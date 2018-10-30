@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "ava": "^0.25.0"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "name": "moli-ad-tag",
+  "license": "UNLICENSED",
+  "description": "An ad tag implementation called moli",
+  "version": "0.1.0",
+  "dependencies": {
+  },
+  "scripts": {
+    "start": "yarn watch",
+    "watch": "yarn clean:build && yarn build:ts:watch",
+    "build": "yarn clean:build && yarn build:ts",
+    "build:prod": "yarn build --mode=production",
+    "build:ts": "webpack",
+    "build:ts:watch": "webpack --watch",
+    "test": "rm -rf ./temp/* && yarn -s test:transpile && ava --verbose",
+    "test:tap": "yarn -s test:transpile && ava --tap | tap-xunit --package='frontend.loggedin.home' --dontUseCommentsAsTestNames=true > temp/test-report.xml",
+    "test:transpile": "tsc --outDir ./temp && gulp copy-and-rename-graphql --gulpfile ../frontend_config/unitTest.gulpfile.js --gf-project frontend_loggedIn_home",
+    "test:watch": "rm -rf ./temp/* && yarn -s test:transpile && concurrently 'yarn -s test:transpile --watch' 'ava --watch --verbose'",
+    "lint": "yarn lint:ts && yarn lint:css",
+    "lint:css": "webpack --config webpack.lintcss.config.js --env.lint --mode=production",
+    "lint:ts": "tslint --project tsconfig.json",
+    "lint:ts:fix": "tslint --project tsconfig.json --fix",
+    "clean": "yarn clean:build && yarn clean:test",
+    "clean:build": "rm -rf ./public/*",
+    "clean:test": "rm -rf ./temp/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.gutefrage.net:7999/gf/nmms.git"
+  },
+  "engines": {
+    "node": ">=5.0"
+  },
+  "ava": {
+    "require": [
+      "../frontend_base/setup-browser-env.js"
+    ],
+    "files": [
+      "./temp/**/*.test.js"
+    ],
+    "source": [
+      "./temp/**/*.js",
+      "!./temp/**/*.test.js"
+    ],
+    "concurrency": 8,
+    "failWithoutAssertions": false
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@types/sinon": "^4.0.0",
+    "ava": "^0.25.0",
+    "babel-loader": "^8.0.2",
+    "browser-env": "3.2.4",
+    "concurrently": "^3.5.1",
+    "copy-webpack-plugin": "^4.2.3",
+    "css-loader": "^1.0.0",
+    "document-register-element": "1.7.2",
+    "fork-ts-checker-webpack-plugin": "^0.4.9",
+    "gulp": "^3.9.1",
+    "gulp-cli": "^2.0.1",
+    "ignore-assets-webpack-plugin": "^2.0.0",
+    "sinon": "^4.1.2",
+    "tap-xunit": "^2.2.0",
+    "ts-loader": "^4.2.0",
+    "tslint": "^5.8.0",
+    "tslint-loader": "^3.5.3",
+    "typescript": "^3.1.3",
+    "webpack": "^4.22.0",
+    "webpack-clean-obsolete-chunks": "^0.4.0",
+    "webpack-cli": "^2.0.15"
+  }
+}
