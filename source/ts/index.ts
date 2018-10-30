@@ -1,5 +1,8 @@
 import { AdInventoryProvider } from './ads/adInventoryProvider';
 import { DfpService } from './ads/dfpService';
+import { adPerformanceService } from './ads/adPerformanceService';
+import { IAdNetworkService } from './ads/IAdNetworkService';
+import { AdService } from './ads/adService';
 
 /*
  * Init ads:

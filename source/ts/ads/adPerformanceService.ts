@@ -1,11 +1,11 @@
-import {IPerformanceMeasurementService, performanceMeasurementService} from '../../performanceService';
-import {ITrackService, trackService} from '../../../tracker';
-import {DfpPrebidSlot, DfpSlot} from './adNetworkSlot';
-import {googletag} from '../../../types/googletag';
-import {prebidjs} from '../../../types/prebidjs';
-import {ILogger, globalLogger} from '../../../utils/logger';
-import {gfUserAgent} from '../../../context/UserAgent';
-import {gfContext} from '../../../context/GfContext';
+import { IPerformanceMeasurementService, performanceMeasurementService } from '../../performanceService';
+import { ITrackService, trackService } from '../../../tracker';
+import { DfpPrebidSlot, DfpSlot } from './adNetworkSlot';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
+import { globalLogger, ILogger } from '../../../utils/logger';
+import { gfUserAgent } from '../../../context/UserAgent';
+import { gfContext } from '../../../context/GfContext';
 
 /**
  *

@@ -1,13 +1,11 @@
-import test, {Context} from 'ava';
-import {GenericTestContext} from 'ava';
-import Sinon = require('sinon');
-import {SinonSandbox} from 'sinon';
-import browserEnv = require('browser-env');
+import test, { Context, GenericTestContext } from 'ava';
+import { SinonSandbox } from 'sinon';
 import * as LazyLoading from './lazyLoading';
-import {IQueryService, queryService} from '../../dom/queryService';
-import {IScrollService, scrollService} from '../../dom/scrollService';
-import {IWindowEventService, WindowEventService} from '../../dom/windowEventService';
-
+import { IQueryService, queryService } from '../../dom/queryService';
+import { IScrollService, scrollService } from '../../dom/scrollService';
+import { IWindowEventService, WindowEventService } from '../../dom/windowEventService';
+import Sinon = require('sinon');
+import browserEnv = require('browser-env');
 
 interface ILazyLoadingTestContext {
   sandbox: SinonSandbox;

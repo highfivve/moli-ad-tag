@@ -1,4 +1,7 @@
 import test from 'ava';
+import Sinon = require('sinon');
+import browserEnv = require('browser-env');
+
 import { AdService } from './adService';
 import { IAdNetworkConfiguration, IAdNetworkService } from './IAdNetworkService';
 import { performanceMeasurementService } from '../../performanceService';
@@ -7,8 +10,6 @@ import { AdInventoryProvider } from './adInventoryProvider';
 import { DfpQDPPositionSlot, DfpSlot, StickySlot } from './adNetworkSlot';
 import { IAppConfig, IVertical } from '../../../config/appConfig';
 import { gfContext } from '../../../context/GfContext';
-import Sinon = require('sinon');
-import browserEnv = require('browser-env');
 
 const sandbox = Sinon.createSandbox();
 

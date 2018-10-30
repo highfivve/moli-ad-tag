@@ -1,4 +1,4 @@
-import { prebidjs } from '../../../../types/prebidjs';
+import { prebidjs } from '../../types/prebidjs';
 import Teads = prebidjs.Teads;
 import ITeadsBid = prebidjs.ITeadsBid;
 

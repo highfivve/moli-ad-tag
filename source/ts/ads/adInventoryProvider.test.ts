@@ -1,14 +1,11 @@
-import test, {Context, GenericTestContext} from 'ava';
-import {gfUserAgent} from '../../../context/UserAgent';
+import test, { Context, GenericTestContext } from 'ava';
+import { gfUserAgent } from '../../../context/UserAgent';
 
-import {AdInventoryProvider} from './adInventoryProvider';
-import {IFrontendConfigGlobal} from '../../../config/frontendConfig';
-import {TestLogger} from '../../../utils/logger.test.helper';
-import {DfpPrebidSlot, DfpQDPPositionSlot, DfpSlotLazy} from './adNetworkSlot';
-import {IAdNetworkConfiguration} from './IAdNetworkService';
+import { AdInventoryProvider } from './adInventoryProvider';
+import { TestLogger } from '../../../utils/logger.test.helper';
+import { DfpPrebidSlot, DfpQDPPositionSlot, DfpSlotLazy } from './adNetworkSlot';
+import { IAdNetworkConfiguration } from './IAdNetworkService';
 import Sinon = require('sinon');
-
-declare const window: IFrontendConfigGlobal & Window;
 
 interface ITestContext {
   sandbox: Sinon.SinonSandbox;

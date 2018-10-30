@@ -1,5 +1,4 @@
-import {prebidjs} from '../../../../types/prebidjs';
-
+import { prebidjs } from '../../types/prebidjs';
 import IJustPremiumBid = prebidjs.IJustPremiumBid;
 import JustPremium = prebidjs.JustPremium;
 

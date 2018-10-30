@@ -1,9 +1,8 @@
-import test, {GenericTestContext} from 'ava';
+import test, { GenericTestContext } from 'ava';
 import Sinon = require('sinon');
 
-import {DfpPrebidSlot, DfpQDPPositionSlot, DfpSlotSize} from './adNetworkSlot';
-import {googletag} from '../../../types/googletag';
-
+import { DfpPrebidSlot, DfpQDPPositionSlot, DfpSlotSize } from './adNetworkSlot';
+import { googletag } from '../types/googletag';
 
 test.beforeEach((t: GenericTestContext<any>) => {
   t.context.googleTag = <googletag.IGoogleTag> {

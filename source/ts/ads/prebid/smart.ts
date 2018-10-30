@@ -1,4 +1,4 @@
-import {prebidjs} from '../../../../types/prebidjs';
+import { prebidjs } from '../../types/prebidjs';
 import ISmartAdServerBid = prebidjs.ISmartAdServerBid;
 import SmartAdServer = prebidjs.SmartAdServer;
 /*

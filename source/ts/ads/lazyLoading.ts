@@ -1,6 +1,7 @@
 import { EventType, IWindowEventObserver, IWindowEventService } from '../../dom/windowEventService';
-import {IQueryService} from '../../dom/queryService';
-import {IScrollService} from '../../dom/scrollService';
+import { IQueryService } from '../../dom/queryService';
+import { IScrollService } from '../../dom/scrollService';
+
 /**
  * == Lazy Loader ==
  *

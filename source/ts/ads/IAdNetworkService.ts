@@ -1,5 +1,5 @@
-import {DfpSlot} from './adNetworkSlot';
-import {IVertical} from '../../../config/appConfig';
+import { DfpSlot } from './adNetworkSlot';
+import { IVertical } from '../../../config/appConfig';
 
 export interface IAdNetworkService {
 

@@ -1,8 +1,7 @@
-import {prebidjs} from '../../../../types/prebidjs';
-
+import { DfpSlotSize } from '../adNetworkSlot';
+import { prebidjs } from '../../types/prebidjs';
 import IImproveDigitalBid = prebidjs.IImproveDigitalBid;
 import ImproveDigital = prebidjs.ImproveDigital;
-import {DfpSlotSize} from '../adNetworkSlot';
 
 /*
  * == ImproveDigital Configuration ==

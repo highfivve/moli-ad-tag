@@ -1,11 +1,8 @@
 import { IVertical } from '../../../config/appConfig';
 import { IAdNetworkService } from './IAdNetworkService';
-import { IGFWindow } from '../../../types/window';
 import { ILogger } from '../../../utils/logger';
 import { AdInventoryProvider } from './adInventoryProvider';
 import { IPerformanceMeasurementService } from '../../performanceService';
-
-declare const window: IGFWindow;
 
 export class AdService {
   constructor(

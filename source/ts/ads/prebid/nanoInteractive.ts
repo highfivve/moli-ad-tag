@@ -1,5 +1,4 @@
-import {prebidjs} from '../../../../types/prebidjs';
-
+import { prebidjs } from '../../types/prebidjs';
 import INanoInteractiveBid = prebidjs.INanoInteractiveBid;
 import NanoInteractive = prebidjs.NanoInteractive;
 

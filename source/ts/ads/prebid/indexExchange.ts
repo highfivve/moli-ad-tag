@@ -1,5 +1,4 @@
-import {prebidjs} from '../../../../types/prebidjs';
-
+import { prebidjs } from '../../types/prebidjs';
 import IIndexExchangeBid = prebidjs.IIndexExchangeBid;
 import IndexExchange = prebidjs.IndexExchange;
 

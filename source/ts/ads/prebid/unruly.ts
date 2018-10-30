@@ -1,4 +1,4 @@
-import { prebidjs } from '../../../../types/prebidjs';
+import { prebidjs } from '../../types/prebidjs';
 import IUnrulyBid = prebidjs.IUnrulyBid;
 import Unruly = prebidjs.Unruly;
 

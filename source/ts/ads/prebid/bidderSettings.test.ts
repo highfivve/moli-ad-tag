@@ -1,8 +1,7 @@
-import test, {GenericTestContext} from 'ava';
+import test, { GenericTestContext } from 'ava';
 
-import {bidderSettings} from './bidderSettings';
+import { bidderSettings } from './bidderSettings';
 import { prebidjs } from '../../types/prebidjs';
-
 
 test('prebid result should return string of fixed precision', (t: GenericTestContext<any>) => {
 

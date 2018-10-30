@@ -1,6 +1,5 @@
-import {prebidjs} from '../../../../types/prebidjs';
-import {DfpSlotSize} from '../adNetworkSlot';
-
+import { prebidjs } from '../../types/prebidjs';
+import { DfpSlotSize } from '../adNetworkSlot';
 import IPubMaticBid = prebidjs.IPubMaticBid;
 import PubMatic = prebidjs.PubMatic;
 

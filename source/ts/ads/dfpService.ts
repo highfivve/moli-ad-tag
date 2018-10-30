@@ -1,32 +1,28 @@
+import domready = require('domready');
+
+import { apstag } from '../types/apstag';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
+
+import IApsTag = apstag.IApsTag;
+import IConsentData = IABConsentManagement.IConsentData;
 import { ILogger } from '../../../utils/logger';
-import {ICookieService} from '../../cookieService';
+import { ICookieService } from '../../cookieService';
 import { IQueryService, queryService } from '../../dom/queryService';
 import { IAdNetworkConfiguration, IAdNetworkService, IMarketingChannel } from './IAdNetworkService';
 import {
-  DfpHeaderAreaSlot,
-  DfpPrebidSlot,
-  DfpQdpOutOfPageMobileInterstitialSlot,
-  DfpQdpOutOfPagePopUnderSlotDesktop,
-  DfpSlot,
-  DfpSlotLazy,
-  DfpSlotRefreshable,
-  DfpWallpaperPixelSlot
+  DfpHeaderAreaSlot, DfpPrebidSlot, DfpQdpOutOfPageMobileInterstitialSlot, DfpQdpOutOfPagePopUnderSlotDesktop, DfpSlot,
+  DfpSlotLazy, DfpSlotRefreshable, DfpWallpaperPixelSlot
 } from './adNetworkSlot';
 import { gfContext } from '../../../context/GfContext';
 import { ITrackService } from '../../../tracker/index';
 import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../../dom/assetLoaderService';
 import { IVertical } from '../../../config/appConfig';
 import { IFrontendConfigGlobal } from '../../../config/frontendConfig';
-import { googletag } from '../../../types/googletag';
-import { prebidjs } from '../../../types/prebidjs';
 import { gfUserAgent } from '../../../context/UserAgent';
-import { apstag } from '../../../types/apstag';
-import domready = require('domready');
-import IApsTag = apstag.IApsTag;
-import {IABConsentManagement} from '../../../types/IABConsentManagement';
-import IConsentData = IABConsentManagement.IConsentData;
-import {ICmpService} from '../../happyUnicorns/cmpService';
-import {IAdPerformanceService} from './adPerformanceService';
+import { IABConsentManagement } from '../../../types/IABConsentManagement';
+import { ICmpService } from '../../happyUnicorns/cmpService';
+import { IAdPerformanceService } from './adPerformanceService';
 
 /**
  * Combines the dfp slot definition along with the actual googletag.IAdSlot definition.

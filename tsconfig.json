@@ -1,0 +1,22 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "allowJs": false,
+    "traceResolution": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2015",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "lib": [ "dom", "es6", "scripthost" ],
+    "strictFunctionTypes": false
+  }
+}

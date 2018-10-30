@@ -1,4 +1,4 @@
-import {prebidjs} from '../../../../types/prebidjs';
+import { prebidjs } from '../../types/prebidjs';
 import IOpenxBid = prebidjs.IOpenxBid;
 import OpenX = prebidjs.OpenX;
 

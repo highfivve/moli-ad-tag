@@ -1,34 +1,33 @@
-import test from 'ava';
-import { GenericTestContext } from 'ava';
+import test, { GenericTestContext } from 'ava';
+import browserEnv = require('browser-env');
 import Sinon = require('sinon');
 
-import {cookieService, ICookieService} from '../../cookieService';
-import {IAdPerformanceService} from './adPerformanceService';
+import { cookieService, ICookieService } from '../../cookieService';
+import { IAdPerformanceService } from './adPerformanceService';
 import { DfpService } from './dfpService';
 import { TestLogger } from '../../../utils/logger.test.helper';
-import { queryService, IQueryService } from '../../dom/queryService';
-import {AssetLoadMethod, AssetType, IAssetLoaderService} from '../../dom/assetLoaderService';
-import { googletag } from '../../../types/googletag';
-import { prebidjs } from '../../../types/prebidjs';
+import { IQueryService, queryService } from '../../dom/queryService';
+import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../../dom/assetLoaderService';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 import { bidderSettings } from './prebid/bidderSettings';
 import { AdInventoryProvider } from './adInventoryProvider';
-import {DfpSlot, DfpQDPPositionSlot, DfpInPageSlot, DfpPrebidSlot, DfpSkyScraperSlot} from './adNetworkSlot';
+import { DfpInPageSlot, DfpPrebidSlot, DfpQDPPositionSlot, DfpSkyScraperSlot, DfpSlot } from './adNetworkSlot';
 import { IAdNetworkConfiguration } from './IAdNetworkService';
 import { SinonSandbox } from 'sinon';
 import { gfContext } from '../../../context/GfContext';
 import { IVertical } from '../../../config/appConfig';
-
-import browserEnv = require('browser-env');
-import IPrebidJs = prebidjs.IPrebidJs;
-import IRequestObj = prebidjs.IRequestObj;
 import { gfUserAgent } from '../../../context/UserAgent';
 import { ITrackService } from '../../../tracker/index';
-import { apstag } from '../../../types/apstag';
+import { apstag } from '../types/apstag';
+import { services } from '../../../services/services';
+import { IABConsentManagement } from '../../../types/IABConsentManagement';
+import { defaultVendorData, ICmpService } from '../../happyUnicorns/cmpService';
+
+import IPrebidJs = prebidjs.IPrebidJs;
+import IRequestObj = prebidjs.IRequestObj;
 import IApsTag = apstag.IApsTag;
 import IBidConfig = apstag.IBidConfig;
-import { services } from '../../../services/services';
-import {IABConsentManagement} from '../../../types/IABConsentManagement';
-import {defaultVendorData, ICmpService} from '../../happyUnicorns/cmpService';
 
 interface IDfpTestContext {
   context: {

@@ -1,6 +1,6 @@
-import {EVENT_LISTING_CARD_LOAD} from '../../../components/card-listing/index';
-import {googletag} from '../../../types/googletag';
-import {prebidjs} from '../../../types/prebidjs';
+import { EVENT_LISTING_CARD_LOAD } from '../../../components/card-listing/index';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 import * as LazyLoading from './lazyLoading';
 import * as AdRefreshListener from './refreshAd';
 

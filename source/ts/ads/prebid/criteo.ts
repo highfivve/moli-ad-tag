@@ -1,10 +1,7 @@
-import {prebidjs} from '../../../../types/prebidjs';
-import {DfpSlotSize} from '../adNetworkSlot';
-
+import { DfpSlotSize } from '../adNetworkSlot';
+import { prebidjs } from '../../types/prebidjs';
 import ICriteoBid = prebidjs.ICriteoBid;
 import Criteo = prebidjs.Criteo;
-
-
 
 /*
  * Criteo Configuration
