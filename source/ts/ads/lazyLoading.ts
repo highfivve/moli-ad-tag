@@ -1,5 +1,4 @@
 import { EventType, IWindowEventObserver, IWindowEventService } from '../../dom/windowEventService';
-import { IQueryService } from '../../dom/queryService';
 import { IScrollService } from '../../dom/scrollService';
 
 /**
@@ -19,13 +18,11 @@ export interface ILazyLoader {
 /**
  * When the footer is visible the lazy loading logic is triggered.
  *
- * @param queryService
  * @param scrollService
  * @param windowEventService
  * @returns {ILazyLoader} a lazy loader
  */
 export const FooterVisible = (
-  queryService: IQueryService,
   scrollService: IScrollService,
   windowEventService: IWindowEventService,
 ): ILazyLoader => {
@@ -36,7 +33,7 @@ export const FooterVisible = (
       return new Promise<void>((resolve): void => {
         // we use the footer to determine if the ad should be displayed as the element
         // has display:none , thus we cannot determine the visibility.
-        const footer = queryService.querySelector('footer');
+        const footer = document.querySelector('footer');
         const windowEventObserver: IWindowEventObserver = {
           listener: () => {
             if (scrollService.elementInOrAboveViewport(footer) && !isResolved) {

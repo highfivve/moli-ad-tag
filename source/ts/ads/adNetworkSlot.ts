@@ -77,7 +77,7 @@ export abstract class DfpSlot {
  * // wrap another slot into a lazy loaded slot along with the lazy loading logic.
  * new DfpSlotLazy(
  *   new DfpPerformanceBannerSlot('im-performanceBanner', [[988, 250]]),
- *   LazyLoading.FooterVisible(queryService, scrollService, windowEventService)
+ *   LazyLoading.FooterVisible(scrollService, windowEventService)
  * )
  *
  * @example prebid slot as lazy slot
@@ -87,7 +87,7 @@ export abstract class DfpSlot {
  *     new DfpPerformanceBannerSlot('ad-performanceBanner'),
  *     [ ... prebid configuration ... ]
  *   ),
- *   LazyLoading.FooterVisible(queryService, scrollService, windowEventService)
+ *   LazyLoading.FooterVisible(scrollService, windowEventService)
  * )
  *
  * @see ILazyLoader for implementations

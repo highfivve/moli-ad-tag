@@ -1,7 +1,6 @@
 import test, { Context, GenericTestContext } from 'ava';
 import { SinonSandbox } from 'sinon';
 import * as LazyLoading from './lazyLoading';
-import { IQueryService, queryService } from '../../dom/queryService';
 import { IScrollService, scrollService } from '../../dom/scrollService';
 import { IWindowEventService, WindowEventService } from '../../dom/windowEventService';
 import Sinon = require('sinon');
@@ -10,7 +9,6 @@ import browserEnv = require('browser-env');
 interface ILazyLoadingTestContext {
   sandbox: SinonSandbox;
   stubs: {
-    queryService: IQueryService;
     scrollService: IScrollService;
     windowEventService: IWindowEventService;
   };
@@ -26,7 +24,7 @@ test.beforeEach((t: GenericTestContext<Context<ILazyLoadingTestContext>>) => {
 
   t.context.sandbox = Sinon.createSandbox();
   t.context.stubs = {
-    queryService, scrollService, windowEventService: new WindowEventService()
+    scrollService, windowEventService: new WindowEventService()
   };
 
   t.context.createAnswerPlate = (index: number) => {
@@ -65,7 +63,6 @@ test.serial('LazyLoading.FooterVisible - Resolves when the footer is visible', (
   const elementVisibleSpy = sandbox.stub(stubs.scrollService, 'elementInOrAboveViewport').returns(true);
 
   const lazy = LazyLoading.FooterVisible(
-    stubs.queryService,
     stubs.scrollService,
     stubs.windowEventService
   );

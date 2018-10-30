@@ -8,7 +8,6 @@ import IApsTag = apstag.IApsTag;
 import IConsentData = IABConsentManagement.IConsentData;
 import { ILogger } from '../../../utils/logger';
 import { ICookieService } from '../../cookieService';
-import { IQueryService, queryService } from '../../dom/queryService';
 import { IAdNetworkConfiguration, IAdNetworkService, IMarketingChannel } from './IAdNetworkService';
 import {
   DfpHeaderAreaSlot, DfpPrebidSlot, DfpQdpOutOfPageMobileInterstitialSlot, DfpQdpOutOfPagePopUnderSlotDesktop, DfpSlot,
@@ -55,7 +54,7 @@ export class DfpService implements IAdNetworkService {
    * - Prebid defaults 10.000ms
    * @type {number} milliseconds
    */
-  private readonly consentManagementTimeout: number = 200;
+  private readonly consentManagementTimeout: number = 500;
 
   /**
    * The user sync delay for prebid.
@@ -75,7 +74,6 @@ export class DfpService implements IAdNetworkService {
    *
    * @param googleTag - inject google tag as it's loaded by an external script tag
    * @param pbjs - inject pbjs script here for easier testing. Will be loaded by the DFP service (at least for now)
-   * @param queryService - query the dom for elements
    * @param adPerformanceService - measure dfp timings/performance
    * @param trackService - report no ads to GA and UB
    * @param assetService - Currently needed to load amazon
@@ -86,7 +84,6 @@ export class DfpService implements IAdNetworkService {
    */
   constructor(private googleTag: googletag.IGoogleTag,
               private pbjs: prebidjs.IPrebidJs,
-              private queryService: IQueryService,
               private adPerformanceService: IAdPerformanceService,
               private trackService: ITrackService,
               private assetService: IAssetLoaderService,
@@ -113,9 +110,12 @@ export class DfpService implements IAdNetworkService {
     if (gfContext.isDebug()) {
       this.filterAvailableSlots(slots).forEach(dfpSlot => {
         this.logger.debug(`Show adSlot in debug mode ${dfpSlot.id} / ${dfpSlot.adUnitPath}`);
-        const slotElement = queryService.querySelector(`#${dfpSlot.id}`);
-        slotElement.classList.remove('u-hidden');
-        slotElement.innerHTML = dfpSlot.asDebugString;
+        const slotElement = document.querySelector(`#${dfpSlot.id}`);
+
+        if (slotElement) {
+          slotElement.classList.remove('u-hidden');
+          slotElement.innerHTML = dfpSlot.asDebugString;
+        }
       });
 
       slots
@@ -123,9 +123,12 @@ export class DfpService implements IAdNetworkService {
         .forEach(dfpSlot => {
           dfpSlot.onRefresh().then(() => {
             this.logger.debug(`Show lazy adSlot in debug mode ${dfpSlot.id} / ${dfpSlot.adUnitPath}`);
-            const slotElement = queryService.querySelector(`#${dfpSlot.id}`);
-            slotElement.classList.remove('u-hidden');
-            slotElement.innerHTML = dfpSlot.asDebugString;
+            const slotElement = document.querySelector(`#${dfpSlot.id}`);
+
+            if (slotElement) {
+              slotElement.classList.remove('u-hidden');
+              slotElement.innerHTML = dfpSlot.asDebugString;
+            }
           });
         });
 
@@ -197,7 +200,7 @@ export class DfpService implements IAdNetworkService {
 
         dfpSlotLazy.onRefresh()
           .then(() => {
-            if (this.queryService.elementExists(dfpSlotLazy.id)) {
+            if (document.getElementById(dfpSlotLazy.id)) {
               return Promise.resolve();
             }
             return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.id}`);
@@ -484,7 +487,7 @@ export class DfpService implements IAdNetworkService {
   }
 
   private filterAvailableSlots(slots: DfpSlot[]): DfpSlot[] {
-    return slots.filter((slot: DfpSlot) => this.queryService.elementExists(slot.id));
+    return slots.filter((slot: DfpSlot) => !!document.getElementById(slot.id));
   }
 
   /**
@@ -668,9 +671,9 @@ export class DfpService implements IAdNetworkService {
   }
 
   private showAdSlot(dfpSlot: DfpSlot): void {
-    const slotElement = queryService.querySelector(`#${dfpSlot.id}`);
+    const slotElement = document.querySelector(`#${dfpSlot.id}`);
     this.googleTag.pubads().addEventListener('slotRenderEnded', (event: googletag.events.ISlotRenderEndedEvent) => {
-      if (!event.isEmpty) {
+      if (!event.isEmpty && slotElement) {
         slotElement.classList.remove('u-hidden');
       }
     });
@@ -700,7 +703,8 @@ export class DfpService implements IAdNetworkService {
         // Make the Ad--presenter an Ad--wallpaper
         const headerAreaSlot = adSlots.find(slot => slot.dfpSlot.adUnitPath === DfpHeaderAreaSlot.adUnitPath);
         if (headerAreaSlot) {
-          const headerArea = this.queryService.querySelector(`#${headerAreaSlot.dfpSlot.id}`);
+          const headerArea = document.querySelector(`#${headerAreaSlot.dfpSlot.id}`);
+
           if (headerArea) {
             headerArea.classList.remove('Ad--presenter');
             headerArea.classList.add('Ad--wallpaper');

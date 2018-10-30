@@ -6,7 +6,6 @@ import { cookieService, ICookieService } from '../../cookieService';
 import { IAdPerformanceService } from './adPerformanceService';
 import { DfpService } from './dfpService';
 import { TestLogger } from '../../../utils/logger.test.helper';
-import { IQueryService, queryService } from '../../dom/queryService';
 import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../../dom/assetLoaderService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
@@ -41,7 +40,6 @@ interface IDfpTestContext {
      * Instantiating dependency-free components and creating stubs.
      */
     stubs: {
-      queryService: IQueryService;
       logger: TestLogger;
       adInventoryProvider: AdInventoryProvider;
       assetLoaderService: IAssetLoaderService;
@@ -235,7 +233,6 @@ test.beforeEach((t: GenericTestContext<IDfpTestContext>) => {
   };
 
   t.context.stubs = {
-    queryService,
     logger: new TestLogger(),
     adInventoryProvider,
     assetLoaderService,
@@ -257,7 +254,6 @@ test.beforeEach((t: GenericTestContext<IDfpTestContext>) => {
   t.context.dfpService = new DfpService(
     t.context.stubs.googletag,
     t.context.stubs.pbjs,
-    t.context.stubs.queryService,
     t.context.stubs.adPerformanceService,
     t.context.stubs.trackService,
     t.context.stubs.assetLoaderService,
@@ -706,7 +702,7 @@ test.serial('DFPService - justpremium skin - destroy nothing if ad-sidebar-skySc
   t.plan(1);
   const sandbox: SinonSandbox = t.context.sandbox;
   const destroySlotsSpy = sandbox.stub(t.context.stubs.googletag, 'destroySlots');
-  sandbox.stub(t.context.stubs.queryService, 'elementExists').returns(true);
+  sandbox.stub(document, 'getElementById').returns(true);
 
   const promise = t.context.dfpService.initialize([], t.context.adConfiguration, t.context.vertical);
   t.context.resolveGPT();
@@ -752,7 +748,7 @@ test.serial('DFPService - justpremium skin - destroy ad-sidebar-skyScraper if pr
     )
   ];
 
-  sandbox.stub(t.context.stubs.queryService, 'elementExists').returns(true);
+  sandbox.stub(document, 'getElementById').returns(true);
 
   const promise = t.context.dfpService.initialize(adSlots, t.context.adConfiguration, t.context.vertical);
   t.context.resolveGPT();
@@ -795,7 +791,7 @@ test.serial('DFPService - bidsBackHandler resolves if function inside throws an 
       }
     }
   );
-  sandbox.stub(t.context.stubs.queryService, 'elementExists').returns(true);
+  sandbox.stub(document, 'getElementById').returns(true);
 
   const pubAdsRefreshSpy = sandbox.stub(t.context.stubs.googletag.pubads(), 'refresh');
 
