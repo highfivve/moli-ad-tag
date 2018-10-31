@@ -3,25 +3,13 @@ import domready = require('domready');
 import { apstag } from '../types/apstag';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
+import { DfpPrebidSlot, DfpSlot, DfpSlotLazy, DfpSlotRefreshable } from './adNetworkSlot';
+import { ICookieService } from '../util/cookieService';
+import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
+import { Moli } from '../types/moli';
 
+import MoliLogger = Moli.MoliLogger;
 import IApsTag = apstag.IApsTag;
-import IConsentData = IABConsentManagement.IConsentData;
-import { ILogger } from '../../../utils/logger';
-import { ICookieService } from '../../cookieService';
-import { IAdNetworkConfiguration, IAdNetworkService, IMarketingChannel } from './IAdNetworkService';
-import {
-  DfpHeaderAreaSlot, DfpPrebidSlot, DfpQdpOutOfPageMobileInterstitialSlot, DfpQdpOutOfPagePopUnderSlotDesktop, DfpSlot,
-  DfpSlotLazy, DfpSlotRefreshable, DfpWallpaperPixelSlot
-} from './adNetworkSlot';
-import { gfContext } from '../../../context/GfContext';
-import { ITrackService } from '../../../tracker/index';
-import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../../dom/assetLoaderService';
-import { IVertical } from '../../../config/appConfig';
-import { IFrontendConfigGlobal } from '../../../config/frontendConfig';
-import { gfUserAgent } from '../../../context/UserAgent';
-import { IABConsentManagement } from '../../../types/IABConsentManagement';
-import { ICmpService } from '../../happyUnicorns/cmpService';
-import { IAdPerformanceService } from './adPerformanceService';
 
 /**
  * Combines the dfp slot definition along with the actual googletag.IAdSlot definition.
@@ -34,11 +22,9 @@ interface ISlotDefinition<S extends DfpSlot> {
   readonly adSlot: googletag.IAdSlot;
 }
 
-declare const window: Window & IFrontendConfigGlobal & apstag.IGlobalApsTagApi;
+declare const window: Window & apstag.IGlobalApsTagApi;
 
-export class DfpService implements IAdNetworkService {
-
-  public readonly networkName: string = 'dfp';
+export class DfpService {
 
   /**
    * The time to wait for a header bidding response before we continue to render the ads.
@@ -74,22 +60,16 @@ export class DfpService implements IAdNetworkService {
    *
    * @param googleTag - inject google tag as it's loaded by an external script tag
    * @param pbjs - inject pbjs script here for easier testing. Will be loaded by the DFP service (at least for now)
-   * @param adPerformanceService - measure dfp timings/performance
-   * @param trackService - report no ads to GA and UB
    * @param assetService - Currently needed to load amazon
    * @param cookieService - Access browser cookies
-   * @param cmpService - holds consent management information
    * @param logger - for errors and warnings
    * @param apstag - amazon a9, optional, only for test purpose
    */
   constructor(private googleTag: googletag.IGoogleTag,
               private pbjs: prebidjs.IPrebidJs,
-              private adPerformanceService: IAdPerformanceService,
-              private trackService: ITrackService,
               private assetService: IAssetLoaderService,
               private cookieService: ICookieService,
-              private cmpService: ICmpService,
-              private logger: ILogger,
+              private logger: MoliLogger,
               apstag?: IApsTag) {
 
     // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
@@ -101,50 +81,13 @@ export class DfpService implements IAdNetworkService {
    * Initializes and shows DFP ads.
    *
    * @param slots             a list of potential DFP slots.
-   * @param config
-   * @param vertical
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize(slots: DfpSlot[], config: IAdNetworkConfiguration, vertical: IVertical): Promise<void> {
-    // In debug mode we don't load any ads. Instead we show each available adSlots' debugString.
-    if (gfContext.isDebug()) {
-      this.filterAvailableSlots(slots).forEach(dfpSlot => {
-        this.logger.debug(`Show adSlot in debug mode ${dfpSlot.id} / ${dfpSlot.adUnitPath}`);
-        const slotElement = document.querySelector(`#${dfpSlot.id}`);
-
-        if (slotElement) {
-          slotElement.classList.remove('u-hidden');
-          slotElement.innerHTML = dfpSlot.asDebugString;
-        }
-      });
-
-      slots
-        .filter(this.isLazySlot)
-        .forEach(dfpSlot => {
-          dfpSlot.onRefresh().then(() => {
-            this.logger.debug(`Show lazy adSlot in debug mode ${dfpSlot.id} / ${dfpSlot.adUnitPath}`);
-            const slotElement = document.querySelector(`#${dfpSlot.id}`);
-
-            if (slotElement) {
-              slotElement.classList.remove('u-hidden');
-              slotElement.innerHTML = dfpSlot.asDebugString;
-            }
-          });
-        });
-
-      return Promise.resolve();
-    }
-
-    // measure the dfp performance
-    this.adPerformanceService.markDfpInitialization();
-
-    const consentData = this.cmpService.getConsentData();
+  public initialize(slots: DfpSlot[]): Promise<unknown> {
 
     const dfpReady = this.awaitAdNetworkLoaded()
       .then(() => this.awaitDomReady())
-      .then(() => consentData)
-      .then(consentData => this.trackConsentData(consentData))
-      .then((consentData) => this.configureAdNetwork(config, vertical, consentData));
+      .then(() => this.configureAdNetwork());
 
     // concurrently initialize lazy loaded slots
     const lazySlots: Promise<DfpSlotLazy[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
@@ -154,7 +97,6 @@ export class DfpService implements IAdNetworkService {
     const eagerlyLoadedSlots = dfpReady
       // request all existing and non-lazy loading slots
       .then(() => this.filterAvailableSlots(slots).filter(slot => !this.isLazySlot(slot)))
-      .then(slots => this.filterSecondViewSlots(slots))
       // configure slots with gpt
       .then((availableSlots: DfpSlot[]) => this.registerSlots(availableSlots))
       .then((registeredSlots: ISlotDefinition<DfpSlot>[]) => this.displayAds(registeredSlots));
@@ -167,21 +109,14 @@ export class DfpService implements IAdNetworkService {
         .then(slotDefinitions => this.initHeaderBidding(slotDefinitions))
         .then((adSlots: ISlotDefinition<DfpSlot>[]) => this.refreshAds(adSlots));
 
-    // == Performance logging ==
-    refreshedAds.then(slots => this.adPerformanceService.measureAdSlots(this.googleTag, slots.map(({dfpSlot}) => dfpSlot)));
-
     // handle wallpaper ads
-    refreshedAds.then((adSlots: ISlotDefinition<DfpSlot>[]) => this.handleWallpaperAd(adSlots));
-
-    // the adsPromise only waits for the *first* ad to be displayed and resolves
     const adsPromise = refreshedAds
-      .then((slots) => this.adPerformanceService.measureFirstAdLoadTime(this.googleTag, slots.map(({dfpSlot}) => dfpSlot)))
-      .catch(reason => this.logger.error('DfpService :: Initialization failed', reason));
+      .catch(reason => this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason)));
 
     const timeoutPromise = this.awaitDomReady()
       .then(() => this.timeoutPromise(2000));
 
-    // we grant our ads a total of 3 seconds to load before we display them anyway. otherwise users on slow
+    // we grant our ads a total of 2 seconds to load before we display the answers anyway. otherwise users on slow
     // connections would be stuck waiting for answers for a long time.
     return Promise.race([adsPromise, timeoutPromise]);
   }
@@ -200,24 +135,24 @@ export class DfpService implements IAdNetworkService {
 
         dfpSlotLazy.onRefresh()
           .then(() => {
-            if (document.getElementById(dfpSlotLazy.id)) {
+            if (document.getElementById(dfpSlotLazy.domId)) {
               return Promise.resolve();
             }
-            return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.id}`);
+            return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.domId}`);
           })
           .then(() => this.registerSlot(dfpSlotLazy))
-          .then((adSlot) => {
-            const slotDefinition: ISlotDefinition<DfpSlot> = {adSlot, dfpSlot: dfpSlotLazy.slot};
+          .then(adSlot => {
+            const slotDefinition: ISlotDefinition<DfpSlot> = {adSlot, dfpSlot: dfpSlotLazy};
             // check if the lazy slot wraps a prebid slot and request prebid too
             // only executes the necessary parts of `this.initHeaderBidding`
-            if (dfpSlotLazy.slot instanceof DfpPrebidSlot) {
-              const prebid = this.initPrebid([{adSlot, dfpSlot: dfpSlotLazy.slot}]);
-              const a9 = this.fetchA9Slots([dfpSlotLazy.slot]);
+            if (dfpSlotLazy instanceof DfpPrebidSlot) {
+              const prebid = this.initPrebid([{adSlot, dfpSlot: dfpSlotLazy}]);
+              const a9 = this.fetchA9Slots([dfpSlotLazy]);
               return Promise.all([prebid, a9]).then(() => slotDefinition);
             }
             return Promise.resolve(slotDefinition);
           })
-          .then(({adSlot, dfpSlot}) => {
+          .then(({ adSlot, dfpSlot }) => {
             this.googleTag.pubads().refresh([adSlot]);
             this.showAdSlot(dfpSlot);
           })
@@ -234,6 +169,7 @@ export class DfpService implements IAdNetworkService {
    *
    * @param {Promise<ISlotDefinition<DfpSlot>[]>} displayedAdSlots
    */
+  // TODO: is this still correct compared to the old implementation? slots are not wrapped anymore
   private initRefreshableSlots(displayedAdSlots: Promise<ISlotDefinition<DfpSlot>[]>): void {
     displayedAdSlots
       .then(registrations => registrations.filter(reg => reg.dfpSlot instanceof DfpSlotRefreshable))
@@ -241,10 +177,10 @@ export class DfpService implements IAdNetworkService {
         // cast dfpSlot to DfpSlotRefreshable as we know this must be a refreshable slot
         const refreshableDfpSlot = dfpSlot as DfpSlotRefreshable;
           refreshableDfpSlot.setRefeshListener(() => {
-          const requestHeaderBids: Promise<any> = refreshableDfpSlot.slot instanceof DfpPrebidSlot ?
+          const requestHeaderBids: Promise<any> = refreshableDfpSlot instanceof DfpPrebidSlot ?
             Promise.all([
-              this.initPrebid([{adSlot, dfpSlot: refreshableDfpSlot.slot}]),
-              this.fetchA9Slots([refreshableDfpSlot.slot])]
+              this.initPrebid([{adSlot, dfpSlot: refreshableDfpSlot}]),
+              this.fetchA9Slots([refreshableDfpSlot])]
             ) : Promise.resolve();
 
             requestHeaderBids.then(() => {
@@ -276,12 +212,9 @@ export class DfpService implements IAdNetworkService {
 
     const dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[] = availableSlots
       .map(({adSlot, dfpSlot}) => {
-          if (dfpSlot instanceof  DfpPrebidSlot) {
+        // TODO: is this correct compared to the previous implementation?
+          if (dfpSlot instanceof  DfpPrebidSlot || dfpSlot instanceof DfpPrebidSlot) {
             return {adSlot, dfpSlot: dfpSlot};
-          } else if (dfpSlot instanceof DfpSlotRefreshable && dfpSlot.slot instanceof DfpPrebidSlot) {
-            // refreshable ad slots need are displayed immediately. So we have to unwrap any inner prebid
-            // slot as well
-            return {adSlot, dfpSlot: dfpSlot.slot};
           }
           return null;
       })
@@ -419,10 +352,7 @@ export class DfpService implements IAdNetworkService {
     });
   }
 
-  private configureAdNetwork(config: IAdNetworkConfiguration, vertical: IVertical, consentData: IConsentData): void {
-    this.setupChannelIds(config);
-    this.setupTargeting(config, vertical, consentData);
-
+  private configureAdNetwork(): void {
     this.setupConsentFromSourcepoint();
 
     this.googleTag.pubads().enableAsyncRendering();
@@ -431,49 +361,8 @@ export class DfpService implements IAdNetworkService {
     this.googleTag.enableServices();
   }
 
-  private setupChannelIds(config: IAdNetworkConfiguration): void {
-    let adChannels = [
-      config.marketingChannel.channelGfThemaId       // main channel as an ID of the form 'gf_thema_XXX'
-    ];
-
-    // configure google adsense channels - see https://developers.google.com/doubleclick-gpt/adsense_attributes.
-    // these cannot be configured (as of 2016-07) per slot unfortunately, so we cannot pass stuff for single ad positions.
-    // the documentation by Google does not state this explicitly, but we tested it and couldn’t get it to work.
-    this.googleTag.pubads().set('adsense_channel_ids', adChannels.join('+'));
-  }
-
-  private setupTargeting(config: IAdNetworkConfiguration, vertical: IVertical, consentData: IConsentData): void {
-    const {channel, subChannel} = this.getMarketingChannels(config.marketingChannel, vertical);
-    this.logger.debug('DFP target channel / subChannel', channel, subChannel);
-
-    this.googleTag.pubads()
-    // v2015 on PHP app
-      .setTargeting('gfversion', ['v2016'])
-      // premium partner consultation yes/no?
-      .setTargeting('sprechstunde', (config.consultation || false).toString())
-      // array of normalized tags
-      .setTargeting('tags', config.tags)
-      // marketing channel
-      .setTargeting('channel', channel)
-      // marketing subChannel
-      // enables us to test different campaigns. Has nothing to do with our internal ab testing
-      .setTargeting('ABtest', config.abTest.toString())
-      // allows targeting for verticals
-      .setTargeting('vertical', vertical.domain)
-      // allows targeting adult content
-      .setTargeting('isAdultContent', config.isAdultContent.toString())
-      // allows targeting for user agents
-      .setTargeting('supportedUserAgent', gfUserAgent.isSupportedBrowser().toString())
-      // gdpr: 1 means that the user is subject to GDPR regulation, 0 means that the user is not subject
-      .setTargeting('gdpr', consentData.gdprApplies ? '1' : '0');
-
-    if (subChannel) {
-      this.googleTag.pubads().setTargeting('subChannel', subChannel);
-    }
-  }
-
   /**
-   * If the user has opt-out of personalized ads via our consent management platform (sourcepoint),
+   * If the user has opted out of personalized ads via our consent management platform (sourcepoint),
    * we configure gpt accordingly. By default gpt will serve personalized ads.
    *
    * This ensure that a user needs to opt out and we don't block any ad calls.
@@ -487,40 +376,7 @@ export class DfpService implements IAdNetworkService {
   }
 
   private filterAvailableSlots(slots: DfpSlot[]): DfpSlot[] {
-    return slots.filter((slot: DfpSlot) => !!document.getElementById(slot.id));
-  }
-
-  /**
-   * Only request a slot if the user has visited the page in the last x hours.
-   *
-   * @param {DfpSlot[]} slots
-   * @returns {DfpSlot[]}
-   */
-  private filterSecondViewSlots(slots: DfpSlot[]): DfpSlot[] {
-    return slots.filter((slot: DfpSlot) => {
-      // only handle out-of-page slots
-      if (slot instanceof DfpQdpOutOfPageMobileInterstitialSlot || slot instanceof DfpQdpOutOfPagePopUnderSlotDesktop) {
-        const cookieName = `gfAdsRevisit_${slot.id}`;
-
-        const minutesPerDay = 1440;
-        if (!this.cookieService.exists(cookieName)) {
-          // first visit in the last week. Do not request an out-of-page slot
-          this.cookieService.set(cookieName, 'requestOnNextView', minutesPerDay);
-          return false;
-        } if (this.cookieService.get(cookieName) === 'requested') {
-          // Out-of-Page slot has already been requested
-          return false;
-        } else {
-          // second visit in the last week . Request an out-of-page slot as
-          // it hasn't been requested yet.
-          // the frequency cap in DFP didn't work during local testing.
-          this.cookieService.set(cookieName, 'requested', minutesPerDay);
-          return true;
-        }
-      }
-      // don't filter by default
-      return true;
-    });
+    return slots.filter((slot: DfpSlot) => !!document.getElementById(slot.domId));
   }
 
   /**
@@ -533,7 +389,7 @@ export class DfpService implements IAdNetworkService {
     const slots = dfpPrebidSlots.map(slot => slot.dfpSlot);
     this.pbjs.addAdUnits(slots.map((slot: DfpPrebidSlot) => {
       return {
-        code: slot.id,
+        code: slot.domId,
         mediaTypes: slot.mediaTypes,
         bids: slot.bids
       };
@@ -546,7 +402,7 @@ export class DfpService implements IAdNetworkService {
       window.apstag.fetchBids({
         slots: slots.map(slot => {
           return {
-            slotID: slot.id,
+            slotID: slot.domId,
             slotName: slot.adUnitPath,
             sizes: slot.prebidSizes() // banner sizes
           };
@@ -573,8 +429,7 @@ export class DfpService implements IAdNetworkService {
       let adserverRequestSent = false;
 
       const dfpSlots = slotDefinitions.map(slot => slot.dfpSlot);
-      const adUnitCodes = dfpSlots.map(slot => slot.id);
-      this.adPerformanceService.markPrebidSlotsRequested();
+      const adUnitCodes = dfpSlots.map(slot => slot.domId);
 
       this.pbjs.requestBids({
         timeout: this.prebidTimeout,
@@ -586,7 +441,6 @@ export class DfpService implements IAdNetworkService {
             if (adserverRequestSent) {
               return;
             }
-            this.adPerformanceService.measurePrebidSlots(dfpSlots, bidResponses);
 
             if (this.checkForJustPremiumWallpaper(bidResponses)) {
               this.destroySkyscraperAdUnit(slotDefinitions);
@@ -594,12 +448,12 @@ export class DfpService implements IAdNetworkService {
 
             adserverRequestSent = true;
 
-            // set key-values for DFP to target the correct lineitems
+            // set key-values for DFP to target the correct line items
             this.pbjs.setTargetingForGPTAsync(adUnitCodes);
 
             resolve(bidResponses);
           } catch (error) {
-            this.logger.error('DfpService:: could not resolve bidsBackHandler', error);
+            this.logger.error('DfpService:: could not resolve bidsBackHandler' + JSON.stringify(error));
             resolve({});
           }
         }
@@ -643,10 +497,16 @@ export class DfpService implements IAdNetworkService {
   }
 
   private registerSlot(dfpSlot: DfpSlot): googletag.IAdSlot {
-    const adSlot = dfpSlot.defineSlotOnGoogleTag(this.googleTag);
+    let adSlot: googletag.IAdSlot;
+
+    if (dfpSlot.position === 'in-page') {
+      adSlot = this.googleTag.defineSlot(dfpSlot.adUnitPath, dfpSlot.sizes, dfpSlot.domId);
+    } else {
+      adSlot = this.googleTag.defineOutOfPageSlot(dfpSlot.adUnitPath, dfpSlot.domId);
+    }
+
     adSlot.setCollapseEmptyDiv(true);
     adSlot.addService(this.googleTag.pubads());
-    this.adPerformanceService.markRegisterSlot(dfpSlot);
     return adSlot;
   }
 
@@ -656,14 +516,14 @@ export class DfpService implements IAdNetworkService {
   }
 
   private displayAd(dfpSlot: DfpSlot): void {
-    this.logger.debug('Displaying', dfpSlot.id);
-    this.googleTag.display(dfpSlot.id);
+    this.logger.debug('Displaying' + dfpSlot.domId);
+    this.googleTag.display(dfpSlot.domId);
   }
 
   /**
    * Refresh all the passed slots
    * @param slots - the slots that should be refreshed
-   * @returns {IResolvedSlotDefinition[]} unaltered
+   * @returns {ISlotDefinition[]} unaltered
    */
   private refreshAds(slots: ISlotDefinition<DfpSlot>[]): ISlotDefinition<DfpSlot>[] {
     this.googleTag.pubads().refresh(slots.map(slot => slot.adSlot));
@@ -671,49 +531,10 @@ export class DfpService implements IAdNetworkService {
   }
 
   private showAdSlot(dfpSlot: DfpSlot): void {
-    const slotElement = document.querySelector(`#${dfpSlot.id}`);
+    const slotElement = document.querySelector(`#${dfpSlot.domId}`);
     this.googleTag.pubads().addEventListener('slotRenderEnded', (event: googletag.events.ISlotRenderEndedEvent) => {
       if (!event.isEmpty && slotElement) {
         slotElement.classList.remove('u-hidden');
-      }
-    });
-  }
-
-  /**
-   * Adjust the leaderboard ad if a wallpaper ad is delivered.
-   *
-   * @see https://confluence.gutefrage.net/display/DEV/Sonderformate
-   * @param {ISlotDefinition[]} adSlots
-   */
-  private handleWallpaperAd(adSlots: ISlotDefinition<DfpSlot>[]): void {
-    const wallpaperPixelSlot = adSlots.find(slot => slot.dfpSlot instanceof DfpWallpaperPixelSlot);
-
-    // if no wallpaper slot is requested we are done
-    if (!wallpaperPixelSlot) {
-      return;
-    }
-
-    this.googleTag.pubads().addEventListener('slotRenderEnded', event => {
-      // dismiss all slots that are empty
-      if (event.isEmpty || !event.slot) {
-        return;
-      }
-      // check for the wallpaper coordination adSlot
-      if (event.slot.getAdUnitPath() === wallpaperPixelSlot.dfpSlot.adUnitPath) {
-        // Make the Ad--presenter an Ad--wallpaper
-        const headerAreaSlot = adSlots.find(slot => slot.dfpSlot.adUnitPath === DfpHeaderAreaSlot.adUnitPath);
-        if (headerAreaSlot) {
-          const headerArea = document.querySelector(`#${headerAreaSlot.dfpSlot.id}`);
-
-          if (headerArea) {
-            headerArea.classList.remove('Ad--presenter');
-            headerArea.classList.add('Ad--wallpaper');
-          } else {
-            this.logger.error(`[wallpaper] Could not find #${headerAreaSlot.dfpSlot.id}, but the wallpaper-pixel was delivered`);
-          }
-        } else {
-          this.logger.error('[wallpaper] no headerArea slot is defined, but the wallpaper-pixel was delivered');
-        }
       }
     });
   }
@@ -722,44 +543,6 @@ export class DfpService implements IAdNetworkService {
     return new Promise<void>(resolve => {
       window.setTimeout(resolve, timeout);
     });
-  }
-
-  private trackConsentData(consentData: IConsentData): Promise<IConsentData> {
-    // track consent string
-    this.trackService.trackEvent([ 'ub' ], 'gdpr', 'consent', consentData.consentData, '', true);
-    return Promise.resolve(consentData);
-  }
-
-  private getMarketingChannels(marketingChannel: IMarketingChannel, vertical: IVertical): {channel: string, subChannel?: string} {
-    switch (vertical.platform) {
-      case 'gf':
-        return {
-          channel: this.renameMarketingChannelNameForEmptyChannel(marketingChannel.channel),
-          subChannel: marketingChannel.subChannel
-        };
-      // The vertical don't have dynamic channel mappings.
-      // The mapping is fixed to matching IAB category
-      case 'af': return { channel: 'Automotive'};
-      case 'cf': return { channel: 'TechnologyAndComputing'};
-      case 'ff': return { channel: 'PersonalFinance'};
-      case 'gef': return { channel: 'MedicalHealth'};
-      case 'mf': return { channel: 'Automotive'};
-      case 'rf': return { channel: 'Travel'};
-      case 'sf': return { channel: 'Sports'};
-      case 'tf': return { channel: 'Uncategorized'};
-    }
-  }
-
-  /**
-   * Returns 'sonstige' if marketing channel is empty, otherwise marketing channel
-   */
-  private renameMarketingChannelNameForEmptyChannel(channel: string): string {
-    switch (channel) {
-      case '':
-        return 'sonstige';
-      default:
-        return channel;
-    }
   }
 
   private isLazySlot(slot: DfpSlot): slot is DfpSlotLazy {

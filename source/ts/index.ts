@@ -1,12 +1,12 @@
-import { AdInventoryProvider } from './ads/adInventoryProvider';
 import { DfpService } from './ads/dfpService';
-import { adPerformanceService } from './ads/adPerformanceService';
-import { IAdNetworkService } from './ads/IAdNetworkService';
-import { AdService } from './ads/adService';
 import { assetLoaderService } from './util/assetLoaderService';
 import { cookieService } from './util/cookieService';
 import { prebidjs } from './types/prebidjs';
 import { googletag } from './types/googletag';
+import { Moli } from './types/moli';
+
+import MoliLogger = Moli.MoliLogger;
+import MoliWindow = Moli.MoliWindow;
 
 /**
  * The Global Google Tag API.
@@ -19,7 +19,14 @@ interface IGlobalGoogleTagApi {
   googletag: googletag.IGoogleTag;
 }
 
-declare const window: Window & IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi;
+declare const window: Window & IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi & MoliWindow;
+
+const globalLogger: MoliLogger = {
+  debug: window.moliConfig.logger.debug || console.debug,
+  info: window.moliConfig.logger.info || console.info,
+  warn: window.moliConfig.logger.warn || console.warn,
+  error: window.moliConfig.logger.error || console.error
+};
 
 /*
  * Init ads:
@@ -27,29 +34,13 @@ declare const window: Window & IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi
  *  - ad network services (DoubleClick for Publishers (DFP))
  *  - ad service
  */
-const adInventoryProvider = new AdInventoryProvider(frontendConfig.appConfig.adConfiguration, globalLogger);
 const dfpService = new DfpService(
   window.googletag,
   window.pbjs,
-  adPerformanceService,
-  services.base.trackService, // TODO
   assetLoaderService,
   cookieService,
-  cmpService, // TODO
-  globalLogger // TODO
+  globalLogger
 );
 
-// TODO
-// Initialize adSlot <-> application communication via `postMessage` messages
-window.addEventListener('message', messageEventListener(window.location.origin, adInventoryProvider));
-
-const adServices: IAdNetworkService[] = [ dfpService ];
-const adService = new AdService(
-  adServices,
-  adInventoryProvider,
-  performanceMeasurementService, // TODO
-  frontendConfig.appConfig.vertical, // TODO
-  globalLogger // TODO
-);
-
-adService.initialize();
+dfpService.initialize(window.moliConfig.slots)
+  .then(() => window.dispatchEvent(new CustomEvent('ads.loaded')));

@@ -1,5 +1,4 @@
 import domready = require('domready');
-import { IPerformanceMeasurementService, performanceMeasurementService } from '../performanceService';
 
 export enum AssetType {
   SCRIPT, STYLE
@@ -45,18 +44,14 @@ export interface IAssetLoaderService {
 
 export class AssetLoaderService implements IAssetLoaderService {
 
-  constructor(private performanceService: IPerformanceMeasurementService) {}
-
   public loadAsset(config: ILoadAssetParams, parent: Element = document.head!): Promise<void> {
    return this.awaitDomReady()
-     .then(() => this.startPerformance(config.name))
      .then(() => {
         switch (config.loadMethod) {
           case AssetLoadMethod.FETCH: return this.loadAssetViaFetch(config, parent);
           case AssetLoadMethod.TAG: return this.loadAssetViaTag(config, parent);
         }
-     })
-     .then(() => this.measurePerformance(config.name));
+     });
   }
 
   private loadAssetViaFetch(config: ILoadAssetParams, parentElement: Element): Promise<any> {
@@ -88,8 +83,6 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 
   private loadAssetViaTag(config: ILoadAssetParams, parentElement: Element): Promise<void> {
-    this.performanceService.mark(`${config.name}_load_start`);
-
     const tag: HTMLElement = config.assetType === AssetType.SCRIPT
       ? this.scriptTagWithSrc(config.assetUrl)
       : this.linkTagWithHref(config.assetUrl);
@@ -126,19 +119,6 @@ export class AssetLoaderService implements IAssetLoaderService {
       domready(resolve);
     });
   }
-
-  private startPerformance(name: string): void {
-    this.performanceService.mark(`${name}_load_start`);
-  }
-
-  private measurePerformance(name: string): void {
-    this.performanceService.mark(`${name}_load_stop`);
-    this.performanceService.measure(
-      `${name}_load_time`,
-      `${name}_load_start`,
-      `${name}_load_stop`
-    );
-  }
 }
 
 /**
@@ -152,8 +132,8 @@ class CachedAssetLoaderService implements IAssetLoaderService {
   private assetloaderService: IAssetLoaderService;
   private cache: Map<string, Promise<void>>;
 
-  constructor(performanceService: IPerformanceMeasurementService) {
-    this.assetloaderService = new AssetLoaderService(performanceService);
+  constructor() {
+    this.assetloaderService = new AssetLoaderService();
     this.cache = new Map();
   }
 
@@ -166,6 +146,6 @@ class CachedAssetLoaderService implements IAssetLoaderService {
   }
 }
 
-export const assetLoaderService: IAssetLoaderService = new AssetLoaderService(performanceMeasurementService);
+export const assetLoaderService: IAssetLoaderService = new AssetLoaderService();
 
-export const cachedAssetLoaderService: IAssetLoaderService = new CachedAssetLoaderService(performanceMeasurementService);
+export const cachedAssetLoaderService: IAssetLoaderService = new CachedAssetLoaderService();

@@ -1,6 +1,3 @@
-import { EventType, IWindowEventObserver, IWindowEventService } from '../../dom/windowEventService';
-import { IScrollService } from '../../dom/scrollService';
-
 /**
  * == Lazy Loader ==
  *
@@ -18,32 +15,15 @@ export interface ILazyLoader {
 /**
  * When the footer is visible the lazy loading logic is triggered.
  *
- * @param scrollService
- * @param windowEventService
+ * TODO: real implementation
+ *
  * @returns {ILazyLoader} a lazy loader
  */
-export const FooterVisible = (
-  scrollService: IScrollService,
-  windowEventService: IWindowEventService,
-): ILazyLoader => {
+export const FooterVisible = (): ILazyLoader => {
 
-  let isResolved: boolean = false;
   return {
     onLoad(): Promise<void> {
-      return new Promise<void>((resolve): void => {
-        // we use the footer to determine if the ad should be displayed as the element
-        // has display:none , thus we cannot determine the visibility.
-        const footer = document.querySelector('footer');
-        const windowEventObserver: IWindowEventObserver = {
-          listener: () => {
-            if (scrollService.elementInOrAboveViewport(footer) && !isResolved) {
-              isResolved = true;
-              resolve();
-            }
-          }
-        };
-        windowEventService.register(EventType.Scroll, windowEventObserver);
-      });
+      return Promise.resolve();
     }
   };
 };
@@ -51,21 +31,15 @@ export const FooterVisible = (
 /**
  * Resolves the ad slot when the sidebar is tall enough for this ad slot.
  *
- * @see qdp-sidebar/index.ts for implementation details
+ * TODO: real implementation
+ *
  * @returns {ILazyLoader}
  */
 export const QdpSidebar2Loaded = (): ILazyLoader => {
-  let isResolved: boolean = false;
+
   return {
     onLoad(): Promise<void> {
-      return new Promise<void>((resolve): void => {
-        window.addEventListener('qdp.sidebar.2.loaded', () => {
-          if (!isResolved) {
-            isResolved = true;
-            resolve();
-          }
-        });
-      });
+      return Promise.resolve();
     }
   };
 };

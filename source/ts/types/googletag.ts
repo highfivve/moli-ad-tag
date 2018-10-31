@@ -3,7 +3,6 @@ export namespace googletag {
 
   export declare const googletag: IGoogleTag;
 
-
   export type Size = [number, number] | string;
 
   /**
