@@ -28,36 +28,15 @@
   "engines": {
     "node": ">=8.0"
   },
-  "ava": {
-    "require": [
-      "../setup-browser-env.js"
-    ],
-    "files": [
-      "./temp/**/*.test.js"
-    ],
-    "source": [
-      "./temp/**/*.js",
-      "!./temp/**/*.test.js"
-    ],
-    "concurrency": 8,
-    "failWithoutAssertions": false
-  },
   "devDependencies": {
     "@babel/core": "^7.1.0",
     "@babel/preset-env": "^7.1.0",
     "@types/domready": "^1.0.0",
-    "@types/sinon": "^5.0.5",
-    "ava": "^0.25.0",
     "babel-loader": "^8.0.2",
-    "browser-env": "^3.2.5",
     "concurrently": "^3.5.1",
     "copy-webpack-plugin": "^4.2.3",
     "fork-ts-checker-webpack-plugin": "^0.4.9",
-    "gulp": "^3.9.1",
-    "gulp-cli": "^2.0.1",
     "ignore-assets-webpack-plugin": "^2.0.0",
-    "sinon": "^7.1.0",
-    "tap-xunit": "^2.2.0",
     "ts-loader": "^4.2.0",
     "tslint": "^5.11.0",
     "tslint-loader": "^3.5.3",
