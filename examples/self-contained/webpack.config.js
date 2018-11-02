@@ -1,0 +1,41 @@
+'use strict';
+
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+
+module.exports = {
+    devtool: process.env.NODE_ENV === 'development' ? 'inline-source-map' : 'none',
+    entry: './index.ts',
+    output: {
+      filename: 'moli_[chunkHash].js'
+    },
+    module: {
+        rules: [
+            {
+                test: /\.ts$/,
+                loader: 'ts-loader'
+            }
+        ]
+    },
+    resolve: {
+        extensions: [ '.ts', '.js' ]
+    },
+    // local development
+    devServer: {
+        https: true,
+        contentBase: path.join(__dirname, 'dist'),
+        compress: true,
+        port: 9000,
+        allowedHosts: [
+            'localhost',
+            '.gutefrage.net'
+        ]
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            title: 'Publisher Demo Page',
+            template: 'demo/index.html'
+        })
+    ]
+};
