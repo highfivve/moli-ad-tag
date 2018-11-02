@@ -8,7 +8,7 @@
     "build:tag": "webpack --mode=production",
     "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../prebid/modules.json",
     "start": "yarn build:prebid && webpack-dev-server",
-    "moli:update": "yarn update moli-ad-tag",
+    "moli:update": "yarn upgrade moli-ad-tag",
     "moli:cleanCache": "yarn cache clean moli-ad-tag"
   },
   "repository": {
