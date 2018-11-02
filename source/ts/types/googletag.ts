@@ -6,6 +6,17 @@ export namespace googletag {
   export type Size = [number, number] | string;
 
   /**
+   * The Global Google Tag API.
+   */
+  export interface IGlobalGoogleTagApi {
+    /**
+     * Google Publisher Tag (gpt.js)
+     * @see {@link https://developers.google.com/doubleclick-gpt/reference}
+     */
+    googletag: googletag.IGoogleTag;
+  }
+
+  /**
    * Base service class that contains methods common for all services.
    * @template T type reference to return the proper service subclass
    */

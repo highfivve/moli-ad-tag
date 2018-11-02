@@ -16,7 +16,7 @@ export interface IAdRefreshListener {
    *
    * @param {(event: CustomEvent) => void} func
    */
-  addAdRefreshListener(func: (event: CustomEvent) => void): void;
+  addAdRefreshListener(func: EventListenerOrEventListenerObject): void;
 }
 
 
@@ -34,7 +34,7 @@ export interface IAdRefreshListener {
  */
 export class AnswerSortingChanged implements IAdRefreshListener {
 
-  addAdRefreshListener(callback: (event: CustomEvent) => void): void {
+  addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
     document.addEventListener('answers.sorting.ad.refresh', callback);
   }
 }

@@ -194,7 +194,7 @@ export class DfpSlotRefreshable extends DfpSlot {
     super();
   }
 
-  setRefeshListener(func: (event: CustomEvent) => void): void {
+  setRefeshListener(func: EventListenerOrEventListenerObject): void {
     this.refreshListener.addAdRefreshListener(func);
   }
 }

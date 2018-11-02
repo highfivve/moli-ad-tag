@@ -4,12 +4,9 @@ import { apstag } from '../types/apstag';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { DfpPrebidSlot, DfpSlot, DfpSlotLazy, DfpSlotRefreshable } from './adNetworkSlot';
-import { ICookieService } from '../util/cookieService';
-import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
+import { cookieService, ICookieService } from '../util/cookieService';
+import { assetLoaderService, AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
 import { Moli } from '../types/moli';
-
-import MoliLogger = Moli.MoliLogger;
-import IApsTag = apstag.IApsTag;
 
 /**
  * Combines the dfp slot definition along with the actual googletag.IAdSlot definition.
@@ -22,7 +19,7 @@ interface ISlotDefinition<S extends DfpSlot> {
   readonly adSlot: googletag.IAdSlot;
 }
 
-declare const window: Window & apstag.IGlobalApsTagApi;
+declare const window: Window & googletag.IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi & apstag.IGlobalApsTagApi;
 
 export class DfpService {
 
@@ -55,37 +52,38 @@ export class DfpService {
    */
   private readonly prebidReady: Promise<prebidjs.IPrebidJs>;
 
+  private config?: Moli.MoliConfig;
+
 
   /**
    *
-   * @param googleTag - inject google tag as it's loaded by an external script tag
-   * @param pbjs - inject pbjs script here for easier testing. Will be loaded by the DFP service (at least for now)
    * @param assetService - Currently needed to load amazon
    * @param cookieService - Access browser cookies
-   * @param logger - for errors and warnings
-   * @param apstag - amazon a9, optional, only for test purpose
    */
-  constructor(private googleTag: googletag.IGoogleTag,
-              private pbjs: prebidjs.IPrebidJs,
-              private assetService: IAssetLoaderService,
-              private cookieService: ICookieService,
-              private logger: MoliLogger,
-              apstag?: IApsTag) {
+  constructor(private assetService: IAssetLoaderService,
+              private cookieService: ICookieService) {
 
     // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
-    window.apstag = apstag || this.initApstag();
-    this.prebidReady = new Promise(resolve => this.pbjs.que.push(() => resolve(this.pbjs)));
+    this.initApstag();
+    this.prebidReady = this.awaitPrebidLoaded();
   }
 
   /**
-   * Initializes and shows DFP ads.
+   * Initializes and shows ads
    *
-   * @param slots             a list of potential DFP slots.
+   * @param config - the ad configuration
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize(slots: DfpSlot[]): Promise<unknown> {
+  public initialize(config: Moli.MoliConfig): Promise<unknown> {
+    if (this.config) {
+      return Promise.reject('Already initialized');
+    }
 
-    const dfpReady = this.awaitAdNetworkLoaded()
+    this.config = config;
+
+    const slots = config.slots;
+
+    const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
       .then(() => this.configureAdNetwork());
 
@@ -153,7 +151,7 @@ export class DfpService {
             return Promise.resolve(slotDefinition);
           })
           .then(({ adSlot, dfpSlot }) => {
-            this.googleTag.pubads().refresh([adSlot]);
+            window.googletag.pubads().refresh([adSlot]);
             this.showAdSlot(dfpSlot);
           })
           .catch(error => {
@@ -184,7 +182,7 @@ export class DfpService {
             ) : Promise.resolve();
 
             requestHeaderBids.then(() => {
-              this.googleTag.pubads().refresh([adSlot]);
+              window.googletag.pubads().refresh([adSlot]);
               this.showAdSlot(dfpSlot);
             });
         });
@@ -307,20 +305,31 @@ export class DfpService {
    *
    * @return {Promise<void>}
    */
-  private awaitAdNetworkLoaded(): Promise<void> {
-    return new Promise<void>(resolve => this.googleTag.cmd.push(resolve));
+  private awaitGptLoaded(): Promise<void> {
+    window.googletag = window.googletag || {};
+    window.googletag.cmd = window.googletag.cmd || [];
+    return new Promise<void>(resolve => window.googletag.cmd.push(resolve));
   }
 
-  private initApstag(): IApsTag {
-    const apstag: IApsTag = {
+  private awaitPrebidLoaded(): Promise<prebidjs.IPrebidJs> {
+    window.pbjs = window.pbjs || {};
+    window.pbjs.que = window.pbjs.que || [];
+    return  new Promise(resolve => window.pbjs.que.push(() => resolve(window.pbjs)));
+  }
+
+
+
+  private initApstag(): void {
+    if (window.apstag) {
+      return;
+    }
+    window.apstag = {
       _Q: [],
-      init: function(): void { apstag._Q.push(['i', arguments]); },
-      fetchBids: function(): void { apstag._Q.push(['f', arguments]); },
+      init: function(): void { window.apstag._Q.push(['i', arguments]); },
+      fetchBids: function(): void { window.apstag._Q.push(['f', arguments]); },
       setDisplayBids: function(): void { return; },
       targetingKeys: function(): void { return; }
     };
-
-    return apstag;
   }
 
   /**
@@ -355,10 +364,10 @@ export class DfpService {
   private configureAdNetwork(): void {
     this.setupConsentFromSourcepoint();
 
-    this.googleTag.pubads().enableAsyncRendering();
-    this.googleTag.pubads().disableInitialLoad();
-    this.googleTag.pubads().enableSingleRequest();
-    this.googleTag.enableServices();
+    window.googletag.pubads().enableAsyncRendering();
+    window.googletag.pubads().disableInitialLoad();
+    window.googletag.pubads().enableSingleRequest();
+    window.googletag.enableServices();
   }
 
   /**
@@ -371,7 +380,7 @@ export class DfpService {
     if (this.cookieService.exists('_sp_enable_dfp_personalized_ads') &&
         this.cookieService.get('_sp_enable_dfp_personalized_ads') === 'false'
     ) {
-      this.googleTag.pubads().setRequestNonPersonalizedAds(1);
+      window.googletag.pubads().setRequestNonPersonalizedAds(1);
     }
   }
 
@@ -387,7 +396,7 @@ export class DfpService {
    */
   private registerPrebidSlots(dfpPrebidSlots:  ISlotDefinition<DfpPrebidSlot>[]): void {
     const slots = dfpPrebidSlots.map(slot => slot.dfpSlot);
-    this.pbjs.addAdUnits(slots.map((slot: DfpPrebidSlot) => {
+    window.pbjs.addAdUnits(slots.map((slot: DfpPrebidSlot) => {
       return {
         code: slot.domId,
         mediaTypes: slot.mediaTypes,
@@ -397,6 +406,9 @@ export class DfpService {
   }
 
   private fetchA9Slots(slots: DfpPrebidSlot[]): Promise<void> {
+    if (slots.length === 0) {
+      return Promise.resolve();
+    }
 
     return new Promise<void>(resolve => {
       window.apstag.fetchBids({
@@ -431,7 +443,7 @@ export class DfpService {
       const dfpSlots = slotDefinitions.map(slot => slot.dfpSlot);
       const adUnitCodes = dfpSlots.map(slot => slot.domId);
 
-      this.pbjs.requestBids({
+      window.pbjs.requestBids({
         timeout: this.prebidTimeout,
         adUnitCodes: adUnitCodes,
         bidsBackHandler: (bidResponses: prebidjs.IBidResponsesMap, _timedOut: boolean) => {
@@ -442,14 +454,10 @@ export class DfpService {
               return;
             }
 
-            if (this.checkForJustPremiumWallpaper(bidResponses)) {
-              this.destroySkyscraperAdUnit(slotDefinitions);
-            }
-
             adserverRequestSent = true;
 
             // set key-values for DFP to target the correct line items
-            this.pbjs.setTargetingForGPTAsync(adUnitCodes);
+            window.pbjs.setTargetingForGPTAsync(adUnitCodes);
 
             resolve(bidResponses);
           } catch (error) {
@@ -460,28 +468,6 @@ export class DfpService {
       });
     });
 
-  }
-
-  /**
-   * Checks if bid responses contain a JustPremium bid that has the wallpaper format
-   */
-  private checkForJustPremiumWallpaper(bidResponses: prebidjs.IBidResponsesMap): boolean {
-    const adPresenterDesktop = bidResponses['ad-presenter-desktop'];
-    const justPremiumWallpaperBid = adPresenterDesktop ?
-      adPresenterDesktop.bids.filter( (presenterBid: prebidjs.IJustPremiumBidResponse) =>
-        presenterBid.bidder === prebidjs.JustPremium && presenterBid.format === prebidjs.JustPremiumWallpaper && presenterBid.cpm > 0
-      ) : [];
-    return justPremiumWallpaperBid.length !== 0;
-  }
-
-  /**
-   * Destroys the Skyscraper Ad Unit.
-   * In case of Wallpaper being served from DFP, we don't want the skyscraper Ad Unit to be served as well.
-   */
-  private destroySkyscraperAdUnit(slotDefinitions: ISlotDefinition<DfpPrebidSlot>[]): void {
-    const skyscraperAdSlot = slotDefinitions.map(slot => slot.adSlot)
-      .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === 'ad-sidebar-skyScraper');
-    this.googleTag.destroySlots(skyscraperAdSlot);
   }
 
 
@@ -500,13 +486,13 @@ export class DfpService {
     let adSlot: googletag.IAdSlot;
 
     if (dfpSlot.position === 'in-page') {
-      adSlot = this.googleTag.defineSlot(dfpSlot.adUnitPath, dfpSlot.sizes, dfpSlot.domId);
+      adSlot = window.googletag.defineSlot(dfpSlot.adUnitPath, dfpSlot.sizes, dfpSlot.domId);
     } else {
-      adSlot = this.googleTag.defineOutOfPageSlot(dfpSlot.adUnitPath, dfpSlot.domId);
+      adSlot = window.googletag.defineOutOfPageSlot(dfpSlot.adUnitPath, dfpSlot.domId);
     }
 
     adSlot.setCollapseEmptyDiv(true);
-    adSlot.addService(this.googleTag.pubads());
+    adSlot.addService(window.googletag.pubads());
     return adSlot;
   }
 
@@ -517,7 +503,7 @@ export class DfpService {
 
   private displayAd(dfpSlot: DfpSlot): void {
     this.logger.debug('Displaying' + dfpSlot.domId);
-    this.googleTag.display(dfpSlot.domId);
+    window.googletag.display(dfpSlot.domId);
   }
 
   /**
@@ -526,13 +512,13 @@ export class DfpService {
    * @returns {ISlotDefinition[]} unaltered
    */
   private refreshAds(slots: ISlotDefinition<DfpSlot>[]): ISlotDefinition<DfpSlot>[] {
-    this.googleTag.pubads().refresh(slots.map(slot => slot.adSlot));
+    window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
     return slots;
   }
 
   private showAdSlot(dfpSlot: DfpSlot): void {
     const slotElement = document.querySelector(`#${dfpSlot.domId}`);
-    this.googleTag.pubads().addEventListener('slotRenderEnded', (event: googletag.events.ISlotRenderEndedEvent) => {
+    window.googletag.pubads().addEventListener('slotRenderEnded', (event: googletag.events.ISlotRenderEndedEvent) => {
       if (!event.isEmpty && slotElement) {
         slotElement.classList.remove('u-hidden');
       }
@@ -548,4 +534,15 @@ export class DfpService {
   private isLazySlot(slot: DfpSlot): slot is DfpSlotLazy {
     return slot instanceof DfpSlotLazy;
   }
+
+  private get logger(): Moli.MoliLogger {
+    return (this.config && this.config.logger) ? this.config.logger  : {
+      debug: console.debug,
+      info:  console.info,
+      warn: console.warn,
+      error: console.error
+    };
+  }
 }
+
+export const moli = new DfpService(assetLoaderService, cookieService);

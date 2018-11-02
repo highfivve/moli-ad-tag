@@ -30,3 +30,11 @@ All projects reference top-level moli build. You can start a local project by
 
 `webpack-dev-server` is [configured with https](https://webpack.js.org/configuration/dev-server/#devserver-https) to ensure
 we have a more production like setup. The certificate is self-signed.
+
+**Known issues**
+
+- You need to run `yarn moli:update` to update moli inside an example project
+- `yarn moli:update` slowly fills your yarn cache. Run `yarn moli:cleanCache` to clean up the mess
+- Intellij needs some help to realize moli has updated
+
+Maybe try `yarn link`, which comes with other issues :/

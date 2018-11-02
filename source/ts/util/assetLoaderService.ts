@@ -121,31 +121,5 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 }
 
-/**
- * Cached version of the asset loader service.
- *
- * loadAsset will only trigger once. All following requests with the same assetUrl return the previous promise. If an
- * asset is removed after calling loadAsset it WILL NOT be loaded again!
- */
-class CachedAssetLoaderService implements IAssetLoaderService {
-
-  private assetloaderService: IAssetLoaderService;
-  private cache: Map<string, Promise<void>>;
-
-  constructor() {
-    this.assetloaderService = new AssetLoaderService();
-    this.cache = new Map();
-  }
-
-  public loadAsset(config: ILoadAssetParams): Promise<void> {
-    if (!this.cache.has(config.assetUrl)) {
-      this.cache.set(config.assetUrl, this.assetloaderService.loadAsset(config));
-    }
-
-    return this.cache.get(config.assetUrl)!;
-  }
-}
-
 export const assetLoaderService: IAssetLoaderService = new AssetLoaderService();
 
-export const cachedAssetLoaderService: IAssetLoaderService = new CachedAssetLoaderService();
