@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "license": "UNLICENSED",
   "description": "An ad tag implementation called moli",
+  "main": "source/ts/index.ts",
   "scripts": {
     "start": "yarn watch",
     "watch": "yarn clean:build && yarn build:ts:watch",
