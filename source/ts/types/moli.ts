@@ -34,7 +34,7 @@ export namespace Moli {
     };
 
     /** configurable logger */
-    readonly logger: MoliLogger;
+    readonly logger?: MoliLogger;
 
   }
 
