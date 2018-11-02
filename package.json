@@ -6,13 +6,14 @@
   "main": "source/ts/index.ts",
   "scripts": {
     "start": "yarn watch",
-    "watch": "yarn build:ts:watch",
-    "build": "yarn build:ts",
-    "build:ts": "tsc --noEmit",
-    "build:ts:watch": "tsc --noEmit --watch",
+    "watch": "yarn compile:ts:watch",
+    "compile": "yarn compile:ts",
+    "compile:ts": "tsc --noEmit",
+    "compile:ts:watch": "tsc --noEmit --watch",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json",
-    "lint:ts:fix": "tslint --project tsconfig.json --fix"
+    "lint:ts:fix": "tslint --project tsconfig.json --fix",
+    "test": "echo 'no tests yet!'"
   },
   "repository": {
     "type": "git",
