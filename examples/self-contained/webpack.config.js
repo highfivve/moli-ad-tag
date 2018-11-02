@@ -8,7 +8,7 @@ module.exports = {
     devtool: process.env.NODE_ENV === 'development' ? 'inline-source-map' : 'none',
     entry: './index.ts',
     output: {
-      filename: 'moli_[chunkHash].js'
+      filename: 'self_contained_[chunkHash].js'
     },
     module: {
         rules: [

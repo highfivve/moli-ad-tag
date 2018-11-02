@@ -14,6 +14,7 @@ pipeline {
                     nodejs('nodejs-10.10.0') {
                         echo "Setting up yarn and install dependencies"
                         sh "npm install yarn@1.10.1"
+                        sh "yarn install"
                     }
                 }
             }
@@ -21,9 +22,8 @@ pipeline {
         stage('Lint') {
             steps {
                 ansiColor('xterm') {
-                    // use the name for the nodejs installation from the 'configure tools' page
                     nodejs('nodejs-10.10.0') {
-                        sh "yarn && yarn lint"
+                        sh "yarn lint"
                     }
                 }
             }
@@ -31,9 +31,8 @@ pipeline {
         stage('Compile') {
             steps {
                 ansiColor('xterm') {
-                    // use the name for the nodejs installation from the 'configure tools' page
                     nodejs('nodejs-10.10.0') {
-                        sh "yarn && yarn compile"
+                        sh "yarn compile"
                     }
                 }
             }
@@ -41,9 +40,17 @@ pipeline {
         stage('Test') {
             steps {
                 ansiColor('xterm') {
-                    // use the name for the nodejs installation from the 'configure tools' page
                     nodejs('nodejs-10.10.0') {
-                        sh "yarn && yarn test"
+                        sh "yarn test"
+                    }
+                }
+            }
+        }
+        stage('Build examples') {
+            steps {
+                ansiColor('xterm') {
+                    nodejs('nodejs-10.10.0') {
+                        sh "yarn build:examples"
                     }
                 }
             }

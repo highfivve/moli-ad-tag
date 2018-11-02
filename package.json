@@ -13,7 +13,9 @@
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json",
     "lint:ts:fix": "tslint --project tsconfig.json --fix",
-    "test": "echo 'no tests yet!'"
+    "test": "echo 'no tests yet!'",
+    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:self-contained",
+    "build:example:self-contained": "mkdir -p dist/self-contained && cd examples/self-contained && yarn build && cp dist/* ../../dist/self-contained"
   },
   "repository": {
     "type": "git",
