@@ -23,6 +23,11 @@ export namespace prebidjs {
      */
     que: Array<Function>;
 
+    /**
+     * Prebid version
+     */
+    version: string;
+
     adserverRequestSent: boolean;
 
     /**
