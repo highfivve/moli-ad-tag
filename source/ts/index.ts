@@ -21,12 +21,13 @@ interface IGlobalGoogleTagApi {
 
 declare const window: Window & IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi & MoliWindow;
 
-const globalLogger: MoliLogger = {
-  debug: window.moliConfig.logger.debug || console.debug,
-  info: window.moliConfig.logger.info || console.info,
-  warn: window.moliConfig.logger.warn || console.warn,
-  error: window.moliConfig.logger.error || console.error
-};
+const globalLogger: MoliLogger = window.moliConfig.logger ?
+  window.moliConfig.logger : {
+    debug: console.debug,
+    info:  console.info,
+    warn: console.warn,
+    error: console.error
+  };
 
 /*
  * Init ads:
