@@ -5,6 +5,7 @@ import { prebidjs } from '../types/prebidjs';
 import { cookieService, ICookieService } from '../util/cookieService';
 import { assetLoaderService, AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
 import { createLazyLoader } from './lazyLoading';
+import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
 
 /**
@@ -135,7 +136,7 @@ class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid([{ adSlot, dfpSlot: dfpSlotLazy }], config));
+              bidRequests.push(this.initPrebid([slotDefinition], config));
             }
 
             if (dfpSlotLazy.a9) {
@@ -160,28 +161,32 @@ class DfpService implements Moli.MoliTag {
    *
    * @param {Promise<ISlotDefinition<Moli.AdSlot>[]>} displayedAdSlots
    */
-  // TODO: is this still correct compared to the old implementation? slots are not wrapped anymore
   private initRefreshableSlots(displayedAdSlots: Promise<ISlotDefinition<Moli.AdSlot>[]>, config: Moli.MoliConfig): void {
     displayedAdSlots
-      .then(registrations => registrations.filter(reg => reg.dfpSlot.behaviour === 'refreshable'))
-      .then((refreshableSlots: ISlotDefinition<Moli.AdSlot>[]) => refreshableSlots.forEach(({ adSlot, dfpSlot }) => {
-        // cast dfpSlot to DfpSlotRefreshable as we know this must be a refreshable slot
-        return Promise.reject('refreshable slots are not implemented yet');
+      .then(registrations => registrations.filter(this.isRefreshableAdSlotDefinition))
+      .then((refreshableSlots: ISlotDefinition<Moli.RefreshableAdSlot>[]) => refreshableSlots.forEach(({ adSlot, dfpSlot }) => {
+        const listener = createRefreshListener(dfpSlot.trigger);
 
-        // FIXME implement refreshable ad slots
-        // const refreshableDfpSlot = dfpSlot as Moli.RefreshableAdSlot;
-        // refreshableDfpSlot.setRefeshListener(() => {
-        //   const requestHeaderBids: Promise<any> = refreshableDfpSlot.prebid ?
-        //     Promise.all([
-        //       this.initPrebid([{ adSlot, dfpSlot: refreshableDfpSlot }], config),
-        //       this.fetchA9Slots([refreshableDfpSlot])]
-        //     ) : Promise.resolve();
+        if (listener) {
+          listener.addAdRefreshListener(() => {
+            const bidRequests: Promise<unknown>[] = [];
 
-        //   requestHeaderBids.then(() => {
-        //     window.googletag.pubads().refresh([adSlot]);
-        //     this.showAdSlot(dfpSlot);
-        //   });
-        // });
+            if (dfpSlot.prebid) {
+              bidRequests.push(this.initPrebid([{ adSlot, dfpSlot }], config));
+            }
+
+            if (dfpSlot.a9) {
+              bidRequests.push(this.fetchA9Slots([dfpSlot as Moli.A9AdSlot]));
+            }
+
+            Promise.all(bidRequests)
+              .then(() => {
+                window.googletag.pubads().refresh([adSlot]);
+              });
+          });
+        } else {
+          this.logger.error(`Invalid refreshable ad slot trigger: ${JSON.stringify(dfpSlot.trigger)}`);
+        }
       }));
   }
 
@@ -480,6 +485,10 @@ class DfpService implements Moli.MoliTag {
 
   private isLazySlot(slot: Moli.AdSlot): slot is Moli.LazyAdSlot {
     return slot.behaviour === 'lazy';
+  }
+
+  private isRefreshableAdSlotDefinition(slotDefinition: ISlotDefinition<Moli.AdSlot>): slotDefinition is ISlotDefinition<Moli.RefreshableAdSlot> {
+    return slotDefinition.dfpSlot.behaviour === 'refreshable';
   }
 
   private isPrebidSlotDefinition(slotDefinition: ISlotDefinition<Moli.AdSlot>): slotDefinition is ISlotDefinition<Moli.PrebidAdSlot> {

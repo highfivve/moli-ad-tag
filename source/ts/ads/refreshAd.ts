@@ -1,3 +1,8 @@
+import { Moli } from '../types/moli';
+import Trigger = Moli.behaviour.Trigger;
+import EventTrigger = Moli.behaviour.EventTrigger;
+import VisibleTrigger = Moli.behaviour.VisibleTrigger;
+
 /**
  * == Refresh Listener ==
  *
@@ -19,9 +24,8 @@ export interface IAdRefreshListener {
   addAdRefreshListener(func: EventListenerOrEventListenerObject): void;
 }
 
-
 /**
- * We call the callback function each time the event 'answers.sorting.ad.refresh' is triggered.
+ * We call the callback function each time the event 'trigger.event' is triggered.
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener:
  *
@@ -32,9 +36,26 @@ export interface IAdRefreshListener {
  *
  * @param {(event: CustomEvent) => void}
  */
-export class AnswerSortingChanged implements IAdRefreshListener {
+const createEventRefreshListener = (trigger: EventTrigger): IAdRefreshListener => {
+  return {
+    addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
+      document.addEventListener(trigger.event, callback);
+    }
+  };
+};
 
-  addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
-    document.addEventListener('answers.sorting.ad.refresh', callback);
+/**
+ * 
+ * @param trigger the trigger configuration for the refresh listener
+ * @returns an IAdRefreshListener if possible otherwise null
+ */
+export const createRefreshListener = (trigger: Trigger): IAdRefreshListener | null => {
+  switch (trigger.name) {
+    case 'event':
+      return createEventRefreshListener(trigger);
+    case 'visible':
+      return null;
+    default:
+      return null;
   }
-}
+};
