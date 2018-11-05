@@ -229,7 +229,7 @@ export namespace Moli {
        * 
        * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties 
        */
-      readonly adUnit: prebidjs.IAdUnit
+      readonly adUnit: prebidjs.IAdUnit;
     }
 
     export interface A9Config {

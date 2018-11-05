@@ -196,7 +196,7 @@ class DfpService implements Moli.MoliTag {
     this.logger.debug('DFP activate header bidding');
 
 
-    const prebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition)
+    const prebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition);
     const a9Slots: ISlotDefinition<Moli.A9AdSlot>[] = availableSlots.filter(this.isA9SlotDefinition);
 
     return Promise.all([this.initA9(a9Slots, config), this.initPrebid(prebidSlots, config)])
@@ -369,7 +369,7 @@ class DfpService implements Moli.MoliTag {
             slotID: slot.domId,
             slotName: slot.adUnitPath,
             // FIXME configure a9 sizes
-            sizes: [] //slot.prebidSizes() // banner sizes
+            sizes: [] // slot.prebidSizes() // banner sizes
           };
         }),
         timeout: this.a9Timeout,
