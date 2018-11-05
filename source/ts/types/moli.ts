@@ -50,9 +50,7 @@ export namespace Moli {
       readonly config: prebidjs.IPrebidJsConfig;
     };
 
-    readonly a9?: {
-      readonly timeout: number;
-    };
+    readonly a9?: headerbidding.A9Config;
 
     /** configurable logger */
     readonly logger?: MoliLogger;
@@ -76,7 +74,7 @@ export namespace Moli {
     readonly labels: string[];
   }
 
-  export interface AdSlot {
+  export interface IAdSlot {
     /** id for the ad slot element */
     readonly domId: string;
 
@@ -90,7 +88,8 @@ export namespace Moli {
     readonly position: 'in-page' | 'out-of-page';
 
     /** configure how and when the slot should be loaded */
-    readonly behaviour: behaviour.SlotLoadingBehaviour;
+    readonly behaviour: behaviour.SlotLoading;
+    // readonly behaviour: behaviour.SlotLoadingBehaviour;
 
     /**
      * Conditionally select the ad unit based on labels.
@@ -104,23 +103,74 @@ export namespace Moli {
     readonly labelAll?: string[];
 
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
-    readonly prebid?: {
-      /** 
-       * bids configuration
-       * 
-       * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties 
-       */
-      readonly bids: prebidjs.IAdUnit[]
-    };
+    readonly prebid?: headerbidding.PrebidAdSlotConfig;
 
     /** optional a9 configuration if this ad slot can also be used by a9 */
-    readonly a9?: {
-      readonly enabled: boolean;
-    };
+    readonly a9?: headerbidding.A9AdSlotConfig;
   }
+
+  // -----------------------------------------
+  // ------- Ad Slot definitions -------------
+  // -----------------------------------------
+
+  /**
+   * An ad slot which is requested during page load.
+   * This is the standard behaviour.
+   */
+  export interface EagerAdSlot extends IAdSlot {
+    readonly behaviour: 'eager';
+  }
+
+  /**
+   * An ad slot which is requested lazily.
+   * DFP offers a similar implementation, but only for "load when in view port"
+   */
+  export interface LazyAdSlot extends IAdSlot {
+    readonly behaviour: 'lazy';
+
+    /** what triggers the loading */
+    readonly trigger: behaviour.Trigger;
+  }
+
+  /**
+   * An ad slot which can be refreshed.
+   * Useful for
+   * - sorting lists that contain ads
+   * - Single page applications (SPA)
+   */
+  export interface RefreshableAdSlot extends IAdSlot {
+    readonly behaviour: 'refreshable';
+
+    /** what triggers the refresh */
+    readonly trigger: behaviour.Trigger;
+  }
+
+  /**
+   * An ad slot that should request prebid SSPs.
+   */
+  export interface PrebidAdSlot extends IAdSlot {
+    readonly prebid: headerbidding.PrebidAdSlotConfig;
+  }
+
+  /**
+   * An ad slot that should request a9 bids.
+   */
+  export interface A9AdSlot extends IAdSlot {
+    readonly a9: headerbidding.A9AdSlotConfig;
+  }
+
+  /**
+   * AdSlot type
+   * 
+   * Used for discriminating unions to make type safe assumptions about the existence
+   * or type of individual properties.
+   */
+  export type AdSlot = EagerAdSlot | LazyAdSlot | RefreshableAdSlot | PrebidAdSlot | A9AdSlot;
 
   /** slot behaviour namespace */
   export namespace behaviour {
+
+    export type SlotLoading = 'eager' | 'lazy' | 'refreshable';
 
     /** How and when should a slot be displayed */
     export type SlotLoadingBehaviour = EagerLoadingBehaviour | LazyLoadingBehaviour | RefreshableBehaviour;
@@ -171,9 +221,38 @@ export namespace Moli {
   export namespace headerbidding {
 
     /**
+     * Configuration for a prebid enabled ad slot
+     */
+    export interface PrebidAdSlotConfig {
+      /** 
+       * bids configuration
+       * 
+       * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties 
+       */
+      readonly adUnit: prebidjs.IAdUnit
+    }
+
+    export interface A9Config {
+      /**
+       * publisher ID
+       */
+      readonly pubID: string;
+
+      /**
+       * Defaults to //c.amazon-adsystem.com/aax2/apstag.js
+       */
+      readonly scriptUrl?: string;
+
+      /**
+       * bids timeout for a9
+       */
+      readonly timeout: number;
+    }
+
+    /**
      * See internal A9 apstag documentation
      */
-    export interface A9AdSlot { }
+    export interface A9AdSlotConfig { }
   }
 
   /** pluggable logger */
