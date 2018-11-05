@@ -5,6 +5,22 @@ export namespace Moli {
   export type DfpSize = [number, number] | 'fluid';
   type DfpKeyValue = { key: string, value: string[] | string };
 
+  export interface MoliTag {
+
+    /**
+     * 
+     * @param config the ad configuration
+     * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
+     */
+    initialize(config: MoliConfig): Promise<void>;
+
+    /**
+     * @returns the configuration used to initialize the ads. If not yet initialized, undefined.
+     */
+    getConfig(): MoliConfig | undefined;
+
+  }
+
   export interface MoliConfig {
 
     /** all possible ad slots */

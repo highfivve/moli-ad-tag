@@ -21,7 +21,7 @@ interface ISlotDefinition<S extends DfpSlot> {
 
 declare const window: Window & googletag.IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi & apstag.IGlobalApsTagApi;
 
-export class DfpService {
+class DfpService implements Moli.MoliTag {
 
   /**
    * The time to wait for a header bidding response before we continue to render the ads.
@@ -52,6 +52,10 @@ export class DfpService {
    */
   private readonly prebidReady: Promise<prebidjs.IPrebidJs>;
 
+  /**
+   * The moli configuration. Set by the initialize method and used to configure
+   * all ads on the current page.
+   */
   private config?: Moli.MoliConfig;
 
 
@@ -74,7 +78,7 @@ export class DfpService {
    * @param config - the ad configuration
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize(config: Moli.MoliConfig): Promise<unknown> {
+  public initialize(config: Moli.MoliConfig): Promise<void> {
     if (this.config) {
       return Promise.reject('Already initialized');
     }
@@ -107,16 +111,13 @@ export class DfpService {
         .then(slotDefinitions => this.initHeaderBidding(slotDefinitions))
         .then((adSlots: ISlotDefinition<DfpSlot>[]) => this.refreshAds(adSlots));
 
-    // handle wallpaper ads
-    const adsPromise = refreshedAds
+    return refreshedAds
+      .then(() => { return; })
       .catch(reason => this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason)));
+  }
 
-    const timeoutPromise = this.awaitDomReady()
-      .then(() => this.timeoutPromise(2000));
-
-    // we grant our ads a total of 2 seconds to load before we display the answers anyway. otherwise users on slow
-    // connections would be stuck waiting for answers for a long time.
-    return Promise.race([adsPromise, timeoutPromise]);
+  public getConfig(): Moli.MoliConfig | undefined {
+    return this.config;
   }
 
   /**
