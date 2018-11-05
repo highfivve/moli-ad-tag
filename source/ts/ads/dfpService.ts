@@ -23,11 +23,6 @@ declare const window: Window;
 
 class DfpService implements Moli.MoliTag {
 
-  /**
-   * The time to wait for a header bidding response before we continue to render the ads.
-   * @type {number} milliseconds
-   */
-  private readonly prebidTimeout: number = 1000;
   private readonly a9Timeout: number = 1000;
 
   /**
@@ -38,13 +33,6 @@ class DfpService implements Moli.MoliTag {
    * @type {number} milliseconds
    */
   private readonly consentManagementTimeout: number = 500;
-
-  /**
-   * The user sync delay for prebid.
-   *
-   * @type {number} milliesconds
-   */
-  private readonly syncDelay: number = 6000;
 
   /**
    * creates a promise that is resolved when prebid js is loaded. we initialize this as early as possible and only
@@ -413,7 +401,6 @@ class DfpService implements Moli.MoliTag {
       const adUnitCodes = dfpSlots.map(slot => slot.domId);
 
       window.pbjs.requestBids({
-        timeout: this.prebidTimeout,
         adUnitCodes: adUnitCodes,
         bidsBackHandler: (bidResponses: prebidjs.IBidResponsesMap, _timedOut: boolean) => {
           // the bids back handler seems to run on a different thread
