@@ -1,3 +1,8 @@
+import { Moli } from '../types/moli';
+import Trigger = Moli.behaviour.Trigger;
+import EventTrigger = Moli.behaviour.EventTrigger;
+import VisibleTrigger = Moli.behaviour.VisibleTrigger;
+
 /**
  * == Lazy Loader ==
  *
@@ -12,34 +17,27 @@ export interface ILazyLoader {
   onLoad(): Promise<void>;
 }
 
-/**
- * When the footer is visible the lazy loading logic is triggered.
- *
- * TODO: real implementation
- *
- * @returns {ILazyLoader} a lazy loader
- */
-export const FooterVisible = (): ILazyLoader => {
-
+const createEventLazyLoader = (trigger: EventTrigger): ILazyLoader => {
   return {
-    onLoad(): Promise<void> {
-      return Promise.resolve();
-    }
+    onLoad: () => Promise.reject(`Event trigger not implemented yet for event ${trigger.event}`)
   };
 };
 
-/**
- * Resolves the ad slot when the sidebar is tall enough for this ad slot.
- *
- * TODO: real implementation
- *
- * @returns {ILazyLoader}
- */
-export const QdpSidebar2Loaded = (): ILazyLoader => {
-
+const createVisibleLazyLoader = (trigger: VisibleTrigger): ILazyLoader => {
   return {
-    onLoad(): Promise<void> {
-      return Promise.resolve();
-    }
+    onLoad: () => Promise.reject(`Event trigger not implemented yet for domID ${trigger.domId}`)
   };
+};
+
+export const createLazyLoader = (trigger: Trigger): ILazyLoader => {
+  switch (trigger.name) {
+    case 'event':
+      return createEventLazyLoader(trigger);
+    case 'visible':
+      return createVisibleLazyLoader(trigger);
+    default:
+      return {
+        onLoad: () => Promise.reject(`Invalid trigger configuration: ${JSON.stringify(trigger)}`)
+      };
+  }
 };

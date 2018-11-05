@@ -4,6 +4,7 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { cookieService, ICookieService } from '../util/cookieService';
 import { assetLoaderService, AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
+import { createLazyLoader } from './lazyLoading';
 import { Moli } from '../types/moli';
 
 /**
@@ -117,35 +118,38 @@ class DfpService implements Moli.MoliTag {
   private initLazyLoadedSlots(lazyLoadingSlots: Promise<Moli.LazyAdSlot[]>, config: Moli.MoliConfig): void {
     lazyLoadingSlots
       .then((lazySlots: Moli.LazyAdSlot[]) => lazySlots.forEach((dfpSlotLazy) => {
-        return Promise.reject('lazy slots are not implemented yet');
 
-        // FIXME implement lazy loading
-        // dfpSlotLazy.onRefresh()
-        //   .then(() => {
-        //     if (document.getElementById(dfpSlotLazy.domId)) {
-        //       return Promise.resolve();
-        //     }
-        //     return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.domId}`);
-        //   })
-        //   .then(() => this.registerSlot(dfpSlotLazy))
-        //   .then(adSlot => {
-        //     const slotDefinition: ISlotDefinition<Moli.AdSlot> = { adSlot, dfpSlot: dfpSlotLazy };
-        //     // check if the lazy slot wraps a prebid slot and request prebid too
-        //     // only executes the necessary parts of `this.initHeaderBidding`
-        //     if (dfpSlotLazy.prebid) {
-        //       const prebid = this.initPrebid([{ adSlot, dfpSlot: dfpSlotLazy }], config);
-        //       const a9 = this.fetchA9Slots([dfpSlotLazy]);
-        //       return Promise.all([prebid, a9]).then(() => slotDefinition);
-        //     }
-        //     return Promise.resolve(slotDefinition);
-        //   })
-        //   .then(({ adSlot, dfpSlot }) => {
-        //     window.googletag.pubads().refresh([adSlot]);
-        //     this.showAdSlot(dfpSlot);
-        //   })
-        //   .catch(error => {
-        //     this.logger.error(error);
-        //   });
+        createLazyLoader(dfpSlotLazy.trigger).onLoad()
+          .then(() => {
+            if (document.getElementById(dfpSlotLazy.domId)) {
+              return Promise.resolve();
+            }
+            return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.domId}`);
+          })
+          .then(() => this.registerSlot(dfpSlotLazy))
+          .then(adSlot => {
+            const slotDefinition: ISlotDefinition<Moli.AdSlot> = { adSlot, dfpSlot: dfpSlotLazy };
+            // check if the lazy slot wraps a prebid slot and request prebid too
+            // only executes the necessary parts of `this.initHeaderBidding`
+
+            const bidRequests: Promise<unknown>[] = [];
+
+            if (dfpSlotLazy.prebid) {
+              bidRequests.push(this.initPrebid([{ adSlot, dfpSlot: dfpSlotLazy }], config));
+            }
+
+            if (dfpSlotLazy.a9) {
+              bidRequests.push(this.fetchA9Slots([dfpSlotLazy as Moli.A9AdSlot]));
+            }
+
+            return Promise.all(bidRequests).then(() => slotDefinition);
+          })
+          .then(({ adSlot, dfpSlot }) => {
+            window.googletag.pubads().refresh([adSlot]);
+          })
+          .catch(error => {
+            this.logger.error(error);
+          });
       }));
   }
 

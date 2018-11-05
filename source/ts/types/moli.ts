@@ -200,7 +200,7 @@ export namespace Moli {
     export type Trigger = EventTrigger | VisibleTrigger;
 
     /** triggers when a certain event is fired */
-    interface EventTrigger {
+    export interface EventTrigger {
       readonly name: 'event';
 
       /** the event name */
@@ -208,7 +208,7 @@ export namespace Moli {
     }
 
     /** triggers when a certain element is visible */
-    interface VisibleTrigger {
+    export interface VisibleTrigger {
       readonly name: 'visible';
 
       /** the DOM element that needs to be visible */
