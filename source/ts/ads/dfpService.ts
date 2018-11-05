@@ -23,8 +23,6 @@ declare const window: Window;
 
 class DfpService implements Moli.MoliTag {
 
-  private readonly a9Timeout: number = 1000;
-
   /**
    * The time to wait for a GDPR response from the consent management platform.
    *
@@ -140,7 +138,7 @@ class DfpService implements Moli.MoliTag {
             }
 
             if (dfpSlotLazy.a9) {
-              bidRequests.push(this.fetchA9Slots([dfpSlotLazy as Moli.A9AdSlot]));
+              bidRequests.push(this.fetchA9Slots([dfpSlotLazy as Moli.A9AdSlot], config));
             }
 
             return Promise.all(bidRequests).then(() => slotDefinition);
@@ -176,7 +174,7 @@ class DfpService implements Moli.MoliTag {
             }
 
             if (dfpSlot.a9) {
-              bidRequests.push(this.fetchA9Slots([dfpSlot as Moli.A9AdSlot]));
+              bidRequests.push(this.fetchA9Slots([dfpSlot as Moli.A9AdSlot], config));
             }
 
             Promise.all(bidRequests)
@@ -244,7 +242,7 @@ class DfpService implements Moli.MoliTag {
 
     return Promise.resolve(a9Slots)
       .then((slots: ISlotDefinition<Moli.A9AdSlot>[]) => slots.map(slot => slot.dfpSlot))
-      .then((slots: Moli.A9AdSlot[]) => this.fetchA9Slots(slots))
+      .then((slots: Moli.A9AdSlot[]) => this.fetchA9Slots(slots, config))
       .catch(reason => this.logger.warn(reason));
   }
 
@@ -366,8 +364,8 @@ class DfpService implements Moli.MoliTag {
     }));
   }
 
-  private fetchA9Slots(slots: Moli.A9AdSlot[]): Promise<void> {
-    if (slots.length === 0) {
+  private fetchA9Slots(slots: Moli.A9AdSlot[], config: Moli.MoliConfig): Promise<void> {
+    if (config.a9 || slots.length === 0) {
       return Promise.resolve();
     }
 
@@ -381,7 +379,8 @@ class DfpService implements Moli.MoliTag {
             sizes: [] // slot.prebidSizes() // banner sizes
           };
         }),
-        timeout: this.a9Timeout,
+        // TODO we need to find a way to make sure that the config object is not reset after initialization
+        timeout: config.a9 ? config.a9.timeout : 1000,
       }, (_bids: Object[]) => {
         window.apstag.setDisplayBids();
         resolve();
