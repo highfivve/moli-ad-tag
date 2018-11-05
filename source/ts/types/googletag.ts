@@ -18,14 +18,14 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotRenderEnded',  listener: (event: events.ISlotRenderEndedEvent) => void): T;
+    addEventListener(eventType: 'slotRenderEnded', listener: (event: events.ISlotRenderEndedEvent) => void): T;
 
     /**
      * This event is fired when an impression becomes viewable, according to the Active View criteria
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'impressionViewable',  listener: (event: events.IImpressionViewableEvent) => void): T;
+    addEventListener(eventType: 'impressionViewable', listener: (event: events.IImpressionViewableEvent) => void): T;
 
     /**
      * This event is fired when the creative's iframe fires its load event. When rendering rich media ads in sync
@@ -33,7 +33,7 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotOnload',  listener: (event: events.ISlotOnloadEvent) => void): T;
+    addEventListener(eventType: 'slotOnload', listener: (event: events.ISlotOnloadEvent) => void): T;
 
     /**
      * This event is fired whenever the on-screen percentage of an ad slot's area changes.
@@ -41,7 +41,7 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotVisibilityChanged',  listener: (event: events.ISlotVisibilityChangedEvent) => void): T;
+    addEventListener(eventType: 'slotVisibilityChanged', listener: (event: events.ISlotVisibilityChangedEvent) => void): T;
 
     /**
      * Get the list of slots associated with this service.
@@ -124,7 +124,7 @@ export namespace googletag {
      *        such that requests with the same correlator received close together will be considered
      *        a single page view. By default a new correlator is generated for every refresh.
      */
-    refresh(slots?: IAdSlot[], options?: {changeCorrelator: boolean}): void;
+    refresh(slots?: IAdSlot[], options?: { changeCorrelator: boolean }): void;
 
     /**
      * Configures whether the page should request personalized or non-personalized ads. Personalized ads served by
@@ -328,6 +328,7 @@ export namespace googletag {
 
 }
 
+/* tslint:disable:interface-name */
 declare global {
 
   /**
@@ -341,3 +342,4 @@ declare global {
     googletag: googletag.IGoogleTag;
   }
 }
+/* tslint:enable:interface-name */

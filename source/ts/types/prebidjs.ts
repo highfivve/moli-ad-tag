@@ -250,7 +250,7 @@ export namespace prebidjs {
        *
        * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
        */
-      defaultRates: {'USD': {'EUR': number}};
+      defaultRates: { 'USD': { 'EUR': number } };
     };
   }
 
@@ -367,7 +367,7 @@ export namespace prebidjs {
    * The bidder code is used to identify the different SSPs.
    */
   export type BidderCode = typeof Criteo | typeof AppNexusAst | typeof ImproveDigital | typeof IndexExchange | typeof JustPremium |
-                           typeof NanoInteractive | typeof PubMatic | typeof OpenX | typeof SmartAdServer | typeof Unruly | typeof Teads;
+    typeof NanoInteractive | typeof PubMatic | typeof OpenX | typeof SmartAdServer | typeof Unruly | typeof Teads;
 
   /**
    * A bid object.
@@ -393,7 +393,7 @@ export namespace prebidjs {
   export interface ICriteoParams {
     readonly zoneId: number;
   }
-  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
+  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> { }
 
 
   export interface IAppNexusASTKeyword {
@@ -494,7 +494,7 @@ export namespace prebidjs {
   /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> {}
+  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> { }
 
   /**
    * ImproveDigital bid parameters.
@@ -557,11 +557,11 @@ export namespace prebidjs {
    *            stay empty.
    */
   export type JustPremiumFormat = typeof JustPremiumPushUpBillboard |
-                                  typeof JustPremiumPushDownBillboard |
-                                  typeof JustPremiumFloorAd |
-                                  typeof JustPremiumSideAd |
-                                  typeof JustPremiumWallpaper |
-                                  typeof JustPremiumMobileScroller;
+    typeof JustPremiumPushDownBillboard |
+    typeof JustPremiumFloorAd |
+    typeof JustPremiumSideAd |
+    typeof JustPremiumWallpaper |
+    typeof JustPremiumMobileScroller;
 
   /**
    * JustPremium bid parameters
@@ -603,7 +603,7 @@ export namespace prebidjs {
     readonly adSlot: string;
   }
 
-  export interface IPubMaticBid  extends IBidObject<typeof PubMatic, IPubMaticParams> { }
+  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> { }
 
 
   /**
@@ -781,7 +781,7 @@ export namespace prebidjs {
   /**
    * The Object returned by the bidsBackHandler when requesting the Prebidjs bids.
    */
-  export interface IBidResponsesMap  {
+  export interface IBidResponsesMap {
     /**
      * The adUnit code, e.g. 'ad-presenter-desktop'
      */
@@ -938,7 +938,7 @@ export namespace prebidjs {
   }
 }
 
-
+/* tslint:disable:interface-name */
 declare global {
 
   /**
@@ -952,3 +952,4 @@ declare global {
     pbjs: prebidjs.IPrebidJs;
   }
 }
+/* tslint:enable:interface-name */

@@ -52,7 +52,7 @@ export namespace Moli {
 
     readonly a9?: {
       readonly timeout: number;
-    }
+    };
 
     /** configurable logger */
     readonly logger?: MoliLogger;

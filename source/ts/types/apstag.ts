@@ -104,7 +104,7 @@ export namespace apstag {
   }
 }
 
-
+/* tslint:disable:interface-name */
 declare global {
 
   /**
@@ -118,3 +118,4 @@ declare global {
     apstag: apstag.IApsTag;
   }
 }
+/* tslint:enable:interface-name */

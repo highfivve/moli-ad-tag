@@ -246,11 +246,9 @@ class DfpService implements Moli.MoliTag {
   }
 
   private configurePrebid(pbjs: prebidjs.IPrebidJs, config: Moli.MoliConfig): Promise<void> {
-    return new Promise<void>(resolve => {
-      config.prebid ? pbjs.setConfig(config.prebid.config) : {};
-      resolve();
-    });
-
+    return new Promise<prebidjs.IPrebidJsConfig>((resolve, reject) => {
+      config.prebid ? resolve(config.prebid.config) : reject('Configure prebid without a prebid configuration is not allowed');
+    }).then(prebidConfig => pbjs.setConfig(prebidConfig));
   }
 
   private initA9(dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[]): Promise<void> {
