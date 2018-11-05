@@ -49,7 +49,7 @@ export abstract class DfpSlot implements Moli.AdSlot {
   /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
   public readonly prebid?: {
     /** bids configuration */
-    readonly bids: Moli.headerbidding.PrebidAdUnit[]
+    readonly bids: prebidjs.IAdUnit[]
   };
 
   /** optional a9 configuration if this ad slot can also be used by a9 */

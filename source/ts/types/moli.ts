@@ -1,4 +1,5 @@
 /* tslint:disable:interface-name */
+import { prebidjs } from './prebidjs';
 
 export namespace Moli {
 
@@ -46,8 +47,12 @@ export namespace Moli {
     readonly prebid?: {
 
       /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
-      readonly config: headerbidding.PrebidConfig;
+      readonly config: prebidjs.IPrebidJsConfig;
     };
+
+    readonly a9?: {
+      readonly timeout: number;
+    }
 
     /** configurable logger */
     readonly logger?: MoliLogger;
@@ -100,8 +105,12 @@ export namespace Moli {
 
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
     readonly prebid?: {
-      /** bids configuration */
-      readonly bids: headerbidding.PrebidAdUnit[]
+      /** 
+       * bids configuration
+       * 
+       * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties 
+       */
+      readonly bids: prebidjs.IAdUnit[]
     };
 
     /** optional a9 configuration if this ad slot can also be used by a9 */
@@ -160,24 +169,11 @@ export namespace Moli {
 
   /** header bidding types */
   export namespace headerbidding {
-    /**
-     * Prebid configuration
-     * http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
-     */
-    export interface PrebidConfig {
-    }
-
-    /**
-     * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties
-     */
-    export interface PrebidAdUnit {
-    }
 
     /**
      * See internal A9 apstag documentation
      */
-    export interface A9AdSlot {
-    }
+    export interface A9AdSlot { }
   }
 
   /** pluggable logger */

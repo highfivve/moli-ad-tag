@@ -93,7 +93,7 @@ class DfpService implements Moli.MoliTag {
 
     // concurrently initialize lazy loaded slots
     const lazySlots: Promise<DfpSlotLazy[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
-    this.initLazyLoadedSlots(lazySlots);
+    this.initLazyLoadedSlots(lazySlots, config);
 
     // eagerly displayed slots
     const eagerlyLoadedSlots = dfpReady
@@ -104,11 +104,11 @@ class DfpService implements Moli.MoliTag {
       .then((registeredSlots: ISlotDefinition<DfpSlot>[]) => this.displayAds(registeredSlots));
 
     // initialize refreshable slots
-    this.initRefreshableSlots(eagerlyLoadedSlots);
+    this.initRefreshableSlots(eagerlyLoadedSlots, config);
 
     // We wait for a prebid response and then refresh.
     const refreshedAds: Promise<ISlotDefinition<DfpSlot>[]> = eagerlyLoadedSlots
-      .then(slotDefinitions => this.initHeaderBidding(slotDefinitions))
+      .then(slotDefinitions => this.initHeaderBidding(slotDefinitions, config))
       .then((adSlots: ISlotDefinition<DfpSlot>[]) => this.refreshAds(adSlots));
 
     return refreshedAds
@@ -128,7 +128,7 @@ class DfpService implements Moli.MoliTag {
    *
    * @param lazyLoadingSlots
    */
-  private initLazyLoadedSlots(lazyLoadingSlots: Promise<DfpSlotLazy[]>): void {
+  private initLazyLoadedSlots(lazyLoadingSlots: Promise<DfpSlotLazy[]>, config: Moli.MoliConfig): void {
     lazyLoadingSlots
       .then((lazySlots: DfpSlotLazy[]) => lazySlots.forEach((dfpSlotLazy) => {
 
@@ -145,7 +145,7 @@ class DfpService implements Moli.MoliTag {
             // check if the lazy slot wraps a prebid slot and request prebid too
             // only executes the necessary parts of `this.initHeaderBidding`
             if (dfpSlotLazy instanceof DfpPrebidSlot) {
-              const prebid = this.initPrebid([{ adSlot, dfpSlot: dfpSlotLazy }]);
+              const prebid = this.initPrebid([{ adSlot, dfpSlot: dfpSlotLazy }], config);
               const a9 = this.fetchA9Slots([dfpSlotLazy]);
               return Promise.all([prebid, a9]).then(() => slotDefinition);
             }
@@ -169,7 +169,7 @@ class DfpService implements Moli.MoliTag {
    * @param {Promise<ISlotDefinition<DfpSlot>[]>} displayedAdSlots
    */
   // TODO: is this still correct compared to the old implementation? slots are not wrapped anymore
-  private initRefreshableSlots(displayedAdSlots: Promise<ISlotDefinition<DfpSlot>[]>): void {
+  private initRefreshableSlots(displayedAdSlots: Promise<ISlotDefinition<DfpSlot>[]>, config: Moli.MoliConfig): void {
     displayedAdSlots
       .then(registrations => registrations.filter(reg => reg.dfpSlot instanceof DfpSlotRefreshable))
       .then((refreshableSlots: ISlotDefinition<DfpSlot>[]) => refreshableSlots.forEach(({ adSlot, dfpSlot }) => {
@@ -178,7 +178,7 @@ class DfpService implements Moli.MoliTag {
         refreshableDfpSlot.setRefeshListener(() => {
           const requestHeaderBids: Promise<any> = refreshableDfpSlot instanceof DfpPrebidSlot ?
             Promise.all([
-              this.initPrebid([{ adSlot, dfpSlot: refreshableDfpSlot }]),
+              this.initPrebid([{ adSlot, dfpSlot: refreshableDfpSlot }], config),
               this.fetchA9Slots([refreshableDfpSlot])]
             ) : Promise.resolve();
 
@@ -201,7 +201,7 @@ class DfpService implements Moli.MoliTag {
    * @param availableSlots
    * @returns returns the unaltered adSlot definitions
    */
-  private initHeaderBidding(availableSlots: ISlotDefinition<DfpSlot>[]): Promise<ISlotDefinition<DfpSlot>[]> {
+  private initHeaderBidding(availableSlots: ISlotDefinition<DfpSlot>[], config: Moli.MoliConfig): Promise<ISlotDefinition<DfpSlot>[]> {
     this.logger.debug('DFP activate header bidding');
 
     // https://stackoverflow.com/questions/43118692/typescript-filter-out-nulls-from-an-array
@@ -220,7 +220,7 @@ class DfpService implements Moli.MoliTag {
       .filter(notEmpty)
       ;
 
-    return Promise.all([this.initA9(dfpPrebidSlots), this.initPrebid(dfpPrebidSlots)])
+    return Promise.all([this.initA9(dfpPrebidSlots), this.initPrebid(dfpPrebidSlots, config)])
       .then(() => availableSlots);
   }
 
@@ -234,9 +234,9 @@ class DfpService implements Moli.MoliTag {
    * @param {Promise<ISlotDefinition<DfpPrebidSlot>[]>} dfpPrebidSlots
    * @returns {Promise<void>}
    */
-  private initPrebid(dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[]): Promise<prebidjs.IBidResponsesMap> {
+  private initPrebid(dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
     return this.prebidReady
-      .then((pbjs) => this.configurePrebid(pbjs))
+      .then((pbjs) => this.configurePrebid(pbjs, config))
       .then(() => this.registerPrebidSlots(dfpPrebidSlots))
       .then(() => this.requestPrebid(dfpPrebidSlots))
       .catch(reason => {
@@ -245,42 +245,12 @@ class DfpService implements Moli.MoliTag {
       });
   }
 
-  private configurePrebid(pbjs: prebidjs.IPrebidJs): Promise<void> {
+  private configurePrebid(pbjs: prebidjs.IPrebidJs, config: Moli.MoliConfig): Promise<void> {
     return new Promise<void>(resolve => {
-      pbjs.setConfig({
-        bidderTimeout: this.prebidTimeout,
-        consentManagement: {
-          timeout: this.consentManagementTimeout,
-          allowAuctionWithoutConsent: true
-        },
-        userSync: {
-          syncDelay: this.syncDelay,
-          filterSettings: {
-            // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
-            iframe: {
-              bidders: [prebidjs.PubMatic, prebidjs.OpenX, prebidjs.SmartAdServer],
-              filter: 'include'
-            },
-            // by default, prebid enables the image sync for all SSPs. We make it explicit here.
-            image: {
-              bidders: ['*'],
-              filter: 'include'
-            }
-          }
-        },
-        currency: {
-          adServerCurrency: 'EUR',
-          granularityMultiplier: 1,
-          // taken from: https://currency.prebid.org/latest.json
-          defaultRates: {
-            'USD': {
-              'EUR': 0.8695652174
-            }
-          }
-        }
-      });
+      config.prebid ? pbjs.setConfig(config.prebid.config) : {};
       resolve();
     });
+
   }
 
   private initA9(dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[]): Promise<void> {
