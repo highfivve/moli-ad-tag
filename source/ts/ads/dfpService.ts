@@ -238,6 +238,12 @@ class DfpService implements Moli.MoliTag {
   }
 
   private initA9(a9Slots: ISlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig): Promise<void> {
+    // no a9 configured
+    if (!config.a9) {
+      return Promise.resolve();
+    }
+
+    // TODO make sure the a9 script is only loaded once! Probably move this somewhere earlier in the initialization
     this.loadA9Script(config); // load a9 script, but we don't have to wait until loaded
 
     return Promise.resolve(a9Slots)
