@@ -206,8 +206,6 @@ declare global {
      * the global moli tag definition
      */
     moli: Moli.MoliTag;
-
-    foo: string;
   }
 }
 
