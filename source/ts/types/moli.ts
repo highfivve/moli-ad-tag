@@ -193,8 +193,21 @@ export namespace Moli {
 
   }
 
-  export interface MoliWindow {
-    moliConfig: Moli.MoliConfig;
+}
+
+declare global {
+
+  /**
+   * Add moli to the global Window instance
+   */
+  interface Window {
+
+    /**
+     * the global moli tag definition
+     */
+    moli: Moli.MoliTag;
+
+    foo: string;
   }
 }
 

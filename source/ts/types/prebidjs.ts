@@ -4,16 +4,6 @@
  * @see {@link http://prebid.org/dev-docs/publisher-api-reference.html}
  */
 export namespace prebidjs {
-  /**
-   * The Global PrebidJs API.
-   */
-  export interface IGlobalPrebidJsApi {
-
-    /**
-     * global prebid.js object
-     */
-    pbjs: prebidjs.IPrebidJs;
-  }
 
   export interface IPrebidJs {
 
@@ -945,5 +935,20 @@ export namespace prebidjs {
   export interface IAdServerTargeting {
     readonly key: string;
     val(bidResponse: IBidResponse): string;
+  }
+}
+
+
+declare global {
+
+  /**
+   * Add pbjs to the global Window instance
+   */
+  interface Window {
+
+    /**
+     * global prebid.js object
+     */
+    pbjs: prebidjs.IPrebidJs;
   }
 }

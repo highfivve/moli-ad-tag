@@ -1,20 +1,7 @@
 // type definitions for DFP googletag
 export namespace googletag {
 
-  export declare const googletag: IGoogleTag;
-
   export type Size = [number, number] | string;
-
-  /**
-   * The Global Google Tag API.
-   */
-  export interface IGlobalGoogleTagApi {
-    /**
-     * Google Publisher Tag (gpt.js)
-     * @see {@link https://developers.google.com/doubleclick-gpt/reference}
-     */
-    googletag: googletag.IGoogleTag;
-  }
 
   /**
    * Base service class that contains methods common for all services.
@@ -339,4 +326,18 @@ export namespace googletag {
     getTargeting(key: string): string[];
   }
 
+}
+
+declare global {
+
+  /**
+   * Add googletag to global window instance
+   */
+  interface Window {
+    /**
+     * Google Publisher Tag (gpt.js)
+     * @see {@link https://developers.google.com/doubleclick-gpt/reference}
+     */
+    googletag: googletag.IGoogleTag;
+  }
 }

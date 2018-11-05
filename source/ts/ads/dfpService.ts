@@ -19,7 +19,7 @@ interface ISlotDefinition<S extends DfpSlot> {
   readonly adSlot: googletag.IAdSlot;
 }
 
-declare const window: Window & googletag.IGlobalGoogleTagApi & prebidjs.IGlobalPrebidJsApi & apstag.IGlobalApsTagApi;
+declare const window: Window;
 
 class DfpService implements Moli.MoliTag {
 
@@ -547,3 +547,4 @@ class DfpService implements Moli.MoliTag {
 }
 
 export const moli = new DfpService(assetLoaderService, cookieService);
+window.moli = moli;

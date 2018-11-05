@@ -1,17 +1,5 @@
 export namespace apstag {
 
-  export declare const apstag: IApsTag;
-
-  /**
-   * The Global ApsTag (Amazon A9) API
-   */
-  export interface IGlobalApsTagApi {
-    /**
-     * global apstag object
-     */
-    apstag: apstag.IApsTag;
-  }
-
   export interface IApsTag {
 
     /**
@@ -113,5 +101,20 @@ export namespace apstag {
      * The sizes to consider in the auction for this slot
      */
     sizes: [number, number][];
+  }
+}
+
+
+declare global {
+
+  /**
+   * Add the ApsTag (Amazon A9) API to the global Window instance
+   */
+  interface Window {
+
+    /**
+     * global apstag object
+     */
+    apstag: apstag.IApsTag;
   }
 }
