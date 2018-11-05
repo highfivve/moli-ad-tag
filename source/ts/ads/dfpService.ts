@@ -65,7 +65,7 @@ class DfpService implements Moli.MoliTag {
    * @param cookieService - Access browser cookies
    */
   constructor(private assetService: IAssetLoaderService,
-              private cookieService: ICookieService) {
+    private cookieService: ICookieService) {
 
     // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
     this.initApstag();
@@ -108,8 +108,8 @@ class DfpService implements Moli.MoliTag {
 
     // We wait for a prebid response and then refresh.
     const refreshedAds: Promise<ISlotDefinition<DfpSlot>[]> = eagerlyLoadedSlots
-        .then(slotDefinitions => this.initHeaderBidding(slotDefinitions))
-        .then((adSlots: ISlotDefinition<DfpSlot>[]) => this.refreshAds(adSlots));
+      .then(slotDefinitions => this.initHeaderBidding(slotDefinitions))
+      .then((adSlots: ISlotDefinition<DfpSlot>[]) => this.refreshAds(adSlots));
 
     return refreshedAds
       .then(() => { return; })
@@ -141,11 +141,11 @@ class DfpService implements Moli.MoliTag {
           })
           .then(() => this.registerSlot(dfpSlotLazy))
           .then(adSlot => {
-            const slotDefinition: ISlotDefinition<DfpSlot> = {adSlot, dfpSlot: dfpSlotLazy};
+            const slotDefinition: ISlotDefinition<DfpSlot> = { adSlot, dfpSlot: dfpSlotLazy };
             // check if the lazy slot wraps a prebid slot and request prebid too
             // only executes the necessary parts of `this.initHeaderBidding`
             if (dfpSlotLazy instanceof DfpPrebidSlot) {
-              const prebid = this.initPrebid([{adSlot, dfpSlot: dfpSlotLazy}]);
+              const prebid = this.initPrebid([{ adSlot, dfpSlot: dfpSlotLazy }]);
               const a9 = this.fetchA9Slots([dfpSlotLazy]);
               return Promise.all([prebid, a9]).then(() => slotDefinition);
             }
@@ -172,22 +172,22 @@ class DfpService implements Moli.MoliTag {
   private initRefreshableSlots(displayedAdSlots: Promise<ISlotDefinition<DfpSlot>[]>): void {
     displayedAdSlots
       .then(registrations => registrations.filter(reg => reg.dfpSlot instanceof DfpSlotRefreshable))
-      .then((refreshableSlots: ISlotDefinition<DfpSlot>[]) => refreshableSlots.forEach(({adSlot, dfpSlot}) => {
+      .then((refreshableSlots: ISlotDefinition<DfpSlot>[]) => refreshableSlots.forEach(({ adSlot, dfpSlot }) => {
         // cast dfpSlot to DfpSlotRefreshable as we know this must be a refreshable slot
         const refreshableDfpSlot = dfpSlot as DfpSlotRefreshable;
-          refreshableDfpSlot.setRefeshListener(() => {
+        refreshableDfpSlot.setRefeshListener(() => {
           const requestHeaderBids: Promise<any> = refreshableDfpSlot instanceof DfpPrebidSlot ?
             Promise.all([
-              this.initPrebid([{adSlot, dfpSlot: refreshableDfpSlot}]),
+              this.initPrebid([{ adSlot, dfpSlot: refreshableDfpSlot }]),
               this.fetchA9Slots([refreshableDfpSlot])]
             ) : Promise.resolve();
 
-            requestHeaderBids.then(() => {
-              window.googletag.pubads().refresh([adSlot]);
-              this.showAdSlot(dfpSlot);
-            });
+          requestHeaderBids.then(() => {
+            window.googletag.pubads().refresh([adSlot]);
+            this.showAdSlot(dfpSlot);
+          });
         });
-    }));
+      }));
   }
 
   /**
@@ -210,15 +210,15 @@ class DfpService implements Moli.MoliTag {
     };
 
     const dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[] = availableSlots
-      .map(({adSlot, dfpSlot}) => {
+      .map(({ adSlot, dfpSlot }) => {
         // TODO: is this correct compared to the previous implementation?
-          if (dfpSlot instanceof  DfpPrebidSlot || dfpSlot instanceof DfpPrebidSlot) {
-            return {adSlot, dfpSlot: dfpSlot};
-          }
-          return null;
+        if (dfpSlot instanceof DfpPrebidSlot || dfpSlot instanceof DfpPrebidSlot) {
+          return { adSlot, dfpSlot: dfpSlot };
+        }
+        return null;
       })
       .filter(notEmpty)
-    ;
+      ;
 
     return Promise.all([this.initA9(dfpPrebidSlots), this.initPrebid(dfpPrebidSlots)])
       .then(() => availableSlots);
@@ -287,7 +287,7 @@ class DfpService implements Moli.MoliTag {
     this.loadA9Script(); // load a9 script, but we don't have to wait until loaded
 
     return Promise.resolve(dfpPrebidSlots)
-      .then((slots:  ISlotDefinition<DfpPrebidSlot>[]) => slots.map(slot => slot.dfpSlot))
+      .then((slots: ISlotDefinition<DfpPrebidSlot>[]) => slots.map(slot => slot.dfpSlot))
       .then((slots: DfpPrebidSlot[]) => this.fetchA9Slots(slots))
       .catch(reason => this.logger.warn(reason));
   }
@@ -315,7 +315,7 @@ class DfpService implements Moli.MoliTag {
   private awaitPrebidLoaded(): Promise<prebidjs.IPrebidJs> {
     window.pbjs = window.pbjs || {};
     window.pbjs.que = window.pbjs.que || [];
-    return  new Promise(resolve => window.pbjs.que.push(() => resolve(window.pbjs)));
+    return new Promise(resolve => window.pbjs.que.push(() => resolve(window.pbjs)));
   }
 
 
@@ -326,10 +326,10 @@ class DfpService implements Moli.MoliTag {
     }
     window.apstag = {
       _Q: [],
-      init: function(): void { window.apstag._Q.push(['i', arguments]); },
-      fetchBids: function(): void { window.apstag._Q.push(['f', arguments]); },
-      setDisplayBids: function(): void { return; },
-      targetingKeys: function(): void { return; }
+      init: function (): void { window.apstag._Q.push(['i', arguments]); },
+      fetchBids: function (): void { window.apstag._Q.push(['f', arguments]); },
+      setDisplayBids: function (): void { return; },
+      targetingKeys: function (): void { return; }
     };
   }
 
@@ -379,7 +379,7 @@ class DfpService implements Moli.MoliTag {
    */
   private setupConsentFromSourcepoint(): void {
     if (this.cookieService.exists('_sp_enable_dfp_personalized_ads') &&
-        this.cookieService.get('_sp_enable_dfp_personalized_ads') === 'false'
+      this.cookieService.get('_sp_enable_dfp_personalized_ads') === 'false'
     ) {
       window.googletag.pubads().setRequestNonPersonalizedAds(1);
     }
@@ -395,7 +395,7 @@ class DfpService implements Moli.MoliTag {
    * @param dfpPrebidSlots that should be registered
    * @returns the unaltered prebid slots
    */
-  private registerPrebidSlots(dfpPrebidSlots:  ISlotDefinition<DfpPrebidSlot>[]): void {
+  private registerPrebidSlots(dfpPrebidSlots: ISlotDefinition<DfpPrebidSlot>[]): void {
     const slots = dfpPrebidSlots.map(slot => slot.dfpSlot);
     window.pbjs.addAdUnits(slots.map((slot: DfpPrebidSlot) => {
       return {
@@ -479,7 +479,7 @@ class DfpService implements Moli.MoliTag {
     }
 
     return slots.map((slot: DfpSlot) => {
-      return {dfpSlot: slot, adSlot: this.registerSlot(slot)};
+      return { dfpSlot: slot, adSlot: this.registerSlot(slot) };
     });
   }
 
@@ -498,7 +498,7 @@ class DfpService implements Moli.MoliTag {
   }
 
   private displayAds(slots: ISlotDefinition<DfpSlot>[]): ISlotDefinition<DfpSlot>[] {
-    slots.forEach((definition: ISlotDefinition<DfpSlot>) =>  this.displayAd(definition.dfpSlot));
+    slots.forEach((definition: ISlotDefinition<DfpSlot>) => this.displayAd(definition.dfpSlot));
     return slots;
   }
 
@@ -537,9 +537,9 @@ class DfpService implements Moli.MoliTag {
   }
 
   private get logger(): Moli.MoliLogger {
-    return (this.config && this.config.logger) ? this.config.logger  : {
+    return (this.config && this.config.logger) ? this.config.logger : {
       debug: console.debug,
-      info:  console.info,
+      info: console.info,
       warn: console.warn,
       error: console.error
     };

@@ -46,7 +46,7 @@ export namespace Moli {
     readonly prebid?: {
 
       /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
-      readonly config: headerbidding.PrebidConfig | (() => headerbidding.PrebidConfig);
+      readonly config: headerbidding.PrebidConfig;
     };
 
     /** configurable logger */
