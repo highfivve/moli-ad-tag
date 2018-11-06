@@ -867,40 +867,40 @@ export namespace prebidjs {
   export interface IBidderSettings {
 
     /** used as a fallback if the SSP has no custom bidder settings */
-    readonly standard: IBidderSetting;
+    readonly standard?: IBidderSetting;
 
     /** criteo bidder settings */
-    readonly criteo: IBidderSetting;
+    readonly criteo?: IBidderSetting;
 
     /** appNexus bidder settings */
-    readonly appnexusAst: IBidderSetting;
+    readonly appnexusAst?: IBidderSetting;
 
     /** improveDigital bidder settings */
-    readonly improvedigital: IBidderSetting;
+    readonly improvedigital?: IBidderSetting;
 
     /** indexExchange bidder settings */
-    readonly ix: IBidderSetting;
+    readonly ix?: IBidderSetting;
 
     /** nano interactive bidder settings */
-    readonly nanoInteractive: IBidderSetting;
+    readonly nanoInteractive?: IBidderSetting;
 
     /** just premium bidder settings */
-    readonly justpremium: IBidderSetting;
+    readonly justpremium?: IBidderSetting;
 
     /** PubMatic bidder settings */
-    readonly pubmatic: IBidderSetting;
+    readonly pubmatic?: IBidderSetting;
 
     /** OpenX bidder settings */
-    readonly openx: IBidderSetting;
+    readonly openx?: IBidderSetting;
 
     /** Smart AdServer bidder settings */
-    readonly smartadserver: IBidderSetting;
+    readonly smartadserver?: IBidderSetting;
 
     /** unruly bidder settings */
-    readonly unruly: IBidderSetting;
+    readonly unruly?: IBidderSetting;
 
     /** teads bidder settings */
-    readonly teads: IBidderSetting;
+    readonly teads?: IBidderSetting;
   }
 
   /**
