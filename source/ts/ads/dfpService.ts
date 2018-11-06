@@ -2,6 +2,7 @@ import domready = require('domready');
 
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
+import  '../types/apstag';
 import { cookieService, ICookieService } from '../util/cookieService';
 import { assetLoaderService, AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
 import { createLazyLoader } from './lazyLoading';
