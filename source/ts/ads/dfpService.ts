@@ -64,7 +64,7 @@ class DfpService implements Moli.MoliTag {
    * @param config - the ad configuration
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize(config: Moli.MoliConfig): Promise<void> {
+  public initialize = (config: Moli.MoliConfig): Promise<void> => {
     if (this.config) {
       return Promise.reject('Already initialized');
     }
@@ -102,7 +102,7 @@ class DfpService implements Moli.MoliTag {
       .catch(reason => this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason)));
   }
 
-  public getConfig(): Moli.MoliConfig | undefined {
+  public getConfig = (): Moli.MoliConfig | undefined => {
     return this.config;
   }
 
@@ -514,5 +514,13 @@ class DfpService implements Moli.MoliTag {
   }
 }
 
-export const moli = new DfpService(assetLoaderService, cookieService);
+const dfpService = new DfpService(assetLoaderService, cookieService);
+
+/**
+ * Only export the public API and hide properties and methods in the DFP Service
+ */
+export const moli: Moli.MoliTag = {
+  initialize: dfpService.initialize,
+  getConfig: dfpService.getConfig
+};
 window.moli = moli;
