@@ -16,7 +16,8 @@
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "test:junit": "mocha --reporter mocha-junit-reporter -r ts-node/register tests/**/*.test.ts",
     "build:examples": "rm -rf dist && mkdir dist && yarn build:example:self-contained",
-    "build:example:self-contained": "mkdir -p dist/self-contained && cd examples/self-contained && yarn install && yarn build && cp dist/* ../../dist/self-contained"
+    "build:example:self-contained": "mkdir -p dist/self-contained && cd examples/self-contained && yarn install && yarn build && cp dist/* ../../dist/self-contained",
+    "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/"
   },
   "repository": {
     "type": "git",
@@ -42,6 +43,7 @@
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-loader": "^3.5.3",
+    "typedoc": "^0.13.0",
     "typescript": "^3.1.6",
     "webpack": "^4.22.0",
     "webpack-cli": "^3.1.1"

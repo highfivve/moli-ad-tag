@@ -4,6 +4,8 @@ pipeline {
     environment {
         CI = "jenkins"
         PATH = "${WORKSPACE}/node_modules/.bin/:${PATH}"
+        HDFS_PATH_API_DOCS = "/mesos/moli/api-docs/${BUILD_NUMBER}"
+        DOCS_FILE = "docs.tar.gz"
     }
 
     stages {
@@ -51,6 +53,19 @@ pipeline {
                 ansiColor('xterm') {
                     nodejs('nodejs-10.10.0') {
                         sh "yarn build:examples"
+                    }
+                }
+            }
+        }
+        stage('API docs') {
+            steps {
+                ansiColor('xterm') {
+                    nodejs('nodejs-10.10.0') {
+                        sh "yarn docs"
+                        sh "tar -zcvf ${DOCS_FILE} -C docs ."
+                        echo "Publishing to ${HDFS_PATH_API_DOCS}"
+                        sh "httpfs-cdh5 put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
+                        sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_API_DOCS} --bind=docsFile=${DOCS_FILE}  gfaurora/frontend/prod/moli-api-docs docs.aurora"
                     }
                 }
             }

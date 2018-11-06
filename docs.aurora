@@ -1,0 +1,36 @@
+fetch = Process(
+    name='Fetch from HDFS',
+    cmdline="""
+        /usr/local/bin/httpfs-cdh5 copyToLocal {{hdfsPath}}/{{docsFile}} .
+        tar -xf {{docsFile}} --strip-components=1
+        rm {{docsFile}}
+    """
+)
+
+runHttpServer = Process(
+    name='webserver',
+    cmdline="python -m SimpleHTTPServer {{thermos.ports[http]}}"
+)
+
+task = SequentialTask(
+    name = 'moli-api-docs',
+    processes = [fetch, runHttpServer],
+    resources=Resources(cpu=0.1, ram=64 * MB, disk=32 * MB)
+)
+
+healthcheckconfig = HealthCheckConfig(
+    health_checker = HealthCheckerConfig(
+        http = HttpHealthChecker(endpoint = '/index.html', expected_response_code = 200)
+    ),
+    initial_interval_secs=20,
+    interval_secs=10,
+    timeout_secs=5
+)
+updateconfig = UpdateConfig(batch_size=1)
+announce = Announcer(primary_port='http')
+
+jobs = [
+    Service(announce = announce, task = task, update_config = updateconfig, health_check_config = healthcheckconfig,
+            cluster = 'gfaurora', role = 'frontend', environment = 'prod', name = 'moli-api-docs',
+            instances = 1, constraints = { 'host': 'limit:1', 'dedicated' : 'frontend'})
+]

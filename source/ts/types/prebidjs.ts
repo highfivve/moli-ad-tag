@@ -1,7 +1,7 @@
 /**
  * Api Reference for Prebid.js
  *
- * @see {@link http://prebid.org/dev-docs/publisher-api-reference.html}
+ * @see http://prebid.org/dev-docs/publisher-api-reference.html
  */
 export namespace prebidjs {
 
