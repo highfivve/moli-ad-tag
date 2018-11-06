@@ -101,11 +101,11 @@ class DfpService implements Moli.MoliTag {
     return refreshedAds
       .then(() => { return; })
       .catch(reason => this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason)));
-  }
+  };
 
   public getConfig = (): Moli.MoliConfig | undefined => {
     return this.config;
-  }
+  };
 
   /**
    * Lazy loaded slots.
