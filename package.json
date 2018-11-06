@@ -14,6 +14,7 @@
     "lint:ts": "tslint --project tsconfig.json",
     "lint:ts:fix": "tslint --project tsconfig.json --fix",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
+    "test:junit": "mocha --reporter mocha-junit-reporter -r ts-node/register tests/**/*.test.ts",
     "build:examples": "rm -rf dist && mkdir dist && yarn build:example:self-contained",
     "build:example:self-contained": "mkdir -p dist/self-contained && cd examples/self-contained && yarn install && yarn build && cp dist/* ../../dist/self-contained"
   },
@@ -35,6 +36,7 @@
     "browser-env": "^3.2.5",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
+    "mocha-junit-reporter": "^1.18.0",
     "sinon": "^7.1.1",
     "ts-loader": "^5.2.2",
     "ts-node": "^7.0.1",

@@ -41,7 +41,7 @@ pipeline {
             steps {
                 ansiColor('xterm') {
                     nodejs('nodejs-10.10.0') {
-                        sh "yarn test"
+                        sh "yarn test:junit"
                     }
                 }
             }
@@ -58,8 +58,7 @@ pipeline {
     }
     post {
         always {
-            // FIXME don't allow empty results
-            junit allowEmptyResults: true, testResults: '**/test-report.xml'
+            junit allowEmptyResults: false, testResults: '**/test-report.xml'
         }
     }
 }
