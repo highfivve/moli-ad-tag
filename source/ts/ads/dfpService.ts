@@ -22,7 +22,7 @@ interface ISlotDefinition<S extends Moli.AdSlot> {
 
 declare const window: Window;
 
-class DfpService implements Moli.MoliTag {
+export class DfpService implements Moli.MoliTag {
 
   /**
    * The time to wait for a GDPR response from the consent management platform.
@@ -32,12 +32,6 @@ class DfpService implements Moli.MoliTag {
    * @type {number} milliseconds
    */
   private readonly consentManagementTimeout: number = 500;
-
-  /**
-   * creates a promise that is resolved when prebid js is loaded. we initialize this as early as possible and only
-   * once to avoid race conditions in tests and unnecessary promise creations
-   */
-  private readonly prebidReady: Promise<prebidjs.IPrebidJs>;
 
   /**
    * The moli configuration. Set by the initialize method and used to configure
@@ -53,10 +47,6 @@ class DfpService implements Moli.MoliTag {
    */
   constructor(private assetService: IAssetLoaderService,
     private cookieService: ICookieService) {
-
-    // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
-    this.initApstag();
-    this.prebidReady = this.awaitPrebidLoaded();
   }
 
   /**
@@ -70,6 +60,10 @@ class DfpService implements Moli.MoliTag {
       return Promise.reject('Already initialized');
     }
 
+    // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
+    this.initApstag();
+    const prebidReady = this.awaitPrebidLoaded();
+
     this.config = config;
 
     const slots = config.slots;
@@ -78,9 +72,12 @@ class DfpService implements Moli.MoliTag {
       .then(() => this.awaitDomReady())
       .then(() => this.configureAdNetwork());
 
-    // concurrently initialize lazy loaded slots
+    // concurrently initialize lazy loaded slots and refreshable slots
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
-    this.initLazyLoadedSlots(lazySlots, config);
+    prebidReady.then(() =>  {
+      this.initRefreshableSlots(eagerlyLoadedSlots, config);
+      this.initLazyLoadedSlots(lazySlots, config);
+    });
 
     // eagerly displayed slots
     const eagerlyLoadedSlots = dfpReady
@@ -90,11 +87,10 @@ class DfpService implements Moli.MoliTag {
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots))
       .then((registeredSlots: ISlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots));
 
-    // initialize refreshable slots
-    this.initRefreshableSlots(eagerlyLoadedSlots, config);
 
     // We wait for a prebid response and then refresh.
-    const refreshedAds: Promise<ISlotDefinition<Moli.AdSlot>[]> = eagerlyLoadedSlots
+    const refreshedAds: Promise<ISlotDefinition<Moli.AdSlot>[]> = prebidReady
+      .then(() => eagerlyLoadedSlots)
       .then(slotDefinitions => this.initHeaderBidding(slotDefinitions, config))
       .then((adSlots: ISlotDefinition<Moli.AdSlot>[]) => this.refreshAds(adSlots));
 
@@ -135,7 +131,7 @@ class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid([slotDefinition], config));
+              bidRequests.push(this.initPrebid( [slotDefinition], config));
             }
 
             if (dfpSlotLazy.a9) {
@@ -171,7 +167,7 @@ class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlot.prebid) {
-              bidRequests.push(this.initPrebid([{ adSlot, dfpSlot }], config));
+              bidRequests.push(this.initPrebid( [{ adSlot, dfpSlot }], config));
             }
 
             if (dfpSlot.a9) {
@@ -222,8 +218,8 @@ class DfpService implements Moli.MoliTag {
    * @returns {Promise<void>}
    */
   private initPrebid(dfpPrebidSlots: ISlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
-    return this.prebidReady
-      .then((pbjs) => this.configurePrebid(pbjs, config))
+    return  Promise.resolve()
+      .then((pbjs) => this.configurePrebid(window.pbjs, config))
       .then(() => this.registerPrebidSlots(dfpPrebidSlots))
       .then(() => this.requestPrebid(dfpPrebidSlots))
       .catch(reason => {
@@ -481,12 +477,6 @@ class DfpService implements Moli.MoliTag {
   private refreshAds(slots: ISlotDefinition<Moli.AdSlot>[]): ISlotDefinition<Moli.AdSlot>[] {
     window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
     return slots;
-  }
-
-  private timeoutPromise(timeout: number): Promise<void> {
-    return new Promise<void>(resolve => {
-      window.setTimeout(resolve, timeout);
-    });
   }
 
   private isLazySlot(slot: Moli.AdSlot): slot is Moli.LazyAdSlot {
