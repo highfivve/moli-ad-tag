@@ -5,8 +5,10 @@ browserEnv(['window', 'document']);
 import { expect } from 'chai';
 import { moli } from '../../../source/ts/ads/dfpService';
 
+// tslint:disable: no-unused-expression
 describe('moli', () => {
   it('should have been exported', () => {
     expect(moli).to.be.ok;
   });
 });
+// tslint:enable
