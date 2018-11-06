@@ -1,9 +1,9 @@
 import browserEnv = require('browser-env');
 
-browserEnv([ 'window', 'document' ]);
+browserEnv(['window', 'document']);
 
 import { expect } from 'chai';
-import { moli } from './dfpService';
+import { moli } from '../../../source/ts/ads/dfpService';
 
 describe('moli', () => {
   it('should have been exported', () => {
