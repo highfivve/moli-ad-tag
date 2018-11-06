@@ -5,10 +5,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 
 module.exports = {
-    devtool: process.env.NODE_ENV === 'development' ? 'inline-source-map' : 'none',
+    devtool: process.env.NODE_ENV === 'production' ? 'none' : 'inline-source-map',
     entry: './index.ts',
     output: {
-      filename: 'self_contained_[chunkHash].js'
+        filename: 'self_contained_[chunkHash].js'
     },
     module: {
         rules: [
@@ -20,7 +20,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: [ '.ts', '.js' ]
+        extensions: ['.ts', '.js']
     },
     // local development
     devServer: {
