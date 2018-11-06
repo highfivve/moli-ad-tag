@@ -255,16 +255,46 @@ export namespace Moli {
     export interface A9AdSlotConfig { }
   }
 
-  /** pluggable logger */
+  /**
+   * == Logger interface ==
+   *
+   * The default logging implementation uses `window.console` as the output.
+   * Publishers may plugin their own logging implementation.
+   *
+   */
   export interface MoliLogger {
 
-    debug(msg: string): void;
+    /**
+     * Log a debug message
+     *
+     * @param message
+     * @param optionalParams - effect depends on the implementation
+     */
+    debug(message?: any, ...optionalParams: any[]): void;
 
-    info(msg: string): void;
+    /**
+     * Log a info message
+     *
+     * @param message
+     * @param optionalParams - effect depends on the implementation
+     */
+    info(message?: any, ...optionalParams: any[]): void;
 
-    warn(msg: string): void;
+    /**
+     * Log a warning
+     *
+     * @param message
+     * @param optionalParams - effect depends on the implementation
+     */
+    warn(message?: any, ...optionalParams: any[]): void;
 
-    error(msg: string): void;
+    /**
+     * Log an error
+     *
+     * @param message
+     * @param optionalParams - effect depends on the implementation
+     */
+    error(message?: any, ...optionalParams: any[]): void;
 
   }
 
