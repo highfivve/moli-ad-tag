@@ -11,7 +11,9 @@ export namespace prebidjs {
      * Command queue on the `pbjs` window object.
      * All functions will be executed once pbjs is loaded.
      */
-    que: Array<Function>;
+    que: {
+      push(callback: Function): void;
+    };
 
     /**
      * Prebid version

@@ -212,7 +212,9 @@ export namespace googletag {
      * This mechanism allows GPT to reduce perceived latency by fetching the JavaScript asynchronously
      * while allowing the browser to continue rendering the page.
      */
-    cmd: Array<Function>;
+    cmd: {
+      push(callback: Function): void;
+    };
 
     /**
      * Returns a reference to the pubads service.
