@@ -469,7 +469,7 @@ class DfpService implements Moli.MoliTag {
   }
 
   private displayAd(dfpSlot: Moli.AdSlot): void {
-    this.logger.debug('Displaying' + dfpSlot.domId);
+    this.logger.debug(`Displaying ${dfpSlot.domId}`);
     window.googletag.display(dfpSlot.domId);
   }
 

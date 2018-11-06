@@ -3,7 +3,7 @@ import { prebidjs } from './prebidjs';
 
 export namespace Moli {
 
-  export type DfpSize = [number, number] | 'fluid';
+  export type DfpSlotSize = [number, number] | 'fluid';
   type DfpKeyValue = { key: string, value: string[] | string };
 
   export interface MoliTag {
@@ -36,7 +36,7 @@ export namespace Moli {
 
     /**
      * Size configuration to support "responsive" ads.
-     * This is an alternative solution to custom () => DfpSize[] functions and is taken
+     * This is an alternative solution to custom () => DfpSlotSize[] functions and is taken
      * from prebid.js.
      *
      * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
@@ -82,7 +82,7 @@ export namespace Moli {
     readonly adUnitPath: string;
 
     /** the sizes for this ad slot */
-    readonly sizes: DfpSize[];
+    readonly sizes: DfpSlotSize[];
 
     /** is this a dfp out-of-page (interstitial) slot or not */
     readonly position: 'in-page' | 'out-of-page';
