@@ -5,7 +5,11 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2015",
-    "lib": [ "dom", "es6", "scripthost" ]
+    "lib": [ "dom", "es6", "scripthost" ],
+    "baseUrl": ".",
+    "paths": {
+      "browser-env": [ "source/ts/types/browserEnv" ]
+    }
   },
   "include": [
     "source/**/*"
