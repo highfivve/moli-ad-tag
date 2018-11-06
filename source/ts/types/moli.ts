@@ -4,7 +4,7 @@ import { prebidjs } from './prebidjs';
 export namespace Moli {
 
   export type DfpSlotSize = [number, number] | 'fluid';
-  type DfpKeyValue = { key: string, value: string[] | string };
+  export type DfpKeyValue = { key: string, value: string[] | string };
 
   export interface MoliTag {
 

@@ -2,12 +2,13 @@ import domready = require('domready');
 
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
-import  '../types/apstag';
+import '../types/apstag';
 import { cookieService, ICookieService } from '../util/cookieService';
 import { assetLoaderService, AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
+import DfpKeyValue = Moli.DfpKeyValue;
 
 /**
  * Combines the dfp slot definition along with the actual googletag.IAdSlot definition.
@@ -70,7 +71,7 @@ export class DfpService implements Moli.MoliTag {
 
     const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
-      .then(() => this.configureAdNetwork());
+      .then(() => this.configureAdNetwork(config.targeting ? config.targeting.keyValues : []));
 
     // concurrently initialize lazy loaded slots and refreshable slots
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
@@ -86,7 +87,6 @@ export class DfpService implements Moli.MoliTag {
       // configure slots with gpt
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots))
       .then((registeredSlots: ISlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots));
-
 
     // We wait for a prebid response and then refresh.
     const refreshedAds: Promise<ISlotDefinition<Moli.AdSlot>[]> = prebidReady
@@ -131,7 +131,7 @@ export class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid( [slotDefinition], config));
+              bidRequests.push(this.initPrebid([ slotDefinition ], config));
             }
 
             if (dfpSlotLazy.a9) {
@@ -167,7 +167,7 @@ export class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlot.prebid) {
-              bidRequests.push(this.initPrebid( [{ adSlot, dfpSlot }], config));
+              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot } ], config));
             }
 
             if (dfpSlot.a9) {
@@ -199,7 +199,6 @@ export class DfpService implements Moli.MoliTag {
   private initHeaderBidding(availableSlots: ISlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig): Promise<ISlotDefinition<Moli.AdSlot>[]> {
     this.logger.debug('DFP activate header bidding');
 
-
     const prebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition);
     const a9Slots: ISlotDefinition<Moli.A9AdSlot>[] = availableSlots.filter(this.isA9SlotDefinition);
 
@@ -218,7 +217,7 @@ export class DfpService implements Moli.MoliTag {
    * @returns {Promise<void>}
    */
   private initPrebid(dfpPrebidSlots: ISlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
-    return  Promise.resolve()
+    return Promise.resolve()
       .then((pbjs) => this.configurePrebid(window.pbjs, config))
       .then(() => this.registerPrebidSlots(dfpPrebidSlots))
       .then(() => this.requestPrebid(dfpPrebidSlots))
@@ -322,7 +321,9 @@ export class DfpService implements Moli.MoliTag {
     });
   }
 
-  private configureAdNetwork(): void {
+  private configureAdNetwork(keyValuePairs: DfpKeyValue[]): void {
+    keyValuePairs.forEach(kv => window.googletag.pubads().setTargeting(kv.key, kv.value));
+
     this.setupConsentFromSourcepoint();
 
     window.googletag.pubads().enableAsyncRendering();
