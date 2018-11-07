@@ -14,13 +14,29 @@ export const pubAdsServiceStub: googletag.IPubAdsService = {
   }
 };
 
-export const googleAdSlotStub: googletag.IAdSlot = {
-  setTargeting: (_key: string, _value: string | string[]): googletag.IAdSlot => { return googleAdSlotStub; },
-  getTargeting: (_key: string): string[] => { return []; },
-  setCollapseEmptyDiv: (_doCollapse: boolean, _collapseBeforeAdFetch: boolean): void => { return; },
-  getSlotElementId: () => { throw new Error('stub getSlotElementID'); },
-  getAdUnitPath: () => { throw new Error('stub getAdUnitPath'); },
-  addService: (_service: googletag.IService<any>): void => { return; }
+export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
+
+  const stub: googletag.IAdSlot = {
+    setTargeting: (_key: string, _value: string | string[]): googletag.IAdSlot => {
+      return stub;
+    },
+    getTargeting: (_key: string): string[] => {
+      return [];
+    },
+    setCollapseEmptyDiv: (_doCollapse: boolean, _collapseBeforeAdFetch: boolean): void => {
+      return;
+    },
+    getSlotElementId: () => {
+      return slotId;
+    },
+    getAdUnitPath: () => {
+      return adUnitPath;
+    },
+    addService: (_service: googletag.IService<any>): void => {
+      return;
+    }
+  };
+  return stub;
 };
 
 export const googletagStub: googletag.IGoogleTag = {
@@ -28,8 +44,8 @@ export const googletagStub: googletag.IGoogleTag = {
     // execute every callback instantly
     push: (callback: Function) => { callback(); }
   },
-  defineSlot: (_adUnitPath: string, _size: googletag.Size[], _slotId: string): googletag.IAdSlot => { return googleAdSlotStub; },
-  defineOutOfPageSlot: (_adUnitPath: string, _slotId: string): googletag.IAdSlot => { return googleAdSlotStub; },
+  defineSlot: (adUnitPath: string, _size: googletag.Size[], slotId: string): googletag.IAdSlot => { return googleAdSlotStub(adUnitPath, slotId); },
+  defineOutOfPageSlot: (adUnitPath: string, slotId: string): googletag.IAdSlot => { return googleAdSlotStub(adUnitPath, slotId); },
   destroySlots: (_opt_slots: googletag.IAdSlot[]): void => { return; },
   display: (_id: string): void => { return; },
   enableServices: (): void => { return; },
