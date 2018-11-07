@@ -2,14 +2,19 @@ import browserEnv = require('browser-env');
 
 browserEnv([ 'window', 'document' ]);
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
+import { prebidjs } from '../../../source/ts';
 import { DfpService, moli } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
 import { assetLoaderService } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
 import { googletagStub } from '../stubs/googletagStubs';
-import { pbjsStub } from '../stubs/prebidjsStubs';
+import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
+
+// setup sinon-chai
+use(sinonChai);
 
 // tslint:disable: no-unused-expression
 describe('moli', () => {
@@ -102,20 +107,57 @@ describe('DfpService', () => {
         });
       });
 
-      it.skip('should add prebidjs adUnits', () => {
+      it('should add prebidjs adUnits', () => {
         const dfpService = newDfpService();
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          }
+        };
+
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ] ]
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig
         };
 
+        const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
+        const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
+        const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
+
         return dfpService.initialize({
-          slots: [ adSlot ]
+          slots: [ adSlot ],
+          prebid: { config: pbjsTestConfig }
         }).then(() => {
-          console.log('got promise');
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ prebidAdslotConfig.adUnit ]);
+
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])).and(
+              Sinon.match.has('bidsBackHandler', Sinon.match.defined)
+            )
+          );
+
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnce;
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])
+          );
         });
       });
     });
@@ -128,7 +170,7 @@ describe('DfpService', () => {
       window.pbjs = pbjsStub;
     });
 
-    it('should set correct targeting values', (done: Mocha.Done) => {
+    it('should set correct targeting values', () => {
       const setTargetingStub = sandbox.stub(window.googletag.pubads(), 'setTargeting');
 
       const adConfiguration: Moli.MoliConfig = {
@@ -142,13 +184,11 @@ describe('DfpService', () => {
         sizeConfig: []
       };
 
-      moli.initialize(adConfiguration)
+      return moli.initialize(adConfiguration)
         .then(() => {
-          expect(setTargetingStub.callCount).to.be.eq(2);
-          expect(setTargetingStub.firstCall.args).to.be.deep.equal([ 'gfversion', [ 'v2016' ] ]);
-          expect(setTargetingStub.secondCall.args).to.be.deep.equal([ 'sprechstunde', 'true' ]);
-
-          done();
+          expect(setTargetingStub).to.be.calledTwice;
+          expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals([ 'v2016' ]));
+          expect(setTargetingStub).to.be.calledWith('sprechstunde',  'true');
         });
     });
   });

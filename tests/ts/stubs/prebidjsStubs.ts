@@ -19,3 +19,17 @@ export const pbjsStub: prebidjs.IPrebidJs = {
   setConfig: (_config: prebidjs.IPrebidJsConfig): void => { return; },
   setTargetingForGPTAsync: (_adUnits: string[]): void => { return; }
 };
+
+
+export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
+  bidderTimeout: 500,
+  currency: {
+    adServerCurrency: 'EUR',
+    granularityMultiplier: 1,
+    defaultRates: {
+      USD: {
+        EUR: 0.812
+      }
+    }
+  }
+};

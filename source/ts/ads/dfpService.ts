@@ -220,9 +220,17 @@ export class DfpService implements Moli.MoliTag {
    * @returns {Promise<void>}
    */
   private initPrebid(dfpPrebidSlots: ISlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
+    const prebidSlots = dfpPrebidSlots.filter(this.isPrebidSlotDefinition);
+
+    if (prebidSlots.length === 0) {
+      return Promise.resolve({});
+    }
+
+
     return Promise.resolve()
-      .then((pbjs) => this.configurePrebid(window.pbjs, config))
-      .then(() => this.registerPrebidSlots(dfpPrebidSlots))
+      // FIXME make sure this is only initialized once!
+      .then(() => this.configurePrebid(window.pbjs, config))
+      .then(() => this.registerPrebidSlots(prebidSlots))
       .then(() => this.requestPrebid(dfpPrebidSlots))
       .catch(reason => {
         this.logger.warn(reason);
@@ -359,14 +367,13 @@ export class DfpService implements Moli.MoliTag {
    * @param dfpPrebidSlots that should be registered
    * @returns the unaltered prebid slots
    */
-  private registerPrebidSlots(dfpPrebidSlots: ISlotDefinition<Moli.AdSlot>[]): void {
+  private registerPrebidSlots(dfpPrebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[]): void {
     const slots = dfpPrebidSlots.map(slot => slot.dfpSlot);
-    window.pbjs.addAdUnits(slots.map((slot: Moli.AdSlot) => {
+    window.pbjs.addAdUnits(slots.map((slot: Moli.PrebidAdSlot) => {
       return {
         code: slot.domId,
-        // TODO make the access to the prebid object without forcing no-null check
-        mediaTypes: slot.prebid!.adUnit.mediaTypes,
-        bids: slot.prebid!.adUnit.bids
+        mediaTypes: slot.prebid.adUnit.mediaTypes,
+        bids: slot.prebid.adUnit.bids
       };
     }));
   }
