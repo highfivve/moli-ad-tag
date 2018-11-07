@@ -335,26 +335,10 @@ export class DfpService implements Moli.MoliTag {
   private configureAdNetwork(keyValuePairs: DfpKeyValue[]): void {
     keyValuePairs.forEach(kv => window.googletag.pubads().setTargeting(kv.key, kv.value));
 
-    this.setupConsentFromSourcepoint();
-
     window.googletag.pubads().enableAsyncRendering();
     window.googletag.pubads().disableInitialLoad();
     window.googletag.pubads().enableSingleRequest();
     window.googletag.enableServices();
-  }
-
-  /**
-   * If the user has opted out of personalized ads via our consent management platform (sourcepoint),
-   * we configure gpt accordingly. By default gpt will serve personalized ads.
-   *
-   * This ensure that a user needs to opt out and we don't block any ad calls.
-   */
-  private setupConsentFromSourcepoint(): void {
-    if (this.cookieService.exists('_sp_enable_dfp_personalized_ads') &&
-      this.cookieService.get('_sp_enable_dfp_personalized_ads') === 'false'
-    ) {
-      window.googletag.pubads().setRequestNonPersonalizedAds(1);
-    }
   }
 
   private filterAvailableSlots(slots: Moli.AdSlot[]): Moli.AdSlot[] {
