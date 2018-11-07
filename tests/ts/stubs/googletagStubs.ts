@@ -40,6 +40,7 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
 };
 
 export const googletagStub: googletag.IGoogleTag = {
+  pubadsReady: true,
   cmd: {
     // execute every callback instantly
     push: (callback: Function) => { callback(); }

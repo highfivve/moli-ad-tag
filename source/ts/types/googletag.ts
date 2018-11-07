@@ -217,6 +217,12 @@ export namespace googletag {
     };
 
     /**
+     * Flag indicating that Pubads service is enabled, loaded and fully operational. This property will be simply
+     * undefined until googletag.enableServices() is called and Pubads service is loaded and initialized.
+     */
+    pubadsReady: boolean | undefined;
+
+    /**
      * Returns a reference to the pubads service.
      */
     pubads(): IPubAdsService;
