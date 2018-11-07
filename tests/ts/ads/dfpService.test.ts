@@ -129,13 +129,7 @@ describe('DfpService', () => {
     });
 
     it('should set correct targeting values', (done: Mocha.Done) => {
-      const setTargetingStub = Sinon.stub(window.googletag.pubads(), 'setTargeting');
-
-      // stub gpt loaded
-      Sinon.stub(window.googletag.cmd, 'push').callsFake((fn: Function) => fn());
-
-      // stub pbjs (prebid) loaded
-      Sinon.stub(window.pbjs.que, 'push').callsFake((fn: Function) => fn());
+      const setTargetingStub = sandbox.stub(window.googletag.pubads(), 'setTargeting');
 
       const adConfiguration: Moli.MoliConfig = {
         slots: [],
