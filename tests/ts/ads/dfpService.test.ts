@@ -59,12 +59,14 @@ describe('DfpService', () => {
 
     const getElementByIdStub = sandbox.stub(document, 'getElementById');
     const googletagDefineSlotStub = sandbox.stub(window.googletag, 'defineSlot');
+    const googletagDefineOutOfPageSlotStub = sandbox.stub(window.googletag, 'defineOutOfPageSlot');
     const pubAdsServiceStubRefreshStub = sandbox.stub(pubAdsServiceStub, 'refresh');
 
     beforeEach(() => {
       getElementByIdStub.returns({});
       googletagDefineSlotStub.callThrough();
       pubAdsServiceStubRefreshStub.callThrough();
+      googletagDefineOutOfPageSlotStub.callThrough();
     });
 
     describe('regular slots', () => {
@@ -107,6 +109,28 @@ describe('DfpService', () => {
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnce;
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnce;
+        });
+      });
+
+      it('should register and refresh eagerly loaded out-of-page slot', () => {
+        const dfpService = newDfpService();
+
+        getElementByIdStub.returns({});
+
+        const adSlot: Moli.AdSlot = {
+          position: 'out-of-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ ]
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ]
+        }).then(() => {
+          expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.domId);
           expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnce;
         });
       });
