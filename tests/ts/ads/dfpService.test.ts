@@ -49,15 +49,44 @@ describe('DfpService', () => {
 
   describe('ad slot registration', () => {
 
+    window.googletag = googletagStub;
+    window.pbjs = pbjsStub;
+
+    const getElementByIdStub = sandbox.stub(document, 'getElementById');
+    const googletagDefineSlotStub = sandbox.stub(window.googletag, 'defineSlot');
+
     beforeEach(() => {
-      window.googletag = googletagStub;
-      window.pbjs = pbjsStub;
+      getElementByIdStub.returns({});
+      googletagDefineSlotStub.callThrough();
     });
 
     describe('regular slots', () => {
 
+      it('should filter slots if not present in the DOM', () => {
+        const dfpService = newDfpService();
+
+        getElementByIdStub.returns(null);
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'not-available',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ]
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ]
+        }).then(() => {
+          expect(googletagDefineSlotStub.called).to.be.false;
+        });
+      });
+
       it('should register and refresh eagerly loaded slots', () => {
         const dfpService = newDfpService();
+
+        getElementByIdStub.returns({});
+
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
@@ -69,11 +98,12 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ]
         }).then(() => {
-          console.log('got promise');
+          expect(googletagDefineSlotStub.called).to.be.true;
         });
       });
 
-      it('should add prebidjs adUnits', () => {
+
+      it.skip('should add prebidjs adUnits', () => {
         const dfpService = newDfpService();
         const adSlot: Moli.AdSlot = {
           position: 'in-page',

@@ -14,13 +14,22 @@ export const pubAdsServiceStub: googletag.IPubAdsService = {
   }
 };
 
+export const googleAdSlotStub: googletag.IAdSlot = {
+  setTargeting: (_key: string, _value: string | string[]): googletag.IAdSlot => { return googleAdSlotStub; },
+  getTargeting: (_key: string): string[] => { return []; },
+  setCollapseEmptyDiv: (_doCollapse: boolean, _collapseBeforeAdFetch: boolean): void => { return; },
+  getSlotElementId: () => { throw new Error('stub getSlotElementID'); },
+  getAdUnitPath: () => { throw new Error('stub getAdUnitPath'); },
+  addService: (_service: googletag.IService<any>): void => { return; }
+};
+
 export const googletagStub: googletag.IGoogleTag = {
   cmd: {
     // execute every callback instantly
     push: (callback: Function) => { callback(); }
   },
-  defineSlot: (_adUnitPath: string, _size: googletag.Size[], _slotId: string): googletag.IAdSlot => { throw new Error('stub'); },
-  defineOutOfPageSlot: (_adUnitPath: string, _slotId: string): googletag.IAdSlot => { throw new Error('stub'); },
+  defineSlot: (_adUnitPath: string, _size: googletag.Size[], _slotId: string): googletag.IAdSlot => { return googleAdSlotStub; },
+  defineOutOfPageSlot: (_adUnitPath: string, _slotId: string): googletag.IAdSlot => { return googleAdSlotStub; },
   destroySlots: (_opt_slots: googletag.IAdSlot[]): void => { return; },
   display: (_id: string): void => { return; },
   enableServices: (): void => { return; },

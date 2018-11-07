@@ -96,7 +96,10 @@ export class DfpService implements Moli.MoliTag {
 
     return refreshedAds
       .then(() => { return; })
-      .catch(reason => this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason)));
+      .catch(reason => {
+        this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason));
+        return Promise.reject(reason);
+      });
   };
 
   public getConfig = (): Moli.MoliConfig | undefined => {
@@ -447,13 +450,9 @@ export class DfpService implements Moli.MoliTag {
   }
 
   private registerSlot(dfpSlot: Moli.AdSlot): googletag.IAdSlot {
-    let adSlot: googletag.IAdSlot;
-
-    if (dfpSlot.position === 'in-page') {
-      adSlot = window.googletag.defineSlot(dfpSlot.adUnitPath, dfpSlot.sizes, dfpSlot.domId);
-    } else {
-      adSlot = window.googletag.defineOutOfPageSlot(dfpSlot.adUnitPath, dfpSlot.domId);
-    }
+    const adSlot: googletag.IAdSlot = dfpSlot.position === 'in-page' ?
+      window.googletag.defineSlot(dfpSlot.adUnitPath, dfpSlot.sizes, dfpSlot.domId) :
+      window.googletag.defineOutOfPageSlot(dfpSlot.adUnitPath, dfpSlot.domId);
 
     adSlot.setCollapseEmptyDiv(true);
     adSlot.addService(window.googletag.pubads());

@@ -296,7 +296,7 @@ export namespace googletag {
      * Adds a service to this slot.
      * @param service
      */
-    addService(service: any): void;
+    addService(service: googletag.IService<any>): void;
 
     /**
      * Returns the id of the slot element provided when the slot was defined.
