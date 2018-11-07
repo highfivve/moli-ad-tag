@@ -287,12 +287,24 @@ export namespace prebidjs {
 
   /**
    * Defines one or multiple media types the ad unit supports.
-   * Media Types can be "banner", "native" or "video
+   * Media Types can be "banner", "native" or "video.
+   *
+   * @see http://prebid.org/dev-docs/show-multi-format-ads.html
+   * @see http://prebid.org/dev-docs/publisher-api-reference.html#adUnit-multi-format
    */
   export interface IMediaTypes {
 
+    /**
+     * optional. If no other properties are specified, this is the default.
+     * @see http://prebid.org/dev-docs/publisher-api-reference.html#adUnit-banner
+     */
     readonly banner?: IMediaTypeBanner;
 
+    /**
+     * Defines properties of a video ad.
+     *
+     * @see http://prebid.org/dev-docs/publisher-api-reference.html#adUnit-video
+     */
     readonly video?: IMediaTypeVideo;
   }
 
