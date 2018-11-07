@@ -10,7 +10,7 @@ import { DfpService, moli } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
 import { assetLoaderService } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
-import { googletagStub } from '../stubs/googletagStubs';
+import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 
 // setup sinon-chai
@@ -59,10 +59,12 @@ describe('DfpService', () => {
 
     const getElementByIdStub = sandbox.stub(document, 'getElementById');
     const googletagDefineSlotStub = sandbox.stub(window.googletag, 'defineSlot');
+    const pubAdsServiceStubRefreshStub = sandbox.stub(pubAdsServiceStub, 'refresh');
 
     beforeEach(() => {
       getElementByIdStub.returns({});
       googletagDefineSlotStub.callThrough();
+      pubAdsServiceStubRefreshStub.callThrough();
     });
 
     describe('regular slots', () => {
@@ -87,7 +89,7 @@ describe('DfpService', () => {
         });
       });
 
-      it('should register and refresh eagerly loaded slots', () => {
+      it('should register and refresh eagerly loaded in-page slot', () => {
         const dfpService = newDfpService();
 
         getElementByIdStub.returns({});
@@ -103,7 +105,9 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ]
         }).then(() => {
-          expect(googletagDefineSlotStub.called).to.be.true;
+          expect(googletagDefineSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnce;
         });
       });
 
