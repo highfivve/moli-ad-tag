@@ -102,7 +102,6 @@ describe('DfpService', () => {
         });
       });
 
-
       it.skip('should add prebidjs adUnits', () => {
         const dfpService = newDfpService();
         const adSlot: Moli.AdSlot = {
@@ -152,6 +151,8 @@ describe('DfpService', () => {
       moli.initialize(adConfiguration)
         .then(() => {
           expect(setTargetingStub.callCount).to.be.eq(2);
+          expect(setTargetingStub.firstCall.args).to.be.deep.equal([ 'gfversion', [ 'v2016' ] ]);
+          expect(setTargetingStub.secondCall.args).to.be.deep.equal([ 'sprechstunde', 'true' ]);
 
           done();
         });
