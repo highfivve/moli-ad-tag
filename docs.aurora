@@ -42,7 +42,7 @@ task = SequentialTask(
 
 healthcheckconfig = HealthCheckConfig(
     health_checker = HealthCheckerConfig(
-        http = HttpHealthChecker(endpoint = '/index.html', expected_response_code = 200, expected_response = None)
+        http = HttpHealthChecker(endpoint = '/index.html', expected_response_code = 200, expected_response = '')
     ),
     initial_interval_secs=20,
     interval_secs=10,
