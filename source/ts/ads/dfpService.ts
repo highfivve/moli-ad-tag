@@ -320,7 +320,7 @@ export class DfpService implements Moli.MoliTag {
       pubID: config.a9.pubID,
       adServer: 'googletag',
       gdpr: {
-        cmpTimeout: config.a9.timeout,
+        cmpTimeout: config.a9.cmpTimeout,
       },
     });
 
