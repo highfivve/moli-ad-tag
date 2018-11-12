@@ -61,9 +61,10 @@ export class DfpService implements Moli.MoliTag {
       return Promise.reject('Already initialized');
     }
 
-    // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
+    // a9 script overwrites the window.apstag completely on script load
     if (config.a9) {
       this.initApstag();
+      this.loadA9Script(config); // load a9 script, but we don't have to wait until loaded
     }
     const prebidReady = config.prebid ?
       this.awaitPrebidLoaded().then(() => this.configurePrebid(window.pbjs, config)) :
@@ -138,7 +139,7 @@ export class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid([ slotDefinition ], config));
+              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot: dfpSlotLazy as Moli.PrebidAdSlot} ], config));
             }
 
             if (dfpSlotLazy.a9) {
@@ -174,7 +175,7 @@ export class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlot.prebid) {
-              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot } ], config));
+              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot: dfpSlot as Moli.PrebidAdSlot } ], config));
             }
 
             if (dfpSlot.a9) {
@@ -220,21 +221,24 @@ export class DfpService implements Moli.MoliTag {
    * - all prebid slots have been registered
    * - all prebid slot have been requested
    *
-   * @param dfpPrebidSlots all slots - will be filtered for prebid slots
+   * @param prebidSlots all slots - will be filtered for prebid slots
    * @param config full ad configuration
    * @returns the bid response map. Always empty if not prebid slots are requested
    */
-  private initPrebid(dfpPrebidSlots: ISlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
-    const prebidSlots = dfpPrebidSlots.filter(this.isPrebidSlotDefinition);
-
+  private initPrebid(prebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
     if (prebidSlots.length === 0) {
+      return Promise.resolve({});
+    }
+
+    if (!config.prebid) {
+      this.logger.warn(`Try to init ${prebidSlots.length} without a prebid configuration`, prebidSlots);
       return Promise.resolve({});
     }
 
 
     return Promise.resolve()
       .then(() => this.registerPrebidSlots(prebidSlots))
-      .then(() => this.requestPrebid(dfpPrebidSlots))
+      .then(() => this.requestPrebid(prebidSlots))
       .catch(reason => {
         this.logger.warn(reason);
         return {};
@@ -248,13 +252,15 @@ export class DfpService implements Moli.MoliTag {
   }
 
   private initA9(a9Slots: ISlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig): Promise<void> {
-    // no a9 configured
-    if (!config.a9) {
+    if (a9Slots.length === 0) {
       return Promise.resolve();
     }
 
-    // TODO make sure the a9 script is only loaded once! Probably move this somewhere earlier in the initialization
-    this.loadA9Script(config); // load a9 script, but we don't have to wait until loaded
+    // no a9 configured
+    if (!config.a9) {
+      this.logger.warn(`Try to init ${a9Slots.length} without a prebid configuration`, a9Slots);
+      return Promise.resolve();
+    }
 
     return Promise.resolve(a9Slots)
       .then((slots: ISlotDefinition<Moli.A9AdSlot>[]) => slots.map(slot => slot.dfpSlot))
@@ -323,7 +329,7 @@ export class DfpService implements Moli.MoliTag {
       pubID: config.a9.pubID,
       adServer: 'googletag',
       gdpr: {
-        cmpTimeout: this.consentManagementTimeout,
+        cmpTimeout: config.a9.timeout,
       },
     });
 

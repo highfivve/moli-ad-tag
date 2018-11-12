@@ -8,11 +8,11 @@ import * as Sinon from 'sinon';
 import { prebidjs } from '../../../source/ts';
 import { DfpService, moli } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
-import { assetLoaderService } from '../../../source/ts/util/assetLoaderService';
+import { assetLoaderService, AssetLoadMethod, AssetType } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
 import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
-import { a9ConfigStub } from '../stubs/a9Stubs';
+import { apstagStub, a9ConfigStub } from '../stubs/a9Stubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -28,6 +28,7 @@ describe('moli', () => {
 
 describe('DfpService', () => {
   const sandbox = Sinon.createSandbox();
+  const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadAsset');
   const newDfpService = (): DfpService => {
     return new DfpService(assetLoaderService, cookieService);
   };
@@ -35,6 +36,8 @@ describe('DfpService', () => {
   beforeEach(() => {
     window.googletag = googletagStub;
     window.pbjs = pbjsStub;
+    window.apstag = apstagStub;
+    assetLoaderFetch.resolves();
   });
 
   afterEach(() => {
@@ -49,13 +52,13 @@ describe('DfpService', () => {
 
     it('should configure window.pbjs.que', () => {
       (window as any).pbjs = undefined;
-      const init = newDfpService().initialize({ slots: [], prebid: { config: pbjsTestConfig }});
+      const init = newDfpService().initialize({ slots: [], prebid: { config: pbjsTestConfig } });
 
       return sleep()
-        .then( () => {
+        .then(() => {
           expect(window.pbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).pbjs.que[0]();
+          (window as any).pbjs.que[ 0 ]();
           window.pbjs = pbjsStub;
         })
         .then(() => init);
@@ -63,10 +66,10 @@ describe('DfpService', () => {
 
     it('should not configure window.pbjs.que without prebid config', () => {
       (window as any).pbjs = undefined;
-      const init = newDfpService().initialize({ slots: []});
+      const init = newDfpService().initialize({ slots: [] });
 
       return sleep()
-        .then( () => {
+        .then(() => {
           expect(window.pbjs).to.be.undefined;
         })
         .then(() => init);
@@ -77,10 +80,17 @@ describe('DfpService', () => {
       (window as any).apstag = undefined;
       const init = newDfpService().initialize({ slots: [], a9: a9ConfigStub });
       return sleep()
-        .then( () => {
+        .then(() => {
           expect(window.apstag._Q).to.be.ok;
           expect(window.apstag.init).to.be.ok;
           expect(window.apstag.fetchBids).to.be.ok;
+
+          expect(assetLoaderFetch).to.be.calledOnceWithExactly({
+            name: 'A9',
+            assetType: AssetType.SCRIPT,
+            loadMethod: AssetLoadMethod.TAG,
+            assetUrl: '//c.amazon-adsystem.com/aax2/apstag.js'
+          });
         })
         .then(() => init);
     });
@@ -89,8 +99,9 @@ describe('DfpService', () => {
       (window as any).apstag = undefined;
       const init = newDfpService().initialize({ slots: [] });
       return sleep()
-        .then( () => {
+        .then(() => {
           expect(window.apstag).to.be.undefined;
+          expect(assetLoaderFetch).not.called
         })
         .then(() => init);
     });
@@ -98,15 +109,46 @@ describe('DfpService', () => {
 
     it('should configure window.googletag.cmd', () => {
       (window as any).googletag = undefined;
-      const init = newDfpService().initialize({ slots: []});
+      const init = newDfpService().initialize({ slots: [] });
       return sleep()
-        .then( () => {
+        .then(() => {
           expect(window.googletag.cmd).to.be.ok;
           // resolve queue and set stub
-          (window as any).googletag.cmd[0]();
+          (window as any).googletag.cmd[ 0 ]();
           window.googletag = googletagStub;
         })
         .then(() => init);
+    });
+  });
+
+  describe('a9 configuration', () => {
+    const initSpy = sandbox.spy(apstagStub, 'init');
+
+    it('should init the apstag', () => {
+      return newDfpService().initialize({
+          slots: [], a9: {
+            pubID: 'pub-123',
+            timeout: 123,
+            scriptUrl: '//foo.bar'
+          }
+        }
+      )
+      .then(() => {
+        expect(initSpy).to.be.calledOnceWithExactly({
+          pubID: 'pub-123',
+          adServer: 'googletag',
+          gdpr: {
+            cmpTimeout: 123,
+          }
+        });
+
+        expect(assetLoaderFetch).to.be.calledOnceWithExactly({
+          name: 'A9',
+          assetType: AssetType.SCRIPT,
+          loadMethod: AssetLoadMethod.TAG,
+          assetUrl: '//foo.bar'
+        });
+      });
     });
   });
 
@@ -182,7 +224,7 @@ describe('DfpService', () => {
           domId: 'eager-loading-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ ]
+          sizes: []
         };
 
         return dfpService.initialize({
@@ -193,6 +235,10 @@ describe('DfpService', () => {
           expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnce;
         });
       });
+
+      // ------------------
+      // ----- Prebid -----
+      // ------------------
 
       it('should add prebidjs adUnits', () => {
         const dfpService = newDfpService();
@@ -275,7 +321,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(setTargetingStub).to.be.calledTwice;
           expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals([ 'v2016' ]));
-          expect(setTargetingStub).to.be.calledWith('sprechstunde',  'true');
+          expect(setTargetingStub).to.be.calledWith('sprechstunde', 'true');
         });
     });
   });
