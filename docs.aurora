@@ -1,6 +1,16 @@
-fetch = Process(
-    name='Fetch from HDFS',
+fetchHttpServer = Process(
+    name = 'fetch executable from hdfs and directory setup',
+    cmdline = """
+                mkdir -p bin web
+                httpfs copyToLocal /mesos/ops/gf_algernon/algernon bin/
+                chmod 755 bin/algernon
+            """
+)
+
+fetchDocs = Process(
+    name='fetch docs from HDFS',
     cmdline="""
+        cd web
         /usr/local/bin/httpfs-cdh5 copyToLocal {{hdfsPath}}/{{docsFile}} .
         tar -xf {{docsFile}} --strip-components=1
         rm {{docsFile}}
@@ -8,14 +18,26 @@ fetch = Process(
 )
 
 runHttpServer = Process(
-    name='webserver',
-    cmdline="python -m SimpleHTTPServer {{thermos.ports[http]}}"
+    name = 'run executable',
+    cmdline = """
+        bin/algernon \
+          --addr=:{{thermos.ports[http]}} \
+          --dir=web \
+          --httponly \
+          --nodb \
+          --server \
+          --cache=prod \
+          --cachesize=134217728 \
+          --nolimit \
+          --stricter \
+          --statcache \
+    """
 )
 
 task = SequentialTask(
     name = 'moli-api-docs',
-    processes = [fetch, runHttpServer],
-    resources=Resources(cpu=0.1, ram=64 * MB, disk=32 * MB)
+    processes = [fetchHttpServer, fetchDocs, runHttpServer],
+    resources=Resources(cpu=0.3, ram=160 * MB, disk=32 * MB)
 )
 
 healthcheckconfig = HealthCheckConfig(
@@ -27,7 +49,7 @@ healthcheckconfig = HealthCheckConfig(
     timeout_secs=5
 )
 updateconfig = UpdateConfig(batch_size=1)
-announce = Announcer(primary_port='http')
+announce = Announcer(primary_port='http', portmap={ 'health': 'http' })
 
 jobs = [
     Service(announce = announce, task = task, update_config = updateconfig, health_check_config = healthcheckconfig,
