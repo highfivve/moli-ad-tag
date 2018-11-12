@@ -26,15 +26,6 @@ declare const window: Window;
 export class DfpService implements Moli.MoliTag {
 
   /**
-   * The time to wait for a GDPR response from the consent management platform.
-   *
-   * - Amazon A9 defaults to 50ms
-   * - Prebid defaults 10.000ms
-   * @type {number} milliseconds
-   */
-  private readonly consentManagementTimeout: number = 500;
-
-  /**
    * The moli configuration. Set by the initialize method and used to configure
    * all ads on the current page.
    */
@@ -372,7 +363,7 @@ export class DfpService implements Moli.MoliTag {
   }
 
   private fetchA9Slots(slots: Moli.A9AdSlot[], config: Moli.MoliConfig): Promise<void> {
-    if (config.a9 || slots.length === 0) {
+    if (slots.length === 0) {
       return Promise.resolve();
     }
 
@@ -382,11 +373,9 @@ export class DfpService implements Moli.MoliTag {
           return {
             slotID: slot.domId,
             slotName: slot.adUnitPath,
-            // FIXME configure a9 sizes
-            sizes: [] // slot.prebidSizes() // banner sizes
+            sizes: slot.sizes.filter(this.isFixedSize)
           };
         }),
-        // TODO we need to find a way to make sure that the config object is not reset after initialization
         timeout: config.a9 ? config.a9.timeout : 1000,
       }, (_bids: Object[]) => {
         window.apstag.setDisplayBids();
@@ -493,6 +482,10 @@ export class DfpService implements Moli.MoliTag {
 
   private isA9SlotDefinition(slotDefinition: ISlotDefinition<Moli.AdSlot>): slotDefinition is ISlotDefinition<Moli.A9AdSlot> {
     return !!slotDefinition.dfpSlot.a9;
+  }
+
+  private isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
+    return size !== 'fluid';
   }
 
   private get logger(): Moli.MoliLogger {

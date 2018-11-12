@@ -5,7 +5,8 @@ browserEnv([ 'window', 'document' ]);
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { prebidjs } from '../../../source/ts';
+import { prebidjs } from '../../../source/ts/types/prebidjs';
+import { apstag } from '../../../source/ts/types/apstag';
 import { DfpService, moli } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
 import { assetLoaderService, AssetLoadMethod, AssetType } from '../../../source/ts/util/assetLoaderService';
@@ -129,26 +130,27 @@ describe('DfpService', () => {
           slots: [], a9: {
             pubID: 'pub-123',
             timeout: 123,
+            cmpTimeout: 555,
             scriptUrl: '//foo.bar'
           }
         }
       )
-      .then(() => {
-        expect(initSpy).to.be.calledOnceWithExactly({
-          pubID: 'pub-123',
-          adServer: 'googletag',
-          gdpr: {
-            cmpTimeout: 123,
-          }
-        });
+        .then(() => {
+          expect(initSpy).to.be.calledOnceWithExactly({
+            pubID: 'pub-123',
+            adServer: 'googletag',
+            gdpr: {
+              cmpTimeout: 555
+            }
+          });
 
-        expect(assetLoaderFetch).to.be.calledOnceWithExactly({
-          name: 'A9',
-          assetType: AssetType.SCRIPT,
-          loadMethod: AssetLoadMethod.TAG,
-          assetUrl: '//foo.bar'
+          expect(assetLoaderFetch).to.be.calledOnceWithExactly({
+            name: 'A9',
+            assetType: AssetType.SCRIPT,
+            loadMethod: AssetLoadMethod.TAG,
+            assetUrl: '//foo.bar'
+          });
         });
-      });
     });
   });
 
@@ -293,6 +295,53 @@ describe('DfpService', () => {
           );
         });
       });
+
+      // ------------------
+      // ----- A9 ---------
+      // ------------------
+
+      it('should fetchBids for a9 ad slots', () => {
+        const dfpService = newDfpService();
+
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          a9: {}
+        };
+
+        const pbjsFetchBidsSpy = sandbox.spy(window.apstag, 'fetchBids');
+        const pbjsSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          a9: a9ConfigStub
+        }).then(() => {
+
+          expect(pbjsFetchBidsSpy).to.have.been.calledOnce;
+
+          const fetchBidArgs = pbjsFetchBidsSpy.firstCall.args;
+          expect(fetchBidArgs).length(2);
+
+          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+
+          expect(bidConfig.slots).to.be.an('array');
+          expect(bidConfig.slots).length(1);
+          expect(bidConfig.slots[0].slotID).to.be.equal('eager-loading-adslot');
+          expect(bidConfig.slots[0].slotName).to.be.equal('/123/eager');
+          expect(bidConfig.slots[0].sizes).to.be.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.timeout).to.be.equal(666);
+
+          expect(fetchBidArgs[1]).to.be.a('function');
+
+
+          expect(pbjsSetDisplayBidsSpy).to.have.been.calledOnce;
+        });
+      });
+
     });
   });
 

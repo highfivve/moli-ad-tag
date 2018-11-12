@@ -3,7 +3,8 @@ import { apstag } from '../../../source/ts/types/apstag';
 
 export const a9ConfigStub: Moli.headerbidding.A9Config = {
   pubID: '123',
-  timeout: 666
+  timeout: 666,
+  cmpTimeout: 246
 };
 
 export const apstagStub: apstag.IApsTag = {

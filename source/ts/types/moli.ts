@@ -247,6 +247,11 @@ export namespace Moli {
        * bids timeout for a9
        */
       readonly timeout: number;
+
+      /**
+       * timeout for the cmp provider to return a consent string
+       */
+      readonly cmpTimeout: number;
     }
 
     /**
