@@ -62,8 +62,12 @@ export class DfpService implements Moli.MoliTag {
     }
 
     // we cannot use apstag as member like googleTag, because a9 script overwrites the window.apstag completely on script load
-    this.initApstag();
-    const prebidReady = this.awaitPrebidLoaded();
+    if (config.a9) {
+      this.initApstag();
+    }
+    const prebidReady = config.prebid ?
+      this.awaitPrebidLoaded().then(() => this.configurePrebid(window.pbjs, config)) :
+      Promise.resolve();
 
     this.config = config;
 
@@ -216,8 +220,9 @@ export class DfpService implements Moli.MoliTag {
    * - all prebid slots have been registered
    * - all prebid slot have been requested
    *
-   * @param {Promise<ISlotDefinition<Moli.AdSlot>[]>} dfpPrebidSlots
-   * @returns {Promise<void>}
+   * @param dfpPrebidSlots all slots - will be filtered for prebid slots
+   * @param config full ad configuration
+   * @returns the bid response map. Always empty if not prebid slots are requested
    */
   private initPrebid(dfpPrebidSlots: ISlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig): Promise<prebidjs.IBidResponsesMap> {
     const prebidSlots = dfpPrebidSlots.filter(this.isPrebidSlotDefinition);
@@ -228,8 +233,6 @@ export class DfpService implements Moli.MoliTag {
 
 
     return Promise.resolve()
-      // FIXME make sure this is only initialized once!
-      .then(() => this.configurePrebid(window.pbjs, config))
       .then(() => this.registerPrebidSlots(prebidSlots))
       .then(() => this.requestPrebid(dfpPrebidSlots))
       .catch(reason => {
@@ -279,10 +282,10 @@ export class DfpService implements Moli.MoliTag {
     return new Promise<void>(resolve => window.googletag.cmd.push(resolve));
   }
 
-  private awaitPrebidLoaded(): Promise<prebidjs.IPrebidJs> {
+  private awaitPrebidLoaded(): Promise<void> {
     window.pbjs = window.pbjs || {};
     window.pbjs.que = window.pbjs.que || [];
-    return new Promise(resolve => window.pbjs.que.push(() => resolve(window.pbjs)));
+    return new Promise(resolve => window.pbjs.que.push(resolve));
   }
 
 

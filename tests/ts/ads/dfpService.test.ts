@@ -12,6 +12,7 @@ import { assetLoaderService } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
 import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
+import { a9ConfigStub } from '../stubs/a9Stubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -31,26 +32,84 @@ describe('DfpService', () => {
     return new DfpService(assetLoaderService, cookieService);
   };
 
+  beforeEach(() => {
+    window.googletag = googletagStub;
+    window.pbjs = pbjsStub;
+  });
+
   afterEach(() => {
     sandbox.reset();
   });
 
   describe('window initialization code', () => {
 
-    it.skip('should configure window.googletag.cmd', () => {
-      expect(window.googletag.cmd).to.be.ok;
+    const sleep = () => new Promise(resolve => {
+      setTimeout(resolve, 100);
     });
 
-    it.skip('should configure window.pbjs.que', () => {
-      expect(window.pbjs.que).to.be.ok;
+    it('should configure window.pbjs.que', () => {
+      (window as any).pbjs = undefined;
+      const init = newDfpService().initialize({ slots: [], prebid: { config: pbjsTestConfig }});
+
+      return sleep()
+        .then( () => {
+          expect(window.pbjs.que).to.be.ok;
+          // resolve queue and set stub
+          (window as any).pbjs.que[0]();
+          window.pbjs = pbjsStub;
+        })
+        .then(() => init);
     });
 
-    it.skip('should configure window.pbjs._Q', () => {
-      expect(window.apstag._Q).to.be.ok;
-      expect(window.apstag.init).to.be.ok;
-      expect(window.apstag.fetchBids).to.be.ok;
+    it('should not configure window.pbjs.que without prebid config', () => {
+      (window as any).pbjs = undefined;
+      const init = newDfpService().initialize({ slots: []});
+
+      return sleep()
+        .then( () => {
+          expect(window.pbjs).to.be.undefined;
+        })
+        .then(() => init);
+
+    });
+
+    it('should configure window.apstag', () => {
+      (window as any).apstag = undefined;
+      const init = newDfpService().initialize({ slots: [], a9: a9ConfigStub });
+      return sleep()
+        .then( () => {
+          expect(window.apstag._Q).to.be.ok;
+          expect(window.apstag.init).to.be.ok;
+          expect(window.apstag.fetchBids).to.be.ok;
+        })
+        .then(() => init);
+    });
+
+    it('should not configure window.apstag if no a9 is requested', () => {
+      (window as any).apstag = undefined;
+      const init = newDfpService().initialize({ slots: [] });
+      return sleep()
+        .then( () => {
+          expect(window.apstag).to.be.undefined;
+        })
+        .then(() => init);
+    });
+
+
+    it('should configure window.googletag.cmd', () => {
+      (window as any).googletag = undefined;
+      const init = newDfpService().initialize({ slots: []});
+      return sleep()
+        .then( () => {
+          expect(window.googletag.cmd).to.be.ok;
+          // resolve queue and set stub
+          (window as any).googletag.cmd[0]();
+          window.googletag = googletagStub;
+        })
+        .then(() => init);
     });
   });
+
 
   describe('ad slot registration', () => {
 
