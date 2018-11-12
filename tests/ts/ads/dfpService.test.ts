@@ -102,7 +102,7 @@ describe('DfpService', () => {
       return sleep()
         .then(() => {
           expect(window.apstag).to.be.undefined;
-          expect(assetLoaderFetch).not.called
+          expect(assetLoaderFetch).not.called;
         })
         .then(() => init);
     });
