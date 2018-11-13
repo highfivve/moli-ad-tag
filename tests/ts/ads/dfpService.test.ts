@@ -266,7 +266,7 @@ describe('DfpService', () => {
 
         const adSlot: Moli.AdSlot = {
           position: 'out-of-page',
-          domId: 'eager-loading-adslot',
+          domId: 'eager-loading-out-of-page-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
           sizes: []
