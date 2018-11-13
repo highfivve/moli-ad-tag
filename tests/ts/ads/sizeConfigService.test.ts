@@ -1,7 +1,3 @@
-import browserEnv = require('browser-env');
-
-browserEnv(['window', 'document']);
-
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
