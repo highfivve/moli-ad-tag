@@ -153,6 +153,47 @@ describe('DfpService', () => {
     });
   });
 
+  describe('prebid configuration', () => {
+
+    it('should set the prebid configuration', () => {
+      const pbjsSetConfigSpy = sandbox.spy(window.pbjs, 'setConfig');
+      return newDfpService().initialize({
+          slots: [],
+          prebid: {
+            config: pbjsTestConfig
+          }
+        }
+      )
+        .then(() => {
+          expect(pbjsSetConfigSpy).to.be.calledOnceWithExactly(pbjsTestConfig);
+        });
+    });
+
+    it('should set the prebid bidderSettings', () => {
+      (window.pbjs as any).bidderSettings = undefined;
+      const bidderSettings: prebidjs.IBidderSettings = {
+        appnexusAst: {
+          adserverTargeting: []
+        }
+      };
+      return newDfpService().initialize({
+          slots: [],
+          prebid: {
+            config: pbjsTestConfig,
+            bidderSettings: bidderSettings
+          }
+        }
+      )
+        .then(() => {
+          expect(window.pbjs.bidderSettings).not.to.be.undefined;
+          expect(window.pbjs.bidderSettings).to.be.equals(bidderSettings);
+        });
+    });
+
+
+  });
+
+
   describe('ad slot registration', () => {
 
     window.googletag = googletagStub;
@@ -323,7 +364,7 @@ describe('DfpService', () => {
           const fetchBidArgs = pbjsFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
@@ -332,7 +373,7 @@ describe('DfpService', () => {
           expect(bidConfig.slots[0].sizes).to.be.deep.equal([[605, 165]]);
           expect(bidConfig.timeout).to.be.equal(666);
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(pbjsSetDisplayBidsSpy).to.have.been.calledOnce;
         });

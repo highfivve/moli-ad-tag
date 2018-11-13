@@ -38,7 +38,7 @@ export class DfpService implements Moli.MoliTag {
    * @param cookieService - Access browser cookies
    */
   constructor(private assetService: IAssetLoaderService,
-    private cookieService: ICookieService) {
+              private cookieService: ICookieService) {
   }
 
   /**
@@ -71,14 +71,14 @@ export class DfpService implements Moli.MoliTag {
 
     // concurrently initialize lazy loaded slots and refreshable slots
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
-    prebidReady.then(() =>  {
+    prebidReady.then(() => {
       this.initRefreshableSlots(eagerlyLoadedSlots, config);
       this.initLazyLoadedSlots(lazySlots, config);
     });
 
     // eagerly displayed slots
     const eagerlyLoadedSlots = dfpReady
-      // request all existing and non-lazy loading slots
+    // request all existing and non-lazy loading slots
       .then(() => this.filterAvailableSlots(slots).filter(slot => !this.isLazySlot(slot)))
       // configure slots with gpt
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots))
@@ -91,7 +91,9 @@ export class DfpService implements Moli.MoliTag {
       .then((adSlots: ISlotDefinition<Moli.AdSlot>[]) => this.refreshAds(adSlots));
 
     return refreshedAds
-      .then(() => { return; })
+      .then(() => {
+        return;
+      })
       .catch(reason => {
         this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason));
         return Promise.reject(reason);
@@ -130,17 +132,17 @@ export class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot: dfpSlotLazy as Moli.PrebidAdSlot} ], config));
+              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot: dfpSlotLazy as Moli.PrebidAdSlot } ], config));
             }
 
             if (dfpSlotLazy.a9) {
-              bidRequests.push(this.fetchA9Slots([dfpSlotLazy as Moli.A9AdSlot], config));
+              bidRequests.push(this.fetchA9Slots([ dfpSlotLazy as Moli.A9AdSlot ], config));
             }
 
             return Promise.all(bidRequests).then(() => slotDefinition);
           })
           .then(({ adSlot, dfpSlot }) => {
-            window.googletag.pubads().refresh([adSlot]);
+            window.googletag.pubads().refresh([ adSlot ]);
           })
           .catch(error => {
             this.logger.error(error);
@@ -170,12 +172,12 @@ export class DfpService implements Moli.MoliTag {
             }
 
             if (dfpSlot.a9) {
-              bidRequests.push(this.fetchA9Slots([dfpSlot as Moli.A9AdSlot], config));
+              bidRequests.push(this.fetchA9Slots([ dfpSlot as Moli.A9AdSlot ], config));
             }
 
             Promise.all(bidRequests)
               .then(() => {
-                window.googletag.pubads().refresh([adSlot]);
+                window.googletag.pubads().refresh([ adSlot ]);
               });
           });
         } else {
@@ -201,7 +203,7 @@ export class DfpService implements Moli.MoliTag {
     const prebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition);
     const a9Slots: ISlotDefinition<Moli.A9AdSlot>[] = availableSlots.filter(this.isA9SlotDefinition);
 
-    return Promise.all([this.initA9(a9Slots, config), this.initPrebid(prebidSlots, config)])
+    return Promise.all([ this.initA9(a9Slots, config), this.initPrebid(prebidSlots, config) ])
       .then(() => availableSlots);
   }
 
@@ -237,9 +239,14 @@ export class DfpService implements Moli.MoliTag {
   }
 
   private configurePrebid(pbjs: prebidjs.IPrebidJs, config: Moli.MoliConfig): Promise<void> {
-    return new Promise<prebidjs.IPrebidJsConfig>((resolve, reject) => {
-      config.prebid ? resolve(config.prebid.config) : reject('Configure prebid without a prebid configuration is not allowed');
-    }).then(prebidConfig => pbjs.setConfig(prebidConfig));
+    return new Promise<Moli.headerbidding.PrebidConfig>((resolve, reject) => {
+      config.prebid ? resolve(config.prebid) : reject('Configure prebid without a prebid configuration is not allowed');
+    }).then(prebidConfig => {
+      pbjs.setConfig(prebidConfig.config);
+      if (prebidConfig.bidderSettings) {
+        window.pbjs.bidderSettings = prebidConfig.bidderSettings;
+      }
+    });
   }
 
   private initA9(a9Slots: ISlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig): Promise<void> {
@@ -274,17 +281,14 @@ export class DfpService implements Moli.MoliTag {
    * @return {Promise<void>}
    */
   private awaitGptLoaded(): Promise<void> {
-    window.googletag = window.googletag || {};
-    window.googletag.cmd = window.googletag.cmd || [];
+    window.googletag = window.googletag || { cmd: [] };
     return new Promise<void>(resolve => window.googletag.cmd.push(resolve));
   }
 
   private awaitPrebidLoaded(): Promise<void> {
-    window.pbjs = window.pbjs || {};
-    window.pbjs.que = window.pbjs.que || [];
+    window.pbjs = window.pbjs || { que: [] };
     return new Promise(resolve => window.pbjs.que.push(resolve));
   }
-
 
 
   private initApstag(): void {
@@ -320,8 +324,8 @@ export class DfpService implements Moli.MoliTag {
       pubID: config.a9.pubID,
       adServer: 'googletag',
       gdpr: {
-        cmpTimeout: config.a9.cmpTimeout,
-      },
+        cmpTimeout: config.a9.cmpTimeout
+      }
     });
 
     return this.assetService.loadAsset({
@@ -376,7 +380,7 @@ export class DfpService implements Moli.MoliTag {
             sizes: slot.sizes.filter(this.isFixedSize)
           };
         }),
-        timeout: config.a9 ? config.a9.timeout : 1000,
+        timeout: config.a9 ? config.a9.timeout : 1000
       }, (_bids: Object[]) => {
         window.apstag.setDisplayBids();
         resolve();
@@ -484,7 +488,7 @@ export class DfpService implements Moli.MoliTag {
     return !!slotDefinition.dfpSlot.a9;
   }
 
-  private isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
+  private isFixedSize(size: Moli.DfpSlotSize): size is [ number, number ] {
     return size !== 'fluid';
   }
 

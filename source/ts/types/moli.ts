@@ -44,11 +44,7 @@ export namespace Moli {
     readonly sizeConfig?: SizeConfigEntry[];
 
     /** optional prebid configuration */
-    readonly prebid?: {
-
-      /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig */
-      readonly config: prebidjs.IPrebidJsConfig;
-    };
+    readonly prebid?: headerbidding.PrebidConfig;
 
     readonly a9?: headerbidding.A9Config;
 
@@ -219,6 +215,14 @@ export namespace Moli {
 
   /** header bidding types */
   export namespace headerbidding {
+
+    export interface PrebidConfig {
+      /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
+      readonly config: prebidjs.IPrebidJsConfig;
+
+      /** optional bidder settings */
+      readonly bidderSettings?: prebidjs.IBidderSettings;
+    }
 
     /**
      * Configuration for a prebid enabled ad slot
