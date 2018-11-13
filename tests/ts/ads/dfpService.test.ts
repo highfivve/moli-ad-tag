@@ -59,7 +59,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.pbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).pbjs.que[ 0 ]();
+          (window as any).pbjs.que[0]();
           window.pbjs = pbjsStub;
         })
         .then(() => init);
@@ -107,7 +107,6 @@ describe('DfpService', () => {
         .then(() => init);
     });
 
-
     it('should configure window.googletag.cmd', () => {
       (window as any).googletag = undefined;
       const init = newDfpService().initialize({ slots: [] });
@@ -115,7 +114,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.googletag.cmd).to.be.ok;
           // resolve queue and set stub
-          (window as any).googletag.cmd[ 0 ]();
+          (window as any).googletag.cmd[0]();
           window.googletag = googletagStub;
         })
         .then(() => init);
@@ -154,7 +153,6 @@ describe('DfpService', () => {
     });
   });
 
-
   describe('ad slot registration', () => {
 
     window.googletag = googletagStub;
@@ -184,11 +182,11 @@ describe('DfpService', () => {
           domId: 'not-available',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ] ]
+          sizes: ['fluid', [605, 165]]
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ]
+          slots: [adSlot]
         }).then(() => {
           expect(googletagDefineSlotStub.called).to.be.false;
         });
@@ -204,11 +202,11 @@ describe('DfpService', () => {
           domId: 'eager-loading-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ] ]
+          sizes: ['fluid', [605, 165]]
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ]
+          slots: [adSlot]
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnce;
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -230,7 +228,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ]
+          slots: [adSlot]
         }).then(() => {
           expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnce;
           expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.domId);
@@ -250,15 +248,15 @@ describe('DfpService', () => {
             code: 'eager-loading-adslot',
             mediaTypes: {
               banner: {
-                sizes: [ [ 605, 165 ] ]
+                sizes: [[605, 165]]
               }
             },
-            bids: [ {
+            bids: [{
               bidder: prebidjs.AppNexusAst,
               params: {
                 placementId: '1234'
               }
-            } ]
+            }]
           }
         };
 
@@ -267,7 +265,7 @@ describe('DfpService', () => {
           domId: 'eager-loading-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ] ],
+          sizes: ['fluid', [605, 165]],
           prebid: prebidAdslotConfig
         };
 
@@ -276,22 +274,22 @@ describe('DfpService', () => {
         const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
 
         return dfpService.initialize({
-          slots: [ adSlot ],
+          slots: [adSlot],
           prebid: { config: pbjsTestConfig }
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
-          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ prebidAdslotConfig.adUnit ]);
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([prebidAdslotConfig.adUnit]);
 
           expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
           expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
-            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])).and(
+            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals(['eager-loading-adslot'])).and(
               Sinon.match.has('bidsBackHandler', Sinon.match.defined)
             )
           );
 
           expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnce;
           expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
-            Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])
+            Sinon.match.array.deepEquals(['eager-loading-adslot'])
           );
         });
       });
@@ -303,13 +301,12 @@ describe('DfpService', () => {
       it('should fetchBids for a9 ad slots', () => {
         const dfpService = newDfpService();
 
-
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ] ],
+          sizes: ['fluid', [605, 165]],
           a9: {}
         };
 
@@ -317,7 +314,7 @@ describe('DfpService', () => {
         const pbjsSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
 
         return dfpService.initialize({
-          slots: [ adSlot ],
+          slots: [adSlot],
           a9: a9ConfigStub
         }).then(() => {
 
@@ -332,11 +329,10 @@ describe('DfpService', () => {
           expect(bidConfig.slots).length(1);
           expect(bidConfig.slots[0].slotID).to.be.equal('eager-loading-adslot');
           expect(bidConfig.slots[0].slotName).to.be.equal('/123/eager');
-          expect(bidConfig.slots[0].sizes).to.be.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[0].sizes).to.be.deep.equal([[605, 165]]);
           expect(bidConfig.timeout).to.be.equal(666);
 
           expect(fetchBidArgs[1]).to.be.a('function');
-
 
           expect(pbjsSetDisplayBidsSpy).to.have.been.calledOnce;
         });
@@ -359,7 +355,7 @@ describe('DfpService', () => {
         slots: [],
         targeting: {
           keyValues: [
-            { key: 'gfversion', value: [ 'v2016' ] },
+            { key: 'gfversion', value: ['v2016'] },
             { key: 'sprechstunde', value: 'true' }
           ]
         },
@@ -369,7 +365,7 @@ describe('DfpService', () => {
       return moli.initialize(adConfiguration)
         .then(() => {
           expect(setTargetingStub).to.be.calledTwice;
-          expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals([ 'v2016' ]));
+          expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals(['v2016']));
           expect(setTargetingStub).to.be.calledWith('sprechstunde', 'true');
         });
     });

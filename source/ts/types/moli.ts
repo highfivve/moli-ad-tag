@@ -9,7 +9,7 @@ export namespace Moli {
   export interface MoliTag {
 
     /**
-     * 
+     *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
      */
@@ -46,7 +46,7 @@ export namespace Moli {
     /** optional prebid configuration */
     readonly prebid?: {
 
-      /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
+      /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig */
       readonly config: prebidjs.IPrebidJsConfig;
     };
 
@@ -161,7 +161,7 @@ export namespace Moli {
 
   /**
    * AdSlot type
-   * 
+   *
    * Used for discriminating unions to make type safe assumptions about the existence
    * or type of individual properties.
    */
@@ -224,10 +224,10 @@ export namespace Moli {
      * Configuration for a prebid enabled ad slot
      */
     export interface PrebidAdSlotConfig {
-      /** 
+      /**
        * bids configuration
-       * 
-       * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties 
+       *
+       * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties
        */
       readonly adUnit: prebidjs.IAdUnit;
     }
@@ -257,7 +257,7 @@ export namespace Moli {
     /**
      * See internal A9 apstag documentation
      */
-    export interface A9AdSlotConfig { }
+    export interface A9AdSlotConfig {}
   }
 
   /**
