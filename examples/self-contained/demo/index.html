@@ -1,28 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <title><%= htmlWebpackPlugin.options.title %></title>
   <script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"></script>
   <style>
+    .u-mtm {
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Slot 1</h1>
-  <div id="adslot-1">
-  </div>
-  <hr>
-  <h1>Slot 2</h1>
-  <div id="adslot-2">
-  </div>
-  <hr>
-  <h1>Slot 3</h1>
-  <div id="adslot-3">
-  </div>
-  <hr>
-  <h1>Slot 4</h1>
-  <div id="adslot-4">
-  </div>
-  <hr>
+<h1>Eager Loading AdSlot</h1>
+<div id="eager-loading-adslot"></div>
+
+<hr>
+
+<h1>Refreshable AdSlot</h1>
+<script>
+  const refresh = () => {
+    console.log('slot.refresh fired');
+    window.dispatchEvent(new CustomEvent('slot.refresh'));
+  }
+</script>
+<div id="refreshable-adslot"></div>
+<button class="u-mtm" onclick="refresh()">Refresh the slot</button>
+
+<hr>
+
+<h1>Lazy AdSlot</h1>
+<script>
+  let timeoutSteps = 5;
+  const tick = () => window.setTimeout(() => {
+    timeoutSteps--;
+    document.getElementById('countdown').innerText = timeoutSteps;
+    if (timeoutSteps) {
+      tick();
+    } else {
+      console.log('timer.complete fired');
+      window.dispatchEvent(new CustomEvent('timer.complete'));
+    }
+  }, 1000);
+  tick();
+</script>
+<div id="lazy-adslot"></div>
+<div class="u-mtm">
+  Slot triggering in <span id="countdown">5</span> seconds
+</div>
+
+<hr>
+
+<h1>Prebid AdSlot</h1>
+<div id="prebid-adslot"></div>
+
+<hr>
+
+<h1>Amazon A9 AdSlot</h1>
+<div id="a9-adslot"></div>
 </body>
 </html>
