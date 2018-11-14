@@ -32,6 +32,10 @@ describe('DfpService', () => {
     return new DfpService(assetLoaderService, cookieService);
   };
 
+  const sleep = (timeInMs: number = 20) => new Promise(resolve => {
+    setTimeout(resolve, timeInMs);
+  });
+
   beforeEach(() => {
     window.googletag = googletagStub;
     window.pbjs = pbjsStub;
@@ -44,10 +48,6 @@ describe('DfpService', () => {
   });
 
   describe('window initialization code', () => {
-
-    const sleep = () => new Promise(resolve => {
-      setTimeout(resolve, 100);
-    });
 
     it('should configure window.pbjs.que', () => {
       (window as any).pbjs = undefined;
@@ -199,11 +199,20 @@ describe('DfpService', () => {
 
     window.googletag = googletagStub;
     window.pbjs = pbjsStub;
+    window.apstag = apstagStub;
 
     const getElementByIdStub = sandbox.stub(document, 'getElementById');
     const googletagDefineSlotStub = sandbox.stub(window.googletag, 'defineSlot');
     const googletagDefineOutOfPageSlotStub = sandbox.stub(window.googletag, 'defineOutOfPageSlot');
     const pubAdsServiceStubRefreshStub = sandbox.stub(pubAdsServiceStub, 'refresh');
+
+    const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
+    const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
+    const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
+
+    const pbjsFetchBidsSpy = sandbox.spy(window.apstag, 'fetchBids');
+    const pbjsSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
+
 
     beforeEach(() => {
       getElementByIdStub.returns({});
@@ -237,8 +246,6 @@ describe('DfpService', () => {
       it('should register and refresh eagerly loaded in-page slot', () => {
         const dfpService = newDfpService();
 
-        getElementByIdStub.returns({});
-
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
@@ -258,8 +265,6 @@ describe('DfpService', () => {
 
       it('should register and refresh eagerly loaded out-of-page slot', () => {
         const dfpService = newDfpService();
-
-        getElementByIdStub.returns({});
 
         const adSlot: Moli.AdSlot = {
           position: 'out-of-page',
@@ -311,10 +316,6 @@ describe('DfpService', () => {
           prebid: prebidAdslotConfig
         };
 
-        const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
-        const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
-        const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
-
         return dfpService.initialize({
           slots: [adSlot],
           logger: noopLogger,
@@ -353,9 +354,6 @@ describe('DfpService', () => {
           a9: {}
         };
 
-        const pbjsFetchBidsSpy = sandbox.spy(window.apstag, 'fetchBids');
-        const pbjsSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
-
         return dfpService.initialize({
           slots: [adSlot],
           logger: noopLogger,
@@ -381,8 +379,223 @@ describe('DfpService', () => {
           expect(pbjsSetDisplayBidsSpy).to.have.been.calledOnce;
         });
       });
+    });
+
+
+    describe('lazy slots', () => {
+
+      it('should register and refresh lazy loaded slot based on event', () => {
+        const dfpService = newDfpService();
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'lazy-loading-adslot',
+          behaviour: 'lazy',
+          adUnitPath: '/123/lazy',
+          sizes: [ [605, 340] ],
+          trigger: {
+            name: 'event',
+            event: 'slot-trigger'
+          }
+        };
+
+        return dfpService.initialize({
+          slots: [adSlot], logger: noopLogger
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.not.been.called;
+          expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
+        }).then(() => {
+          document.dispatchEvent(new Event('slot-trigger'));
+          return sleep();
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.called;
+          const adSlotArray = pubAdsServiceStubRefreshStub.secondCall.lastArg;
+          expect(adSlotArray).length(1);
+        });
+      });
+
+
+      it('should initPrebid for lazy loaded slot based on event', () => {
+        const dfpService = newDfpService();
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'lazy-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [[605, 165]]
+              }
+            },
+            bids: [{
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            }]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'lazy-loading-adslot',
+          behaviour: 'lazy',
+          adUnitPath: '/123/lazy',
+          sizes: [ [605, 340] ],
+          prebid: prebidAdslotConfig,
+          trigger: {
+            name: 'event',
+            event: 'slot-trigger'
+          }
+        };
+
+        return dfpService.initialize({
+          slots: [adSlot], prebid: { config: pbjsTestConfig }, logger: noopLogger
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.not.been.called;
+          expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
+        }).then(() => {
+          document.dispatchEvent(new Event('slot-trigger'));
+          return sleep();
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.called;
+          const adSlotArray = pubAdsServiceStubRefreshStub.secondCall.lastArg;
+          expect(adSlotArray).length(1);
+
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([prebidAdslotConfig.adUnit]);
+
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals(['lazy-loading-adslot'])).and(
+              Sinon.match.has('bidsBackHandler', Sinon.match.defined)
+            )
+          );
+
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnce;
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.array.deepEquals(['lazy-loading-adslot'])
+          );
+        });
+      });
+
+
+      it('should initPrebid for lazy loaded slot based on event', () => {
+        const dfpService = newDfpService();
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'lazy-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [[605, 165]]
+              }
+            },
+            bids: [{
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            }]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'lazy-loading-adslot',
+          behaviour: 'lazy',
+          adUnitPath: '/123/lazy',
+          sizes: [ [605, 340] ],
+          prebid: prebidAdslotConfig,
+          trigger: {
+            name: 'event',
+            event: 'slot-trigger'
+          }
+        };
+
+        return dfpService.initialize({
+          slots: [adSlot], prebid: { config: pbjsTestConfig }, logger: noopLogger
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.not.been.called;
+          expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
+        }).then(() => {
+          document.dispatchEvent(new Event('slot-trigger'));
+          return sleep();
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.called;
+          const adSlotArray = pubAdsServiceStubRefreshStub.secondCall.lastArg;
+          expect(adSlotArray).length(1);
+
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([prebidAdslotConfig.adUnit]);
+
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals(['lazy-loading-adslot'])).and(
+              Sinon.match.has('bidsBackHandler', Sinon.match.defined)
+            )
+          );
+
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnce;
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.array.deepEquals(['lazy-loading-adslot'])
+          );
+        });
+      });
+
+      it('should fetchBids for a9 lazy ad slots', () => {
+        const dfpService = newDfpService();
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'lazy-loading-adslot',
+          behaviour: 'lazy',
+          adUnitPath: '/123/lazy',
+          sizes: [ [605, 340] ],
+          a9: {},
+          trigger: {
+            name: 'event',
+            event: 'slot-trigger'
+          }
+        };
+
+
+        return dfpService.initialize({
+          slots: [adSlot],
+          logger: noopLogger,
+          a9: a9ConfigStub
+        }).then(() => {
+          expect(googletagDefineSlotStub).to.have.not.been.called;
+          expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
+        }).then(() => {
+          document.dispatchEvent(new Event('slot-trigger'));
+          return sleep();
+        }).then(() => {
+
+          expect(pbjsFetchBidsSpy).to.have.been.calledOnce;
+
+          const fetchBidArgs = pbjsFetchBidsSpy.firstCall.args;
+          expect(fetchBidArgs).length(2);
+
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
+
+          expect(bidConfig.slots).to.be.an('array');
+          expect(bidConfig.slots).length(1);
+          expect(bidConfig.slots[0].slotID).to.be.equal('lazy-loading-adslot');
+          expect(bidConfig.slots[0].slotName).to.be.equal('/123/lazy');
+          expect(bidConfig.slots[0].sizes).to.be.deep.equal([[605, 340]]);
+          expect(bidConfig.timeout).to.be.equal(666);
+
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
+
+          expect(pbjsSetDisplayBidsSpy).to.have.been.calledOnce;
+        });
+      });
 
     });
+
   });
 
   describe('setting key/value pairs', () => {
