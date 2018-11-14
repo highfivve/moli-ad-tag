@@ -170,7 +170,9 @@ export namespace Moli {
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;
 
-    /** triggers when a certain event is fired */
+    /**
+     * Triggers when a certain event is fired via `window.dispatchEvent`.
+     */
     export interface EventTrigger {
       readonly name: 'event';
 
