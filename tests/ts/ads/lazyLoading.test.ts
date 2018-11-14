@@ -25,7 +25,7 @@ describe('Lazy Loading', () => {
       });
 
       const onLoad = eventLoader.onLoad();
-      document.dispatchEvent(new Event('trigger-event', {}));
+      window.dispatchEvent(new Event('trigger-event', {}));
 
       return onLoad;
     });
@@ -51,7 +51,7 @@ describe('Lazy Loading', () => {
       });
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
-      document.dispatchEvent(new Event('another-event', {}));
+      window.dispatchEvent(new Event('another-event', {}));
       const race: Promise<boolean> = sleep().then(() => false);
 
       return Promise.race<boolean>([onLoad, race]).then((called) => {

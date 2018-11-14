@@ -19,7 +19,7 @@ export interface ILazyLoader {
 const createEventLazyLoader = (trigger: EventTrigger): ILazyLoader => {
   return {
     onLoad: () => {
-      return new Promise<void>(resolve => document.addEventListener(trigger.event, () => {
+      return new Promise<void>(resolve => window.addEventListener(trigger.event, () => {
         resolve();
       }, { once: true, passive: true }));
     }

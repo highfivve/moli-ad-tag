@@ -38,7 +38,7 @@ export interface IAdRefreshListener {
 const createEventRefreshListener = (trigger: EventTrigger): IAdRefreshListener => {
   return {
     addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
-      document.addEventListener(trigger.event, callback);
+      window.addEventListener(trigger.event, callback);
     }
   };
 };

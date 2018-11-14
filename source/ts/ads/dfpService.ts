@@ -161,34 +161,31 @@ export class DfpService implements Moli.MoliTag {
     displayedAdSlots
       .then(registrations => registrations.filter(this.isRefreshableAdSlotDefinition))
       .then((refreshableSlots: ISlotDefinition<Moli.RefreshableAdSlot>[]) => refreshableSlots.forEach(({ adSlot, dfpSlot }) => {
-        const listener = createRefreshListener(dfpSlot.trigger);
+        createRefreshListener(dfpSlot.trigger).addAdRefreshListener(() => {
+          const bidRequests: Promise<unknown>[] = [];
 
-        if (listener) {
-          listener.addAdRefreshListener(() => {
-            const bidRequests: Promise<unknown>[] = [];
-
-            if (dfpSlot.prebid) {
-              const refreshPrebidSlot = this.requestPrebid([ { adSlot, dfpSlot: dfpSlot as Moli.PrebidAdSlot } ])
-                .catch(reason => {
-                  this.logger.warn(reason);
-                  return {};
-                });
-              bidRequests.push(refreshPrebidSlot);
-            }
-
-            if (dfpSlot.a9) {
-              bidRequests.push(this.fetchA9Slots([ dfpSlot as Moli.A9AdSlot ], config));
-            }
-
-            Promise.all(bidRequests)
-              .then(() => {
-                window.googletag.pubads().refresh([ adSlot ]);
+          if (dfpSlot.prebid) {
+            const refreshPrebidSlot = this.requestPrebid([ { adSlot, dfpSlot: dfpSlot as Moli.PrebidAdSlot } ])
+              .catch(reason => {
+                this.logger.warn(reason);
+                return {};
               });
-          });
-        } else {
-          this.logger.error(`Invalid refreshable ad slot trigger: ${JSON.stringify(dfpSlot.trigger)}`);
-        }
-      }));
+            bidRequests.push(refreshPrebidSlot);
+          }
+
+          if (dfpSlot.a9) {
+            bidRequests.push(this.fetchA9Slots([ dfpSlot as Moli.A9AdSlot ], config));
+          }
+
+          Promise.all(bidRequests)
+            .then(() => {
+              window.googletag.pubads().refresh([ adSlot ]);
+            });
+        });
+      }))
+      .catch((error) => {
+        this.logger.error(`refreshable ad slot initialization failed with ${error}`);
+      });
   }
 
   /**
@@ -302,10 +299,18 @@ export class DfpService implements Moli.MoliTag {
     }
     window.apstag = {
       _Q: [],
-      init: function (): void { window.apstag._Q.push(['i', arguments]); },
-      fetchBids: function (): void { window.apstag._Q.push(['f', arguments]); },
-      setDisplayBids: function (): void { return; },
-      targetingKeys: function (): void { return; }
+      init: function (): void {
+        window.apstag._Q.push([ 'i', arguments ]);
+      },
+      fetchBids: function (): void {
+        window.apstag._Q.push([ 'f', arguments ]);
+      },
+      setDisplayBids: function (): void {
+        return;
+      },
+      targetingKeys: function (): void {
+        return;
+      }
     };
   }
 

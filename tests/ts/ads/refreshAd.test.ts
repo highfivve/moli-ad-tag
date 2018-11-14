@@ -29,7 +29,7 @@ describe('Refreshable Loading', () => {
           resolve();
         });
       });
-      document.dispatchEvent(new Event('trigger-event', {}));
+      window.dispatchEvent(new Event('trigger-event', {}));
 
       return onRefresh;
     });
@@ -49,9 +49,9 @@ describe('Refreshable Loading', () => {
         });
       });
       // dispatch three events
-      document.dispatchEvent(new Event('trigger-event', {}));
-      document.dispatchEvent(new Event('trigger-event', {}));
-      document.dispatchEvent(new Event('trigger-event', {}));
+      window.dispatchEvent(new Event('trigger-event', {}));
+      window.dispatchEvent(new Event('trigger-event', {}));
+      window.dispatchEvent(new Event('trigger-event', {}));
 
       return onRefresh;
     });
@@ -85,7 +85,7 @@ describe('Refreshable Loading', () => {
           resolve(true);
         });
       });
-      document.dispatchEvent(new Event('another-event', {}));
+      window.dispatchEvent(new Event('another-event', {}));
       const race: Promise<boolean> = sleep().then(() => false);
 
       return Promise.race<boolean>([onRefresh, race]).then((called) => {
