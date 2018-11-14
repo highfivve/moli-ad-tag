@@ -393,6 +393,7 @@ describe('DfpService', () => {
     });
 
     it('should set correct targeting values', () => {
+      const dfpService = newDfpService();
       const setTargetingStub = sandbox.stub(window.googletag.pubads(), 'setTargeting');
 
       const adConfiguration: Moli.MoliConfig = {
@@ -407,7 +408,7 @@ describe('DfpService', () => {
         sizeConfig: []
       };
 
-      return moli.initialize(adConfiguration)
+      return dfpService.initialize(adConfiguration)
         .then(() => {
           expect(setTargetingStub).to.be.calledTwice;
           expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals(['v2016']));
