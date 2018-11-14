@@ -85,7 +85,6 @@ export namespace Moli {
 
     /** configure how and when the slot should be loaded */
     readonly behaviour: behaviour.SlotLoading;
-    // readonly behaviour: behaviour.SlotLoadingBehaviour;
 
     /**
      * Conditionally select the ad unit based on labels.
@@ -168,32 +167,8 @@ export namespace Moli {
 
     export type SlotLoading = 'eager' | 'lazy' | 'refreshable';
 
-    /** How and when should a slot be displayed */
-    export type SlotLoadingBehaviour = EagerLoadingBehaviour | LazyLoadingBehaviour | RefreshableBehaviour;
-
-    /** default behaviour - slot is loaded immediately */
-    export interface EagerLoadingBehaviour {
-      readonly name: 'eager';
-    }
-
-    /** slot is loaded lazily based on the configuration */
-    export interface LazyLoadingBehaviour {
-      readonly name: 'lazy';
-
-      /** what triggers the loading */
-      readonly trigger: Trigger;
-    }
-
-    /** a slot that is eagerly loaded but can be refreshed */
-    export interface RefreshableBehaviour {
-      readonly name: 'refreshable';
-
-      /** what triggers the loading */
-      readonly trigger: Trigger;
-    }
-
     /** all available triggers for loading behaviours */
-    export type Trigger = EventTrigger | VisibleTrigger;
+    export type Trigger = EventTrigger;
 
     /** triggers when a certain event is fired */
     export interface EventTrigger {
@@ -201,14 +176,6 @@ export namespace Moli {
 
       /** the event name */
       readonly event: string;
-    }
-
-    /** triggers when a certain element is visible */
-    export interface VisibleTrigger {
-      readonly name: 'visible';
-
-      /** the DOM element that needs to be visible */
-      readonly domId: string;
     }
 
   }

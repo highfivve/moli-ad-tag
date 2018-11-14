@@ -1,7 +1,6 @@
 import { Moli } from '../types/moli';
 import Trigger = Moli.behaviour.Trigger;
 import EventTrigger = Moli.behaviour.EventTrigger;
-import VisibleTrigger = Moli.behaviour.VisibleTrigger;
 
 /**
  * == Refresh Listener ==
@@ -53,8 +52,6 @@ export const createRefreshListener = (trigger: Trigger): IAdRefreshListener | nu
   switch (trigger.name) {
     case 'event':
       return createEventRefreshListener(trigger);
-    case 'visible':
-      return null;
     default:
       return null;
   }

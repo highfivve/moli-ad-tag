@@ -1,7 +1,6 @@
 import { Moli } from '../types/moli';
 import Trigger = Moli.behaviour.Trigger;
 import EventTrigger = Moli.behaviour.EventTrigger;
-import VisibleTrigger = Moli.behaviour.VisibleTrigger;
 
 /**
  * == Lazy Loader ==
@@ -27,18 +26,10 @@ const createEventLazyLoader = (trigger: EventTrigger): ILazyLoader => {
   };
 };
 
-const createVisibleLazyLoader = (trigger: VisibleTrigger): ILazyLoader => {
-  return {
-    onLoad: () => Promise.reject(`Event trigger not implemented yet for domID ${trigger.domId}`)
-  };
-};
-
 export const createLazyLoader = (trigger: Trigger): ILazyLoader => {
   switch (trigger.name) {
     case 'event':
       return createEventLazyLoader(trigger);
-    case 'visible':
-      return createVisibleLazyLoader(trigger);
     default:
       return {
         onLoad: () => Promise.reject(`Invalid trigger configuration: ${JSON.stringify(trigger)}`)
