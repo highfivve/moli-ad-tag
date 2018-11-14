@@ -1,5 +1,5 @@
 import { Moli } from '../types/moli';
-import { flatten } from '../util/flatten';
+import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 
 import DfpSlotSize = Moli.DfpSlotSize;
 import SizeConfigEntry = Moli.SizeConfigEntry;
@@ -13,29 +13,51 @@ import IAdSlot = Moli.IAdSlot;
  */
 export class SizeConfigService {
   private readonly supportedSizes: DfpSlotSize[];
+  private readonly supportedLabels: string[];
 
   constructor(sizeConfig: SizeConfigEntry[], private logger: MoliLogger) {
     // Matches the given slot sizes against the window's dimensions.
+    const supportedConfigs = sizeConfig
+      .filter(conf => window.matchMedia(conf.mediaQuery).matches);
+
     // To filter out duplicate slot sizes, the slot size tuples are converted to strings that can be easily compared
-    // with indexOf(), and back to tuples after the filtering took place.
-    this.supportedSizes = flatten(sizeConfig
-      .filter(conf => window.matchMedia(conf.mediaQuery).matches)
-      .map(conf => conf.sizesSupported))
+    // using indexOf(), and back to tuples after the filtering took place.
+    this.supportedSizes = flatten(supportedConfigs
+      .map(conf => conf.sizesSupported)
+    )
       .map(size => JSON.stringify(size))
-      .filter((size, position, arr) => arr.indexOf(size) === position)
+      .filter(uniquePrimitiveFilter)
       .map(sizeAsString => JSON.parse(sizeAsString));
+
+    this.supportedLabels = flatten(
+      supportedConfigs
+        .map(conf => conf.labels)
+    )
+      .filter(uniquePrimitiveFilter);
   }
 
   /**
    * Checks if the given slot fulfills the configured slot size and label matching criteria.
    *
-   * @param slot
-   * @returns {boolean} is this slot supported (label/sizes)?
+   * Labels are matched in this order: labelAll, labelAny. If both are specified, only labelAll will be
+   * taken into account.
    *
-   * TODO: filter for labels
+   * @param slot the ad slot to check
+   * @returns {boolean} is this slot supported (label/sizes)?
    */
   public filterSlot(slot: IAdSlot): boolean {
-    return this.filterSupportedSizes(slot.sizes).length > 0;
+    let labelsMatching = true;
+
+    if (slot.labelAll) {
+      labelsMatching = slot.labelAll.every(label => this.supportedLabels.indexOf(label) > -1);
+    }
+
+    // if labelAll was already evaluated, labelAny will be ignored.
+    if (slot.labelAny && !slot.labelAll) {
+      labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
+    }
+
+    return labelsMatching && this.filterSupportedSizes(slot.sizes).length > 0;
   }
 
   /**
