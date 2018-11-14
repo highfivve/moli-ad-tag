@@ -168,7 +168,12 @@ export class DfpService implements Moli.MoliTag {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlot.prebid) {
-              bidRequests.push(this.initPrebid([ { adSlot, dfpSlot: dfpSlot as Moli.PrebidAdSlot } ], config));
+              const refreshPrebidSlot = this.requestPrebid([ { adSlot, dfpSlot: dfpSlot as Moli.PrebidAdSlot } ])
+                .catch(reason => {
+                  this.logger.warn(reason);
+                  return {};
+                });
+              bidRequests.push(refreshPrebidSlot);
             }
 
             if (dfpSlot.a9) {
