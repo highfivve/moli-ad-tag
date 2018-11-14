@@ -48,11 +48,11 @@ const createEventRefreshListener = (trigger: EventTrigger): IAdRefreshListener =
  * @param trigger the trigger configuration for the refresh listener
  * @returns an IAdRefreshListener if possible otherwise null
  */
-export const createRefreshListener = (trigger: Trigger): IAdRefreshListener | null => {
+export const createRefreshListener = (trigger: Trigger): IAdRefreshListener => {
   switch (trigger.name) {
     case 'event':
       return createEventRefreshListener(trigger);
     default:
-      return null;
+      throw new Error(`Unsupported trigger ${trigger.name}`);
   }
 };
