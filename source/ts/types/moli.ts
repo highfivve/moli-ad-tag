@@ -59,12 +59,12 @@ export namespace Moli {
    * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
    * http://prebid.org/dev-docs/conditional-ad-units.html
    */
-  interface SizeConfigEntry {
+  export interface SizeConfigEntry {
     /** media query that must match if the sizes are applicable */
     readonly mediaQuery: string;
 
     /** static sizes that are support if the media query matches */
-    readonly sizesSupported: [number, number][];
+    readonly sizesSupported: DfpSlotSize[];
 
     /** labels that are available if the media query matches */
     readonly labels: string[];

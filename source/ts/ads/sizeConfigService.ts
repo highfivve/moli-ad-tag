@@ -2,24 +2,27 @@ import { Moli } from '../types/moli';
 import { flatten } from '../util/flatten';
 
 import DfpSlotSize = Moli.DfpSlotSize;
-import IAdSlot = Moli.IAdSlot;
+import SizeConfigEntry = Moli.SizeConfigEntry;
 import MoliLogger = Moli.MoliLogger;
 
 export class SizeConfigService {
-  private slots: Array<IAdSlot> = [];
+  private supportedSizes: DfpSlotSize[];
 
-  constructor(private logger: MoliLogger) {}
-
-  public initialize(slots: Array<IAdSlot>): void {
-    this.slots = slots;
+  constructor(sizeConfig: SizeConfigEntry[], private logger: MoliLogger) {
+    this.supportedSizes = flatten(sizeConfig
+      .filter(conf => window.matchMedia(conf.mediaQuery).matches)
+      .map(conf => conf.sizesSupported))
+      .map(size => JSON.stringify(size))
+      .filter((size, position, arr) => arr.indexOf(size) === position)
+      .map(sizeAsString => JSON.parse(sizeAsString));
   }
 
-  public filterSupportedSizes(givenSizes: Array<DfpSlotSize>): Array<DfpSlotSize> {
-    if (this.slots.length === 0) {
-      this.logger.warn('SizeConfig: not initialized (slots empty)');
+  public filterSupportedSizes(givenSizes: DfpSlotSize[]): DfpSlotSize[] {
+    if (this.supportedSizes.length === 0) {
+      this.logger.warn('SizeConfig: not initialized (supported sizes empty)');
     }
 
-    return flatten(this.slots.map(slot => slot.sizes)).filter(
+    return this.supportedSizes.filter(
       configuredSize => givenSizes.some(
         givenSize => {
           if (configuredSize === 'fluid') {

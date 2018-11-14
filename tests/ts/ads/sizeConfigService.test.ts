@@ -1,4 +1,5 @@
 import '../stubs/browserEnvSetup';
+
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
@@ -7,7 +8,8 @@ import { SizeConfigService } from '../../../source/ts/ads/sizeConfigService';
 import { Moli } from '../../../source/ts';
 
 import MoliLogger = Moli.MoliLogger;
-import IAdSlot = Moli.IAdSlot;
+import SizeConfigEntry = Moli.SizeConfigEntry;
+import DfpSlotSize = Moli.DfpSlotSize;
 
 // setup sinon-chai
 use(sinonChai);
@@ -22,14 +24,8 @@ describe('SizeConfigService', () => {
     warn: warnStub,
     error: sandbox.stub()
   };
-  const eagerSlot = {
-    position: 'in-page',
-    domId: 'not-available',
-    behaviour: 'eager',
-    adUnitPath: '/123/eager',
-    sizes: ['fluid', [605, 165]]
-  } as IAdSlot;
-  const newSizeConfigService = (logger: MoliLogger) => new SizeConfigService(logger);
+  const defaultSizeConfig: SizeConfigEntry[] = [];
+  const newSizeConfigService = (sizeConfig: SizeConfigEntry[], logger: MoliLogger) => new SizeConfigService(sizeConfig, logger);
 
   afterEach(() => {
     sandbox.reset();
@@ -38,8 +34,7 @@ describe('SizeConfigService', () => {
   describe('slot matching logic', () => {
 
     it('should return an empty array when passed an empty array', () => {
-      const sizeConfigService = newSizeConfigService(loggerStub);
-      sizeConfigService.initialize([ eagerSlot ]);
+      const sizeConfigService = newSizeConfigService(defaultSizeConfig, loggerStub);
 
       const filteredSizes = sizeConfigService.filterSupportedSizes([]);
 
@@ -47,14 +42,30 @@ describe('SizeConfigService', () => {
     });
 
     it('should warn if config is empty', () => {
-      const filteredSizes = newSizeConfigService(loggerStub).filterSupportedSizes([]);
+      const filteredSizes = newSizeConfigService(defaultSizeConfig, loggerStub).filterSupportedSizes([]);
 
       expect(warnStub).to.have.been.calledOnce;
       expect(filteredSizes).to.deep.equal([]);
     });
 
+    it('should filter out duplicate slots from the size config', () => {
+      const sizeConfigEntry1: SizeConfigEntry = {
+        labels: [],
+        sizesSupported: [ [ 205, 200 ], 'fluid' ],
+        mediaQuery: 'min-width: 300px'
+      };
+      const sizeConfigEntry2: SizeConfigEntry = {
+        labels: [],
+        sizesSupported: [ [ 205, 200 ] ],
+        mediaQuery: 'min-width: 300px'
+      };
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ], loggerStub);
+
+      expect((sizeConfigService as any).supportedSizes as DfpSlotSize[]).to.deep.equal([ [ 205, 200 ], 'fluid' ]);
+    });
+
     it.skip('should filter the given slots according to configuration', () => {
-      const filteredSizes = newSizeConfigService(loggerStub).filterSupportedSizes([]);
+      const filteredSizes = newSizeConfigService(defaultSizeConfig, loggerStub).filterSupportedSizes([]);
 
       expect(filteredSizes).to.deep.equal([]);
     });
