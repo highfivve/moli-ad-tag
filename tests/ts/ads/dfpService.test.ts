@@ -405,7 +405,7 @@ describe('DfpService', () => {
           expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          document.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -454,7 +454,7 @@ describe('DfpService', () => {
           expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          document.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -504,7 +504,7 @@ describe('DfpService', () => {
           expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshStub).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          document.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
 
@@ -555,7 +555,7 @@ describe('DfpService', () => {
           const adSlotArray = pubAdsServiceStubRefreshStub.firstCall.lastArg;
           expect(adSlotArray).length(1);
         }).then(() => {
-          document.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnce;
@@ -616,7 +616,7 @@ describe('DfpService', () => {
           );
 
         }).then(() => {
-          document.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -681,7 +681,7 @@ describe('DfpService', () => {
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
 
         }).then(() => {
-          document.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
 
