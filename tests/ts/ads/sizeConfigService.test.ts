@@ -24,6 +24,35 @@ describe('SizeConfigService', () => {
     warn: warnStub,
     error: sandbox.stub()
   };
+  const sizeConfigEntry1: SizeConfigEntry = {
+    labels: [],
+    sizesSupported: [ [ 205, 200 ], 'fluid' ],
+    mediaQuery: 'min-width: 300px'
+  };
+  const sizeConfigEntry2: SizeConfigEntry = {
+    labels: [],
+    sizesSupported: [ [ 205, 200 ] ],
+    mediaQuery: 'min-width: 300px'
+  };
+  const sizeConfigEntry3: SizeConfigEntry = {
+    labels: [],
+    sizesSupported: [ [ 985, 380 ], 'fluid' ],
+    mediaQuery: 'min-width: 300px'
+  };
+  const adSlot1: Moli.AdSlot = {
+    position: 'in-page',
+    domId: 'not-available',
+    behaviour: 'eager',
+    adUnitPath: '/123/eager',
+    sizes: [ [ 605, 165 ] ]
+  };
+  const adSlot2: Moli.AdSlot = {
+    position: 'in-page',
+    domId: 'not-available-2',
+    behaviour: 'eager',
+    adUnitPath: '/123/eager-2',
+    sizes: [ 'fluid', [ 985, 380 ] ]
+  };
   const defaultSizeConfig: SizeConfigEntry[] = [];
   const newSizeConfigService = (sizeConfig: SizeConfigEntry[], logger: MoliLogger) => new SizeConfigService(sizeConfig, logger);
 
@@ -31,7 +60,7 @@ describe('SizeConfigService', () => {
     sandbox.reset();
   });
 
-  describe('slot matching logic', () => {
+  describe('slot size matching logic', () => {
 
     it('should return an empty array when passed an empty array', () => {
       const sizeConfigService = newSizeConfigService(defaultSizeConfig, loggerStub);
@@ -49,25 +78,23 @@ describe('SizeConfigService', () => {
     });
 
     it('should filter out duplicate slots from the size config', () => {
-      const sizeConfigEntry1: SizeConfigEntry = {
-        labels: [],
-        sizesSupported: [ [ 205, 200 ], 'fluid' ],
-        mediaQuery: 'min-width: 300px'
-      };
-      const sizeConfigEntry2: SizeConfigEntry = {
-        labels: [],
-        sizesSupported: [ [ 205, 200 ] ],
-        mediaQuery: 'min-width: 300px'
-      };
       const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ], loggerStub);
 
       expect((sizeConfigService as any).supportedSizes as DfpSlotSize[]).to.deep.equal([ [ 205, 200 ], 'fluid' ]);
     });
 
-    it.skip('should filter the given slots according to configuration', () => {
-      const filteredSizes = newSizeConfigService(defaultSizeConfig, loggerStub).filterSupportedSizes([]);
+    it('should filter the given slots according to configuration', () => {
+      const filteredSizes = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2, sizeConfigEntry3 ], loggerStub)
+        .filterSupportedSizes([ [ 985, 380 ], [ 205, 200 ], [ 350, 200 ], [ 1, 1 ] ]);
 
-      expect(filteredSizes).to.deep.equal([]);
+      expect(new Set(filteredSizes)).to.deep.equal(new Set([ [ 985, 380 ], [ 205, 200 ] ]));
+    });
+
+    it('should check if a given slot matches the configured slot size criteria', () => {
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ], loggerStub);
+
+      expect(sizeConfigService.filterSlot(adSlot1)).to.be.false;
+      expect(sizeConfigService.filterSlot(adSlot2)).to.be.true;
     });
   });
 });
