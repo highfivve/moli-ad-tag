@@ -9,6 +9,7 @@ import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
 import DfpKeyValue = Moli.DfpKeyValue;
+import { SizeConfigService } from './sizeConfigService';
 
 /**
  * Combines the dfp slot definition along with the actual googletag.IAdSlot definition.
@@ -31,7 +32,6 @@ export class DfpService implements Moli.MoliTag {
    */
   private config?: Moli.MoliConfig;
 
-
   /**
    *
    * @param assetService - Currently needed to load amazon
@@ -52,6 +52,8 @@ export class DfpService implements Moli.MoliTag {
       return Promise.reject('Already initialized');
     }
 
+    const sizeConfigService = new SizeConfigService(config.sizeConfig || [], this.logger);
+
     // a9 script overwrites the window.apstag completely on script load
     if (config.a9) {
       this.initApstag();
@@ -63,7 +65,8 @@ export class DfpService implements Moli.MoliTag {
 
     this.config = config;
 
-    const slots = config.slots;
+    const slots = config.slots
+      .filter(slot => sizeConfigService.filterSlot(slot));
 
     const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
@@ -110,7 +113,8 @@ export class DfpService implements Moli.MoliTag {
    * A lazy loaded slot can contain any other slot. This includes prebid (header bidding) slots.
    * This method handles
    *
-   * @param lazyLoadingSlots
+   * @param {Promise<Moli.LazyAdSlot[]>} lazyLoadingSlots
+   * @param {Moli.MoliConfig} config
    */
   private initLazyLoadedSlots(lazyLoadingSlots: Promise<Moli.LazyAdSlot[]>, config: Moli.MoliConfig): void {
     lazyLoadingSlots
@@ -156,6 +160,7 @@ export class DfpService implements Moli.MoliTag {
    * A refreshable slot can contain any other slot. This includes prebid (header bidding) and lazy loading slots.
    *
    * @param {Promise<ISlotDefinition<Moli.AdSlot>[]>} displayedAdSlots
+   * @param {Moli.MoliConfig} config
    */
   private initRefreshableSlots(displayedAdSlots: Promise<ISlotDefinition<Moli.AdSlot>[]>, config: Moli.MoliConfig): void {
     displayedAdSlots

@@ -20,10 +20,15 @@ export class SizeConfigService {
     const supportedConfigs = sizeConfig
       .filter(conf => window.matchMedia(conf.mediaQuery).matches);
 
+    if (sizeConfig.length > 0 && supportedConfigs.length === 0) {
+      this.logger.debug('SizeConfig: supported sizes empty after matchMedia filtering - probably wrong config?');
+    }
+
     // To filter out duplicate slot sizes, the slot size tuples are converted to strings that can be easily compared
     // using indexOf(), and back to tuples after the filtering took place.
-    this.supportedSizes = flatten(supportedConfigs
-      .map(conf => conf.sizesSupported)
+    this.supportedSizes = flatten(
+      supportedConfigs
+        .map(conf => conf.sizesSupported)
     )
       .map(size => JSON.stringify(size))
       .filter(uniquePrimitiveFilter)
@@ -42,18 +47,22 @@ export class SizeConfigService {
    * Labels are matched in this order: labelAll, labelAny. If both are specified, only labelAll will be
    * taken into account.
    *
+   * If no labels have been configured, all labels are considered matching. See the implementation in prebid.js:
+   * https://github.com/prebid/Prebid.js/blob/master/src/sizeMapping.js#L96
+   *
    * @param slot the ad slot to check
    * @returns {boolean} is this slot supported (label/sizes)?
    */
   public filterSlot(slot: IAdSlot): boolean {
     let labelsMatching = true;
 
-    if (slot.labelAll) {
+    // filtering by labels is only done if any labels were configured.
+    if (this.supportedLabels.length > 0 && slot.labelAll) {
       labelsMatching = slot.labelAll.every(label => this.supportedLabels.indexOf(label) > -1);
     }
 
     // if labelAll was already evaluated, labelAny will be ignored.
-    if (slot.labelAny && !slot.labelAll) {
+    if (this.supportedLabels.length > 0 && slot.labelAny && !slot.labelAll) {
       labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
     }
 
@@ -63,15 +72,14 @@ export class SizeConfigService {
   /**
    * Returns all sizes matching the configured possible slot sizes from a given set.
    *
+   * If *no* supportedSizes are present, all sizes are valid. This implementation logic is en par with prebid.js:
+   * https://github.com/prebid/Prebid.js/blob/master/src/sizeMapping.js#L129-L131
+   *
    * @param givenSizes
    * @returns {DfpSlotSize[]}
    */
   public filterSupportedSizes(givenSizes: DfpSlotSize[]): DfpSlotSize[] {
-    if (this.supportedSizes.length === 0) {
-      this.logger.warn('SizeConfig: not properly initialized (supported sizes empty)');
-    }
-
-    return this.supportedSizes.filter(
+    return this.supportedSizes.length === 0 ? givenSizes : this.supportedSizes.filter(
       configuredSize => givenSizes.some(
         givenSize => {
           if (configuredSize === 'fluid') {
