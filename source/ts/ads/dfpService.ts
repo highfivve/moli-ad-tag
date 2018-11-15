@@ -3,8 +3,8 @@ import domready = require('domready');
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import '../types/apstag';
-import { cookieService, ICookieService } from '../util/cookieService';
-import { assetLoaderService, AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
+import { ICookieService } from '../util/cookieService';
+import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
@@ -516,14 +516,3 @@ export class DfpService implements Moli.MoliTag {
     };
   }
 }
-
-const dfpService = new DfpService(assetLoaderService, cookieService);
-
-/**
- * Only export the public API and hide properties and methods in the DFP Service
- */
-export const moli: Moli.MoliTag = {
-  initialize: dfpService.initialize,
-  getConfig: dfpService.getConfig
-};
-window.moli = moli;
