@@ -59,6 +59,13 @@ describe('SizeConfigService', () => {
     sizesSupported: [ 'fluid' ],
     mediaQuery: 'min-width: 300px'
   };
+  const outOfPageSlot: Moli.AdSlot = {
+    position: 'out-of-page',
+    domId: 'not-available',
+    behaviour: 'eager',
+    adUnitPath: '/123/eager-oop',
+    sizes: []
+  };
   const adSlot605x165: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available',
@@ -157,6 +164,13 @@ describe('SizeConfigService', () => {
     it('should let the given slot pass if label configuration is empty', () => {
       const slotPassed = newSizeConfigService([ sizeConfigEntryWithoutLabels ], loggerStub)
         .filterSlot(adSlotWithLabelAll);
+
+      expect(slotPassed).to.be.true;
+    });
+
+    it('should let the given slot pass if it is an out-of-page slot with empty sizes', () => {
+      const slotPassed = newSizeConfigService([ sizeConfigEntry5 ], loggerStub)
+        .filterSlot(outOfPageSlot);
 
       expect(slotPassed).to.be.true;
     });

@@ -66,7 +66,8 @@ export class SizeConfigService {
       labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
     }
 
-    return labelsMatching && this.filterSupportedSizes(slot.sizes).length > 0;
+    // for out-of-page slots, no sizes are provided. Therefore, we need to bypass slot size filtering for these slots.
+    return labelsMatching && (slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0);
   }
 
   /**
