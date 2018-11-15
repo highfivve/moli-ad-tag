@@ -105,7 +105,7 @@ export const adConfiguration: Moli.MoliConfig = {
     }
   ],
   targeting: {
-    keyValues: []
+    keyValues: {}
   },
   sizeConfig: [],
   prebid: {

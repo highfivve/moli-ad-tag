@@ -8,7 +8,6 @@ import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLo
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
-import DfpKeyValue = Moli.DfpKeyValue;
 import { SizeConfigService } from './sizeConfigService';
 import DfpKeyValueMap = Moli.DfpKeyValueMap;
 
@@ -25,7 +24,7 @@ interface ISlotDefinition<S extends Moli.AdSlot> {
 
 declare const window: Window;
 
-export class DfpService implements Moli.MoliTag {
+export class DfpService {
 
   /**
    * The moli configuration. Set by the initialize method and used to configure

@@ -4,7 +4,6 @@ import { prebidjs } from './prebidjs';
 export namespace Moli {
 
   export type DfpSlotSize = [number, number] | 'fluid';
-  export type DfpKeyValue = { key: string, value: string[] | string };
 
   /**
    * KeyValue map. Last insert wins.
@@ -13,19 +12,48 @@ export namespace Moli {
     [key: string]: string | string[] | undefined;
   }
 
+  export type MoliCommand = (moli: MoliTag) => void;
+
   export interface MoliTag {
+
+    /**
+     * Queue for async loading and processing
+     */
+    que: {
+      /**
+       * Push a single command into the queue.
+       *
+       * @param cmd
+       */
+      push(cmd: MoliCommand): void;
+    };
+
+
+    /**
+     * Set a key value. Can be used in DFP or prebid bids configuration.
+     * @param key
+     * @param value
+     */
+    setTargeting(key: string, value: string | string[]): void;
 
     /**
      *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
      */
-    initialize(config: MoliConfig): Promise<void>;
+    configure(config: MoliConfig): void;
+
+
+    /**
+     * Start requesting ads as soon as the tag has been configured.
+     */
+    requestAds(): void;
 
     /**
      * @returns the configuration used to initialize the ads. If not yet initialized, undefined.
      */
     getConfig(): MoliConfig | undefined;
+
 
   }
 
