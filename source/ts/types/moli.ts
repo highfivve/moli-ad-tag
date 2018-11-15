@@ -6,6 +6,13 @@ export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
   export type DfpKeyValue = { key: string, value: string[] | string };
 
+  /**
+   * KeyValue map. Last insert wins.
+   */
+  export interface DfpKeyValueMap {
+    [key: string]: string | string[] | undefined;
+  }
+
   export interface MoliTag {
 
     /**
@@ -31,7 +38,7 @@ export namespace Moli {
     readonly targeting?: {
 
       /** static or supplied key-values */
-      readonly keyValues: DfpKeyValue[];
+      readonly keyValues: DfpKeyValueMap;
     };
 
     /**

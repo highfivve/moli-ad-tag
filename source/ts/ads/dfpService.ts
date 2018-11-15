@@ -10,6 +10,7 @@ import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
 import DfpKeyValue = Moli.DfpKeyValue;
 import { SizeConfigService } from './sizeConfigService';
+import DfpKeyValueMap = Moli.DfpKeyValueMap;
 
 /**
  * Combines the dfp slot definition along with the actual googletag.IAdSlot definition.
@@ -70,7 +71,7 @@ export class DfpService implements Moli.MoliTag {
 
     const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
-      .then(() => this.configureAdNetwork(config.targeting ? config.targeting.keyValues : []));
+      .then(() => this.configureAdNetwork(config.targeting ? config.targeting.keyValues : {}));
 
     // concurrently initialize lazy loaded slots and refreshable slots
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
@@ -351,8 +352,15 @@ export class DfpService implements Moli.MoliTag {
     });
   }
 
-  private configureAdNetwork(keyValuePairs: DfpKeyValue[]): void {
-    keyValuePairs.forEach(kv => window.googletag.pubads().setTargeting(kv.key, kv.value));
+  private configureAdNetwork(keyValueMap: DfpKeyValueMap): void {
+
+    Object.keys(keyValueMap).forEach(key => {
+      const value = keyValueMap[key];
+      if (value) {
+        window.googletag.pubads().setTargeting(key, value);
+      }
+    });
+
 
     window.googletag.pubads().enableAsyncRendering();
     window.googletag.pubads().disableInitialLoad();

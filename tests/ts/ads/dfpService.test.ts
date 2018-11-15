@@ -4,7 +4,7 @@ import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 import { apstag } from '../../../source/ts/types/apstag';
-import { DfpService, moli } from '../../../source/ts/ads/dfpService';
+import { DfpService } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
 import { assetLoaderService, AssetLoadMethod, AssetType } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
@@ -17,14 +17,6 @@ import { noopLogger } from '../stubs/moliStubs';
 use(sinonChai);
 
 // tslint:disable: no-unused-expression
-describe('moli', () => {
-
-  it('should have been exported', () => {
-    expect(moli).to.be.ok;
-  });
-
-});
-
 describe('DfpService', () => {
   const sandbox = Sinon.createSandbox();
   const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadAsset');
@@ -725,10 +717,11 @@ describe('DfpService', () => {
         slots: [],
         logger: noopLogger,
         targeting: {
-          keyValues: [
-            { key: 'gfversion', value: ['v2016'] },
-            { key: 'sprechstunde', value: 'true' }
-          ]
+          keyValues: {
+            'gfversion': ['v2016'],
+            'sprechstunde': 'true',
+            'undefined': undefined
+          }
         },
         sizeConfig: []
       };
@@ -738,6 +731,7 @@ describe('DfpService', () => {
           expect(setTargetingStub).to.be.calledTwice;
           expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals(['v2016']));
           expect(setTargetingStub).to.be.calledWith('sprechstunde', 'true');
+          expect(setTargetingStub).not.to.be.calledWith('undefined', undefined);
         });
     });
   });
