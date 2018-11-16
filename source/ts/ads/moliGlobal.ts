@@ -1,6 +1,6 @@
 import { Moli } from '../types/moli';
 import { DfpService } from './dfpService';
-import { assetLoaderService } from '../util/assetLoaderService';
+import { assetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
 
 const dfpService = new DfpService(assetLoaderService, cookieService);
@@ -8,7 +8,7 @@ const dfpService = new DfpService(assetLoaderService, cookieService);
 
 /**
  *
- * # State transitions
+ * State transitions
  *
  * TODO: allowed state transitions
  * TODO: document various que ordering examples
@@ -248,6 +248,21 @@ const moliGlobal = (): Moli.MoliTag => {
     }
   }
 
+  function openConsole(): void {
+    switch (state.state) {
+      case 'configurable': {
+        break;
+      }
+      default: {
+        assetLoaderService.loadScript({
+          assetUrl: 'moli-debug.min.js', // TODO: make asset path configurable
+          loadMethod: AssetLoadMethod.TAG,
+          name: 'moli-debugger'
+        });
+      }
+    }
+  }
+
   const que = {
     push(cmd: Moli.MoliCommand): void {
       cmd(window.moli);
@@ -260,7 +275,8 @@ const moliGlobal = (): Moli.MoliTag => {
     setTargeting: setTargeting,
     getConfig: getConfig,
     configure: configure,
-    requestAds: requestAds
+    requestAds: requestAds,
+    openConsole: openConsole
   };
 };
 

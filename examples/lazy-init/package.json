@@ -4,13 +4,13 @@
   "description": "Publisher boostrap template",
   "main": "index.ts",
   "scripts": {
-    "build": "yarn clean && yarn build:prebid && yarn build:tag",
+    "build": "yarn build:prebid && yarn build:tag",
     "build:tag": "webpack --mode=production",
     "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../prebid/modules.json",
-    "start": "yarn build:prebid && webpack-dev-server --mode=development",
+    "start": "yarn build:prebid && yarn link:debug && webpack-dev-server --mode=development",
+    "link:debug": "ln -sf ../../moli-debugger/dist/ dist",
     "moli:update": "yarn moli:cleanCache && yarn upgrade moli-ad-tag",
-    "moli:cleanCache": "yarn cache clean moli-ad-tag",
-    "clean": "rm -rf dist/"
+    "moli:cleanCache": "yarn cache clean moli-ad-tag"
   },
   "repository": {
     "type": "git",

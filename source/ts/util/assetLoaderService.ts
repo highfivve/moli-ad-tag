@@ -1,19 +1,10 @@
 import domready = require('domready');
 
-export enum AssetType {
-  SCRIPT, STYLE
-}
-
 export enum AssetLoadMethod {
   FETCH, TAG
 }
 
 export interface ILoadAssetParams {
-
-  /**
-   * The type of asset. Can be SCRIPT (JavaScript) or STYLE (CSS).
-   */
-  assetType: AssetType;
 
   /**
    * Short identifier for the style/script. Used for performance measurement and error messages.
@@ -39,12 +30,12 @@ export interface IAssetLoaderService {
    * @param config
    * @param parent [optional] the element to which the assetLoader should append the asset. defaults to document.head.
    */
-  loadAsset(config: ILoadAssetParams, parent?: Element): Promise<void>;
+  loadScript(config: ILoadAssetParams, parent?: Element): Promise<void>;
 }
 
 export class AssetLoaderService implements IAssetLoaderService {
 
-  public loadAsset(config: ILoadAssetParams, parent: Element = document.head!): Promise<void> {
+  public loadScript(config: ILoadAssetParams, parent: Element = document.head!): Promise<void> {
    return this.awaitDomReady()
      .then(() => {
         switch (config.loadMethod) {
@@ -58,12 +49,7 @@ export class AssetLoaderService implements IAssetLoaderService {
     return window.fetch(config.assetUrl)
       .then((response: Response) => response.ok ? Promise.resolve(response) : Promise.reject(response))
       .then((response: Response) => response.text())
-      .then((body: string) => {
-        switch (config.assetType) {
-          case AssetType.SCRIPT: return this.scriptTagWithBody(body);
-          case AssetType.STYLE: return this.styleTagWithBody(body);
-        }
-      })
+      .then((body: string) => this.scriptTagWithBody(body))
       .then((element: HTMLElement) => parentElement.appendChild(element));
   }
 
@@ -75,17 +61,8 @@ export class AssetLoaderService implements IAssetLoaderService {
     return scriptTag;
   }
 
-  private styleTagWithBody(body: string): HTMLStyleElement {
-    const styleTag = document.createElement('style');
-    styleTag.type = 'text/css';
-    styleTag.innerText = body;
-    return styleTag;
-  }
-
   private loadAssetViaTag(config: ILoadAssetParams, parentElement: Element): Promise<void> {
-    const tag: HTMLElement = config.assetType === AssetType.SCRIPT
-      ? this.scriptTagWithSrc(config.assetUrl)
-      : this.linkTagWithHref(config.assetUrl);
+    const tag: HTMLElement = this.scriptTagWithSrc(config.assetUrl);
 
     return new Promise<void>((resolve: (() => void), reject: (() => void)) => {
       tag.onload = resolve;
@@ -100,13 +77,6 @@ export class AssetLoaderService implements IAssetLoaderService {
     scriptTag.async = true;
     scriptTag.src = src;
     return scriptTag;
-  }
-
-  private linkTagWithHref(href: string): HTMLStyleElement {
-    const styleTag = document.createElement('link');
-    styleTag.rel = 'stylesheet';
-    styleTag.href = href;
-    return styleTag;
   }
 
   /**

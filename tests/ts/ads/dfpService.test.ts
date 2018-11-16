@@ -6,7 +6,7 @@ import { prebidjs } from '../../../source/ts/types/prebidjs';
 import { apstag } from '../../../source/ts/types/apstag';
 import { DfpService } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
-import { assetLoaderService, AssetLoadMethod, AssetType } from '../../../source/ts/util/assetLoaderService';
+import { assetLoaderService, AssetLoadMethod } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
 import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
@@ -19,7 +19,7 @@ use(sinonChai);
 // tslint:disable: no-unused-expression
 describe('DfpService', () => {
   const sandbox = Sinon.createSandbox();
-  const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadAsset');
+  const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadScript');
   const newDfpService = (): DfpService => {
     return new DfpService(assetLoaderService, cookieService);
   };
@@ -78,7 +78,6 @@ describe('DfpService', () => {
 
           expect(assetLoaderFetch).to.be.calledOnceWithExactly({
             name: 'A9',
-            assetType: AssetType.SCRIPT,
             loadMethod: AssetLoadMethod.TAG,
             assetUrl: '//c.amazon-adsystem.com/aax2/apstag.js'
           });
@@ -136,7 +135,6 @@ describe('DfpService', () => {
 
           expect(assetLoaderFetch).to.be.calledOnceWithExactly({
             name: 'A9',
-            assetType: AssetType.SCRIPT,
             loadMethod: AssetLoadMethod.TAG,
             assetUrl: '//foo.bar'
           });

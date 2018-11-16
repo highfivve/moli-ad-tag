@@ -4,7 +4,7 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import '../types/apstag';
 import { ICookieService } from '../util/cookieService';
-import { AssetLoadMethod, AssetType, IAssetLoaderService } from '../util/assetLoaderService';
+import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
@@ -343,9 +343,8 @@ export class DfpService {
       }
     });
 
-    return this.assetService.loadAsset({
+    return this.assetService.loadScript({
       name: 'A9',
-      assetType: AssetType.SCRIPT,
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: config.a9.scriptUrl ? config.a9.scriptUrl : '//c.amazon-adsystem.com/aax2/apstag.js'
     });

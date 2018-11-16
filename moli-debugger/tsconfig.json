@@ -7,7 +7,7 @@
       "es6",
       "scripthost"
     ],
-    "module": "commonjs",
+    "module": "amd",
     "moduleResolution": "node",
     "target": "es2015",
     "typeRoots": [
@@ -15,6 +15,9 @@
       "types"
     ]
   },
+  "files": [
+    "debug.ts"
+  ],
   "include": [
     "node_modules/moli-ad-tag/source/**/*"
   ]

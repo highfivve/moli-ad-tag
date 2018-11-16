@@ -54,7 +54,10 @@ export namespace Moli {
      */
     getConfig(): MoliConfig | undefined;
 
-
+    /**
+     * Request the debug bundle and start the debug mode.
+     */
+    openConsole(): void;
   }
 
   export interface MoliConfig {
