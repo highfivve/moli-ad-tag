@@ -2,107 +2,10 @@ import { Moli } from '../types/moli';
 import { DfpService } from './dfpService';
 import { assetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
+import IStateMachine = Moli.state.IStateMachine;
 
 const dfpService = new DfpService(assetLoaderService, cookieService);
 
-
-/**
- *
- * State transitions
- *
- * TODO: allowed state transitions
- * TODO: document various que ordering examples
- *
- */
-interface IState {
-  readonly state: 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
-}
-
-interface IConfigurable extends IState {
-  readonly state: 'configurable';
-
-
-  // changeable configuration options
-
-  /**
-   * If set to true, initializes the ad tag as soon as the ad configuration has been set.
-   * If set to false, nothing will initialize until moli.initialize is called
-   */
-  initialize: boolean;
-
-  /**
-   * Additional key-values. Insert with
-   *
-   * @example
-   * window.moli.que.push(function(moli) => {
-   *   moli.setTargeting(key, value);
-   * });
-   *
-   */
-  keyValues: Moli.DfpKeyValueMap;
-
-}
-
-/**
- * The ad configuration has been set
- */
-interface IConfigured extends IState {
-  readonly state: 'configured';
-
-  /**
-   * Changeable configuration if other settings have been pushed into the que.
-   */
-  config: Moli.MoliConfig;
-}
-
-/**
- * Moli should be initialized. This can only be done from the "configured" state.
- *
- * If moli is in the "configurable" state, the `initialize` flag will be set to true
- * and moli is initialized once it's configured.
- */
-interface IRequestAds extends IState {
-  readonly state: 'requestAds';
-
-  /**
-   * Configuration is now immutable
-   */
-  readonly config: Moli.MoliConfig;
-}
-
-/**
- * Moli has finished loading.
- */
-interface IFinished extends IState {
-  readonly state: 'finished';
-
-  /**
-   * Configuration is now immutable
-   */
-  readonly config: Moli.MoliConfig;
-}
-
-/**
- * Moli has finished loading.
- */
-interface IError extends IState {
-  readonly state: 'error';
-
-  /**
-   * Configuration is now immutable
-   */
-  readonly config: Moli.MoliConfig;
-
-  /**
-   * the error. Should  be readable for a key accounter and a techi.
-   */
-  readonly error: any;
-}
-
-/**
- * All valid states
- */
-type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
 
 
 const logger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
@@ -280,13 +183,16 @@ const moliGlobal = (): Moli.MoliTag => {
   };
 };
 
+// =============================
+// ====== Initialization =======
+// =============================
 
 const queueCommands = window.moli ? [...window.moli.que as Moli.MoliCommand[]] || [] : [];
 
 /**
  * Only export the public API and hide properties and methods in the DFP Service
  */
-export const moli: Moli.MoliTag = moliGlobal();
+export const moli: Moli.MoliTag = createMoliTag();
 window.moli = moli;
 
 queueCommands.forEach(cmd => cmd(moli));

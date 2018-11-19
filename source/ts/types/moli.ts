@@ -60,6 +60,268 @@ export namespace Moli {
     openConsole(): void;
   }
 
+  /**
+   *
+   * ## State transitions
+   *
+   * The state machine is defined as:
+   *
+   * <pre style="font-size:10px;">
+   *                                                                                        ads ok        +----------+
+   *                                                                                                      |          |
+   *                                                                                     +------------>   | finished |
+   *                                                                                     |                |          |
+   *                                                                                     |                +----------+
+   * +--------------+    configure(config)   +------------+      requestAds()     +------+-----+
+   * |              |                        |            |                       |            |
+   * | configurable |  +-------------------> | configured |  +----------------->  | requestAds |
+   * |              |                        |            |                       |            |
+   * +--------------+                        +------------+                       +------+-----+
+   *                                                                                     |                +----------+
+   *   +         ^                            +         ^                                |                |          |
+   *   |         |                            |         |                                +------------->  | error    |
+   *   +  setXYZ +                            +  setXYZ +                                                 |          |
+   *      addXYZ                                 addXYZ                                     ads not ok    +----------+
+   * </pre>
+   *
+   * Each state has allowed operations and transitions
+   *
+   * ### Configurable state
+   *
+   * In this state the ad tag can be customized. All `getXYZ` and `addXYZ` methods
+   * can be called.
+   *
+   *
+   * * `addXYZ` - with transition `configurable -> configurable`
+   * * `setXYZ` - with transition `configurable -> configurable`
+   * * `configure` - with transition `configurable ->  configured`
+   *    Sets the main configuration. Changes can still be made.
+   * * `requestAds` - with transition `configurable -> configurable`
+   *   After `moli.configure` has been called, ads will be requested immediately.
+   *
+   * ### Configured state
+   *
+   * The main ad configuration has been set. `moli.getConfig` now returns the current
+   * configuration.
+   *
+   * * `addXYZ` - with transition `configured -> configured`
+   * * `setXYZ` - with transition `configured -> configured`
+   * * `requestAds` - with transition `configured -> requestAds`.
+   *   No changes are allowed anymore
+   *
+   *
+   * ### RequestAds state
+   *
+   * No changes are allowed anymore. The configuration is frozen. All `addXYZ` and `setXYZ`
+   * calls will fail.
+   *
+   * Two state transitions will happen:
+   *
+   * 1. After all ads have been loaded successfully: `requestAds -> finished`
+   * 1. After an error during ad loading: `requestAds -> error`
+   *
+   *
+   * ### Finished state
+   *
+   * All ads have been successfully loaded.
+   *
+   * ### Error state
+   *
+   * An error occurred while were being loaded.
+   *
+   */
+  export namespace state {
+
+    /**
+     * Top level interface for each state
+     */
+    interface IState {
+      readonly state: 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
+    }
+
+    export interface IConfigurable extends IState {
+      readonly state: 'configurable';
+
+
+      // changeable configuration options
+
+      /**
+       * If set to true, initializes the ad tag as soon as the ad configuration has been set.
+       * If set to false, nothing will initialize until moli.initialize is called
+       */
+      initialize: boolean;
+
+      /**
+       * Additional key-values. Insert with
+       *
+       * @example
+       * window.moli.que.push(function(moli) => {
+       *   moli.setTargeting(key, value);
+       * });
+       *
+       */
+      keyValues: Moli.DfpKeyValueMap;
+
+    }
+
+    /**
+     * The ad configuration has been set
+     */
+    export interface IConfigured extends IState {
+      readonly state: 'configured';
+
+      /**
+       * Changeable configuration if other settings have been pushed into the que.
+       */
+      config: Moli.MoliConfig;
+    }
+
+    /**
+     * Moli should be initialized. This can only be done from the "configured" state.
+     *
+     * If moli is in the "configurable" state, the `initialize` flag will be set to true
+     * and moli is initialized once it's configured.
+     */
+    export interface IRequestAds extends IState {
+      readonly state: 'requestAds';
+
+      /**
+       * Configuration is now immutable
+       */
+      readonly config: Moli.MoliConfig;
+    }
+
+    /**
+     * Moli has finished loading.
+     */
+    export interface IFinished extends IState {
+      readonly state: 'finished';
+
+      /**
+       * Configuration is now immutable
+       */
+      readonly config: Moli.MoliConfig;
+    }
+
+    /**
+     * Moli has finished loading.
+     */
+    export interface IError extends IState {
+      readonly state: 'error';
+
+      /**
+       * Configuration is now immutable
+       */
+      readonly config: Moli.MoliConfig;
+
+      /**
+       * the error. Should  be readable for a key accounter and a techi.
+       */
+      readonly error: any;
+    }
+
+    /**
+     * All valid states
+     */
+    export type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
+  }
+
+  /**
+   * Base interface for all states.
+   */
+  interface IState {
+    /**
+     * state name.
+     */
+    readonly state: 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
+  }
+
+  interface IConfigurable extends IState {
+    readonly state: 'configurable';
+
+
+    // changeable configuration options
+
+    /**
+     * If set to true, initializes the ad tag as soon as the ad configuration has been set.
+     * If set to false, nothing will initialize until moli.initialize is called
+     */
+    initialize: boolean;
+
+    /**
+     * Additional key-values. Insert with
+     *
+     * @example
+     * window.moli.que.push(function(moli) => {
+     *   moli.setTargeting(key, value);
+     * });
+     *
+     */
+    keyValues: Moli.DfpKeyValueMap;
+
+  }
+
+  /**
+   * The ad configuration has been set
+   */
+  interface IConfigured extends IState {
+    readonly state: 'configured';
+
+    /**
+     * Changeable configuration if other settings have been pushed into the que.
+     */
+    config: Moli.MoliConfig;
+  }
+
+  /**
+   * Moli should be initialized. This can only be done from the "configured" state.
+   *
+   * If moli is in the "configurable" state, the `initialize` flag will be set to true
+   * and moli is initialized once it's configured.
+   */
+  interface IRequestAds extends IState {
+    readonly state: 'requestAds';
+
+    /**
+     * Configuration is now immutable
+     */
+    readonly config: Moli.MoliConfig;
+  }
+
+  /**
+   * Moli has finished loading.
+   */
+  interface IFinished extends IState {
+    readonly state: 'finished';
+
+    /**
+     * Configuration is now immutable
+     */
+    readonly config: Moli.MoliConfig;
+  }
+
+  /**
+   * Moli has finished loading.
+   */
+  interface IError extends IState {
+    readonly state: 'error';
+
+    /**
+     * Configuration is now immutable
+     */
+    readonly config: Moli.MoliConfig;
+
+    /**
+     * the error. Should  be readable for a key accounter and a techi.
+     */
+    readonly error: any;
+  }
+
+  /**
+   * All valid states
+   */
+  type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
+
   export interface MoliConfig {
 
     /** all possible ad slots */
