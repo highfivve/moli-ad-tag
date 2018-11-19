@@ -47,12 +47,17 @@ export namespace Moli {
     /**
      * Start requesting ads as soon as the tag has been configured.
      */
-    requestAds(): void;
+    requestAds(): Promise<IConfigurable | IFinished | IError>;
 
     /**
      * @returns the configuration used to initialize the ads. If not yet initialized, undefined.
      */
     getConfig(): MoliConfig | undefined;
+
+    /**
+     * @returns the current state name
+     */
+    getState(): state.States;
 
     /**
      * Request the debug bundle and start the debug mode.
@@ -132,11 +137,12 @@ export namespace Moli {
    */
   export namespace state {
 
+    export type States = 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
     /**
      * Top level interface for each state
      */
-    interface IState {
-      readonly state: 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
+    export interface IState {
+      readonly state: States;
     }
 
     export interface IConfigurable extends IState {

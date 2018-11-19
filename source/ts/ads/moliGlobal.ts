@@ -3,6 +3,9 @@ import { DfpService } from './dfpService';
 import { assetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
 import IStateMachine = Moli.state.IStateMachine;
+import IFinished = Moli.state.IFinished;
+import IError = Moli.state.IError;
+import IConfigurable = Moli.state.IConfigurable;
 
 const dfpService = new DfpService(assetLoaderService, cookieService);
 
@@ -17,7 +20,7 @@ const logger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
   };
 };
 
-const moliGlobal = (): Moli.MoliTag => {
+export const createMoliTag = (): Moli.MoliTag => {
 
   /**
    * Initial state is configurable
@@ -114,41 +117,50 @@ const moliGlobal = (): Moli.MoliTag => {
     }
   }
 
-  function requestAds(): void {
+  function requestAds(): Promise<IConfigurable | IFinished | IError> {
     switch (state.state) {
       case 'configurable': {
         state.initialize = true;
-        break;
+        return Promise.resolve(state);
       }
       case 'configured': {
         const config = state.config;
-        dfpService.initialize(config).then(() => {
+        state = {
+          state: 'requestAds',
+          config: config
+        };
+        return dfpService.initialize(config).then(() => {
           state = {
             state: 'finished',
             config: config
           };
+          return Promise.resolve(state);
         }).catch((error) => {
            state = {
              state: 'error',
              config: config,
              error: error
            };
+           return Promise.resolve(state);
         });
-        break;
       }
       case 'requestAds': {
         logger(state.config.logger).error('Trying to requestAds twice. Already requesting ads.');
-        break;
+        return Promise.reject();
       }
       case 'finished': {
         logger(state.config.logger).error('Trying to requestAds twice. Already finished.');
-        break;
+        return Promise.reject();
       }
       case 'error': {
         logger(state.config.logger).error('Trying to requestAds twice. Already finished, but with an error.', state.error);
-        break;
+        return Promise.reject();
       }
     }
+  }
+
+  function getState(): Moli.state.States {
+    return state.state;
   }
 
   function openConsole(): void {
@@ -179,6 +191,7 @@ const moliGlobal = (): Moli.MoliTag => {
     getConfig: getConfig,
     configure: configure,
     requestAds: requestAds,
+    getState: getState,
     openConsole: openConsole
   };
 };

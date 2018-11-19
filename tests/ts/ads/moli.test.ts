@@ -1,0 +1,112 @@
+import '../stubs/browserEnvSetup';
+import { expect, use } from 'chai';
+import * as sinonChai from 'sinon-chai';
+import { Moli } from '../../../source/ts/types/moli';
+import { createMoliTag, moli } from '../../../source/ts/ads/moliGlobal';
+import { googletagStub } from '../stubs/googletagStubs';
+import { pbjsStub } from '../stubs/prebidjsStubs';
+import IConfigurable = Moli.state.IConfigurable;
+
+// setup sinon-chai
+use(sinonChai);
+
+// tslint:disable: no-unused-expression
+describe('moli', () => {
+
+  it('should set the window.moli tag', () => {
+    expect(window.moli).to.be.ok;
+    expect(window.moli).to.be.equal(moli);
+  });
+
+  describe('state machine', () => {
+
+    beforeEach(() => {
+      window.googletag = googletagStub;
+      window.pbjs = pbjsStub;
+    });
+
+    it('should start in configurable state', () => {
+      const adTag = createMoliTag();
+      expect(adTag.getState()).to.be.eq('configurable');
+    });
+
+    it('should stay in configurable state after setTargeting()', () => {
+      const adTag = createMoliTag();
+      adTag.setTargeting('key', 'value');
+      expect(adTag.getState()).to.be.eq('configurable');
+    });
+
+    it('should transition into configured state after configure()', () => {
+      const adTag = createMoliTag();
+      adTag.configure({ slots: []});
+      expect(adTag.getState()).to.be.eq('configured');
+    });
+
+    it('should stay in configured state after setTargeting()', () => {
+      const adTag = createMoliTag();
+      adTag.configure({ slots: []});
+      adTag.setTargeting('key', 'value');
+      expect(adTag.getState()).to.be.eq('configured');
+    });
+
+    it('should transition into requestAds state after requestAds()', () => {
+      const adTag = createMoliTag();
+      adTag.configure({ slots: []});
+      const finished = adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('requestAds');
+      return finished.then(state => {
+        expect(state.state).to.be.eq('finished');
+      });
+    });
+
+    it('should stay in configurable state after requestAds() and set initialize to true', () => {
+      const adTag = createMoliTag();
+      const finished = adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('configurable');
+      return finished.then(state => {
+        expect(state.state).to.be.eq('configurable');
+        const configurableState: IConfigurable = state as IConfigurable;
+        expect(configurableState.initialize).to.be.true;
+      });
+    });
+  });
+
+  describe('setTargeting()', () => {
+
+    it('should add key-values to the config', () => {
+      const adTag = createMoliTag();
+      adTag.setTargeting('pre', 'configure1');
+      adTag.configure({ slots: []});
+      adTag.setTargeting('post', 'configure2');
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(      config!.targeting!.keyValues).to.be.deep.equals({
+        pre: 'configure1',
+        post: 'configure2'
+      });
+    });
+
+    it('should override preexisting values', () => {
+      const adTag = createMoliTag();
+      adTag.setTargeting('pre', 'configure1');
+      adTag.configure({ slots: [], targeting: {
+        keyValues: {
+          pre: 'dismiss',
+          post: 'dismiss'
+        }
+      }});
+      adTag.setTargeting('post', 'configure2');
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(config!.targeting!.keyValues).to.be.deep.equals({
+        pre: 'configure1',
+        post: 'configure2'
+      });
+    });
+  });
+});
+// tslint:enable
