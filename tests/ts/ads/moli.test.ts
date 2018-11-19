@@ -82,7 +82,7 @@ describe('moli', () => {
       const config = adTag.getConfig();
       expect(config).to.be.ok;
       expect(config!.targeting).to.be.ok;
-      expect(      config!.targeting!.keyValues).to.be.deep.equals({
+      expect(config!.targeting!.keyValues).to.be.deep.equals({
         pre: 'configure1',
         post: 'configure2'
       });
