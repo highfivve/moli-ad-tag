@@ -108,5 +108,60 @@ describe('moli', () => {
       });
     });
   });
+
+  describe('addLabel()', () => {
+
+    it('should add label to the config', () => {
+      const adTag = createMoliTag();
+      adTag.addLabel('pre');
+      adTag.configure({ slots: []});
+      adTag.addLabel('post');
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(config!.targeting!.labels).to.be.deep.equals([ 'pre', 'post' ]);
+    });
+
+    it('should append to preexisting values', () => {
+      const adTag = createMoliTag();
+      adTag.addLabel('pre');
+      adTag.configure({ slots: [], targeting: {
+        keyValues: { },
+        labels: [ 'pre-existing' ]
+      }});
+      adTag.addLabel('post');
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(config!.targeting!.labels).to.be.deep.equals([ 'pre-existing', 'pre', 'post' ]);
+    });
+  });
+
+  describe('multiple configurations', () => {
+    it('should not miss any configuration', () => {
+      const adTag = createMoliTag();
+      adTag.setTargeting('pre', 'configure1');
+      adTag.addLabel('pre');
+      adTag.configure({ slots: [], targeting: {
+          keyValues: {
+            pre: 'dismiss',
+            post: 'dismiss'
+          },
+          labels: [ 'pre-existing' ]
+        }});
+      adTag.addLabel('post');
+      adTag.setTargeting('post', 'configure2');
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(config!.targeting!.labels).to.be.deep.equals([ 'pre-existing', 'pre', 'post' ]);
+      expect(config!.targeting!.keyValues).to.be.deep.equals({
+        pre: 'configure1',
+        post: 'configure2'
+      });
+    });
+  });
 });
 // tslint:enable

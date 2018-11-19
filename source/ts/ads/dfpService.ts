@@ -52,7 +52,8 @@ export class DfpService {
       return Promise.reject('Already initialized');
     }
 
-    const sizeConfigService = new SizeConfigService(config.sizeConfig || [], this.logger);
+    const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
+    const sizeConfigService = new SizeConfigService(config.sizeConfig || [], extraLabels, this.logger);
 
     // a9 script overwrites the window.apstag completely on script load
     if (config.a9) {

@@ -106,7 +106,7 @@ describe('SizeConfigService', () => {
     labelAll: [ 'video', 'visitor-uk' ]
   };
   const emptySizeConfig: SizeConfigEntry[] = [];
-  const newSizeConfigService = (sizeConfig: SizeConfigEntry[], logger: MoliLogger) => new SizeConfigService(sizeConfig, logger);
+  const newSizeConfigService = (sizeConfig: SizeConfigEntry[], logger: MoliLogger) => new SizeConfigService(sizeConfig, [], logger);
 
   afterEach(() => {
     sandbox.reset();
@@ -186,7 +186,7 @@ describe('SizeConfigService', () => {
       const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ], loggerStub);
 
       expect(
-        new Set((sizeConfigService as any).supportedLabels as string[])
+        new Set(sizeConfigService.getSupportedLabels())
       ).to.deep.equal(
         new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
       );
@@ -203,6 +203,15 @@ describe('SizeConfigService', () => {
 
       // has both specified, but labelAll doesn't match and labelAny is ignored :(
       expect(sizeConfigService.filterSlot(adSlotWithLabelAnyLabelAll)).to.be.false;
+    });
+
+    it('should add the extra labels to the supported labels', () => {
+      const sizeConfigService = new SizeConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ], loggerStub);
+      expect(
+        new Set(sizeConfigService.getSupportedLabels())
+      ).to.deep.equal(
+        new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
+      );
     });
   });
 });

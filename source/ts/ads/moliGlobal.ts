@@ -28,7 +28,8 @@ export const createMoliTag = (): Moli.MoliTag => {
   let state: IStateMachine = {
     state: 'configurable',
     initialize: false,
-    keyValues: {}
+    keyValues: {},
+    labels: []
   };
 
 
@@ -55,6 +56,33 @@ export const createMoliTag = (): Moli.MoliTag => {
       }
       default: {
         logger(state.config.logger).error(`Setting key-value after configuration: ${key} : ${value}`);
+        break;
+      }
+    }
+  }
+
+  function addLabel(label: string): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.labels.push(label);
+        break;
+      }
+      case 'configured': {
+        if (state.config.targeting && state.config.targeting.labels) {
+          state.config.targeting.labels.push(label);
+        } else {
+          state.config = {
+            ...state.config,
+            targeting: {
+              keyValues: {},
+              labels: [label]
+            }
+          };
+        }
+        break;
+      }
+      default: {
+        logger(state.config.logger).error(`Adding label after configure: ${label}`);
         break;
       }
     }
@@ -89,7 +117,11 @@ export const createMoliTag = (): Moli.MoliTag => {
           config: {
             ...config,
             targeting: {
-              keyValues: { ...state.keyValues }
+              keyValues: { ...state.keyValues },
+              labels: [
+                ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
+                ...state.labels
+              ]
             }
           }
         };
@@ -188,6 +220,7 @@ export const createMoliTag = (): Moli.MoliTag => {
   return {
     que: que,
     setTargeting: setTargeting,
+    addLabel: addLabel,
     getConfig: getConfig,
     configure: configure,
     requestAds: requestAds,

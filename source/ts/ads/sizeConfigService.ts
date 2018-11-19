@@ -15,7 +15,9 @@ export class SizeConfigService {
   private readonly supportedSizes: DfpSlotSize[];
   private readonly supportedLabels: string[];
 
-  constructor(sizeConfig: SizeConfigEntry[], private logger: MoliLogger) {
+  constructor(private readonly sizeConfig: SizeConfigEntry[],
+              private readonly extraLabels: string[],
+              private readonly logger: MoliLogger) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedConfigs = sizeConfig
       .filter(conf => window.matchMedia(conf.mediaQuery).matches);
@@ -34,10 +36,11 @@ export class SizeConfigService {
       .filter(uniquePrimitiveFilter)
       .map(sizeAsString => JSON.parse(sizeAsString));
 
-    this.supportedLabels = flatten(
-      supportedConfigs
-        .map(conf => conf.labels)
-    )
+    const supportedLabels = flatten(
+      supportedConfigs.map(conf => conf.labels)
+    );
+
+    this.supportedLabels = [...supportedLabels, ...extraLabels]
       .filter(uniquePrimitiveFilter);
   }
 
@@ -93,5 +96,12 @@ export class SizeConfigService {
         }
       )
     );
+  }
+
+  /**
+   * @returns the configured supported labels
+   */
+  public getSupportedLabels(): string[] {
+    return this.supportedLabels;
   }
 }

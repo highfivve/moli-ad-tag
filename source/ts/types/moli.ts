@@ -37,6 +37,12 @@ export namespace Moli {
     setTargeting(key: string, value: string | string[]): void;
 
     /**
+     * Adds a label to the static label list.
+     * @param label to be added
+     */
+    addLabel(label: String): void;
+
+    /**
      *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
@@ -47,7 +53,7 @@ export namespace Moli {
     /**
      * Start requesting ads as soon as the tag has been configured.
      */
-    requestAds(): Promise<IConfigurable | IFinished | IError>;
+    requestAds(): Promise<state.IConfigurable | state.IFinished | state.IError>;
 
     /**
      * @returns the configuration used to initialize the ads. If not yet initialized, undefined.
@@ -138,8 +144,9 @@ export namespace Moli {
   export namespace state {
 
     export type States = 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
+
     /**
-     * Top level interface for each state
+     * Base interface for all states.
      */
     export interface IState {
       readonly state: States;
@@ -167,6 +174,16 @@ export namespace Moli {
        *
        */
       keyValues: Moli.DfpKeyValueMap;
+
+      /**
+       * Additional labels. Insert with
+       *
+       * @example
+       * window.moli.que.push(function(moli) => {
+       *   moli.addLabel('foo');
+       * });
+       */
+      labels: string[];
 
     }
 
@@ -232,102 +249,6 @@ export namespace Moli {
     export type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
   }
 
-  /**
-   * Base interface for all states.
-   */
-  interface IState {
-    /**
-     * state name.
-     */
-    readonly state: 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
-  }
-
-  interface IConfigurable extends IState {
-    readonly state: 'configurable';
-
-
-    // changeable configuration options
-
-    /**
-     * If set to true, initializes the ad tag as soon as the ad configuration has been set.
-     * If set to false, nothing will initialize until moli.initialize is called
-     */
-    initialize: boolean;
-
-    /**
-     * Additional key-values. Insert with
-     *
-     * @example
-     * window.moli.que.push(function(moli) => {
-     *   moli.setTargeting(key, value);
-     * });
-     *
-     */
-    keyValues: Moli.DfpKeyValueMap;
-
-  }
-
-  /**
-   * The ad configuration has been set
-   */
-  interface IConfigured extends IState {
-    readonly state: 'configured';
-
-    /**
-     * Changeable configuration if other settings have been pushed into the que.
-     */
-    config: Moli.MoliConfig;
-  }
-
-  /**
-   * Moli should be initialized. This can only be done from the "configured" state.
-   *
-   * If moli is in the "configurable" state, the `initialize` flag will be set to true
-   * and moli is initialized once it's configured.
-   */
-  interface IRequestAds extends IState {
-    readonly state: 'requestAds';
-
-    /**
-     * Configuration is now immutable
-     */
-    readonly config: Moli.MoliConfig;
-  }
-
-  /**
-   * Moli has finished loading.
-   */
-  interface IFinished extends IState {
-    readonly state: 'finished';
-
-    /**
-     * Configuration is now immutable
-     */
-    readonly config: Moli.MoliConfig;
-  }
-
-  /**
-   * Moli has finished loading.
-   */
-  interface IError extends IState {
-    readonly state: 'error';
-
-    /**
-     * Configuration is now immutable
-     */
-    readonly config: Moli.MoliConfig;
-
-    /**
-     * the error. Should  be readable for a key accounter and a techi.
-     */
-    readonly error: any;
-  }
-
-  /**
-   * All valid states
-   */
-  type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
-
   export interface MoliConfig {
 
     /** all possible ad slots */
@@ -338,6 +259,9 @@ export namespace Moli {
 
       /** static or supplied key-values */
       readonly keyValues: DfpKeyValueMap;
+
+      /** additional labels. Added in addition to the ones created by the sizeConfig. */
+      readonly labels?: string[];
     };
 
     /**
