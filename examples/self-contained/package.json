@@ -9,7 +9,6 @@
     "build:tag": "webpack --mode=production",
     "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../prebid/modules.json",
     "start": "yarn build:prebid && webpack-dev-server --mode=development",
-    "link:debug": "ln -sf ../../moli-debugger/dist/ dist",
     "unlink": "yarn unlink moli-ad-tag",
     "clean": "rm -rf dist/"
   },
@@ -21,9 +20,6 @@
     "publisher"
   ],
   "license": "UNLICENSED",
-  "dependencies": {
-    "moli-ad-tag": "file:../.."
-  },
   "devDependencies": {
     "html-webpack-plugin": "^3.2.0",
     "prebid.js": "1.28.0",

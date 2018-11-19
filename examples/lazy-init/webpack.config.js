@@ -25,7 +25,11 @@ module.exports = {
   // local development
   devServer: {
     https: true,
-    contentBase: path.join(__dirname, 'dist'),
+    contentBase: [
+      path.join(__dirname, 'dist'),
+      // always use the latest moli-debugger
+      '../../moli-debugger/dist'
+    ],
     compress: true,
     port: 9000,
     allowedHosts: [
