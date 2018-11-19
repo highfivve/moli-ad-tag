@@ -7,7 +7,8 @@ import { googletag, prebidjs, Moli, moli } from 'moli-ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 // init moli
-moli.initialize(adConfiguration);
+moli.configure(adConfiguration);
+moli.requestAds();
 
 console.log(window.pbjs.version);
 console.log(adConfiguration);
