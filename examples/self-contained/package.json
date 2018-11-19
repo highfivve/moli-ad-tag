@@ -1,15 +1,16 @@
 {
-  "name": "publisher-tags",
+  "name": "self-contained",
   "version": "1.0.0",
   "description": "Publisher boostrap template",
   "main": "index.ts",
   "scripts": {
+    "postinstall": "yarn link moli-ad-tag",
     "build": "yarn clean && yarn build:prebid && yarn build:tag",
     "build:tag": "webpack --mode=production",
     "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../prebid/modules.json",
     "start": "yarn build:prebid && webpack-dev-server --mode=development",
-    "moli:update": "yarn moli:cleanCache && yarn upgrade moli-ad-tag",
-    "moli:cleanCache": "yarn cache clean moli-ad-tag",
+    "link:debug": "ln -sf ../../moli-debugger/dist/ dist",
+    "unlink": "yarn unlink moli-ad-tag",
     "clean": "rm -rf dist/"
   },
   "repository": {

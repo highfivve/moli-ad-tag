@@ -3,7 +3,9 @@
 // This example means a fully self-contained publisher ad tag, which only needs to be added and things just work
 
 import 'prebid.js/build/dist/prebid';
-import { googletag, prebidjs, Moli, moli } from 'moli-ad-tag';
+// with `yarn link` we cannot import from the `index.ts` for unknown reasons.
+// ts-loader bails out, because no js has been emitted
+import { moli } from 'moli-ad-tag/source/ts/ads/moliGlobal';
 import { adConfiguration } from './source/ts/configuration';
 
 // init moli

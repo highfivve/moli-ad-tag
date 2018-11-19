@@ -11,8 +11,6 @@
     "compile": "yarn compile:ts",
     "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
-    "moli:update": "yarn moli:cleanCache && yarn upgrade moli-ad-tag",
-    "moli:cleanCache": "yarn cache clean moli-ad-tag",
     "clean": "rm -rf dist/"
   },
   "repository": {

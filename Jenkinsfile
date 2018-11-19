@@ -53,6 +53,8 @@ pipeline {
                 ansiColor('xterm') {
                     nodejs('nodejs-10.10.0') {
                         sh "yarn build:examples"
+                        // remove the symlink created in yarn install
+                        sh "yarn unlink"
                     }
                 }
             }
