@@ -11,7 +11,7 @@ import { cookieService } from '../../../source/ts/util/cookieService';
 import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { apstagStub, a9ConfigStub } from '../stubs/a9Stubs';
-import { noopLogger } from '../stubs/moliStubs';
+import { consentConfig, noopLogger } from '../stubs/moliStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -67,7 +67,12 @@ describe('DfpService', () => {
 
     it('should configure window.pbjs.que', () => {
       (window as any).pbjs = undefined;
-      const init = newDfpService().initialize({ slots: [], logger: noopLogger, prebid: { config: pbjsTestConfig } });
+      const init = newDfpService().initialize({
+        slots: [],
+        consent: consentConfig,
+        logger: noopLogger,
+        prebid: { config: pbjsTestConfig }
+      });
 
       return sleep()
         .then(() => {
@@ -81,7 +86,7 @@ describe('DfpService', () => {
 
     it('should not configure window.pbjs.que without prebid config', () => {
       (window as any).pbjs = undefined;
-      const init = newDfpService().initialize({ slots: [], logger: noopLogger });
+      const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
 
       return sleep()
         .then(() => {
@@ -93,7 +98,12 @@ describe('DfpService', () => {
 
     it('should configure window.apstag', () => {
       (window as any).apstag = undefined;
-      const init = newDfpService().initialize({ slots: [], logger: noopLogger, a9: a9ConfigStub });
+      const init = newDfpService().initialize({
+        slots: [],
+        consent: consentConfig,
+        logger: noopLogger,
+        a9: a9ConfigStub
+      });
       return sleep()
         .then(() => {
           expect(window.apstag._Q).to.be.ok;
@@ -111,7 +121,7 @@ describe('DfpService', () => {
 
     it('should not configure window.apstag if no a9 is requested', () => {
       (window as any).apstag = undefined;
-      const init = newDfpService().initialize({ slots: [], logger: noopLogger });
+      const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
       return sleep()
         .then(() => {
           expect(window.apstag).to.be.undefined;
@@ -122,7 +132,7 @@ describe('DfpService', () => {
 
     it('should configure window.googletag.cmd', () => {
       (window as any).googletag = undefined;
-      const init = newDfpService().initialize({ slots: [], logger: noopLogger });
+      const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
       return sleep()
         .then(() => {
           expect(window.googletag.cmd).to.be.ok;
@@ -145,6 +155,7 @@ describe('DfpService', () => {
             cmpTimeout: 555,
             scriptUrl: '//foo.bar'
           },
+          consent: consentConfig,
           logger: noopLogger
         }
       )
@@ -173,6 +184,7 @@ describe('DfpService', () => {
       return newDfpService().initialize({
           slots: [],
           logger: noopLogger,
+          consent: consentConfig,
           prebid: {
             config: pbjsTestConfig
           }
@@ -193,6 +205,7 @@ describe('DfpService', () => {
       return newDfpService().initialize({
           slots: [],
           logger: noopLogger,
+          consent: consentConfig,
           prebid: {
             config: pbjsTestConfig,
             bidderSettings: bidderSettings
@@ -247,6 +260,7 @@ describe('DfpService', () => {
         return newDfpService().initialize({
             slots: [ adSlot ],
             logger: noopLogger,
+            consent: consentConfig,
             prebid: {
               config: pbjsTestConfig,
               listener: listener
@@ -257,12 +271,12 @@ describe('DfpService', () => {
 
           const args = listenerSpy.firstCall.args;
 
-          expect(args[0]).to.be.deep.equals({}); // response map
-          expect(args[1]).to.be.false; // time out
+          expect(args[ 0 ]).to.be.deep.equals({}); // response map
+          expect(args[ 1 ]).to.be.false; // time out
 
-          const slotDefinitions = args[2] as Moli.SlotDefinition<Moli.AdSlot>[];
+          const slotDefinitions = args[ 2 ] as Moli.SlotDefinition<Moli.AdSlot>[];
           expect(slotDefinitions).length(1);
-          expect(adSlot).to.be.deep.equals(slotDefinitions[0].moliSlot);
+          expect(adSlot).to.be.deep.equals(slotDefinitions[ 0 ].moliSlot);
         });
       });
     });
@@ -300,7 +314,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy.called).to.be.false;
         });
@@ -318,7 +332,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.been.calledOnce;
           expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -338,7 +352,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(googletagDefineOutOfPageSlotSpy).to.have.been.calledOnce;
           expect(googletagDefineOutOfPageSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.domId);
@@ -382,6 +396,7 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ],
           logger: noopLogger,
+          consent: consentConfig,
           prebid: { config: pbjsTestConfig }
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
@@ -450,6 +465,7 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ],
           logger: noopLogger,
+          consent: consentConfig,
           targeting: {
             keyValues: {
               channel: 'PersonalAndFinance'
@@ -498,6 +514,7 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ],
           logger: noopLogger,
+          consent: consentConfig,
           a9: a9ConfigStub
         }).then(() => {
 
@@ -541,7 +558,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
@@ -590,7 +607,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], prebid: { config: pbjsTestConfig }, logger: noopLogger
+          slots: [ adSlot ], prebid: { config: pbjsTestConfig }, consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
@@ -640,6 +657,7 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ],
           logger: noopLogger,
+          consent: consentConfig,
           a9: a9ConfigStub
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.not.been.called;
@@ -689,7 +707,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.been.calledOnce;
           expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -739,7 +757,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], prebid: { config: pbjsTestConfig }, logger: noopLogger
+          slots: [ adSlot ], prebid: { config: pbjsTestConfig }, consent: consentConfig, logger: noopLogger
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ prebidAdslotConfig.adUnit ]);
@@ -801,6 +819,7 @@ describe('DfpService', () => {
         return dfpService.initialize({
           slots: [ adSlot ],
           logger: noopLogger,
+          consent: consentConfig,
           a9: a9ConfigStub
         }).then(() => {
           expect(apstagFetchBidsSpy).to.have.been.calledOnce;
@@ -865,6 +884,7 @@ describe('DfpService', () => {
       const adConfiguration: Moli.MoliConfig = {
         slots: [],
         logger: noopLogger,
+        consent: consentConfig,
         targeting: {
           keyValues: {
             'gfversion': [ 'v2016' ],

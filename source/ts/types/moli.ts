@@ -277,7 +277,13 @@ export namespace Moli {
     /** optional prebid configuration */
     readonly prebid?: headerbidding.PrebidConfig;
 
+    /** Amazon A9 headerbidding configuration */
     readonly a9?: headerbidding.A9Config;
+
+    /**
+     * GDPR consent management settings
+     */
+    readonly consent: consent.ConsentConfig;
 
     /** configurable logger */
     readonly logger?: MoliLogger;
@@ -535,6 +541,122 @@ export namespace Moli {
      */
     export interface A9AdSlotConfig {}
   }
+
+  /**
+   * ## Consent Management
+   *
+   * GDPR compliant consent management configuration.
+   *
+   */
+  export namespace consent {
+
+    /**
+     * Top level consent management configuration.
+     */
+    export interface ConsentConfig {
+
+      /** DFP `setNonPersonalizedAds` configuration provider */
+      readonly personalizedAds: consent.PersonalizedAdsProvider;
+    }
+
+    /**
+     * Union type for the different dfp `setNonPersonalizedAds` implementations.
+     */
+    export type PersonalizedAdsProvider = Static | Cmp | Cookie;
+
+    /**
+     * Base interface for personalizedAds implementations.
+     */
+    export interface IPersonalizedAdsProvider {
+      provider: 'static' | 'cmp' | 'cookie';
+    }
+
+    /**
+     * ## Static
+     *
+     * Configures a fixed value for the `setNonPersonalizedAds` call.
+     *
+     * @example
+     * {
+     *   provider: 'static',
+     *   value: 0
+     * }
+     *
+     * Translates to `googletag.setNonPersonalizedAds(0)` which results in **personalized** ads.
+     *
+     *
+     */
+    export interface Static extends IPersonalizedAdsProvider {
+      provider: 'static';
+      value: 0 | 1;
+    }
+
+    /**
+     * ## CMP - Consent Management Platform
+     *
+     * Uses the IAB `window.__cmp` API to check if consent has been given for all relevant
+     * purposes.
+     *
+     * **RECOMMENDED**
+     * This is the recommended implementation as it is fully IAB and GDPR compliant and
+     * gives the publisher various options on how to handle the consent management.
+     *
+     *
+     * ## CMP Providers
+     *
+     * A list of providers that work well with this approach.
+     *
+     * - Faktor.io
+     */
+    export interface Cmp extends IPersonalizedAdsProvider {
+      provider: 'cmp';
+    }
+
+    /**
+     * ## Cookie
+     *
+     * Configure a cookie that is checked for a specific value.
+     *
+     * **Note**
+     * The implementation favors the _legitimate interest_ approach, which means that
+     * if no cookie is set, consent is assumed. If the cookie is set, then the value
+     * must match.
+     *
+     *
+     * @example
+     * {
+     *   provider: 'cookie',
+     *   cookie: '_sp_enable_dfp_personalized_ads',
+     *   valueForPersonalizedAds: 'true'
+     * }
+     *
+     * If a cookie `_sp_enable_dfp_personalized_ads` is available and set to `true`, then
+     * `googletag.setNonPersonalizedAds(0);` is being called.
+     *
+     *
+     * ## CMP Providers
+     *
+     * A list of providers that work well with this approach.
+     *
+     * - Sourcepoint
+     *
+     */
+    export interface Cookie extends IPersonalizedAdsProvider {
+      provider: 'cookie';
+
+      /**
+       * The cookie name to look for.
+       */
+      cookie: string;
+
+      /**
+       * if cookie exists and contains this value, nonPersonalizedAds will be displayed.
+       */
+      valueForPersonalizedAds: string;
+    }
+
+  }
+
 
   /**
    * == Logger interface ==

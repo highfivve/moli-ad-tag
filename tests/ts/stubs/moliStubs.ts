@@ -6,3 +6,10 @@ export const noopLogger: Moli.MoliLogger = {
   warn: () => { return; },
   error: () => { return; }
 };
+
+export const consentConfig: Moli.consent.ConsentConfig = {
+  personalizedAds: {
+    provider: 'static',
+    value: 0
+  }
+};

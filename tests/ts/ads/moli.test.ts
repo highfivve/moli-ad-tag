@@ -5,6 +5,7 @@ import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag, moli } from '../../../source/ts/ads/moliGlobal';
 import { googletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
+import { consentConfig } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 
 // setup sinon-chai
@@ -38,20 +39,20 @@ describe('moli', () => {
 
     it('should transition into configured state after configure()', () => {
       const adTag = createMoliTag();
-      adTag.configure({ slots: []});
+      adTag.configure({ slots: [], consent: consentConfig });
       expect(adTag.getState()).to.be.eq('configured');
     });
 
     it('should stay in configured state after setTargeting()', () => {
       const adTag = createMoliTag();
-      adTag.configure({ slots: []});
+      adTag.configure({ slots: [], consent: consentConfig });
       adTag.setTargeting('key', 'value');
       expect(adTag.getState()).to.be.eq('configured');
     });
 
     it('should transition into requestAds state after requestAds()', () => {
       const adTag = createMoliTag();
-      adTag.configure({ slots: []});
+      adTag.configure({ slots: [], consent: consentConfig });
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('requestAds');
       return finished.then(state => {
@@ -76,7 +77,7 @@ describe('moli', () => {
     it('should add key-values to the config', () => {
       const adTag = createMoliTag();
       adTag.setTargeting('pre', 'configure1');
-      adTag.configure({ slots: []});
+      adTag.configure({ slots: [], consent: consentConfig });
       adTag.setTargeting('post', 'configure2');
 
       const config = adTag.getConfig();
@@ -91,12 +92,14 @@ describe('moli', () => {
     it('should override preexisting values', () => {
       const adTag = createMoliTag();
       adTag.setTargeting('pre', 'configure1');
-      adTag.configure({ slots: [], targeting: {
-        keyValues: {
-          pre: 'dismiss',
-          post: 'dismiss'
+      adTag.configure({
+        slots: [], consent: consentConfig, targeting: {
+          keyValues: {
+            pre: 'dismiss',
+            post: 'dismiss'
+          }
         }
-      }});
+      });
       adTag.setTargeting('post', 'configure2');
 
       const config = adTag.getConfig();
@@ -114,7 +117,7 @@ describe('moli', () => {
     it('should add label to the config', () => {
       const adTag = createMoliTag();
       adTag.addLabel('pre');
-      adTag.configure({ slots: []});
+      adTag.configure({ slots: [], consent: consentConfig });
       adTag.addLabel('post');
 
       const config = adTag.getConfig();
@@ -126,10 +129,12 @@ describe('moli', () => {
     it('should append to preexisting values', () => {
       const adTag = createMoliTag();
       adTag.addLabel('pre');
-      adTag.configure({ slots: [], targeting: {
-        keyValues: { },
-        labels: [ 'pre-existing' ]
-      }});
+      adTag.configure({
+        slots: [], consent: consentConfig, targeting: {
+          keyValues: {},
+          labels: [ 'pre-existing' ]
+        }
+      });
       adTag.addLabel('post');
 
       const config = adTag.getConfig();
@@ -144,13 +149,15 @@ describe('moli', () => {
       const adTag = createMoliTag();
       adTag.setTargeting('pre', 'configure1');
       adTag.addLabel('pre');
-      adTag.configure({ slots: [], targeting: {
+      adTag.configure({
+        slots: [], consent: consentConfig, targeting: {
           keyValues: {
             pre: 'dismiss',
             post: 'dismiss'
           },
           labels: [ 'pre-existing' ]
-        }});
+        }
+      });
       adTag.addLabel('post');
       adTag.setTargeting('post', 'configure2');
       const config = adTag.getConfig();
