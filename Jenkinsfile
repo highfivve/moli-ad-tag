@@ -94,7 +94,7 @@ pipeline {
     }
     post {
         always {
-            junit allowEmptyResults: false, testResults: '**/test-results.xml'
+            junit allowEmptyResults: false, testResults: 'temp/test-results.xml'
             // remove the symlink created in yarn install
             sh "yarn unlink"
         }
