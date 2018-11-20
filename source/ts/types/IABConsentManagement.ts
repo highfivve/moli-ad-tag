@@ -44,6 +44,45 @@ export namespace IABConsentManagement {
      *        The boolean success parameter passed to the callback indicates whether the call to getConsentData() was successful.
      */
     __cmp(command: 'getConsentData', consentStringVersion: string | null, callback: (consentData: IConsentData | null, success: boolean) => void): void;
+
+
+
+    /**
+     * The vendorIds array contains the vendor ids (as identified in the Global Vendor List) for which consent is being requested.
+     * If vendorIds is null or empty, the operation will return consent status for all vendors in the vendor list. The callback
+     * function will be called with a VendorConsents object as the parameter. If vendorIds is provided and not empty,
+     * then VendorConsents.vendorConsents will only includes IDs from vendorIds. The callback is called only after consent is
+     * obtained from the UI or existing cookies.
+     *
+     * The consent will be returned false ("No Consent") for any invalid vendorId. The boolean success parameter passed to the
+     * callback indicates whether the call to getVendorConsents() was successful.
+     *
+     * @param command {"getVendorConsents"} command - getConsentData
+     * @param vendorIds - If vendorIds is null or empty, the operation will return consent status for all vendors in the vendor list
+     * @param callback
+     */
+    __cmp(command: 'getVendorConsents', vendorIds: number[] | null, callback: (consentData: IVendorConsents, success: boolean) => void): void;
+  }
+
+  export interface IVendorConsentsObject {
+    [vendorId: number]: boolean;
+  }
+
+  export interface IPurposeConsentsObject {
+    /** Information storage and access */
+    1?: boolean;
+
+    /** Personalisation */
+    2?: boolean;
+
+    /** Ad selection, delivery, reporting */
+    3?: boolean;
+
+    /** Content selection, delivery, reporting */
+    4?: boolean;
+
+    /** Measurement */
+    5?: boolean;
   }
 
   /**
@@ -77,9 +116,9 @@ export namespace IABConsentManagement {
      */
     hasGlobalScope: boolean;
 
-    purposeConsent: {purposeId: boolean};
+    purposeConsents: IPurposeConsentsObject;
 
-    vendorConsents: {vendorId: boolean};
+    vendorConsents: IVendorConsentsObject;
   }
 
   /**
@@ -123,3 +162,13 @@ export namespace IABConsentManagement {
   }
 
 }
+
+/* tslint:disable:interface-name */
+declare global {
+
+  /**
+   * Add IAB __cmp to the global Window instance
+   */
+  interface Window extends IABConsentManagement.IGlobalCMPApi { }
+}
+/* tslint:enable */

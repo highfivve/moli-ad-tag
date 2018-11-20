@@ -6,6 +6,7 @@ import '../types/apstag';
 import { ICookieService } from '../util/cookieService';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { createLazyLoader } from './lazyLoading';
+import { getPersonalizedAdSetting } from './personalizedAdsProvider';
 import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
 import { SizeConfigService } from './sizeConfigService';
@@ -77,7 +78,7 @@ export class DfpService {
 
     const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
-      .then(() => this.configureAdNetwork(config.targeting ? config.targeting.keyValues : {}));
+      .then(() => this.configureAdNetwork(config));
 
     // concurrently initialize lazy loaded slots and refreshable slots
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
@@ -351,7 +352,9 @@ export class DfpService {
     });
   }
 
-  private configureAdNetwork(keyValueMap: DfpKeyValueMap): void {
+  private configureAdNetwork(config: Moli.MoliConfig): Promise<void> {
+
+    const keyValueMap = config.targeting ? config.targeting.keyValues : {};
 
     Object.keys(keyValueMap).forEach(key => {
       const value = keyValueMap[key];
@@ -363,7 +366,11 @@ export class DfpService {
     window.googletag.pubads().enableAsyncRendering();
     window.googletag.pubads().disableInitialLoad();
     window.googletag.pubads().enableSingleRequest();
-    window.googletag.enableServices();
+
+    return getPersonalizedAdSetting(config.consent).then(nonPersonalizedAds => {
+      window.googletag.pubads().setRequestNonPersonalizedAds(nonPersonalizedAds);
+      window.googletag.enableServices();
+    });
   }
 
   private filterAvailableSlots(slots: Moli.AdSlot[]): Moli.AdSlot[] {

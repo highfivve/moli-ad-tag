@@ -283,7 +283,6 @@ describe('DfpService', () => {
 
   });
 
-
   describe('ad slot registration', () => {
 
     const googletagDefineSlotSpy = sandbox.spy(window.googletag, 'defineSlot');
@@ -903,6 +902,23 @@ describe('DfpService', () => {
           expect(setTargetingStub).not.to.be.calledWith('undefined', undefined);
         });
     });
+  });
+
+  describe('consent management', () => {
+
+    const setNonPersonalizedAdsSpy = sandbox.spy(pubAdsServiceStub, 'setRequestNonPersonalizedAds');
+
+    it('should setNonPersonalizedAds based on the consent configuration', () => {
+      return newDfpService().initialize({
+        slots: [],
+        consent: consentConfig,
+        logger: noopLogger
+      }).then(() => {
+        expect(setNonPersonalizedAdsSpy).to.be.calledOnce;
+        expect(setNonPersonalizedAdsSpy).to.be.calledOnceWithExactly(0);
+      });
+    });
+
   });
 });
 

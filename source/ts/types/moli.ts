@@ -627,11 +627,20 @@ export namespace Moli {
      * {
      *   provider: 'cookie',
      *   cookie: '_sp_enable_dfp_personalized_ads',
-     *   valueForPersonalizedAds: 'true'
+     *   valueForNonPersonalizedAds: 'false'
      * }
      *
-     * If a cookie `_sp_enable_dfp_personalized_ads` is available and set to `true`, then
-     * `googletag.setNonPersonalizedAds(0);` is being called.
+     * If a cookie `_sp_enable_dfp_personalized_ads` is available and set to `false`, then
+     *
+     * ```
+     * googletag.setNonPersonalizedAds(1)
+     * ```
+     *
+     * is being called. Otherwise
+     *
+     * ```
+     * googletag.setNonPersonalizedAds(0)
+     * ```
      *
      *
      * ## CMP Providers
@@ -652,7 +661,7 @@ export namespace Moli {
       /**
        * if cookie exists and contains this value, nonPersonalizedAds will be displayed.
        */
-      valueForPersonalizedAds: string;
+      valueForNonPersonalizedAds: string;
     }
 
   }
