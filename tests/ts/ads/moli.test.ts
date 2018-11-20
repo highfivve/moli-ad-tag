@@ -148,13 +148,21 @@ describe('moli', () => {
     it('should set the given logger instance', () => {
       const adTag = createMoliTag();
       const customLogger: Moli.MoliLogger = {
-        debug: () => { return ;},
-        info: () => { return ;},
-        warn: () => { return ;},
-        error: () => { return ;}
+        debug: () => {
+          return;
+        },
+        info: () => {
+          return;
+        },
+        warn: () => {
+          return;
+        },
+        error: () => {
+          return;
+        }
       };
 
-      adTag.setLogger(customLogger)
+      adTag.setLogger(customLogger);
       adTag.configure({ slots: [], consent: consentConfig });
 
       const config = adTag.getConfig();
