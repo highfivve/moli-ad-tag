@@ -328,7 +328,7 @@ export namespace Moli {
     readonly labelAll?: string[];
 
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
-    readonly prebid?: headerbidding.PrebidAdSlotConfig;
+    readonly prebid?: headerbidding.PrebidAdSlotConfigFactory;
 
     /** optional a9 configuration if this ad slot can also be used by a9 */
     readonly a9?: headerbidding.A9AdSlotConfig;
@@ -374,7 +374,7 @@ export namespace Moli {
    * An ad slot that should request prebid SSPs.
    */
   export interface PrebidAdSlot extends IAdSlot {
-    readonly prebid: headerbidding.PrebidAdSlotConfig;
+    readonly prebid: headerbidding.PrebidAdSlotConfigFactory;
   }
 
   /**
@@ -414,6 +414,31 @@ export namespace Moli {
 
   /** header bidding types */
   export namespace headerbidding {
+
+    /**
+     * A `PrebidAdSlotConfig` can either be created
+     *
+     * - as a static value
+     * - from a function which takes a `PrebidAdSlotContext`
+     */
+    export type PrebidAdSlotConfigFactory = PrebidAdSlotConfig | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig);
+
+    /**
+     * Context for creating a dynamic `PrebidAdSlotConfig`. Grants access to certain values
+     * from the `MoliConfig` to configure prebid bidder params.
+     *
+     * **Use cases**
+     *
+     * * key-value targeting in prebid params
+     *
+     */
+    export interface PrebidAdSlotContext {
+
+      /**
+       * Access key-values
+       */
+      readonly keyValues: DfpKeyValueMap;
+    }
 
     export interface PrebidConfig {
       /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */

@@ -250,7 +250,7 @@ export class DfpService {
 
 
     return Promise.resolve()
-      .then(() => this.registerPrebidSlots(prebidSlots))
+      .then(() => this.registerPrebidSlots(prebidSlots, config))
       .then(() => this.requestPrebid(prebidSlots))
       .catch(reason => {
         this.logger.warn(reason);
@@ -389,13 +389,16 @@ export class DfpService {
    * @param dfpPrebidSlots that should be registered
    * @returns the unaltered prebid slots
    */
-  private registerPrebidSlots(dfpPrebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[]): void {
+  private registerPrebidSlots(dfpPrebidSlots: ISlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig): void {
     const slots = dfpPrebidSlots.map(slot => slot.dfpSlot);
     window.pbjs.addAdUnits(slots.map((slot: Moli.PrebidAdSlot) => {
+      const keyValues = config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {};
+      const prebidAdSlotConfig = (typeof slot.prebid === 'function') ? slot.prebid({ keyValues: keyValues }) : slot.prebid;
+
       return {
         code: slot.domId,
-        mediaTypes: slot.prebid.adUnit.mediaTypes,
-        bids: slot.prebid.adUnit.bids
+        mediaTypes: prebidAdSlotConfig.adUnit.mediaTypes,
+        bids: prebidAdSlotConfig.adUnit.bids
       };
     }));
   }

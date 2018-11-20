@@ -514,6 +514,7 @@ export namespace prebidjs {
    * ImproveDigital bid parameters.
    *
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/improvedigitalBidAdapter.js
+   * @see http://prebid.org/dev-docs/bidders/improvedigital.html
    */
   export interface IImproveDigitalParams {
     readonly placementId: number;
@@ -521,19 +522,16 @@ export namespace prebidjs {
      * Optional field to add additional targeting values.
      * Arbitrary keys can be added. The value is always a string array.
      */
-    keyValues?: {
-
-      /** IAB values */
-      category: string[]
+    readonly keyValues?: {
+      /** key value map */
+      [key: string]: string[];
     };
   }
 
   /**
    * ImproveDigital bid object.
    */
-  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {
-    placementCode: string;
-  }
+  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> { }
 
   /**
    * IndexExchange bid parameters.
