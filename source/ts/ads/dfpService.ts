@@ -27,10 +27,14 @@ declare const window: Window;
 export class DfpService {
 
   /**
-   * The moli configuration. Set by the initialize method and used to configure
-   * all ads on the current page.
+   * The DfpService can only be initialized once.
    */
-  private config?: Moli.MoliConfig;
+  private initialized: boolean = false;
+
+  /**
+   * Access to a logger
+   */
+  private logger: Moli.MoliLogger;
 
   /**
    *
@@ -39,6 +43,14 @@ export class DfpService {
    */
   constructor(private assetService: IAssetLoaderService,
               private cookieService: ICookieService) {
+
+    // initialize the logger with a default one
+    this.logger = {
+      debug: console.debug,
+      info: console.info,
+      warn: console.warn,
+      error: console.error
+    };
   }
 
   /**
@@ -48,8 +60,14 @@ export class DfpService {
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
   public initialize = (config: Moli.MoliConfig): Promise<void> => {
-    if (this.config) {
+    if (this.initialized) {
       return Promise.reject('Already initialized');
+    }
+    this.initialized = true;
+
+    // override the fallback logger
+    if (config.logger) {
+      this.logger = config.logger;
     }
 
     const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
@@ -63,8 +81,6 @@ export class DfpService {
     const prebidReady = config.prebid ?
       this.awaitPrebidLoaded().then(() => this.configurePrebid(window.pbjs, config)) :
       Promise.resolve();
-
-    this.config = config;
 
     const slots = config.slots
       .filter(slot => sizeConfigService.filterSlot(slot));
@@ -102,10 +118,6 @@ export class DfpService {
         this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason));
         return Promise.reject(reason);
       });
-  };
-
-  public getConfig = (): Moli.MoliConfig | undefined => {
-    return this.config;
   };
 
   /**
@@ -512,14 +524,5 @@ export class DfpService {
 
   private isFixedSize(size: Moli.DfpSlotSize): size is [ number, number ] {
     return size !== 'fluid';
-  }
-
-  private get logger(): Moli.MoliLogger {
-    return (this.config && this.config.logger) ? this.config.logger : {
-      debug: console.debug,
-      info: console.info,
-      warn: console.warn,
-      error: console.error
-    };
   }
 }
