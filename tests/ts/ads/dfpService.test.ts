@@ -413,7 +413,7 @@ describe('DfpService', () => {
         };
 
         // define the prebidAdSlotConfig factory
-        const prebidAdSlotConfig: Moli.headerbidding.PrebidAdSlotConfigFactory = (context: Moli.headerbidding.PrebidAdSlotContext) => {
+        const prebidAdSlotConfig: Moli.headerbidding.PrebidAdSlotConfigProvider = (context: Moli.headerbidding.PrebidAdSlotContext) => {
           return {
             adUnit: {
               code: 'eager-loading-adslot',
