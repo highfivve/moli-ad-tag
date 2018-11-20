@@ -144,5 +144,11 @@ export const adConfiguration: Moli.MoliConfig = {
       }
     }
   },
+  consent: {
+    personalizedAds: {
+      provider: 'static',
+      value: 0
+    }
+  },
   logger: logger
 };
