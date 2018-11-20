@@ -6,7 +6,7 @@
 
 .MoliDebug {
 
-  &Sidebar {
+  &-sidebar {
     background: color(red alpha(40%));
     box-sizing: border-box;
     display: block;
@@ -37,5 +37,44 @@
       top: 0;
       width: 32px;
     }
+  }
+
+  &-adSlot {
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+
+    &-buttons {
+      height: 24px;
+      left: 0;
+      position: absolute;
+      top: 0;
+    }
+
+    &-button:not(:first-child) {
+      margin-left: 10px;
+    }
+
+    &-button {
+      background-color: lightgray;
+      border: 1px solid lightgray;
+      border-radius: 4px;
+      height: 24px;
+      padding: 0;
+      width: 24px;
+
+      &:hover,
+      &:focus,
+      &.is-active {
+        background-color: white;
+        border-color: black;
+      }
+    }
+  }
+
+  &-posRelative {
+    position: relative;
   }
 }

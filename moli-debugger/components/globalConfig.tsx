@@ -24,9 +24,9 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
   }
 
   render(props: IGlobalConfigProps, state: IGlobalConfigState): JSX.Element {
-    const classes = classList('MoliDebugSidebar', [ this.state.sidebarHidden, 'is-hidden' ]);
+    const classes = classList('MoliDebug-sidebar', [ this.state.sidebarHidden, 'is-hidden' ]);
     return <div class={classes} data-ref={debugSidebarSelector}>
-      <button class="MoliDebugSidebar-closeHandle" onClick={this.toggleSidebar}>
+      <button class="MoliDebug-sidebar-closeHandle" onClick={this.toggleSidebar}>
         {state.sidebarHidden && <span>&#11013;</span>}
         {!state.sidebarHidden && <span>&times;</span>}
       </button>

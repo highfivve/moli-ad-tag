@@ -238,7 +238,6 @@ export class DfpService {
       return Promise.resolve({});
     }
 
-
     return Promise.resolve()
       .then(() => this.registerPrebidSlots(prebidSlots, config))
       .then(() => this.requestPrebid(prebidSlots, config))
@@ -300,7 +299,6 @@ export class DfpService {
     return new Promise(resolve => window.pbjs.que.push(resolve));
   }
 
-
   private initApstag(): void {
     if (window.apstag) {
       return;
@@ -361,7 +359,6 @@ export class DfpService {
         window.googletag.pubads().setTargeting(key, value);
       }
     });
-
 
     window.googletag.pubads().enableAsyncRendering();
     window.googletag.pubads().disableInitialLoad();
@@ -461,7 +458,6 @@ export class DfpService {
     });
 
   }
-
 
   private registerSlots(slots: Moli.AdSlot[]): SlotDefinition<Moli.AdSlot>[] {
     if (slots.length === 0) {
