@@ -18,13 +18,31 @@
     "url": "ssh://git@git.gutefrage.net:7999/gd/publisher-tags.git"
   },
   "keywords": [
-    "publisher"
+    "debugging"
   ],
   "license": "UNLICENSED",
   "devDependencies": {
+    "@types/node": "^10.12.9",
+    "cssnano": "^4.1.4",
+    "postcss-bem-linter": "^3.1.0",
+    "postcss-color-function": "^4.0.1",
+    "postcss-custom-media": "^7.0.4",
+    "postcss-custom-properties": "^8.0.6",
+    "postcss-extend": "^1.0.5",
+    "postcss-import": "^12.0.0",
+    "postcss-loader": "^3.0.0",
+    "postcss-mixins": "^6.2.0",
+    "postcss-nested": "^4.1.0",
+    "postcss-reporter": "^6.0.0",
+    "style-loader": "^0.23.1",
+    "stylelint": "^9.6.0",
+    "stylelint-config-suitcss": "^14.0.0",
     "ts-loader": "^5.2.2",
     "typescript": "^3.1.3",
     "webpack": "^4.23.1",
     "webpack-cli": "^3.1.2"
+  },
+  "dependencies": {
+    "preact": "^8.3.1"
   }
 }

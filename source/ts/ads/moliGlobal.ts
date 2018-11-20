@@ -9,8 +9,6 @@ import IConfigurable = Moli.state.IConfigurable;
 
 const dfpService = new DfpService(assetLoaderService, cookieService);
 
-
-
 const logger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
   return logger ? logger : {
     debug: console.debug,
@@ -31,7 +29,6 @@ export const createMoliTag = (): Moli.MoliTag => {
     keyValues: {},
     labels: []
   };
-
 
   function setTargeting(key: string, value: string | string[]): void {
     switch (state.state) {
@@ -215,7 +212,6 @@ export const createMoliTag = (): Moli.MoliTag => {
       cmd(window.moli);
     }
   };
-
 
   return {
     que: que,

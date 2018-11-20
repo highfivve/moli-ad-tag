@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "jsx": "react",
+    "jsxFactory": "preact.h",
     "strict": true,
     "sourceMap": true,
     "lib": [
@@ -16,9 +18,10 @@
     ]
   },
   "files": [
-    "debug.ts"
+    "debug.tsx"
   ],
   "include": [
+    "components/*",
     "node_modules/moli-ad-tag/source/**/*"
   ]
 }

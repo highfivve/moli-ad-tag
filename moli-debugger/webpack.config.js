@@ -1,26 +1,39 @@
 'use strict';
 
-const path = require('path');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
-module.exports = {
-  mode: "development",
+const { postCssLoader } = require('./postcss.config');
+
+module.exports = env => ({
+  mode: 'development',
   devtool: process.env.NODE_ENV === 'production' ? 'none' : 'inline-source-map',
-  entry: './debug.ts',
+  entry: './debug.tsx',
   output: {
     filename: 'moli-debug.min.js'
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx?$/,
         loader: 'ts-loader',
-        options: {'allowTsInNodeModules': true}
+        options: { 'allowTsInNodeModules': true }
+      },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'style-loader',
+            options: {
+              attrs: { id: 'moli-debug-styles' }
+            }
+          },
+          postCssLoader(env),
+        ]
       }
     ]
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: [ '.tsx', '.ts', '.js', '.css' ]
   },
   plugins: [
     new UglifyJsPlugin({
@@ -29,4 +42,4 @@ module.exports = {
       parallel: true
     }),
   ]
-};
+});
