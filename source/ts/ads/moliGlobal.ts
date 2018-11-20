@@ -9,7 +9,7 @@ import IConfigurable = Moli.state.IConfigurable;
 
 const dfpService = new DfpService(assetLoaderService, cookieService);
 
-const logger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
+const getLogger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
   return logger ? logger : {
     debug: console.debug,
     info: console.info,
@@ -52,7 +52,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default: {
-        logger(state.config.logger).error(`Setting key-value after configuration: ${key} : ${value}`);
+        getLogger(state.config.logger).error(`Setting key-value after configuration: ${key} : ${value}`);
         break;
       }
     }
@@ -79,7 +79,27 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default: {
-        logger(state.config.logger).error(`Adding label after configure: ${label}`);
+        getLogger(state.config.logger).error(`Adding label after configure: ${label}`);
+        break;
+      }
+    }
+  }
+
+  function setLogger(logger: Moli.MoliLogger): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.logger = logger;
+        break;
+      }
+      case 'configured': {
+        state.config = {
+          ...state.config,
+          logger: logger
+        };
+        break;
+      }
+      default: {
+        logger.error('Setting a custom logger is not allowed after configuration');
         break;
       }
     }
@@ -119,7 +139,8 @@ export const createMoliTag = (): Moli.MoliTag => {
                 ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
                 ...state.labels
               ]
-            }
+            },
+            logger: state.logger || config.logger
           }
         };
         if (shouldInitialize) {
@@ -128,19 +149,19 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       case 'configured': {
-        logger(state.config.logger).error('Trying to configure moli tag twice. Already configured.', state.config);
+        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already configured.', state.config);
         break;
       }
       case 'requestAds': {
-        logger(state.config.logger).error('Trying to configure moli tag twice. Already requesting ads.');
+        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already requesting ads.');
         break;
       }
       case 'finished': {
-        logger(state.config.logger).error('Trying to configure moli tag twice. Already finished.');
+        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already finished.');
         break;
       }
       case 'error': {
-        logger(state.config.logger).error('Trying to configure moli tag twice. Already finished, but with an error.', state.error);
+        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already finished, but with an error.', state.error);
         break;
       }
     }
@@ -174,15 +195,15 @@ export const createMoliTag = (): Moli.MoliTag => {
         });
       }
       case 'requestAds': {
-        logger(state.config.logger).error('Trying to requestAds twice. Already requesting ads.');
+        getLogger(state.config.logger).error('Trying to requestAds twice. Already requesting ads.');
         return Promise.reject();
       }
       case 'finished': {
-        logger(state.config.logger).error('Trying to requestAds twice. Already finished.');
+        getLogger(state.config.logger).error('Trying to requestAds twice. Already finished.');
         return Promise.reject();
       }
       case 'error': {
-        logger(state.config.logger).error('Trying to requestAds twice. Already finished, but with an error.', state.error);
+        getLogger(state.config.logger).error('Trying to requestAds twice. Already finished, but with an error.', state.error);
         return Promise.reject();
       }
     }
@@ -217,6 +238,7 @@ export const createMoliTag = (): Moli.MoliTag => {
     que: que,
     setTargeting: setTargeting,
     addLabel: addLabel,
+    setLogger: setLogger,
     getConfig: getConfig,
     configure: configure,
     requestAds: requestAds,

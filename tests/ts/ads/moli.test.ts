@@ -144,6 +144,26 @@ describe('moli', () => {
     });
   });
 
+  describe('setLogger()', () => {
+    it('should set the given logger instance', () => {
+      const adTag = createMoliTag();
+      const customLogger: Moli.MoliLogger = {
+        debug: () => { return ;},
+        info: () => { return ;},
+        warn: () => { return ;},
+        error: () => { return ;}
+      };
+
+      adTag.setLogger(customLogger)
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.logger).to.be.equal(customLogger);
+    });
+
+  });
+
   describe('multiple configurations', () => {
     it('should not miss any configuration', () => {
       const adTag = createMoliTag();

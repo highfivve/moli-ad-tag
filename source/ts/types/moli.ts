@@ -44,6 +44,13 @@ export namespace Moli {
     addLabel(label: String): void;
 
     /**
+     * Set a custom logger that should be used for logging.
+     *
+     * @param logger
+     */
+    setLogger(logger: MoliLogger): void;
+
+    /**
      *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
@@ -185,6 +192,11 @@ export namespace Moli {
        * });
        */
       labels: string[];
+
+      /**
+       * Custom logger
+       */
+      logger?: MoliLogger;
 
     }
 
