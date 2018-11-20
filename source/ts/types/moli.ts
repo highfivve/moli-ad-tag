@@ -1,6 +1,7 @@
-/* tslint:disable:interface-name */
+import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 
+/* tslint:disable:interface-name */
 export namespace Moli {
 
   export type DfpSlotSize = [number, number] | 'fluid';
@@ -392,6 +393,20 @@ export namespace Moli {
    */
   export type AdSlot = EagerAdSlot | LazyAdSlot | RefreshableAdSlot | PrebidAdSlot | A9AdSlot;
 
+  /**
+   * Combines the moli slot configuration (`Moli.AdSlot`) along with the actual `googletag.IAdSlot` definition.
+   *
+   * This model lets you work with the materialized slot (`googletag.IAdSlot`), while having access to the
+   * configuration settings from the `Moli.AdSlot` definition.
+   */
+  export interface SlotDefinition<S extends Moli.AdSlot> {
+    /** The moli adSlot configuration */
+    readonly moliSlot: S;
+
+    /** The actual dfp slot returned by `googletag.defineSlot` or `googletag.defineOutOfPageSlot` */
+    readonly adSlot: googletag.IAdSlot;
+  }
+
   /** slot behaviour namespace */
   export namespace behaviour {
 
@@ -440,12 +455,45 @@ export namespace Moli {
       readonly keyValues: DfpKeyValueMap;
     }
 
+    /**
+     * Object with additional listeners to customize the prebid behaviour.
+     *
+     * ## `preSetTargetingForGPTAsync` listener
+     *
+     * Allow to react during the `bidsBackHandler` is being called and add
+     * additional behaviour before the DFP key values have been set.
+     *
+     * **Use case**
+     *
+     * Special formats like the wallpaper/skin ad from just premium may require
+     * removing other ad slots.
+     *
+     * @example
+     * const prebidListener = {
+     *   preSetTargetingForGPTAsync: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean, slotDefinitions: SlotDefinition<AdSlot>[]) => {
+     *     if (this.checkForJustPremiumWallpaper(bidResponses)) {
+     *       // finds the googletag.AdSlot and calls googletag.destroySlots([skyScraperSlot]);
+     *       this.destroySkyscraperAdUnit(slotDefinitions);
+     *     }
+     *   }
+     * }
+     *
+     */
+    export interface PrebidListener {
+
+      /** called in the `bidsBackHandler` before the dfp key-values are being set */
+      readonly preSetTargetingForGPTAsync?: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean, slotDefinitions: SlotDefinition<AdSlot>[]) => void;
+    }
+
     export interface PrebidConfig {
       /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
       readonly config: prebidjs.IPrebidJsConfig;
 
       /** optional bidder settings */
       readonly bidderSettings?: prebidjs.IBidderSettings;
+
+      /** optional listener for prebid events */
+      readonly listener?: PrebidListener;
     }
 
     /**
