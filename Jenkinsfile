@@ -95,8 +95,10 @@ pipeline {
     post {
         always {
             junit allowEmptyResults: false, testResults: 'temp/test-results.xml'
-            // remove the symlink created in yarn install
-            sh "yarn unlink"
+            nodejs('nodejs-10.10.0') {
+                // remove the symlink created in yarn install
+                sh "yarn unlink"
+            }
         }
     }
 }
