@@ -1,4 +1,7 @@
 import domready = require('domready');
+import {
+  IPerformanceMeasurementService, performanceMeasurementService
+} from '../../../tests/ts/ads/performanceService';
 
 export enum AssetLoadMethod {
   FETCH, TAG
@@ -35,14 +38,21 @@ export interface IAssetLoaderService {
 
 export class AssetLoaderService implements IAssetLoaderService {
 
+  constructor(private readonly performanceService: IPerformanceMeasurementService) {
+  }
+
   public loadScript(config: ILoadAssetParams, parent: Element = document.head!): Promise<void> {
-   return this.awaitDomReady()
-     .then(() => {
+    return this.awaitDomReady()
+      .then(() => this.startPerformance(config.name))
+      .then(() => {
         switch (config.loadMethod) {
-          case AssetLoadMethod.FETCH: return this.loadAssetViaFetch(config, parent);
-          case AssetLoadMethod.TAG: return this.loadAssetViaTag(config, parent);
+          case AssetLoadMethod.FETCH:
+            return this.loadAssetViaFetch(config, parent);
+          case AssetLoadMethod.TAG:
+            return this.loadAssetViaTag(config, parent);
         }
-     });
+      })
+      .then(() => this.measurePerformance(config.name));
   }
 
   private loadAssetViaFetch(config: ILoadAssetParams, parentElement: Element): Promise<any> {
@@ -89,7 +99,20 @@ export class AssetLoaderService implements IAssetLoaderService {
       domready(resolve);
     });
   }
+
+  private startPerformance(name: string): void {
+    this.performanceService.mark(`${name}_load_start`);
+  }
+
+  private measurePerformance(name: string): void {
+    this.performanceService.mark(`${name}_load_stop`);
+    this.performanceService.measure(
+      `${name}_load_time`,
+      `${name}_load_start`,
+      `${name}_load_stop`
+    );
+  }
 }
 
-export const assetLoaderService: IAssetLoaderService = new AssetLoaderService();
+export const assetLoaderService: IAssetLoaderService = new AssetLoaderService(performanceMeasurementService);
 

@@ -17,6 +17,14 @@ const logger: Moli.MoliLogger = {
 
 };
 
+// small helper to create the desired shape for improve digital
+const asArray = (value: string | string[] | undefined, fallback: string[]): string[] => {
+  if (value) {
+    return typeof value === 'string' ? [ value ] : value;
+  }
+  return fallback;
+};
+
 export const adConfiguration: Moli.MoliConfig = {
   slots: [
     {
@@ -46,7 +54,32 @@ export const adConfiguration: Moli.MoliConfig = {
         event: 'timer.complete'
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+      sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
+      // example for a dynamic prebid configuration
+      prebid: (context) => {
+        return {
+          adUnit: {
+            code: 'lazy-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 300, 250 ] ]
+              }
+            },
+            bids: [
+              {
+                bidder: prebidjs.ImproveDigital,
+                placementCode: 'sidebar-2',
+                params: {
+                  placementId: 1160064,
+                  keyValues: {
+                    category: asArray(context.keyValues.channel, [ '' ])
+                  }
+                }
+              }
+            ]
+          }
+        };
+      }
     },
     {
       position: 'in-page',

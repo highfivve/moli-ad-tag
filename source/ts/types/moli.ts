@@ -794,7 +794,7 @@ export namespace Moli {
       readonly type: 'adSlots';
 
       /**
-       * The total number of ad slots on the page that were requested.
+       * The total number of ad slots on the page that were rendered.
        */
       readonly numberAdSlots: number;
 
@@ -856,6 +856,10 @@ export namespace Moli {
        */
       readonly lineItemId?: number;
 
+      /**
+       * Performance mark when the ad slot is refreshed.
+       */
+      readonly refresh: PerformanceMark;
 
       /**
        * Performance measure from `requestAds` until the adslot is rendered.
@@ -866,6 +870,12 @@ export namespace Moli {
        * Performance measure from `requestAds` until the adslot is fully loaded.
        */
       readonly loaded: PerformanceMeasure;
+
+      /**
+       * Performance measure from `adSlot rendered` to `adSlot loaded`. This give
+       * represents the time the creative needed to be fully visible.
+       */
+      readonly rendering: PerformanceMeasure;
 
     }
 
