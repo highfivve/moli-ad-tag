@@ -1,18 +1,19 @@
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
+import { consoleLogReporter } from './reporters';
 
 const logger: Moli.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.debug(`[DEBUG] ${message}`, ...optionalParams);
   },
   info(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.info(`[INFO] ${message}`, ...optionalParams);
   },
   warn(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.warn(`[WARN] ${message}`, ...optionalParams);
   },
   error(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.error(`[ERROR] ${message}`, ...optionalParams);
   }
 
 };
@@ -180,6 +181,15 @@ export const adConfiguration: Moli.MoliConfig = {
       provider: 'static',
       value: 0
     }
+  },
+
+  reporting: {
+    // report everything
+    sampleRate: 1,
+    adUnitRegex: /\/\d*\/gf\//i,
+    reporters: [
+      consoleLogReporter
+    ]
   },
   logger: logger
 };
