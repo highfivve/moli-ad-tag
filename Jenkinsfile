@@ -84,7 +84,7 @@ pipeline {
                                 sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/dist ."
                                 echo "Publishing to ${HDFS_PATH_DEBUG}"
                                 sh "httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
-                                sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug debug.aurora"
+                                sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug moli-debugger.aurora"
                             }
                         }
                     }
