@@ -297,6 +297,11 @@ export namespace Moli {
      */
     readonly consent: consent.ConsentConfig;
 
+    /**
+     * Reporting configuration
+     */
+    readonly reporting?: reporting.ReportingConfig;
+
     /** configurable logger */
     readonly logger?: MoliLogger;
 
@@ -674,6 +679,194 @@ export namespace Moli {
        * if cookie exists and contains this value, nonPersonalizedAds will be displayed.
        */
       valueForNonPersonalizedAds: string;
+    }
+
+  }
+
+  /**
+   * ## Reporting
+   *
+   * Moli provides extension points to add listeners for different metrics. These can
+   * be used to measure performance and latency of your ad setup.
+   *
+   * ## Metrics
+   *
+   * All metrics are based on the Web Performance API. If a browser doesn't support this
+   * API, no metrics will be collected.
+   *
+   * Moli provides the following metrics
+   *
+   * * `dfpLoad`    - measurement from `requestAds` to `finish`
+   * * `prebidLoad` - measurement from `requestBids` to `bidsBackHandler` called
+   * * `ttfa`       - Time-To-First-Ad measurement from `requestAds` to the first ad slot render call
+   * * `ttfr`       - Time-To-FIrst-Render measurement from `requestAds` to first ad slot fully rendered
+   * * `adslot`     - Contains multiple metrics for a single ad slot. See `AdSlotMetric` for more details.
+   *
+   * @see https://developer.mozilla.org/de/docs/Web/API/Performance
+   *
+   */
+  export namespace reporting {
+
+    /**
+     * Reporting configuration
+     */
+    export interface ReportingConfig {
+
+      /**
+       * a value between 0 and 1 to define the percentage of page requests that should be used
+       * to report metrics.
+       *
+       * @example
+       * sampleRate = 1   // 100%
+       * sampleRate = 0.5 //  50%
+       * sampleRate = 0   //   0%
+       */
+      readonly sampleRate: number;
+
+      /**
+       * A list of reporters
+       */
+      readonly reporters: Reporter[];
+
+      /**
+       * An optional regex for shortening the adunit name in the performance marks and measures.
+       * By default the publisher id is removed and nothing else.
+       *
+       * @example
+       * adUnitRegex = undefined;
+       * "/1234/my/ad/unit" => "my/ad/unit"
+       *
+       */
+      readonly adUnitRegex?: string | RegExp;
+
+    }
+
+    /**
+     * A reporter is a simple function that receives a metric and handles it.
+     */
+    export type Reporter = (metric: Metric) => void;
+
+
+    /**
+     * Union type for all provided metric types.
+     */
+    export type MetricType = 'dfpLoad' | 'prebidLoad' | 'ttfa' | 'ttfr' | 'adSlot' | 'adSlots';
+
+    /**
+     * Base interface for all provided metrics.
+     */
+    export interface IMetric {
+      readonly type: MetricType;
+
+      /**
+       * Unique identifier to identify ad slots that have been requested during the
+       * same page request.
+       */
+      readonly pageRequestId: string;
+    }
+
+    /**
+     * Base type for all provided metrics.
+     */
+    export type Metric = SingleMeasurementMetric | AdSlotMetric | AdSlotsMetric;
+
+    /**
+     * The single measure metric represents all metrics with only one measure.
+     */
+    export interface SingleMeasurementMetric extends IMetric {
+
+      /**
+       * All metrics that provide only a single measurement point.
+       */
+      readonly type: 'dfpLoad' | 'prebidLoad' | 'ttfa' | 'ttfr';
+
+      /**
+       * The measurement provided by the metric `type`
+       */
+      readonly measurement: PerformanceMeasure;
+    }
+
+    /**
+     * The ad slots metric represents aggregated metrics for all ad slots on the site.
+     */
+    export interface AdSlotsMetric {
+
+      readonly type: 'adSlots';
+
+      /**
+       * The total number of ad slots on the page that were requested.
+       */
+      readonly numberAdSlots: number;
+
+      /**
+       * The number of ad slots that weren't rendered, because no creative was delivered.
+       */
+      readonly numberEmptyAdSlots: number;
+
+    }
+
+    /**
+     * AdSlot metric type. Fired for each ad slot that is not empty.
+     *
+     * ## Dimensions
+     *
+     * The AdSlot metric contains a number of dimensions to enable fine grained analytics.
+     *
+     * - `pageRequestId` - allows an analytics backend to group all ad slots from a single page request together
+     * - `adUnitName`    - the ad unit path to separate the different ad slots
+     * - `advertiserId`  - the advertiser that filled this ad slot
+     * - `campaignId`    - the order that filled this ad slot
+     * - `lineItemId`    - the line item that filled this ad slot
+     *
+     * ## Metrics
+     *
+     * - `rendered` - ad slot is starting to render
+     * - `loaded`   - ad slot is fully loaded
+     *
+     */
+    export interface AdSlotMetric extends IMetric {
+
+      readonly type: 'adSlot';
+
+
+      /**
+       * The adslot ad unit name/path.
+       */
+      readonly adUnitName: string;
+
+      /**
+       * Advertiser ID of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
+       *
+       * Viewable in ad manager: https://admanager.google.com/<publisherId>#admin/companyDetail/id=<advertiserId>
+       */
+      readonly advertiserId?: number;
+
+      /**
+       * Campaign ID (Order ID) of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
+       *
+       * Viewable in ad manager: https://admanager.google.com/<publisherId>#delivery/OrderDetail/orderId=<campaignId>
+       */
+      readonly campaignId?: number;
+
+      /**
+       * Line item ID of the rendered reservation ad. Value is null for empty slots, backfill ads or creatives rendered
+       * by services other than pubads service.
+       *
+       * Viewable in ad manager: https://admanager.google.com/<publisherId>#delivery/LineItemDetail/orderId=<campaignId>&lineItemId=<lineItemId>
+       */
+      readonly lineItemId?: number;
+
+
+      /**
+       * Performance measure from `requestAds` until the adslot is rendered.
+       */
+      readonly rendered: PerformanceMeasure;
+
+      /**
+       * Performance measure from `requestAds` until the adslot is fully loaded.
+       */
+      readonly loaded: PerformanceMeasure;
+
     }
 
   }
