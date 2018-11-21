@@ -69,7 +69,7 @@ pipeline {
                                 sh "yarn docs"
                                 sh "tar -zcvf ${DOCS_FILE} -C docs ."
                                 echo "Publishing to ${HDFS_PATH_API_DOCS}"
-                                sh "httpfs-cdh5 put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
+                                sh "httpfs put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
                                 sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_API_DOCS} --bind=docsFile=${DOCS_FILE}  gfaurora/frontend/prod/moli-api-docs docs.aurora"
                             }
                         }
@@ -83,7 +83,7 @@ pipeline {
                                 sh "yarn build:debug"
                                 sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/dist ."
                                 echo "Publishing to ${HDFS_PATH_DEBUG}"
-                                sh "httpfs-cdh5 put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
+                                sh "httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
                                 sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug debug.aurora"
                             }
                         }

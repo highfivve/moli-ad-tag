@@ -11,7 +11,7 @@ fetchDist = Process(
     name='fetch dist from HDFS',
     cmdline="""
         cd web
-        /usr/local/bin/httpfs-cdh5 copyToLocal {{hdfsPath}}/{{distFile}} .
+        /usr/local/bin/httpfs copyToLocal {{hdfsPath}}/{{distFile}} .
         tar -xf {{distFile}} --strip-components=1
         rm {{distFile}}
     """

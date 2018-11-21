@@ -11,7 +11,7 @@ fetchDocs = Process(
     name='fetch docs from HDFS',
     cmdline="""
         cd web
-        /usr/local/bin/httpfs-cdh5 copyToLocal {{hdfsPath}}/{{docsFile}} .
+        /usr/local/bin/httpfs copyToLocal {{hdfsPath}}/{{docsFile}} .
         tar -xf {{docsFile}} --strip-components=1
         rm {{docsFile}}
     """
