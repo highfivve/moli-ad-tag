@@ -214,7 +214,7 @@ describe('DfpService', () => {
       )
         .then(() => {
           expect(window.pbjs.bidderSettings).not.to.be.undefined;
-          expect(window.pbjs.bidderSettings).to.be.equals(bidderSettings);
+          expect(window.pbjs.bidderSettings).to.equal(bidderSettings);
         });
     });
 
@@ -271,12 +271,12 @@ describe('DfpService', () => {
 
           const args = listenerSpy.firstCall.args;
 
-          expect(args[ 0 ]).to.be.deep.equals({}); // response map
+          expect(args[ 0 ]).to.deep.equal({}); // response map
           expect(args[ 1 ]).to.be.false; // time out
 
           const slotDefinitions = args[ 2 ] as Moli.SlotDefinition<Moli.AdSlot>[];
           expect(slotDefinitions).length(1);
-          expect(adSlot).to.be.deep.equals(slotDefinitions[ 0 ].moliSlot);
+          expect(adSlot).to.deep.equal(slotDefinitions[ 0 ].moliSlot);
         });
       });
     });
@@ -526,10 +526,10 @@ describe('DfpService', () => {
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[ 0 ].slotID).to.be.equal('eager-loading-adslot');
-          expect(bidConfig.slots[ 0 ].slotName).to.be.equal('/123/eager');
-          expect(bidConfig.slots[ 0 ].sizes).to.be.deep.equal([ [ 605, 165 ] ]);
-          expect(bidConfig.timeout).to.be.equal(666);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('eager-loading-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/eager');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.timeout).to.equal(666);
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
@@ -675,10 +675,10 @@ describe('DfpService', () => {
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[ 0 ].slotID).to.be.equal('lazy-loading-adslot');
-          expect(bidConfig.slots[ 0 ].slotName).to.be.equal('/123/lazy');
-          expect(bidConfig.slots[ 0 ].sizes).to.be.deep.equal([ [ 605, 340 ] ]);
-          expect(bidConfig.timeout).to.be.equal(666);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('lazy-loading-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/lazy');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.timeout).to.equal(666);
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
@@ -830,10 +830,10 @@ describe('DfpService', () => {
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[ 0 ].slotID).to.be.equal('refreshable-adslot');
-          expect(bidConfig.slots[ 0 ].slotName).to.be.equal('/123/refreshable');
-          expect(bidConfig.slots[ 0 ].sizes).to.be.deep.equal([ [ 605, 340 ] ]);
-          expect(bidConfig.timeout).to.be.equal(666);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.timeout).to.equal(666);
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
@@ -853,10 +853,10 @@ describe('DfpService', () => {
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[ 0 ].slotID).to.be.equal('refreshable-adslot');
-          expect(bidConfig.slots[ 0 ].slotName).to.be.equal('/123/refreshable');
-          expect(bidConfig.slots[ 0 ].sizes).to.be.deep.equal([ [ 605, 340 ] ]);
-          expect(bidConfig.timeout).to.be.equal(666);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.timeout).to.equal(666);
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
