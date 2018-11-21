@@ -2,6 +2,8 @@
 
 :root {
   --MoliDebug-sidebar-padding: 15px;
+  --MoliDebug-border-radius: 4px;
+  --MoliDebug-info-button-height: 24px;
 }
 
 .MoliDebug {
@@ -40,6 +42,7 @@
   }
 
   &-adSlot {
+    display: flex;
     height: 100%;
     left: 0;
     position: absolute;
@@ -47,8 +50,10 @@
     width: 100%;
 
     &-buttons {
+      display: flex;
       height: 24px;
       left: 0;
+      padding: 5px;
       position: absolute;
       top: 0;
     }
@@ -60,8 +65,9 @@
     &-button {
       background-color: lightgray;
       border: 1px solid lightgray;
-      border-radius: 4px;
-      height: 24px;
+      border-radius: var(--MoliDebug-border-radius);
+      cursor: pointer;
+      height: var(--MoliDebug-info-button-height);
       padding: 0;
       width: 24px;
 
@@ -71,6 +77,36 @@
         background-color: white;
         border-color: black;
       }
+    }
+  }
+
+  &-panel {
+    background: color(white alpha(80%));
+    padding: calc(var(--MoliDebug-info-button-height) + 5px) 5px 5px;
+  }
+
+  &-tag {
+    background: darkgray;
+    border-radius: var(--MoliDebug-border-radius);
+    display: inline-block;
+    margin-right: 5px;
+    padding: 1px 5px;
+
+    &--red {
+      background: #ff583d;
+    }
+
+    &--green {
+      background: #93ff8d;
+    }
+
+    &Label {
+      display: inline-block;
+      min-width: 95px;
+    }
+
+    &Container {
+      margin-top: 5px;
     }
   }
 

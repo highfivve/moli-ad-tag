@@ -39,19 +39,46 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
     return <div class="MoliDebug-adSlot" style={state.dimensions}>
       <div class="MoliDebug-adSlot-buttons">
-        <button title="Show general slot info" class={classList('MoliDebug-adSlot-button', [state.showGeneral, 'is-active'])} onClick={this.toggleGeneral}>&#8505;</button>
-        {props.slot.a9 && <button title="Show A9 config" class={classList('MoliDebug-adSlot-button', [state.showA9, 'is-active'])} onClick={this.toggleA9}>A9</button>}
-        {props.slot.prebid && <button title="Show Prebid config" class={classList('MoliDebug-adSlot-button', [state.showPrebid, 'is-active'])} onClick={this.togglePrebid}>pb</button>}
+        <button title="Show general slot info"
+                class={classList('MoliDebug-adSlot-button', [ state.showGeneral, 'is-active' ])}
+                onClick={this.toggleGeneral}>&#9432;</button>
+        {props.slot.a9 &&
+        <button title="Show A9 config" class={classList('MoliDebug-adSlot-button', [ state.showA9, 'is-active' ])}
+                onClick={this.toggleA9}>A9</button>}
+        {props.slot.prebid && <button title="Show Prebid config"
+                                      class={classList('MoliDebug-adSlot-button', [ state.showPrebid, 'is-active' ])}
+                                      onClick={this.togglePrebid}>pb</button>}
       </div>
-      {state.showGeneral && <pre>
-        {JSON.stringify(props.slot, undefined, 2)}
-      </pre>}
-      {state.showA9 && <pre>
-        {JSON.stringify(props.slot.a9, undefined, 2)}
-      </pre>}
-      {state.showPrebid && <pre>
-        {JSON.stringify(props.slot.prebid, undefined, 2)}
-      </pre>}
+      {state.showGeneral && <div class="MoliDebug-panel">
+        <div class="MoliDebug-tagContainer">
+          <div class="MoliDebug-tag MoliDebug-tag--green">{props.slot.position}</div>
+          <div class="MoliDebug-tag MoliDebug-tag--red">{props.slot.behaviour}</div>
+        </div>
+        <div class="MoliDebug-tagContainer">
+          <span class="MoliDebug-tagLabel">DOM ID</span>
+          <div class="MoliDebug-tag">{props.slot.domId}</div>
+        </div>
+        <div class="MoliDebug-tagContainer">
+          <span class="MoliDebug-tagLabel">AdUnit path</span>
+          <div class="MoliDebug-tag">{props.slot.adUnitPath}</div>
+        </div>
+        <div class="MoliDebug-tagContainer">
+          <span class="MoliDebug-tagLabel">Sizes</span>
+          {props.slot.sizes.map(size =>
+            <div class="MoliDebug-tag">
+              {size === 'fluid' ? size : `${size[0]}x${size[1]}`}
+            </div>
+          )}
+        </div>
+      </div>}
+      {state.showA9 && <div class="MoliDebug-panel">
+        A9 is <div class="MoliDebug-tag MoliDebug-tag--green">enabled</div>
+      </div>}
+      {state.showPrebid && <div class="MoliDebug-panel">
+        <pre>
+          {JSON.stringify(props.slot.prebid, undefined, 2)}
+        </pre>
+      </div>}
     </div>;
   }
 
