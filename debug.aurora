@@ -37,7 +37,7 @@ runHttpServer = Process(
 task = SequentialTask(
     name = 'moli-debug',
     processes = [fetchHttpServer, fetchDist, runHttpServer],
-    resources=Resources(cpu=0.3, ram=160 * MB, disk=32 * MB)
+    resources=Resources(cpu=0.3, ram=320 * MB, disk=32 * MB)
 )
 
 healthcheckconfig = HealthCheckConfig(
