@@ -31,7 +31,7 @@ describe('personalizedAdsProvider', () => {
           value: 0
         }
       }).then(value => {
-        expect(value).to.be.eq(0);
+        expect(value).to.equal(0);
       });
     });
 
@@ -42,7 +42,7 @@ describe('personalizedAdsProvider', () => {
           value: 1
         }
       }).then(value => {
-        expect(value).to.be.eq(1);
+        expect(value).to.equal(1);
       });
     });
   });
@@ -63,7 +63,7 @@ describe('personalizedAdsProvider', () => {
     it('should return 0 when no cookie is set', () => {
       cookieExistsStub.returns(false);
       return getPersonalizedAdSetting(cookieConsentConfig).then(value => {
-        expect(value).to.be.eq(0);
+        expect(value).to.equal(0);
       });
     });
 
@@ -71,7 +71,7 @@ describe('personalizedAdsProvider', () => {
       cookieExistsStub.returns(true);
       cookieGetStub.returns('true');
       return getPersonalizedAdSetting(cookieConsentConfig).then(value => {
-        expect(value).to.be.eq(0);
+        expect(value).to.equal(0);
       });
     });
 
@@ -79,7 +79,7 @@ describe('personalizedAdsProvider', () => {
       cookieExistsStub.returns(true);
       cookieGetStub.returns('false');
       return getPersonalizedAdSetting(cookieConsentConfig).then(value => {
-        expect(value).to.be.eq(1);
+        expect(value).to.equal(1);
       });
     });
   });
@@ -101,7 +101,7 @@ describe('personalizedAdsProvider', () => {
       (window as any).__cmp = undefined;
       return getPersonalizedAdSetting(cmpConsentConfig)
         .then((value) => expect.fail(value, 'rejected promise'))
-        .catch(error => expect(error).to.be.eq('No window.__cmp object is available'));
+        .catch(error => expect(error).to.equal('No window.__cmp object is available'));
     });
 
     it('should return 1 when not all purpose consents are given and gdpr applies', () => {
@@ -117,7 +117,7 @@ describe('personalizedAdsProvider', () => {
       };
       window.__cmp = cmpFunction(vendorConsents);
       return getPersonalizedAdSetting(cmpConsentConfig)
-        .then((value) => expect(value).to.be.eq(1));
+        .then((value) => expect(value).to.equal(1));
     });
 
     it('should return 0 when not all purpose consents are given, but gdpr does not apply', () => {
@@ -133,7 +133,7 @@ describe('personalizedAdsProvider', () => {
       };
       window.__cmp = cmpFunction(vendorConsents);
       return getPersonalizedAdSetting(cmpConsentConfig)
-        .then((value) => expect(value).to.be.eq(0));
+        .then((value) => expect(value).to.equal(0));
     });
 
     it('should return 0 when all purpose consents are given and gdpr applies', () => {
@@ -152,7 +152,7 @@ describe('personalizedAdsProvider', () => {
       };
       window.__cmp = cmpFunction(vendorConsents);
       return getPersonalizedAdSetting(cmpConsentConfig)
-        .then((value) => expect(value).to.be.eq(0));
+        .then((value) => expect(value).to.equal(0));
     });
 
 
@@ -172,7 +172,7 @@ describe('personalizedAdsProvider', () => {
       };
       window.__cmp = cmpFunction(vendorConsents);
       return getPersonalizedAdSetting(cmpConsentConfig)
-        .then((value) => expect(value).to.be.eq(0));
+        .then((value) => expect(value).to.equal(0));
     });
   });
 
