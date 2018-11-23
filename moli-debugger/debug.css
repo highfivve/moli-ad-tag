@@ -3,7 +3,7 @@
 :root {
   --MoliDebug-sidebar-padding: 15px;
   --MoliDebug-border-radius: 4px;
-  --MoliDebug-info-button-height: 24px;
+  --MoliDebug-buttons-height: 24px;
   --MoliDebug-font-size: 14px;
 }
 
@@ -41,24 +41,31 @@
       top: 0;
       width: 32px;
     }
+
+    &Section {
+      margin-bottom: 10px;
+    }
   }
 
   &-adSlot {
+    background: color(white alpha(80%));
     display: flex;
+    flex-direction: column;
     font-size: var(--MoliDebug-font-size);
-    height: 100%;
-    left: 0;
-    position: absolute;
-    top: 0;
-    width: 100%;
+    min-height: var(--MoliDebug-buttons-height);
+
+    &--overlay {
+      height: 100%;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100%;
+    }
 
     &-buttons {
       display: flex;
-      height: 24px;
-      left: 0;
+      height: var(--MoliDebug-buttons-height);
       padding: 5px;
-      position: absolute;
-      top: 0;
     }
 
     &-button:not(:first-child) {
@@ -70,7 +77,7 @@
       border: 1px solid lightgray;
       border-radius: var(--MoliDebug-border-radius);
       cursor: pointer;
-      height: var(--MoliDebug-info-button-height);
+      height: var(--MoliDebug-buttons-height);
       padding: 0;
       width: 24px;
 
@@ -84,8 +91,7 @@
   }
 
   &-panel {
-    background: color(white alpha(80%));
-    padding: calc(var(--MoliDebug-info-button-height) + 5px) 5px 5px;
+    padding: 5px;
   }
 
   &-tag {
@@ -110,6 +116,15 @@
 
     &Container {
       margin-top: 5px;
+    }
+  }
+
+  &-keyValueTable {
+    text-align: left;
+
+    & td,
+    & th {
+      padding-right: 10px;
     }
   }
 

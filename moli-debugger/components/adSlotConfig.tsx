@@ -9,11 +9,11 @@ import AdSlot = Moli.AdSlot;
 import headerbidding = Moli.headerbidding;
 
 type IAdSlotConfigProps = {
-  parentElement: HTMLElement;
+  parentElement?: HTMLElement;
   slot: AdSlot;
 };
 type IAdSlotConfigState = {
-  dimensions: { width: number, height: number };
+  dimensions?: { width: number, height: number };
   showA9: boolean;
   showPrebid: boolean;
   showGeneral: boolean;
@@ -30,17 +30,22 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   constructor(props: IAdSlotConfigProps) {
     super();
 
-    props.parentElement.classList.add('MoliDebug-posRelative');
+    if (props.parentElement) {
+      props.parentElement.classList.add('MoliDebug-posRelative');
 
-    const { width, height } = props.parentElement.getBoundingClientRect();
-    this.state = {
-      dimensions: { width, height },
-      ...defaultPanelState
-    };
+      const { width, height } = props.parentElement.getBoundingClientRect();
+      this.state = {
+        dimensions: { width, height },
+        ...defaultPanelState
+      };
+    } else {
+      this.state = defaultPanelState;
+    }
   }
 
   render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
-    return <div class="MoliDebug-adSlot" style={state.dimensions}>
+    return <div class={classList('MoliDebug-adSlot', [!!props.parentElement, 'MoliDebug-adSlot--overlay'])}
+                style={state.dimensions}>
       <div class="MoliDebug-adSlot-buttons">
         <button title="Show general slot info"
                 class={classList('MoliDebug-adSlot-button', [state.showGeneral, 'is-active'])}
