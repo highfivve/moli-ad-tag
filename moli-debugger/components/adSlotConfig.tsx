@@ -1,9 +1,12 @@
 import * as preact from 'preact';
 
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
+import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
+
+import { classList } from '../util/stringUtils';
 
 import AdSlot = Moli.AdSlot;
-import { classList } from '../util/stringUtils';
+import headerbidding = Moli.headerbidding;
 
 type IAdSlotConfigProps = {
   parentElement: HTMLElement;
@@ -40,13 +43,13 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     return <div class="MoliDebug-adSlot" style={state.dimensions}>
       <div class="MoliDebug-adSlot-buttons">
         <button title="Show general slot info"
-                class={classList('MoliDebug-adSlot-button', [ state.showGeneral, 'is-active' ])}
+                class={classList('MoliDebug-adSlot-button', [state.showGeneral, 'is-active'])}
                 onClick={this.toggleGeneral}>&#9432;</button>
         {props.slot.a9 &&
-        <button title="Show A9 config" class={classList('MoliDebug-adSlot-button', [ state.showA9, 'is-active' ])}
+        <button title="Show A9 config" class={classList('MoliDebug-adSlot-button', [state.showA9, 'is-active'])}
                 onClick={this.toggleA9}>A9</button>}
         {props.slot.prebid && <button title="Show Prebid config"
-                                      class={classList('MoliDebug-adSlot-button', [ state.showPrebid, 'is-active' ])}
+                                      class={classList('MoliDebug-adSlot-button', [state.showPrebid, 'is-active'])}
                                       onClick={this.togglePrebid}>pb</button>}
       </div>
       {state.showGeneral && <div class="MoliDebug-panel">
@@ -74,13 +77,51 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       {state.showA9 && <div class="MoliDebug-panel">
         A9 is <div class="MoliDebug-tag MoliDebug-tag--green">enabled</div>
       </div>}
-      {state.showPrebid && <div class="MoliDebug-panel">
-        <pre>
-          {JSON.stringify(props.slot.prebid, undefined, 2)}
-        </pre>
+      {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel">
+        {this.prebidConfig(props.slot.prebid)}
       </div>}
     </div>;
   }
+
+  private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
+    const prebidAdUnit: prebidjs.IAdUnit = (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {} })).adUnit;
+    const banner = prebidAdUnit.mediaTypes.banner;
+    const video = prebidAdUnit.mediaTypes.video;
+
+    return <div>
+      <div class="MoliDebug-tagContainer">
+        <span class="MoliDebug-tagLabel">Code</span>
+        <div class="MoliDebug-tag MoliDebug-tag--green">{prebidAdUnit.code}</div>
+      </div>
+      {banner && <div class="MoliDebug-tagContainer">
+        <span class="MoliDebug-tagLabel">Banner sizes</span>
+        {banner.sizes.map(size =>
+          <div class="MoliDebug-tag">
+            {`${size[0]}x${size[1]}`}
+          </div>)}
+      </div>}
+      {video && <div class="MoliDebug-tagContainer">
+        <span class="MoliDebug-tagLabel">Video</span>
+        <div class="MoliDebug-tag MoliDebug-tag--green">{video.context}</div>
+        {this.isSingleVideoSize(video.playerSize) && this.tagFromTuple(video.playerSize)}
+        {this.isMultiVideoSize(video.playerSize) && video.playerSize.map(
+          (size: [number, number]) => this.tagFromTuple(size))
+        }
+      </div>}
+      {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => [
+          <hr/>,
+          <div class="MoliDebug-tagContainer">
+            <span class="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
+            <div class="MoliDebug-tag MoliDebug-tag--red">{bid.bidder}</div>
+          </div>,
+          <div class="MoliDebug-tagContainer">
+            <span class="MoliDebug-tagLabel">Params</span>
+            <div class="MoliDebug-tag">{JSON.stringify(bid.params)}</div>
+          </div>
+        ]
+      )}
+    </div>;
+  };
 
   private toggleGeneral = (): void => {
     this.setState({ ...defaultPanelState, showGeneral: !this.state.showGeneral });
@@ -92,5 +133,21 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private togglePrebid = (): void => {
     this.setState({ ...defaultPanelState, showPrebid: !this.state.showPrebid });
+  };
+
+  private tagFromTuple = (tuple: [number, number]): JSX.Element => {
+    return <div class="MoliDebug-tag">{`${tuple[0]}x${tuple[1]}`}</div>;
+  };
+
+  private isPrebidConfigObject = (prebid: Moli.headerbidding.PrebidAdSlotConfigProvider): prebid is headerbidding.PrebidAdSlotConfig => {
+    return typeof prebid !== 'function';
+  };
+
+  private isSingleVideoSize = (playerSize: [number, number][] | [number, number]): playerSize is [number, number] => {
+    return typeof playerSize[0] === 'number';
+  };
+
+  private isMultiVideoSize = (playerSize: [number, number][] | [number, number]): playerSize is [number, number][] => {
+    return Array.isArray(playerSize[0]);
   };
 }

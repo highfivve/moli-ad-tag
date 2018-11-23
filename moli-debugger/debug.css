@@ -4,6 +4,7 @@
   --MoliDebug-sidebar-padding: 15px;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-info-button-height: 24px;
+  --MoliDebug-font-size: 14px;
 }
 
 .MoliDebug {
@@ -12,6 +13,7 @@
     background: color(red alpha(40%));
     box-sizing: border-box;
     display: block;
+    font-size: var(--MoliDebug-font-size);
     max-height: 100vh;
     max-width: 100vw;
     padding: var(--MoliDebug-sidebar-padding);
@@ -43,6 +45,7 @@
 
   &-adSlot {
     display: flex;
+    font-size: var(--MoliDebug-font-size);
     height: 100%;
     left: 0;
     position: absolute;
@@ -102,7 +105,7 @@
 
     &Label {
       display: inline-block;
-      min-width: 95px;
+      min-width: 110px;
     }
 
     &Container {

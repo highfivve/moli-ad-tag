@@ -280,9 +280,9 @@ export namespace prebidjs {
     readonly context: 'outstream';
 
     /**
-     * Player size that this ad unit can accept (width, height).
+     * Player size(s) that this ad unit can accept (width, height).
      */
-    readonly playerSize: [number, number];
+    readonly playerSize: [number, number][] | [number, number];
   }
 
   /**
