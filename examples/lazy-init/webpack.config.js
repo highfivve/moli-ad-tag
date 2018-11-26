@@ -1,8 +1,8 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
 
 module.exports = {
   devtool: process.env.NODE_ENV === 'production' ? 'none' : 'inline-source-map',
@@ -24,7 +24,11 @@ module.exports = {
   },
   // local development
   devServer: {
-    https: true,
+    https: {
+      key: fs.readFileSync(path.join(__dirname, 'certs/selfsigned.key')),
+      cert: fs.readFileSync(path.join(__dirname, 'certs/selfsigned.crt')),
+      ca: fs.readFileSync(path.join(__dirname, 'certs/selfsigned.pem'))
+    },
     contentBase: [
       path.join(__dirname, 'dist'),
       // always use the latest moli-debugger
