@@ -62,6 +62,7 @@
 
   &-adSlot {
     background: color(white alpha(80%));
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     font-size: var(--MoliDebug-font-size);
@@ -134,6 +135,7 @@
     &Label {
       display: inline-block;
       min-width: 110px;
+      padding-right: 5px;
     }
 
     &Container {
