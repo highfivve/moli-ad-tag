@@ -5,12 +5,15 @@
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
   --MoliDebug-font-size: 14px;
+  --MoliDebug-sidebar-bg: white;
+  --MoliDebug-sidebar-box-shadow: -3px 0 5px 0px rgba(0,0,0,0.2);
 }
 
 .MoliDebug {
 
   &-sidebar {
-    background: color(red alpha(40%));
+    background: var(--MoliDebug-sidebar-bg);
+    box-shadow: var(--MoliDebug-sidebar-box-shadow);
     box-sizing: border-box;
     display: block;
     font-size: var(--MoliDebug-font-size);
@@ -33,13 +36,21 @@
     }
 
     &-closeHandle {
-      background: color(red alpha(40%));
+      background: var(--MoliDebug-sidebar-bg);
+      border: none;
+      border-bottom-left-radius: var(--MoliDebug-border-radius);
+      box-shadow: var(--MoliDebug-sidebar-box-shadow);
       cursor: pointer;
       height: 32px;
       left: -32px;
+      padding: 0;
       position: absolute;
       top: 0;
       width: 32px;
+
+      &:hover {
+        background: color(var(--MoliDebug-sidebar-bg) shade(20%));
+      }
     }
 
     &Section {
