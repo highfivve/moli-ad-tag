@@ -30,7 +30,7 @@ if (moliConfig) {
 
   moliConfig.slots.forEach(slot => {
     const slotDomElement = document.getElementById(slot.domId);
-    if (slotDomElement) {
+    if (slotDomElement && sizeConfigService.filterSlot(slot)) {
       preact.render(<AdSlotConfig sizeConfigService={sizeConfigService} slot={slot} parentElement={slotDomElement}/>, slotDomElement);
     }
   });
