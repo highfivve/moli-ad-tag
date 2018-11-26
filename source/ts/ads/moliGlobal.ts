@@ -27,7 +27,10 @@ export const createMoliTag = (): Moli.MoliTag => {
     state: 'configurable',
     initialize: false,
     keyValues: {},
-    labels: []
+    labels: [],
+    reporting: {
+      reporters: []
+    }
   };
 
   function setTargeting(key: string, value: string | string[]): void {
@@ -105,6 +108,53 @@ export const createMoliTag = (): Moli.MoliTag => {
     }
   }
 
+  function setSampleRate(sampleRate: number): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.reporting.sampleRate = sampleRate;
+        break;
+      }
+      case 'configured': {
+        state.config = {
+          ...state.config,
+          reporting: {
+            sampleRate: sampleRate,
+            reporters: state.config.reporting ? state.config.reporting.reporters : []
+          }
+        };
+        break;
+      }
+      default : {
+        getLogger(state.config.logger).error('Trying to setSampleRate. Already configured.', state.config);
+        break;
+      }
+    }
+  }
+
+  function addReporter(reporter: Moli.reporting.Reporter): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.reporting.reporters.push(reporter);
+        break;
+      }
+      case 'configured': {
+        state.config = {
+          ...state.config,
+          reporting: {
+            // a reporter is added without a sampling size being configured, we set the sampling rate to 0
+            sampleRate: state.config.reporting ? state.config.reporting.sampleRate : 0,
+            reporters: [...(state.config.reporting ? state.config.reporting.reporters : []), reporter]
+          }
+        };
+        break;
+      }
+      default : {
+        getLogger(state.config.logger).error('Trying to setSampleRate. Already configured.', state.config);
+        break;
+      }
+    }
+  }
+
   function getConfig(): Moli.MoliConfig | undefined {
     switch (state.state) {
       case 'configurable': {
@@ -139,6 +189,11 @@ export const createMoliTag = (): Moli.MoliTag => {
                 ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
                 ...state.labels
               ]
+            },
+            reporting: {
+              ...config.reporting,
+              sampleRate: state.reporting.sampleRate ? state.reporting.sampleRate : (config.reporting && config.reporting.sampleRate) ? config.reporting.sampleRate : 0,
+              reporters: [...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters]
             },
             logger: state.logger || config.logger
           }
@@ -239,6 +294,8 @@ export const createMoliTag = (): Moli.MoliTag => {
     setTargeting: setTargeting,
     addLabel: addLabel,
     setLogger: setLogger,
+    setSampleRate: setSampleRate,
+    addReporter: addReporter,
     getConfig: getConfig,
     configure: configure,
     requestAds: requestAds,

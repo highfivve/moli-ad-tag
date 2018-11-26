@@ -5,7 +5,7 @@ import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag, moli } from '../../../source/ts/ads/moliGlobal';
 import { googletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { consentConfig } from '../stubs/moliStubs';
+import { consentConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 
 // setup sinon-chai
@@ -52,7 +52,7 @@ describe('moli', () => {
 
     it('should transition into requestAds state after requestAds()', () => {
       const adTag = createMoliTag();
-      adTag.configure({ slots: [], consent: consentConfig });
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('requestAds');
       return finished.then(state => {
@@ -168,6 +168,79 @@ describe('moli', () => {
       const config = adTag.getConfig();
       expect(config).to.be.ok;
       expect(config!.logger).to.be.equal(customLogger);
+    });
+
+  });
+
+  describe('setSampleRate()', () => {
+    it('should set the given sample rate instance before configure() is called', () => {
+      const adTag = createMoliTag();
+
+      adTag.setSampleRate(0.23);
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.reporting!.sampleRate).to.be.equal(0.23);
+    });
+
+    it('should set the given sample rate instance after configure() is called', () => {
+      const adTag = createMoliTag();
+
+      adTag.configure({ slots: [], consent: consentConfig });
+      adTag.setSampleRate(0.23);
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.reporting!.sampleRate).to.be.equal(0.23);
+    });
+
+    it('should set the reporters array to an empty array', () => {
+      const adTag = createMoliTag();
+
+      adTag.configure({ slots: [], consent: consentConfig });
+      adTag.setSampleRate(0.23);
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.reporting!.reporters).to.deep.equal([]);
+    });
+  });
+
+  describe('addReporter()', () => {
+    it('should add the given reporter instances', () => {
+      const adTag = createMoliTag();
+
+      const voidReporter: Moli.reporting.Reporter = () => {
+        return;
+      };
+      adTag.addReporter(voidReporter);
+      adTag.configure({ slots: [], consent: consentConfig });
+      adTag.addReporter(voidReporter);
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.reporting!.reporters).length(2);
+      expect(config!.reporting!.reporters).to.deep.equal([ voidReporter, voidReporter ]);
+    });
+
+    it('should set the default sampleRate to 0', () => {
+      const adTag = createMoliTag();
+
+      const voidReporter: Moli.reporting.Reporter = () => {
+        return;
+      };
+      adTag.addReporter(voidReporter);
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.reporting!.sampleRate).to.be.equal(0);
     });
 
   });

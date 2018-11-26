@@ -51,6 +51,21 @@ export namespace Moli {
     setLogger(logger: MoliLogger): void;
 
     /**
+     * Configure the reporting sample rate
+     *
+     * @param samplingRate a number between 0 and 1
+     */
+    setSampleRate(samplingRate: number): void;
+
+    /**
+     * Add a reporter
+     *
+     * @param reporter the reporter function
+     */
+    addReporter(reporter: Moli.reporting.Reporter): void;
+
+
+    /**
      *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
@@ -197,6 +212,15 @@ export namespace Moli {
        * Custom logger
        */
       logger?: MoliLogger;
+
+      /**
+       * Customizable reporting configuration
+       */
+      reporting: {
+        sampleRate?: number;
+
+        reporters: Moli.reporting.Reporter[];
+      };
 
     }
 
