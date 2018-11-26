@@ -1,5 +1,3 @@
-import { Moli } from '../../../source/ts';
-
 export interface IPerformanceMeasurementService {
 
   /**

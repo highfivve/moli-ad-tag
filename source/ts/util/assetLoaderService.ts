@@ -1,7 +1,7 @@
 import domready = require('domready');
 import {
   IPerformanceMeasurementService, performanceMeasurementService
-} from '../../../tests/ts/ads/performanceService';
+} from './performanceService';
 
 export enum AssetLoadMethod {
   FETCH, TAG
