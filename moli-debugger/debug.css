@@ -9,6 +9,7 @@
   --MoliDebug-sidebar-box-shadow: -3px 0 5px 0px rgba(0,0,0,0.2);
   --MoliDebug-green: #93ff8d;
   --MoliDebug-red: #ff583d;
+  --MoliDebug-yellow: #ffe152;
 }
 
 .MoliDebug {
@@ -130,6 +131,10 @@
 
     &--green {
       background: var(--MoliDebug-green);
+    }
+
+    &--yellow {
+      background: var(--MoliDebug-yellow);
     }
 
     &Label {

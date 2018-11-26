@@ -71,7 +71,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       {state.showGeneral && <div class="MoliDebug-panel">
         <div class="MoliDebug-tagContainer">
           <div class="MoliDebug-tag MoliDebug-tag--green">{props.slot.position}</div>
-          <div class="MoliDebug-tag MoliDebug-tag--red">{props.slot.behaviour}</div>
+          <div class="MoliDebug-tag MoliDebug-tag--yellow">{props.slot.behaviour}</div>
         </div>
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">DOM ID</span>
