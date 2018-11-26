@@ -19,9 +19,8 @@ export function classList(...classNames: (string | Conditional)[]): string {
     if (typeof className === 'string') {
       result += `${className} `;
     } else {
-      const conditionalClassName = (className as Conditional);
-      if (conditionalClassName[0]) {
-        result += `${conditionalClassName[1]} `;
+      if (className[0]) {
+        result += `${className[1]} `;
       }
     }
   }
