@@ -10,6 +10,34 @@ The public API that should be used by publishers is the Moli tag.
 
 This is "ad configuration", which contains all necessary information to request and render ads on the publisher page.
 
+## Features
+
+The moli publisher ad tag provides a minimal API for various uses cases.
+All methods only make sense if the tag is triggered on the publisher page, which means the following initialization code
+is required
+
+```html
+<script>
+// initialize the command queue
+window.moli = window.moli || { que: [] };
+window.moli.que.push(function(moliAdTag) => {
+  // trigger ads
+  moliAdTag.requestAds();
+});
+</script>
+```
+
+- [`setTarget(key,value)`](interfaces/_moli_.moli.molitag.html#settargeting). Add dynamic key value pairs from the publisher site
+- [`addLabel`](interfaces/_moli_.moli.molitag.html#addlabel). Add custom labels for ad slot filtering
+- [`setLogger`](interfaces/_moli_.moli.molitag.html#setlogger). Provide a custom logger implementation
+- [`addReporter`](interfaces/_moli_.moli.molitag.html#addreporter). Add custom reporting functions to measure general metrics and ad slot related metrics
+- [`setSampleRate](interfaces/_moli_.moli.molitag.html#setsamplerate). Restrict the number of metrics pushed to the configured reporters
+
+
+The [`configure()`](interfaces/_moli_.moli.molitag.html#configure) method should never be called by the publisher. The ad tag contains the
+static configuration. Use this method for initial testing during the integration face, but not in production.
+
+
 
 ## Integration
 
