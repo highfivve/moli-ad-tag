@@ -28,7 +28,7 @@
 
   // request ads after 5 seconds
   window.moli.que.push(function(moli) {
-    window.setTimeout(moli.requestAds, 5000);
+    window.setTimeout(moli.requestAds, 2000);
   });
 
 </script>
@@ -53,7 +53,7 @@
 
 <h1>Lazy AdSlot</h1>
 <script>
-  let timeoutSteps = 10;
+  let timeoutSteps = 5;
   const tick = () => window.setTimeout(() => {
     timeoutSteps--;
     document.getElementById('countdown').innerText = timeoutSteps;
