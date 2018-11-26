@@ -1,6 +1,6 @@
 import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
-import { IPerformanceMeasurementService } from './performanceService';
+import { IPerformanceMeasurementService } from './../util/performanceService';
 
 /**
  * ## Reporting Service

@@ -1,7 +1,7 @@
 import domready = require('domready');
 
-import { performanceMeasurementService } from '../../../tests/ts/ads/performanceService';
-import { ReportingService } from '../../../tests/ts/ads/reportingService';
+import { performanceMeasurementService } from './../util/performanceService';
+import { ReportingService } from './reportingService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import '../types/apstag';
