@@ -7,6 +7,8 @@
   --MoliDebug-font-size: 14px;
   --MoliDebug-sidebar-bg: white;
   --MoliDebug-sidebar-box-shadow: -3px 0 5px 0px rgba(0,0,0,0.2);
+  --MoliDebug-green: #93ff8d;
+  --MoliDebug-red: #ff583d;
 }
 
 .MoliDebug {
@@ -84,9 +86,10 @@
     }
 
     &-button {
-      background-color: lightgray;
+      background: lightgray;
       border: 1px solid lightgray;
       border-radius: var(--MoliDebug-border-radius);
+      color: black;
       cursor: pointer;
       height: var(--MoliDebug-buttons-height);
       padding: 0;
@@ -95,8 +98,16 @@
       &:hover,
       &:focus,
       &.is-active {
-        background-color: white;
+        background: white;
         border-color: black;
+      }
+
+      &.is-rendered {
+        background: var(--MoliDebug-green);
+      }
+
+      &.is-notRendered {
+        background: var(--MoliDebug-red);
       }
     }
   }
@@ -113,11 +124,11 @@
     padding: 1px 5px;
 
     &--red {
-      background: #ff583d;
+      background: var(--MoliDebug-red);
     }
 
     &--green {
-      background: #93ff8d;
+      background: var(--MoliDebug-green);
     }
 
     &Label {

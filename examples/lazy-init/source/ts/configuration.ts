@@ -3,16 +3,16 @@ import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
 
 const logger: Moli.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.log(`[lazy-init example] ${message}`, ...optionalParams);
   },
   info(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.log(`[lazy-init example] ${message}`, ...optionalParams);
   },
   warn(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.log(`[lazy-init example] ${message}`, ...optionalParams);
   },
   error(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[DFP] ${message}`, ...optionalParams);
+    window.console.log(`[lazy-init example] ${message}`, ...optionalParams);
   }
 
 };
@@ -22,6 +22,13 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'eager-loading-adslot',
+      behaviour: 'eager',
+      adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
+      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+    },
+    {
+      position: 'in-page',
+      domId: 'eager-loading-adslot-not-in-dom',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
@@ -47,6 +54,17 @@ export const adConfiguration: Moli.MoliConfig = {
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+    },
+    {
+      position: 'in-page',
+      domId: 'lazy-adslot',
+      behaviour: 'lazy',
+      trigger: {
+        name: 'event',
+        event: 'timer.complete'
+      },
+      adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
+      sizes: [ [ 999, 165 ] ]
     },
     {
       position: 'in-page',
@@ -107,7 +125,13 @@ export const adConfiguration: Moli.MoliConfig = {
       'static': 'from-config'
     }
   },
-  sizeConfig: [],
+  sizeConfig: [
+    {
+      labels: [],
+      sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      mediaQuery: '(min-width: 400px)'
+    }
+  ],
   prebid: {
     config: {
       bidderTimeout: 1000,

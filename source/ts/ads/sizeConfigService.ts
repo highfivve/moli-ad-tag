@@ -40,7 +40,7 @@ export class SizeConfigService {
       supportedConfigs.map(conf => conf.labels)
     );
 
-    this.supportedLabels = [...supportedLabels, ...extraLabels]
+    this.supportedLabels = [ ...supportedLabels, ...extraLabels ]
       .filter(uniquePrimitiveFilter);
   }
 

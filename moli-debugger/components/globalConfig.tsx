@@ -4,12 +4,14 @@ import { classList } from '../util/stringUtils';
 import { AdSlotConfig } from './adSlotConfig';
 
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
+import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 
 import MoliConfig = Moli.MoliConfig;
 import DfpSlotSize = Moli.DfpSlotSize;
 
 type IGlobalConfigProps = {
-  config?: MoliConfig
+  config?: MoliConfig;
+  sizeConfigService: SizeConfigService;
 };
 type IGlobalConfigState = {
   sidebarHidden: boolean;
@@ -27,10 +29,11 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
   }
 
   render(props: IGlobalConfigProps, state: IGlobalConfigState): JSX.Element {
-    const classes = classList('MoliDebug-sidebar', [this.state.sidebarHidden, 'is-hidden']);
+    const classes = classList('MoliDebug-sidebar', [ this.state.sidebarHidden, 'is-hidden' ]);
     const config = props.config;
     return <div class={classes} data-ref={debugSidebarSelector}>
-      <button class="MoliDebug-sidebar-closeHandle" title={`${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`} onClick={this.toggleSidebar}>
+      <button class="MoliDebug-sidebar-closeHandle"
+              title={`${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`} onClick={this.toggleSidebar}>
         {state.sidebarHidden && <span>&#11013;</span>}
         {!state.sidebarHidden && <span>&times;</span>}
       </button>
@@ -39,7 +42,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         {config.slots.map(slot =>
           <div class="MoliDebug-sidebarSection">
             Slot with DOM ID <strong>{slot.domId}</strong>
-            <AdSlotConfig slot={slot}/>
+            <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
           </div>
         )}
         <h4>Targeting</h4>
@@ -95,21 +98,26 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private sizeConfig = (sizeConfig: Moli.SizeConfigEntry[]): JSX.Element => {
     return <div>
-      {sizeConfig.map(sizeConfigEntry =>
-        <div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Media query</span>
-            <div class="MoliDebug-tag MoliDebug-tag--green">{sizeConfigEntry.mediaQuery}</div>
-          </div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Supported slot sizes</span>
-            {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}
-          </div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Labels</span>
-            {sizeConfigEntry.labels.map(this.tagFromString)}
-          </div>
-        </div>
+      {sizeConfig.map(sizeConfigEntry => {
+          const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
+          return <div>
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Media query</span>
+              <div
+                class={classList('MoliDebug-tag', [ mediaQueryMatches, 'MoliDebug-tag--green' ], [ !mediaQueryMatches, 'MoliDebug-tag--red' ])}>
+                {sizeConfigEntry.mediaQuery}
+              </div>
+            </div>
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Supported slot sizes</span>
+              {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}
+            </div>
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Labels</span>
+              {sizeConfigEntry.labels.map(this.tagFromString)}
+            </div>
+          </div>;
+        }
       )}
     </div>;
   };
