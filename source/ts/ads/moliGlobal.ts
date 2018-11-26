@@ -268,14 +268,14 @@ export const createMoliTag = (): Moli.MoliTag => {
     return state.state;
   }
 
-  function openConsole(): void {
+  function openConsole(path?: string): void {
     switch (state.state) {
       case 'configurable': {
         break;
       }
       default: {
         assetLoaderService.loadScript({
-          assetUrl: 'moli-debug.min.js', // TODO: make asset path configurable
+          assetUrl: path || 'moli-debug.min.js', // TODO: make asset path configurable
           loadMethod: AssetLoadMethod.TAG,
           name: 'moli-debugger'
         });

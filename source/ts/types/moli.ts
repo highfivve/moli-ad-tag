@@ -66,7 +66,6 @@ export namespace Moli {
 
 
     /**
-     *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
      */
@@ -89,9 +88,10 @@ export namespace Moli {
     getState(): state.States;
 
     /**
+     * @param path [optional] full path to the moli debug script.
      * Request the debug bundle and start the debug mode.
      */
-    openConsole(): void;
+    openConsole(path?: string): void;
   }
 
   /**
