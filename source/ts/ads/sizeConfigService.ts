@@ -23,7 +23,7 @@ export class SizeConfigService {
       .filter(conf => window.matchMedia(conf.mediaQuery).matches);
 
     if (sizeConfig.length > 0 && supportedConfigs.length === 0) {
-      this.logger.debug('SizeConfig: supported sizes empty after matchMedia filtering - probably wrong config?');
+      this.logger.debug('[SizeConfig] Supported sizes empty after matchMedia filtering - probably wrong config?');
     }
 
     // To filter out duplicate slot sizes, the slot size tuples are converted to strings that can be easily compared
