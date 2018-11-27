@@ -20,7 +20,7 @@ is required
 <script>
 // initialize the command queue
 window.moli = window.moli || { que: [] };
-window.moli.que.push(function(moliAdTag) => {
+window.moli.que.push(function(moliAdTag) {
   // trigger ads
   moliAdTag.requestAds();
 });
@@ -82,7 +82,7 @@ You can push arbitrary commands into this queue with
 
 ```html
 <script>
-window.moli.que.push(function(moliAdTag) => {
+window.moli.que.push(function(moliAdTag) {
   moliAdTag.setTargeting('key', 'value');
   moliAdTag.requestAds();
 });
@@ -99,7 +99,7 @@ This step is required in order to load ads:
 
 ```html
 <script>
-window.moli.que.push(function(moliAdTag) => {
+window.moli.que.push(function(moliAdTag) {
   moliAdTag.requestAds();
 });
 </script>
@@ -111,7 +111,7 @@ window.moli.que.push(function(moliAdTag) => {
 ```html
 <script>
 window.moli = window.moli || { que: [] };
-window.moli.que.push(function(moliAdTag) => {
+window.moli.que.push(function(moliAdTag) {
   moliAdTag.setTargeting('key', 'value');
   moliAdTag.addLabel('qdp');
   moliAdTag.requestAds();
