@@ -31,38 +31,43 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
   render(props: IGlobalConfigProps, state: IGlobalConfigState): JSX.Element {
     const classes = classList('MoliDebug-sidebar', [ this.state.sidebarHidden, 'is-hidden' ]);
     const config = props.config;
-    return <div class={classes} data-ref={debugSidebarSelector}>
+    const showHideMessage = `${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
+
+    return <div>
       <button class="MoliDebug-sidebar-closeHandle"
-              title={`${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`} onClick={this.toggleSidebar}>
-        {state.sidebarHidden && <span>&#11013;</span>}
-        {!state.sidebarHidden && <span>&times;</span>}
+              title={showHideMessage} onClick={this.toggleSidebar}>
+        {state.sidebarHidden && <span>&#11013; </span>}
+        {!state.sidebarHidden && <span>&times; </span>}
+        {showHideMessage}
       </button>
-      {config && <div>
-        <h4>Slots</h4>
-        {config.slots.map(slot =>
+      <div class={classes} data-ref={debugSidebarSelector}>
+        {config && <div>
+          <h4>Slots</h4>
+          {config.slots.map(slot =>
+            <div class="MoliDebug-sidebarSection">
+              Slot with DOM ID <strong>{slot.domId}</strong>
+              <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
+            </div>
+          )}
+          <h4>Targeting</h4>
           <div class="MoliDebug-sidebarSection">
-            Slot with DOM ID <strong>{slot.domId}</strong>
-            <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
+            {config.targeting && <div>
+              <h5>Key/value pairs</h5>
+              {this.keyValues(config.targeting.keyValues)}
+              {this.labels(config.targeting.labels)}
+            </div>}
+            {!config.targeting && <span>No targeting config present.</span>}
           </div>
-        )}
-        <h4>Targeting</h4>
-        <div class="MoliDebug-sidebarSection">
-          {config.targeting && <div>
-            <h5>Key/value pairs</h5>
-            {this.keyValues(config.targeting.keyValues)}
-            {this.labels(config.targeting.labels)}
-          </div>}
-          {!config.targeting && <span>No targeting config present.</span>}
-        </div>
-        <h4>Size config</h4>
-        <div class="MoliDebug-sidebarSection">
-          {(config.sizeConfig && config.sizeConfig.length > 0) && this.sizeConfig(config.sizeConfig)}
-          {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
-        </div>
-        <pre>
+          <h4>Size config</h4>
+          <div class="MoliDebug-sidebarSection">
+            {(config.sizeConfig && config.sizeConfig.length > 0) && this.sizeConfig(config.sizeConfig)}
+            {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
+          </div>
+          <pre>
           {JSON.stringify(config, undefined, 2)}
         </pre>
-      </div>}
+        </div>}
+      </div>
     </div>;
   }
 
@@ -104,7 +109,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Media query</span>
               <div
-                class={classList('MoliDebug-tag', [ mediaQueryMatches, 'MoliDebug-tag--green' ], [ !mediaQueryMatches, 'MoliDebug-tag--red' ])}>
+                class={classList('MoliDebug-tag', [ mediaQueryMatches, 'MoliDebug-tag--green' ], [ !mediaQueryMatches, 'MoliDebug-tag--red' ])}
+                title={`Media query ${mediaQueryMatches ? 'matches' : 'doesn\'t match'}`}>
                 {sizeConfigEntry.mediaQuery}
               </div>
             </div>

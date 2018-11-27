@@ -4,12 +4,14 @@
   --MoliDebug-sidebar-padding: 15px;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
+  --MoliDebug-buttons-padding: 5px;
   --MoliDebug-font-size: 14px;
   --MoliDebug-sidebar-bg: white;
-  --MoliDebug-sidebar-box-shadow: -3px 0 5px 0px rgba(0,0,0,0.2);
+  --MoliDebug-sidebar-box-shadow: -3px 0 5px 0px rgba(0, 0, 0, 0.2);
   --MoliDebug-green: #93ff8d;
   --MoliDebug-red: #ff583d;
   --MoliDebug-yellow: #ffe152;
+  --MoliDebug-sidebar-z-index: 99999;
 }
 
 .MoliDebug {
@@ -22,34 +24,44 @@
     font-size: var(--MoliDebug-font-size);
     max-height: 100vh;
     max-width: 100vw;
-    padding: var(--MoliDebug-sidebar-padding);
+    overflow-y: auto;
+    padding: 32px var(--MoliDebug-sidebar-padding) var(--MoliDebug-sidebar-padding);
     position: fixed;
     right: 0;
     top: 0;
-    z-index: 99999;
+    z-index: var(--MoliDebug-sidebar-z-index);
+
+    @media (min-width: 768px) {
+      max-width: calc(100vw - 32px);
+    }
 
     &.is-hidden {
-      transform: translateX(100%);
+      display: none;
     }
 
     & pre {
       margin: 0;
-      max-height: calc(100vh - 2 * var(--MoliDebug-sidebar-padding));
-      overflow-y: auto;
     }
 
     &-closeHandle {
       background: var(--MoliDebug-sidebar-bg);
       border: none;
-      border-bottom-left-radius: var(--MoliDebug-border-radius);
       box-shadow: var(--MoliDebug-sidebar-box-shadow);
       cursor: pointer;
       height: 32px;
-      left: -32px;
-      padding: 0;
-      position: absolute;
+      padding-left: 10px;
+      position: fixed;
+      left: 0;
       top: 0;
-      width: 32px;
+      width: 100vw;
+      z-index: calc(var(--MoliDebug-sidebar-z-index) + 1);
+
+      @media (min-width: 768px) {
+        border-bottom-left-radius: var(--MoliDebug-border-radius);
+        left: auto;
+        right: 0;
+        width: auto;
+      }
 
       &:hover {
         background: color(var(--MoliDebug-sidebar-bg) shade(20%));
@@ -67,9 +79,11 @@
     display: flex;
     flex-direction: column;
     font-size: var(--MoliDebug-font-size);
-    min-height: var(--MoliDebug-buttons-height);
+    min-height: calc(var(--MoliDebug-buttons-height) + 2 * var(--MoliDebug-buttons-padding));
 
     &--overlay {
+      border: 1px solid black;
+      border-radius: var(--MoliDebug-border-radius);
       height: 100%;
       left: 0;
       position: absolute;
@@ -80,7 +94,7 @@
     &-buttons {
       display: flex;
       height: var(--MoliDebug-buttons-height);
-      padding: 5px;
+      padding: var(--MoliDebug-buttons-padding);
     }
 
     &-button:not(:first-child) {
