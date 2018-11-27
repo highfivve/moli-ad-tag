@@ -43,7 +43,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'Publisher Demo Page',
+      title: 'Lazy Init - Publisher Demo Page',
       template: 'demo/index.html'
     })
   ]
