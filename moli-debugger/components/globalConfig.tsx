@@ -21,16 +21,21 @@ type IGlobalConfigState = {
     targeting: boolean;
     prebid: boolean;
     sizeConfig: boolean;
-  }
+  };
+  messages: Array<Message>;
 };
 
+type Message = {
+  kind: 'error' | 'warning';
+  text: string | JSX.Element;
+};
 type TagVariant = 'green' | 'red' | 'yellow';
 
 const debugSidebarSelector = 'moli-debug-sidebar';
 
 export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalConfigState> {
 
-  constructor() {
+  constructor(props: IGlobalConfigProps) {
     super();
     this.state = {
       sidebarHidden: false,
@@ -39,8 +44,23 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         targeting: true,
         prebid: true,
         sizeConfig: true
-      }
+      },
+      messages: []
     };
+
+    if (!props.config) {
+      this.reportMissingConfig(this.state.messages);
+    } else {
+      props.config.slots.forEach(slot =>
+        this.checkForDuplicateOrMissingSlots(this.state.messages, slot)
+      );
+
+      this.checkConsentConfig(this.state.messages, props.config.consent);
+
+      if (props.config.prebid) {
+        this.checkPrebidConfig(this.state.messages, props.config.prebid);
+      }
+    }
   }
 
   render(props: IGlobalConfigProps, state: IGlobalConfigState): JSX.Element {
@@ -186,6 +206,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         <div class="MoliDebug-sidebarSection">
           {this.consent(config.consent)}
         </div>
+
+        <h4>Moli configuration issues and warnings</h4>
+        <div class="MoliDebug-sidebarSection">
+          {this.state.messages.map(message => <div class={classList('MoliDebug-configMessage', `MoliDebug-configMessage--${message.kind}`)}>
+            {this.iconForMessageKind(message.kind)}
+            {message.text}
+          </div>)}
+        </div>
       </div>}
     </div>;
   }
@@ -320,5 +348,52 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     return <button class="MoliDebug-adSlot-button"
                    title={`${this.state.expandSection[section] ? 'collapse' : 'expand'} ${section}`}
                    onClick={() => toggleValue(section)}>{this.state.expandSection[section] ? '⊖' : '⊕'}</button>;
+  };
+
+  private iconForMessageKind = (kind: 'error' | 'warning'): JSX.Element => {
+    return <span class="MoliDebug-configMessage-icon">{kind === 'error' ? <span>&#2716;</span> : <span>&#9888;</span>}</span>;
+  };
+
+  private reportMissingConfig = (messages: Array<Message>): void => {
+    messages.push({
+      kind: 'error',
+      text: 'No moli config found.'
+    });
+  };
+
+  private checkForDuplicateOrMissingSlots = (messages: Array<Message>, slot: Moli.AdSlot): void => {
+    const count = document.querySelectorAll(`#${slot.domId}`).length;
+
+    if (count > 1) {
+      messages.push({
+        kind: 'warning',
+        text: <span>{count} DOM elements with id <strong>{slot.domId}</strong> found. This may lead to unexpected results.</span>
+      });
+    }
+
+    if (count === 0) {
+      messages.push({
+        kind: 'warning',
+        text: <span>No DOM element with id <strong>{slot.domId}</strong> found. Slot will not be rendered.</span>
+      });
+    }
+  };
+
+  private checkConsentConfig = (messages: Array<Message>, consent?: Moli.consent.ConsentConfig): void => {
+    if (!consent) {
+      messages.push({
+        kind: 'error',
+        text: 'No consent configuration found.'
+      });
+    }
+  };
+
+  private checkPrebidConfig = (messages: Array<Message>, prebid: Moli.headerbidding.PrebidConfig) => {
+    if (!prebid.config.consentManagement) {
+      messages.push({
+        kind: 'error',
+        text: 'No prebid consentManagement configuration found.'
+      });
+    }
   };
 }

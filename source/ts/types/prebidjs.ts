@@ -372,8 +372,7 @@ export namespace prebidjs {
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof JustPremium
-    |
-    typeof NanoInteractive
+    | typeof NanoInteractive
     | typeof PubMatic
     | typeof OpenX
     | typeof SmartAdServer
@@ -755,7 +754,18 @@ export namespace prebidjs {
   /**
    * Supported bid object types.
    */
-  export type IBid = ICriteoBid | IAppNexusASTBid | IImproveDigitalBid | IIndexExchangeBid | IJustPremiumBid | INanoInteractiveBid | IPubMaticBid | IOpenxBid | ISmartAdServerBid | IUnrulyBid | ITeadsBid;
+  export type IBid =
+    ICriteoBid
+    | IAppNexusASTBid
+    | IImproveDigitalBid
+    | IIndexExchangeBid
+    | IJustPremiumBid
+    | INanoInteractiveBid
+    | IPubMaticBid
+    | IOpenxBid
+    | ISmartAdServerBid
+    | IUnrulyBid
+    | ITeadsBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
