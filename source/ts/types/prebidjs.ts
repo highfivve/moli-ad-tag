@@ -103,7 +103,7 @@ export namespace prebidjs {
      * After this option is set, pbjs.getAdserverTargeting() will give you the below JSON (example).
      * pbjs.setTargetingForGPTAsync() will apply the below keywords in the JSON to GPT (example below)
      *
-     * Default: tre
+     * Default: true
      */
     enableSendAllBids?: boolean;
 
@@ -165,12 +165,10 @@ export namespace prebidjs {
        */
       syncDelay?: number;
 
-
       /**
        * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
        */
       syncsPerBidder?: number;
-
 
       /**
        * Configure lists of adapters to include or exclude their user syncing based on the pixel type (image/iframe).
@@ -182,40 +180,19 @@ export namespace prebidjs {
          * If you want to apply the same bidder inclusion/exlusion rules for both types of sync pixels,
          * you can use the all object instead specifying both image and iframe objects like so
          */
-        all?: {
-          /**
-           * Array of bidders that should be filtered. '*' means all.
-           */
-          bidders: Array<BidderCode | '*'>;
-
-          filter: 'include' | 'exclude';
-        }
+        all?: IFilterSetting
 
         /**
          * Allow iframe-based syncs (the presence of a valid filterSettings.iframe object automatically enables iframe type user-syncing).
          *
          * Note - iframe-based syncing is disabled by default.
          */
-        iframe?: {
-          /**
-           * Array of bidders that should be filtered. '*' means all.
-           */
-          bidders: Array<BidderCode | '*'>;
-
-          filter: 'include' | 'exclude';
-        }
+        iframe?: IFilterSetting
 
         /**
          * Image-based syncing is enabled by default; it can be disabled by excluding all/certain bidders via the filterSettings object.
          */
-        image?: {
-          /**
-           * Array of bidders that should be filtered. '*' means all.
-           */
-          bidders: Array<BidderCode | '*'>;
-
-          filter: 'include' | 'exclude';
-        }
+        image?: IFilterSetting
       }
 
       /**
@@ -256,6 +233,15 @@ export namespace prebidjs {
     };
   }
 
+  export interface IFilterSetting {
+    /**
+     * Array of bidders that should be filtered. '*' means all.
+     */
+    bidders: Array<BidderCode | '*'>;
+
+    filter: 'include' | 'exclude';
+  }
+
   /**
    * For AdUnits with MediaType: banner
    */
@@ -264,7 +250,7 @@ export namespace prebidjs {
      * All the sizes that this ad unit can accept.
      * Hint: Some SSPs handles only the first size, so keep that in mind.
      */
-    readonly sizes: [number, number][];
+    readonly sizes: [ number, number ][];
   }
 
   /**
@@ -282,7 +268,7 @@ export namespace prebidjs {
     /**
      * Player size(s) that this ad unit can accept (width, height).
      */
-    readonly playerSize: [number, number][] | [number, number];
+    readonly playerSize: [ number, number ][] | [ number, number ];
   }
 
   /**
@@ -380,8 +366,19 @@ export namespace prebidjs {
   /**
    * The bidder code is used to identify the different SSPs.
    */
-  export type BidderCode = typeof Criteo | typeof AppNexusAst | typeof ImproveDigital | typeof IndexExchange | typeof JustPremium |
-    typeof NanoInteractive | typeof PubMatic | typeof OpenX | typeof SmartAdServer | typeof Unruly | typeof Teads;
+  export type BidderCode =
+    typeof Criteo
+    | typeof AppNexusAst
+    | typeof ImproveDigital
+    | typeof IndexExchange
+    | typeof JustPremium
+    |
+    typeof NanoInteractive
+    | typeof PubMatic
+    | typeof OpenX
+    | typeof SmartAdServer
+    | typeof Unruly
+    | typeof Teads;
 
   /**
    * A bid object.
@@ -407,8 +404,8 @@ export namespace prebidjs {
   export interface ICriteoParams {
     readonly zoneId: number;
   }
-  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> { }
 
+  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
 
   export interface IAppNexusASTKeyword {
     [key: string]: string[];
@@ -463,7 +460,7 @@ export namespace prebidjs {
       readonly mimes?: string[];
 
       /**
-       * 	Integer that defines the minimum video ad duration in seconds.
+       *  Integer that defines the minimum video ad duration in seconds.
        */
       readonly minduration?: number;
 
@@ -486,19 +483,19 @@ export namespace prebidjs {
       readonly skippable?: boolean;
 
       /**
-       * playback_method	Array of strings listing playback methods supported by the publisher.
+       * playback_method  Array of strings listing playback methods supported by the publisher.
        */
       readonly playback_method?: Array<'auto_play_sound_on' | 'auto_play_sound_off' | 'click_to_play' | 'mouseover' | 'auto_play_sound_unknown'>
 
       /**
-       * 	Array of integers listing API frameworks supported by the publisher.
-       * 	Allowed values:
-       * 	  0: None
-       * 	  1: VPAID 1.0
-       * 	  2: VPAID 2.0
-       * 	  3: MRAID 1.0:
-       * 	  4: ORMMA
-       * 	  5: MRAID 2.0
+       *  Array of integers listing API frameworks supported by the publisher.
+       *  Allowed values:
+       *    0: None
+       *    1: VPAID 1.0
+       *    2: VPAID 2.0
+       *    3: MRAID 1.0:
+       *    4: ORMMA
+       *    5: MRAID 2.0
        */
       readonly frameworks: Array<0 | 1 | 2 | 3 | 4 | 5>;
     };
@@ -508,7 +505,7 @@ export namespace prebidjs {
   /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> { }
+  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> {}
 
   /**
    * ImproveDigital bid parameters.
@@ -531,7 +528,7 @@ export namespace prebidjs {
   /**
    * ImproveDigital bid object.
    */
-  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> { }
+  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {}
 
   /**
    * IndexExchange bid parameters.
@@ -596,7 +593,7 @@ export namespace prebidjs {
     readonly exclude?: Array<JustPremiumFormat>;
   }
 
-  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> { }
+  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
 
   export interface IPubMaticParams {
 
@@ -615,8 +612,7 @@ export namespace prebidjs {
     readonly adSlot: string;
   }
 
-  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> { }
-
+  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
 
   /**
    * NanoInteractive bid parameters.
@@ -641,7 +637,7 @@ export namespace prebidjs {
   /**
    * NanoInteractive bid object.
    */
-  export interface INanoInteractiveBid extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> { }
+  export interface INanoInteractiveBid extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
 
   /**
    * OpenX bid parameters
@@ -666,7 +662,7 @@ export namespace prebidjs {
   /**
    * OpenX bid object
    */
-  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> { }
+  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> {}
 
   /**
    * Smart bid parameters
@@ -694,8 +690,8 @@ export namespace prebidjs {
     pageId: number;
 
     /**
-     * 	The placement format ID
-     * 	example: 1234
+     *  The placement format ID
+     *  example: 1234
      */
     formatId: number;
 
@@ -708,7 +704,7 @@ export namespace prebidjs {
   /**
    * Smart bid object
    */
-  export interface ISmartAdServerBid extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> { }
+  export interface ISmartAdServerBid extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> {}
 
   /**
    * Unruly bid parameters
@@ -731,7 +727,7 @@ export namespace prebidjs {
   /**
    * Unruly bid object
    */
-  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> { }
+  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
 
   /**
    * Teads bid parameters
@@ -754,8 +750,7 @@ export namespace prebidjs {
   /**
    * Teads bid object
    */
-  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> { }
-
+  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
 
   /**
    * Supported bid object types.
@@ -804,7 +799,6 @@ export namespace prebidjs {
       bids: prebidjs.BidResponse[];
     } | undefined;
   }
-
 
   /**
    * Bid response object.
@@ -946,6 +940,7 @@ export namespace prebidjs {
    */
   export interface IAdServerTargeting {
     readonly key: string;
+
     val(bidResponse: IBidResponse): string;
   }
 }
