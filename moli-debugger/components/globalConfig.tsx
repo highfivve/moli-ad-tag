@@ -16,6 +16,12 @@ type IGlobalConfigProps = {
 };
 type IGlobalConfigState = {
   sidebarHidden: boolean;
+  expandSection: {
+    slots: boolean;
+    targeting: boolean;
+    prebid: boolean;
+    sizeConfig: boolean;
+  }
 };
 
 type TagVariant = 'green' | 'red' | 'yellow';
@@ -27,7 +33,13 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
   constructor() {
     super();
     this.state = {
-      sidebarHidden: false
+      sidebarHidden: false,
+      expandSection: {
+        slots: false,
+        targeting: true,
+        prebid: true,
+        sizeConfig: true
+      }
     };
   }
 
@@ -43,34 +55,57 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         {!state.sidebarHidden && <span>&times; </span>}
         {showHideMessage}
       </button>
-      <div class={classes} data-ref={debugSidebarSelector}>
-        {config && <div>
-          <h4>Slots</h4>
-          {config.slots.map(slot =>
-            <div class="MoliDebug-sidebarSection">
-              <strong>{slot.behaviour}</strong> slot with DOM ID <strong>{slot.domId}</strong>
-              <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
-            </div>
-          )}
-          <h4>Targeting</h4>
-          <div class="MoliDebug-sidebarSection">
-            {config.targeting && <div>
-              <h5>Key/value pairs</h5>
-              {this.keyValues(config.targeting.keyValues)}
-              {this.labels(config.targeting.labels)}
-            </div>}
-            {!config.targeting && <span>No targeting config present.</span>}
-          </div>
-          <h4>Size config</h4>
-          <div class="MoliDebug-sidebarSection">
-            {(config.sizeConfig && config.sizeConfig.length > 0) && this.sizeConfig(config.sizeConfig)}
-            {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
-          </div>
+      {config && <div class={classes} data-ref={debugSidebarSelector}>
 
-          {config.prebid && <div class="MoliDebug-sidebarSection">
+        <div class="MoliDebug-sidebarSection">
+          <h4>
+            {this.collapseToggle('slots')}
+            Slots
+          </h4>
 
-            <h4>Prebid</h4>
+          {this.state.expandSection.slots && <div>
+            {config.slots.map(slot =>
+              <div>
+                <strong>{slot.behaviour}</strong> slot with DOM ID <strong>{slot.domId}</strong>
+                <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
+              </div>
+            )}
+          </div>}
 
+        </div>
+
+        <h4>
+          {this.collapseToggle('targeting')}
+          Targeting
+        </h4>
+
+        {this.state.expandSection.targeting && <div class="MoliDebug-sidebarSection">
+          {config.targeting && <div>
+            <h5>Key/value pairs</h5>
+            {this.keyValues(config.targeting.keyValues)}
+            {this.labels(config.targeting.labels)}
+          </div>}
+          {!config.targeting && <span>No targeting config present.</span>}
+        </div>}
+
+        <h4>
+          {this.collapseToggle('sizeConfig')}
+          Size config
+        </h4>
+
+        {this.state.expandSection.sizeConfig && <div class="MoliDebug-sidebarSection">
+          {(config.sizeConfig && config.sizeConfig.length > 0) && this.sizeConfig(config.sizeConfig)}
+          {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
+        </div>}
+
+        {config.prebid && <div class="MoliDebug-sidebarSection">
+
+          <h4>
+            {this.collapseToggle('prebid')}
+            Prebid
+          </h4>
+
+          {this.state.expandSection.prebid && <div>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Prebid debug</span>
               {this.tagFromString(config.prebid.config.debug ? 'enabled' : 'disabled', config.prebid.config.debug ? 'yellow' : undefined)}
@@ -144,15 +179,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             </div>
 
             {/* TODO: bidder settings - do we need to display something here? */}
-
           </div>}
-
-          <h4>Consent</h4>
-          <div class="MoliDebug-sidebarSection">
-            {this.consent(config.consent)}
-          </div>
         </div>}
-      </div>
+
+        <h4>Consent</h4>
+        <div class="MoliDebug-sidebarSection">
+          {this.consent(config.consent)}
+        </div>
+      </div>}
     </div>;
   }
 
@@ -188,9 +222,10 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private sizeConfig = (sizeConfig: Moli.SizeConfigEntry[]): JSX.Element => {
     return <div>
-      {sizeConfig.map(sizeConfigEntry => {
+      {sizeConfig.map((sizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
-          return <div>
+          return <div class="MoliDebug-sidebarSection">
+            Entry <strong>#{idx + 1}</strong>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Media query</span>
               <div
@@ -275,5 +310,15 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           </div>
         </div>;
     }
+  };
+
+  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'sizeConfig'>): JSX.Element => {
+    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'sizeConfig'>) => {
+      const oldVal = this.state.expandSection[section];
+      this.setState({ expandSection: { ...this.state.expandSection, [section]: !oldVal } });
+    };
+    return <button class="MoliDebug-adSlot-button"
+                   title={`${this.state.expandSection[section] ? 'collapse' : 'expand'} ${section}`}
+                   onClick={() => toggleValue(section)}>{this.state.expandSection[section] ? '⊖' : '⊕'}</button>;
   };
 }

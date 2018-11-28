@@ -130,6 +130,11 @@ export const adConfiguration: Moli.MoliConfig = {
       labels: [],
       sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       mediaQuery: '(min-width: 400px)'
+    },
+    {
+      labels: [ 'desktop', 'tablet' ],
+      sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      mediaQuery: '(min-width: 768px)'
     }
   ],
   prebid: {
