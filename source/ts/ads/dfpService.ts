@@ -106,7 +106,7 @@ export class DfpService {
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
     prebidReady.then(() => {
       this.initRefreshableSlots(eagerlyLoadedSlots, config, reportingService);
-      this.initLazyLoadedSlots(lazySlots, config, reportingService);
+      this.initLazyLoadedSlots(lazySlots, config, reportingService, sizeConfigService);
     });
 
     // eagerly displayed slots
@@ -114,7 +114,7 @@ export class DfpService {
     // request all existing and non-lazy loading slots
       .then(() => this.filterAvailableSlots(slots).filter(slot => !this.isLazySlot(slot)))
       // configure slots with gpt
-      .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots))
+      .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, sizeConfigService))
       .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots));
 
     // We wait for a prebid response and then refresh.
@@ -141,8 +141,15 @@ export class DfpService {
    *
    * @param {Promise<Moli.LazyAdSlot[]>} lazyLoadingSlots
    * @param {Moli.MoliConfig} config
+   * @param reportingService gather metrics
+   * @param globalSizeConfigService filter supported sizes
    */
-  private initLazyLoadedSlots(lazyLoadingSlots: Promise<Moli.LazyAdSlot[]>, config: Moli.MoliConfig, reportingService: ReportingService): void {
+  private initLazyLoadedSlots(
+    lazyLoadingSlots: Promise<Moli.LazyAdSlot[]>,
+    config: Moli.MoliConfig,
+    reportingService: ReportingService,
+    globalSizeConfigService: SizeConfigService
+  ): void {
     lazyLoadingSlots
       .then((lazySlots: Moli.LazyAdSlot[]) => lazySlots.forEach((dfpSlotLazy) => {
 
@@ -153,7 +160,7 @@ export class DfpService {
             }
             return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.domId}`);
           })
-          .then(() => this.registerSlot(dfpSlotLazy))
+          .then(() => this.registerSlot(dfpSlotLazy, globalSizeConfigService))
           .then(adSlot => {
             const slotDefinition: SlotDefinition<Moli.AdSlot> = { adSlot, moliSlot: dfpSlotLazy };
             // check if the lazy slot wraps a prebid slot and request prebid too
@@ -502,19 +509,23 @@ export class DfpService {
 
   }
 
-  private registerSlots(slots: Moli.AdSlot[]): SlotDefinition<Moli.AdSlot>[] {
+  private registerSlots(slots: Moli.AdSlot[], globalSizeConfigService: SizeConfigService): SlotDefinition<Moli.AdSlot>[] {
     if (slots.length === 0) {
       this.logger.debug('No DFP ads displayed!');
     }
 
     return slots.map((slot: Moli.AdSlot) => {
-      return { moliSlot: slot, adSlot: this.registerSlot(slot) };
+      return { moliSlot: slot, adSlot: this.registerSlot(slot, globalSizeConfigService) };
     });
   }
 
-  private registerSlot(dfpSlot: Moli.AdSlot): googletag.IAdSlot {
+  private registerSlot(dfpSlot: Moli.AdSlot, globalSizeConfigService: SizeConfigService): googletag.IAdSlot {
+    const sizes = dfpSlot.sizeConfig ?
+      (new SizeConfigService(dfpSlot.sizeConfig, [], this.logger).filterSupportedSizes(dfpSlot.sizes)) :
+      globalSizeConfigService.filterSupportedSizes(dfpSlot.sizes);
+
     const adSlot: googletag.IAdSlot = dfpSlot.position === 'in-page' ?
-      window.googletag.defineSlot(dfpSlot.adUnitPath, dfpSlot.sizes, dfpSlot.domId) :
+      window.googletag.defineSlot(dfpSlot.adUnitPath, sizes, dfpSlot.domId) :
       window.googletag.defineOutOfPageSlot(dfpSlot.adUnitPath, dfpSlot.domId);
 
     adSlot.setCollapseEmptyDiv(true);

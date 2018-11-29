@@ -112,6 +112,10 @@ describe('SizeConfigService', () => {
     sandbox.reset();
   });
 
+  after(() => {
+    sandbox.restore();
+  });
+
   describe('slot size matching logic', () => {
 
     it('should return an empty array when passed an empty array', () => {

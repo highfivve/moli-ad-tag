@@ -538,7 +538,6 @@ describe('DfpService', () => {
       });
     });
 
-
     describe('lazy slots', () => {
 
       it('should register and refresh lazy loaded slot based on event', () => {
@@ -866,7 +865,96 @@ describe('DfpService', () => {
 
     });
 
+    describe('sizeConfig', () => {
 
+      const matchMediaStub = sandbox.stub(window, 'matchMedia');
+
+      it('should use the global supported sizes', () => {
+        const dfpService = newDfpService();
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ], [ 1000, 200 ] ]
+        };
+
+        const sizeConfigEntry1: Moli.SizeConfigEntry = {
+          labels: [],
+          sizesSupported: [ [ 605, 165 ], 'fluid' ],
+          mediaQuery: 'min-width: 300px'
+        };
+        const sizeConfigEntry2: Moli.SizeConfigEntry = {
+          labels: [],
+          sizesSupported: [ [ 1000, 200 ] ],
+          mediaQuery: 'min-width: 1000px'
+        };
+
+        matchMediaStub.onFirstCall().returns({ matches: true }); // match the first entry
+        matchMediaStub.onSecondCall().returns({ matches: false }); // but don't match the second one
+
+        return dfpService.initialize({
+          slots: [ adSlot ], sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ], consent: consentConfig, logger: noopLogger
+        }).then(() => {
+          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ [ 605, 165 ], 'fluid' ], adSlot.domId);
+          expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
+        });
+      });
+
+      it('should use the global supported sizes', () => {
+        const dfpService = newDfpService();
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ], [ 1000, 200 ] ],
+          sizeConfig: [
+            {
+              labels: [],
+              sizesSupported: [ [ 605, 165 ], 'fluid' ],
+              mediaQuery: 'min-width: 200px'
+            },
+            {
+              labels: [],
+              sizesSupported: [ [ 1000, 200 ] ],
+              mediaQuery: 'min-width: 500px'
+            }
+          ]
+        };
+
+        const sizeConfigEntry1: Moli.SizeConfigEntry = {
+          labels: [],
+          sizesSupported: [ [ 605, 165 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+        const sizeConfigEntry2: Moli.SizeConfigEntry = {
+          labels: [],
+          sizesSupported: [ [ 1000, 200 ] ],
+          mediaQuery: 'min-width: 1000px'
+        };
+
+        // first two calls are the global config
+        matchMediaStub.onCall(0).returns({ matches: true });
+        matchMediaStub.onCall(1).returns({ matches: false });
+
+        // second call is the specific one
+        matchMediaStub.onCall(2).returns({ matches: true });
+        matchMediaStub.onCall(3).returns({ matches: true });
+
+
+        return dfpService.initialize({
+          slots: [ adSlot ], sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ], consent: consentConfig, logger: noopLogger
+        }).then(() => {
+          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ [ 605, 165 ], 'fluid', [ 1000, 200 ] ], adSlot.domId);
+          expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
+        });
+      });
+    });
   });
 
   describe('setting key/value pairs', () => {

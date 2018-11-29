@@ -375,6 +375,19 @@ export namespace Moli {
     readonly labelAny?: string[];
     readonly labelAll?: string[];
 
+
+    /**
+     * Provide an optional size config to create supported sizes for this ad slot.
+     *
+     * - The global `supportedSizes` will be **ignored**
+     * - The global `labels` will be **used**
+     *
+     * NOTE: This should not be used to create labels. Use the global SizeConfig to
+     *       create labels for filtering entire ad slots.
+     *
+     */
+    readonly sizeConfig?: SizeConfigEntry[];
+
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
     readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
 
