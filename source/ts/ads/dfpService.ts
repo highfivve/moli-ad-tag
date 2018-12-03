@@ -105,7 +105,7 @@ export class DfpService {
     // concurrently initialize lazy loaded slots and refreshable slots
     const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
     prebidReady.then(() => {
-      this.initRefreshableSlots(eagerlyLoadedSlots, config, reportingService);
+      this.initRefreshableSlots(eagerlyLoadedSlots, config, reportingService, sizeConfigService);
       this.initLazyLoadedSlots(lazySlots, config, reportingService, sizeConfigService);
     });
 
@@ -120,7 +120,7 @@ export class DfpService {
     // We wait for a prebid response and then refresh.
     const refreshedAds: Promise<SlotDefinition<Moli.AdSlot>[]> = prebidReady
       .then(() => eagerlyLoadedSlots)
-      .then(slotDefinitions => this.initHeaderBidding(slotDefinitions, config, reportingService))
+      .then(slotDefinitions => this.initHeaderBidding(slotDefinitions, config, reportingService, sizeConfigService))
       .then((adSlots: SlotDefinition<Moli.AdSlot>[]) => this.refreshAds(adSlots, reportingService));
 
     return refreshedAds
@@ -169,7 +169,7 @@ export class DfpService {
             const bidRequests: Promise<unknown>[] = [];
 
             if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid([ { adSlot, moliSlot: dfpSlotLazy as Moli.PrebidAdSlot } ], config, reportingService));
+              bidRequests.push(this.initPrebid([ { adSlot, moliSlot: dfpSlotLazy as Moli.PrebidAdSlot } ], config, reportingService, globalSizeConfigService));
             }
 
             if (dfpSlotLazy.a9) {
@@ -194,8 +194,10 @@ export class DfpService {
    *
    * @param {Promise<SlotDefinition<Moli.AdSlot>[]>} displayedAdSlots
    * @param {Moli.MoliConfig} config
+   * @param reportingService performance metrics and reporting
+   * @param globalSizeConfigService required for labels
    */
-  private initRefreshableSlots(displayedAdSlots: Promise<SlotDefinition<Moli.AdSlot>[]>, config: Moli.MoliConfig, reportingService: ReportingService): void {
+  private initRefreshableSlots(displayedAdSlots: Promise<SlotDefinition<Moli.AdSlot>[]>, config: Moli.MoliConfig, reportingService: ReportingService, globalSizeConfigService: SizeConfigService): void {
     displayedAdSlots
       .then(registrations => registrations.filter(this.isRefreshableAdSlotDefinition))
       .then((refreshableSlots: SlotDefinition<Moli.RefreshableAdSlot>[]) => refreshableSlots.forEach(({ adSlot, moliSlot }) => {
@@ -203,7 +205,7 @@ export class DfpService {
           const bidRequests: Promise<unknown>[] = [];
 
           if (moliSlot.prebid) {
-            const refreshPrebidSlot = this.requestPrebid([ { adSlot, moliSlot: moliSlot as Moli.PrebidAdSlot } ], config, reportingService)
+            const refreshPrebidSlot = this.requestPrebid([ { adSlot, moliSlot: moliSlot as Moli.PrebidAdSlot } ], config, reportingService, globalSizeConfigService)
               .catch(reason => {
                 this.logger.warn(reason);
                 return {};
@@ -234,16 +236,19 @@ export class DfpService {
    * - Registering the prebid slots
    * - Sending the bidRequest via pbjs
    *
-   * @param availableSlots
+   * @param availableSlots all available slots that will eventually be requested
+   * @param config the moli config
+   * @param reportingService performance metrics and reporting
+   * @param globalSizeConfigService required for labels
    * @returns returns the unaltered adSlot definitions
    */
-  private initHeaderBidding(availableSlots: SlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<SlotDefinition<Moli.AdSlot>[]> {
+  private initHeaderBidding(availableSlots: SlotDefinition<Moli.AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService, globalSizeConfigService: SizeConfigService): Promise<SlotDefinition<Moli.AdSlot>[]> {
     this.logger.debug('DFP activate header bidding');
 
     const prebidSlots: SlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition);
     const a9Slots: SlotDefinition<Moli.A9AdSlot>[] = availableSlots.filter(this.isA9SlotDefinition);
 
-    return Promise.all([ this.initA9(a9Slots, config, reportingService), this.initPrebid(prebidSlots, config, reportingService) ])
+    return Promise.all([ this.initA9(a9Slots, config, reportingService), this.initPrebid(prebidSlots, config, reportingService, globalSizeConfigService) ])
       .then(() => availableSlots);
   }
 
@@ -256,9 +261,16 @@ export class DfpService {
    *
    * @param prebidSlots all slots - will be filtered for prebid slots
    * @param config full ad configuration
+   * @param reportingService performance metrics and reporting
+   * @param globalSizeConfigService required for labels
    * @returns the bid response map. Always empty if not prebid slots are requested
    */
-  private initPrebid(prebidSlots: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<prebidjs.IBidResponsesMap> {
+  private initPrebid(
+    prebidSlots: SlotDefinition<Moli.PrebidAdSlot>[],
+    config: Moli.MoliConfig,
+    reportingService: ReportingService,
+    globalSizeConfigService: SizeConfigService
+  ): Promise<prebidjs.IBidResponsesMap> {
     if (prebidSlots.length === 0) {
       return Promise.resolve({});
     }
@@ -270,7 +282,7 @@ export class DfpService {
 
     return Promise.resolve()
       .then(() => this.registerPrebidSlots(prebidSlots, config))
-      .then(() => this.requestPrebid(prebidSlots, config, reportingService))
+      .then(() => this.requestPrebid(prebidSlots, config, reportingService, globalSizeConfigService))
       .catch(reason => {
         this.logger.warn(reason);
         return {};
@@ -461,7 +473,12 @@ export class DfpService {
    *
    * @returns {Promise<void>} resolves when the bidsBackHandler is executed
    */
-  private requestPrebid(slotDefinitions: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<prebidjs.IBidResponsesMap> {
+  private requestPrebid(
+    slotDefinitions: SlotDefinition<Moli.PrebidAdSlot>[],
+    config: Moli.MoliConfig,
+    reportingService: ReportingService,
+    globalSizeConfigService: SizeConfigService
+  ): Promise<prebidjs.IBidResponsesMap> {
     return new Promise<prebidjs.IBidResponsesMap>(resolve => {
 
       // increase the prebid request count
@@ -479,6 +496,7 @@ export class DfpService {
       reportingService.markPrebidSlotsRequested(currentRequestCount);
       window.pbjs.requestBids({
         adUnitCodes: adUnitCodes,
+        labels: globalSizeConfigService.getSupportedLabels(),
         bidsBackHandler: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean) => {
           // the bids back handler seems to run on a different thread
           // in consequence, we need to catch errors here to propagate them to top levels

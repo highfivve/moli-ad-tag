@@ -788,6 +788,11 @@ export namespace prebidjs {
     readonly timeout?: number;
 
     /**
+     * 	Defines labels that may be matched on ad unit targeting conditions.
+     */
+    readonly labels: string[];
+
+    /**
      * Callback to execute when all the bid responses are back or the timeout hits.
      * @param bidResponses contains all valid SSP responses
      * @param timedOut - true if the handler was called due to hitting the timeout. false others

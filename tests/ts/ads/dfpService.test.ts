@@ -404,7 +404,9 @@ describe('DfpService', () => {
           expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
           expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
             Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])).and(
-              Sinon.match.has('bidsBackHandler', Sinon.match.defined)
+              Sinon.match.has('bidsBackHandler', Sinon.match.defined).and(
+                Sinon.match.has('labels', Sinon.match.array.deepEquals([]))
+              )
             )
           );
 
@@ -895,7 +897,10 @@ describe('DfpService', () => {
         matchMediaStub.onSecondCall().returns({ matches: false }); // but don't match the second one
 
         return dfpService.initialize({
-          slots: [ adSlot ], sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ],
+          sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ],
+          consent: consentConfig,
+          logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.been.calledOnce;
           expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ [ 605, 165 ], 'fluid' ], adSlot.domId);
@@ -947,13 +952,79 @@ describe('DfpService', () => {
 
 
         return dfpService.initialize({
-          slots: [ adSlot ], sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ],
+          sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ],
+          consent: consentConfig,
+          logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.been.calledOnce;
           expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ [ 605, 165 ], 'fluid', [ 1000, 200 ] ], adSlot.domId);
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
         });
       });
+
+      it('should add requestBids with the supported labels', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const sizeConfigEntry: Moli.SizeConfigEntry = {
+          labels: [ 'foo', 'bar' ],
+          sizesSupported: [ [ 605, 165 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig,
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry ],
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ prebidAdslotConfig.adUnit ]);
+
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])).and(
+              Sinon.match.has('bidsBackHandler', Sinon.match.defined)
+            ).and(Sinon.match.has('labels', Sinon.match.array.deepEquals(['foo', 'bar'])))
+          );
+
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnce;
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])
+          );
+        });
+      });
+
+
     });
   });
 

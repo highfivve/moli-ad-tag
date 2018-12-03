@@ -332,10 +332,26 @@ export namespace Moli {
   }
 
   /**
+   * ## SizeConfig entry
+   *
    * Configure sizes and labels based on media queries.
    *
-   * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
-   * http://prebid.org/dev-docs/conditional-ad-units.html
+   * This is the most complex part of a publisher ad tag setup. The size config defines
+   *
+   * - if an ad slot is loaded
+   * - what sizes are requested
+   *
+   * ## Prebid API
+   *
+   * The API is identical to the Prebid size config feature. However we do not pass the
+   * size config down to prebid as we already apply the logic at a higher level. We only
+   * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
+   *
+   *
+   * @see [Configure-Responsive-Ads](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+   * @see [Conditional Ad Units](http://prebid.org/dev-docs/conditional-ad-units.html)
+   * @see [Size Mapping](http://prebid.org/dev-docs/examples/size-mapping.html)
+   * @see [requestBids with labels](http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
    */
   export interface SizeConfigEntry {
     /** media query that must match if the sizes are applicable */
@@ -369,8 +385,9 @@ export namespace Moli {
      * Labels are supplied by the sizeConfig object in the top level moli configuration.
      *
      * The API and behaviour matches the prebid API.
-     * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
-     * http://prebid.org/dev-docs/conditional-ad-units.html
+     * - [Configure-Responsive-Ads](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+     * - [Conditional Ad Units](http://prebid.org/dev-docs/conditional-ad-units.html)
+     * - [Size Mapping](http://prebid.org/dev-docs/examples/size-mapping.html)
      */
     readonly labelAny?: string[];
     readonly labelAll?: string[];
