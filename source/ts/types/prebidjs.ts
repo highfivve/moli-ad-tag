@@ -565,7 +565,7 @@ export namespace prebidjs {
    */
   export interface IIndexExchangeParams {
     readonly siteId: string;
-    readonly size: number[];
+    readonly size: [number, number];
   }
 
   /**
