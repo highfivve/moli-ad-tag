@@ -510,7 +510,11 @@ export class DfpService {
 
             // execute listener
             if (config.prebid && config.prebid.listener && config.prebid.listener.preSetTargetingForGPTAsync) {
-              config.prebid.listener.preSetTargetingForGPTAsync(bidResponses, timedOut, slotDefinitions);
+              try {
+                config.prebid.listener.preSetTargetingForGPTAsync(bidResponses, timedOut, slotDefinitions);
+              } catch (e) {
+                this.logger.error(`Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`);
+              }
             }
 
             // set key-values for DFP to target the correct line items
