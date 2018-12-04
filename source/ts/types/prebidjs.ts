@@ -326,6 +326,14 @@ export namespace prebidjs {
     readonly options?: any;
   }
 
+  /**
+   * == Ad unit / ad unit object ==
+   *
+   * Relates directly to the `Moli.IAdSlot`.
+   *
+   *
+   * @see http://prebid.org/dev-docs/adunit-reference.html
+   */
   export interface IAdUnit {
     /**
      * A unique identifier that you create and assign to this ad unit. This identifier will be used to set
@@ -384,14 +392,34 @@ export namespace prebidjs {
    */
   export interface IBidObject<B extends BidderCode, T> {
     /**
-     * The bidder code.
+     * Unique code identifying the bidder. For bidder codes, see the [bidder param reference](http://prebid.org/dev-docs/bidders.html).
+     * @see http://prebid.org/dev-docs/bidders.html
      */
     readonly bidder: B;
 
     /**
-     * The bidder's preferred way of identifying a bid request.
+     * Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](http://prebid.org/dev-docs/bidders.html).
+     * @see http://prebid.org/dev-docs/bidders.html
      */
     readonly params: T;
+
+    /**
+     * Used for [conditional ads](http://prebid.org/dev-docs/conditional-ad-units.html).
+     * Works with sizeConfig argument to [pbjs.setConfig](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
+     *
+     * @see http://prebid.org/dev-docs/conditional-ad-units.html
+     * @see http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
+     */
+    readonly labelAny?: string[];
+
+    /**
+     * Used for [conditional ads](http://prebid.org/dev-docs/conditional-ad-units.html).
+     * Works with sizeConfig argument to [pbjs.setConfig](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
+     *
+     * @see http://prebid.org/dev-docs/conditional-ad-units.html
+     * @see http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
+     */
+    readonly labelAll?: string[];
   }
 
   /**
