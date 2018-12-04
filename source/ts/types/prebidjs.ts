@@ -856,6 +856,21 @@ export namespace prebidjs {
     readonly height: number;
   }
 
+  export interface IGenericBidResponse extends IBidResponse {
+
+    /**
+     * The bidder code.
+     *
+     * Excludes all the bidder codes which have a more specific implementation.
+     * Add more bidders by extending the union type, e.g.
+     *
+     * ```
+     * Exclude<BidderCode, typeof JustPremium | typeof AppNexusAst>;
+     * ```
+     */
+    readonly bidder: Exclude<BidderCode, typeof JustPremium>;
+  }
+
   export interface IJustPremiumBidResponse extends IBidResponse {
 
     /**
@@ -869,7 +884,7 @@ export namespace prebidjs {
     readonly format: JustPremiumFormat;
   }
 
-  export type BidResponse = IBidResponse | IJustPremiumBidResponse;
+  export type BidResponse = IGenericBidResponse | IJustPremiumBidResponse;
 
   /**
    * The bidderSettings object provides a way to define some behaviors for the platform
