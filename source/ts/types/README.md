@@ -31,7 +31,7 @@ window.moli.que.push(function(moliAdTag) {
 - [`addLabel`](interfaces/_moli_.moli.molitag.html#addlabel). Add custom labels for ad slot filtering
 - [`setLogger`](interfaces/_moli_.moli.molitag.html#setlogger). Provide a custom logger implementation
 - [`addReporter`](interfaces/_moli_.moli.molitag.html#addreporter). Add custom reporting functions to measure general metrics and ad slot related metrics
-- [`setSampleRate](interfaces/_moli_.moli.molitag.html#setsamplerate). Restrict the number of metrics pushed to the configured reporters
+- [`setSampleRate`](interfaces/_moli_.moli.molitag.html#setsamplerate). Restrict the number of metrics pushed to the configured reporters
 
 
 The [`configure()`](interfaces/_moli_.moli.molitag.html#configure) method should never be called by the publisher. The ad tag contains the
