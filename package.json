@@ -17,9 +17,10 @@
     "test": "mocha --require ts-node/register tests/**/*.test.ts",
     "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register tests/**/*.test.ts",
     "build:debug": "cd moli-debugger && yarn && yarn build",
-    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:self-contained && yarn build:example:lazy-init",
-    "build:example:self-contained": "mkdir -p dist/self-contained && cd examples/self-contained && yarn && yarn build && cp dist/* ../../dist/self-contained",
-    "build:example:lazy-init": "mkdir -p dist/lazy-init && cd examples/lazy-init && yarn && yarn build && cp dist/* ../../dist/lazy-init",
+    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:instant && yarn build:example:publisher && yarn build:example-ie11",
+    "build:example:instant": "mkdir -p dist/instant && cd examples/instant && yarn && yarn build && cp dist/* ../../dist/instant",
+    "build:example:publisher": "mkdir -p dist/publisher && cd examples/publisher && yarn && yarn build && cp dist/* ../../dist/publisher",
+    "build:example:ie-11": "mkdir -p dist/ie-11 && cd examples/ie-11 && yarn && yarn build && cp dist/* ../../dist/ie-11",
     "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/"
   },
   "repository": {

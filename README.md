@@ -24,7 +24,7 @@ Moli contains the "glue code" or business logic to render an `adConfiguration`.
 The example projects can be used to test some features locally and to show case different integrations.
 All projects reference top-level moli build. You can start a local project by
 
-1. Go to the desired subfolder, e.g. [examples/self-contained](examples/self-contained)
+1. Go to the desired sub folder, e.g. [examples/instant](examples/instant)
 2. Run `yarn install && yarn start`
 3. Open your browser [https://localhost:9000](https://localhost:9000)
 

@@ -1,4 +1,4 @@
-// Self contain
+// Instant mode example
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // This example means a fully self-contained publisher ad tag, which only needs to be added and things just work
 

@@ -1,6 +1,7 @@
-// Self contain
+// Publisher mode example
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// This example means a fully self-contained publisher ad tag, which only needs to be added and things just work
+// This example demonstrates the "publisher" mode, which enables the publisher
+// to configure moli and trigger `requestAds` afterwards.
 
 import 'prebid.js/build/dist/prebid';
 // with `yarn link` we cannot import from the `index.ts` for unknown reasons.
