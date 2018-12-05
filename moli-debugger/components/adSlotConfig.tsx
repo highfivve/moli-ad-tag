@@ -131,7 +131,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <hr/>,
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
-            <div class="MoliDebug-tag MoliDebug-tag--red">{bid.bidder}</div>
+            <div class="MoliDebug-tag MoliDebug-tag--yellow">{bid.bidder}</div>
           </div>,
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Params</span>

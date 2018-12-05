@@ -229,12 +229,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         </tr>
         </thead>
         <tbody>
-        {properties.map((key: string) =>
-          <tr>
+        {properties.map((key: string) => {
+          const value = keyValues[key];
+
+          return <tr>
             <td>{key}</td>
-            <td>{keyValues[key]}</td>
-          </tr>
-        )}
+            <td>{Array.isArray(value) ? value.map(this.standardTagFromString) : this.standardTagFromString(value!)}</td>
+          </tr>;
+        })}
         </tbody>
       </table> :
       <span>No key/values config present.</span>;

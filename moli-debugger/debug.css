@@ -85,15 +85,20 @@
     flex-direction: column;
     font-size: var(--MoliDebug-font-size);
     min-height: calc(var(--MoliDebug-buttons-height) + 2 * var(--MoliDebug-buttons-padding));
+    text-align: left;
 
     &--overlay {
       border: 1px solid black;
       border-radius: var(--MoliDebug-border-radius);
       height: 100%;
       left: 0;
+      min-height: 100px;
+      min-width: 300px;
+      overflow-y: auto;
       position: absolute;
       top: 0;
       width: 100%;
+      z-index: calc(var(--MoliDebug-sidebar-z-index) - 1);
     }
 
     &-buttons {
