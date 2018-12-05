@@ -825,7 +825,7 @@ export namespace prebidjs {
      * @param bidResponses contains all valid SSP responses
      * @param timedOut - true if the handler was called due to hitting the timeout. false others
      */
-    readonly bidsBackHandler?: (bidResponses: IBidResponsesMap, timedOut: boolean) => void;
+    readonly bidsBackHandler?: (bidResponses?: IBidResponsesMap, timedOut?: boolean) => void;
   }
 
   /**

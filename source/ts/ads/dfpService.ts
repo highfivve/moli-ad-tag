@@ -497,11 +497,16 @@ export class DfpService {
       window.pbjs.requestBids({
         adUnitCodes: adUnitCodes,
         labels: globalSizeConfigService.getSupportedLabels(),
-        bidsBackHandler: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean) => {
+        bidsBackHandler: (bidResponses?: prebidjs.IBidResponsesMap, timedOut?: boolean) => {
           // the bids back handler seems to run on a different thread
           // in consequence, we need to catch errors here to propagate them to top levels
           try {
             if (adserverRequestSent) {
+              return;
+            }
+
+            if (!bidResponses) {
+              this.logger.warn(`Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`);
               return;
             }
 
@@ -511,7 +516,7 @@ export class DfpService {
             // execute listener
             if (config.prebid && config.prebid.listener && config.prebid.listener.preSetTargetingForGPTAsync) {
               try {
-                config.prebid.listener.preSetTargetingForGPTAsync(bidResponses, timedOut, slotDefinitions);
+                config.prebid.listener.preSetTargetingForGPTAsync(bidResponses, timedOut || false, slotDefinitions);
               } catch (e) {
                 this.logger.error(`Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`);
               }
