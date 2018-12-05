@@ -118,6 +118,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         state.config = {
           ...state.config,
           reporting: {
+            ...state.config.reporting,
             sampleRate: sampleRate,
             reporters: state.config.reporting ? state.config.reporting.reporters : []
           }
@@ -141,6 +142,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         state.config = {
           ...state.config,
           reporting: {
+            ...state.config.reporting,
             // a reporter is added without a sampling size being configured, we set the sampling rate to 0
             sampleRate: state.config.reporting ? state.config.reporting.sampleRate : 0,
             reporters: [...(state.config.reporting ? state.config.reporting.reporters : []), reporter]
