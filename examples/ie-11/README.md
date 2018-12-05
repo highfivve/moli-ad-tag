@@ -1,6 +1,6 @@
-# Self contained
+# IE 11 compatible
 
-This example show cases how a fully automated publisher tag can be created.
+This example show cases how a a IE11 compatible build looks like
 
 Features:
 

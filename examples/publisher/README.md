@@ -1,6 +1,6 @@
-# Self contained
+# Publisher mode
 
-This example show cases how a fully automated publisher tag can be created.
+This example show cases how a tag that the publisher can configure via the moli API looks like.
 
 Features:
 

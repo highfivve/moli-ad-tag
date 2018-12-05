@@ -1,4 +1,4 @@
-# Self contained
+# Instant mode
 
 This example show cases how a fully automated publisher tag can be created.
 
