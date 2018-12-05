@@ -4,9 +4,9 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 const { postCssLoader } = require('./postcss.config');
 
-module.exports = env => ({
+module.exports = (env, argv) => ({
   mode: 'development',
-  devtool: process.env.NODE_ENV === 'production' ? 'none' : 'inline-source-map',
+  devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
   entry: './debug.tsx',
   output: {
     filename: 'moli-debug.min.js'

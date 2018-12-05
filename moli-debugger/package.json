@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "yarn link moli-ad-tag",
     "build": "yarn clean && yarn compile",
+    "build:prod": "yarn clean && yarn compile --mode=production",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
