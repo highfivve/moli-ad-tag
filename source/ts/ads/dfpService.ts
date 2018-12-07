@@ -262,7 +262,7 @@ export class DfpService {
    * @param prebidSlots all slots - will be filtered for prebid slots
    * @param config full ad configuration
    * @param reportingService performance metrics and reporting
-   * @param globalSizeConfigService required for labels
+   * @param globalSizeConfigService required for labels and prebid sizes
    * @returns the bid response map. Always empty if not prebid slots are requested
    */
   private initPrebid(
@@ -281,7 +281,7 @@ export class DfpService {
     }
 
     return Promise.resolve()
-      .then(() => this.registerPrebidSlots(prebidSlots, config))
+      .then(() => this.registerPrebidSlots(prebidSlots, config, globalSizeConfigService))
       .then(() => this.requestPrebid(prebidSlots, config, reportingService, globalSizeConfigService))
       .catch(reason => {
         this.logger.warn(reason);
@@ -422,17 +422,26 @@ export class DfpService {
    * Register prebid slots with pbjs.
    *
    * @param dfpPrebidSlots that should be registered
+   * @param config the moli global config
+   * @param sizeConfig needed for filtering the prebid slot sizes
    * @returns the unaltered prebid slots
    */
-  private registerPrebidSlots(dfpPrebidSlots: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig): void {
+  private registerPrebidSlots(dfpPrebidSlots: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig, sizeConfig: SizeConfigService): void {
     const slots = dfpPrebidSlots.map(slot => slot.moliSlot);
     window.pbjs.addAdUnits(slots.map((slot: Moli.PrebidAdSlot) => {
       const keyValues = config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {};
       const prebidAdSlotConfig = (typeof slot.prebid === 'function') ? slot.prebid({ keyValues: keyValues }) : slot.prebid;
+      const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
 
       return {
         code: slot.domId,
-        mediaTypes: prebidAdSlotConfig.adUnit.mediaTypes,
+        mediaTypes: {
+          ...prebidAdSlotConfig.adUnit.mediaTypes,
+          banner: mediaTypeBanner ? {
+            ...mediaTypeBanner,
+            sizes: sizeConfig.filterSupportedSizes(mediaTypeBanner.sizes).filter(this.isFixedSize)
+          } : undefined
+        },
         bids: prebidAdSlotConfig.adUnit.bids
       };
     }));
