@@ -210,10 +210,16 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
         <h4>Moli configuration issues and warnings</h4>
         <div class="MoliDebug-sidebarSection">
-          {this.state.messages.map(message => <div class={classList('MoliDebug-configMessage', `MoliDebug-configMessage--${message.kind}`)}>
+          {this.state.messages.map(message => <div
+            class={classList('MoliDebug-configMessage', `MoliDebug-configMessage--${message.kind}`)}>
             {this.iconForMessageKind(message.kind)}
             {message.text}
           </div>)}
+          {this.state.messages.length === 0 &&
+          <div className={classList('MoliDebug-configMessage', `MoliDebug-configMessage--empty`)}>
+            {this.iconForMessageKind('empty')}
+            No errors or warnings found. You're all set!
+          </div>}
         </div>
       </div>}
     </div>;
@@ -353,8 +359,12 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
                    onClick={() => toggleValue(section)}>{this.state.expandSection[section] ? '⊖' : '⊕'}</button>;
   };
 
-  private iconForMessageKind = (kind: 'error' | 'warning'): JSX.Element => {
-    return <span class="MoliDebug-configMessage-icon">{kind === 'error' ? <span>&#2716;</span> : <span>&#9888;</span>}</span>;
+  private iconForMessageKind = (kind: Message['kind'] | 'empty'): JSX.Element => {
+    return <span className="MoliDebug-configMessage-icon">
+      {kind === 'error' && <span>&#2716;</span>}
+      {kind === 'warning' && <span>&#9888;</span>}
+      {kind === 'empty' && <span>✔</span>}
+    </span>;
   };
 
   private reportMissingConfig = (messages: Array<Message>): void => {
