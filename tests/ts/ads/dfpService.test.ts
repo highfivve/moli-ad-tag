@@ -414,75 +414,6 @@ describe('DfpService', () => {
         });
       });
 
-      it('should filter out slots from prebidjs adUnits that don\'t match the sizeConfig', () => {
-        const dfpService = newDfpService();
-
-        matchMediaStub.returns({ matches: true });
-
-        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
-          adUnit: {
-            code: 'eager-loading-adslot',
-            mediaTypes: {
-              banner: {
-                sizes: [ [ 605, 165 ], [ 500, 1000 ] ]
-              }
-            },
-            bids: [ {
-              bidder: prebidjs.AppNexusAst,
-              params: {
-                placementId: '1234'
-              }
-            } ]
-          }
-        };
-
-        const adSlot: Moli.AdSlot = {
-          position: 'in-page',
-          domId: 'eager-loading-adslot',
-          behaviour: 'eager',
-          adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ] ],
-          prebid: prebidAdslotConfig
-        };
-
-        const sizeConfigEntry1: Moli.SizeConfigEntry = {
-          labels: [],
-          sizesSupported: [ [ 605, 165 ], 'fluid' ],
-          mediaQuery: '(min-width: 300px)'
-        };
-        const sizeConfigEntry2: Moli.SizeConfigEntry = {
-          labels: [],
-          sizesSupported: [ [ 1000, 200 ] ],
-          mediaQuery: '(min-width: 1000px)'
-        };
-
-        return dfpService.initialize({
-          slots: [ adSlot ],
-          logger: noopLogger,
-          consent: consentConfig,
-          sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ],
-          prebid: { config: pbjsTestConfig }
-        }).then(() => {
-          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
-          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([
-            {
-              code: 'eager-loading-adslot',
-              mediaTypes: {
-                banner: {
-                  sizes: [ [ 605, 165 ] ]
-                }
-              },
-              bids: [ {
-                bidder: prebidjs.AppNexusAst,
-                params: {
-                  placementId: '1234'
-                }
-              } ]
-            }
-          ]);
-        });
-      });
-
       it('should add prebidjs adUnits with a dynamic configuration', () => {
         const dfpService = newDfpService();
 
@@ -933,6 +864,75 @@ describe('DfpService', () => {
     });
 
     describe('sizeConfig', () => {
+
+      it('should filter out slots from prebidjs adUnits that don\'t match the sizeConfig', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ], [ 500, 1000 ] ]
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig
+        };
+
+        const sizeConfigEntry1: Moli.SizeConfigEntry = {
+          labels: [],
+          sizesSupported: [ [ 605, 165 ], 'fluid' ],
+          mediaQuery: '(min-width: 300px)'
+        };
+        const sizeConfigEntry2: Moli.SizeConfigEntry = {
+          labels: [],
+          sizesSupported: [ [ 1000, 200 ] ],
+          mediaQuery: '(min-width: 1000px)'
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ],
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([
+            {
+              code: 'eager-loading-adslot',
+              mediaTypes: {
+                banner: {
+                  sizes: [ [ 605, 165 ] ]
+                }
+              },
+              bids: [ {
+                bidder: prebidjs.AppNexusAst,
+                params: {
+                  placementId: '1234'
+                }
+              } ]
+            }
+          ]);
+        });
+      });
 
       it('should use the global supported sizes', () => {
         const dfpService = newDfpService();
