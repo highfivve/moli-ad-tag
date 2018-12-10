@@ -370,6 +370,7 @@ export namespace prebidjs {
   export const SmartAdServer = 'smartadserver';
   export const Unruly = 'unruly';
   export const Teads = 'teads';
+  export const Yieldlab = 'yieldlab';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -385,7 +386,8 @@ export namespace prebidjs {
     | typeof OpenX
     | typeof SmartAdServer
     | typeof Unruly
-    | typeof Teads;
+    | typeof Teads
+    | typeof Yieldlab;
 
   /**
    * A bid object.
@@ -781,6 +783,40 @@ export namespace prebidjs {
    */
   export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
 
+  export interface IYieldlabParams {
+
+    /**
+     * Yieldlab Adslot ID
+     */
+    readonly adslotId: string;
+
+    /**
+     * Yieldlab Supply ID. Please reach out to your account management for more information.
+     */
+    readonly supplyId: string;
+
+    /**
+     * 	Override the default prebid size.
+     *
+     * 	The current implementation takes the the first size from the sizes array and uses
+     * 	it. As we have a mulit-size setup, this doesn't work. So this parameter is required
+     * 	for us.
+     *
+     * 	@example 970x250
+     */
+    readonly adSize: string;
+
+    /**
+     * A simple key-value map
+     */
+    readonly targeting?: {[key: string]: string };
+  }
+
+  /**
+   * Yieldlab bid object
+   */
+  export interface IYieldlabBid  extends IBidObject<typeof Yieldlab, IYieldlabParams> { }
+
   /**
    * Supported bid object types.
    */
@@ -795,7 +831,8 @@ export namespace prebidjs {
     | IOpenxBid
     | ISmartAdServerBid
     | IUnrulyBid
-    | ITeadsBid;
+    | ITeadsBid
+    | IYieldlabBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
@@ -967,6 +1004,9 @@ export namespace prebidjs {
 
     /** teads bidder settings */
     readonly teads?: IBidderSetting;
+
+    /** yieldlab bidder settings */
+    readonly yieldlab?: IBidderSetting;
   }
 
   /**
