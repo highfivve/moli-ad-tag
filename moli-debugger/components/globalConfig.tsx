@@ -51,9 +51,10 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     if (!props.config) {
       this.reportMissingConfig(this.state.messages);
     } else {
-      props.config.slots.forEach(slot =>
-        this.checkForDuplicateOrMissingSlots(this.state.messages, slot)
-      );
+      props.config.slots.forEach(slot => {
+        this.checkForDuplicateOrMissingSlots(this.state.messages, slot);
+        this.checkSlotPrebidConfig(this.state.messages, slot);
+      });
 
       this.checkConsentConfig(this.state.messages, props.config.consent);
 
@@ -396,6 +397,20 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         kind: 'error',
         text: 'No prebid consentManagement configuration found.'
       });
+    }
+  };
+
+  private checkSlotPrebidConfig = (messages: Array<Message>, slot: Moli.AdSlot) => {
+    if (slot.prebid) {
+      const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {} }) : slot.prebid,
+        mediaTypes = prebidConfig.adUnit.mediaTypes;
+
+      if (!!mediaTypes && !mediaTypes.banner && !mediaTypes.video) {
+        messages.push({
+          kind: 'error',
+          text: `Prebidjs mediaTypes for slot ${slot.domId} | ${slot.adUnitPath} is empty.`
+        });
+      }
     }
   };
 }
