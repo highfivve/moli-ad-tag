@@ -8,7 +8,7 @@ module.exports = {
   devtool: process.env.NODE_ENV === 'production' ? 'none' : 'inline-source-map',
   entry: './index.ts',
   output: {
-    filename: 'self_contained_[chunkHash].js'
+    filename: 'publisher_lazy_init_[chunkHash].js'
   },
   module: {
     rules: [
@@ -43,7 +43,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'Lazy Init - Publisher Demo Page',
+      title: 'Publisher / Lazy Init - Publisher Demo Page',
       template: 'demo/index.html'
     })
   ]

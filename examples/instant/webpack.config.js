@@ -8,7 +8,7 @@ module.exports = {
   devtool: process.env.NODE_ENV === 'production' ? 'none' : 'inline-source-map',
   entry: './index.ts',
   output: {
-    filename: 'self_contained_[chunkHash].js'
+    filename: 'instant_self_contained_[chunkHash].js'
   },
   module: {
     rules: [
@@ -43,7 +43,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'Eager Init - Publisher Demo Page',
+      title: 'Instant / Eager Init - Publisher Demo Page',
       template: 'demo/index.html'
     })
   ]
