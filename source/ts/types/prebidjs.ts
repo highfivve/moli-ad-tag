@@ -579,6 +579,7 @@ export namespace prebidjs {
   export const JustPremiumPushUpBillboard = 'pu';
   export const JustPremiumPushDownBillboard = 'pd';
   export const JustPremiumFloorAd = 'fa';
+  export const JustPremiumClassicFloorAd = 'cf';
   export const JustPremiumSideAd = 'sa';
   export const JustPremiumWallpaper = 'wp';
   export const JustPremiumMobileScroller = 'is';
@@ -595,6 +596,7 @@ export namespace prebidjs {
   export type JustPremiumFormat = typeof JustPremiumPushUpBillboard |
     typeof JustPremiumPushDownBillboard |
     typeof JustPremiumFloorAd |
+    typeof JustPremiumClassicFloorAd |
     typeof JustPremiumSideAd |
     typeof JustPremiumWallpaper |
     typeof JustPremiumMobileScroller;
