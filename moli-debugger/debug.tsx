@@ -10,6 +10,7 @@ import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 import MoliConfig = Moli.MoliConfig;
 
 import './debug.css';
+import { WindowResizeService } from './util/windowResizeService';
 
 const moliConfig: MoliConfig | undefined = window.moli.getConfig();
 
@@ -24,7 +25,7 @@ if (moliConfig) {
   };
   const sizeConfigService = new SizeConfigService(moliConfig.sizeConfig || [], extraLabels, moliConfig.logger || defaultLogger);
 
-  preact.render(<GlobalConfig sizeConfigService={sizeConfigService} config={moliConfig}/>, globalConfigElement);
+  preact.render(<GlobalConfig config={moliConfig} sizeConfigService={sizeConfigService} windowResizeService={new WindowResizeService()}/>, globalConfigElement);
 
   document.body.appendChild(globalConfigElement);
 

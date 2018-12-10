@@ -1,7 +1,8 @@
 import * as preact from 'preact';
 
-import { classList } from '../util/stringUtils';
 import { AdSlotConfig } from './adSlotConfig';
+import { classList } from '../util/stringUtils';
+import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
@@ -13,6 +14,7 @@ import DfpSlotSize = Moli.DfpSlotSize;
 type IGlobalConfigProps = {
   config?: MoliConfig;
   sizeConfigService: SizeConfigService;
+  windowResizeService: WindowResizeService;
 };
 type IGlobalConfigState = {
   sidebarHidden: boolean;
@@ -23,6 +25,7 @@ type IGlobalConfigState = {
     sizeConfig: boolean;
   };
   messages: Array<Message>;
+  browserResized: boolean;
 };
 
 type Message = {
@@ -33,7 +36,7 @@ type TagVariant = 'green' | 'red' | 'yellow';
 
 const debugSidebarSelector = 'moli-debug-sidebar';
 
-export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalConfigState> {
+export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalConfigState> implements IWindowEventObserver {
 
   constructor(props: IGlobalConfigProps) {
     super();
@@ -45,7 +48,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         prebid: true,
         sizeConfig: true
       },
-      messages: []
+      messages: [],
+      browserResized: false
     };
 
     if (!props.config) {
@@ -61,6 +65,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       if (props.config.prebid) {
         this.checkPrebidConfig(this.state.messages, props.config.prebid);
       }
+
+      props.windowResizeService.register(this);
     }
   }
 
@@ -224,6 +230,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       </div>}
     </div>;
   }
+
+  public listener = (): void => {
+    this.setState({ browserResized: true });
+  };
+
+  public componentWillUnmount = (): void => {
+    this.props.windowResizeService.unregister(this);
+  };
 
   private keyValues = (keyValues: Moli.DfpKeyValueMap): JSX.Element => {
     const properties = Object.keys(keyValues);
