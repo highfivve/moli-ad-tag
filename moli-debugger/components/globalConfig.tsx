@@ -1,15 +1,16 @@
 import * as preact from 'preact';
 
 import { AdSlotConfig } from './adSlotConfig';
+import { SizeConfigDebug } from './sizeConfigDebug';
+import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
-import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
+import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 
 import MoliConfig = Moli.MoliConfig;
-import DfpSlotSize = Moli.DfpSlotSize;
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
@@ -32,7 +33,6 @@ type Message = {
   kind: 'error' | 'warning';
   text: string | JSX.Element;
 };
-type TagVariant = 'green' | 'red' | 'yellow';
 
 const debugSidebarSelector = 'moli-debug-sidebar';
 
@@ -121,7 +121,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         </h4>
 
         {this.state.expandSection.sizeConfig && <div class="MoliDebug-sidebarSection">
-          {(config.sizeConfig && config.sizeConfig.length > 0) && this.sizeConfig(config.sizeConfig)}
+          {(config.sizeConfig && config.sizeConfig.length > 0) && <SizeConfigDebug sizeConfig={config.sizeConfig}/>}
           {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
         </div>}
 
@@ -135,33 +135,33 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {this.state.expandSection.prebid && <div>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Prebid debug</span>
-              {this.tagFromString(config.prebid.config.debug ? 'enabled' : 'disabled', config.prebid.config.debug ? 'yellow' : undefined)}
+              <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>{config.prebid.config.debug ? 'enabled' : 'disabled'}</Tag>
             </div>
 
             {config.prebid.config.enableSendAllBids !== undefined && <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">sendAllBids enabled</span>
-              {this.tagFromString(config.prebid.config.enableSendAllBids.toString())}
+              <Tag>{config.prebid.config.enableSendAllBids.toString()}</Tag>
             </div>}
 
             {config.prebid.config.bidderTimeout &&
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Bidder timeout</span>
-              {this.tagFromString(`${config.prebid.config.bidderTimeout.toString()}ms`)}
+              <Tag>{`${config.prebid.config.bidderTimeout.toString()}ms`}</Tag>
             </div>}
 
             {config.prebid.config.consentManagement && <div>
               <h5>Consent management</h5>
               <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">allowAuctionWithoutConsent</span>
-                {this.tagFromString((!!config.prebid.config.consentManagement.allowAuctionWithoutConsent).toString())}
+                <Tag>{(!!config.prebid.config.consentManagement.allowAuctionWithoutConsent).toString()}</Tag>
               </div>
               {config.prebid.config.consentManagement.cmpApi && <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">CMP API</span>
-                {this.tagFromString(config.prebid.config.consentManagement.cmpApi)}
+                <Tag>{config.prebid.config.consentManagement.cmpApi}</Tag>
               </div>}
               <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">CMP timeout</span>
-                {this.tagFromString(`${config.prebid.config.consentManagement.timeout}ms`)}
+                <Tag>{`${config.prebid.config.consentManagement.timeout}ms`}</Tag>
               </div>
             </div>}
 
@@ -169,19 +169,19 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
               <h5>User sync</h5>
               <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">Sync enabled</span>
-                {this.tagFromString((!!config.prebid.config.userSync.syncEnabled).toString())}
+                <Tag>{(!!config.prebid.config.userSync.syncEnabled).toString()}</Tag>
               </div>
               {config.prebid.config.userSync.syncDelay !== undefined && <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">Sync delay</span>
-                {this.tagFromString(`${config.prebid.config.userSync.syncDelay}ms`)}
+                <Tag>{`${config.prebid.config.userSync.syncDelay}ms`}</Tag>
               </div>}
               {config.prebid.config.userSync.syncsPerBidder !== undefined && <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">Syncs per bidder</span>
-                {this.tagFromString(config.prebid.config.userSync.syncsPerBidder.toString())}
+                <Tag>{config.prebid.config.userSync.syncsPerBidder.toString()}</Tag>
               </div>}
               <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">User sync override enabled</span>
-                {this.tagFromString((!!config.prebid.config.userSync.enableOverride).toString())}
+                <Tag>{(!!config.prebid.config.userSync.enableOverride).toString()}</Tag>
               </div>
               {config.prebid.config.userSync.filterSettings && <div>
                 <h6>Filter Settings</h6>
@@ -194,18 +194,16 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             <h5>Currency</h5>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Ad server currency</span>
-              {this.tagFromString(config.prebid.config.currency.adServerCurrency)}
+              <Tag>{config.prebid.config.currency.adServerCurrency}</Tag>
             </div>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Granularity multiplier</span>
-              {this.tagFromString(config.prebid.config.currency.granularityMultiplier.toString())}
+              <Tag>{config.prebid.config.currency.granularityMultiplier.toString()}</Tag>
             </div>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Default Rates, USD → EUR</span>
-              {this.tagFromString(config.prebid.config.currency.defaultRates.USD.EUR.toString())}
+              <Tag>{config.prebid.config.currency.defaultRates.USD.EUR.toString()}</Tag>
             </div>
-
-            {/* TODO: bidder settings - do we need to display something here? */}
           </div>}
         </div>}
 
@@ -271,34 +269,6 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     </div>;
   };
 
-  private sizeConfig = (sizeConfig: Moli.SizeConfigEntry[]): JSX.Element => {
-    return <div>
-      {sizeConfig.map((sizeConfigEntry, idx) => {
-          const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
-          return <div class="MoliDebug-sidebarSection">
-            Entry <strong>#{idx + 1}</strong>
-            <div class="MoliDebug-tagContainer">
-              <span class="MoliDebug-tagLabel">Media query</span>
-              <div
-                class={classList('MoliDebug-tag', [ mediaQueryMatches, 'MoliDebug-tag--green' ], [ !mediaQueryMatches, 'MoliDebug-tag--red' ])}
-                title={`Media query ${mediaQueryMatches ? 'matches' : 'doesn\'t match'}`}>
-                {sizeConfigEntry.mediaQuery}
-              </div>
-            </div>
-            <div class="MoliDebug-tagContainer">
-              <span class="MoliDebug-tagLabel">Supported slot sizes</span>
-              {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}
-            </div>
-            <div class="MoliDebug-tagContainer">
-              <span class="MoliDebug-tagLabel">Labels</span>
-              {sizeConfigEntry.labels.map(this.standardTagFromString)}
-            </div>
-          </div>;
-        }
-      )}
-    </div>;
-  };
-
   private filterSetting = (name: string, filterSetting: prebidjs.IFilterSetting): JSX.Element => {
     return <div>
       <strong>{name}</strong>
@@ -313,18 +283,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     </div>;
   };
 
-  private tagFromSlotSize = (slotSize: DfpSlotSize): JSX.Element => {
-    return this.tagFromString(
-      slotSize === 'fluid' ? slotSize : `${slotSize[0]}x${slotSize[1]}`
-    );
-  };
-
   private standardTagFromString = (content: string): JSX.Element => {
-    return this.tagFromString(content);
-  };
-
-  private tagFromString = (content: string, variant?: TagVariant): JSX.Element => {
-    return <div class={classList('MoliDebug-tag', [ !!variant, `MoliDebug-tag--${variant}` ])}>{content}</div>;
+    return <Tag>{content}</Tag>;
   };
 
   private toggleSidebar = (): void => {
@@ -334,7 +294,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
   private consent = (consent: Moli.consent.ConsentConfig): JSX.Element => {
     const provider = <div class="MoliDebug-tagContainer">
       <span class="MoliDebug-tagLabel">Provider</span>
-      {this.tagFromString(consent.personalizedAds.provider)}
+      <Tag>{consent.personalizedAds.provider}</Tag>
     </div>;
 
     switch (consent.personalizedAds.provider) {
@@ -345,7 +305,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {provider}
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Value</span>
-            {this.tagFromString(consent.personalizedAds.value.toString())}
+            <Tag>{consent.personalizedAds.value.toString()}</Tag>
           </div>
         </div>;
       case 'cookie':
@@ -353,11 +313,11 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {provider}
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Cookie</span>
-            {this.tagFromString(consent.personalizedAds.cookie)}
+            <Tag>{consent.personalizedAds.cookie}</Tag>
           </div>
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Cookie value for nonPersonalizedAds</span>
-            {this.tagFromString(consent.personalizedAds.valueForNonPersonalizedAds)}
+            <Tag>{consent.personalizedAds.valueForNonPersonalizedAds}</Tag>
           </div>
         </div>;
     }

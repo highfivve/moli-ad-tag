@@ -8,6 +8,7 @@ import { classList } from '../util/stringUtils';
 
 import AdSlot = Moli.AdSlot;
 import headerbidding = Moli.headerbidding;
+import { SizeConfigDebug } from './sizeConfigDebug';
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
@@ -19,12 +20,14 @@ type IAdSlotConfigState = {
   showA9: boolean;
   showPrebid: boolean;
   showGeneral: boolean;
+  showSizeConfig: boolean;
 };
 
-const defaultPanelState: Pick<IAdSlotConfigState, 'showA9' | 'showPrebid' | 'showGeneral'> = {
+const defaultPanelState: Pick<IAdSlotConfigState, 'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig'> = {
   showA9: false,
   showPrebid: false,
-  showGeneral: false
+  showGeneral: false,
+  showSizeConfig: false
 };
 
 export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotConfigState> {
@@ -67,6 +70,11 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
         <button title="Show Prebid config"
                 class={classList('MoliDebug-adSlot-button', [ state.showPrebid, 'is-active' ])}
                 onClick={this.togglePrebid}>pb</button>}
+
+        {props.slot.sizeConfig &&
+        <button title="Show sizeConfig"
+                class={classList('MoliDebug-adSlot-button', [ state.showSizeConfig, 'is-active' ])}
+                onClick={this.toggleSizeConfig}>↔</button>}
       </div>
       {state.showGeneral && <div class="MoliDebug-panel">
         <div class="MoliDebug-tagContainer">
@@ -99,6 +107,11 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel">
         {this.prebidConfig(props.slot.prebid)}
       </div>}
+      {state.showSizeConfig && props.slot.sizeConfig &&
+      <div className="MoliDebug-panel">
+        <SizeConfigDebug sizeConfig={props.slot.sizeConfig}/>
+      </div>
+      }
     </div>;
   }
 
@@ -152,6 +165,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private togglePrebid = (): void => {
     this.setState({ ...defaultPanelState, showPrebid: !this.state.showPrebid });
+  };
+
+  private toggleSizeConfig = (): void => {
+    this.setState({ ...defaultPanelState, showSizeConfig: !this.state.showSizeConfig });
   };
 
   private tagFromTuple = (tuple: [ number, number ]): JSX.Element => {
