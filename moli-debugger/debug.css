@@ -139,6 +139,16 @@
 
   &-panel {
     padding: 5px;
+
+    & ul {
+      margin: 5px 0;
+      padding-left: 20px;
+    }
+
+    &--grey {
+      background: lightgray;
+      border-radius: var(--MoliDebug-border-radius);
+    }
   }
 
   &-tag {

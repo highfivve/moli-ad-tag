@@ -10,20 +10,16 @@ import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 import MoliConfig = Moli.MoliConfig;
 
 import './debug.css';
+
 import { WindowResizeService } from './util/windowResizeService';
+import { debugLogger } from './util/debugLogger';
 
 const moliConfig: MoliConfig | undefined = window.moli.getConfig();
 
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');
   const extraLabels = moliConfig.targeting && moliConfig.targeting.labels || [];
-  const defaultLogger = {
-    debug: console.debug,
-    info: console.info,
-    warn: console.warn,
-    error: console.error
-  };
-  const sizeConfigService = new SizeConfigService(moliConfig.sizeConfig || [], extraLabels, moliConfig.logger || defaultLogger);
+  const sizeConfigService = new SizeConfigService(moliConfig.sizeConfig || [], extraLabels, moliConfig.logger || debugLogger);
 
   preact.render(<GlobalConfig config={moliConfig} sizeConfigService={sizeConfigService} windowResizeService={new WindowResizeService()}/>, globalConfigElement);
 

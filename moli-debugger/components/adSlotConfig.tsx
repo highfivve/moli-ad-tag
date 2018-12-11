@@ -9,6 +9,7 @@ import { classList } from '../util/stringUtils';
 import AdSlot = Moli.AdSlot;
 import headerbidding = Moli.headerbidding;
 import { SizeConfigDebug } from './sizeConfigDebug';
+import { debugLogger } from '../util/debugLogger';
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
@@ -91,11 +92,16 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
         </div>
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">Sizes</span>
-          {props.slot.sizes.map(size => {
-              const slotSizeValid = props.sizeConfigService.filterSupportedSizes([ size ]).length > 0;
-              return <div class={classList('MoliDebug-tag', [ !slotSizeValid, 'MoliDebug-tag--red' ])}
-                          title={`${slotSizeValid ? 'Valid' : 'Invalid'} slot size as per configuration`}>
-                {size === 'fluid' ? size : `${size[0]}x${size[1]}`}
+          {props.slot.sizes.map(
+            size => {
+              const slotSizeConfig = props.slot.sizeConfig;
+              const slotSizeValid = slotSizeConfig ?
+                new SizeConfigService(slotSizeConfig, [], debugLogger).filterSupportedSizes(props.slot.sizes).length > 0 :
+                props.sizeConfigService.filterSupportedSizes([ size ]).length > 0;
+              return <div
+                class={classList('MoliDebug-tag', [ slotSizeValid, 'MoliDebug-tag--green' ], [ !slotSizeValid, 'MoliDebug-tag--red' ])}
+                title={`${slotSizeValid ? 'Valid' : 'Invalid'} (${slotSizeConfig ? 'slot' : 'global'} sizeConfig)`}>
+                {size === 'fluid' ? size : `${size[0]}x${size[1]}`} {slotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
               </div>;
             }
           )}

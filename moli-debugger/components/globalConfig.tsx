@@ -91,6 +91,18 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           </h4>
 
           {this.state.expandSection.slots && <div>
+            <p class="MoliDebug-panel MoliDebug-panel--grey">
+              Slot sizes are annotated to show the origin of their validation state:
+              <ul>
+                <li><strong>Ⓢ</strong> means that the validation originates from the <strong>slot's own
+                  sizeConfig</strong>,
+                </li>
+                <li><strong>Ⓖ</strong> indicates that the validation was done using the <strong>global
+                  sizeConfig</strong>.
+                </li>
+              </ul>
+            </p>
+
             {config.slots.map(slot =>
               <div>
                 <strong>{slot.behaviour}</strong> slot with DOM ID <strong>{slot.domId}</strong>
@@ -136,7 +148,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {this.state.expandSection.prebid && <div>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Prebid debug</span>
-              <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>{config.prebid.config.debug ? 'enabled' : 'disabled'}</Tag>
+              <Tag
+                variant={config.prebid.config.debug ? 'yellow' : undefined}>{config.prebid.config.debug ? 'enabled' : 'disabled'}</Tag>
             </div>
 
             {config.prebid.config.enableSendAllBids !== undefined && <div class="MoliDebug-tagContainer">
