@@ -3,7 +3,7 @@ import * as preact from 'preact';
 import { AdSlotConfig } from './adSlotConfig';
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
-import { classList } from '../util/stringUtils';
+import { classList, firstUpper } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
@@ -110,7 +110,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {config.targeting && <div>
             <h5>Key/value pairs</h5>
             {this.keyValues(config.targeting.keyValues)}
-            {this.labels(config.targeting.labels)}
+            {this.labels('labels from targeting', config.targeting.labels)}
+            {this.labels('labels from sizeConfig', props.sizeConfigService.getSupportedLabels())}
           </div>}
           {!config.targeting && <span>No targeting config present.</span>}
         </div>}
@@ -261,11 +262,11 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       <span>No key/values config present.</span>;
   };
 
-  private labels = (labels: string[] | undefined): JSX.Element => {
+  private labels = (heading: string, labels: string[] | undefined): JSX.Element => {
     return <div class="MoliDebug-tagContainer">
-      <span class="MoliDebug-tagLabel">Labels</span>
+      <span class="MoliDebug-tagLabel">{firstUpper(heading)}</span>
       {labels && labels.map(this.standardTagFromString)}
-      {(!labels || labels.length === 0) && <span>No labels config present.</span>}
+      {(!labels || labels.length === 0) && <span>No {heading} present.</span>}
     </div>;
   };
 
