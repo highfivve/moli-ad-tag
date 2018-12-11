@@ -96,7 +96,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
             size => {
               const slotSizeConfig = props.slot.sizeConfig;
               const slotSizeValid = slotSizeConfig ?
-                new SizeConfigService(slotSizeConfig, [], debugLogger).filterSupportedSizes(props.slot.sizes).length > 0 :
+                new SizeConfigService(slotSizeConfig, [], debugLogger).filterSupportedSizes([ size ]).length > 0 :
                 props.sizeConfigService.filterSupportedSizes([ size ]).length > 0;
               return <div
                 class={classList('MoliDebug-tag', [ slotSizeValid, 'MoliDebug-tag--green' ], [ !slotSizeValid, 'MoliDebug-tag--red' ])}
