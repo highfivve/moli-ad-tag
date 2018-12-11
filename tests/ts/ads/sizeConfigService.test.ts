@@ -209,7 +209,7 @@ describe('SizeConfigService', () => {
 
     it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
       const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ], loggerStub);
-      expect(sizeConfigService.getSupportedLabels()).to.deep.equal(['desktop', 'video', 'mobile', 'bottom'])
+      expect(sizeConfigService.getSupportedLabels()).to.deep.equal(['desktop', 'video', 'mobile', 'bottom']);
 
       // has labelAny "video" matching
       expect(sizeConfigService.filterSlot(adSlotWithLabelAny)).to.be.true;
