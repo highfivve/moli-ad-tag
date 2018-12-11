@@ -105,6 +105,17 @@ describe('SizeConfigService', () => {
     labelAny: [ 'video', 'visitor-uk' ],
     labelAll: [ 'video', 'visitor-uk' ]
   };
+
+  const adSlotWithDifferentLabelAnyLabelAll: Moli.AdSlot = {
+    position: 'in-page',
+    domId: 'not-available-5',
+    behaviour: 'eager',
+    adUnitPath: '/123/eager-5',
+    sizes: [ 'fluid', [ 985, 380 ] ],
+    labelAny: [ 'video' ],
+    labelAll: [ 'desktop', 'bottom' ]
+  };
+
   const emptySizeConfig: SizeConfigEntry[] = [];
   const newSizeConfigService = (sizeConfig: SizeConfigEntry[], logger: MoliLogger) => new SizeConfigService(sizeConfig, [], logger);
 
@@ -198,6 +209,7 @@ describe('SizeConfigService', () => {
 
     it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
       const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ], loggerStub);
+      expect(sizeConfigService.getSupportedLabels()).to.deep.equal(['desktop', 'video', 'mobile', 'bottom'])
 
       // has labelAny "video" matching
       expect(sizeConfigService.filterSlot(adSlotWithLabelAny)).to.be.true;
@@ -207,6 +219,9 @@ describe('SizeConfigService', () => {
 
       // has both specified, but labelAll doesn't match and labelAny is ignored :(
       expect(sizeConfigService.filterSlot(adSlotWithLabelAnyLabelAll)).to.be.false;
+
+      // has both specific and both match
+      expect(sizeConfigService.filterSlot(adSlotWithDifferentLabelAnyLabelAll)).to.be.true;
     });
 
     it('should add the extra labels to the supported labels', () => {
