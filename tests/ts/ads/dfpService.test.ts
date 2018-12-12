@@ -369,7 +369,8 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              }
+              },
+              video: undefined
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -411,6 +412,200 @@ describe('DfpService', () => {
           expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
             Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])
           );
+        });
+      });
+
+      it('should filter prebidjs video playerSizes (single size)', () => {
+        matchMediaStub.returns({ matches: true });
+
+        const dfpService = newDfpService();
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: undefined,
+              video: {
+                playerSize: [ 320, 180 ],
+                context: 'outstream'
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig
+        };
+
+        return dfpService.initialize({
+          sizeConfig: [
+            {
+              labels: [],
+              sizesSupported: [ [ 605, 165 ], [ 320, 180 ] ],
+              mediaQuery: '(min-width: 0px)'
+            }
+          ],
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledWithExactly([ prebidAdslotConfig.adUnit ]);
+        });
+      });
+
+      it('should filter prebidjs video playerSizes (multi size)', () => {
+        matchMediaStub.returns({ matches: true });
+
+        const dfpService = newDfpService();
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: undefined,
+              video: {
+                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [number, number][],
+                context: 'outstream'
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig
+        };
+
+        return dfpService.initialize({
+          sizeConfig: [
+            {
+              labels: [],
+              sizesSupported: [ [ 605, 165 ], [ 320, 180 ] ],
+              mediaQuery: '(min-width: 0px)'
+            }
+          ],
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledWithExactly([ {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: undefined,
+              video: {
+                playerSize: [ [ 320, 180 ] ] as [number, number][],
+                context: 'outstream'
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          } ]);
+        });
+      });
+
+      it('should filter prebidjs banner/video sizes using a slot-local sizeConfig', () => {
+        matchMediaStub.returns({ matches: true });
+
+        const dfpService = newDfpService();
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ], [ 320, 150 ] ]
+              },
+              video: {
+                playerSize: [ [ 320, 180 ], [ 640, 360 ], [ 1920, 1080 ] ] as [number, number][],
+                context: 'outstream'
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig,
+          sizeConfig: [
+            {
+              mediaQuery: '(min-width: 320px)',
+              sizesSupported: [ [ 320, 180 ], [ 640, 360 ], [ 605, 165 ] ],
+              labels: []
+            }
+          ]
+        };
+
+        return dfpService.initialize({
+          sizeConfig: [
+            {
+              labels: [],
+              sizesSupported: [ [ 605, 165 ], [ 320, 180 ] ],
+              mediaQuery: '(min-width: 0px)'
+            }
+          ],
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledWithExactly([ {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              },
+              video: {
+                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [number, number][],
+                context: 'outstream'
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1234'
+              }
+            } ]
+          } ]);
         });
       });
 
@@ -477,7 +672,8 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              }
+              },
+              video: undefined
             },
             bids: [ {
               bidder: prebidjs.ImproveDigital,
@@ -579,7 +775,8 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              }
+              },
+              video: undefined
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -762,7 +959,8 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              }
+              },
+              video: undefined
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -955,7 +1153,8 @@ describe('DfpService', () => {
               mediaTypes: {
                 banner: {
                   sizes: [ [ 605, 165 ] ]
-                }
+                },
+                video: undefined
               },
               bids: [ {
                 bidder: prebidjs.AppNexusAst,
@@ -1005,7 +1204,7 @@ describe('DfpService', () => {
         });
       });
 
-      it('should use the global supported sizes', () => {
+      it('should use the slot-local supported sizes', () => {
         const dfpService = newDfpService();
 
         const adSlot: Moli.AdSlot = {
@@ -1017,7 +1216,7 @@ describe('DfpService', () => {
           sizeConfig: [
             {
               labels: [],
-              sizesSupported: [ [ 605, 165 ], 'fluid' ],
+              sizesSupported: [ [ 150, 35 ], 'fluid' ],
               mediaQuery: 'min-width: 200px'
             },
             {
@@ -1035,7 +1234,7 @@ describe('DfpService', () => {
         };
         const sizeConfigEntry2: Moli.SizeConfigEntry = {
           labels: [],
-          sizesSupported: [ [ 1000, 200 ] ],
+          sizesSupported: [ [ 2000, 400 ] ],
           mediaQuery: 'min-width: 1000px'
         };
 
@@ -1054,7 +1253,7 @@ describe('DfpService', () => {
           logger: noopLogger
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.been.calledOnce;
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ [ 605, 165 ], 'fluid', [ 1000, 200 ] ], adSlot.domId);
+          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ 'fluid', [ 1000, 200 ] ], adSlot.domId);
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
         });
       });
@@ -1076,7 +1275,8 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              }
+              },
+              video: undefined
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
