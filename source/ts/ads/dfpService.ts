@@ -668,7 +668,10 @@ export class DfpService {
    */
   private refreshAds(slots: SlotDefinition<Moli.AdSlot>[], reportingService: ReportingService): SlotDefinition<Moli.AdSlot>[] {
     window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
-    slots.forEach(slot => reportingService.markRefreshed(slot.moliSlot));
+    slots.forEach(slot => {
+      this.logger.debug(`Refresh ad slot ${slot.moliSlot.domId}`);
+      reportingService.markRefreshed(slot.moliSlot);
+    });
     return slots;
   }
 
