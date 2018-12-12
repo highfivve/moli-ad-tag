@@ -140,7 +140,7 @@ export class DfpService {
         return;
       })
       .catch(reason => {
-        this.logger.error('DfpService :: Initialization failed' + JSON.stringify(reason));
+        this.logger.error('DfpService :: Initialization failed: ' + JSON.stringify(reason), reason);
         return Promise.reject(reason);
       });
   };
@@ -223,9 +223,13 @@ export class DfpService {
     globalSizeConfigService: SizeConfigService
   ): void {
     registeredSlots.forEach((slotDefinition) => {
-      createRefreshListener(slotDefinition.moliSlot.trigger).addAdRefreshListener(() => {
-        this.requestRefreshableSlot(slotDefinition, config, reportingService, globalSizeConfigService);
-      });
+      try {
+        createRefreshListener(slotDefinition.moliSlot.trigger).addAdRefreshListener(() => {
+          this.requestRefreshableSlot(slotDefinition, config, reportingService, globalSizeConfigService);
+        });
+      } catch (e) {
+        this.logger.error(`DfpService:: creating refreshable slots failed for slot ${slotDefinition.moliSlot.adUnitPath}`, e);
+      }
     });
   }
 
@@ -237,22 +241,27 @@ export class DfpService {
   ): void {
     lazyRefreshableSlots.forEach((moliSlotRefreshable) => {
       const filterSupportedSizes = this.getSizeFilterFunction(moliSlotRefreshable, globalSizeConfigService);
+      try {
 
-      let adSlot: googletag.IAdSlot;
-      createRefreshListener(moliSlotRefreshable.trigger).addAdRefreshListener(() => {
-        if (!adSlot) {
-          // ad slot has not been registered yet
-          adSlot = this.registerSlot({ moliSlot: moliSlotRefreshable, filterSupportedSizes });
-          this.displayAd(moliSlotRefreshable);
-        }
-        this.requestRefreshableSlot(
-          { moliSlot: moliSlotRefreshable, adSlot, filterSupportedSizes },
-          config,
-          reportingService,
-          globalSizeConfigService
-        );
-      });
+        let adSlot: googletag.IAdSlot;
+        createRefreshListener(moliSlotRefreshable.trigger).addAdRefreshListener(() => {
+          if (!adSlot) {
+            // ad slot has not been registered yet
+            adSlot = this.registerSlot({ moliSlot: moliSlotRefreshable, filterSupportedSizes });
+            this.displayAd(moliSlotRefreshable);
+          }
+          this.requestRefreshableSlot(
+            { moliSlot: moliSlotRefreshable, adSlot, filterSupportedSizes },
+            config,
+            reportingService,
+            globalSizeConfigService
+          );
+        });
+      } catch (e) {
+        this.logger.error(`DfpService:: creating lazy refreshable slots failed ${moliSlotRefreshable.adUnitPath}`, e);
+      }
     });
+
   }
 
   /**
@@ -673,11 +682,12 @@ export class DfpService {
    * @returns true if the slot is immediately requested
    */
   private isInstantlyLoadedSlot(slot: Moli.AdSlot): boolean {
-            return !(
-              slot.behaviour === 'lazy' ||
-              slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false)
-            );
-          }
+    return !(
+      slot.behaviour === 'lazy' ||
+      slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false)
+    );
+  }
+
   /**
    * Decides which sizeConfigService to use - if the slot brings its own sizeConfig, it gets precedence over the
    * global one.
@@ -716,7 +726,7 @@ export class DfpService {
   }
 
   private isSinglePlayerSize(size: prebidjs.IMediaTypeVideo['playerSize']): size is [ number, number ] {
-    return size.length === 2 && typeof size[0] === 'number' && typeof size[1] === 'number';
+    return size.length === 2 && typeof size[ 0 ] === 'number' && typeof size[ 1 ] === 'number';
   }
 
   /**
@@ -732,6 +742,6 @@ export class DfpService {
       this.isSinglePlayerSize(playerSize) ? [ playerSize ] : playerSize
     ).filter(this.isFixedSize);
 
-    return supportedSizes.length > 0 ? this.isSinglePlayerSize(playerSize) ? supportedSizes[0] : supportedSizes : [];
+    return supportedSizes.length > 0 ? this.isSinglePlayerSize(playerSize) ? supportedSizes[ 0 ] : supportedSizes : [];
   }
 }
