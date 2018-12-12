@@ -797,7 +797,8 @@ describe('DfpService', () => {
           prebid: prebidAdslotConfig,
           trigger: {
             name: 'event',
-            event: 'slot-trigger'
+            event: 'slot-trigger',
+            source: window
           }
         };
 
@@ -844,7 +845,8 @@ describe('DfpService', () => {
           a9: {},
           trigger: {
             name: 'event',
-            event: 'slot-trigger'
+            event: 'slot-trigger',
+            source: window
           }
         };
 
@@ -983,7 +985,8 @@ describe('DfpService', () => {
           prebid: prebidAdslotConfig,
           trigger: {
             name: 'event',
-            event: 'slot-trigger'
+            event: 'slot-trigger',
+            source: window
           }
         };
 
@@ -1043,7 +1046,8 @@ describe('DfpService', () => {
           a9: {},
           trigger: {
             name: 'event',
-            event: 'slot-trigger'
+            event: 'slot-trigger',
+            source: window
           }
         };
 
