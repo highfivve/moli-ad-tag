@@ -5,11 +5,14 @@ import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 
 import { classList } from '../util/stringUtils';
-
-import AdSlot = Moli.AdSlot;
-import headerbidding = Moli.headerbidding;
-import { SizeConfigDebug } from './sizeConfigDebug';
 import { debugLogger } from '../util/debugLogger';
+
+import { SizeConfigDebug } from './sizeConfigDebug';
+import { Tag } from './tag';
+
+import headerbidding = Moli.headerbidding;
+import AdSlot = Moli.AdSlot;
+import DfpSlotSize = Moli.DfpSlotSize;
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
@@ -30,6 +33,8 @@ const defaultPanelState: Pick<IAdSlotConfigState, 'showA9' | 'showPrebid' | 'sho
   showGeneral: false,
   showSizeConfig: false
 };
+
+type ValidatedSlotSize = { valid: boolean, size: DfpSlotSize };
 
 export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotConfigState> {
 
@@ -79,36 +84,26 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       </div>
       {state.showGeneral && <div class="MoliDebug-panel">
         <div class="MoliDebug-tagContainer">
-          <div class="MoliDebug-tag MoliDebug-tag--green">{props.slot.position}</div>
-          <div class="MoliDebug-tag MoliDebug-tag--yellow">{props.slot.behaviour}</div>
+          <Tag variant="green">{props.slot.position}</Tag>
+          <Tag variant="yellow">{props.slot.behaviour}</Tag>
         </div>
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">DOM ID</span>
-          <div class="MoliDebug-tag">{props.slot.domId}</div>
+          <Tag>{props.slot.domId}</Tag>
         </div>
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">AdUnit path</span>
-          <div class="MoliDebug-tag">{props.slot.adUnitPath}</div>
+          <Tag>{props.slot.adUnitPath}</Tag>
         </div>
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">Sizes</span>
-          {props.slot.sizes.map(
-            size => {
-              const slotSizeConfig = props.slot.sizeConfig;
-              const slotSizeValid = slotSizeConfig ?
-                new SizeConfigService(slotSizeConfig, [], debugLogger).filterSupportedSizes([ size ]).length > 0 :
-                props.sizeConfigService.filterSupportedSizes([ size ]).length > 0;
-              return <div
-                class={classList('MoliDebug-tag', [ slotSizeValid, 'MoliDebug-tag--green' ], [ !slotSizeValid, 'MoliDebug-tag--red' ])}
-                title={`${slotSizeValid ? 'Valid' : 'Invalid'} (${slotSizeConfig ? 'slot' : 'global'} sizeConfig)`}>
-                {size === 'fluid' ? size : `${size[0]}x${size[1]}`} {slotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
-              </div>;
-            }
+          {this.validateSlotSizes(props.slot.sizes).map(
+            validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!props.slot.sizeConfig)
           )}
         </div>
       </div>}
       {state.showA9 && <div class="MoliDebug-panel">
-        A9 is <div class="MoliDebug-tag MoliDebug-tag--green">enabled</div>
+        A9 is <Tag variant="green">enabled</Tag>
       </div>}
       {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel">
         {this.prebidConfig(props.slot.prebid)}
@@ -123,38 +118,37 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
     const prebidAdUnit: prebidjs.IAdUnit = (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {} })).adUnit;
+    const slotSizeConfig = this.props.slot.sizeConfig;
     const banner = prebidAdUnit.mediaTypes.banner;
     const video = prebidAdUnit.mediaTypes.video;
 
     return <div>
       <div class="MoliDebug-tagContainer">
         <span class="MoliDebug-tagLabel">Code</span>
-        <div class="MoliDebug-tag MoliDebug-tag--green">{prebidAdUnit.code}</div>
+        <Tag variant="green">{prebidAdUnit.code}</Tag>
       </div>
       {banner && <div class="MoliDebug-tagContainer">
         <span class="MoliDebug-tagLabel">Banner sizes</span>
-        {banner.sizes.map(size =>
-          <div class="MoliDebug-tag">
-            {`${size[0]}x${size[1]}`}
-          </div>)}
+        {this.validateSlotSizes(banner.sizes).map(validatedSlotSize =>
+          this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
+        )}
       </div>}
       {video && <div class="MoliDebug-tagContainer">
         <span class="MoliDebug-tagLabel">Video</span>
-        <div class="MoliDebug-tag MoliDebug-tag--green">{video.context}</div>
-        {this.isSingleVideoSize(video.playerSize) && this.tagFromTuple(video.playerSize)}
-        {this.isMultiVideoSize(video.playerSize) && video.playerSize.map(
-          (size: [ number, number ]) => this.tagFromTuple(size))
+        <Tag variant="green">{video.context}</Tag>
+        {this.validateSlotSizes(this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize)
+          .map(validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig))
         }
       </div>}
       {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => [
           <hr/>,
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
-            <div class="MoliDebug-tag MoliDebug-tag--yellow">{bid.bidder}</div>
+            <Tag variant="yellow">{bid.bidder}</Tag>
           </div>,
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Params</span>
-            <div class="MoliDebug-tag">{JSON.stringify(bid.params)}</div>
+            <Tag>{JSON.stringify(bid.params)}</Tag>
           </div>
         ]
       )}
@@ -177,19 +171,30 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     this.setState({ ...defaultPanelState, showSizeConfig: !this.state.showSizeConfig });
   };
 
-  private tagFromTuple = (tuple: [ number, number ]): JSX.Element => {
-    return <div class="MoliDebug-tag">{`${tuple[0]}x${tuple[1]}`}</div>;
-  };
-
-  private isPrebidConfigObject = (prebid: Moli.headerbidding.PrebidAdSlotConfigProvider): prebid is headerbidding.PrebidAdSlotConfig => {
+  private isPrebidConfigObject = (prebid: headerbidding.PrebidAdSlotConfigProvider): prebid is headerbidding.PrebidAdSlotConfig => {
     return typeof prebid !== 'function';
   };
 
   private isSingleVideoSize = (playerSize: [ number, number ][] | [ number, number ]): playerSize is [ number, number ] => {
-    return typeof playerSize[0] === 'number';
+    return playerSize.length === 2 && typeof playerSize[0] === 'number' && typeof playerSize[1] === 'number';
   };
 
-  private isMultiVideoSize = (playerSize: [ number, number ][] | [ number, number ]): playerSize is [ number, number ][] => {
-    return Array.isArray(playerSize[0]);
+  private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
+    const slotSizeConfig = this.props.slot.sizeConfig;
+    const sizeConfigService = slotSizeConfig ?
+      new SizeConfigService(slotSizeConfig, [], debugLogger) :
+      this.props.sizeConfigService;
+
+    return sizes.map(size => ({
+      valid: sizeConfigService.filterSupportedSizes([ size ]).length > 0,
+      size
+    }));
+  };
+
+  private tagFromValidatedSlotSize = (slotSize: ValidatedSlotSize, hasSlotSizeConfig: boolean): JSX.Element => {
+    return <Tag variant={slotSize.valid ? 'green' : 'red'}
+                title={`${slotSize.valid ? 'Valid' : 'Invalid'} (${hasSlotSizeConfig ? 'slot' : 'global'} sizeConfig)`}>
+      {slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
+    </Tag>;
   };
 }
