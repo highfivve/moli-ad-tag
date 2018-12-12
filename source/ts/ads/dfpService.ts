@@ -222,15 +222,17 @@ export class DfpService {
     reportingService: ReportingService,
     globalSizeConfigService: SizeConfigService
   ): void {
-    registeredSlots.forEach((slotDefinition) => {
-      try {
-        createRefreshListener(slotDefinition.moliSlot.trigger).addAdRefreshListener(() => {
-          this.requestRefreshableSlot(slotDefinition, config, reportingService, globalSizeConfigService);
-        });
-      } catch (e) {
-        this.logger.error(`DfpService:: creating refreshable slots failed for slot ${slotDefinition.moliSlot.adUnitPath}`, e);
-      }
-    });
+    registeredSlots
+      .filter(({ moliSlot }) => this.isValidTrigger(moliSlot.trigger))
+      .forEach((slotDefinition) => {
+        try {
+          createRefreshListener(slotDefinition.moliSlot.trigger).addAdRefreshListener(() => {
+            this.requestRefreshableSlot(slotDefinition, config, reportingService, globalSizeConfigService);
+          });
+        } catch (e) {
+          this.logger.warn(`DfpService:: creating refreshable slots failed for slot ${slotDefinition.moliSlot.adUnitPath}`, e);
+        }
+      });
   }
 
   private initLazyRefreshableSlots(
@@ -239,28 +241,30 @@ export class DfpService {
     reportingService: ReportingService,
     globalSizeConfigService: SizeConfigService
   ): void {
-    lazyRefreshableSlots.forEach((moliSlotRefreshable) => {
-      const filterSupportedSizes = this.getSizeFilterFunction(moliSlotRefreshable, globalSizeConfigService);
-      try {
+    lazyRefreshableSlots
+      .filter((moliSlot) => this.isValidTrigger(moliSlot.trigger))
+      .forEach((moliSlotRefreshable) => {
+        const filterSupportedSizes = this.getSizeFilterFunction(moliSlotRefreshable, globalSizeConfigService);
+        try {
 
-        let adSlot: googletag.IAdSlot;
-        createRefreshListener(moliSlotRefreshable.trigger).addAdRefreshListener(() => {
-          if (!adSlot) {
-            // ad slot has not been registered yet
-            adSlot = this.registerSlot({ moliSlot: moliSlotRefreshable, filterSupportedSizes });
-            this.displayAd(moliSlotRefreshable);
-          }
-          this.requestRefreshableSlot(
-            { moliSlot: moliSlotRefreshable, adSlot, filterSupportedSizes },
-            config,
-            reportingService,
-            globalSizeConfigService
-          );
-        });
-      } catch (e) {
-        this.logger.error(`DfpService:: creating lazy refreshable slots failed ${moliSlotRefreshable.adUnitPath}`, e);
-      }
-    });
+          let adSlot: googletag.IAdSlot;
+          createRefreshListener(moliSlotRefreshable.trigger).addAdRefreshListener(() => {
+            if (!adSlot) {
+              // ad slot has not been registered yet
+              adSlot = this.registerSlot({ moliSlot: moliSlotRefreshable, filterSupportedSizes });
+              this.displayAd(moliSlotRefreshable);
+            }
+            this.requestRefreshableSlot(
+              { moliSlot: moliSlotRefreshable, adSlot, filterSupportedSizes },
+              config,
+              reportingService,
+              globalSizeConfigService
+            );
+          });
+        } catch (e) {
+          this.logger.warn(`DfpService:: creating lazy refreshable slots failed ${moliSlotRefreshable.adUnitPath}`, e);
+        }
+      });
 
   }
 
@@ -281,7 +285,7 @@ export class DfpService {
     globalSizeConfigService: SizeConfigService): void {
     const bidRequests: Promise<unknown>[] = [];
 
-    const { moliSlot, adSlot, filterSupportedSizes} = slotDefinition;
+    const { moliSlot, adSlot, filterSupportedSizes } = slotDefinition;
 
     if (moliSlot.prebid) {
       const refreshPrebidSlot = this.requestPrebid([ {
@@ -691,6 +695,10 @@ export class DfpService {
       slot.behaviour === 'lazy' ||
       slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false)
     );
+  }
+
+  private isValidTrigger(trigger: Moli.behaviour.Trigger): boolean {
+    return !(typeof trigger.source === 'string') || !!document.querySelector(trigger.source);
   }
 
   /**
