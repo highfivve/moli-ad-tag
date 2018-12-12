@@ -746,7 +746,8 @@ describe('DfpService', () => {
           sizes: [ [ 605, 340 ] ],
           trigger: {
             name: 'event',
-            event: 'slot-trigger'
+            event: 'slot-trigger',
+            source: window
           }
         };
 
@@ -895,7 +896,8 @@ describe('DfpService', () => {
           sizes: [ [ 605, 340 ] ],
           trigger: {
             name: 'event',
-            event: 'eager-slot-trigger'
+            event: 'eager-slot-trigger',
+            source: window
           }
         };
 
@@ -929,6 +931,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'lazy-slot-trigger',
+            source: window
           }
         };
 
