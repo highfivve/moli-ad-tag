@@ -41,7 +41,8 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: 'refreshable',
       trigger: {
         name: 'event',
-        event: 'slot.refresh'
+        event: 'slot.refresh',
+        source: window
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
@@ -52,7 +53,8 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: 'lazy',
       trigger: {
         name: 'event',
-        event: 'timer.complete'
+        event: 'timer.complete',
+        source: window
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
       sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
@@ -129,7 +131,8 @@ export const adConfiguration: Moli.MoliConfig = {
       trigger:
         {
           name: 'event',
-          event: ''
+          event: '',
+          source: window
         },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],

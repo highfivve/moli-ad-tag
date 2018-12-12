@@ -41,7 +41,8 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: 'refreshable',
       trigger: {
         name: 'event',
-        event: 'slot.refresh'
+        event: 'slot.refresh',
+        source: window
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
