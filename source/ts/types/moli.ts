@@ -513,6 +513,14 @@ export namespace Moli {
 
       /** the event name */
       readonly event: string;
+
+      /**
+       * the source that fires the event.
+       * - window
+       * - document
+       * - or a query selector for a DOM Node
+       */
+      readonly source: Window | Document | string;
     }
 
   }

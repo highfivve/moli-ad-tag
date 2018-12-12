@@ -33,12 +33,22 @@ export interface IAdRefreshListener {
  *      They do not cause the EventListener to be called twice,
  *      and they do not need to be removed manually with the removeEventListener() method.
  *
- * @param {(event: CustomEvent) => void}
+ * @param trigger the trigger configuration
+ * @throws an error if the trigger.source is invalid
  */
 const createEventRefreshListener = (trigger: EventTrigger): IAdRefreshListener => {
   return {
     addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
-      window.addEventListener(trigger.event, callback);
+      if (typeof trigger.source === 'string') {
+        const element = document.querySelector(trigger.source);
+        if (element) {
+          element.addEventListener(trigger.event, callback);
+        } else {
+          throw new Error(`Invalid query selector for refresh listener trigger: ${trigger.source}`);
+        }
+      } else {
+        trigger.source.addEventListener(trigger.event, callback);
+      }
     }
   };
 };

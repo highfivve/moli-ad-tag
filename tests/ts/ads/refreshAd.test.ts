@@ -18,10 +18,11 @@ describe('Refreshable Loading', () => {
 
 
   describe('Event refreshable listener', () => {
-    it('should trigger when the required event is fired', () => {
+    it('should trigger when the required event is fired on window', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
-        event: 'trigger-event'
+        event: 'trigger-event',
+        source: window
       });
 
       const onRefresh = new Promise(resolve => {
@@ -34,10 +35,49 @@ describe('Refreshable Loading', () => {
       return onRefresh;
     });
 
+    it('should trigger when the required event is fired on document', () => {
+      const refreshListener = createRefreshListener({
+        name: 'event',
+        event: 'trigger-event',
+        source: document
+      });
+
+      const onRefresh = new Promise(resolve => {
+        refreshListener.addAdRefreshListener(() => {
+          resolve();
+        });
+      });
+      document.dispatchEvent(new Event('trigger-event', {}));
+
+      return onRefresh;
+    });
+
+    it('should trigger when the required event is fired on a dom node', () => {
+      const refreshListener = createRefreshListener({
+        name: 'event',
+        event: 'trigger-event',
+        source: '#refresh-trigger-element'
+      });
+
+      const div = document.createElement('div');
+      div.id = 'refresh-trigger-element';
+      document.body.append(div);
+
+      const onRefresh = new Promise(resolve => {
+        refreshListener.addAdRefreshListener(() => {
+          resolve();
+        });
+      });
+      div.dispatchEvent(new Event('trigger-event', {}));
+
+      return onRefresh;
+    });
+
     it('should trigger multiple times when multiple events are fired', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
-        event: 'trigger-event'
+        event: 'trigger-event',
+        source: window
       });
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
@@ -59,7 +99,8 @@ describe('Refreshable Loading', () => {
     it('should not trigger when no event is fired', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
-        event: 'trigger-event'
+        event: 'trigger-event',
+        source: window
       });
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
@@ -77,7 +118,8 @@ describe('Refreshable Loading', () => {
     it('should not trigger when another event is fired', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
-        event: 'trigger-event'
+        event: 'trigger-event',
+        source: window
       });
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
@@ -86,6 +128,26 @@ describe('Refreshable Loading', () => {
         });
       });
       window.dispatchEvent(new Event('another-event', {}));
+      const race: Promise<boolean> = sleep().then(() => false);
+
+      return Promise.race<boolean>([onRefresh, race]).then((called) => {
+        expect(called).to.be.false;
+      });
+    });
+
+    it('should not trigger when event is fired on another source', () => {
+      const refreshListener = createRefreshListener({
+        name: 'event',
+        event: 'trigger-event',
+        source: window
+      });
+
+      const onRefresh: Promise<boolean> = new Promise(resolve => {
+        refreshListener.addAdRefreshListener(() => {
+          resolve(true);
+        });
+      });
+      document.dispatchEvent(new Event('trigger-event', {}));
       const race: Promise<boolean> = sleep().then(() => false);
 
       return Promise.race<boolean>([onRefresh, race]).then((called) => {

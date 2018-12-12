@@ -16,12 +16,31 @@ export interface ILazyLoader {
   onLoad(): Promise<void>;
 }
 
+const getElementForListener = (trigger: EventTrigger): Window | Document | Element => {
+  if (typeof trigger.source === 'string') {
+    const element = document.querySelector(trigger.source);
+    if (element) {
+      return element;
+    } else {
+      throw new Error(`Invalid query selector for refresh listener trigger: ${trigger.source}`);
+    }
+  } else {
+    return trigger.source;
+  }
+};
+
 const createEventLazyLoader = (trigger: EventTrigger): ILazyLoader => {
   return {
     onLoad: () => {
-      return new Promise<void>(resolve => window.addEventListener(trigger.event, () => {
-        resolve();
-      }, { once: true, passive: true }));
+      return new Promise<void>((resolve, reject) => {
+        try {
+          getElementForListener(trigger).addEventListener(trigger.event, () => {
+            resolve();
+          }, { once: true, passive: true });
+        } catch (e) {
+            reject(e);
+        }
+      });
     }
   };
 };
