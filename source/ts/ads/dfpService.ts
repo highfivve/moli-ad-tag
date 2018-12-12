@@ -275,11 +275,13 @@ export class DfpService {
    * @param globalSizeConfigService
    */
   private requestRefreshableSlot(
-    { moliSlot, adSlot, filterSupportedSizes }: SlotDefinition<RefreshableAdSlot>,
+    slotDefinition: SlotDefinition<RefreshableAdSlot>,
     config: Moli.MoliConfig,
     reportingService: ReportingService,
     globalSizeConfigService: SizeConfigService): void {
     const bidRequests: Promise<unknown>[] = [];
+
+    const { moliSlot, adSlot, filterSupportedSizes} = slotDefinition;
 
     if (moliSlot.prebid) {
       const refreshPrebidSlot = this.requestPrebid([ {
@@ -300,7 +302,7 @@ export class DfpService {
 
     Promise.all(bidRequests)
       .then(() => {
-        window.googletag.pubads().refresh([ adSlot ]);
+        this.refreshAds([ slotDefinition ], reportingService);
       }).catch((error) => {
       this.logger.error(`refreshable ad slot (${moliSlot.adUnitPath}) initialization failed with ${error}`);
     });
