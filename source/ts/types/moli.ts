@@ -446,6 +446,16 @@ export namespace Moli {
 
     /** what triggers the refresh */
     readonly trigger: behaviour.Trigger;
+
+    /**
+     * Configure the refresh behaviour.
+     *
+     * - `false` (default)
+     *    the ad slot is refreshed instantly, acting like an eager loading slot
+     * - `true`
+     *    the ad slot is refreshed (requested) when the first event is fired, acting like a lazy loading slot
+     */
+    readonly lazy?: boolean;
   }
 
   /**

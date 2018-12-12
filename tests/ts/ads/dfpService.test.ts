@@ -687,7 +687,7 @@ describe('DfpService', () => {
 
     describe('refreshable slots', () => {
 
-      it('should register and refresh refreshable slot based on event', () => {
+      it('should register and refresh refreshable slot based on event without lazy loading', () => {
         const dfpService = newDfpService();
 
         const adSlot: Moli.AdSlot = {
@@ -698,7 +698,7 @@ describe('DfpService', () => {
           sizes: [ [ 605, 340 ] ],
           trigger: {
             name: 'event',
-            event: 'slot-trigger'
+            event: 'eager-slot-trigger'
           }
         };
 
@@ -710,10 +710,44 @@ describe('DfpService', () => {
           const adSlotArray = pubAdsServiceStubRefreshSpy.firstCall.lastArg;
           expect(adSlotArray).length(1);
         }).then(() => {
-          window.dispatchEvent(new Event('slot-trigger'));
+          window.dispatchEvent(new Event('eager-slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+          const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
+          expect(adSlotArray).length(1);
+        });
+      });
+
+      it('should register and refresh refreshable slot based on event lazily', () => {
+        const dfpService = newDfpService();
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'lazy-refreshable-adslot',
+          behaviour: 'refreshable',
+          adUnitPath: '/123/refreshable',
+          sizes: [ [ 605, 340 ] ],
+          lazy: true,
+          trigger: {
+            name: 'event',
+            event: 'lazy-slot-trigger',
+          }
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+        }).then(() => {
+          expect(googletagDefineSlotSpy).to.have.been.callCount(0);
+          expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
+          expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
+        }).then(() => {
+          window.dispatchEvent(new Event('lazy-slot-trigger'));
+          return sleep();
+        }).then(() => {
+          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(pubAdsServiceStubRefreshSpy).to.have.calledTwice;
           const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
           expect(adSlotArray).length(1);
         });

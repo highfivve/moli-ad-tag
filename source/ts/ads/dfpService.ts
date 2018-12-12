@@ -13,6 +13,7 @@ import { createRefreshListener } from './refreshAd';
 import { Moli } from '../types/moli';
 import { SizeConfigService } from './sizeConfigService';
 import SlotDefinition = Moli.SlotDefinition;
+import RefreshableAdSlot = Moli.RefreshableAdSlot;
 
 declare const window: Window;
 
@@ -99,23 +100,28 @@ export class DfpService {
     const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
       // initialize the reporting for non-lazy slots
-      .then(() => reportingService.initialize(this.filterAvailableSlots(slots).filter(slot => !this.isLazySlot(slot))))
+      .then(() => reportingService.initialize(
+        this.filterAvailableSlots(slots).filter(this.isInstantlyLoadedSlot))
+      )
       .then(() => this.configureAdNetwork(config));
-
-    // concurrently initialize lazy loaded slots and refreshable slots
-    const lazySlots: Promise<Moli.LazyAdSlot[]> = dfpReady.then(() => slots.filter(this.isLazySlot));
-    prebidReady.then(() => {
-      this.initRefreshableSlots(eagerlyLoadedSlots, config, reportingService, sizeConfigService);
-      this.initLazyLoadedSlots(lazySlots, config, reportingService, sizeConfigService);
-    });
 
     // eagerly displayed slots
     const eagerlyLoadedSlots = dfpReady
     // request all existing and non-lazy loading slots
-      .then(() => this.filterAvailableSlots(slots).filter(slot => !this.isLazySlot(slot)))
+      .then(() => this.filterAvailableSlots(slots).filter(this.isInstantlyLoadedSlot))
       // configure slots with gpt
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, sizeConfigService))
-      .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots));
+      .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots))
+      .then((registeredSlots) => {
+        this.initRefreshableSlots(registeredSlots.filter(this.isRefreshableAdSlotDefinition), config, reportingService, sizeConfigService);
+        return registeredSlots;
+      });
+
+    // concurrently initialize lazy loaded slots and refreshable slots
+    prebidReady.then(() => {
+      this.initLazyRefreshableSlots(slots.filter(this.isLazyRefreshableAdSlot), config, reportingService, sizeConfigService);
+      this.initLazyLoadedSlots(slots.filter(this.isLazySlot), config, reportingService, sizeConfigService);
+    });
 
     // We wait for a prebid response and then refresh.
     const refreshedAds: Promise<SlotDefinition<Moli.AdSlot>[]> = prebidReady
@@ -145,46 +151,47 @@ export class DfpService {
    * @param globalSizeConfigService filter supported sizes
    */
   private initLazyLoadedSlots(
-    lazyLoadingSlots: Promise<Moli.LazyAdSlot[]>,
+    lazyLoadingSlots: Moli.LazyAdSlot[],
     config: Moli.MoliConfig,
     reportingService: ReportingService,
     globalSizeConfigService: SizeConfigService
   ): void {
-    lazyLoadingSlots
-      .then((lazySlots: Moli.LazyAdSlot[]) => lazySlots.forEach((dfpSlotLazy) => {
+    lazyLoadingSlots.forEach((dfpSlotLazy) => {
+      createLazyLoader(dfpSlotLazy.trigger).onLoad()
+        .then(() => {
+          if (document.getElementById(dfpSlotLazy.domId)) {
+            return Promise.resolve();
+          }
+          return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.domId}`);
+        })
+        .then(() => this.registerSlot(dfpSlotLazy, globalSizeConfigService))
+        .then(adSlot => {
+          const slotDefinition: SlotDefinition<Moli.AdSlot> = { adSlot, moliSlot: dfpSlotLazy };
+          // check if the lazy slot wraps a prebid slot and request prebid too
+          // only executes the necessary parts of `this.initHeaderBidding`
 
-        createLazyLoader(dfpSlotLazy.trigger).onLoad()
-          .then(() => {
-            if (document.getElementById(dfpSlotLazy.domId)) {
-              return Promise.resolve();
-            }
-            return Promise.reject(`DfpService: lazy slot dom element not available: ${dfpSlotLazy.adUnitPath} / ${dfpSlotLazy.domId}`);
-          })
-          .then(() => this.registerSlot(dfpSlotLazy, globalSizeConfigService))
-          .then(adSlot => {
-            const slotDefinition: SlotDefinition<Moli.AdSlot> = { adSlot, moliSlot: dfpSlotLazy };
-            // check if the lazy slot wraps a prebid slot and request prebid too
-            // only executes the necessary parts of `this.initHeaderBidding`
+          const bidRequests: Promise<unknown>[] = [];
 
-            const bidRequests: Promise<unknown>[] = [];
+          if (dfpSlotLazy.prebid) {
+            bidRequests.push(this.initPrebid([ {
+              adSlot,
+              moliSlot: dfpSlotLazy as Moli.PrebidAdSlot
+            } ], config, reportingService, globalSizeConfigService));
+          }
 
-            if (dfpSlotLazy.prebid) {
-              bidRequests.push(this.initPrebid([ { adSlot, moliSlot: dfpSlotLazy as Moli.PrebidAdSlot } ], config, reportingService, globalSizeConfigService));
-            }
+          if (dfpSlotLazy.a9) {
+            bidRequests.push(this.fetchA9Slots([ dfpSlotLazy as Moli.A9AdSlot ], config, reportingService));
+          }
 
-            if (dfpSlotLazy.a9) {
-              bidRequests.push(this.fetchA9Slots([ dfpSlotLazy as Moli.A9AdSlot ], config, reportingService));
-            }
-
-            return Promise.all(bidRequests).then(() => slotDefinition);
-          })
-          .then(({ adSlot, moliSlot }) => {
-            window.googletag.pubads().refresh([ adSlot ]);
-          })
-          .catch(error => {
-            this.logger.error(error);
-          });
-      }));
+          return Promise.all(bidRequests).then(() => slotDefinition);
+        })
+        .then(({ adSlot, moliSlot }) => {
+          window.googletag.pubads().refresh([ adSlot ]);
+        })
+        .catch(error => {
+          this.logger.error(error);
+        });
+    });
   }
 
   /**
@@ -192,40 +199,81 @@ export class DfpService {
    *
    * A refreshable slot can contain any other slot. This includes prebid (header bidding) and lazy loading slots.
    *
-   * @param {Promise<SlotDefinition<Moli.AdSlot>[]>} displayedAdSlots
+   * @param registeredSlots already registered ad slots
    * @param {Moli.MoliConfig} config
    * @param reportingService performance metrics and reporting
    * @param globalSizeConfigService required for labels
    */
-  private initRefreshableSlots(displayedAdSlots: Promise<SlotDefinition<Moli.AdSlot>[]>, config: Moli.MoliConfig, reportingService: ReportingService, globalSizeConfigService: SizeConfigService): void {
-    displayedAdSlots
-      .then(registrations => registrations.filter(this.isRefreshableAdSlotDefinition))
-      .then((refreshableSlots: SlotDefinition<Moli.RefreshableAdSlot>[]) => refreshableSlots.forEach(({ adSlot, moliSlot }) => {
-        createRefreshListener(moliSlot.trigger).addAdRefreshListener(() => {
-          const bidRequests: Promise<unknown>[] = [];
-
-          if (moliSlot.prebid) {
-            const refreshPrebidSlot = this.requestPrebid([ { adSlot, moliSlot: moliSlot as Moli.PrebidAdSlot } ], config, reportingService, globalSizeConfigService)
-              .catch(reason => {
-                this.logger.warn(reason);
-                return {};
-              });
-            bidRequests.push(refreshPrebidSlot);
-          }
-
-          if (moliSlot.a9) {
-            bidRequests.push(this.fetchA9Slots([ moliSlot as Moli.A9AdSlot ], config, reportingService));
-          }
-
-          Promise.all(bidRequests)
-            .then(() => {
-              window.googletag.pubads().refresh([ adSlot ]);
-            });
-        });
-      }))
-      .catch((error) => {
-        this.logger.error(`refreshable ad slot initialization failed with ${error}`);
+  private initRefreshableSlots(
+    registeredSlots: SlotDefinition<Moli.RefreshableAdSlot>[],
+    config: Moli.MoliConfig,
+    reportingService: ReportingService,
+    globalSizeConfigService: SizeConfigService
+  ): void {
+    registeredSlots.forEach((slotDefinition) => {
+      createRefreshListener(slotDefinition.moliSlot.trigger).addAdRefreshListener(() => {
+        this.requestRefreshableSlot(slotDefinition, config, reportingService, globalSizeConfigService);
       });
+    });
+  }
+
+  private initLazyRefreshableSlots(
+    lazyRefreshableSlots: Moli.RefreshableAdSlot[],
+    config: Moli.MoliConfig,
+    reportingService: ReportingService,
+    globalSizeConfigService: SizeConfigService
+  ): void {
+    lazyRefreshableSlots.forEach((moliSlot) => {
+      let adSlot: googletag.IAdSlot;
+      createRefreshListener(moliSlot.trigger).addAdRefreshListener(() => {
+        if (!adSlot) {
+          // ad slot has not been registered yet
+          adSlot = this.registerSlot(moliSlot, globalSizeConfigService);
+          this.displayAd(moliSlot);
+        }
+        this.requestRefreshableSlot({ moliSlot, adSlot }, config, reportingService, globalSizeConfigService);
+      });
+    });
+  }
+
+  /**
+   * Request bids for a refreshable ad slot
+   *
+   * @param moliSlot
+   * @param adSlot
+   * @param config
+   * @param reportingService
+   * @param globalSizeConfigService
+   */
+  private requestRefreshableSlot(
+    { moliSlot, adSlot }: SlotDefinition<RefreshableAdSlot>,
+    config: Moli.MoliConfig,
+    reportingService: ReportingService,
+    globalSizeConfigService: SizeConfigService): void {
+    const bidRequests: Promise<unknown>[] = [];
+
+    if (moliSlot.prebid) {
+      const refreshPrebidSlot = this.requestPrebid([ {
+        adSlot,
+        moliSlot: moliSlot as Moli.PrebidAdSlot
+      } ], config, reportingService, globalSizeConfigService)
+        .catch(reason => {
+          this.logger.warn(reason);
+          return {};
+        });
+      bidRequests.push(refreshPrebidSlot);
+    }
+
+    if (moliSlot.a9) {
+      bidRequests.push(this.fetchA9Slots([ moliSlot as Moli.A9AdSlot ], config, reportingService));
+    }
+
+    Promise.all(bidRequests)
+      .then(() => {
+        window.googletag.pubads().refresh([ adSlot ]);
+      }).catch((error) => {
+      this.logger.error(`refreshable ad slot (${moliSlot.adUnitPath}) initialization failed with ${error}`);
+    });
   }
 
   /**
@@ -398,7 +446,7 @@ export class DfpService {
     const keyValueMap = config.targeting ? config.targeting.keyValues : {};
 
     Object.keys(keyValueMap).forEach(key => {
-      const value = keyValueMap[key];
+      const value = keyValueMap[ key ];
       if (value) {
         window.googletag.pubads().setTargeting(key, value);
       }
@@ -455,7 +503,7 @@ export class DfpService {
     // increase the a9 request count
 
 
-    const currentRequestCount =  this.a9RequestCount++;
+    const currentRequestCount = this.a9RequestCount++;
 
     return new Promise<void>(resolve => {
       reportingService.markA9fetchBids(currentRequestCount);
@@ -591,8 +639,28 @@ export class DfpService {
     return slots;
   }
 
+
+  /**
+   * Checks if the slot has a 'lazy' behaviour
+   * - true if this is a lazy ad slot
+   * - true if this is a refreshable ad slot with lazy=true
+   *
+   * @param slot the slot that should be checked
+   * @returns true if the slot is immediately requested
+   */
+  private isInstantlyLoadedSlot(slot: Moli.AdSlot): boolean {
+    return !(
+      slot.behaviour === 'lazy' ||
+      slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false)
+    );
+  }
+
   private isLazySlot(slot: Moli.AdSlot): slot is Moli.LazyAdSlot {
     return slot.behaviour === 'lazy';
+  }
+
+  private isLazyRefreshableAdSlot(slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot {
+    return slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false);
   }
 
   private isRefreshableAdSlotDefinition(slotDefinition: SlotDefinition<Moli.AdSlot>): slotDefinition is SlotDefinition<Moli.RefreshableAdSlot> {
