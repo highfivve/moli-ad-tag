@@ -95,7 +95,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <span class="MoliDebug-tagLabel">AdUnit path</span>
           <Tag>{props.slot.adUnitPath}</Tag>
         </div>
-        <div class="MoliDebug-tagContainer">
+        {props.slot.sizes.length > 0 && <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">Sizes</span>
           {this.validateSlotSizes(props.slot.sizes).map(
             validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!props.slot.sizeConfig)

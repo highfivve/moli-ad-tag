@@ -219,6 +219,10 @@
     }
   }
 
+  &-checkBox {
+    user-select: none;
+  }
+
   &-posRelative {
     position: relative;
   }

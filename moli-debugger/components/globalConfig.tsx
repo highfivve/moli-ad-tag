@@ -11,6 +11,7 @@ import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 
 import MoliConfig = Moli.MoliConfig;
+import AdSlot = Moli.AdSlot;
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
@@ -27,6 +28,7 @@ type IGlobalConfigState = {
   };
   messages: Array<Message>;
   browserResized: boolean;
+  showOnlyRenderedSlots: boolean;
 };
 
 type Message = {
@@ -49,7 +51,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         sizeConfig: true
       },
       messages: [],
-      browserResized: false
+      browserResized: false,
+      showOnlyRenderedSlots: false
     };
 
     if (!props.config) {
@@ -103,11 +106,19 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
               </ul>
             </p>
 
-            {config.slots.map(slot =>
+            <p class="MoliDebug-panel MoliDebug-panel--grey">
+              <label class="MoliDebug-checkBox">
+                <input type="checkbox"
+                       onChange={e => this.setState({ showOnlyRenderedSlots: (e.target as HTMLInputElement).checked })}/>
+                Show only rendered slots
+              </label>
+            </p>
+
+            {config.slots.map(slot => (this.isSlotRendered(slot) || !state.showOnlyRenderedSlots) ?
               <div>
                 <strong>{slot.behaviour}</strong> slot with DOM ID <strong>{slot.domId}</strong>
                 <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
-              </div>
+              </div> : null
             )}
           </div>}
 
@@ -362,7 +373,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     });
   };
 
-  private checkForDuplicateOrMissingSlots = (messages: Array<Message>, slot: Moli.AdSlot): void => {
+  private checkForDuplicateOrMissingSlots = (messages: Array<Message>, slot: AdSlot): void => {
     const count = document.querySelectorAll(`#${slot.domId}`).length;
 
     if (count > 1) {
@@ -398,7 +409,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private checkSlotPrebidConfig = (messages: Array<Message>, slot: Moli.AdSlot) => {
+  private checkSlotPrebidConfig = (messages: Array<Message>, slot: AdSlot) => {
     if (slot.prebid) {
       const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {} }) : slot.prebid,
         mediaTypes = prebidConfig.adUnit.mediaTypes;
@@ -411,4 +422,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       }
     }
   };
+
+  private isSlotRendered = (slot: AdSlot): boolean => !!document.getElementById(slot.domId)
+    && this.props.sizeConfigService.filterSlot(slot);
 }
