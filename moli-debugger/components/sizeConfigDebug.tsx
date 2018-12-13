@@ -5,10 +5,11 @@ import { classList } from '../util/stringUtils';
 
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 import SizeConfigEntry = Moli.SizeConfigEntry;
+import SlotSizeConfigEntry = Moli.SlotSizeConfigEntry;
 import DfpSlotSize = Moli.DfpSlotSize;
 
 type ISizeConfigProps = {
-  sizeConfig: Array<SizeConfigEntry>;
+  sizeConfig: Array<SizeConfigEntry | SlotSizeConfigEntry>;
 };
 
 type ISizeConfigState = {};
@@ -32,14 +33,19 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
               <span class="MoliDebug-tagLabel">Supported slot sizes</span>
               {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}
             </div>
+            {this.isGlobalSizeConfigEntry(sizeConfigEntry) &&
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Labels</span>
               {sizeConfigEntry.labels.map(label => <Tag>{label}</Tag>)}
-            </div>
+            </div>}
           </div>;
         }
       )}
     </div>;
+  }
+
+  private isGlobalSizeConfigEntry(entry: SizeConfigEntry | SlotSizeConfigEntry): entry is SizeConfigEntry {
+    return entry.hasOwnProperty('labels');
   }
 
   private tagFromSlotSize = (slotSize: DfpSlotSize): JSX.Element => {

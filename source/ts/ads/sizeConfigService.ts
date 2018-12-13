@@ -5,6 +5,7 @@ import DfpSlotSize = Moli.DfpSlotSize;
 import SizeConfigEntry = Moli.SizeConfigEntry;
 import MoliLogger = Moli.MoliLogger;
 import IAdSlot = Moli.IAdSlot;
+import SlotSizeConfigEntry = Moli.SlotSizeConfigEntry;
 
 /**
  * Service that holds the slot size and labels configuration.
@@ -15,7 +16,7 @@ export class SizeConfigService {
   private readonly supportedSizes: DfpSlotSize[];
   private readonly supportedLabels: string[];
 
-  constructor(private readonly sizeConfig: SizeConfigEntry[],
+  constructor(private readonly sizeConfig: (SizeConfigEntry | SlotSizeConfigEntry)[],
               private readonly extraLabels: string[],
               private readonly logger: MoliLogger) {
     // Matches the given slot sizes against the window's dimensions.
@@ -37,7 +38,7 @@ export class SizeConfigService {
       .map(sizeAsString => JSON.parse(sizeAsString));
 
     const supportedLabels = flatten(
-      supportedConfigs.map(conf => conf.labels)
+      supportedConfigs.map(conf => this.isGlobalSizeConfigEntry(conf) ? conf.labels : [])
     );
 
     this.supportedLabels = [ ...supportedLabels, ...extraLabels ]
@@ -60,12 +61,12 @@ export class SizeConfigService {
     let labelsMatching = true;
 
     // filtering by labels is only done if any labels were configured.
-    if (this.supportedLabels.length > 0 && slot.labelAll) {
+    if (this.supportedLabels.length > 0 && slot.labelAll && slot.labelAll.length > 0) {
       labelsMatching = slot.labelAll.every(label => this.supportedLabels.indexOf(label) > -1);
     }
 
     // if labelAll was already evaluated, labelAny will be ignored.
-    if (this.supportedLabels.length > 0 && slot.labelAny && !slot.labelAll) {
+    if (this.supportedLabels.length > 0 && slot.labelAny && !(slot.labelAll && slot.labelAll.length > 0)) {
       labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
     }
 
@@ -103,5 +104,9 @@ export class SizeConfigService {
    */
   public getSupportedLabels(): string[] {
     return this.supportedLabels;
+  }
+
+  private isGlobalSizeConfigEntry(entry: SizeConfigEntry | SlotSizeConfigEntry): entry is SizeConfigEntry {
+    return entry.hasOwnProperty('labels');
   }
 }

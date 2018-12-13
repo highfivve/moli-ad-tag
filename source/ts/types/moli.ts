@@ -364,6 +364,8 @@ export namespace Moli {
     readonly labels: string[];
   }
 
+  export type SlotSizeConfigEntry = Pick<SizeConfigEntry, 'mediaQuery' | 'sizesSupported'>;
+
   export interface IAdSlot {
     /** id for the ad slot element */
     readonly domId: string;
@@ -403,7 +405,7 @@ export namespace Moli {
      *       create labels for filtering entire ad slots.
      *
      */
-    readonly sizeConfig?: SizeConfigEntry[];
+    readonly sizeConfig?: SlotSizeConfigEntry[];
 
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
     readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
