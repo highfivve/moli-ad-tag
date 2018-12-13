@@ -493,6 +493,10 @@ export class DfpService {
     window.googletag.pubads().enableSingleRequest();
 
     return getPersonalizedAdSetting(config.consent).then(nonPersonalizedAds => {
+      this.logger.debug(`googletag setRequestNonPersonalizedAds(${nonPersonalizedAds})`);
+      if (nonPersonalizedAds) {
+        this.logger.debug('Serve non-personalized ads');
+      }
       window.googletag.pubads().setRequestNonPersonalizedAds(nonPersonalizedAds);
       window.googletag.enableServices();
     });
