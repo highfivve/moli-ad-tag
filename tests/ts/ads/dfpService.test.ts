@@ -568,8 +568,7 @@ describe('DfpService', () => {
           sizeConfig: [
             {
               mediaQuery: '(min-width: 320px)',
-              sizesSupported: [ [ 320, 180 ], [ 640, 360 ], [ 605, 165 ] ],
-              labels: []
+              sizesSupported: [ [ 320, 180 ], [ 640, 360 ], [ 605, 165 ] ]
             }
           ]
         };
@@ -1222,12 +1221,10 @@ describe('DfpService', () => {
           sizes: [ 'fluid', [ 605, 165 ], [ 1000, 200 ] ],
           sizeConfig: [
             {
-              labels: [],
               sizesSupported: [ [ 150, 35 ], 'fluid' ],
               mediaQuery: 'min-width: 200px'
             },
             {
-              labels: [],
               sizesSupported: [ [ 1000, 200 ] ],
               mediaQuery: 'min-width: 500px'
             }
