@@ -103,6 +103,9 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           {this.validateSlotSizes(props.slot.sizes).map(
             validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!props.slot.sizeConfig)
           )}
+        </div>}
+        <div className="MoliDebug-tagContainer">
+          {this.labelConfig()}
         </div>
       </div>}
       {state.showA9 && <div class="MoliDebug-panel">
@@ -219,5 +222,31 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
                 title={`${slotSize.valid ? 'Valid' : 'Invalid'} (${hasSlotSizeConfig ? 'slot' : 'global'} sizeConfig)`}>
       {slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
     </Tag>;
+  };
+
+  private labelConfig = (): JSX.Element => {
+    const labelAll = this.props.slot.labelAll;
+    const labelAny = this.props.slot.labelAny;
+    const supportedLabels = this.props.sizeConfigService.getSupportedLabels();
+    const labelAllMatches = !!labelAll && labelAll.every(label => supportedLabels.indexOf(label) > -1);
+
+    return <div>
+      {labelAll && labelAll.length > 0 &&
+      <div>
+        <span className="MoliDebug-tagLabel">labelAll</span>
+        {labelAll.map(label => <Tag variant={labelAllMatches ? 'green' : 'red'}>{label}</Tag>)}
+      </div>
+      }
+      {labelAny && labelAny.length > 0 &&
+      <div>
+        <span className="MoliDebug-tagLabel">labelAny</span>
+        {labelAll && labelAll.length > 0 && <Tag variant={'yellow'}>labelAll was already evaluated, labelAny is ignored</Tag>}
+        {labelAny.map(label => {
+          const labelFound = supportedLabels.indexOf(label) > -1;
+          return <Tag variant={labelFound ? 'green' : 'red'}>{label}</Tag>;
+        })}
+      </div>
+      }
+    </div>;
   };
 }
