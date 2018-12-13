@@ -55,7 +55,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   }
 
   render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
-    const slotVisible = !!document.getElementById(props.slot.domId) && props.sizeConfigService.filterSlot(props.slot);
+    const slotVisible = !!document.getElementById(props.slot.domId)
+      && props.sizeConfigService.filterSlot(props.slot);
+
+    const prebidValid = this.isVisiblePrebid();
 
     return <div class={classList('MoliDebug-adSlot', [ !!props.parentElement, 'MoliDebug-adSlot--overlay' ])}
                 style={state.dimensions}>
@@ -74,7 +77,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
                 onClick={this.toggleA9}>A9</button>}
         {props.slot.prebid &&
         <button title="Show Prebid config"
-                class={classList('MoliDebug-adSlot-button', [ state.showPrebid, 'is-active' ])}
+                class={classList('MoliDebug-adSlot-button', [ state.showPrebid, 'is-active' ], [ prebidValid, 'is-rendered' ], [ !prebidValid, 'is-notRendered' ])}
                 onClick={this.togglePrebid}>pb</button>}
 
         {props.slot.sizeConfig &&
@@ -173,6 +176,26 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private isPrebidConfigObject = (prebid: headerbidding.PrebidAdSlotConfigProvider): prebid is headerbidding.PrebidAdSlotConfig => {
     return typeof prebid !== 'function';
+  };
+
+  private isVisiblePrebid = (): boolean => {
+    const prebid = this.props.slot.prebid;
+
+    if (prebid) {
+      const prebidAdUnit: prebidjs.IAdUnit = this.isPrebidConfigObject(prebid) ? prebid.adUnit : prebid({ keyValues: {} }).adUnit;
+
+      const video = prebidAdUnit.mediaTypes.video;
+      const banner = prebidAdUnit.mediaTypes.banner;
+
+      const videoValid = !!video && this.validateSlotSizes(
+        this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize
+      ).some(validatedSlotSize => validatedSlotSize.valid);
+
+      return videoValid || (!!banner && this.validateSlotSizes(banner.sizes)
+        .some(validatedSlotSize => validatedSlotSize.valid));
+    }
+
+    return true;
   };
 
   private isSingleVideoSize = (playerSize: [ number, number ][] | [ number, number ]): playerSize is [ number, number ] => {
