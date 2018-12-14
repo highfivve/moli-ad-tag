@@ -87,7 +87,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       </button>
       {config && <div class={classes} data-ref={debugSidebarSelector}>
 
-        <div class="MoliDebug-sidebarSection">
+        <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--slots">
           <h4>
             {this.collapseToggle('slots')}
             Slots
@@ -124,32 +124,36 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
         </div>
 
-        <h4>
-          {this.collapseToggle('targeting')}
-          Targeting
-        </h4>
+        <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--targeting">
+          <h4>
+            {this.collapseToggle('targeting')}
+            Targeting
+          </h4>
 
-        {this.state.expandSection.targeting && <div class="MoliDebug-sidebarSection">
-          {config.targeting && <div>
-            <h5>Key/value pairs</h5>
-            {this.keyValues(config.targeting.keyValues)}
-            {this.labels('labels from targeting', config.targeting.labels)}
-            {this.labels('labels from sizeConfig', props.sizeConfigService.getSupportedLabels())}
+          {this.state.expandSection.targeting && <div>
+            {config.targeting && <div>
+              <h5>Key/value pairs</h5>
+              {this.keyValues(config.targeting.keyValues)}
+              {this.labels('labels from targeting', config.targeting.labels)}
+              {this.labels('labels from sizeConfig', props.sizeConfigService.getSupportedLabels())}
+            </div>}
+            {!config.targeting && <span>No targeting config present.</span>}
           </div>}
-          {!config.targeting && <span>No targeting config present.</span>}
-        </div>}
+        </div>
 
-        <h4>
-          {this.collapseToggle('sizeConfig')}
-          Size config
-        </h4>
+        <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--sizeConfig">
+          <h4>
+            {this.collapseToggle('sizeConfig')}
+            Size config
+          </h4>
 
-        {this.state.expandSection.sizeConfig && <div class="MoliDebug-sidebarSection">
-          {(config.sizeConfig && config.sizeConfig.length > 0) && <SizeConfigDebug sizeConfig={config.sizeConfig}/>}
-          {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
-        </div>}
+          {this.state.expandSection.sizeConfig && <div>
+            {(config.sizeConfig && config.sizeConfig.length > 0) && <SizeConfigDebug sizeConfig={config.sizeConfig}/>}
+            {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
+          </div>}
+        </div>
 
-        {config.prebid && <div class="MoliDebug-sidebarSection">
+        {config.prebid && <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--prebid">
 
           <h4>
             {this.collapseToggle('prebid')}
@@ -232,13 +236,13 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           </div>}
         </div>}
 
-        <h4>Consent</h4>
-        <div class="MoliDebug-sidebarSection">
+        <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
+          <h4>Consent</h4>
           {this.consent(config.consent)}
         </div>
 
+        <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
         <h4>Moli configuration issues and warnings</h4>
-        <div class="MoliDebug-sidebarSection">
           {this.state.messages.map(message => <div
             class={classList('MoliDebug-configMessage', `MoliDebug-configMessage--${message.kind}`)}>
             {this.iconForMessageKind(message.kind)}
@@ -274,7 +278,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         </thead>
         <tbody>
         {properties.map((key: string) => {
-          const value = keyValues[key];
+          const value = keyValues[ key ];
 
           return <tr>
             <td>{key}</td>
@@ -350,12 +354,12 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'sizeConfig'>): JSX.Element => {
     const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'sizeConfig'>) => {
-      const oldVal = this.state.expandSection[section];
-      this.setState({ expandSection: { ...this.state.expandSection, [section]: !oldVal } });
+      const oldVal = this.state.expandSection[ section ];
+      this.setState({ expandSection: { ...this.state.expandSection, [ section ]: !oldVal } });
     };
     return <button class="MoliDebug-adSlot-button"
-                   title={`${this.state.expandSection[section] ? 'collapse' : 'expand'} ${section}`}
-                   onClick={() => toggleValue(section)}>{this.state.expandSection[section] ? '⊖' : '⊕'}</button>;
+                   title={`${this.state.expandSection[ section ] ? 'collapse' : 'expand'} ${section}`}
+                   onClick={() => toggleValue(section)}>{this.state.expandSection[ section ] ? '⊖' : '⊕'}</button>;
   };
 
   private iconForMessageKind = (kind: Message['kind'] | 'empty'): JSX.Element => {

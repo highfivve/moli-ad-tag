@@ -1,8 +1,8 @@
 /** @define MoliDebug */
 
 :root {
-  --MoliDebug-green: #93ff8d;
-  --MoliDebug-red: #ff583d;
+  --MoliDebug-green: #90be6d;
+  --MoliDebug-red: #db3b3d;
   --MoliDebug-yellow: #ffe152;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
@@ -17,6 +17,8 @@
 
 .MoliDebug {
 
+  font-family: Helvetica, Arial, sans-serif;
+
   &-sidebar {
     background: var(--MoliDebug-sidebar-bg);
     box-shadow: var(--MoliDebug-sidebar-box-shadow);
@@ -26,7 +28,7 @@
     max-height: 100vh;
     max-width: 100vw;
     overflow-y: auto;
-    padding: var(--MoliDebug-close-handle-height) var(--MoliDebug-sidebar-padding) var(--MoliDebug-sidebar-padding);
+    padding: var(--MoliDebug-close-handle-height) 0 var(--MoliDebug-sidebar-padding);
     position: fixed;
     right: 0;
     top: 0;
@@ -71,10 +73,40 @@
     }
 
     &Section {
+      border-left: 6px solid;
       margin-bottom: 10px;
+      padding-left: var(--MoliDebug-sidebar-padding);
 
       &:last-child {
         margin-bottom: var(--MoliDebug-sidebar-padding);
+      }
+
+      &--noBorder {
+        border-left: none;
+      }
+
+      &--slots {
+        border-left-color: #506684;
+      }
+
+      &--targeting {
+        border-left-color: #998FC7;
+      }
+
+      &--sizeConfig {
+        border-left-color: #D4C2FC;
+      }
+
+      &--prebid {
+        border-left-color: #76949F;
+      }
+
+      &--consent {
+        border-left-color: #D9F4C7;
+      }
+
+      &--linting {
+        border-left-color: #F4EF88;
       }
     }
   }
@@ -152,7 +184,8 @@
   }
 
   &-tag {
-    background: darkgray;
+    color: white;
+    background: #76949F;
     border-radius: var(--MoliDebug-border-radius);
     display: inline-block;
     margin-right: 5px;

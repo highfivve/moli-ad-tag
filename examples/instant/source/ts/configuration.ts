@@ -140,9 +140,25 @@ export const adConfiguration: Moli.MoliConfig = {
     }
   ],
   targeting: {
-    keyValues: {}
+    keyValues: {
+      isAdult: 'false',
+      tags: [ 'auto', 'waschanlage' ],
+      vertical: 'frag-muki.de'
+    },
+    labels: [ 'frag-muki.de', 'appnexusAst', 'ix' ]
   },
-  sizeConfig: [],
+  sizeConfig: [
+    {
+      mediaQuery: '(max-width: 767px)',
+      labels: [ 'mobile' ],
+      sizesSupported: [ 'fluid', [ 300, 250 ], [ 300, 100 ], [ 300, 50 ], [ 1, 1 ] ]
+    },
+    {
+      mediaQuery: '(min-width: 768px)',
+      labels: [ 'desktop' ],
+      sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+    }
+  ],
   prebid: {
     config: {
       bidderTimeout: 1000,

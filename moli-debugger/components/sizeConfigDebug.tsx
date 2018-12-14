@@ -19,7 +19,7 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
     return <div>
       {props.sizeConfig.map((sizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
-          return <div class="MoliDebug-sidebarSection">
+          return <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
             Entry <strong>#{idx + 1}</strong>
             <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Media query</span>
