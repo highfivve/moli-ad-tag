@@ -254,7 +254,8 @@ describe('moli', () => {
         slots: [], consent: consentConfig, targeting: {
           keyValues: {
             pre: 'dismiss',
-            post: 'dismiss'
+            post: 'dismiss',
+            persists: 'available'
           },
           labels: [ 'pre-existing' ]
         }
@@ -267,7 +268,8 @@ describe('moli', () => {
       expect(config!.targeting!.labels).to.be.deep.equals([ 'pre-existing', 'pre', 'post' ]);
       expect(config!.targeting!.keyValues).to.be.deep.equals({
         pre: 'configure1',
-        post: 'configure2'
+        post: 'configure2',
+        persists: 'available'
       });
     });
   });

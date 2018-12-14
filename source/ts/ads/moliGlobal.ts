@@ -74,7 +74,7 @@ export const createMoliTag = (): Moli.MoliTag => {
           state.config = {
             ...state.config,
             targeting: {
-              keyValues: {},
+              keyValues: (state.config.targeting ? state.config.targeting.keyValues : {}),
               labels: [label]
             }
           };
@@ -186,7 +186,10 @@ export const createMoliTag = (): Moli.MoliTag => {
           config: {
             ...config,
             targeting: {
-              keyValues: { ...state.keyValues },
+              keyValues: {
+                ...(config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {}),
+                ...state.keyValues
+              },
               labels: [
                 ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
                 ...state.labels
