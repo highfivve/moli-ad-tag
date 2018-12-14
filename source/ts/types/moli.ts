@@ -4,13 +4,13 @@ import { prebidjs } from './prebidjs';
 /* tslint:disable:interface-name */
 export namespace Moli {
 
-  export type DfpSlotSize = [number, number] | 'fluid';
+  export type DfpSlotSize = [ number, number ] | 'fluid';
 
   /**
    * KeyValue map. Last insert wins.
    */
   export interface DfpKeyValueMap {
-    [key: string]: string | string[] | undefined;
+    [ key: string ]: string | string[] | undefined;
   }
 
   export type MoliCommand = (moli: MoliTag) => void;
@@ -536,7 +536,9 @@ export namespace Moli {
      * - as a static value
      * - from a function which takes a `PrebidAdSlotContext`
      */
-    export type PrebidAdSlotConfigProvider = PrebidAdSlotConfig | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig);
+    export type PrebidAdSlotConfigProvider =
+      PrebidAdSlotConfig
+      | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig);
 
     /**
      * Context for creating a dynamic `PrebidAdSlotConfig`. Grants access to certain values
@@ -633,13 +635,40 @@ export namespace Moli {
     /**
      * See internal A9 apstag documentation
      */
-    export interface A9AdSlotConfig {}
+    export interface A9AdSlotConfig {
+    }
   }
 
   /**
    * ## Consent Management
    *
    * GDPR compliant consent management configuration.
+   *
+   * ### GPT - Google Publisher Tag
+   *
+   * The [PersonalizedAdsProvider](#personalizedadsprovider) configures the `setNonPersonalizedAds()`
+   * method call on the `PubAdsService`.
+   *
+   * There are three variants
+   *
+   * - [Static](/interfaces/_moli_.moli.consent.static.html) - a fixed value
+   * - [Cookie](/interfaces/_moli_.moli.consent.cookie.html) - based on a cookie
+   * - [CMP](/interfaces/_moli_.moli.consent.cmp.html) - use an IAB CMP API
+   *
+   * ### Prebid
+   * Prebid comes with its IAB compliant consent management framework. Make sure you have the
+   * `ConsentManagement` module. This must be in the `modules.json`.
+   *
+   * ```json
+   * [
+   *   ...
+   *   "consentManagement",
+   *   ...
+   * ]
+   * ```
+   *
+   *
+   * @see [Prebid GDPR ConsentManagement Module](http://prebid.org/dev-docs/modules/consentManagement.html)
    *
    */
   export namespace consent {
@@ -670,13 +699,15 @@ export namespace Moli {
      *
      * Configures a fixed value for the `setNonPersonalizedAds` call.
      *
-     * @example
+     * @example Example to set `googletag.setNonPersonalizedAds(0)` which results in **personalized** ads.<br>
+     * ```typescript
      * {
      *   provider: 'static',
      *   value: 0
      * }
+     * ```
      *
-     * Translates to `googletag.setNonPersonalizedAds(0)` which results in **personalized** ads.
+     *
      *
      *
      */
@@ -717,12 +748,14 @@ export namespace Moli {
      * must match.
      *
      *
-     * @example
+     * @example Example for a cookie based configuration. <br>
+     * ```typescript
      * {
      *   provider: 'cookie',
      *   cookie: '_sp_enable_dfp_personalized_ads',
      *   valueForNonPersonalizedAds: 'false'
      * }
+     * ```
      *
      * If a cookie `_sp_enable_dfp_personalized_ads` is available and set to `false`, then
      *
@@ -779,6 +812,25 @@ export namespace Moli {
    * * `ttfr`       - Time-To-FIrst-Render measurement from `requestAds` to first ad slot fully rendered
    * * `adslot`     - Contains multiple metrics for a single ad slot. See `AdSlotMetric` for more details.
    *
+   *
+   * ## Integration
+   *
+   * @example A simple integration in the ad configuration object. To see the console reporter implementation
+   * take a look [the reporter type](#reporter).
+   * ```typescript
+   * reporting: {
+   *   // report everything
+   *   sampleRate: 1,
+   *   // a regex that splits the publisher id and `gf` from the ad unit path
+   *   adUnitRegex: /\/\d*\/gf\//i,
+   *   // an array of reporters
+   *   reporters: [
+   *     consoleLogReporter
+   *   ]
+   * }
+   * ```
+   *
+   * @see [The Reporter type contains implementation examples](#reporter).
    * @see https://developer.mozilla.org/de/docs/Web/API/Performance
    *
    */
@@ -820,6 +872,65 @@ export namespace Moli {
 
     /**
      * A reporter is a simple function that receives a metric and handles it.
+     *
+     * @example A simple console log reporter that logs everything in grouped outputs.
+     * </br></br>
+     * ```typescript
+     * import { Moli } from 'moli-ad-tag/source/ts/types/moli';
+     * export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporting.Metric) => {
+     *
+     * switch (metric.type) {
+     *    case 'dfpLoad': {
+     *      console.groupCollapsed('DFP Load Time');
+     *      console.log('startTime', Math.round(metric.measurement.startTime));
+     *      console.log('duration', metric.measurement.duration);
+     *      console.groupEnd();
+     *      break;
+     *    }
+     *    case 'prebidLoad': {
+     *      console.groupCollapsed('Prebid Load Time');
+     *      console.log('name', metric.measurement.name);
+     *      console.log('startTime', Math.round(metric.measurement.startTime));
+     *      console.log('duration', Math.round(metric.measurement.duration));
+     *      console.groupEnd();
+     *      break;
+     *    }
+     *    case 'ttfa': {
+     *      console.groupCollapsed('Time to first Ad');
+     *      console.log('visible at', Math.round(metric.measurement.startTime + metric.measurement.duration));
+     *      console.log('startTime', Math.round(metric.measurement.startTime));
+     *      console.log('duration', Math.round(metric.measurement.duration));
+     *      console.groupEnd();
+     *      break;
+     *    }
+     *    case 'ttfr': {
+     *      console.groupCollapsed('Time to first Render');
+     *      console.log('rendered at', Math.round(metric.measurement.startTime + metric.measurement.duration));
+     *      console.log('startTime', Math.round(metric.measurement.startTime));
+     *      console.log('duration', Math.round(metric.measurement.duration));
+     *      console.groupEnd();
+     *      break;
+     *    }
+     *    case 'adSlots': {
+     *      console.groupCollapsed('AdSlot metrics');
+     *      console.log('number of slots', metric.numberAdSlots);
+     *      console.log('number of empty slots', metric.numberEmptyAdSlots);
+     *      console.groupEnd();
+     *      break;
+     *    }
+     *    case 'adSlot': {
+     *      console.groupCollapsed(`AdSlot: ${metric.adUnitName}`);
+     *      console.log('advertiser id', metric.advertiserId);
+     *      console.log('order id', metric.campaignId);
+     *      console.log('line item id', metric.lineItemId);
+     *      console.log('render start at', Math.round(metric.rendered.startTime));
+     *      console.log('rendering duration', Math.round(metric.rendering.duration));
+     *      console.log('loaded at', Math.round(metric.loaded.startTime + metric.loaded.duration));
+     *      console.groupEnd();
+     *      break;
+     *    }
+     * }
+     * ```
      */
     export type Reporter = (metric: Metric) => void;
 
