@@ -431,7 +431,16 @@ export namespace prebidjs {
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/criteoBidAdapter.js
    */
   export interface ICriteoParams {
-    readonly zoneId: number;
+
+    /**
+     * Included for legacy integrations that require a zone id.
+     */
+    readonly zoneId?: number;
+
+    /**
+     * Required for all new criteo implementations
+     */
+    readonly networkId: number;
   }
 
   export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
