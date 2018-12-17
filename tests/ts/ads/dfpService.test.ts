@@ -462,7 +462,19 @@ describe('DfpService', () => {
           prebid: { config: pbjsTestConfig }
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
-          expect(pbjsAddAdUnitSpy).to.have.been.calledWithExactly([ prebidAdslotConfig.adUnit ]);
+
+          const adUnit: prebidjs.IAdUnit = {
+            ...prebidAdslotConfig.adUnit,
+            mediaTypes: {
+              banner: undefined,
+              video: {
+                context: 'outstream',
+                playerSize: [ [ 320, 180 ] ] as [number, number][]
+              }
+            }
+          };
+
+          expect(pbjsAddAdUnitSpy).to.have.been.calledWithExactly([ adUnit ]);
         });
       });
 
@@ -1392,8 +1404,8 @@ describe('DfpService', () => {
           const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
 
           expect(adUnits).length(1);
-          expect(adUnits[0].bids).length(3);
-          expect(adUnits[0].bids).to.deep.equal([ {
+          expect(adUnits[ 0 ].bids).length(3);
+          expect(adUnits[ 0 ].bids).to.deep.equal([ {
             bidder: prebidjs.AppNexusAst,
             params: {
               placementId: '1'
@@ -1480,8 +1492,8 @@ describe('DfpService', () => {
           const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
 
           expect(adUnits).length(1);
-          expect(adUnits[0].mediaTypes.video).to.be.ok;
-          expect(adUnits[0].mediaTypes.banner).to.be.undefined;
+          expect(adUnits[ 0 ].mediaTypes.video).to.be.ok;
+          expect(adUnits[ 0 ].mediaTypes.banner).to.be.undefined;
 
         });
       });
@@ -1539,8 +1551,8 @@ describe('DfpService', () => {
           const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
 
           expect(adUnits).length(1);
-          expect(adUnits[0].mediaTypes.banner).to.be.ok;
-          expect(adUnits[0].mediaTypes.video).to.be.undefined;
+          expect(adUnits[ 0 ].mediaTypes.banner).to.be.ok;
+          expect(adUnits[ 0 ].mediaTypes.video).to.be.undefined;
 
         });
       });

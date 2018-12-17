@@ -527,7 +527,7 @@ export class DfpService {
       // filter bids ourselves and don't rely on prebid to have a stable API
       const bids = prebidAdSlotConfig.adUnit.bids.filter(
         bid => globalSizeConfigService.filterSlot({
-          labelAll: bid.labelAll, labelAny: bid.labelAny, sizes: [...bannerSizes, ...this.flattenSizes(videoSizes)]
+          labelAll: bid.labelAll, labelAny: bid.labelAny, sizes: [...bannerSizes, ...videoSizes]
         })
       );
 
@@ -765,18 +765,9 @@ export class DfpService {
    * @param playerSize the (array of) player size(s)
    * @param filterSupportedSizes function provided by the global or slot-local sizeConfig to filter the slot's sizes
    */
-  private filterVideoPlayerSizes(playerSize: prebidjs.IMediaTypeVideo['playerSize'], filterSupportedSizes: FilterSupportedSizes): prebidjs.IMediaTypeVideo['playerSize'] {
-    const supportedSizes = filterSupportedSizes(
+  private filterVideoPlayerSizes(playerSize: prebidjs.IMediaTypeVideo['playerSize'], filterSupportedSizes: FilterSupportedSizes): [number, number][] {
+    return filterSupportedSizes(
       this.isSinglePlayerSize(playerSize) ? [ playerSize ] : playerSize
     ).filter(this.isFixedSize);
-
-    return supportedSizes.length > 0 ? this.isSinglePlayerSize(playerSize) ? supportedSizes[ 0 ] : supportedSizes : [];
-  }
-
-  private flattenSizes(sizes: [ number, number ][] | [ number, number ]): [ number, number ][] {
-    if (sizes.length === 2 && typeof sizes[ 0 ] === 'number' && typeof sizes[ 1 ] === 'number') {
-      return [ [ sizes[ 0 ], sizes[ 1 ] ] ];
-    }
-    return sizes as [ number, number ][];
   }
 }
