@@ -85,7 +85,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
                 class={classList('MoliDebug-adSlot-button', [ state.showSizeConfig, 'is-active' ])}
                 onClick={this.toggleSizeConfig}>↔</button>}
       </div>
-      {state.showGeneral && <div class="MoliDebug-panel">
+      {state.showGeneral && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         <div class="MoliDebug-tagContainer">
           <Tag variant="green">{props.slot.position}</Tag>
           <Tag variant="yellow">{props.slot.behaviour}</Tag>
@@ -108,14 +108,14 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           {this.labelConfig(this.props.slot)}
         </div>
       </div>}
-      {state.showA9 && <div class="MoliDebug-panel">
+      {state.showA9 && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         A9 is <Tag variant="green">enabled</Tag>
       </div>}
-      {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel">
+      {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         {this.prebidConfig(props.slot.prebid)}
       </div>}
       {state.showSizeConfig && props.slot.sizeConfig &&
-      <div className="MoliDebug-panel">
+      <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         <SizeConfigDebug sizeConfig={props.slot.sizeConfig}/>
       </div>
       }
