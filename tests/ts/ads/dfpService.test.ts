@@ -1427,6 +1427,124 @@ describe('DfpService', () => {
         });
       });
 
+      it('should filter mediaTypes.banner when sizes is empty', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const sizeConfigEntry: Moli.SizeConfigEntry = {
+          labels: [ 'foo', 'bar' ],
+          sizesSupported: [ [ 605, 340 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              },
+              video: {
+                context: 'outstream',
+                playerSize: [ 605, 340 ]
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ] ],
+          prebid: prebidAdslotConfig
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry ],
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
+
+          expect(adUnits).length(1);
+          expect(adUnits[0].mediaTypes.video).to.be.ok;
+          expect(adUnits[0].mediaTypes.banner).to.be.undefined;
+
+        });
+      });
+
+      it('should filter mediaTypes.video when playerSize is empty', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const sizeConfigEntry: Moli.SizeConfigEntry = {
+          labels: [ 'foo', 'bar' ],
+          sizesSupported: [ [ 605, 165 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              },
+              video: {
+                context: 'outstream',
+                playerSize: [ 605, 340 ]
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ] ],
+          prebid: prebidAdslotConfig
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry ],
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
+
+          expect(adUnits).length(1);
+          expect(adUnits[0].mediaTypes.banner).to.be.ok;
+          expect(adUnits[0].mediaTypes.video).to.be.undefined;
+
+        });
+      });
+
     });
   });
 

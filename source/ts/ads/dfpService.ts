@@ -100,21 +100,21 @@ export class DfpService {
       this.awaitPrebidLoaded().then(() => this.configurePrebid(window.pbjs, config)) :
       Promise.resolve();
 
-    const slots = config.slots
+    const filteredSlots = config.slots
       .filter(slot => globalSizeConfigService.filterSlot(slot));
 
     const dfpReady = this.awaitGptLoaded()
       .then(() => this.awaitDomReady())
       // initialize the reporting for non-lazy slots
       .then(() => reportingService.initialize(
-        this.filterAvailableSlots(slots).filter(this.isInstantlyLoadedSlot))
+        this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot))
       )
       .then(() => this.configureAdNetwork(config));
 
     // eagerly displayed slots
     const eagerlyLoadedSlots = dfpReady
     // request all existing and non-lazy loading slots
-      .then(() => this.filterAvailableSlots(slots).filter(this.isInstantlyLoadedSlot))
+      .then(() => this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot))
       // configure slots with gpt
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, globalSizeConfigService))
       .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots))
@@ -125,8 +125,8 @@ export class DfpService {
 
     // concurrently initialize lazy loaded slots and refreshable slots
     prebidReady.then(() => {
-      this.initLazyRefreshableSlots(slots.filter(this.isLazyRefreshableAdSlot), config, reportingService, globalSizeConfigService);
-      this.initLazyLoadedSlots(slots.filter(this.isLazySlot), config, reportingService, globalSizeConfigService);
+      this.initLazyRefreshableSlots(filteredSlots.filter(this.isLazyRefreshableAdSlot), config, reportingService, globalSizeConfigService);
+      this.initLazyLoadedSlots(filteredSlots.filter(this.isLazySlot), config, reportingService, globalSizeConfigService);
     });
 
     // We wait for a prebid response and then refresh.
@@ -535,11 +535,11 @@ export class DfpService {
         code: moliSlot.domId,
         mediaTypes: {
           ...prebidAdSlotConfig.adUnit.mediaTypes,
-          video: mediaTypeVideo ? {
+          video: (mediaTypeVideo && videoSizes.length > 0) ? {
             ...mediaTypeVideo,
             playerSize: videoSizes
           } : undefined,
-          banner: mediaTypeBanner ? {
+          banner: (mediaTypeBanner && bannerSizes.length > 0) ? {
             ...mediaTypeBanner,
             sizes: bannerSizes
           } : undefined
