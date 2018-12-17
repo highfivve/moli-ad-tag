@@ -24,14 +24,47 @@
 
   // push commands
 
-  window.moli.que.push(function (moli) {
-    moli.setTargeting('foo', 'bar');
-    moli.setTargeting('version', '1.2.3');
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.setTargeting('foo', 'bar');
+    moliAdTag.setTargeting('version', '1.2.3');
   });
 
-  // request ads after 5 seconds
-  window.moli.que.push(function (moli) {
-    window.setTimeout(moli.requestAds, 2000);
+  // labels
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.addLabel('criteo');
+    moliAdTag.addLabel('appnexusAst');
+    moliAdTag.addLabel('improvedigital');
+    moliAdTag.addLabel('ix');
+    moliAdTag.addLabel('pubmatic');
+    moliAdTag.addLabel('unruly');
+    moliAdTag.addLabel('teads');
+    moliAdTag.addLabel('yieldlab');
+
+    const vertical = 'gutefrage';
+    const iabChannel = 'Automotive';
+
+    moliAdTag.addLabel(vertical);
+    moliAdTag.addLabel(iabChannel);
+
+    // required targeting
+    // v2015 on PHP app
+    moliAdTag.setTargeting('gfversion', ['v2016']);
+    // array of normalized tags
+    moliAdTag.setTargeting('tags', ['auto', 'waschmaschine']);
+    // allows targeting for verticals
+    moliAdTag.setTargeting('vertical', vertical);
+    // marketing channel
+    moliAdTag.setTargeting('channel', iabChannel);
+
+    // allows targeting adult content
+    moliAdTag.setTargeting('isAdultContent', 'false');
+    // allows targeting for user agents
+    moliAdTag.setTargeting('supportedUserAgent', 'true');
+  });
+
+  // request ads after 2 seconds
+  window.moli.que.push(function (moliAdTag) {
+    window.setTimeout(moliAdTag.requestAds, 2000);
   });
 
 </script>

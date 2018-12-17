@@ -8,6 +8,32 @@ import IAdSlot = Moli.IAdSlot;
 import SlotSizeConfigEntry = Moli.SlotSizeConfigEntry;
 
 /**
+ * Conditionally select the ad unit based on labels.
+ * Labels are supplied by the sizeConfig object in the top level moli configuration.
+ *
+ * This type relies on structural typing. All interfaces that provide the three fields
+ * `labelAny`, `labelAll` and `sizes` can be filtered.
+ *
+ * The API and behaviour matches the prebid API.
+ * - [Configure-Responsive-Ads](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+ * - [Conditional Ad Units](http://prebid.org/dev-docs/conditional-ad-units.html)
+ * - [Size Mapping](http://prebid.org/dev-docs/examples/size-mapping.html)
+ */
+export interface ILabelledSlot {
+
+  /** at least one label must match */
+  readonly labelAny?: string[];
+  /** all labels must match */
+  readonly labelAll?: string[];
+
+  /**
+   * The supported sizes by this slot
+   */
+  readonly sizes: DfpSlotSize[];
+
+}
+
+/**
  * Service that holds the slot size and labels configuration.
  *
  * It provides methods for evaluating if a given slot or a given set of slot sizes match the configured criteria.
@@ -57,7 +83,7 @@ export class SizeConfigService {
    * @param slot the ad slot to check
    * @returns {boolean} is this slot supported (label/sizes)?
    */
-  public filterSlot(slot: IAdSlot): boolean {
+  public filterSlot(slot: ILabelledSlot): boolean {
     let labelsMatching = true;
 
     // filtering by labels is only done if any labels were configured.

@@ -105,7 +105,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           )}
         </div>}
         <div className="MoliDebug-tagContainer">
-          {this.labelConfig()}
+          {this.labelConfig(this.props.slot)}
         </div>
       </div>}
       {state.showA9 && <div class="MoliDebug-panel">
@@ -150,7 +150,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <hr/>,
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
-            <Tag variant="yellow">{bid.bidder}</Tag>
+            <Tag variant="blue">{bid.bidder}</Tag>
+          </div>,
+          <div className="MoliDebug-tagContainer">
+            {this.labelConfig(bid)}
           </div>,
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Params</span>
@@ -224,17 +227,17 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     </Tag>;
   };
 
-  private labelConfig = (): JSX.Element => {
-    const labelAll = this.props.slot.labelAll;
-    const labelAny = this.props.slot.labelAny;
+  private labelConfig = (labelledSlot: {labelAll?: string[], labelAny?: string[]}): JSX.Element => {
+    const labelAll = labelledSlot.labelAll;
+    const labelAny = labelledSlot.labelAny;
     const supportedLabels = this.props.sizeConfigService.getSupportedLabels();
     const labelAllMatches = !!labelAll && labelAll.every(label => supportedLabels.indexOf(label) > -1);
 
     return <div>
       {labelAll && labelAll.length > 0 &&
       <div>
-        <span className="MoliDebug-tagLabel">labelAll</span>
-        {labelAll.map(label => <Tag variant={labelAllMatches ? 'green' : 'red'}>{label}</Tag>)}
+        <span className={classList('MoliDebug-tagLabel', [labelAllMatches, 'MoliDebug-tag--greenText'], [!labelAllMatches, 'MoliDebug-tag--redText'])}>labelAll</span>
+        {labelAll.map(label => <Tag variant={supportedLabels.indexOf(label) > -1 ? 'green' : 'red'}>{label}</Tag>)}
       </div>
       }
       {labelAny && labelAny.length > 0 &&

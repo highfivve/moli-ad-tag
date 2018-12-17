@@ -360,12 +360,12 @@ export class DfpService {
     }
 
     if (!config.prebid) {
-      this.logger.warn(`Try to init ${prebidSlots.length} without a prebid configuration`, prebidSlots);
+      this.logger.warn(`Try to init ${prebidSlots.length} prebid slots without a prebid configuration`, prebidSlots);
       return Promise.resolve({});
     }
 
     return Promise.resolve()
-      .then(() => this.registerPrebidSlots(prebidSlots, config))
+      .then(() => this.registerPrebidSlots(prebidSlots, config, globalSizeConfigService))
       .then(() => this.requestPrebid(prebidSlots, config, reportingService, globalSizeConfigService))
       .catch(reason => {
         this.logger.warn(reason);
@@ -391,7 +391,7 @@ export class DfpService {
 
     // no a9 configured
     if (!config.a9) {
-      this.logger.warn(`Try to init ${a9Slots.length} without a prebid configuration`, a9Slots);
+      this.logger.warn(`Try to init ${a9Slots.length} a9 slots without a a9 configuration`, a9Slots);
       return Promise.resolve();
     }
 
@@ -511,14 +511,25 @@ export class DfpService {
    *
    * @param dfpPrebidSlots that should be registered
    * @param config the moli global config
+   * @param globalSizeConfigService - filter prebid ad unit objects (bids) by label
    * @returns the unaltered prebid slots
    */
-  private registerPrebidSlots(dfpPrebidSlots: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig): void {
+  private registerPrebidSlots(dfpPrebidSlots: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig, globalSizeConfigService: SizeConfigService): void {
     window.pbjs.addAdUnits(dfpPrebidSlots.map(({ moliSlot, filterSupportedSizes }) => {
       const keyValues = config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {};
       const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ? moliSlot.prebid({ keyValues: keyValues }) : moliSlot.prebid;
       const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
       const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
+
+      const bannerSizes = mediaTypeBanner ? filterSupportedSizes(mediaTypeBanner.sizes).filter(this.isFixedSize) : [];
+      const videoSizes = mediaTypeVideo ? this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
+
+      // filter bids ourselves and don't rely on prebid to have a stable API
+      const bids = prebidAdSlotConfig.adUnit.bids.filter(
+        bid => globalSizeConfigService.filterSlot({
+          labelAll: bid.labelAll, labelAny: bid.labelAny, sizes: [...bannerSizes, ...this.flattenSizes(videoSizes)]
+        })
+      );
 
       return {
         code: moliSlot.domId,
@@ -526,14 +537,14 @@ export class DfpService {
           ...prebidAdSlotConfig.adUnit.mediaTypes,
           video: mediaTypeVideo ? {
             ...mediaTypeVideo,
-            playerSize: this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes)
+            playerSize: videoSizes
           } : undefined,
           banner: mediaTypeBanner ? {
             ...mediaTypeBanner,
-            sizes: filterSupportedSizes(mediaTypeBanner.sizes).filter(this.isFixedSize)
+            sizes: bannerSizes
           } : undefined
         },
-        bids: prebidAdSlotConfig.adUnit.bids
+        bids: bids
       };
     }));
   }
@@ -760,5 +771,12 @@ export class DfpService {
     ).filter(this.isFixedSize);
 
     return supportedSizes.length > 0 ? this.isSinglePlayerSize(playerSize) ? supportedSizes[ 0 ] : supportedSizes : [];
+  }
+
+  private flattenSizes(sizes: [ number, number ][] | [ number, number ]): [ number, number ][] {
+    if (sizes.length === 2 && typeof sizes[ 0 ] === 'number' && typeof sizes[ 1 ] === 'number') {
+      return [ [ sizes[ 0 ], sizes[ 1 ] ] ];
+    }
+    return sizes as [ number, number ][];
   }
 }

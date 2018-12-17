@@ -17,6 +17,17 @@ const logger: Moli.MoliLogger = {
 
 };
 
+export const teadsVerticalBid = (placementId: number, pageId: number, labelAll: string[]): prebidjs.ITeadsBid => {
+  return {
+    bidder: prebidjs.Teads,
+    params: {
+      placementId: placementId,
+      pageId: pageId
+    },
+    labelAll: [ prebidjs.Teads, ...labelAll ]
+  };
+};
+
 export const adConfiguration: Moli.MoliConfig = {
   slots: [
     {
@@ -104,7 +115,21 @@ export const adConfiguration: Moli.MoliConfig = {
                   frameworks: [ 1, 2 ]
                 }
               }
-            }
+            },
+            // Teads Mobile
+            teadsVerticalBid(94073, 101869, [ 'mobile', 'gutefrage', 'Automotive' ]),
+            teadsVerticalBid(92425, 100164, [ 'mobile', 'autofrage' ]),
+            teadsVerticalBid(94001, 101794, [ 'mobile', 'computerfrage' ]),
+            teadsVerticalBid(93999, 101792, [ 'mobile', 'finanzfrage' ]),
+            teadsVerticalBid(93997, 101790, [ 'mobile', 'gesundheitsfrage' ]),
+            teadsVerticalBid(93995, 101788, [ 'mobile', 'motorradfrage' ]),
+            // Teads Desktop
+            teadsVerticalBid(94072, 101870, [ 'desktop', 'gutefrage', 'Automotive' ]),
+            teadsVerticalBid(92424, 100163, [ 'desktop', 'autofrage' ]),
+            teadsVerticalBid(94000, 101793, [ 'desktop', 'computerfrage' ]),
+            teadsVerticalBid(93998, 101791, [ 'desktop', 'finanzfrage' ]),
+            teadsVerticalBid(93996, 101789, [ 'desktop', 'gesundheitsfrage' ]),
+            teadsVerticalBid(92424, 101787, [ 'desktop', 'motorradfrage' ])
           ]
         }
       }
@@ -112,12 +137,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'a9-adslot',
-      behaviour: 'lazy',
-      trigger:
-        {
-          name: 'event',
-          event: ''
-        },
+      behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       a9: {}
@@ -130,9 +150,9 @@ export const adConfiguration: Moli.MoliConfig = {
   },
   sizeConfig: [
     {
-      labels: [],
-      sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
-      mediaQuery: '(min-width: 400px)'
+      labels: [ 'mobile' ],
+      sizesSupported: [ 'fluid', [ 300, 250 ], [ 300, 169 ], [ 1, 1 ] ],
+      mediaQuery: '(max-width: 767px)'
     },
     {
       labels: [ 'desktop', 'tablet' ],
@@ -152,7 +172,7 @@ export const adConfiguration: Moli.MoliConfig = {
         filterSettings: {
           // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
           iframe: {
-            bidders: [ prebidjs.PubMatic, prebidjs.OpenX, prebidjs.SmartAdServer ],
+            bidders: [ prebidjs.PubMatic ],
             filter: 'include'
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.

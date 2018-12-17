@@ -4,6 +4,7 @@
   --MoliDebug-green: #90be6d;
   --MoliDebug-red: #db3b3d;
   --MoliDebug-yellow: #ffe152;
+  --MoliDebug-blue: #76949f;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
   --MoliDebug-buttons-padding: 5px;
@@ -97,7 +98,7 @@
       }
 
       &--prebid {
-        border-left-color: #76949F;
+        border-left-color: var(--MoliDebug-blue);
       }
 
       &--consent {
@@ -195,12 +196,24 @@
       background: var(--MoliDebug-red);
     }
 
+    &--redText {
+      color: var(--MoliDebug-red);
+    }
+
     &--green {
       background: var(--MoliDebug-green);
     }
 
+    &--greenText {
+      color: var(--MoliDebug-green);
+    }
+
     &--yellow {
       background: var(--MoliDebug-yellow);
+    }
+
+    &--blue {
+      background: var(--MoliDebug-blue);
     }
 
     &Label {

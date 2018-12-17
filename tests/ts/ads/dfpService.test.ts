@@ -77,7 +77,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.pbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).pbjs.que[0]();
+          (window as any).pbjs.que[ 0 ]();
           window.pbjs = pbjsStub;
         })
         .then(() => init);
@@ -136,7 +136,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.googletag.cmd).to.be.ok;
           // resolve queue and set stub
-          (window as any).googletag.cmd[0]();
+          (window as any).googletag.cmd[ 0 ]();
           window.googletag = googletagStub;
         })
         .then(() => init);
@@ -268,12 +268,12 @@ describe('DfpService', () => {
 
           const args = listenerSpy.firstCall.args;
 
-          expect(args[0]).to.deep.equal({}); // response map
-          expect(args[1]).to.be.false; // time out
+          expect(args[ 0 ]).to.deep.equal({}); // response map
+          expect(args[ 1 ]).to.be.false; // time out
 
-          const slotDefinitions = args[2] as Moli.SlotDefinition<Moli.AdSlot>[];
+          const slotDefinitions = args[ 2 ] as Moli.SlotDefinition<Moli.AdSlot>[];
           expect(slotDefinitions).length(1);
-          expect(adSlot).to.deep.equal(slotDefinitions[0].moliSlot);
+          expect(adSlot).to.deep.equal(slotDefinitions[ 0 ].moliSlot);
         });
       });
     });
@@ -477,7 +477,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: undefined,
               video: {
-                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [number, number][],
+                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [ number, number ][],
                 context: 'outstream'
               }
             },
@@ -518,7 +518,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: undefined,
               video: {
-                playerSize: [ [ 320, 180 ] ] as [number, number][],
+                playerSize: [ [ 320, 180 ] ] as [ number, number ][],
                 context: 'outstream'
               }
             },
@@ -545,7 +545,7 @@ describe('DfpService', () => {
                 sizes: [ [ 605, 165 ], [ 320, 150 ] ]
               },
               video: {
-                playerSize: [ [ 320, 180 ], [ 640, 360 ], [ 1920, 1080 ] ] as [number, number][],
+                playerSize: [ [ 320, 180 ], [ 640, 360 ], [ 1920, 1080 ] ] as [ number, number ][],
                 context: 'outstream'
               }
             },
@@ -594,7 +594,7 @@ describe('DfpService', () => {
                 sizes: [ [ 605, 165 ] ]
               },
               video: {
-                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [number, number][],
+                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [ number, number ][],
                 context: 'outstream'
               }
             },
@@ -716,16 +716,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('eager-loading-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/eager');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('eager-loading-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/eager');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
           expect(bidConfig.timeout).to.equal(666);
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
         });
@@ -867,16 +867,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('lazy-loading-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/lazy');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('lazy-loading-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/lazy');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
           expect(bidConfig.timeout).to.equal(666);
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
         });
@@ -1061,16 +1061,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('refreshable-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/refreshable');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
           expect(bidConfig.timeout).to.equal(666);
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
 
@@ -1084,16 +1084,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.secondCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('refreshable-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/refreshable');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
           expect(bidConfig.timeout).to.equal(666);
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledTwice;
         });
@@ -1309,6 +1309,109 @@ describe('DfpService', () => {
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ prebidAdslotConfig.adUnit ]);
+
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
+          expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])).and(
+              Sinon.match.has('bidsBackHandler', Sinon.match.defined)
+            ).and(Sinon.match.has('labels', Sinon.match.array.deepEquals([ 'foo', 'bar' ])))
+          );
+
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnce;
+          expect(pbjsSetTargetingForGPTAsyncSpy).to.have.been.calledOnceWithExactly(
+            Sinon.match.array.deepEquals([ 'eager-loading-adslot' ])
+          );
+        });
+      });
+
+      it('should filter requestBids with the supported labels', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const sizeConfigEntry: Moli.SizeConfigEntry = {
+          labels: [ 'foo', 'bar' ],
+          sizesSupported: [ [ 605, 165 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              },
+              video: undefined
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1'
+              }
+            }, {
+              bidder: prebidjs.AppNexusAst,
+              labelAll: [ 'foo', 'bar' ],
+              params: {
+                placementId: '2'
+              }
+            }, {
+              bidder: prebidjs.AppNexusAst,
+              labelAny: [ 'foo' ],
+              params: {
+                placementId: '3'
+              }
+            }, {
+              bidder: prebidjs.AppNexusAst,
+              labelAll: [ 'foo', 'baz' ],
+              params: {
+                placementId: '4'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          prebid: prebidAdslotConfig
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry ],
+          prebid: { config: pbjsTestConfig }
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
+
+          expect(adUnits).length(1);
+          expect(adUnits[0].bids).length(3);
+          expect(adUnits[0].bids).to.deep.equal([ {
+            bidder: prebidjs.AppNexusAst,
+            params: {
+              placementId: '1'
+            }
+          }, {
+            bidder: prebidjs.AppNexusAst,
+            labelAll: [ 'foo', 'bar' ],
+            params: {
+              placementId: '2'
+            }
+          }, {
+            bidder: prebidjs.AppNexusAst,
+            labelAny: [ 'foo' ],
+            params: {
+              placementId: '3'
+            }
+          } ]);
+
 
           expect(pbjsRequestBidsSpy).to.have.been.calledOnce;
           expect(pbjsRequestBidsSpy).to.have.been.calledOnceWithExactly(
