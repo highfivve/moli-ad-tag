@@ -525,11 +525,7 @@ export class DfpService {
       const videoSizes = mediaTypeVideo ? this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
 
       // filter bids ourselves and don't rely on prebid to have a stable API
-      const bids = prebidAdSlotConfig.adUnit.bids.filter(
-        bid => globalSizeConfigService.filterSlot({
-          labelAll: bid.labelAll, labelAny: bid.labelAny, sizes: [...bannerSizes, ...videoSizes]
-        })
-      );
+      const bids = prebidAdSlotConfig.adUnit.bids.filter(bid => globalSizeConfigService.filterSlot(bid));
 
       return {
         code: moliSlot.domId,
@@ -765,7 +761,7 @@ export class DfpService {
    * @param playerSize the (array of) player size(s)
    * @param filterSupportedSizes function provided by the global or slot-local sizeConfig to filter the slot's sizes
    */
-  private filterVideoPlayerSizes(playerSize: prebidjs.IMediaTypeVideo['playerSize'], filterSupportedSizes: FilterSupportedSizes): [number, number][] {
+  private filterVideoPlayerSizes(playerSize: prebidjs.IMediaTypeVideo['playerSize'], filterSupportedSizes: FilterSupportedSizes): [ number, number ][] {
     return filterSupportedSizes(
       this.isSinglePlayerSize(playerSize) ? [ playerSize ] : playerSize
     ).filter(this.isFixedSize);

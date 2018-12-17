@@ -27,9 +27,14 @@ export interface ILabelledSlot {
   readonly labelAll?: string[];
 
   /**
-   * The supported sizes by this slot
+   * The supported sizes by this slot.
+   *
+   * 1. If undefined this means that the slot size isn't considered for filtering.
+   * 2. If the slot size is defined the sizeConfigService will use its own supported
+   *    to filter the slot as well
+   *
    */
-  readonly sizes: DfpSlotSize[];
+  readonly sizes?: DfpSlotSize[];
 
 }
 
@@ -96,8 +101,11 @@ export class SizeConfigService {
       labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
     }
 
-    // for out-of-page slots, no sizes are provided. Therefore, we need to bypass slot size filtering for these slots.
-    return labelsMatching && (slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0);
+    // for
+    //  - out-of-page slots
+    //  - prebid slots
+    // no sizes are provided. Therefore, we need to bypass slot size filtering for these slots.
+    return labelsMatching && (!slot.sizes || slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0);
   }
 
   /**
