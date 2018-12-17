@@ -70,18 +70,6 @@ export const adConfiguration: Moli.MoliConfig = {
     },
     {
       position: 'in-page',
-      domId: 'lazy-adslot',
-      behaviour: 'lazy',
-      trigger: {
-        name: 'event',
-        event: 'timer.complete',
-        source: window
-      },
-      adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
-      sizes: [ [ 999, 165 ] ]
-    },
-    {
-      position: 'in-page',
       domId: 'prebid-adslot',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/pos2',
