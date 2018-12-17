@@ -78,9 +78,12 @@ export const adConfiguration: Moli.MoliConfig = {
         adUnit: {
           code: 'prebid-adslot',
           mediaTypes: {
+            banner: {
+              sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]
+            },
             video: {
               context: 'outstream',
-              playerSize: [ 605, 340 ]
+              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ] as [number, number][])
             }
           },
           bids: [
