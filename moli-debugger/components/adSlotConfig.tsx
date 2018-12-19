@@ -91,8 +91,12 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <Tag variant="yellow">{props.slot.behaviour}</Tag>
         </div>
         <div class="MoliDebug-tagContainer">
-          <span class="MoliDebug-tagLabel">DOM ID</span>
-          <Tag>{props.slot.domId}</Tag>
+          <span class={classList('MoliDebug-tagLabel', [ slotVisible, 'MoliDebug-tag--greenText' ], [ !slotVisible, 'MoliDebug-tag--redText' ])}>
+            DOM ID
+          </span>
+          <Tag variant={slotVisible ? 'green' : 'red'} title={`Slot ${slotVisible ? '' : 'not '}found in DOM`}>
+            {props.slot.domId}
+          </Tag>
         </div>
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabel">AdUnit path</span>
