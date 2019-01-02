@@ -192,7 +192,10 @@ export class DfpService {
           }
 
           if (moliSlotLazy.a9) {
-            bidRequests.push(this.fetchA9Slots([ moliSlotLazy as Moli.A9AdSlot ], config, reportingService));
+            bidRequests.push(this.fetchA9Slots([ {
+              ...slotDefinition,
+              moliSlot: moliSlotLazy as Moli.A9AdSlot
+            } ], config, reportingService));
           }
 
           return Promise.all(bidRequests).then(() => slotDefinition);
@@ -301,7 +304,10 @@ export class DfpService {
     }
 
     if (moliSlot.a9) {
-      bidRequests.push(this.fetchA9Slots([ moliSlot as Moli.A9AdSlot ], config, reportingService));
+      bidRequests.push(this.fetchA9Slots([ {
+        ...slotDefinition,
+        moliSlot: moliSlot as Moli.A9AdSlot
+      } ], config, reportingService));
     }
 
     Promise.all(bidRequests)
@@ -396,8 +402,7 @@ export class DfpService {
     }
 
     return Promise.resolve(a9Slots)
-      .then((slots: SlotDefinition<Moli.A9AdSlot>[]) => slots.map(slot => slot.moliSlot))
-      .then((slots: Moli.A9AdSlot[]) => this.fetchA9Slots(slots, config, reportingService))
+      .then((slots: SlotDefinition<Moli.A9AdSlot>[]) => this.fetchA9Slots(slots, config, reportingService))
       .catch(reason => this.logger.warn(reason));
   }
 
@@ -545,7 +550,7 @@ export class DfpService {
     }));
   }
 
-  private fetchA9Slots(slots: Moli.A9AdSlot[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
+  private fetchA9Slots(slots: Moli.SlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
     if (slots.length === 0) {
       return Promise.resolve();
     }
@@ -556,11 +561,11 @@ export class DfpService {
     return new Promise<void>(resolve => {
       reportingService.markA9fetchBids(currentRequestCount);
       window.apstag.fetchBids({
-        slots: slots.map(slot => {
+        slots: slots.map(({ moliSlot, filterSupportedSizes }) => {
           return {
-            slotID: slot.domId,
-            slotName: slot.adUnitPath,
-            sizes: slot.sizes.filter(this.isFixedSize)
+            slotID: moliSlot.domId,
+            slotName: moliSlot.adUnitPath,
+            sizes: filterSupportedSizes(moliSlot.sizes).filter(this.isFixedSize)
           };
         }),
         timeout: config.a9 ? config.a9.timeout : 1000
