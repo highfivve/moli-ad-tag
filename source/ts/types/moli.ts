@@ -364,6 +364,32 @@ export namespace Moli {
     readonly labels: string[];
   }
 
+  /**
+   * ## Slot SizeConfig entry
+   *
+   * Configure sizes based on media queries for a single `IAdSlot`.
+   *
+   * This slot only supports the `mediaQuery` and `sizesSupported` property.
+   * `labels` can only be defined globally as these can and should always be unique,
+   * while the `sizesSupported` may overlap due to overlapping media queries.
+   *
+   * Example for overlapping configuration:
+   *
+   * ```typescript
+   * [{
+   *   // mobile devices support a medium rectangle
+   *   mediaQuery: (max-width: 767px)
+   *   sizesSupported: [[300,250]]
+   * }, {
+   *   // desktop sidebar supports medium rectangle
+   *   mediaQuery: (min-width: 768px)
+   *   sizesSupported: [[300,250]]
+   * }]
+   * ```
+   *
+   * This result in `[[300,250]]` being always supported, which may not be something you want.
+   *
+   */
   export type SlotSizeConfigEntry = Pick<SizeConfigEntry, 'mediaQuery' | 'sizesSupported'>;
 
   export interface IAdSlot {
