@@ -528,6 +528,44 @@ export namespace Moli {
   /** slot behaviour namespace */
   export namespace behaviour {
 
+    /**
+     * ## Slot Loading
+     *
+     * The ad slot loading behaviour is configurable to support various use cases.
+     *
+     * ## Eager
+     *
+     * This is the most common use case. A slot is immediately requested and displayed.
+     * There is no additional configuration necessary.
+     *
+     * @see [[LazyAdSlot]]
+     *
+     * ## Lazy
+     *
+     * This delays the ad request until a certain `trigger` is called. Use cases for this setting:
+     *
+     * 1. Show an ad slot when a certain element is visible
+     * 2. Show an ad slot when a user performs a certain action (e.g. clicks a button)
+     * 3. Show an ad slot only under certain conditions (e.g. x number of elements available)
+     *
+     * [DFP also offers a lazy loading feature](https://developers.google.com/doubleclick-gpt/reference#googletag.PubAdsService_enableLazyLoad), which
+     * only covers the first use case.
+     *
+     * ## Refreshable
+     *
+     * This allows an ad slot to be requested multiple times. A `trigger` configures when the slot is refreshed.
+     * Use cases for this setting:
+     *
+     *  1. Sort or filter listings and reload the ad slots
+     *  2. Layout changes (e.g. card listing vs. row based listing)
+     *  3. Single Page Applications (not tested yet)
+     *
+     * A refreshable slot can also be _lazy_, which means that the first trigger also triggers the first ad request.
+     * The default behaviour is _not lazy_.
+     *
+     * @see [[RefreshableAdSlot]]
+     *
+     */
     export type SlotLoading = 'eager' | 'lazy' | 'refreshable';
 
     /** all available triggers for loading behaviours */
