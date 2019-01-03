@@ -134,9 +134,7 @@ export const adConfiguration: Moli.MoliConfig = {
         },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
-      a9: {
-        enabled: true
-      }
+      a9: {  }
     }
   ],
   targeting: {
