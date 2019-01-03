@@ -469,7 +469,7 @@ describe('DfpService', () => {
               banner: undefined,
               video: {
                 context: 'outstream',
-                playerSize: [ [ 320, 180 ] ] as [number, number][]
+                playerSize: [ [ 320, 180 ] ] as [ number, number ][]
               }
             }
           };
@@ -1556,6 +1556,139 @@ describe('DfpService', () => {
 
         });
       });
+
+      it('should filter a9 fetchBids with the supported labels', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const sizeConfigEntry: Moli.SizeConfigEntry = {
+          labels: [ 'foo', 'bar' ],
+          sizesSupported: [ [ 605, 165 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+
+        const adSlotNoLabels: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'no-labels',
+          behaviour: 'eager',
+          adUnitPath: '/123/no-labels',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          a9: {}
+        };
+
+        const adSlotMatchingLabels: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'matching-labels',
+          behaviour: 'eager',
+          adUnitPath: '/123/matching-labels',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          a9: {
+            labelAll: [ 'foo' ]
+          }
+        };
+
+        const adSlotNoMatchingLabels: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'no-matching-labels',
+          behaviour: 'eager',
+          adUnitPath: '/123/no-matching-labels',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          a9: {
+            labelAll: [ 'invalid' ]
+          }
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlotNoLabels, adSlotMatchingLabels, adSlotNoMatchingLabels ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry ],
+          a9: a9ConfigStub
+        }).then(() => {
+          expect(apstagFetchBidsSpy).to.have.been.calledOnce;
+
+          const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
+          expect(fetchBidArgs).length(2);
+
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
+
+          expect(bidConfig.slots).to.be.an('array');
+          expect(bidConfig.slots).length(2);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('no-labels');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/no-labels');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
+
+          expect(bidConfig.slots[ 1 ].slotID).to.equal('matching-labels');
+          expect(bidConfig.slots[ 1 ].slotName).to.equal('/123/matching-labels');
+          expect(bidConfig.slots[ 1 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
+        });
+      });
+
+      it('should filter a9 fetchBids with the supported sizes', () => {
+        const dfpService = newDfpService();
+
+        matchMediaStub.returns({ matches: true });
+
+        const sizeConfigEntry: Moli.SizeConfigEntry = {
+          labels: [ 'foo', 'bar' ],
+          sizesSupported: [ [ 605, 165 ] ],
+          mediaQuery: 'min-width: 300px'
+        };
+
+        const adSlotMatchingSizes: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'no-labels',
+          behaviour: 'eager',
+          adUnitPath: '/123/no-labels',
+          sizes: [ [ 605, 165 ] ],
+          a9: { }
+        };
+
+        const adSlotFilteredSizes: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'matching-labels',
+          behaviour: 'eager',
+          adUnitPath: '/123/matching-labels',
+          sizes: [ 'fluid', [ 300, 250 ], [ 605, 165 ] ],
+          a9: { }
+        };
+
+        const adSlotNoSupportedSizes: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'no-matching-labels',
+          behaviour: 'eager',
+          adUnitPath: '/123/no-matching-labels',
+          sizes: [ 'fluid', [ 605, 340 ] ],
+          a9: { }
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlotMatchingSizes, adSlotFilteredSizes, adSlotNoSupportedSizes ],
+          logger: noopLogger,
+          consent: consentConfig,
+          sizeConfig: [ sizeConfigEntry ],
+          a9: a9ConfigStub
+        }).then(() => {
+          expect(apstagFetchBidsSpy).to.have.been.calledOnce;
+
+          const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
+          expect(fetchBidArgs).length(2);
+
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
+
+          expect(bidConfig.slots).to.be.an('array');
+          expect(bidConfig.slots).length(2);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('no-labels');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/no-labels');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
+
+          expect(bidConfig.slots[ 1 ].slotID).to.equal('matching-labels');
+          expect(bidConfig.slots[ 1 ].slotName).to.equal('/123/matching-labels');
+          expect(bidConfig.slots[ 1 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
+        });
+      });
+
 
     });
   });

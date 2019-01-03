@@ -697,9 +697,23 @@ export namespace Moli {
     }
 
     /**
-     * See internal A9 apstag documentation
+     * ## A9 ad slot configuration
+     *
+     * Most of the a9 configuration is derived from the [[IAdSlot]] definition that provides
+     * the configuration.
+     *
+     * - `slotID` - is defined by the slot `domId`
+     * - `slotName` - is defined by the slot `adUnitPath`
+     * - `sizes` - is defined by the slot `sizes`
+     *
+     *
+     * @see [[apstag.ISlot]] internal A9 apstag documentation.
      */
     export interface A9AdSlotConfig {
+      /** Filter ad slot based on the given labels */
+      readonly labelAll?: string[];
+      /** Filter ad slot based on the given labels */
+      readonly labelAny?: string[];
     }
   }
 

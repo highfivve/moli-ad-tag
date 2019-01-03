@@ -195,7 +195,7 @@ export class DfpService {
             bidRequests.push(this.fetchA9Slots([ {
               ...slotDefinition,
               moliSlot: moliSlotLazy as Moli.A9AdSlot
-            } ], config, reportingService));
+            } ], config, reportingService, globalSizeConfigService));
           }
 
           return Promise.all(bidRequests).then(() => slotDefinition);
@@ -307,7 +307,7 @@ export class DfpService {
       bidRequests.push(this.fetchA9Slots([ {
         ...slotDefinition,
         moliSlot: moliSlot as Moli.A9AdSlot
-      } ], config, reportingService));
+      } ], config, reportingService, globalSizeConfigService));
     }
 
     Promise.all(bidRequests)
@@ -338,7 +338,7 @@ export class DfpService {
     const prebidSlots: SlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition);
     const a9Slots: SlotDefinition<Moli.A9AdSlot>[] = availableSlots.filter(this.isA9SlotDefinition);
 
-    return Promise.all([ this.initA9(a9Slots, config, reportingService), this.initPrebid(prebidSlots, config, reportingService, globalSizeConfigService) ])
+    return Promise.all([ this.initA9(a9Slots, config, reportingService, globalSizeConfigService), this.initPrebid(prebidSlots, config, reportingService, globalSizeConfigService) ])
       .then(() => availableSlots);
   }
 
@@ -390,7 +390,7 @@ export class DfpService {
     });
   }
 
-  private initA9(a9Slots: SlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
+  private initA9(a9Slots: SlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService, globalSizeConfigService: SizeConfigService): Promise<void> {
     if (a9Slots.length === 0) {
       return Promise.resolve();
     }
@@ -402,7 +402,7 @@ export class DfpService {
     }
 
     return Promise.resolve(a9Slots)
-      .then((slots: SlotDefinition<Moli.A9AdSlot>[]) => this.fetchA9Slots(slots, config, reportingService))
+      .then((slots: SlotDefinition<Moli.A9AdSlot>[]) => this.fetchA9Slots(slots, config, reportingService, globalSizeConfigService))
       .catch(reason => this.logger.warn(reason));
   }
 
@@ -550,8 +550,10 @@ export class DfpService {
     }));
   }
 
-  private fetchA9Slots(slots: Moli.SlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
-    if (slots.length === 0) {
+  private fetchA9Slots(slots: Moli.SlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService, globalSizeConfigService: SizeConfigService): Promise<void> {
+    const filteredSlots = slots.filter(slot => globalSizeConfigService.filterSlot(slot.moliSlot.a9));
+
+    if (filteredSlots.length === 0) {
       return Promise.resolve();
     }
 
@@ -561,7 +563,7 @@ export class DfpService {
     return new Promise<void>(resolve => {
       reportingService.markA9fetchBids(currentRequestCount);
       window.apstag.fetchBids({
-        slots: slots.map(({ moliSlot, filterSupportedSizes }) => {
+        slots: filteredSlots.map(({ moliSlot, filterSupportedSizes }) => {
           return {
             slotID: moliSlot.domId,
             slotName: moliSlot.adUnitPath,
