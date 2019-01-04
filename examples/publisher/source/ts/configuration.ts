@@ -83,7 +83,7 @@ export const adConfiguration: Moli.MoliConfig = {
             },
             video: {
               context: 'outstream',
-              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ] as [number, number][])
+              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ] as [ number, number ][])
             }
           },
           bids: [
@@ -131,7 +131,9 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
-      a9: {}
+      a9: {
+        labelAll: [ 'a9', 'desktop' ]
+      }
     }
   ],
   targeting: {
@@ -184,6 +186,11 @@ export const adConfiguration: Moli.MoliConfig = {
         }
       }
     }
+  },
+  a9: {
+    timeout: 1000,
+    cmpTimeout: 500,
+    pubID: 'test'
   },
   consent: {
     personalizedAds: {

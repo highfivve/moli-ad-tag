@@ -112,8 +112,8 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           {this.labelConfig(this.props.slot)}
         </div>
       </div>}
-      {state.showA9 && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-        A9 is <Tag variant="green">enabled</Tag>
+      {state.showA9 && props.slot.a9 && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
+        {this.a9Config(props.slot.a9)}
       </div>}
       {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         {this.prebidConfig(props.slot.prebid)}
@@ -165,6 +165,22 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           </div>
         ]
       )}
+    </div>;
+  };
+
+  private a9Config = (a9: headerbidding.A9AdSlotConfig): JSX.Element => {
+    const slotSizeConfig = this.props.slot.sizeConfig;
+    return <div>
+      {<div class="MoliDebug-tagContainer">
+        <span class="MoliDebug-tagLabel">Sizes</span>
+        {this.validateSlotSizes(this.props.slot.sizes.filter(this.isFixedSize)).map(validatedSlotSize =>
+          this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
+        )}
+      </div>
+      }
+      <div class="MoliDebug-tagContainer">
+        {this.labelConfig(a9)}
+      </div>
     </div>;
   };
 
@@ -230,6 +246,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       {slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
     </Tag>;
   };
+
+  private isFixedSize(size: Moli.DfpSlotSize): size is [ number, number ] {
+    return size !== 'fluid';
+  }
 
   private labelConfig = (labelledSlot: {labelAll?: string[], labelAny?: string[]}): JSX.Element => {
     const labelAll = labelledSlot.labelAll;

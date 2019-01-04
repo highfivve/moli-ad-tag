@@ -24,6 +24,7 @@ type IGlobalConfigState = {
     slots: boolean;
     targeting: boolean;
     prebid: boolean;
+    a9: boolean,
     sizeConfig: boolean;
   };
   messages: Array<Message>;
@@ -48,6 +49,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         slots: false,
         targeting: true,
         prebid: true,
+        a9: true,
         sizeConfig: true
       },
       messages: [],
@@ -236,6 +238,32 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           </div>}
         </div>}
 
+        {config.a9 && <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--a9">
+          <h4>
+            {this.collapseToggle('a9')}
+            A9
+          </h4>
+
+          {this.state.expandSection.a9 && <div>
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">PubID</span>
+              <Tag
+                variant={config.a9.pubID ? 'blue' : 'red'}>{config.a9.pubID}</Tag>
+            </div>
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Timeout</span>
+              <Tag
+                variant={config.a9.timeout ? 'blue' : 'red'}>{config.a9.timeout.toFixed(0)}ms</Tag>
+            </div>
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">CMP timeout</span>
+              <Tag
+                variant={config.a9.cmpTimeout ? 'blue' : 'red'}>{config.a9.cmpTimeout.toFixed(0)}ms</Tag>
+            </div>
+          </div>}
+        </div>
+        }
+
         <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
           <h4>Consent</h4>
           {this.consent(config.consent)}
@@ -352,8 +380,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'sizeConfig'>): JSX.Element => {
-    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'sizeConfig'>) => {
+  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig'>): JSX.Element => {
+    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig'>) => {
       const oldVal = this.state.expandSection[ section ];
       this.setState({ expandSection: { ...this.state.expandSection, [ section ]: !oldVal } });
     };
