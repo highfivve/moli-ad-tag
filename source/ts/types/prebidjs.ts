@@ -327,10 +327,19 @@ export namespace prebidjs {
   }
 
   /**
-   * == Ad unit / ad unit object ==
+   * ## Ad unit / ad unit object
+   *
+   * The ad unit object is where you configure what kinds of ads you will show in a given ad slot on your page, including:
+   *
+   * - Allowed sizes
+   * - Allowed media types (e.g., banner, native, and/or video)
+   *
+   * It’s also where you will configure bidders, e.g.:
+   *
+   * - Which bidders are allowed to bid for that ad slot
+   * - What information is passed to those bidders via their parameters
    *
    * Relates directly to the `Moli.IAdSlot`.
-   *
    *
    * @see http://prebid.org/dev-docs/adunit-reference.html
    */

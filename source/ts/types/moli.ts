@@ -1151,7 +1151,7 @@ export namespace Moli {
 
 
   /**
-   * == Logger interface ==
+   * ## Logger interface
    *
    * The default logging implementation uses `window.console` as the output.
    * Publishers may plugin their own logging implementation.
