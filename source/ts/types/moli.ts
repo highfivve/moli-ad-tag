@@ -538,7 +538,7 @@ export namespace Moli {
      * This is the most common use case. A slot is immediately requested and displayed.
      * There is no additional configuration necessary.
      *
-     * @see [[LazyAdSlot]]
+     * @see [[EagerAdSlot]]
      *
      * ## Lazy
      *
@@ -550,6 +550,8 @@ export namespace Moli {
      *
      * [DFP also offers a lazy loading feature](https://developers.google.com/doubleclick-gpt/reference#googletag.PubAdsService_enableLazyLoad), which
      * only covers the first use case.
+     *
+     * @see [[LazyAdSlot]]
      *
      * ## Refreshable
      *
