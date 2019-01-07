@@ -226,6 +226,10 @@
       background: var(--MoliDebug-blue);
     }
 
+    &&--mediumSpacing {
+      margin-bottom: 5px;
+    }
+
     &Label {
       display: inline-block;
       min-width: 110px;

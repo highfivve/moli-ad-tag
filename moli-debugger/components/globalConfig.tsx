@@ -136,8 +136,10 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             {config.targeting && <div>
               <h5>Key/value pairs</h5>
               {this.keyValues(config.targeting.keyValues)}
-              {this.labels('labels from targeting', config.targeting.labels)}
-              {this.labels('labels from sizeConfig', props.sizeConfigService.getSupportedLabels())}
+              <h5>Labels from publisher</h5>
+              {this.labels(config.targeting.labels)}
+              <h5>Labels from size config</h5>
+              {this.labels(props.sizeConfigService.getSupportedLabels().filter(l1 => !(config.targeting!.labels || []).find(l2 => l2 === l1)))}
             </div>}
             {!config.targeting && <span>No targeting config present.</span>}
           </div>}
@@ -318,11 +320,10 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       <span>No key/values config present.</span>;
   };
 
-  private labels = (heading: string, labels: string[] | undefined): JSX.Element => {
+  private labels = (labels: string[] | undefined): JSX.Element => {
     return <div class="MoliDebug-tagContainer">
-      <span class="MoliDebug-tagLabel">{firstUpper(heading)}</span>
-      {labels && labels.map(this.standardTagFromString)}
-      {(!labels || labels.length === 0) && <span>No {heading} present.</span>}
+      {labels && labels.map(label => <Tag variant="blue" spacing="medium">{label}</Tag>)}
+      {(!labels || labels.length === 0) && <span>No labels present.</span>}
     </div>;
   };
 
