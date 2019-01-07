@@ -21,7 +21,9 @@
     "build:example:instant": "mkdir -p dist/instant && cd examples/instant && yarn && yarn build && cp dist/* ../../dist/instant",
     "build:example:publisher": "mkdir -p dist/publisher && cd examples/publisher && yarn && yarn build && cp dist/* ../../dist/publisher",
     "build:example:ie-11": "mkdir -p dist/ie-11 && cd examples/ie-11 && yarn && yarn build && cp dist/* ../../dist/ie-11",
-    "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/"
+    "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/",
+    "preversion": "yarn compile && yarn lint && yarn test && yarn build:debug && yarn build:examples && yarn docs",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
