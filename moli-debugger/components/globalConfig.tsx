@@ -202,7 +202,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
               <h5>User sync</h5>
               <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">Sync enabled</span>
-                <Tag>{(!!config.prebid.config.userSync.syncEnabled).toString()}</Tag>
+                <Tag>{(config.prebid.config.userSync === undefined ? true : !!config.prebid.config.userSync.syncEnabled).toString()}</Tag>
               </div>
               {config.prebid.config.userSync.syncDelay !== undefined && <div class="MoliDebug-tagContainer">
                 <span class="MoliDebug-tagLabel">Sync delay</span>
