@@ -68,7 +68,7 @@ export namespace prebidjs {
   }
 
   /**
-   * == Global Prebid Configuration ==
+   * ## Global Prebid Configuration
    *
    * Contains various configuration options for prebid. The type is not complete. Only the necessary configuration
    * options are listed here.
@@ -131,7 +131,7 @@ export namespace prebidjs {
     };
 
     /**
-     * == Configure User Syncing ==
+     * ## Configure User Syncing
      *
      * The user sync configuration options described in this section give publishers control over how adapters behave
      * with respect to dropping pixels or scripts to cookie users with IDs. This practice is called “user syncing”
@@ -903,7 +903,7 @@ export namespace prebidjs {
   /**
    * Bid response object.
    *
-   * == Concrete BidResponse types ==
+   * ## Concrete BidResponse types
    *
    * You can add specific response types for every header bid if necessary by
    *
