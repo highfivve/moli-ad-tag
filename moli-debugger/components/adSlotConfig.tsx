@@ -59,6 +59,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       && props.sizeConfigService.filterSlot(props.slot);
 
     const prebidValid = this.isVisiblePrebid();
+    const a9Valid = slotVisible && this.isVisibleA9();
 
     return <div class={classList('MoliDebug-adSlot', [ !!props.parentElement, 'MoliDebug-adSlot--overlay' ])}
                 style={state.dimensions}>
@@ -73,7 +74,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
                 onClick={this.toggleGeneral}>&#9432;</button>
         {props.slot.a9 &&
         <button title="Show A9 config"
-                class={classList('MoliDebug-adSlot-button', [ state.showA9, 'is-active' ])}
+                class={classList('MoliDebug-adSlot-button', [ state.showA9, 'is-active' ], [ a9Valid, 'is-rendered' ], [ !a9Valid, 'is-notRendered' ])}
                 onClick={this.toggleA9}>A9</button>}
         {props.slot.prebid &&
         <button title="Show Prebid config"
@@ -224,6 +225,22 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     return true;
   };
 
+  private isVisibleA9 = (): boolean => {
+    const a9 = this.props.slot.a9;
+
+    if (a9) {
+      const supportedLabels = this.props.sizeConfigService.getSupportedLabels();
+      if (a9.labelAll) {
+        return a9.labelAll.every(label => supportedLabels.indexOf(label) > -1);
+      }
+      if (a9.labelAny) {
+        return a9.labelAny.some(label => supportedLabels.indexOf(label) > -1);
+      }
+    }
+
+    return true;
+  };
+
   private isSingleVideoSize = (playerSize: [ number, number ][] | [ number, number ]): playerSize is [ number, number ] => {
     return playerSize.length === 2 && typeof playerSize[0] === 'number' && typeof playerSize[1] === 'number';
   };
@@ -256,6 +273,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     const labelAny = labelledSlot.labelAny;
     const supportedLabels = this.props.sizeConfigService.getSupportedLabels();
     const labelAllMatches = !!labelAll && labelAll.every(label => supportedLabels.indexOf(label) > -1);
+    const labelAnyMatches = !!labelAny && labelAny.some(label => supportedLabels.indexOf(label) > -1);
 
     return <div>
       {labelAll && labelAll.length > 0 &&
@@ -266,7 +284,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       }
       {labelAny && labelAny.length > 0 &&
       <div>
-        <span className="MoliDebug-tagLabel">labelAny</span>
+        <span className={classList('MoliDebug-tagLabel', [labelAnyMatches, 'MoliDebug-tag--greenText'], [!labelAnyMatches, 'MoliDebug-tag--redText'])}>labelAny</span>
         {labelAll && labelAll.length > 0 && <Tag variant={'yellow'}>labelAll was already evaluated, labelAny is ignored</Tag>}
         {labelAny.map(label => {
           const labelFound = supportedLabels.indexOf(label) > -1;
