@@ -157,6 +157,29 @@ export const createMoliTag = (): Moli.MoliTag => {
     }
   }
 
+  function beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.hooks = {
+          ...state.hooks,
+          beforeRequestAds: callback
+        };
+        break;
+      }
+      case 'configured': {
+        state.hooks = {
+          ...state.hooks,
+          beforeRequestAds: callback
+        };
+        break;
+      }
+      default : {
+        getLogger(state.config.logger).error('Trying to setSampleRate. Already configured.', state.config);
+        break;
+      }
+    }
+  }
+
   function getConfig(): Moli.MoliConfig | undefined {
     switch (state.state) {
       case 'configurable': {
@@ -201,7 +224,8 @@ export const createMoliTag = (): Moli.MoliTag => {
               reporters: [...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters]
             },
             logger: state.logger || config.logger
-          }
+          },
+          hooks: state.hooks
         };
         if (shouldInitialize) {
           requestAds();
@@ -235,6 +259,11 @@ export const createMoliTag = (): Moli.MoliTag => {
       }
       case 'configured': {
         const config = state.config;
+
+        // call the configured hooks
+        if (state.hooks) {
+          state.hooks.beforeRequestAds(config);
+        }
         state = {
           state: 'requestAds',
           config: config
@@ -301,6 +330,7 @@ export const createMoliTag = (): Moli.MoliTag => {
     setLogger: setLogger,
     setSampleRate: setSampleRate,
     addReporter: addReporter,
+    beforeRequestAds: beforeRequestAds,
     getConfig: getConfig,
     configure: configure,
     requestAds: requestAds,

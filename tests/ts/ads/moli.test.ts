@@ -1,6 +1,7 @@
 import '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
+import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag, moli } from '../../../source/ts/ads/moliGlobal';
 import { googletagStub } from '../stubs/googletagStubs';
@@ -14,17 +15,31 @@ use(sinonChai);
 // tslint:disable: no-unused-expression
 describe('moli', () => {
 
+  // single sandbox instance to create spies and stubs
+  const sandbox = Sinon.createSandbox();
+
+  beforeEach(() => {
+    window.googletag = googletagStub;
+    window.pbjs = pbjsStub;
+  });
+
+  after(() => {
+    // bring everything back to normal after tests
+    sandbox.restore();
+  });
+
+  afterEach(() => {
+    sandbox.reset();
+  });
+
+
+
   it('should set the window.moli tag', () => {
     expect(window.moli).to.be.ok;
     expect(window.moli).to.be.equal(moli);
   });
 
   describe('state machine', () => {
-
-    beforeEach(() => {
-      window.googletag = googletagStub;
-      window.pbjs = pbjsStub;
-    });
 
     it('should start in configurable state', () => {
       const adTag = createMoliTag();
@@ -243,6 +258,24 @@ describe('moli', () => {
       expect(config!.reporting!.sampleRate).to.be.equal(0);
     });
 
+  });
+
+  describe('hooks', () => {
+    it('should add the beforeRequestAds hook and call it', () => {
+      const adTag = createMoliTag();
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      return adTag.requestAds().then(() => {
+        expect(hookSpy).to.be.calledOnce;
+      });
+    });
   });
 
   describe('multiple configurations', () => {

@@ -64,6 +64,14 @@ export namespace Moli {
      */
     addReporter(reporter: Moli.reporting.Reporter): void;
 
+    /**
+     * Set the beforeRequestAds hook, which is triggered before the ads are being requested
+     * with the final [[Moli.MoliConfig]].
+     *
+     * @param callback
+     */
+    beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void;
+
 
     /**
      * @param config the ad configuration
@@ -222,6 +230,11 @@ export namespace Moli {
         reporters: Moli.reporting.Reporter[];
       };
 
+      /**
+       * Add hooks on specific state changes.
+       */
+      hooks?: IHooks;
+
     }
 
     /**
@@ -234,6 +247,11 @@ export namespace Moli {
        * Changeable configuration if other settings have been pushed into the que.
        */
       config: Moli.MoliConfig;
+
+      /**
+       * Add hooks on specific state changes.
+       */
+      hooks?: IHooks;
     }
 
     /**
@@ -284,6 +302,19 @@ export namespace Moli {
      * All valid states
      */
     export type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
+
+    export interface IHooks {
+      /**
+       * This function is triggered before the state changes to `requestAds`.
+       *
+       * ## Use cases
+       *
+       * Use this hook if you need to access the final [[Moli.MoliConfig]].
+       *
+       * @param config - the final [[Moli.MoliConfig]]
+       */
+      beforeRequestAds: (config: Moli.MoliConfig) => void;
+    }
   }
 
   export interface MoliConfig {
