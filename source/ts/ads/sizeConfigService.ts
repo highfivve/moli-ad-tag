@@ -15,9 +15,9 @@ import SlotSizeConfigEntry = Moli.SlotSizeConfigEntry;
  * `labelAny`, `labelAll` and `sizes` can be filtered.
  *
  * The API and behaviour matches the prebid API.
- * - [Configure-Responsive-Ads](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
- * - [Conditional Ad Units](http://prebid.org/dev-docs/conditional-ad-units.html)
- * - [Size Mapping](http://prebid.org/dev-docs/examples/size-mapping.html)
+ * - [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+ * - [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
+ * - [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
  */
 export interface ILabelledSlot {
 

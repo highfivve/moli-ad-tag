@@ -1,7 +1,7 @@
 /**
  * Api Reference for Prebid.js
  *
- * @see http://prebid.org/dev-docs/publisher-api-reference.html
+ * @see https://prebid.org/dev-docs/publisher-api-reference.html
  */
 export namespace prebidjs {
 
@@ -50,7 +50,7 @@ export namespace prebidjs {
      *
      * supports a number of advanced configuration options
      *
-     * @see http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
      * @param {prebidjs.IPrebidJsConfig} config
      */
     setConfig(config: IPrebidJsConfig): void;
@@ -76,7 +76,7 @@ export namespace prebidjs {
    * NOTE: modules can extend this configuration as well, so you may find the information in various prebid
    *       documentation pages. One example is the consentModule.
    *
-   * @see http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
+   * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
    */
   export interface IPrebidJsConfig {
 
@@ -110,7 +110,7 @@ export namespace prebidjs {
     /**
      * 'Consent Management' module configuration
      *
-     * @see http://prebid.org/dev-docs/modules/consentManagement.html
+     * @see https://prebid.org/dev-docs/modules/consentManagement.html
      */
     consentManagement?: {
       /**
@@ -151,7 +151,7 @@ export namespace prebidjs {
      * behavior of Prebid.js is to wait 3 seconds after the auction ends, and then allow every adapter to drop up to
      * 5 image-based user syncs.
      *
-     * @see http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
      */
     userSync?: {
 
@@ -204,7 +204,7 @@ export namespace prebidjs {
     /**
      * The configuration for the currency module
      *
-     * http://prebid.org/dev-docs/modules/currency.html
+     * https://prebid.org/dev-docs/modules/currency.html
      */
     currency: {
 
@@ -275,21 +275,21 @@ export namespace prebidjs {
    * Defines one or multiple media types the ad unit supports.
    * Media Types can be "banner", "native" or "video.
    *
-   * @see http://prebid.org/dev-docs/show-multi-format-ads.html
-   * @see http://prebid.org/dev-docs/publisher-api-reference.html#adUnit-multi-format
+   * @see https://prebid.org/dev-docs/show-multi-format-ads.html
+   * @see https://prebid.org/dev-docs/publisher-api-reference.html#adUnit-multi-format
    */
   export interface IMediaTypes {
 
     /**
      * optional. If no other properties are specified, this is the default.
-     * @see http://prebid.org/dev-docs/publisher-api-reference.html#adUnit-banner
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#adUnit-banner
      */
     readonly banner?: IMediaTypeBanner;
 
     /**
      * Defines properties of a video ad.
      *
-     * @see http://prebid.org/dev-docs/publisher-api-reference.html#adUnit-video
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#adUnit-video
      */
     readonly video?: IMediaTypeVideo;
   }
@@ -305,7 +305,7 @@ export namespace prebidjs {
    * Since not all demand partners return a renderer with their video bid responses,
    * we recommend that publishers associate a renderer with their Prebid video adUnits, if possible.
    *
-   * @see http://prebid.org/dev-docs/show-outstream-video-ads.html
+   * @see https://prebid.org/dev-docs/show-outstream-video-ads.html
    */
   export interface IRenderer {
     /**
@@ -341,7 +341,7 @@ export namespace prebidjs {
    *
    * Relates directly to the `Moli.IAdSlot`.
    *
-   * @see http://prebid.org/dev-docs/adunit-reference.html
+   * @see https://prebid.org/dev-docs/adunit-reference.html
    */
   export interface IAdUnit {
     /**
@@ -403,32 +403,32 @@ export namespace prebidjs {
    */
   export interface IBidObject<B extends BidderCode, T> {
     /**
-     * Unique code identifying the bidder. For bidder codes, see the [bidder param reference](http://prebid.org/dev-docs/bidders.html).
-     * @see http://prebid.org/dev-docs/bidders.html
+     * Unique code identifying the bidder. For bidder codes, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).
+     * @see https://prebid.org/dev-docs/bidders.html
      */
     readonly bidder: B;
 
     /**
-     * Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](http://prebid.org/dev-docs/bidders.html).
-     * @see http://prebid.org/dev-docs/bidders.html
+     * Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).
+     * @see https://prebid.org/dev-docs/bidders.html
      */
     readonly params: T;
 
     /**
-     * Used for [conditional ads](http://prebid.org/dev-docs/conditional-ad-units.html).
-     * Works with sizeConfig argument to [pbjs.setConfig](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
+     * Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html).
+     * Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
      *
-     * @see http://prebid.org/dev-docs/conditional-ad-units.html
-     * @see http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
+     * @see https://prebid.org/dev-docs/conditional-ad-units.html
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
     readonly labelAny?: string[];
 
     /**
-     * Used for [conditional ads](http://prebid.org/dev-docs/conditional-ad-units.html).
-     * Works with sizeConfig argument to [pbjs.setConfig](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
+     * Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html).
+     * Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
      *
-     * @see http://prebid.org/dev-docs/conditional-ad-units.html
-     * @see http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
+     * @see https://prebid.org/dev-docs/conditional-ad-units.html
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
     readonly labelAll?: string[];
   }
@@ -464,7 +464,7 @@ export namespace prebidjs {
    * The type definition may not be complete as only the actually used (or tested)
    * fields are being modelled in this definition.
    *
-   * @see http://prebid.org/dev-docs/bidders.html#appnexusAst
+   * @see https://prebid.org/dev-docs/bidders.html#appnexusAst
    */
   export interface IAppNexusASTParams {
 
@@ -497,7 +497,7 @@ export namespace prebidjs {
 
     /**
      * Optional configuration for video placements
-     * @see http://prebid.org/dev-docs/bidders.html#appnexus-video-object
+     * @see https://prebid.org/dev-docs/bidders.html#appnexus-video-object
      */
     readonly video?: {
 
@@ -558,7 +558,7 @@ export namespace prebidjs {
    * ImproveDigital bid parameters.
    *
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/improvedigitalBidAdapter.js
-   * @see http://prebid.org/dev-docs/bidders/improvedigital.html
+   * @see https://prebid.org/dev-docs/bidders/improvedigital.html
    */
   export interface IImproveDigitalParams {
     readonly placementId: number;
@@ -581,7 +581,7 @@ export namespace prebidjs {
    * IndexExchange bid parameters.
    *
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/indexExchangeBidAdapter.js
-   * @see Documentation http://prebid.org/dev-docs/bidders/indexExchange.html
+   * @see Documentation https://prebid.org/dev-docs/bidders/indexExchange.html
    */
   export interface IIndexExchangeParams {
     readonly siteId: string;
@@ -691,7 +691,7 @@ export namespace prebidjs {
   /**
    * OpenX bid parameters
    *
-   * @see http://prebid.org/dev-docs/bidders/openx.html
+   * @see https://prebid.org/dev-docs/bidders/openx.html
    *
    */
   export interface IOpenxParams {
@@ -716,7 +716,7 @@ export namespace prebidjs {
   /**
    * Smart bid parameters
    *
-   * @see http://prebid.org/dev-docs/bidders/smartadserver.html
+   * @see https://prebid.org/dev-docs/bidders/smartadserver.html
    *
    */
   export interface ISmartAdServerParams {
@@ -758,7 +758,7 @@ export namespace prebidjs {
   /**
    * Unruly bid parameters
    *
-   * @see http://prebid.org/dev-docs/bidders#unruly
+   * @see https://prebid.org/dev-docs/bidders#unruly
    */
   export interface IUnrulyParams {
 
@@ -781,7 +781,7 @@ export namespace prebidjs {
   /**
    * Teads bid parameters
    *
-   * @see http://prebid.org/dev-docs/bidders#teads
+   * @see https://prebid.org/dev-docs/bidders#teads
    */
   export interface ITeadsParams {
 
@@ -983,7 +983,7 @@ export namespace prebidjs {
    * - passing additional information to the ad server
    * - adjusting the bid CPM sent to the ad server
    *
-   * @see http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
+   * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
    */
   export interface IBidderSettings {
 
@@ -1028,7 +1028,7 @@ export namespace prebidjs {
   }
 
   /**
-   * @see http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
+   * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
    */
   export interface IBidderSetting {
     /**

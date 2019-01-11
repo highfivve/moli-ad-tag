@@ -337,7 +337,7 @@ export namespace Moli {
      * This is an alternative solution to custom () => DfpSlotSize[] functions and is taken
      * from prebid.js.
      *
-     * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
+     * https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
     readonly sizeConfig?: SizeConfigEntry[];
 
@@ -379,10 +379,10 @@ export namespace Moli {
    * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
    *
    *
-   * @see [Configure-Responsive-Ads](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
-   * @see [Conditional Ad Units](http://prebid.org/dev-docs/conditional-ad-units.html)
-   * @see [Size Mapping](http://prebid.org/dev-docs/examples/size-mapping.html)
-   * @see [requestBids with labels](http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
+   * @see [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+   * @see [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
+   * @see [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
+   * @see [requestBids with labels](https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
    */
   export interface SizeConfigEntry {
     /** media query that must match if the sizes are applicable */
@@ -444,9 +444,9 @@ export namespace Moli {
      * Labels are supplied by the sizeConfig object in the top level moli configuration.
      *
      * The API and behaviour matches the prebid API.
-     * - [Configure-Responsive-Ads](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
-     * - [Conditional Ad Units](http://prebid.org/dev-docs/conditional-ad-units.html)
-     * - [Size Mapping](http://prebid.org/dev-docs/examples/size-mapping.html)
+     * - [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+     * - [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
+     * - [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
      */
     readonly labelAny?: string[];
     readonly labelAll?: string[];
@@ -685,7 +685,7 @@ export namespace Moli {
     }
 
     export interface PrebidConfig {
-      /** http://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
+      /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
       readonly config: prebidjs.IPrebidJsConfig;
 
       /** optional bidder settings */
@@ -702,7 +702,7 @@ export namespace Moli {
       /**
        * bids configuration
        *
-       * http://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties
+       * https://prebid.org/dev-docs/publisher-api-reference.html#addAdUnits-AdUnitProperties
        */
       readonly adUnit: prebidjs.IAdUnit;
     }
@@ -779,7 +779,7 @@ export namespace Moli {
    * ```
    *
    *
-   * @see [Prebid GDPR ConsentManagement Module](http://prebid.org/dev-docs/modules/consentManagement.html)
+   * @see [Prebid GDPR ConsentManagement Module](https://prebid.org/dev-docs/modules/consentManagement.html)
    *
    */
   export namespace consent {
