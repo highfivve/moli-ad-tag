@@ -8,7 +8,7 @@ The public API that should be used by publishers is the Moli tag.
 
 ## [Moli Config](interfaces/_moli_.moli.moliconfig.html)
 
-This is "ad configuration", which contains all necessary information to request and render ads on the publisher page.
+This is the "ad configuration", which contains all necessary information to request and render ads on the publisher page.
 
 ## Features
 
