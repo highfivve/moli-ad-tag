@@ -10,11 +10,25 @@ The public API that should be used by publishers is the Moli tag.
 
 This is the "ad configuration", which contains all necessary information to request and render ads on the publisher page.
 
+Most of the configuration is provided by Highfivve. The static part contains
+
+- all ad slots and their settings (sizes, labels, prebid, a9)
+- size configuration
+- consent settings
+- prebid settings
+- a9 settings
+
+If required the publisher can change certain settings. See the **Features** section for more details.
+
 ## Features
 
-The moli publisher ad tag provides a minimal API for various uses cases.
-All methods only make sense if the tag is triggered on the publisher page, which means the following initialization code
-is required
+The moli publisher ad tag provides a minimal API for various uses cases. The publisher tag needs to be
+configured in `publisher` mode, which means the publisher needs to trigger the `moli.requestAds()` call.
+
+### Request Ads
+
+The minimal amount of code that is required to trigger the ads in `publisher` mode.
+
 
 ```html
 <script>
@@ -27,6 +41,8 @@ window.moli.que.push(function(moliAdTag) {
 </script>
 ```
 
+### API summary
+
 - [`setTarget(key,value)`](interfaces/_moli_.moli.molitag.html#settargeting). Add dynamic key value pairs from the publisher site
 - [`addLabel`](interfaces/_moli_.moli.molitag.html#addlabel). Add custom labels for ad slot filtering
 - [`setLogger`](interfaces/_moli_.moli.molitag.html#setlogger). Provide a custom logger implementation
@@ -36,8 +52,6 @@ window.moli.que.push(function(moliAdTag) {
 
 The [`configure()`](interfaces/_moli_.moli.molitag.html#configure) method should never be called by the publisher. The ad tag contains the
 static configuration. Use this method for initial testing during the integration face, but not in production.
-
-
 
 ## Integration
 
@@ -55,12 +69,12 @@ All integrations require the following steps.
 
 
 
-### Example: full automatic integration
+### Example: full automatic integration (`instant` mode)
 
 Having integrated both tags, there's nothing else to do.
 
 
-### Example: lazy initialization
+### Example: lazy initialization (`publisher` mode)
 
 You can customize the moli ad tag and trigger the actual ad rendering manually. This
 covers the following use-cases
