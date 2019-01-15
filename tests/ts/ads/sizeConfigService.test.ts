@@ -7,7 +7,6 @@ import * as Sinon from 'sinon';
 import { SizeConfigService } from '../../../source/ts/ads/sizeConfigService';
 import { Moli } from '../../../source/ts';
 
-import MoliLogger = Moli.MoliLogger;
 import SizeConfigEntry = Moli.SizeConfigEntry;
 import DfpSlotSize = Moli.DfpSlotSize;
 
@@ -17,13 +16,6 @@ use(sinonChai);
 // tslint:disable: no-unused-expression
 describe('SizeConfigService', () => {
   const sandbox = Sinon.createSandbox();
-  const debugStub = sandbox.stub();
-  const loggerStub: MoliLogger = {
-    debug: debugStub,
-    info: sandbox.stub(),
-    warn: sandbox.stub(),
-    error: sandbox.stub()
-  };
   const sizeConfigEntry1: SizeConfigEntry = {
     labels: [],
     sizesSupported: [ [ 205, 200 ], 'fluid' ],
@@ -117,7 +109,7 @@ describe('SizeConfigService', () => {
   };
 
   const emptySizeConfig: SizeConfigEntry[] = [];
-  const newSizeConfigService = (sizeConfig: SizeConfigEntry[], logger: MoliLogger) => new SizeConfigService(sizeConfig, [], logger);
+  const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) => new SizeConfigService(sizeConfig, []);
 
   afterEach(() => {
     sandbox.reset();
@@ -130,32 +122,32 @@ describe('SizeConfigService', () => {
   describe('slot size matching logic', () => {
 
     it('should return an empty array when passed an empty array', () => {
-      const sizeConfigService = newSizeConfigService(emptySizeConfig, loggerStub);
+      const sizeConfigService = newSizeConfigService(emptySizeConfig);
 
       const filteredSizes = sizeConfigService.filterSupportedSizes([]);
 
       expect(filteredSizes).to.deep.equal([]);
     });
 
-    it('should warn if config is not empty but no slot\'s matchMedia matches', () => {
+    it('should filter all sizes if config is not empty but no slot\'s matchMedia matches', () => {
       // for this test, we assume no sizeConfig mediaQuery matches:
       const matchMediaStub = sandbox.stub(window, 'matchMedia').returns({ matches: false });
 
-      newSizeConfigService([ sizeConfigEntry3 ], loggerStub);
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry3 ]);
 
-      expect(debugStub).to.have.been.calledOnce;
+      expect(sizeConfigService.filterSupportedSizes([ [ 985, 380 ], 'fluid' ])).to.deep.equal([]);
 
       matchMediaStub.restore();
     });
 
     it('should filter out duplicate slots from the size config', () => {
-      const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ], loggerStub);
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ]);
 
       expect((sizeConfigService as any).supportedSizes as DfpSlotSize[]).to.deep.equal([ [ 205, 200 ], 'fluid' ]);
     });
 
     it('should filter the given slots according to configuration', () => {
-      const filteredSizes = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2, sizeConfigEntry3 ], loggerStub)
+      const filteredSizes = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2, sizeConfigEntry3 ])
         .filterSupportedSizes([ [ 985, 380 ], [ 205, 200 ], [ 350, 200 ], [ 1, 1 ] ]);
 
       expect(
@@ -166,7 +158,7 @@ describe('SizeConfigService', () => {
     });
 
     it('should not change the given slot sizes if size configuration is empty', () => {
-      const filteredSizes = newSizeConfigService([ sizeConfigEntryWithoutSizes ], loggerStub)
+      const filteredSizes = newSizeConfigService([ sizeConfigEntryWithoutSizes ])
         .filterSupportedSizes([ [ 985, 380 ], [ 205, 200 ], [ 350, 200 ], [ 1, 1 ] ]);
 
       expect(
@@ -177,28 +169,28 @@ describe('SizeConfigService', () => {
     });
 
     it('should let the given slot pass if label configuration is empty', () => {
-      const slotPassed = newSizeConfigService([ sizeConfigEntryWithoutLabels ], loggerStub)
+      const slotPassed = newSizeConfigService([ sizeConfigEntryWithoutLabels ])
         .filterSlot(adSlotWithLabelAll);
 
       expect(slotPassed).to.be.true;
     });
 
     it('should let the given slot pass if it is an out-of-page slot with empty sizes', () => {
-      const slotPassed = newSizeConfigService([ sizeConfigEntry5 ], loggerStub)
+      const slotPassed = newSizeConfigService([ sizeConfigEntry5 ])
         .filterSlot(outOfPageSlot);
 
       expect(slotPassed).to.be.true;
     });
 
     it('should check if a given slot matches the configured slot size criteria', () => {
-      const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ], loggerStub);
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry1, sizeConfigEntry2 ]);
 
       expect(sizeConfigService.filterSlot(adSlot605x165)).to.be.false;
       expect(sizeConfigService.filterSlot(adSlotFluid985x380)).to.be.true;
     });
 
     it('should filter out duplicate labels from the label config', () => {
-      const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ], loggerStub);
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ]);
 
       expect(
         new Set(sizeConfigService.getSupportedLabels())
@@ -208,7 +200,7 @@ describe('SizeConfigService', () => {
     });
 
     it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
-      const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ], loggerStub);
+      const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ]);
       expect(sizeConfigService.getSupportedLabels()).to.deep.equal(['desktop', 'video', 'mobile', 'bottom']);
 
       // has labelAny "video" matching
@@ -225,7 +217,7 @@ describe('SizeConfigService', () => {
     });
 
     it('should add the extra labels to the supported labels', () => {
-      const sizeConfigService = new SizeConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ], loggerStub);
+      const sizeConfigService = new SizeConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ]);
       expect(
         new Set(sizeConfigService.getSupportedLabels())
       ).to.deep.equal(

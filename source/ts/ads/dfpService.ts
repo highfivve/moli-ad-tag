@@ -82,7 +82,7 @@ export class DfpService {
     }
 
     const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
-    const globalSizeConfigService = new SizeConfigService(config.sizeConfig || [], extraLabels, this.logger);
+    const globalSizeConfigService = new SizeConfigService(config.sizeConfig || [], extraLabels);
 
     // always create performance marks and metrics even without a config
     const reportingConfig: Moli.reporting.ReportingConfig = config.reporting || {
@@ -728,7 +728,7 @@ export class DfpService {
    */
   private getSizeFilterFunction(moliSlot: Moli.AdSlot, globalSizeConfigService: SizeConfigService): FilterSupportedSizes {
     return moliSlot.sizeConfig ?
-      (givenSizes: DfpSlotSize[]) => new SizeConfigService(moliSlot.sizeConfig!, [], this.logger).filterSupportedSizes(givenSizes) :
+      (givenSizes: DfpSlotSize[]) => new SizeConfigService(moliSlot.sizeConfig!, []).filterSupportedSizes(givenSizes) :
       (givenSizes: DfpSlotSize[]) => globalSizeConfigService.filterSupportedSizes(givenSizes);
   }
 

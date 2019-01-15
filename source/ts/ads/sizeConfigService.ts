@@ -46,17 +46,19 @@ export interface ILabelledSlot {
 export class SizeConfigService {
   private readonly supportedSizes: DfpSlotSize[];
   private readonly supportedLabels: string[];
+  /**
+   * True:  Either no size config is used or the size config produced supported sizes.
+   * False: Size config produced no supported sizes thus all sizes should be filtered.
+   */
+  private readonly isValid: boolean;
 
   constructor(private readonly sizeConfig: (SizeConfigEntry | SlotSizeConfigEntry)[],
-              private readonly extraLabels: string[],
-              private readonly logger: MoliLogger) {
+              private readonly extraLabels: string[]) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedConfigs = sizeConfig
       .filter(conf => window.matchMedia(conf.mediaQuery).matches);
 
-    if (sizeConfig.length > 0 && supportedConfigs.length === 0) {
-      this.logger.debug('[SizeConfig] Supported sizes empty after matchMedia filtering - probably wrong config?');
-    }
+    this.isValid = sizeConfig.length === 0 || !(sizeConfig.length > 0 && supportedConfigs.length === 0);
 
     // To filter out duplicate slot sizes, the slot size tuples are converted to strings that can be easily compared
     // using indexOf(), and back to tuples after the filtering took place.
@@ -118,6 +120,9 @@ export class SizeConfigService {
    * @returns {DfpSlotSize[]}
    */
   public filterSupportedSizes(givenSizes: DfpSlotSize[]): DfpSlotSize[] {
+    if (!this.isValid) {
+      return [];
+    }
     return this.supportedSizes.length === 0 ? givenSizes : this.supportedSizes.filter(
       configuredSize => givenSizes.some(
         givenSize => {
