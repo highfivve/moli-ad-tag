@@ -27,7 +27,7 @@ type IGlobalConfigState = {
     a9: boolean,
     sizeConfig: boolean;
   };
-  messages: Array<Message>;
+  messages: Message[];
   browserResized: boolean;
   showOnlyRenderedSlots: boolean;
 };
@@ -69,6 +69,10 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
       if (props.config.prebid) {
         this.checkPrebidConfig(this.state.messages, props.config.prebid);
+      }
+
+      if (props.config.sizeConfig) {
+        props.config.sizeConfig.forEach(this.checkGlobalSizeConfigEntry(this.state.messages));
       }
 
       props.windowResizeService.register(this);
@@ -399,14 +403,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     </span>;
   };
 
-  private reportMissingConfig = (messages: Array<Message>): void => {
+  private reportMissingConfig = (messages: Message[]): void => {
     messages.push({
       kind: 'error',
       text: 'No moli config found.'
     });
   };
 
-  private checkForDuplicateOrMissingSlots = (messages: Array<Message>, slot: AdSlot): void => {
+  private checkForDuplicateOrMissingSlots = (messages: Message[], slot: AdSlot): void => {
     const count = document.querySelectorAll(`#${slot.domId}`).length;
 
     if (count > 1) {
@@ -424,7 +428,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private checkConsentConfig = (messages: Array<Message>, consent?: Moli.consent.ConsentConfig): void => {
+  private checkConsentConfig = (messages: Message[], consent?: Moli.consent.ConsentConfig): void => {
     if (!consent) {
       messages.push({
         kind: 'error',
@@ -433,7 +437,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private checkPrebidConfig = (messages: Array<Message>, prebid: Moli.headerbidding.PrebidConfig) => {
+  private checkPrebidConfig = (messages: Message[], prebid: Moli.headerbidding.PrebidConfig) => {
     if (!prebid.config.consentManagement) {
       messages.push({
         kind: 'error',
@@ -442,7 +446,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private checkSlotPrebidConfig = (messages: Array<Message>, slot: AdSlot) => {
+  private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
       const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {} }) : slot.prebid,
         mediaTypes = prebidConfig.adUnit.mediaTypes;
@@ -453,6 +457,15 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           text: `Prebidjs mediaTypes for slot ${slot.domId} | ${slot.adUnitPath} is empty.`
         });
       }
+    }
+  };
+  
+  private checkGlobalSizeConfigEntry = (messages: Message[]) =>  (entry: Moli.SizeConfigEntry, index: number): void => {
+    if (entry.sizesSupported.length > 0) {
+      messages.push({
+        kind: 'warning',
+        text: `Global SizeConfig entry #${index + 1} adds supportedSizes. We recommend defining supportedSizes per slot in a slot specific SizeConfig`
+      });
     }
   };
 
