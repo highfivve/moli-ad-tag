@@ -5,7 +5,6 @@ import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 
 import { classList } from '../util/stringUtils';
-import { debugLogger } from '../util/debugLogger';
 
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
@@ -248,7 +247,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
     const sizeConfigService = slotSizeConfig ?
-      new SizeConfigService(slotSizeConfig, [], debugLogger) :
+      new SizeConfigService(slotSizeConfig, []) :
       this.props.sizeConfigService;
 
     return sizes.map(size => ({

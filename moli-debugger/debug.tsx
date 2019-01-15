@@ -12,14 +12,13 @@ import MoliConfig = Moli.MoliConfig;
 import './debug.css';
 
 import { WindowResizeService } from './util/windowResizeService';
-import { debugLogger } from './util/debugLogger';
 
 const moliConfig: MoliConfig | undefined = window.moli.getConfig();
 
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');
   const extraLabels = moliConfig.targeting && moliConfig.targeting.labels || [];
-  const sizeConfigService = new SizeConfigService(moliConfig.sizeConfig || [], extraLabels, moliConfig.logger || debugLogger);
+  const sizeConfigService = new SizeConfigService(moliConfig.sizeConfig || [], extraLabels);
 
   preact.render(<GlobalConfig config={moliConfig} sizeConfigService={sizeConfigService} windowResizeService={new WindowResizeService()}/>, globalConfigElement);
 
