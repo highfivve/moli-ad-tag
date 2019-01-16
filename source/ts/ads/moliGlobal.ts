@@ -334,7 +334,7 @@ export const createMoliTag = (): Moli.MoliTag => {
     const key = 'ABtest';
     const params = parseQueryString(window.location.search);
     const param = params.get(key);
-    const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1
+    const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1;
 
     setTargeting(key, abTest.toString());
   }
