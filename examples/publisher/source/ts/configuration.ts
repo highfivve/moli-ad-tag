@@ -35,7 +35,13 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+        }
+      ]
     },
     {
       position: 'in-page',
