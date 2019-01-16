@@ -397,8 +397,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private iconForMessageKind = (kind: Message['kind'] | 'empty'): JSX.Element => {
     return <span className="MoliDebug-configMessage-icon">
-      {kind === 'error' && <span>&#2716;</span>}
-      {kind === 'warning' && <span>&#9888;</span>}
+      {kind === 'error' && <span>&#x2757;</span>}
+      {kind === 'warning' && <span>&#x26A0;</span>}
       {kind === 'empty' && <span>✔</span>}
     </span>;
   };
