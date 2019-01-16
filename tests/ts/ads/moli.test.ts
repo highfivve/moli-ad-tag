@@ -8,6 +8,7 @@ import { googletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
 import { consentConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
+import IFinished = Moli.state.IFinished;
 
 // setup sinon-chai
 use(sinonChai);
@@ -125,6 +126,43 @@ describe('moli', () => {
         post: 'configure2'
       });
     });
+
+    it('should add ABtest key-value between 1 and 100 in configurable state calling requestAds() ', () => {
+      const adTag = createMoliTag();
+      const finished = adTag.requestAds();
+      expect(adTag.getState()).to.be.eq('configurable');
+      return finished.then(state => {
+        expect(state.state).to.be.eq('configurable');
+        const configurableState: IConfigurable = state as IConfigurable;
+        expect(configurableState.keyValues).to.be.not.undefined;
+        expect(configurableState.keyValues.ABtest).to.be.not.undefined;
+
+        const abTest = Number(configurableState.keyValues.ABtest);
+        expect(abTest).to.be.gte(1);
+        expect(abTest).to.be.lte(100);
+      });
+    });
+
+    it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', () => {
+      const adTag = createMoliTag();
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      expect(adTag.getState()).to.be.eq('configured');
+      return adTag.requestAds().then(state => {
+        console.log((state as any).error);
+        expect(state.state).to.be.eq('finished');
+        const finishedState: IFinished = state as IFinished;
+        const config = finishedState.config;
+        expect(config.targeting).to.be.not.undefined;
+        expect(config.targeting!.keyValues).to.be.not.undefined;
+        expect(config.targeting!.keyValues.ABtest).to.be.not.undefined;
+
+        const abTest = Number(config.targeting!.keyValues.ABtest);
+        expect(abTest).to.be.gte(1);
+        expect(abTest).to.be.lte(100);
+      });
+    });
+
   });
 
   describe('addLabel()', () => {

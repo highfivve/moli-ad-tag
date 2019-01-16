@@ -1,4 +1,5 @@
 import { Moli } from '../types/moli';
+import { parseQueryString } from '../util/query';
 import { DfpService } from './dfpService';
 import { assetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
@@ -6,8 +7,6 @@ import IStateMachine = Moli.state.IStateMachine;
 import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
-
-const dfpService = new DfpService(assetLoaderService, cookieService);
 
 const getLogger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
   return logger ? logger : {
@@ -19,6 +18,9 @@ const getLogger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
 };
 
 export const createMoliTag = (): Moli.MoliTag => {
+
+  // Creating the actual tag requires exactly one DfpService instance
+  const dfpService = new DfpService(assetLoaderService, cookieService);
 
   /**
    * Initial state is configurable
@@ -255,9 +257,11 @@ export const createMoliTag = (): Moli.MoliTag => {
     switch (state.state) {
       case 'configurable': {
         state.initialize = true;
+        setABtestTargeting();
         return Promise.resolve(state);
       }
       case 'configured': {
+        setABtestTargeting();
         const config = state.config;
 
         // call the configured hooks
@@ -315,6 +319,24 @@ export const createMoliTag = (): Moli.MoliTag => {
         });
       }
     }
+  }
+
+  /**
+   * Set a fixed ABtest key-value to allow
+   *
+   * - floor price optimizations
+   * - traffic shaping
+   *
+   * You can override the key-value with a query parameter `?ABtest=[1-100]`.
+   *
+   */
+  function setABtestTargeting(): void {
+    const key = 'ABtest';
+    const params = parseQueryString(window.location.search);
+    const param = params.get(key);
+    const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1
+
+    setTargeting(key, abTest.toString());
   }
 
   const que = {
