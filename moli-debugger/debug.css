@@ -168,6 +168,10 @@
       &.is-notRendered {
         background: var(--MoliDebug-red);
       }
+
+      &--sizeConfig::before {
+        content: "\01F4D0";
+      }
     }
   }
 
