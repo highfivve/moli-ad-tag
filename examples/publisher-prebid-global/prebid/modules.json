@@ -1,0 +1,14 @@
+[
+    "appnexusBidAdapter",
+    "improvedigitalBidAdapter",
+    "ixBidAdapter",
+    "criteoBidAdapter",
+    "nanointeractiveBidAdapter",
+    "pubmaticBidAdapter",
+    "justpremiumBidAdapter",
+    "openxBidAdapter",
+    "smartadserverBidAdapter",
+    "teadsBidAdapter",
+    "consentManagement",
+    "currency"
+]

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title><%= htmlWebpackPlugin.options.title %></title>
+  <script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"></script>
+  <style>
+    body {
+      display: flex;
+    }
+    .u-mtm {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+<!-- ------------------- -->
+<!-- MOLI LAZY INIT CODE -->
+<!-- ------------------- -->
+
+<script>
+  // que setup
+  window.moli = window.moli || { que: [] };
+
+  // push commands
+
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.setTargeting('foo', 'bar');
+    moliAdTag.setTargeting('version', '1.2.3');
+  });
+
+  // labels
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.addLabel('criteo');
+    moliAdTag.addLabel('appnexusAst');
+    moliAdTag.addLabel('improvedigital');
+    moliAdTag.addLabel('ix');
+    moliAdTag.addLabel('pubmatic');
+    moliAdTag.addLabel('unruly');
+    moliAdTag.addLabel('teads');
+    moliAdTag.addLabel('yieldlab');
+
+    const vertical = 'gutefrage';
+    const iabChannel = 'Automotive';
+
+    moliAdTag.addLabel(vertical);
+    moliAdTag.addLabel(iabChannel);
+
+    // required targeting
+    // v2015 on PHP app
+    moliAdTag.setTargeting('gfversion', ['v2016']);
+    // array of normalized tags
+    moliAdTag.setTargeting('tags', ['auto', 'waschmaschine']);
+    // allows targeting for verticals
+    moliAdTag.setTargeting('vertical', vertical);
+    // marketing channel
+    moliAdTag.setTargeting('channel', iabChannel);
+
+    // allows targeting adult content
+    moliAdTag.setTargeting('isAdultContent', 'false');
+    // allows targeting for user agents
+    moliAdTag.setTargeting('supportedUserAgent', 'true');
+  });
+
+  // request ads after 2 seconds
+  window.moli.que.push(function (moliAdTag) {
+    window.setTimeout(moliAdTag.requestAds, 2000);
+  });
+
+</script>
+
+<body>
+  <div>
+    <h1>Eager Loading AdSlot</h1>
+    <div id="eager-loading-adslot"></div>
+
+    <hr>
+
+    <h1>Refreshable AdSlot</h1>
+    <script>
+      const refresh = () => {
+        console.log('slot.refresh fired');
+        window.dispatchEvent(new CustomEvent('slot.refresh'));
+      }
+    </script>
+    <div id="refreshable-adslot"></div>
+    <button class="u-mtm" onclick="refresh()">Refresh the slot</button>
+
+    <hr>
+
+    <h1>Lazy AdSlot</h1>
+    <script>
+      let timeoutSteps = 5;
+      const tick = () => window.setTimeout(() => {
+        timeoutSteps--;
+        document.getElementById('countdown').innerText = timeoutSteps;
+        if (timeoutSteps) {
+          tick();
+        } else {
+          console.log('timer.complete fired');
+          window.dispatchEvent(new CustomEvent('timer.complete'));
+        }
+      }, 1000);
+      tick();
+    </script>
+    <div id="lazy-adslot"></div>
+    <div class="u-mtm">
+      Slot triggering in <span id="countdown">5</span> seconds
+    </div>
+
+    <hr>
+
+    <h1>Prebid AdSlot</h1>
+    <div id="prebid-adslot"></div>
+
+    <hr>
+
+    <h1>Amazon A9 AdSlot</h1>
+    <div id="a9-adslot"></div>
+  </div>
+</body>
+</html>

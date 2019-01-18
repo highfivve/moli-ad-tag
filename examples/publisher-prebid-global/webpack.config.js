@@ -9,7 +9,7 @@ module.exports = (_, argv) => {
     devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
     entry: './index.ts',
     output: {
-      filename: 'publisher_[chunkHash].js'
+      filename: 'publisher_prebid-global_[chunkHash].js'
     },
     module: {
       rules: [
@@ -44,7 +44,7 @@ module.exports = (_, argv) => {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        title: 'Publisher / Lazy Init - Publisher Demo Page',
+        title: 'Publisher - Global Prebid Variable changed',
         template: 'demo/index.html'
       })
     ]
