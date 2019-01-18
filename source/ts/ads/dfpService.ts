@@ -200,7 +200,7 @@ export class DfpService {
 
           return Promise.all(bidRequests).then(() => slotDefinition);
         })
-        .then(({ adSlot, moliSlot }) => {
+        .then(({ adSlot }) => {
           window.googletag.pubads().refresh([ adSlot ]);
         })
         .catch(error => {
