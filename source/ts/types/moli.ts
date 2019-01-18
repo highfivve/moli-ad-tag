@@ -693,6 +693,14 @@ export namespace Moli {
 
       /** optional listener for prebid events */
       readonly listener?: PrebidListener;
+
+      /**
+       * If true, moli will use `window.moliPbjs` to access the prebid instance. The actual renaming of this
+       * variable has to be done in the publisher tag.
+       *
+       * default: `false`
+       */
+      readonly useMoliPbjs?: boolean;
     }
 
     /**
@@ -1237,6 +1245,13 @@ declare global {
      * the global moli tag definition
      */
     moli: Moli.MoliTag;
+
+    /**
+     * moli prebid.js instance if the publisher tag renames the globalVarName setting for prebid.
+     *
+     * @see [[PrebidConfig.useMoliPbjs]]
+     */
+    moliPbjs: prebidjs.IPrebidJs;
   }
 }
 

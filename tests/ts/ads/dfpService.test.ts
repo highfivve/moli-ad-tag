@@ -22,6 +22,7 @@ describe('DfpService', () => {
   // set globals before test
   window.googletag = googletagStub;
   window.pbjs = pbjsStub;
+  window.moliPbjs = pbjsStub;
   window.apstag = apstagStub;
 
   // single sandbox instance to create spies and stubs
@@ -79,6 +80,25 @@ describe('DfpService', () => {
           // resolve queue and set stub
           (window as any).pbjs.que[ 0 ]();
           window.pbjs = pbjsStub;
+        })
+        .then(() => init);
+    });
+
+    it('should configure window.moliPbjs.que if useMoliPbjs is set', () => {
+      (window as any).moliPbjs = undefined;
+      const init = newDfpService().initialize({
+        slots: [],
+        consent: consentConfig,
+        logger: noopLogger,
+        prebid: { config: pbjsTestConfig, useMoliPbjs: true }
+      });
+
+      return sleep()
+        .then(() => {
+          expect(window.moliPbjs.que).to.be.ok;
+          // resolve queue and set stub
+          (window as any).moliPbjs.que[ 0 ]();
+          window.moliPbjs = pbjsStub;
         })
         .then(() => init);
     });
