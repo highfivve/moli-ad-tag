@@ -55,7 +55,8 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
     const slotValid = props.sizeConfigService.filterSlot(props.slot);
-    const slotVisible = slotValid && !!document.getElementById(props.slot.domId);
+    const slotElementExists = !!document.getElementById(props.slot.domId);
+    const slotVisible = slotValid && slotElementExists;
 
     const prebidValid = this.isVisiblePrebid();
     const a9Valid = slotVisible && this.isVisibleA9();
@@ -91,10 +92,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <Tag variant="yellow">{props.slot.behaviour}</Tag>
         </div>
         <div class="MoliDebug-tagContainer">
-          <span class={classList('MoliDebug-tagLabel', [ slotVisible, 'MoliDebug-tag--greenText' ], [ !slotVisible, 'MoliDebug-tag--redText' ])}>
+          <span class={classList('MoliDebug-tagLabel', [ slotElementExists, 'MoliDebug-tag--greenText' ], [ !slotElementExists, 'MoliDebug-tag--redText' ])}>
             DOM ID
           </span>
-          <Tag variant={slotVisible ? 'green' : 'red'} title={`Slot ${slotVisible ? '' : 'not '}found in DOM`}>
+          <Tag variant={slotElementExists ? 'green' : 'red'} title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}>
             {props.slot.domId}
           </Tag>
         </div>
