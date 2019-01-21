@@ -54,8 +54,8 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   }
 
   render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
-    const slotVisible = !!document.getElementById(props.slot.domId)
-      && props.sizeConfigService.filterSlot(props.slot);
+    const slotValid = props.sizeConfigService.filterSlot(props.slot);
+    const slotVisible = slotValid && !!document.getElementById(props.slot.domId);
 
     const prebidValid = this.isVisiblePrebid();
     const a9Valid = slotVisible && this.isVisibleA9();
@@ -82,7 +82,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
         {props.slot.sizeConfig &&
         <button title="Show sizeConfig"
-                class={classList('MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig', [ state.showSizeConfig, 'is-active' ])}
+                class={classList('MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig', [ slotValid, 'is-rendered' ],  [ state.showSizeConfig, 'is-active' ])}
                 onClick={this.toggleSizeConfig}></button>}
       </div>
       {state.showGeneral && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
