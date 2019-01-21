@@ -83,7 +83,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
         {props.slot.sizeConfig &&
         <button title="Show sizeConfig"
-                class={classList('MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig', [ slotValid, 'is-rendered' ],  [ state.showSizeConfig, 'is-active' ])}
+                class={classList('MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig', [ slotValid, 'is-rendered'], [ !slotValid, 'is-notRendered' ], [ state.showSizeConfig, 'is-active' ])}
                 onClick={this.toggleSizeConfig}></button>}
       </div>
       {state.showGeneral && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
