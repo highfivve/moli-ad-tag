@@ -18,6 +18,9 @@ pipeline {
                     nodejs('nodejs-10.10.0') {
                         echo "Setting up yarn and install dependencies"
                         sh "npm install yarn@1.10.1"
+                        // clean up any old links
+                        sh "yarn unlink"
+                        // fresh install
                         sh "yarn install"
                     }
                 }
