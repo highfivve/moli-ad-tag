@@ -19,7 +19,7 @@ pipeline {
                         echo "Setting up yarn and install dependencies"
                         sh "npm install yarn@1.10.1"
                         // clean up any old links
-                        sh "yarn unlink"
+                        sh "yarn unlink || true"
                         // fresh install
                         sh "yarn install"
                     }
