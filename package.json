@@ -17,7 +17,7 @@
     "test": "mocha --require ts-node/register tests/**/*.test.ts",
     "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register tests/**/*.test.ts",
     "build:debug": "cd moli-debugger && yarn && yarn build",
-    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:instant && yarn build:example:publisher && yarn build:example:ie-11 && yarn build:example:publisher-prebid-global",
+    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:instant && yarn build:example:publisher && yarn build:example:ie-11 && yarn build:example:publisher-global-prebid",
     "build:example:instant": "mkdir -p dist/instant && cd examples/instant && yarn && yarn build && cp dist/* ../../dist/instant",
     "build:example:publisher": "mkdir -p dist/publisher && cd examples/publisher && yarn && yarn build && cp dist/* ../../dist/publisher",
     "build:example:publisher-global-prebid": "mkdir -p dist/publisher-prebid-global && cd examples/publisher-prebid-global && yarn && yarn build && cp dist/* ../../dist/publisher-prebid-global",
