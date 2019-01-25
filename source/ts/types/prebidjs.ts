@@ -100,7 +100,7 @@ export namespace prebidjs {
    *
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
    */
-  export interface IPrebidJsConfig extends IImproveDigitalConfig{
+  export interface IPrebidJsConfig extends IImproveDigitalConfig {
 
     /**
      * Turn on debugging
