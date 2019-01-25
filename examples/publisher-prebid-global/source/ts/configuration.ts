@@ -192,6 +192,9 @@ export const adConfiguration: Moli.MoliConfig = {
             'EUR': 0.8695652174
           }
         }
+      },
+      improvedigital: {
+        singleRequest: true
       }
     }
   },
