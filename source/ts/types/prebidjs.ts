@@ -68,6 +68,28 @@ export namespace prebidjs {
   }
 
   /**
+   * ## Global Improve Digital configuration
+   *
+   * This extends the [[IPrebidJsConfig]] with Improve Digital specific configuration options.
+   *
+   */
+  interface IImproveDigitalConfig {
+
+    /**
+     * Global Improve Digital property
+     */
+    readonly improvedigital?: {
+
+      /**
+       * Enable the single request mode, which will send all bids in one request.
+       *
+       * Available since prebid 1.37.0
+       */
+      readonly singleRequest: boolean;
+    };
+  }
+
+  /**
    * ## Global Prebid Configuration
    *
    * Contains various configuration options for prebid. The type is not complete. Only the necessary configuration
@@ -78,7 +100,7 @@ export namespace prebidjs {
    *
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
    */
-  export interface IPrebidJsConfig {
+  export interface IPrebidJsConfig extends IImproveDigitalConfig{
 
     /**
      * Turn on debugging
