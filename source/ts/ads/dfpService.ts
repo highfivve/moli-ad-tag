@@ -46,6 +46,11 @@ export class DfpService {
   private a9RequestCount: number = 0;
 
   /**
+   * Promise resolved when the googletag is available and the dom is ready
+   */
+  private pageReady: Promise<unknown> = Promise.all([this.awaitGptLoaded(), this.awaitDomReady()]);
+
+  /**
    *
    * @param assetService - Currently needed to load amazon
    * @param cookieService - Access browser cookies
@@ -104,8 +109,7 @@ export class DfpService {
     const filteredSlots = config.slots
       .filter(slot => globalSizeConfigService.filterSlot(slot));
 
-    const dfpReady = this.awaitGptLoaded()
-      .then(() => this.awaitDomReady())
+    const dfpReady = this.pageReady
       // initialize the reporting for non-lazy slots
       .then(() => reportingService.initialize(
         this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot))
@@ -169,6 +173,7 @@ export class DfpService {
       const filterSupportedSizes = this.getSizeFilterFunction(moliSlotLazy, globalSizeConfigService);
 
       createLazyLoader(moliSlotLazy.trigger).onLoad()
+        .then(() => this.pageReady)
         .then(() => {
           if (document.getElementById(moliSlotLazy.domId)) {
             return Promise.resolve();
