@@ -272,7 +272,9 @@ export const createMoliTag = (): Moli.MoliTag => {
           state: 'requestAds',
           config: config
         };
-        return dfpService.initialize(config).then(() => {
+        return dfpService.initialize(config)
+          .then(config => dfpService.requestAds(config))
+          .then(() => {
           state = {
             state: 'finished',
             config: config

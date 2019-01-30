@@ -93,7 +93,7 @@ describe('moli', () => {
     it('should add key-values to the config', () => {
       const adTag = createMoliTag();
       adTag.setTargeting('pre', 'configure1');
-      adTag.configure({ slots: [], consent: consentConfig });
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
       adTag.setTargeting('post', 'configure2');
 
       const config = adTag.getConfig();
@@ -149,7 +149,6 @@ describe('moli', () => {
 
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
-        console.log((state as any).error);
         expect(state.state).to.be.eq('finished');
         const finishedState: IFinished = state as IFinished;
         const config = finishedState.config;
