@@ -361,7 +361,13 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
     switch (consent.personalizedAds.provider) {
       case 'cmp':
-        return provider;
+        return <div>
+          {provider}
+          <div class="MoliDebug-tagContainer">
+            <span className="MoliDebug-tagLabel">Available</span>
+            <Tag variant={this.isCmpFunctionAvailable() ? 'green' : 'red'}>{this.isCmpFunctionAvailable().toString()}</Tag>
+          </div>
+        </div>;
       case 'static':
         return <div>
           {provider}
@@ -435,6 +441,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         text: 'No consent configuration found.'
       });
     }
+
+    // if cmp is configured, there must be a cmp present
+    if (consent && consent.personalizedAds.provider === 'cmp' && !this.isCmpFunctionAvailable()) {
+      messages.push({
+        kind: 'error',
+        text: 'no window.__cmp function found. Consent management and ads will not work!'
+      });
+    }
   };
 
   private checkPrebidConfig = (messages: Message[], prebid: Moli.headerbidding.PrebidConfig) => {
@@ -471,4 +485,6 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private isSlotRendered = (slot: AdSlot): boolean => !!document.getElementById(slot.domId)
     && this.props.sizeConfigService.filterSlot(slot);
+
+  private isCmpFunctionAvailable = () => window.__cmp || typeof window.__cmp === 'function';
 }
