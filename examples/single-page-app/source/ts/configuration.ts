@@ -48,7 +48,17 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot-not-in-dom',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250] ],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [ 'fluid', [ 605, 165 ]]
+        },
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [ 'fluid', [ 300, 250 ]]
+        }
+      ]
     },
     {
       position: 'in-page',
@@ -105,17 +115,33 @@ export const adConfiguration: Moli.MoliConfig = {
             teadsVerticalBid(92424, 101787, [ 'desktop', 'motorradfrage' ])
           ]
         }
-      }
+      },
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+        }
+      ]
     },
     {
       position: 'in-page',
       domId: 'a9-adslot',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ]],
       a9: {
         labelAll: [ 'a9', 'desktop' ]
-      }
+      },
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [ 'fluid', [ 605, 165 ]]
+        },
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [ 'fluid', [ 300, 250 ]]
+        }
+      ]
     }
   ],
   targeting: {
@@ -126,12 +152,12 @@ export const adConfiguration: Moli.MoliConfig = {
   sizeConfig: [
     {
       labels: [ 'mobile' ],
-      sizesSupported: [ 'fluid', [ 300, 250 ], [ 300, 169 ], [ 1, 1 ] ],
+      sizesSupported: [ ],
       mediaQuery: '(max-width: 767px)'
     },
     {
       labels: [ 'desktop', 'tablet' ],
-      sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizesSupported: [ ],
       mediaQuery: '(min-width: 768px)'
     }
   ],

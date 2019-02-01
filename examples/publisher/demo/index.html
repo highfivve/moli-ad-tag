@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= htmlWebpackPlugin.options.title %></title>
   <script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"></script>
+  <!-- making things prettier -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+        integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+  <!-- highlighting the integration code -->
+  <link rel="stylesheet"
+        href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+
   <style>
     body {
       display: flex;
@@ -71,7 +82,34 @@
 </script>
 
 <body>
-  <div>
+  <div class="container-fluid">
+    <div class="jumbotron">
+      <h1 class="display-4">Publisher Mode Demo</h1>
+      <p class="lead">This page contains the complete ad configuration</p>
+      <hr class="my-4">
+      <h3>Integration</h3>
+      <p>This code should be placed in the head of your page</p>
+      <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
+&lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
+&lt;!-- your ad tag --&gt;
+&lt;script async="async" src="{{domain}}<%= htmlWebpackPlugin.files.js[0] %>"&gt;&lt;/script&gt;</code></pre>
+
+      <p>In publisher mode the publisher site needs to trigger  the <code>requestAds()</code> method. This test pages executes this additional javascript</p>
+      <pre><code class="javascript">window.moli = window.moli || {que: []};
+window.moli.que.push(function (moliAdTag) {
+
+    // trigger ads
+    moliAdTag.requestAds();
+});</code></pre>
+
+      <h3>Moli Console</h3>
+      <p>You can get more details by opening the moli console.</p>
+      <button class="btn btn-success" onclick="window.moli.openConsole()">Open Moli Console</button>
+      <p>Or if you are developer type this into the javascript console</p>
+      <pre><code class="html hljs xml">moli.openConsole()</code></pre>
+
+    </div>
+
     <h1>Eager Loading AdSlot</h1>
     <div id="eager-loading-adslot"></div>
 
@@ -119,5 +157,10 @@
     <h1>Amazon A9 AdSlot</h1>
     <div id="a9-adslot"></div>
   </div>
+  <!-- update the {{domain}} variable in the integration example -->
+  <script>
+    const code = document.getElementById('integration-code');
+    code.innerText = code.innerText.replace('{{domain}}', window.location.href);
+  </script>
 </body>
 </html>
