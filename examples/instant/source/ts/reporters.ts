@@ -18,6 +18,14 @@ export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporti
       console.groupEnd();
       break;
     }
+    case 'a9Load': {
+      console.groupCollapsed('A9 Load Time');
+      console.log('name', metric.measurement.name);
+      console.log('startTime', Math.round(metric.measurement.startTime));
+      console.log('duration', Math.round(metric.measurement.duration));
+      console.groupEnd();
+      break;
+    }
     case 'ttfa': {
       console.groupCollapsed('Time to first Ad');
       console.log('visible at', Math.round(metric.measurement.startTime + metric.measurement.duration));

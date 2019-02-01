@@ -1087,6 +1087,7 @@ export namespace Moli {
    *
    * * `dfpLoad`    - measurement from `requestAds` to `finish`
    * * `prebidLoad` - measurement from `requestBids` to `bidsBackHandler` called
+   * * `a9Load`     - measurement from `fetchBids` to `bidsBackHandler` called
    * * `ttfa`       - Time-To-First-Ad measurement from `requestAds` to the first ad slot render call
    * * `ttfr`       - Time-To-FIrst-Render measurement from `requestAds` to first ad slot fully rendered
    * * `adslot`     - Contains multiple metrics for a single ad slot. See `AdSlotMetric` for more details.
@@ -1174,6 +1175,14 @@ export namespace Moli {
      *      console.groupEnd();
      *      break;
      *    }
+     * case 'a9Load': {
+     *      console.groupCollapsed('A9 Load Time');
+     *      console.log('name', metric.measurement.name);
+     *      console.log('startTime', Math.round(metric.measurement.startTime));
+     *      console.log('duration', Math.round(metric.measurement.duration));
+     *      console.groupEnd();
+     *      break;
+     *    }
      *    case 'ttfa': {
      *      console.groupCollapsed('Time to first Ad');
      *      console.log('visible at', Math.round(metric.measurement.startTime + metric.measurement.duration));
@@ -1217,7 +1226,7 @@ export namespace Moli {
     /**
      * Union type for all provided metric types.
      */
-    export type MetricType = 'dfpLoad' | 'prebidLoad' | 'ttfa' | 'ttfr' | 'adSlot' | 'adSlots';
+    export type MetricType = 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr' | 'adSlot' | 'adSlots';
 
     /**
      * Base interface for all provided metrics.
@@ -1245,7 +1254,7 @@ export namespace Moli {
       /**
        * All metrics that provide only a single measurement point.
        */
-      readonly type: 'dfpLoad' | 'prebidLoad' | 'ttfa' | 'ttfr';
+      readonly type: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr';
 
       /**
        * The measurement provided by the metric `type`

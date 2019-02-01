@@ -24,6 +24,20 @@ export class ReportingService {
    */
   private readonly isSample: boolean;
 
+  /**
+   * get the performance measure name for
+   * @param type
+   */
+  public static getSingleMeasurementMetricMeasureName(type: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): string {
+    switch (type) {
+      case 'dfpLoad': return 'dfp_load_time';
+      case 'prebidLoad': return 'prebid_load_time';
+      case 'a9Load': return 'a9_load_time';
+      case 'ttfa': return 'dfp_time_to_first_ad';
+      case 'ttfr': return 'dfp_time_to_first_render';
+    }
+  }
+
   constructor(
     private readonly performanceService: IPerformanceMeasurementService,
     private readonly config: Moli.reporting.ReportingConfig,
@@ -86,13 +100,23 @@ export class ReportingService {
    *        multiple times, which is why we need to add this information to the mark name.
    */
   public measureAndReportPrebidBidsBack(callIndex: number): void {
+    const measure = ReportingService.getSingleMeasurementMetricMeasureName('prebidLoad');
     this.performanceService.measure(
-      `prebid_load_time_${callIndex}`,
+      `${measure}_${callIndex}`,
       `prebid_requested_${callIndex}`,
       `prebid_bids_back_${callIndex}`
     );
 
-    const prebid = this.performanceService.getMeasure(`prebid_load_time_${callIndex}`);
+    // For the first request also store it in a better accessible field
+    if (callIndex === 1) {
+      this.performanceService.measure(
+        measure,
+        `prebid_requested_${callIndex}`,
+        `prebid_bids_back_${callIndex}`
+      );
+    }
+
+    const prebid = this.performanceService.getMeasure(`${measure}_${callIndex}`);
 
     if (prebid) {
       this.report({
@@ -116,15 +140,21 @@ export class ReportingService {
    *        multiple times, which is why we need to add this information to the mark name.
    */
   public measureAndReportA9BidsBack(callIndex: number): void {
-    this.performanceService.measure(`a9_load_time_${callIndex}`, `a9_requested_${callIndex}`, `a9_bids_back_${callIndex}`);
+    const measure = ReportingService.getSingleMeasurementMetricMeasureName('a9Load');
+    this.performanceService.measure(`${measure}_${callIndex}`, `a9_requested_${callIndex}`, `a9_bids_back_${callIndex}`);
 
-    const prebid = this.performanceService.getMeasure('prebid_load_time');
+    const a9 = this.performanceService.getMeasure(`${measure}_${callIndex}`);
 
-    if (prebid) {
+    // For the first request also store it in a better accessible field
+    if (callIndex === 1) {
+      this.performanceService.measure(measure, `a9_requested_${callIndex}`, `a9_bids_back_${callIndex}`);
+    }
+
+    if (a9) {
       this.report({
-        type: 'prebidLoad',
+        type: 'a9Load',
         pageRequestId: this.pageRequestId,
-        measurement: prebid
+        measurement: a9
       });
     }
   }
@@ -155,10 +185,11 @@ export class ReportingService {
         }
       });
     }).then(() => {
-      this.performanceService.measure('dfp_time_to_first_render', 'dfp_load_start', 'dfp_time_to_first_render_end');
+      const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfr');
+      this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_render_end');
 
 
-      const timeToFirstAd = this.performanceService.getMeasure('dfp_time_to_first_render');
+      const timeToFirstAd = this.performanceService.getMeasure(measure);
       if (timeToFirstAd) {
         this.report({
           type: 'ttfr',
@@ -182,10 +213,11 @@ export class ReportingService {
         }
       });
     }).then(() => {
-      this.performanceService.measure('dfp_time_to_first_ad', 'dfp_load_start', 'dfp_time_to_first_ad_end');
+      const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfa');
+      this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_ad_end');
 
 
-      const timeToFirstAd = this.performanceService.getMeasure('dfp_time_to_first_ad');
+      const timeToFirstAd = this.performanceService.getMeasure(measure);
       if (timeToFirstAd) {
         this.report({
           type: 'ttfa',
@@ -234,8 +266,9 @@ export class ReportingService {
   }
 
   private measureAndReportDfpLoadTime(): void {
-    this.performanceService.measure('dfp_load_time', 'dfp_load_start', 'dfp_load_end');
-    const dfpLoad = this.performanceService.getMeasure('dfp_load_time');
+    const measure = ReportingService.getSingleMeasurementMetricMeasureName('dfpLoad');
+    this.performanceService.measure(measure, 'dfp_load_start', 'dfp_load_end');
+    const dfpLoad = this.performanceService.getMeasure(measure);
     if (dfpLoad) {
       this.report({
         type: 'dfpLoad',
