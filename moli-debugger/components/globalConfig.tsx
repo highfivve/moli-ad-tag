@@ -281,7 +281,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         {<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
           <h4>
             {this.collapseToggle('performance')}
-            A9
+            Performance
           </h4>
 
           {this.state.expandSection.performance && <div>
