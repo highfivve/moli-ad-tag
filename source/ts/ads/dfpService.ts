@@ -103,7 +103,11 @@ export class DfpService {
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
         // initialize the reporting for non-lazy slots
-        .then(() => this.configureAdNetwork(config));
+        .then(() => this.configureAdNetwork(config))
+        .catch(error => {
+          this.logger.error('failed configuring gpt', error);
+          return Promise.reject(error);
+        });
 
     return Promise.all([ prebidReady, dfpReady ]).then(() => config);
   };
