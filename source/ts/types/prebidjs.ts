@@ -18,9 +18,8 @@ export namespace prebidjs {
     /**
      * Prebid version
      */
-    version: string;
+    readonly version: string;
 
-    adserverRequestSent: boolean;
 
     /**
      * The bidderSettings object provides a way to define some behaviors for the platform and specific adapters.
@@ -30,9 +29,26 @@ export namespace prebidjs {
     bidderSettings: IBidderSettings;
 
     /**
+     * Contains all currently active ad units.
+     *
+     * NOTE: this is an undocumented API and is only used to remove adUnits in a single page application
+     *       environment. If you upgrade prebid, make sure this API is still available.
+     *
+     * Works with prebid 1.38.0
+     */
+    readonly adUnits: IAdUnit[];
+
+    /**
      * Define ad units and their corresponding header bidding bidders' tag IDs.
      */
     addAdUnits(adUnits: IAdUnit[]): void;
+
+    /**
+     * Remove adUnit from the pbjs configuration
+     *
+     * @param adUnitCode - the adUnitCode to remove
+     */
+    removeAdUnit(adUnitCode: string): void;
 
     /**
      * Set query string targeting on all GPT ad units. The logic for deciding query strings is described

@@ -1766,12 +1766,88 @@ describe('DfpService', () => {
     });
   });
 
-  describe('setting key/value pairs', () => {
+  describe('destroy ad slots', () => {
 
-    beforeEach(() => {
-      window.googletag = googletagStub;
-      window.pbjs = pbjsStub;
+    const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+      adUnit: {
+        code: 'eager-loading-adslot',
+        mediaTypes: {
+          banner: {
+            sizes: [ [ 605, 165 ] ]
+          }
+        },
+        bids: [ {
+          bidder: prebidjs.AppNexusAst,
+          params: {
+            placementId: '1234'
+          }
+        } ]
+      }
+    };
+
+    const adSlot: Moli.AdSlot = {
+      position: 'in-page',
+      domId: 'eager-loading-adslot',
+      behaviour: 'eager',
+      adUnitPath: '/123/eager',
+      sizes: [ 'fluid', [ 605, 165 ] ]
+    };
+
+
+    it('should destroy all gpt ad slots', () => {
+      const dfpService = newDfpService();
+
+      const destroySlotsSpy = sandbox.spy(window.googletag, 'destroySlots');
+
+
+      const config = {
+        slots: [ adSlot ],
+        logger: noopLogger,
+        consent: consentConfig
+      };
+
+      return dfpService.initialize(config)
+        .then(() => dfpService.requestAds(config))
+        .then(() => dfpService.destroyAdSlots(config))
+        .then(() => {
+          expect(destroySlotsSpy).to.have.been.calledOnce;
+          expect(destroySlotsSpy).to.have.been.calledOnceWithExactly();
+
+        });
     });
+
+
+    it('should remove all prebid adUnits', () => {
+      const dfpService = newDfpService();
+
+      const removeAdUnitSpy = sandbox.spy(window.pbjs, 'removeAdUnit');
+
+
+      const config = {
+        slots: [     ],
+        logger: noopLogger,
+        consent: consentConfig,
+      };
+
+      // initialize the internal adUnits data structure of prebid
+      (window.pbjs as any).adUnits = [
+        { code: 'ad-1' },
+        { code: 'ad-2' }
+      ];
+
+      return dfpService.initialize(config)
+        .then(() => dfpService.requestAds(config))
+        .then(() => dfpService.destroyAdSlots(config))
+        .then(() => {
+          expect(removeAdUnitSpy).to.have.been.calledTwice;
+          expect(removeAdUnitSpy.firstCall).calledWithExactly('ad-1');
+          expect(removeAdUnitSpy.secondCall).calledWithExactly('ad-2');
+        });
+    });
+
+  });
+
+  describe('setting key/value pairs', () => {
 
     it('should set correct targeting values', () => {
       const dfpService = newDfpService();

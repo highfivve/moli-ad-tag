@@ -6,9 +6,10 @@ import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag, moli } from '../../../source/ts/ads/moliGlobal';
 import { googletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { consentConfig, noopLogger } from '../stubs/moliStubs';
+import { consentConfig, noopLogger, emptyConfig } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
+import ISinglePageApp = Moli.state.ISinglePageApp;
 
 // setup sinon-chai
 use(sinonChai);
@@ -32,7 +33,6 @@ describe('moli', () => {
   afterEach(() => {
     sandbox.reset();
   });
-
 
 
   it('should set the window.moli tag', () => {
@@ -84,6 +84,23 @@ describe('moli', () => {
         expect(state.state).to.be.eq('configurable');
         const configurableState: IConfigurable = state as IConfigurable;
         expect(configurableState.initialize).to.be.true;
+      });
+    });
+
+    it('should stay in spa state if single page app is enabled and requestAds is called multiple times', () => {
+      const adTag = createMoliTag();
+      adTag.enableSinglePageApp();
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      expect(adTag.getState()).to.be.eq('configured');
+      return adTag.requestAds().then(state => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        return adTag.requestAds();
+      }).then((state) => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
       });
     });
   });

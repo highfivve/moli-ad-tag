@@ -7,6 +7,7 @@ import IStateMachine = Moli.state.IStateMachine;
 import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
+import ISinglePageApp = Moli.state.ISinglePageApp;
 
 const getLogger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
   return logger ? logger : {
@@ -28,6 +29,7 @@ export const createMoliTag = (): Moli.MoliTag => {
   let state: IStateMachine = {
     state: 'configurable',
     initialize: false,
+    isSinglePageApp: false,
     keyValues: {},
     labels: [],
     reporting: {
@@ -38,7 +40,7 @@ export const createMoliTag = (): Moli.MoliTag => {
   function setTargeting(key: string, value: string | string[]): void {
     switch (state.state) {
       case 'configurable': {
-        state.keyValues[key] = value;
+        state.keyValues[ key ] = value;
         break;
       }
       case 'configured': {
@@ -77,7 +79,7 @@ export const createMoliTag = (): Moli.MoliTag => {
             ...state.config,
             targeting: {
               keyValues: (state.config.targeting ? state.config.targeting.keyValues : {}),
-              labels: [label]
+              labels: [ label ]
             }
           };
         }
@@ -147,7 +149,7 @@ export const createMoliTag = (): Moli.MoliTag => {
             ...state.config.reporting,
             // a reporter is added without a sampling size being configured, we set the sampling rate to 0
             sampleRate: state.config.reporting ? state.config.reporting.sampleRate : 0,
-            reporters: [...(state.config.reporting ? state.config.reporting.reporters : []), reporter]
+            reporters: [ ...(state.config.reporting ? state.config.reporting.reporters : []), reporter ]
           }
         };
         break;
@@ -223,11 +225,12 @@ export const createMoliTag = (): Moli.MoliTag => {
             reporting: {
               ...config.reporting,
               sampleRate: state.reporting.sampleRate ? state.reporting.sampleRate : (config.reporting && config.reporting.sampleRate) ? config.reporting.sampleRate : 0,
-              reporters: [...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters]
+              reporters: [ ...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters ]
             },
             logger: state.logger || config.logger
           },
-          hooks: state.hooks
+          hooks: state.hooks,
+          isSinglePageApp: state.isSinglePageApp
         };
         if (shouldInitialize) {
           requestAds();
@@ -253,7 +256,25 @@ export const createMoliTag = (): Moli.MoliTag => {
     }
   }
 
-  function requestAds(): Promise<IConfigurable | IFinished | IError> {
+  function enableSinglePageApp(): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.isSinglePageApp = true;
+        break;
+      }
+      case 'configured': {
+        state.isSinglePageApp = true;
+        break;
+
+      }
+      default : {
+        getLogger(state.config.logger).error('Trying enable single page app. Already configured.', state.config);
+        break;
+      }
+    }
+  }
+
+  function requestAds(): Promise<IConfigurable | ISinglePageApp | IFinished | IError> {
     switch (state.state) {
       case 'configurable': {
         state.initialize = true;
@@ -268,26 +289,65 @@ export const createMoliTag = (): Moli.MoliTag => {
         if (state.hooks) {
           state.hooks.beforeRequestAds(config);
         }
-        state = {
-          state: 'requestAds',
-          config: config
-        };
-        return dfpService.initialize(config)
-          .then(config => dfpService.requestAds(config))
-          .then(() => {
+        // handle single page application case
+        if (state.isSinglePageApp) {
+          // initialize first and then make the initial requestAds() call
+          const initialized = dfpService.initialize(config).then(() => config);
+          const currentState: ISinglePageApp = {
+            state: 'spa',
+            config: config,
+            refreshAds: dfpService.requestAds,
+            destroyAdSlots: dfpService.destroyAdSlots,
+            initialized
+          };
+          state = currentState;
+
+          return initialized
+            .then(() => dfpService.requestAds(config))
+            .then(() => currentState);
+
+        } else {
           state = {
-            state: 'finished',
+            state: 'requestAds',
             config: config
           };
-          return Promise.resolve(state);
-        }).catch((error) => {
-           state = {
-             state: 'error',
-             config: config,
-             error: error
-           };
-           return Promise.resolve(state);
-        });
+          return dfpService.initialize(config)
+            .then(config => dfpService.requestAds(config))
+            .then(() => {
+              state = {
+                state: 'finished',
+                config: config
+              };
+              return Promise.resolve(state);
+            }).catch((error) => {
+              state = {
+                state: 'error',
+                config: config,
+                error: error
+              };
+              return Promise.resolve(state);
+            });
+        }
+      }
+      // in the single page application state we first need to destroy the current setup
+      case 'spa': {
+        const { initialized, refreshAds, destroyAdSlots } = state;
+        return initialized
+          .then(config => destroyAdSlots(config))
+          .then(config => {
+            refreshAds(config);
+            return config;
+          })
+          .then((config) => {
+            state = {
+              state: 'spa',
+              refreshAds,
+              destroyAdSlots,
+              config,
+              initialized
+            };
+            return state;
+          });
       }
       case 'requestAds': {
         getLogger(state.config.logger).error('Trying to requestAds twice. Already requesting ads.');
@@ -357,6 +417,7 @@ export const createMoliTag = (): Moli.MoliTag => {
     beforeRequestAds: beforeRequestAds,
     getConfig: getConfig,
     configure: configure,
+    enableSinglePageApp: enableSinglePageApp,
     requestAds: requestAds,
     getState: getState,
     openConsole: openConsole
@@ -367,7 +428,7 @@ export const createMoliTag = (): Moli.MoliTag => {
 // ====== Initialization =======
 // =============================
 
-const queueCommands = window.moli ? [...window.moli.que as Moli.MoliCommand[]] || [] : [];
+const queueCommands = window.moli ? [ ...window.moli.que as Moli.MoliCommand[] ] || [] : [];
 
 /**
  * Only export the public API and hide properties and methods in the DFP Service

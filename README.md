@@ -18,6 +18,7 @@ Moli contains the "glue code" or business logic to render an `adConfiguration`.
 - Metrics
   - general (time-to-first-ad, dfp load time)
   - ad slot specific metrics (time to request, render and content loaded)
+- Single Page Application mode
 
 ## Example projects
 

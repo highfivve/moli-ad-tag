@@ -167,6 +167,22 @@ export class DfpService {
 
   };
 
+  public destroyAdSlots = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
+    if (!this.initialized) {
+      return Promise.reject('Not initialized yet.');
+    }
+
+    return Promise.resolve()
+      .then(() => window.googletag.destroySlots())
+      .then(() => {
+        const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
+        const pbjs = window[prebidGlobal];
+        this.logger.debug(`Destroying prebid adUnits`, pbjs.adUnits);
+        pbjs.adUnits.forEach(adUnit => pbjs.removeAdUnit(adUnit.code));
+      })
+      .then(() => config);
+  };
+
   /**
    * Lazy loaded slots.
    *

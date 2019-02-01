@@ -13,3 +13,5 @@ export const consentConfig: Moli.consent.ConsentConfig = {
     value: 0
   }
 };
+
+export const emptyConfig: Moli.MoliConfig = { slots: [], consent: consentConfig, logger: noopLogger };

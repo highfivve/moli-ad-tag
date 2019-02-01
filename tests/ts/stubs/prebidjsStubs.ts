@@ -6,8 +6,9 @@ export const pbjsStub: prebidjs.IPrebidJs = {
     push: (callback: Function) => { callback(); }
   },
   version: 'none',
+  adUnits: [],
   addAdUnits: (_adUnits: prebidjs.IAdUnit[]): void => { return; },
-  adserverRequestSent: false,
+  removeAdUnit: (_adUnitCode: string): void => { return; },
   bidderSettings: {},
   getAdserverTargeting: (): Object => { return {}; },
   requestBids: (requestParam?: prebidjs.IRequestObj): void => {

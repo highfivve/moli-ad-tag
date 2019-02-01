@@ -15,6 +15,34 @@ export namespace Moli {
 
   export type MoliCommand = (moli: MoliTag) => void;
 
+  /**
+   * # Moli Ad Tag
+   *
+   * This defines the publisher facing API. When the ad tag is configured in _publisher mode_, which means it doesn't fire
+   * `requestAds()` immedetialy after being loaded, publishers can customize the integration.
+   *
+   *
+   * ## Usage
+   *
+   * The general usage pattern is like `gpt` or `prebid`. If the ad tag is not yet available, commands can be pushed to
+   * a que that will eventually be processed.
+   *
+   * @example minimal example on how to request ads <br><br>
+   *
+   * ```
+   * window.moli = window.moli || { que: [] };
+   * window.moli.que.push(function(moliAdTag) {
+   *   moliAdTag.requestAds()
+   * });
+   * ```
+   *
+   * @see [[state]] module for more information on how molis internal flow works
+   * @see [[behaviour]] module for more information on slot loading behaviour
+   * @see [[consent]] module for more information on GDPR / DSVGO configuration options
+   * @see [[reporting]] module for more information on how access metrics provided by moli
+   * @see [[MoliLogger]] on how to configure your own logging with moli
+   *
+   */
   export interface MoliTag {
 
     /**
@@ -47,6 +75,7 @@ export namespace Moli {
      * Set a custom logger that should be used for logging.
      *
      * @param logger
+     * @see [[MoliLogger]]
      */
     setLogger(logger: MoliLogger): void;
 
@@ -61,6 +90,7 @@ export namespace Moli {
      * Add a reporter
      *
      * @param reporter the reporter function
+     * @see [[reporting]] module for more information on how access metrics provided by moli
      */
     addReporter(reporter: Moli.reporting.Reporter): void;
 
@@ -74,19 +104,79 @@ export namespace Moli {
 
 
     /**
+     * **WARNING**
+     * This method is called by the ad tag and can only be called once. If the publisher calls
+     * calls `configure` then the ad configuration provided by the ad tag may not be used.
+     *
+     *
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
      */
     configure(config: MoliConfig): void;
 
+    /**
+     * Enable the single page application mode.
+     *
+     * ## Usage
+     *
+     * If you enable the `Single Page App` mode, moli allows you to call `moli.requestAds()` multiple times.
+     * This will
+     *
+     * - Remove all previous ad slots
+     * - Trigger the full requestAds cycle meaning that
+     *   - all slots will be checked for availability
+     *   - prebid ad units will be configured
+     *
+     * It's publishers responsibility to trigger the `requestAds()` method whenever necessary. Usually the
+     * javascript SPA framework has a proper routing API that enables you to fire events on arbitrary routing
+     * events. Make sure that the `DOM` is fully materialized so the ad tag can find the ad slots.
+     *
+     * We recommend using the moli que to issue commands to moli due to the asynchronous nature. A minimal,
+     * vanilla javascript example would look like this:
+     *
+     * @example On navigation change execute <br><br>
+     * ```
+     * window.moli = window.moli || { que: [] };
+     * window.moli.que.push(function(moliAdTag) {
+     *   moliAdTag.requestAds()
+     * });
+     * ```
+     *
+     *
+     * ## Unsupported Features
+     *
+     * The single page application mode doesn't support all features that are provided by the static website mode.
+     *
+     * - `lazy` and `refreshable` slot loading behaviour is not support. This is due to the fact that we need to
+     *    cleanup all the event listeners initialized by these slots on each `requestAds` call. This may come in
+     *    later versions.
+     *
+     * - `targeting` and `labels` on page changes. This means that the initial targetings and labels you pushed
+     *    into moli with `addLabel(label)` and `setTargeting(key, value)` will be set for the entire lifetime of
+     *    the page.
+     *    Note that the dynamic size configuration will be evaluated on each `requestAds()`
+     *
+     *
+     */
+    enableSinglePageApp(): void;
+
 
     /**
      * Start requesting ads as soon as the tag has been configured.
+     *
+     * The behaviour differs if `enableSinglePageApp()` has been called.
+     * @see [[enableSinglePageApp]]
      */
-    requestAds(): Promise<state.IConfigurable | state.IFinished | state.IError>;
+    requestAds(): Promise<state.IConfigurable | state.ISinglePageApp | state.IFinished | state.IError>;
 
     /**
+     * Returns the  current state of the configuration. This configuration may not be final!
+     * If you need to access the final configuration use the `beforeRequestAds` method to configure
+     * a callback.
+     *
+     *
      * @returns the configuration used to initialize the ads. If not yet initialized, undefined.
+     * @see [[beforeRequestAds]]
      */
     getConfig(): MoliConfig | undefined;
 
@@ -96,6 +186,8 @@ export namespace Moli {
     getState(): state.States;
 
     /**
+     * Open the moli debug console.
+     *
      * @param path [optional] full path to the moli debug script.
      * Request the debug bundle and start the debug mode.
      */
@@ -109,10 +201,26 @@ export namespace Moli {
    * The state machine is defined as:
    *
    * <pre style="font-size:10px;">
-   *                                                                                        ads ok        +----------+
-   *                                                                                                      |          |
-   *                                                                                     +------------>   | finished |
-   *                                                                                     |                |          |
+   *                                                                                   requestAds()
+   *
+   *                                                                                   +----------+
+   *                                                                                   |          |
+   *                                                                                   |          |
+   *                                                                                   |          v
+   *                                                                                   |
+   *                                         +------------+     requestAds()     +-----+------------------+
+   *                                         |            |                      |                        |
+   *                                         | configured |  +---------------->  | Single Page App (spa)  |
+   *                                         |            |                      |                        |
+   *                                         +------------+                      +------------------------+
+   *
+   *                                               ^
+   *                                               |
+   *                                               |  enableSinglePageApp()
+   *                                               |                                        ads ok        +----------+
+   *                                               |                                                      |          |
+   *                                               |                                     +------------>   | finished |
+   *                                               +                                     |                |          |
    *                                                                                     |                +----------+
    * +--------------+    configure(config)   +------------+      requestAds()     +------+-----+
    * |              |                        |            |                       |            |
@@ -124,6 +232,7 @@ export namespace Moli {
    *   |         |                            |         |                                +------------->  | error    |
    *   +  setXYZ +                            +  setXYZ +                                                 |          |
    *      addXYZ                                 addXYZ                                     ads not ok    +----------+
+   *
    * </pre>
    *
    * Each state has allowed operations and transitions
@@ -162,6 +271,13 @@ export namespace Moli {
    * 1. After all ads have been loaded successfully: `requestAds -> finished`
    * 1. After an error during ad loading: `requestAds -> error`
    *
+   * ### Single Page App state
+   *
+   * No changes are allowed anymore. The configuration is frozen. All `addXYZ` and `setXYZ`
+   * calls will fail. This restriction may be lifted in future versions.
+   *
+   * Only called allowed is `requestAds()`, which refreshes the current ads and transitions
+   * into the `Single Page App` state effectively staying in the same state.
    *
    * ### Finished state
    *
@@ -174,7 +290,7 @@ export namespace Moli {
    */
   export namespace state {
 
-    export type States = 'configurable' | 'configured' | 'requestAds' | 'finished' | 'error';
+    export type States = 'configurable' | 'configured' | 'spa' | 'requestAds' | 'finished' | 'error';
 
     /**
      * Base interface for all states.
@@ -194,6 +310,12 @@ export namespace Moli {
        * If set to false, nothing will initialize until moli.initialize is called
        */
       initialize: boolean;
+
+      /**
+       * If set to true the `requestAds()` call will keep the app in the [[ISinglePageApp]]
+       * If set to false the `requestAds() call will transition the state to [[IRequestAds]]
+       */
+      isSinglePageApp: boolean;
 
       /**
        * Additional key-values. Insert with
@@ -252,6 +374,12 @@ export namespace Moli {
        * Add hooks on specific state changes.
        */
       hooks?: IHooks;
+
+      /**
+       * If set to true the `requestAds()` call will keep the app in the [[ISinglePageApp]]
+       * If set to false the `requestAds() call will transition the state to [[IRequestAds]]
+       */
+      isSinglePageApp: boolean;
     }
 
     /**
@@ -267,6 +395,38 @@ export namespace Moli {
        * Configuration is now immutable
        */
       readonly config: Moli.MoliConfig;
+
+    }
+
+    /**
+     * Publisher enabled the single page application mode.
+     */
+    export interface ISinglePageApp extends IState {
+      readonly state: 'spa';
+
+      /**
+       * Immutable configuration. This is the same configuration returned by
+       * the initialized Promise.
+       */
+      readonly config: Moli.MoliConfig;
+
+      /**
+       * Refresh ads
+       */
+      readonly refreshAds: (config: Moli.MoliConfig) => void;
+
+      /**
+       * Destroy all ad slots and prebid ad units
+       *
+       * @return promise resolves when all ad slots have been destroyed
+       */
+      readonly destroyAdSlots: (config: Moli.MoliConfig) => Promise<Moli.MoliConfig>;
+
+      /**
+       * stores the information if the moli ad tag is configured yet
+       */
+      readonly initialized: Promise<Moli.MoliConfig>;
+
     }
 
     /**
@@ -301,7 +461,7 @@ export namespace Moli {
     /**
      * All valid states
      */
-    export type IStateMachine = IConfigurable | IConfigured | IRequestAds | IFinished | IError;
+    export type IStateMachine = IConfigurable | IConfigured | ISinglePageApp | IRequestAds | IFinished | IError;
 
     export interface IHooks {
       /**
@@ -1190,10 +1350,51 @@ export namespace Moli {
 
 
   /**
-   * ## Logger interface
+   * # Logger interface
    *
    * The default logging implementation uses `window.console` as the output.
    * Publishers may plugin their own logging implementation.
+   *
+   * ## Usage
+   *
+   * The ad tag needs to be in _publisher mode_
+   *
+   * ```
+   * window.moli = window.moli || { que: [] };
+   * window.moli.que.push(function(moliAdTag) {
+   *   moliAdTag.setLogger(logger)
+   * });
+   * ```
+   *
+   * @example Noop logger <br><br>
+   * ```
+   * const noopLogger = {
+   *    debug: () => { return; },
+   *    info: () => { return; },
+   *    warn: () => { return; },
+   *    error: () => { return; }
+   * };
+   *
+   * window.moli = window.moli || { que: [] };
+   * window.moli.que.push(function(moliAdTag) {
+   *   moliAdTag.setLogger(noopLogger)
+   * });
+   * ```
+   *
+   * @example console logger <br><br>
+   * ```
+   * const noopLogger = {
+   *    debug: window.debug,
+   *    info: window.info,
+   *    warn: window.info,
+   *    error: window.info
+   * };
+   *
+   * window.moli = window.moli || { que: [] };
+   * window.moli.que.push(function(moliAdTag) {
+   *   moliAdTag.setLogger(noopLogger)
+   * });
+   * ```
    *
    */
   export interface MoliLogger {
