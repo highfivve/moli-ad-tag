@@ -1,4 +1,5 @@
 import * as preact from 'preact';
+import { ReportingService } from '../../source/ts/ads/reportingService';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { SizeConfigDebug } from './sizeConfigDebug';
@@ -26,6 +27,7 @@ type IGlobalConfigState = {
     prebid: boolean;
     a9: boolean,
     sizeConfig: boolean;
+    performance: boolean;
   };
   messages: Message[];
   browserResized: boolean;
@@ -48,9 +50,10 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       expandSection: {
         slots: false,
         targeting: true,
-        prebid: true,
-        a9: true,
-        sizeConfig: true
+        prebid: false,
+        a9: false,
+        sizeConfig: false,
+        performance: true
       },
       messages: [],
       browserResized: false,
@@ -275,6 +278,22 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {this.consent(config.consent)}
         </div>
 
+        {<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
+          <h4>
+            {this.collapseToggle('performance')}
+            A9
+          </h4>
+
+          {this.state.expandSection.performance && <div>
+            {this.singlePerformanceMeasure('ttfa')}
+            {this.singlePerformanceMeasure('ttfr')}
+            {this.singlePerformanceMeasure('prebidLoad')}
+            {this.singlePerformanceMeasure('a9Load')}
+            {this.singlePerformanceMeasure('dfpLoad')}
+          </div>}
+        </div>
+        }
+
         <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
         <h4>Moli configuration issues and warnings</h4>
           {this.state.messages.map(message => <div
@@ -391,8 +410,25 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig'>): JSX.Element => {
-    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig'>) => {
+  private singlePerformanceMeasure = (name: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): JSX.Element => {
+    const measure = ReportingService.getSingleMeasurementMetricMeasureName(name);
+    const results = window.performance.getEntriesByName(measure, 'measure');
+    const entry = results[0];
+    if (entry) {
+      const color: 'green' | 'yellow' | 'red' = entry.duration > 5000 ? 'red' : (entry.duration > 2000 ?  'yellow' : 'green');
+      return <div className="MoliDebug-tagContainer">
+        <span className="MoliDebug-tagLabel">{name}</span>
+        <Tag variant={color}>{entry.duration.toFixed(0)} ms</Tag>
+      </div>;
+    }
+    return <div className="MoliDebug-tagContainer">
+      <span className="MoliDebug-tagLabel">{name}</span>
+      <Tag variant="blue">no entry</Tag>
+    </div>;
+  };
+
+  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance'>): JSX.Element => {
+    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance'>) => {
       const oldVal = this.state.expandSection[ section ];
       this.setState({ expandSection: { ...this.state.expandSection, [ section ]: !oldVal } });
     };

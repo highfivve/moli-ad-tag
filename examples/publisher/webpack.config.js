@@ -44,7 +44,7 @@ module.exports = (_, argv) => {
     },
     plugins: [
       new HtmlWebpackPlugin({
-        title: 'Publisher / Lazy Init - Publisher Demo Page',
+        title: 'Publisher mode - Publisher Demo Page',
         template: 'demo/index.html'
       })
     ]
