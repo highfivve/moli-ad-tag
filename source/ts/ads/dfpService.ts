@@ -624,7 +624,8 @@ export class DfpService {
     }
 
     // increase the a9 request count
-    const currentRequestCount = this.a9RequestCount++;
+    this.a9RequestCount = this.a9RequestCount + 1;
+    const currentRequestCount = this.a9RequestCount;
 
     return new Promise<void>(resolve => {
       reportingService.markA9fetchBids(currentRequestCount);
