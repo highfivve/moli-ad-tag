@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"></script>
+
+    <!-- making things prettier -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+    <!-- highlighting the integration code -->
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+
+<!-- -------------------- -->
+<!-- MOLI SINGLE PAGE APP -->
+<!-- -------------------- -->
+
+<script>
+  // que setup
+  window.moli = window.moli || {que: []};
+
+  // push commands
+
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.setTargeting('foo', 'bar');
+    moliAdTag.setTargeting('version', '1.2.3');
+  });
+
+  // labels
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.addLabel('criteo');
+
+
+    // enable spa mode
+    moliAdTag.enableSinglePageApp();
+
+    moliAdTag.requestAds();
+  });
+
+
+</script>
+
+<body>
+<div class="container-fluid">
+    <div class="jumbotron">
+        <h1 class="display-4">Single Page App Demo</h1>
+        <p class="lead">This page contains the complete ad configuration</p>
+        <hr class="my-4">
+        <h3>Integration</h3>
+        <p>This code should be placed in the head of your page</p>
+        <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
+&lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
+&lt;!-- your ad tag --&gt;
+&lt;script async="async" src="{{domain}}<%= htmlWebpackPlugin.files.js[0] %>"&gt;&lt;/script&gt;</code></pre>
+
+        <p>Single Page App uses the publisher mode. This test pages executes this additional javascript</p>
+        <pre><code class="javascript">window.moli = window.moli || {que: []};
+window.moli.que.push(function (moliAdTag) {
+    // enable spa mode
+    moliAdTag.enableSinglePageApp();
+
+    // trigger ads
+    moliAdTag.requestAds();
+});</code></pre>
+
+        <h3>Moli Console</h3>
+        <p>You can get more details by opening the moli console.</p>
+        <button class="btn btn-success" onclick="window.moli.openConsole()">Open Moli Console</button>
+        <p>Or if you are developer type this into the javascript console</p>
+        <pre><code class="html hljs xml">moli.openConsole()</code></pre>
+
+        <h3>Refresh ads on navigation changes</h3>
+        <p>The single page application of the publisher needs to take care of refreshing the ads, when ever
+        the user changes the page. This is done by call the <code>window.moli.requestAds()</code> method. Due
+        to the asynchronous implementation the publisher should always init and push to the command queue.</p>
+
+        <pre><code class="javascript">window.moli = window.moli || {que: []};
+window.moli.que.push(function (moliAdTag) {
+    // refresh ads on navigation change
+    moliAdTag.requestAds();
+});</code> </pre>
+
+        <button class="btn btn-primary" onclick="moli.requestAds()">Refresh Ads</button>
+
+    </div>
+
+
+    <h1>Eager Loading AdSlot</h1>
+    <div id="eager-loading-adslot"></div>
+
+    <hr>
+
+    <h1>Prebid AdSlot</h1>
+    <div id="prebid-adslot"></div>
+
+    <hr>
+
+    <h1>Amazon A9 AdSlot</h1>
+    <div id="a9-adslot"></div>
+</div>
+<!-- update the {{domain}} variable in the integration example -->
+<script>
+  const code = document.getElementById('integration-code');
+  code.innerText = code.innerText.replace('{{domain}}', window.location.href);
+</script>
+</body>
+</html>
