@@ -535,6 +535,7 @@ export class DfpService {
     window.apstag.init({
       pubID: config.a9.pubID,
       adServer: 'googletag',
+      bidTimeout: config.a9.timeout,
       gdpr: {
         cmpTimeout: config.a9.cmpTimeout
       }
@@ -636,8 +637,7 @@ export class DfpService {
             slotName: moliSlot.adUnitPath,
             sizes: filterSupportedSizes(moliSlot.sizes).filter(this.isFixedSize)
           };
-        }),
-        timeout: config.a9 ? config.a9.timeout : 1000
+        })
       }, (_bids: Object[]) => {
         reportingService.measureAndReportA9BidsBack(currentRequestCount);
         window.apstag.setDisplayBids();

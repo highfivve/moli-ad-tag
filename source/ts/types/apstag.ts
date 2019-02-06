@@ -51,6 +51,11 @@ export namespace apstag {
     adServer: 'googletag' | 'appnexus';
 
     /**
+     * Default timeout for callback function on fetchBids callback
+     */
+    bidTimeout?: number;
+
+    /**
      * Settings for the General Data Protection Regulation (GDPR) (EU)
      * This section provides information on how to provide information on user consent
      * to your bidders in the Unified Ad Marketplace and Transparent Ad Marketplace,
@@ -68,6 +73,29 @@ export namespace apstag {
        */
       cmpTimeout?: number;
     };
+
+    /**
+     * Key value pairs to associate with the bid request(s) (values can be strings, arrays, or objects).
+     *
+     * NOTE: we don't support objects at the moment.
+     *
+     * An object containing key values to include on the bid request(s) if desired, up to 200 characters total.
+     * These key value pairs will be passed to all Transparent Ad Marketplace bidders as part of the OpenRTB request,
+     * in the site.keywords field. Example use cases:
+     *
+     * - Shopping Insights Sections: To get section-level data in Shopping Insights,
+     *   add param `{si_section: “Section Name”}`. Some examples of common sections
+     *   are – Food, Travel, Lifestyle, Pets, Family, Technology etc.
+     * - PMP deals: To set up keyword-based PMP deals with a TAM bidder (e.g. an SSP),
+     *   this can be used to pass key-value pairs to the SSP. This can include any 1st
+     *   party data or inventory classification you may wish to share with your bidders.
+     *   Example `{gender: "male", section: "Homepage"}` etc. Note that in the openRTB
+     *   `site.keywords` field, these will be formatted as a single string of
+     *   comma-separated key-values as: `"gender=male,section=homepage"`.
+     */
+    params?: {
+      [ key: string ]: string | string[];
+    };
   }
 
   export interface IBidConfig {
@@ -80,7 +108,7 @@ export namespace apstag {
      * How many milliseconds to wait for apstag.fetchBids(bidConfig, callback) response before executing the callback.
      * Supersedes the config.bidTimeout value set in apstag.init().
      */
-    timeout?: number;
+    bidTimeout?: number;
   }
 
   export interface ISlot {

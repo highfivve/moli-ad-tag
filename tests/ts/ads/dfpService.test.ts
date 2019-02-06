@@ -182,6 +182,7 @@ describe('DfpService', () => {
           expect(initSpy).to.be.calledOnceWithExactly({
             pubID: 'pub-123',
             adServer: 'googletag',
+            bidTimeout: 123,
             gdpr: {
               cmpTimeout: 555
             }
@@ -776,7 +777,7 @@ describe('DfpService', () => {
           expect(bidConfig.slots[ 0 ].slotID).to.equal('eager-loading-adslot');
           expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/eager');
           expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
-          expect(bidConfig.timeout).to.equal(666);
+          expect(bidConfig.bidTimeout).to.be.undefined;
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
@@ -933,7 +934,7 @@ describe('DfpService', () => {
           expect(bidConfig.slots[ 0 ].slotID).to.equal('lazy-loading-adslot');
           expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/lazy');
           expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
-          expect(bidConfig.timeout).to.equal(666);
+          expect(bidConfig.bidTimeout).to.be.undefined;
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
@@ -1135,7 +1136,7 @@ describe('DfpService', () => {
           expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
           expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
           expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
-          expect(bidConfig.timeout).to.equal(666);
+          expect(bidConfig.bidTimeout).to.be.undefined;
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
@@ -1158,7 +1159,7 @@ describe('DfpService', () => {
           expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
           expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
           expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
-          expect(bidConfig.timeout).to.equal(666);
+          expect(bidConfig.bidTimeout).to.be.undefined;
 
           expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
