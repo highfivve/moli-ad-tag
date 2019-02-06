@@ -582,7 +582,7 @@ export namespace prebidjs {
        *    4: ORMMA
        *    5: MRAID 2.0
        */
-      readonly frameworks: Array<0 | 1 | 2 | 3 | 4 | 5>;
+      readonly frameworks?: Array<0 | 1 | 2 | 3 | 4 | 5>;
     };
 
   }
