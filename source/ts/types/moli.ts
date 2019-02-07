@@ -919,11 +919,11 @@ export namespace Moli {
   }
 
   /**
-   * ## Consent Management
+   * # Consent Management
    *
    * GDPR compliant consent management configuration.
    *
-   * ### GPT - Google Publisher Tag
+   * ## GPT - Google Publisher Tag
    *
    * The [PersonalizedAdsProvider](#personalizedadsprovider) configures the `setNonPersonalizedAds()`
    * method call on the `PubAdsService`.
@@ -934,7 +934,8 @@ export namespace Moli {
    * - [Cookie](/interfaces/_moli_.moli.consent.cookie.html) - based on a cookie
    * - [CMP](/interfaces/_moli_.moli.consent.cmp.html) - use an IAB CMP API
    *
-   * ### Prebid
+   * ## Prebid
+   *
    * Prebid comes with its IAB compliant consent management framework. Make sure you have the
    * `ConsentManagement` module. This must be in the `modules.json`.
    *
@@ -948,12 +949,24 @@ export namespace Moli {
    *
    *
    * @see [Prebid GDPR ConsentManagement Module](https://prebid.org/dev-docs/modules/consentManagement.html)
+   * @see [[ConsentConfig]] for the overall configuration options
+   * @see [[PersonalizedAdsProvider]] for DFP consent configuration options
    *
    */
   export namespace consent {
 
     /**
-     * Top level consent management configuration.
+     * # Consent Configuration
+     *
+     * This object contains all relevant information for configuring consent. This is a very crucial part
+     * of our ad setup as the consent rate determines the overall performance of all partners.
+     *
+     * ## Personalized Ads Provider
+     *
+     * Configure the consent management for DFP.
+     *
+     *
+     * @see [[PersonalizedAdsProvider]] for DFP consent management
      */
     export interface ConsentConfig {
 
@@ -985,8 +998,6 @@ export namespace Moli {
      *   value: 0
      * }
      * ```
-     *
-     *
      *
      *
      */
