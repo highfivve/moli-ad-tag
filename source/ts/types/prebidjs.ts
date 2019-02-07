@@ -947,7 +947,7 @@ export namespace prebidjs {
         /**
          * Autoplay is the default behavior where 1=autoplay and 0=user or publisher initiated.
          */
-        readonly autoplay: 0 | 1;
+        readonly autoplay?: 0 | 1;
 
         /**
          * The desired width of the video ad placement. Requires `content_height` to also be set.
