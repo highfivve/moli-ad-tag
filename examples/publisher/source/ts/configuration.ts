@@ -48,10 +48,7 @@ const spotxBid = (channelId: string, slot: string): prebidjs.ISpotXBid => {
       ad_unit: 'outstream',
       outstream_options: {
         slot: slot,
-        custom_override: {
-          content_width: '605',
-          content_height: '340'
-        }
+        playersize_auto_adapt: true
       }
     },
     labelAll: [ prebidjs.Spotx ]
