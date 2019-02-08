@@ -40,6 +40,35 @@ const unrulyBid = (siteId: number, targetingUUID: string): prebidjs.IUnrulyBid =
   };
 };
 
+const spotxBid = (channelId: string, slot: string): prebidjs.ISpotXBid => {
+  return {
+    bidder: prebidjs.Spotx,
+    params: {
+      channel_id: channelId,
+      ad_unit: 'outstream',
+      outstream_options: {
+        slot: slot,
+        custom_override: {
+          content_width: '605',
+          content_height: '340'
+        }
+      }
+    },
+    labelAll: [ prebidjs.Spotx ]
+  };
+};
+
+const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
+  return            {
+    bidder: prebidjs.AppNexusAst,
+    params: {
+      placementId: placementId,
+      video: { playback_method: [ 'auto_play_sound_off' ] }
+    },
+    labelAll: [ prebidjs.AppNexusAst ]
+  };
+};
+
 export const adConfiguration: Moli.MoliConfig = {
   slots: [
     {
@@ -76,8 +105,9 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       domId: 'prebid-adslot',
       behaviour: 'eager',
-      adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      // adUnitPath: '/33559401/gf/fragen/pos2',
+      adUnitPath: '/55155651/outstream_test',
+      sizes: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       prebid: {
         adUnit: {
           code: 'prebid-adslot',
@@ -93,16 +123,21 @@ export const adConfiguration: Moli.MoliConfig = {
           bids: [
             // Unruly test placement
             unrulyBid(1081534, '6f15e139-5f18-49a1-b52f-87e5e69ee65e'),
+            // SpotX test placement
+            spotxBid('85394', 'prebid-adslot'),
             // Teads fallback placements
-            teadsVerticalBid(94142, 101939, [ 'desktop', 'testfrage' ]),
-            teadsVerticalBid(94140, 101937, [ 'mobile', 'testfrage' ])
+            teadsVerticalBid(94142, 101939, [ 'desktop' ]),
+            teadsVerticalBid(94140, 101937, [ 'mobile' ]),
+            // AppNexus Test Placement - outstream only
+            // see http://prebid.org/examples/video/outstream/outstream-dfp.html
+            appNexusOutstream('13232385')
           ]
         }
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+          sizesSupported: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
         }
       ]
     },
@@ -130,46 +165,6 @@ export const adConfiguration: Moli.MoliConfig = {
     // AppNexus Test Placements
     // -------------------------
 
-    // outstream only
-    // see http://prebid.org/examples/video/outstream/outstream-dfp.html
-    {
-      position: 'in-page',
-      domId: 'appNexus-outstream-adSlot',
-      behaviour: 'eager',
-      // AppNexus adunit path, which doesn't work because the key-value targeting is different
-      // adUnitPath: '/19968336/prebid_outstream_adunit_1',
-      adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: [ [ 640, 480 ], [ 1, 1 ] ],
-      prebid: {
-        adUnit: {
-          code: 'appNexus-outstream-adSlot',
-          mediaTypes: {
-            video: {
-              context: 'outstream',
-              playerSize: [ 640, 480 ]
-            }
-          },
-          bids: [
-            {
-              bidder: prebidjs.AppNexusAst,
-              params: {
-                placementId: '13232385',
-                video: {
-                  skippable: true,
-                  playback_method: [ 'auto_play_sound_off' ]
-                }
-              }
-            }
-          ]
-        }
-      },
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ [ 640, 480 ], [ 1, 1 ] ]
-        }
-      ]
-    },
     // multi format
     // see http://prebid.org/examples/multi_format_example.html
     {
@@ -195,16 +190,7 @@ export const adConfiguration: Moli.MoliConfig = {
             }
           },
           bids: [
-            {
-              bidder: prebidjs.AppNexusAst,
-              params: {
-                placementId: '13232392',
-                video: {
-                  skippable: true,
-                  playback_method: [ 'auto_play_sound_off' ]
-                }
-              }
-            }
+            appNexusOutstream('13232392')
           ]
         }
       },
@@ -220,7 +206,12 @@ export const adConfiguration: Moli.MoliConfig = {
   targeting: {
     keyValues: {
       'static': 'from-config'
-    }
+    },
+    labels: [
+      // activate teads, spotx, appNexus and/or unruly via the label query param
+      prebidjs.Criteo, prebidjs.ImproveDigital,
+      prebidjs.IndexExchange, prebidjs.PubMatic, prebidjs.Yieldlab
+    ]
   },
   sizeConfig: [
     {
@@ -245,9 +236,8 @@ export const adConfiguration: Moli.MoliConfig = {
       userSync: {
         syncDelay: 6000,
         filterSettings: {
-          // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
           iframe: {
-            bidders: [ prebidjs.PubMatic ],
+            bidders: [ prebidjs.PubMatic, prebidjs.SmartAdServer ],
             filter: 'include'
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.

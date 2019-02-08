@@ -28,40 +28,34 @@
 </head>
 
 <!-- ------------------- -->
-<!-- MOLI LAZY INIT CODE -->
+<!-- MOLI PUBLISHER CODE -->
 <!-- ------------------- -->
 
 <script>
+  const vertical = 'gutefrage';
+  const iabChannel = 'Automotive';
+
   // que setup
   window.moli = window.moli || {que: []};
 
   // push commands
 
-  window.moli.que.push(function (moliAdTag) {
-    moliAdTag.setTargeting('foo', 'bar');
-    moliAdTag.setTargeting('version', '1.2.3');
-  });
-
   // labels
   window.moli.que.push(function (moliAdTag) {
-    moliAdTag.addLabel('criteo');
-    moliAdTag.addLabel('appnexusAst');
-    moliAdTag.addLabel('improvedigital');
-    moliAdTag.addLabel('ix');
-    moliAdTag.addLabel('pubmatic');
-    moliAdTag.addLabel('unruly');
-    moliAdTag.addLabel('teads');
-    moliAdTag.addLabel('yieldlab');
-
-    const vertical = 'gutefrage';
-    const iabChannel = 'Automotive';
 
     moliAdTag.addLabel(vertical);
     moliAdTag.addLabel(iabChannel);
 
-    // required targeting
-    // v2015 on PHP app
-    moliAdTag.setTargeting('gfversion', ['v2016']);
+    // parse query params to activate certain outstream partners
+    // this only works in modern browsers
+    const params = new URLSearchParams(window.location.search);
+
+    params.getAll('label').forEach(label => moliAdTag.addLabel(label));
+
+  });
+  // targeting
+  window.moli.que.push(function (moliAdTag) {
+
     // array of normalized tags
     moliAdTag.setTargeting('tags', ['auto', 'waschmaschine']);
     // allows targeting for verticals
@@ -75,9 +69,8 @@
     moliAdTag.setTargeting('supportedUserAgent', 'true');
   });
 
-  // request ads after 2 seconds
   window.moli.que.push(function (moliAdTag) {
-    window.setTimeout(moliAdTag.requestAds, 2000);
+    moliAdTag.requestAds();
   });
 
 </script>
@@ -110,6 +103,16 @@ window.moli.que.push(function (moliAdTag) {
         <p>Or if you are developer type this into the javascript console</p>
         <pre><code class="html hljs xml">moli.openConsole()</code></pre>
 
+        <h3>Outstream</h3>
+        <p>Activate one or more outstream partners by adding them to a <code>label</code> query parameter. Examples</p>
+
+        <div class="list-group">
+            <a href="?label=appnexusAst" class="list-group-item list-group-item-action">Activate AppNexus</a>
+            <a href="?label=spotx" class="list-group-item list-group-item-action">Activate Spotx</a>
+            <a href="?label=teads" class="list-group-item list-group-item-action">Activate Teads</a>
+            <a href="?label=unruly" class="list-group-item list-group-item-action">Activate Unruly</a>
+        </div>
+
     </div>
 
     <h1>Eager Loading AdSlot</h1>
@@ -118,15 +121,12 @@ window.moli.que.push(function (moliAdTag) {
     <hr>
 
     <h1>Prebid AdSlot with outstream</h1>
-    <div id="prebid-adslot" style="height: 340px; width: 640px;"></div>
+    <div id="prebid-adslot" style="max-height: 340px; max-width: 605px;"></div>
 
     <hr>
 
     <h1>Amazon A9 AdSlot</h1>
     <div id="a9-adslot"></div>
-
-    <h1>AppNexus Outstream Test</h1>
-    <div id="appNexus-outstream-adSlot" style="height: 340px; width: 640px;"></div>
 
     <h1>AppNexus Multiformat Test</h1>
     <div id="appNexus-multiformat-adSlot" style="height: 340px; width: 640px;"></div>

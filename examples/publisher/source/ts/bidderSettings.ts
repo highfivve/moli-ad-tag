@@ -147,5 +147,9 @@ export const bidderSettings: prebidjs.IBidderSettings = {
   yieldlab: standardWithSuffix(
     `_${prebidjs.Yieldlab}`,
     (bidResponse: prebidjs.IBidResponse): string => cpmFromBidResponseAllOneCentSteps(bidResponse)
+  ),
+  spotx: standardWithSuffix(
+    `_${prebidjs.Spotx}`,
+    (bidResponse: prebidjs.IBidResponse): string => cpmFromBidResponse(bidResponse)
   )
 };
