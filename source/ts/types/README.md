@@ -60,7 +60,7 @@ All integrations require the following steps.
 1. Add the `publisher-tag` to your page. This is a custom tag with a pre-bundled `MoliConfig`.
    **Example**:
    ```html
-   <script src="cdn.highfivve.com/publisher/gutefrage/tag_fe31ea4c6dd.js" async/></script>
+   <script src="https://[publisher-name].h5v.eu/[version]/moli_[hash].js" async/></script>
    ```
 2. Add `gpt.js` to your page.
    ```html
