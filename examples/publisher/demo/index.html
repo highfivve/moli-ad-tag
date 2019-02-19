@@ -110,8 +110,6 @@
     }).then(function () {
         return getConsentDataExists()
     }).then(function (exists) {
-        console.log("###");
-        console.log(exists);
         if (!exists) {
             acceptAll()
         }

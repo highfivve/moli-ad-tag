@@ -972,12 +972,20 @@ export namespace Moli {
 
       /** DFP `setNonPersonalizedAds` configuration provider */
       readonly personalizedAds: consent.PersonalizedAdsProvider;
+
+      /** CMP - publisher specific or faktor.io */
+      readonly cmpConfig?: consent.CmpConfig;
     }
 
     /**
      * Union type for the different dfp `setNonPersonalizedAds` implementations.
      */
     export type PersonalizedAdsProvider = Static | Cmp | Cookie;
+
+    /**
+     * Union type for different CMPs
+     */
+    export type CmpConfig = PublisherCmpConfig | FaktorCmpConfig;
 
     /**
      * Base interface for personalizedAds implementations.
@@ -1081,6 +1089,28 @@ export namespace Moli {
       valueForNonPersonalizedAds: string;
     }
 
+  }
+
+  /**
+   * Base interface for CMP differentiating between differen CMP providers
+   */
+  export interface CmpConfig {
+    readonly provider: 'publisher' | 'faktor';
+  }
+
+  /**
+   * If the publisher has it's own cmp
+   */
+  export interface PublisherCmpConfig extends CmpConfig {
+    provider: 'publisher';
+  }
+
+  /**
+   * If faktor.io is used as cmp
+   */
+  export interface FaktorCmpConfig extends CmpConfig {
+    provider: 'faktor';
+    readonly autoOptIn: boolean;
   }
 
   /**
