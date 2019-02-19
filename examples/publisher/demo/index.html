@@ -15,6 +15,9 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
 
+    <!-- CMP faktor.io -->
+    <script src="https://config-prod.choice.faktor.io/7512a9aa-3995-4ff7-94c0-c8a45d49c611/faktor.js" async></script>
+
 
     <style>
         body {
@@ -26,6 +29,111 @@
         }
     </style>
 </head>
+
+
+<!-- ------------------- -->
+<!-- CMP STUB CODE       -->
+<!-- ------------------- -->
+
+<script>
+
+    if (!window.__cmp || typeof window.__cmp !== 'function') {
+        var start = window.__cmp ? window.__cmp.start : {};
+
+        window.__cmp = function () {
+            function addLocatorFrame() {
+                if (!window.frames['__cmpLocator']) {
+                    if (document.body) {
+                        var frame = document.createElement('iframe');
+                        frame.style.display = 'none';
+                        frame.name = '__cmpLocator';
+                        document.body.appendChild(frame);
+                    }
+                    else {
+                        setTimeout(addLocatorFrame, 5);
+                    }
+                }
+            }
+            addLocatorFrame();
+
+            var commandQueue = [];
+            var cmp = function (command, parameter, callback) {
+                if (command === 'ping') {
+                    if (callback) {
+                        callback({
+                            gdprAppliesGlobally: !!(window.__cmp && window.__cmp.config && window.__cmp.config.storeConsentGlobally),
+                            cmpLoaded: false
+                        });
+                    }
+                } else {
+                    commandQueue.push({
+                        command: command,
+                        parameter: parameter,
+                        callback: callback
+                    });
+                }
+            };
+            cmp.commandQueue = commandQueue;
+            cmp.receiveMessage = function (event) {
+                var data = event && event.data && event.data.__cmpCall;
+                if (data) {
+                    commandQueue.push({
+                        callId: data.callId,
+                        command: data.command,
+                        parameter: data.parameter,
+                        event: event
+                    });
+                }
+            };
+
+            return cmp;
+        }();
+
+        var listen = window.attachEvent || window.addEventListener;
+        listen('message', function (event) {
+            window.__cmp.receiveMessage(event);
+        });
+
+        window.__cmp.start = start;
+    }
+
+</script>
+
+<!--  -------------------  -->
+<!--  CMP AUTO OPT IN CODE -->
+<!--  -------------------  -->
+
+<script>
+
+    new Promise(function (resolve) {
+        window.__cmp('addEventListener', 'cmpReady', resolve)
+    }).then(function () {
+        return getConsentDataExists()
+    }).then(function (exists) {
+        console.log("###");
+        console.log(exists);
+        if (!exists) {
+            acceptAll()
+        }
+    });
+
+    function getConsentDataExists() {
+        return new Promise(function (resolve) {
+            window.__cmp('consentDataExist', true, (exists) => {
+                resolve(exists)
+            })
+        })
+    }
+
+    function acceptAll() {
+        return new Promise(function (resolve) {
+            window.__cmp('acceptAll', true, resolve)
+        })
+    }
+
+
+</script>
+
 
 <!-- ------------------- -->
 <!-- MOLI PUBLISHER CODE -->
@@ -86,7 +194,9 @@
         <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
 &lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
 &lt;!-- your ad tag --&gt;
-&lt;script async="async" src="{{domain}}<%= htmlWebpackPlugin.files.js[0] %>"&gt;&lt;/script&gt;</code></pre>
+&lt;script async="async" src="{{domain}}<%= htmlWebpackPlugin.files.js[0] %>"&gt;&lt;/script&gt;
+&lt;!-- your faktor.io tag --&gt;
+&lt;script async="async" src="https://config-prod.choice.faktor.io/7512a9aa-3995-4ff7-94c0-c8a45d49c611/faktor.js"&gt;&lt;/script&gt;</code></pre>
 
         <p>In publisher mode the publisher site needs to trigger the <code>requestAds()</code> method. This test pages
             executes this additional javascript</p>
