@@ -28,13 +28,20 @@ export class ReportingService {
    * get the performance measure name for
    * @param type
    */
-  public static getSingleMeasurementMetricMeasureName(type: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): string {
+  public static getSingleMeasurementMetricMeasureName(type: 'cmpLoad' | 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): string {
     switch (type) {
-      case 'dfpLoad': return 'dfp_load_time';
-      case 'prebidLoad': return 'prebid_load_time';
-      case 'a9Load': return 'a9_load_time';
-      case 'ttfa': return 'dfp_time_to_first_ad';
-      case 'ttfr': return 'dfp_time_to_first_render';
+      case 'cmpLoad':
+        return 'cmp_load_time';
+      case 'dfpLoad':
+        return 'dfp_load_time';
+      case 'prebidLoad':
+        return 'prebid_load_time';
+      case 'a9Load':
+        return 'a9_load_time';
+      case 'ttfa':
+        return 'dfp_time_to_first_ad';
+      case 'ttfr':
+        return 'dfp_time_to_first_render';
     }
   }
 
@@ -155,6 +162,31 @@ export class ReportingService {
         type: 'a9Load',
         pageRequestId: this.pageRequestId,
         measurement: a9
+      });
+    }
+  }
+
+  /**
+   * Set a marker when the cmp started loading
+   */
+  public markCmpInitialization(): void {
+    this.performanceService.mark('cmp_load_start');
+  }
+
+  /**
+   * Creates a performance measure for `cmp_load_time` metric and reports it
+   */
+  public measureCmpLoadTime(): void {
+    const measure = ReportingService.getSingleMeasurementMetricMeasureName('cmpLoad');
+    this.performanceService.mark('cmp_load_end');
+    this.performanceService.measure(measure, 'cmp_load_start', 'cmp_load_end');
+
+    const cmpLoad = this.performanceService.getMeasure(measure);
+    if (cmpLoad) {
+      this.report({
+        type: 'cmpLoad',
+        pageRequestId: this.pageRequestId,
+        measurement: cmpLoad
       });
     }
   }
@@ -372,8 +404,8 @@ export class ReportingService {
     /* tslint:disable */
     if ('crypto' in window && 'getRandomValues' in window.crypto) {
       return (([ 1e7 ] as any) + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
-        (c ^ window.crypto.getRandomValues(new Uint8Array(1))[ 0 ] & 15 >> c / 4).toString(16)
-      )
+        (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      );
     } else {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);

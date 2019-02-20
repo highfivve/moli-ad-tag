@@ -14,4 +14,15 @@ export const consentConfig: Moli.consent.ConsentConfig = {
   }
 };
 
+export const cmpConfig: Moli.consent.ConsentConfig = {
+  personalizedAds: {
+    provider: 'static',
+    value: 0
+  },
+  cmpConfig: {
+    provider: 'faktor',
+    autoOptIn: true
+  }
+};
+
 export const emptyConfig: Moli.MoliConfig = { slots: [], consent: consentConfig, logger: noopLogger };

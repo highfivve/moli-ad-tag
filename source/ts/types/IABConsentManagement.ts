@@ -43,8 +43,7 @@ export namespace IABConsentManagement {
      *        The callback is called only after consent is obtained from the UI or existing cookies.
      *        The boolean success parameter passed to the callback indicates whether the call to getConsentData() was successful.
      */
-    __cmp(command: 'getConsentData', consentStringVersion: string | null, callback: (consentData: IConsentData | null, success: boolean) => void): void;
-
+    __cmp(command: 'getConsentData', consentStringVersion: string | null, callback: (consentData: IConsentData, success: boolean) => void): void;
 
 
     /**
@@ -62,6 +61,38 @@ export namespace IABConsentManagement {
      * @param callback
      */
     __cmp(command: 'getVendorConsents', vendorIds: number[] | null, callback: (consentData: IVendorConsents, success: boolean) => void): void;
+
+    /**
+     * Faktor.io specific event listeners.
+     *
+     * @see https://faktor.atlassian.net/wiki/spaces/FK/pages/309395472/Set+up+Event+Tracking+in+Google+Analytics
+     *
+     * @param command
+     * @param event
+     * @param callback
+     * @private
+     */
+    __cmp(command: 'addEventListener', event: 'cmpReady' | 'acceptAllButtonClicked' | 'exitButtonClicked' | 'privacySettingsButtonClicked' | 'fingerprintButtonClicked', callback: () => void): void;
+
+
+    /**
+     * Faktor.io specific call to auto-opt-in users.
+     *
+     * @param command - acceptAll
+     * @param acceptAll - true for auto-opt-in
+     * @param callback - after auto-opt-in
+     */
+    __cmp(command: 'acceptAll', acceptAll: boolean, callback: () => void): void;
+
+    /**
+     * Faktor.io specific call to check if consent data exists.
+     *
+     * @param command 'consentDataExist'
+     * @param param - not documented what the boolean parameter is good for
+     * @param callback - true if consent data exists
+     */
+    __cmp(command: 'consentDataExist', param: boolean, callback: (exists: boolean) => void): void;
+
   }
 
   export interface IVendorConsentsObject {
@@ -152,7 +183,7 @@ export namespace IABConsentManagement {
     /**
      * true if publisher has configured CMP to apply GDPR to all (including non-EU) visitors
      */
-    gdprAppliesGlobally:  boolean;
+    gdprAppliesGlobally: boolean;
 
     /**
      * true if CMP main script is loaded, false if still running stub
@@ -169,6 +200,7 @@ declare global {
   /**
    * Add IAB __cmp to the global Window instance
    */
-  interface Window extends IABConsentManagement.IGlobalCMPApi { }
+  interface Window extends IABConsentManagement.IGlobalCMPApi {
+  }
 }
 /* tslint:enable */

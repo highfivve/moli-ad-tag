@@ -10,7 +10,7 @@ export namespace Moli {
    * KeyValue map. Last insert wins.
    */
   export interface DfpKeyValueMap {
-    [ key: string ]: string | string[] | undefined;
+    [key: string]: string | string[] | undefined;
   }
 
   export type MoliCommand = (moli: MoliTag) => void;
@@ -102,6 +102,11 @@ export namespace Moli {
      */
     beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void;
 
+    /**
+     * Set the afterConsentAcquired hook, which is triggered after the check if the consent exists.
+     * @param callback
+     */
+    afterConsentAcquired(callback: () => void): void;
 
     /**
      * **WARNING**
@@ -473,7 +478,11 @@ export namespace Moli {
        *
        * @param config - the final [[Moli.MoliConfig]]
        */
-      beforeRequestAds: (config: Moli.MoliConfig) => void;
+      beforeRequestAds?: (config: Moli.MoliConfig) => void;
+
+      afterConsentAcquired?: () => void;
+
+
     }
   }
 
@@ -1267,7 +1276,7 @@ export namespace Moli {
     /**
      * Union type for all provided metric types.
      */
-    export type MetricType = 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr' | 'adSlot' | 'adSlots';
+    export type MetricType = 'cmpLoad' | 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr' | 'adSlot' | 'adSlots';
 
     /**
      * Base interface for all provided metrics.
@@ -1295,7 +1304,7 @@ export namespace Moli {
       /**
        * All metrics that provide only a single measurement point.
        */
-      readonly type: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr';
+      readonly type: 'cmpLoad' | 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr';
 
       /**
        * The measurement provided by the metric `type`

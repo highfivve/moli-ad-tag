@@ -18,6 +18,7 @@ import { SizeConfigService } from './sizeConfigService';
 import SlotDefinition = Moli.SlotDefinition;
 import RefreshableAdSlot = Moli.RefreshableAdSlot;
 import DfpSlotSize = Moli.DfpSlotSize;
+import { FaktorCmp } from './cmp/faktor';
 
 type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -44,6 +45,11 @@ export class DfpService {
    * Required for performance marks.
    */
   private a9RequestCount: number = 0;
+
+  /**
+   * Report loading metrics
+   */
+  private reportingService: ReportingService | undefined;
 
 
   /**
@@ -72,9 +78,10 @@ export class DfpService {
    * - configuring consent management
    *
    * @param config - the ad configuration
+   * @param afterConsentAcquiredHook - a function that can be called after the check if consent data exists
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
+  public initialize = (config: Moli.MoliConfig, afterConsentAcquiredHook?: () => void): Promise<Moli.MoliConfig> => {
     if (this.initialized) {
       return Promise.reject('Already initialized');
     }
@@ -85,6 +92,12 @@ export class DfpService {
       this.logger = config.logger;
     }
 
+    // always create performance marks and metrics even without a config
+    const reportingConfig: Moli.reporting.ReportingConfig = config.reporting || {
+      reporters: [],
+      sampleRate: 0
+    };
+    this.reportingService = new ReportingService(performanceMeasurementService, reportingConfig, this.logger);
 
     // a9 script overwrites the window.apstag completely on script load
     if (config.a9) {
@@ -102,6 +115,7 @@ export class DfpService {
     const dfpReady =
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
+        .then(() => this.configureCmp(config, this.reportingService!, afterConsentAcquiredHook))
         // initialize the reporting for non-lazy slots
         .then(() => this.configureAdNetwork(config))
         .catch(error => {
@@ -122,32 +136,24 @@ export class DfpService {
    *
    */
   public requestAds = (config: Moli.MoliConfig): Promise<Moli.AdSlot[]> => {
-    if (!this.initialized) {
+    if (!this.initialized || !this.reportingService) {
       return Promise.reject('Not initialized yet.');
     }
 
     const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
     const globalSizeConfigService = new SizeConfigService(config.sizeConfig || [], extraLabels);
 
-
-    // always create performance marks and metrics even without a config
-    const reportingConfig: Moli.reporting.ReportingConfig = config.reporting || {
-      reporters: [],
-      sampleRate: 0
-    };
-    const reportingService = new ReportingService(performanceMeasurementService, reportingConfig, this.logger);
-
     const filteredSlots = config.slots
       .filter(slot => globalSizeConfigService.filterSlot(slot));
 
-    reportingService.initialize(
+    this.reportingService.initialize(
       this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot));
 
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     // concurrently initialize lazy loaded slots and refreshable slots
-    this.initLazyRefreshableSlots(window[ prebidGlobal ], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, reportingService, globalSizeConfigService);
-    this.initLazyLoadedSlots(window[ prebidGlobal ], filteredSlots.filter(this.isLazySlot), config, reportingService, globalSizeConfigService);
+    this.initLazyRefreshableSlots(window[ prebidGlobal ], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, globalSizeConfigService);
+    this.initLazyLoadedSlots(window[ prebidGlobal ], filteredSlots.filter(this.isLazySlot), config, this.reportingService, globalSizeConfigService);
 
     // eagerly displayed slots - this includes 'eager' slots and non-lazy 'refreshable' slots
     return Promise.resolve()
@@ -157,12 +163,12 @@ export class DfpService {
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, globalSizeConfigService))
       .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots))
       .then((registeredSlots) => {
-        this.initRefreshableSlots(window[ prebidGlobal ], registeredSlots.filter(this.isRefreshableAdSlotDefinition), config, reportingService, globalSizeConfigService);
+        this.initRefreshableSlots(window[ prebidGlobal ], registeredSlots.filter(this.isRefreshableAdSlotDefinition), config, this.reportingService!, globalSizeConfigService);
         return registeredSlots;
       })
       // We wait for a prebid response and then refresh.
-      .then(slotDefinitions => this.initHeaderBidding(window[ prebidGlobal ], slotDefinitions, config, reportingService, globalSizeConfigService))
-      .then(slotDefinitions => this.refreshAds(slotDefinitions, reportingService))
+      .then(slotDefinitions => this.initHeaderBidding(window[ prebidGlobal ], slotDefinitions, config, this.reportingService!, globalSizeConfigService))
+      .then(slotDefinitions => this.refreshAds(slotDefinitions, this.reportingService!))
       .then(slotDefinitions => slotDefinitions.map(slot => slot.moliSlot))
       .catch(reason => {
         this.logger.error('DfpService :: Initialization failed: ' + JSON.stringify(reason), reason);
@@ -186,6 +192,36 @@ export class DfpService {
       })
       .then(() => config);
   };
+
+  /**
+   * @param config - the ad configuration
+   * @param reportingService - the reporting service that is used to report the cmp loading time
+   * @param afterConsentAcquiredHook - a function that can be triggered after the check if consent exists
+   */
+  private configureCmp(config: Moli.MoliConfig, reportingService: ReportingService, afterConsentAcquiredHook?: () => void): Promise<void> {
+    const cmpConfig = config.consent.cmpConfig;
+
+    if (cmpConfig) {
+      switch (cmpConfig.provider) {
+        case 'publisher' : {
+          return Promise.resolve();
+        }
+        case 'faktor' : {
+          const faktorCmp = new FaktorCmp(reportingService);
+          if (cmpConfig.autoOptIn) {
+            return faktorCmp.autoOptIn(afterConsentAcquiredHook);
+          } else {
+            return Promise.resolve();
+          }
+        }
+        default: {
+          return Promise.resolve();
+        }
+      }
+    } else {
+      return Promise.resolve();
+    }
+  }
 
   /**
    * Lazy loaded slots.
