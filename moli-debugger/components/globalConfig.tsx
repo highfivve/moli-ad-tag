@@ -276,6 +276,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
           <h4>Consent</h4>
           {this.consent(config.consent)}
+          {this.consentConfig(config.consent.cmpConfig)}
         </div>
 
         {<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
@@ -407,6 +408,30 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             <Tag>{consent.personalizedAds.valueForNonPersonalizedAds}</Tag>
           </div>
         </div>;
+    }
+  };
+
+  private consentConfig = (consentConfig: Moli.consent.CmpConfig | undefined): JSX.Element | undefined => {
+    if (consentConfig) {
+      const cmpProvider = <div class="MoliDebug-tagContainer">
+        <span class="MoliDebug-tagLabel">CMP Provider</span>
+        <Tag>{consentConfig.provider}</Tag>
+      </div>;
+
+      switch (consentConfig.provider) {
+        case 'publisher':
+          return <div>
+            {cmpProvider}
+          </div>;
+        case 'faktor':
+          return <div>
+            {cmpProvider}
+            <div className="MoliDebug-tagContainer">
+              <span className="MoliDebug-tagLabel">Value</span>
+              <Tag>{consentConfig.autoOptIn.toString()}</Tag>
+            </div>
+          </div>;
+      }
     }
   };
 
