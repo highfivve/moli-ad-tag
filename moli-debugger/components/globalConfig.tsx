@@ -420,9 +420,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
       switch (consentConfig.provider) {
         case 'publisher':
-          return <div>
-            {cmpProvider}
-          </div>;
+          return cmpProvider;
         case 'faktor':
           return <div>
             {cmpProvider}
