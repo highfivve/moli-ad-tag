@@ -411,7 +411,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private consentConfig = (consentConfig: Moli.consent.CmpConfig | undefined): JSX.Element | undefined => {
+  private consentConfig = (consentConfig: Moli.consent.CmpConfigVariants | undefined): JSX.Element | undefined => {
     if (consentConfig) {
       const cmpProvider = <div class="MoliDebug-tagContainer">
         <span class="MoliDebug-tagLabel">CMP Provider</span>

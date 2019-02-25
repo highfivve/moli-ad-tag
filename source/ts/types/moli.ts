@@ -983,7 +983,7 @@ export namespace Moli {
       readonly personalizedAds: consent.PersonalizedAdsProvider;
 
       /** CMP - publisher specific or faktor.io */
-      readonly cmpConfig?: consent.CmpConfig;
+      readonly cmpConfig: consent.CmpConfigVariants;
     }
 
     /**
@@ -994,7 +994,7 @@ export namespace Moli {
     /**
      * Union type for different CMPs
      */
-    export type CmpConfig = PublisherCmpConfig | FaktorCmpConfig;
+    export type CmpConfigVariants = PublisherCmpConfig | FaktorCmpConfig;
 
     /**
      * Base interface for personalizedAds implementations.
@@ -1111,14 +1111,14 @@ export namespace Moli {
    * If the publisher has it's own cmp
    */
   export interface PublisherCmpConfig extends CmpConfig {
-    provider: 'publisher';
+    readonly provider: 'publisher';
   }
 
   /**
    * If faktor.io is used as cmp
    */
   export interface FaktorCmpConfig extends CmpConfig {
-    provider: 'faktor';
+    readonly provider: 'faktor';
     readonly autoOptIn: boolean;
   }
 
