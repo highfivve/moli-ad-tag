@@ -4,7 +4,7 @@ import IGlobalCMPApi = IABConsentManagement.IGlobalCMPApi;
 import IConsentData = IABConsentManagement.IConsentData;
 import IVendorConsents = IABConsentManagement.IVendorConsents;
 import { ReportingService } from '../reportingService';
-import loadCmpFaktorStub = require('cmp-faktor-stub');
+import loadCmpFaktorStub = require('./cmpFaktorStub');
 
 declare const window: IGlobalCMPApi & IFaktorCMPApi & Window;
 
