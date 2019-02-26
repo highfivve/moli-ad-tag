@@ -207,6 +207,9 @@ export const adConfiguration: Moli.MoliConfig = {
     personalizedAds: {
       provider: 'static',
       value: 0
+    },
+    cmpConfig: {
+      provider: 'publisher'
     }
   },
   logger: logger
