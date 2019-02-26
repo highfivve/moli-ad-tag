@@ -3,9 +3,8 @@ import { ICmpService } from './cmpService';
 import IGlobalCMPApi = IABConsentManagement.IGlobalCMPApi;
 import IConsentData = IABConsentManagement.IConsentData;
 import IVendorConsents = IABConsentManagement.IVendorConsents;
-// initialize the faktor.io stub
-import './cmpFaktorStub';
 import { ReportingService } from '../reportingService';
+import loadCmpFaktorStub = require('cmp-faktor-stub');
 
 declare const window: IGlobalCMPApi & IFaktorCMPApi & Window;
 
@@ -36,7 +35,6 @@ interface IFaktorCMPApi {
  */
 export class FaktorCmp implements ICmpService {
 
-
   /**
    * Indicates if the faktor.io bundle has been loaded
    */
@@ -44,8 +42,10 @@ export class FaktorCmp implements ICmpService {
 
   constructor(private readonly reportingService: ReportingService) {
     this.reportingService.markCmpInitialization();
-    this.faktorLoaded = new Promise<void>(resolve =>
-      window.__cmp('addEventListener', 'cmpReady', resolve)
+    this.faktorLoaded = new Promise<void>(resolve => {
+        loadCmpFaktorStub();
+        window.__cmp('addEventListener', 'cmpReady', resolve);
+      }
     );
   }
 

@@ -20,7 +20,6 @@ describe('Faktor CMP', () => {
   const reportingService = new ReportingService(performanceMeasurementService, reportingConfig, noopLogger);
 
   const cmpStub = sandbox.stub();
-  window.__cmp = cmpStub;
 
   const addStubBehaviour = (onCall: number, returnValue?: boolean) => {
     // @ts-ignore TS7031
@@ -35,7 +34,17 @@ describe('Faktor CMP', () => {
     sandbox.restore();
   });
 
+  it('should not load the cmpFactorStub if faktor cmp is not initialized', () => {
+    return expect(window.__cmp).to.be.undefined;
+  });
+
+  it('should load the cmpFactorStub if faktor cmp is initialized', () => {
+    new FaktorCmp(reportingService);
+    return expect(window.__cmp).not.to.be.undefined;
+  });
+
   it('should not call acceptAll if consent data exists', () => {
+    window.__cmp = cmpStub;
     addStubBehaviour(0);
     addStubBehaviour(1, true);
     const faktorCmp = new FaktorCmp(reportingService);
@@ -48,6 +57,7 @@ describe('Faktor CMP', () => {
   });
 
   it('should call acceptAll if no consent data exists', () => {
+    window.__cmp = cmpStub;
     addStubBehaviour(0);
     addStubBehaviour(1, false);
     addStubBehaviour(2);

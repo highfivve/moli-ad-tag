@@ -11,6 +11,9 @@ export const consentConfig: Moli.consent.ConsentConfig = {
   personalizedAds: {
     provider: 'static',
     value: 0
+  },
+  cmpConfig: {
+    provider: 'publisher'
   }
 };
 

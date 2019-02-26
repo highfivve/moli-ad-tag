@@ -59,6 +59,7 @@
     "webpack-cli": "^3.1.1"
   },
   "dependencies": {
+    "cmp-faktor-stub": "file:./source/ts/ads/cmp/cmpFaktorStub",
     "domready": "^1.0.8"
   }
 }

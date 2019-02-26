@@ -29,6 +29,9 @@ describe('personalizedAdsProvider', () => {
         personalizedAds: {
           provider: 'static',
           value: 0
+        },
+        cmpConfig: {
+          provider: 'publisher'
         }
       }).then(value => {
         expect(value).to.equal(0);
@@ -40,6 +43,9 @@ describe('personalizedAdsProvider', () => {
         personalizedAds: {
           provider: 'static',
           value: 1
+        },
+        cmpConfig: {
+          provider: 'publisher'
         }
       }).then(value => {
         expect(value).to.equal(1);
@@ -57,6 +63,9 @@ describe('personalizedAdsProvider', () => {
         provider: 'cookie',
         cookie: 'consent-cookie',
         valueForNonPersonalizedAds: 'false'
+      },
+      cmpConfig: {
+        provider: 'publisher'
       }
     };
 
@@ -89,6 +98,10 @@ describe('personalizedAdsProvider', () => {
     const cmpConsentConfig: Moli.consent.ConsentConfig = {
       personalizedAds: {
         provider: 'cmp'
+      },
+      cmpConfig: {
+        provider: 'faktor',
+        autoOptIn: true
       }
     };
 
