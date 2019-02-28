@@ -1294,7 +1294,23 @@ export namespace Moli {
     /**
      * Base type for all provided metrics.
      */
-    export type Metric = SingleMeasurementMetric | AdSlotMetric | AdSlotsMetric;
+    export type Metric = SingleMeasurementMetric | AdSlotMetric | AdSlotsMetric | BooleanMetric;
+
+    /**
+     * The boolean metrics represent all metrics with a boolean value
+     */
+    export interface BooleanMetric {
+
+      /**
+       * All metrics that provide only a boolean value.
+       */
+      readonly type: 'consentDataExists';
+
+      /**
+       * The boolean value provided by the metric `type`
+       */
+      readonly value: boolean;
+    }
 
     /**
      * The single measure metric represents all metrics with only one measure.
