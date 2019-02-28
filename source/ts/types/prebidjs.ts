@@ -492,6 +492,11 @@ export namespace prebidjs {
      * Required for all new criteo implementations
      */
     readonly networkId: number;
+
+    /**
+     * Used for reporting: we use de div-id here.
+     */
+    readonly publisherSubId?: string;
   }
 
   export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
