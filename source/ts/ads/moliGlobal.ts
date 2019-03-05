@@ -184,29 +184,6 @@ export const createMoliTag = (): Moli.MoliTag => {
     }
   }
 
-  function afterConsentAcquired(callback: () => void): void {
-    switch (state.state) {
-      case 'configurable': {
-        state.hooks = {
-          ...state.hooks,
-          afterConsentAcquired: callback
-        };
-        break;
-      }
-      case 'configured': {
-        state.hooks = {
-          ...state.hooks,
-          afterConsentAcquired: callback
-        };
-        break;
-      }
-      default : {
-        getLogger(state.config.logger).error('Trying to add a hook. Already configured.', state.config);
-        break;
-      }
-    }
-  }
-
   function getConfig(): Moli.MoliConfig | undefined {
     switch (state.state) {
       case 'configurable': {
@@ -315,7 +292,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         // handle single page application case
         if (state.isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
-          const initialized = dfpService.initialize(config, state.hooks && state.hooks.afterConsentAcquired).then(() => config);
+          const initialized = dfpService.initialize(config).then(() => config);
           const currentState: ISinglePageApp = {
             state: 'spa',
             config: config,
@@ -330,13 +307,11 @@ export const createMoliTag = (): Moli.MoliTag => {
             .then(() => currentState);
 
         } else {
-          // initialize first and then make the initial requestAds() call
-          const initialized = dfpService.initialize(config, state.hooks && state.hooks.afterConsentAcquired).then(() => config);
           state = {
             state: 'requestAds',
             config: config
           };
-          return initialized
+          return dfpService.initialize(config)
             .then(config => dfpService.requestAds(config))
             .then(() => {
               state = {
@@ -440,7 +415,6 @@ export const createMoliTag = (): Moli.MoliTag => {
     setSampleRate: setSampleRate,
     addReporter: addReporter,
     beforeRequestAds: beforeRequestAds,
-    afterConsentAcquired: afterConsentAcquired,
     getConfig: getConfig,
     configure: configure,
     enableSinglePageApp: enableSinglePageApp,

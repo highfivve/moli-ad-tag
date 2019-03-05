@@ -78,10 +78,9 @@ export class DfpService {
    * - configuring consent management
    *
    * @param config - the ad configuration
-   * @param afterConsentAcquiredHook - a function that can be called after the check if consent data exists
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize = (config: Moli.MoliConfig, afterConsentAcquiredHook?: () => void): Promise<Moli.MoliConfig> => {
+  public initialize = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
     if (this.initialized) {
       return Promise.reject('Already initialized');
     }
@@ -115,7 +114,7 @@ export class DfpService {
     const dfpReady =
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
-        .then(() => this.configureCmp(config, this.reportingService!, afterConsentAcquiredHook))
+        .then(() => this.configureCmp(config, this.reportingService!))
         // initialize the reporting for non-lazy slots
         .then(() => this.configureAdNetwork(config))
         .catch(error => {
@@ -196,9 +195,8 @@ export class DfpService {
   /**
    * @param config - the ad configuration
    * @param reportingService - the reporting service that is used to report the cmp loading time
-   * @param afterConsentAcquiredHook - a function that can be triggered after the check if consent exists
    */
-  private configureCmp(config: Moli.MoliConfig, reportingService: ReportingService, afterConsentAcquiredHook?: () => void): Promise<void> {
+  private configureCmp(config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
     const cmpConfig = config.consent.cmpConfig;
 
     if (cmpConfig) {
@@ -209,7 +207,7 @@ export class DfpService {
         case 'faktor' : {
           const faktorCmp = new FaktorCmp(reportingService);
           if (cmpConfig.autoOptIn) {
-            return faktorCmp.autoOptIn(afterConsentAcquiredHook);
+            return faktorCmp.autoOptIn();
           } else {
             return Promise.resolve();
           }

@@ -49,9 +49,9 @@ export class FaktorCmp implements ICmpService {
     );
   }
 
-  autoOptIn(afterConsentAcquiredHook?: () => void): Promise<void> {
+  autoOptIn(): Promise<void> {
     return this.faktorLoaded
-      .then(() => this.consentDataExists(afterConsentAcquiredHook))
+      .then(() => this.consentDataExists())
       .then(exists => exists ? Promise.resolve() : this.acceptAll());
   }
 
@@ -79,15 +79,13 @@ export class FaktorCmp implements ICmpService {
    * Checks if a user has already consent data present, either because he/she has already been
    * opted in or has denied consent by using our privacy manager page.
    */
-  private consentDataExists(afterConsentAcquiredHook?: () => void): Promise<boolean> {
+  private consentDataExists(): Promise<boolean> {
     return new Promise<boolean>(resolve => {
       window.__cmp('consentDataExist', true, (exists: boolean) => {
         if (exists) {
           this.reportingService.measureCmpLoadTime();
         }
-        if (afterConsentAcquiredHook) {
-          afterConsentAcquiredHook();
-        }
+        this.reportingService.trackConsentDataExists(exists);
         resolve(exists);
       });
     });

@@ -103,12 +103,6 @@ export namespace Moli {
     beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void;
 
     /**
-     * Set the afterConsentAcquired hook, which is triggered after the check if the consent exists.
-     * @param callback
-     */
-    afterConsentAcquired(callback: () => void): void;
-
-    /**
      * **WARNING**
      * This method is called by the ad tag and can only be called once. If the publisher calls
      * calls `configure` then the ad configuration provided by the ad tag may not be used.
@@ -479,9 +473,6 @@ export namespace Moli {
        * @param config - the final [[Moli.MoliConfig]]
        */
       beforeRequestAds?: (config: Moli.MoliConfig) => void;
-
-      afterConsentAcquired?: () => void;
-
 
     }
   }

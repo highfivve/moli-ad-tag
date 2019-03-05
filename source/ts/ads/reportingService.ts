@@ -192,6 +192,17 @@ export class ReportingService {
   }
 
   /**
+   * reports the `consentDataExists` metrics
+   * @param consentDataExists true if consent data already existed when the user came to the page
+   */
+  public trackConsentDataExists(consentDataExists: boolean): void {
+    this.report( {
+      type: 'consentDataExists',
+      value: consentDataExists
+    });
+  }
+
+  /**
    * If this page request should be measured and tracked
    */
   private shouldTrack(): boolean {

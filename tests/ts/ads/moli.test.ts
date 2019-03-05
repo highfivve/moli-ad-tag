@@ -330,29 +330,6 @@ describe('moli', () => {
         expect(hookSpy).to.be.calledOnce;
       });
     });
-
-    it('should add the afterConsentAcquired hook and pass it to faktor cmp', () => {
-      const adTag = createMoliTag();
-
-      const afterConsentAcquiredHook = () => {
-        return;
-      };
-
-      const cmpStub = sandbox.stub();
-      window.__cmp = cmpStub;
-      cmpStub.onFirstCall().callsFake( (command, param, callback) => callback()); // cmpReady
-      cmpStub.onSecondCall().callsFake( (command, param, callback) => callback(true)); // consentDataExist
-
-      const hookSpy = sandbox.spy(afterConsentAcquiredHook);
-
-      adTag.afterConsentAcquired(hookSpy);
-      adTag.configure({ slots: [], consent: cmpConfig, logger: noopLogger });
-      return adTag.requestAds().then( () => {
-        expect(hookSpy).to.be.calledOnce;
-      });
-
-    });
-
   });
 
   describe('multiple configurations', () => {
