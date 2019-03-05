@@ -385,7 +385,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           {provider}
           <div class="MoliDebug-tagContainer">
             <span className="MoliDebug-tagLabel">Available</span>
-            <Tag variant={this.isCmpFunctionAvailable() ? 'green' : 'red'}>{this.isCmpFunctionAvailable().toString()}</Tag>
+            <Tag variant={this.isCmpFunctionAvailable() ? 'green' : 'red'}>{this.isCmpFunctionAvailable() ? 'true' : 'false'}</Tag>
           </div>
         </div>;
       case 'static':
@@ -425,7 +425,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
           return <div>
             {cmpProvider}
             <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Value</span>
+              <span className="MoliDebug-tagLabel">auto-opt-in</span>
               <Tag>{consentConfig.autoOptIn.toString()}</Tag>
             </div>
           </div>;
