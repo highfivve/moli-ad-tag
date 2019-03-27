@@ -19,6 +19,7 @@ import SlotDefinition = Moli.SlotDefinition;
 import RefreshableAdSlot = Moli.RefreshableAdSlot;
 import DfpSlotSize = Moli.DfpSlotSize;
 import { FaktorCmp } from './cmp/faktor';
+import { getDefaultLogger, getLogger } from '../util/logging';
 
 type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -61,12 +62,7 @@ export class DfpService {
               private cookieService: ICookieService) {
 
     // initialize the logger with a default one
-    this.logger = {
-      debug: console.debug,
-      info: console.info,
-      warn: console.warn,
-      error: console.error
-    };
+    this.logger = getDefaultLogger();
   }
 
   /**
@@ -86,10 +82,7 @@ export class DfpService {
     }
     this.initialized = true;
 
-    // override the fallback logger
-    if (config.logger) {
-      this.logger = config.logger;
-    }
+    this.logger = getLogger(config);
 
     // always create performance marks and metrics even without a config
     const reportingConfig: Moli.reporting.ReportingConfig = config.reporting || {

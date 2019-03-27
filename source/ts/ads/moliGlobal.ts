@@ -8,15 +8,7 @@ import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
-
-const getLogger = (logger: Moli.MoliLogger | undefined): Moli.MoliLogger => {
-  return logger ? logger : {
-    debug: console.debug,
-    info: console.info,
-    warn: console.warn,
-    error: console.error
-  };
-};
+import { getLogger } from '../util/logging';
 
 export const createMoliTag = (): Moli.MoliTag => {
 
@@ -59,7 +51,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config.logger).error(`Setting key-value after configuration: ${key} : ${value}`);
+        getLogger(state.config).error(`Setting key-value after configuration: ${key} : ${value}`);
         break;
       }
     }
@@ -86,7 +78,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config.logger).error(`Adding label after configure: ${label}`);
+        getLogger(state.config).error(`Adding label after configure: ${label}`);
         break;
       }
     }
@@ -130,7 +122,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default : {
-        getLogger(state.config.logger).error('Trying to setSampleRate. Already configured.', state.config);
+        getLogger(state.config).error('Trying to setSampleRate. Already configured.', state.config);
         break;
       }
     }
@@ -155,7 +147,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default : {
-        getLogger(state.config.logger).error('Trying to setSampleRate. Already configured.', state.config);
+        getLogger(state.config).error('Trying to setSampleRate. Already configured.', state.config);
         break;
       }
     }
@@ -178,7 +170,7 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       default : {
-        getLogger(state.config.logger).error('Trying to add a hook beforeRequestAds. Already configured.', state.config);
+        getLogger(state.config).error('Trying to add a hook beforeRequestAds. Already configured.', state.config);
         break;
       }
     }
@@ -238,19 +230,19 @@ export const createMoliTag = (): Moli.MoliTag => {
         break;
       }
       case 'configured': {
-        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already configured.', state.config);
+        getLogger(state.config).error('Trying to configure moli tag twice. Already configured.', state.config);
         break;
       }
       case 'requestAds': {
-        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already requesting ads.');
+        getLogger(state.config).error('Trying to configure moli tag twice. Already requesting ads.');
         break;
       }
       case 'finished': {
-        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already finished.');
+        getLogger(state.config).error('Trying to configure moli tag twice. Already finished.');
         break;
       }
       case 'error': {
-        getLogger(state.config.logger).error('Trying to configure moli tag twice. Already finished, but with an error.', state.error);
+        getLogger(state.config).error('Trying to configure moli tag twice. Already finished, but with an error.', state.error);
         break;
       }
     }
@@ -268,7 +260,7 @@ export const createMoliTag = (): Moli.MoliTag => {
 
       }
       default : {
-        getLogger(state.config.logger).error('Trying enable single page app. Already configured.', state.config);
+        getLogger(state.config).error('Trying enable single page app. Already configured.', state.config);
         break;
       }
     }
@@ -350,15 +342,15 @@ export const createMoliTag = (): Moli.MoliTag => {
           });
       }
       case 'requestAds': {
-        getLogger(state.config.logger).error('Trying to requestAds twice. Already requesting ads.');
+        getLogger(state.config).error('Trying to requestAds twice. Already requesting ads.');
         return Promise.reject();
       }
       case 'finished': {
-        getLogger(state.config.logger).error('Trying to requestAds twice. Already finished.');
+        getLogger(state.config).error('Trying to requestAds twice. Already finished.');
         return Promise.reject();
       }
       case 'error': {
-        getLogger(state.config.logger).error('Trying to requestAds twice. Already finished, but with an error.', state.error);
+        getLogger(state.config).error('Trying to requestAds twice. Already finished, but with an error.', state.error);
         return Promise.reject();
       }
     }
