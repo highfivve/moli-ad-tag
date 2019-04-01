@@ -39,7 +39,7 @@ describe('Faktor CMP', () => {
   });
 
   it('should load the cmpFactorStub if faktor cmp is initialized', () => {
-    new FaktorCmp(reportingService);
+    new FaktorCmp(reportingService, noopLogger);
     return expect(window.__cmp).not.to.be.undefined;
   });
 
@@ -47,7 +47,7 @@ describe('Faktor CMP', () => {
     window.__cmp = cmpStub;
     addStubBehaviour(0);
     addStubBehaviour(1, true);
-    const faktorCmp = new FaktorCmp(reportingService);
+    const faktorCmp = new FaktorCmp(reportingService, noopLogger);
 
     return faktorCmp.autoOptIn().then(() => {
       expect(cmpStub.callCount).to.equal(2);
@@ -61,7 +61,7 @@ describe('Faktor CMP', () => {
     addStubBehaviour(0);
     addStubBehaviour(1, false);
     addStubBehaviour(2);
-    const faktorCmp = new FaktorCmp(reportingService);
+    const faktorCmp = new FaktorCmp(reportingService, noopLogger);
 
     return faktorCmp.autoOptIn().then(() => {
       expect(cmpStub.callCount).to.equal(3);

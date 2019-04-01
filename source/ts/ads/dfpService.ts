@@ -78,7 +78,9 @@ export class DfpService {
    */
   public initialize = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
     if (this.initialized) {
-      return Promise.reject('Already initialized');
+      const message = 'DFP Service already initialized';
+      this.logger.error(message);
+      return Promise.reject(message);
     }
     this.initialized = true;
 
@@ -100,16 +102,19 @@ export class DfpService {
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     const prebidReady = config.prebid ?
-      this.awaitPrebidLoaded(prebidGlobal).then(() => this.configurePrebid(window[ prebidGlobal ], config)) :
+      this.awaitPrebidLoaded(prebidGlobal).then(() => this.configurePrebid(window[prebidGlobal], config)) :
       Promise.resolve();
 
 
     const dfpReady =
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
+        .then(() => this.logger.debug('GPT loaded'))
         .then(() => this.configureCmp(config, this.reportingService!))
+        .then(() => this.logger.debug('CMP configured'))
         // initialize the reporting for non-lazy slots
         .then(() => this.configureAdNetwork(config))
+        .then(() => this.logger.debug('Ad Network configured'))
         .catch(error => {
           this.logger.error('failed configuring gpt', error);
           return Promise.reject(error);
@@ -129,7 +134,9 @@ export class DfpService {
    */
   public requestAds = (config: Moli.MoliConfig): Promise<Moli.AdSlot[]> => {
     if (!this.initialized || !this.reportingService) {
-      return Promise.reject('Not initialized yet.');
+      const message = 'DFP Service not initialized yet';
+      this.logger.error(message);
+      return Promise.reject(message);
     }
 
     const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
@@ -137,6 +144,7 @@ export class DfpService {
 
     const filteredSlots = config.slots
       .filter(slot => globalSizeConfigService.filterSlot(slot));
+    this.logger.debug(`filteredSlots: ${filteredSlots.map(slot => `\n\t\t\t[DomID] ${slot.domId} [AdUnitPath] ${slot.adUnitPath}`)}`);
 
     this.reportingService.initialize(
       this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot));
@@ -144,8 +152,8 @@ export class DfpService {
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     // concurrently initialize lazy loaded slots and refreshable slots
-    this.initLazyRefreshableSlots(window[ prebidGlobal ], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, globalSizeConfigService);
-    this.initLazyLoadedSlots(window[ prebidGlobal ], filteredSlots.filter(this.isLazySlot), config, this.reportingService, globalSizeConfigService);
+    this.initLazyRefreshableSlots(window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, globalSizeConfigService);
+    this.initLazyLoadedSlots(window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, this.reportingService, globalSizeConfigService);
 
     // eagerly displayed slots - this includes 'eager' slots and non-lazy 'refreshable' slots
     return Promise.resolve()
@@ -155,11 +163,11 @@ export class DfpService {
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, globalSizeConfigService))
       .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots))
       .then((registeredSlots) => {
-        this.initRefreshableSlots(window[ prebidGlobal ], registeredSlots.filter(this.isRefreshableAdSlotDefinition), config, this.reportingService!, globalSizeConfigService);
+        this.initRefreshableSlots(window[prebidGlobal], registeredSlots.filter(this.isRefreshableAdSlotDefinition), config, this.reportingService!, globalSizeConfigService);
         return registeredSlots;
       })
       // We wait for a prebid response and then refresh.
-      .then(slotDefinitions => this.initHeaderBidding(window[ prebidGlobal ], slotDefinitions, config, this.reportingService!, globalSizeConfigService))
+      .then(slotDefinitions => this.initHeaderBidding(window[prebidGlobal], slotDefinitions, config, this.reportingService!, globalSizeConfigService))
       .then(slotDefinitions => this.refreshAds(slotDefinitions, this.reportingService!))
       .then(slotDefinitions => slotDefinitions.map(slot => slot.moliSlot))
       .catch(reason => {
@@ -171,7 +179,9 @@ export class DfpService {
 
   public destroyAdSlots = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
     if (!this.initialized) {
-      return Promise.reject('Not initialized yet.');
+      const message = 'Failed to destroy ads. DFP Service not initialized yet.';
+      this.logger.error(message);
+      return Promise.reject(message);
     }
 
     return Promise.resolve()
@@ -192,13 +202,15 @@ export class DfpService {
   private configureCmp(config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
     const cmpConfig = config.consent.cmpConfig;
 
+    this.logger.debug(`Configure cmp using cmp provider: ${cmpConfig.provider}`);
+
     if (cmpConfig) {
       switch (cmpConfig.provider) {
         case 'publisher' : {
           return Promise.resolve();
         }
         case 'faktor' : {
-          const faktorCmp = new FaktorCmp(reportingService);
+          const faktorCmp = new FaktorCmp(reportingService, this.logger);
           if (cmpConfig.autoOptIn) {
             return faktorCmp.autoOptIn();
           } else {
@@ -241,7 +253,9 @@ export class DfpService {
           if (document.getElementById(moliSlotLazy.domId)) {
             return Promise.resolve();
           }
-          return Promise.reject(`DfpService: lazy slot dom element not available: ${moliSlotLazy.adUnitPath} / ${moliSlotLazy.domId}`);
+          const message = `DfpService: lazy slot dom element not available: ${moliSlotLazy.adUnitPath} / ${moliSlotLazy.domId}`;
+          this.logger.error(message);
+          return Promise.reject(message);
         })
         .then(() => this.registerSlot({ moliSlot: moliSlotLazy, filterSupportedSizes }))
         .then(googleTagAdSlot => {
@@ -518,8 +532,8 @@ export class DfpService {
   }
 
   private awaitPrebidLoaded(prebidGlobal: 'pbjs' | 'moliPbjs'): Promise<void> {
-    window[ prebidGlobal ] = window[ prebidGlobal ] || { que: [] };
-    return new Promise(resolve => window[ prebidGlobal ].que.push(resolve));
+    window[prebidGlobal] = window[prebidGlobal] || { que: [] };
+    return new Promise(resolve => window[prebidGlobal].que.push(resolve));
   }
 
   private initApstag(): void {
@@ -556,7 +570,9 @@ export class DfpService {
    */
   private loadA9Script(config: Moli.MoliConfig): Promise<void> {
     if (!config.a9) {
-      return Promise.reject('a9 initialized without a configuration');
+      const message = 'a9 initialized without a configuration';
+      this.logger.error(message);
+      return Promise.reject(message);
     }
 
     window.apstag.init({
@@ -580,7 +596,7 @@ export class DfpService {
     const keyValueMap = config.targeting ? config.targeting.keyValues : {};
 
     Object.keys(keyValueMap).forEach(key => {
-      const value = keyValueMap[ key ];
+      const value = keyValueMap[key];
       if (value) {
         window.googletag.pubads().setTargeting(key, value);
       }
@@ -615,6 +631,8 @@ export class DfpService {
    */
   private registerPrebidSlots(pbjs: prebidjs.IPrebidJs, dfpPrebidSlots: SlotDefinition<Moli.PrebidAdSlot>[], config: Moli.MoliConfig, globalSizeConfigService: SizeConfigService): void {
     pbjs.addAdUnits(dfpPrebidSlots.map(({ moliSlot, filterSupportedSizes }) => {
+      this.logger.debug(`Prebid add ad unit: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
+
       const keyValues = config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {};
       const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ? moliSlot.prebid({ keyValues: keyValues }) : moliSlot.prebid;
       const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
@@ -646,6 +664,8 @@ export class DfpService {
 
   private fetchA9Slots(slots: Moli.SlotDefinition<Moli.A9AdSlot>[], config: Moli.MoliConfig, reportingService: ReportingService, globalSizeConfigService: SizeConfigService): Promise<void> {
     const filteredSlots = slots.filter(slot => globalSizeConfigService.filterSlot(slot.moliSlot.a9));
+
+    this.logger.debug(`Fetch A9 Slots: ${filteredSlots.map(slot => `[DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`)}`);
 
     if (filteredSlots.length === 0) {
       return Promise.resolve();
@@ -700,6 +720,8 @@ export class DfpService {
       const dfpSlots = slotDefinitions.map(slot => slot.moliSlot);
       const adUnitCodes = dfpSlots.map(slot => slot.domId);
 
+      this.logger.debug(`Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`);
+
       reportingService.markPrebidSlotsRequested(currentRequestCount);
       pbjs.requestBids({
         adUnitCodes: adUnitCodes,
@@ -731,6 +753,13 @@ export class DfpService {
 
             // set key-values for DFP to target the correct line items
             pbjs.setTargetingForGPTAsync(adUnitCodes);
+
+            adUnitCodes.forEach(adUnitPath => {
+              const bidResponse = bidResponses[adUnitPath];
+              bidResponse ?
+                this.logger.debug(`Prebid bid response: [DomID]: ${adUnitPath} \n\t\t\t${bidResponse.bids.map(bid => `[bidder] ${bid.bidder} [width] ${bid.width} [height] ${bid.height} [cpm] ${bid.cpm}`)}`) :
+                this.logger.debug(`Prebid bid response: [DomID] ${adUnitPath} ---> no bid response`);
+            });
 
             resolve(bidResponses);
           } catch (error) {
@@ -766,6 +795,8 @@ export class DfpService {
 
     adSlot.setCollapseEmptyDiv(true);
     adSlot.addService(window.googletag.pubads());
+
+    this.logger.debug(`Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
     return adSlot;
   }
 
@@ -775,7 +806,7 @@ export class DfpService {
   }
 
   private displayAd(dfpSlot: Moli.AdSlot): void {
-    this.logger.debug(`Displaying ${dfpSlot.domId}`);
+    this.logger.debug(`Display slot: [DomID] ${dfpSlot.domId} [AdUnitPath] ${dfpSlot.adUnitPath}`);
     window.googletag.display(dfpSlot.domId);
   }
 
@@ -788,7 +819,7 @@ export class DfpService {
   private refreshAds(slots: SlotDefinition<Moli.AdSlot>[], reportingService: ReportingService): SlotDefinition<Moli.AdSlot>[] {
     window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
     slots.forEach(slot => {
-      this.logger.debug(`Refresh ad slot ${slot.moliSlot.domId}`);
+      this.logger.debug(`Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`);
       reportingService.markRefreshed(slot.moliSlot);
     });
     return slots;
@@ -860,7 +891,7 @@ export class DfpService {
   }
 
   private isSinglePlayerSize(size: prebidjs.IMediaTypeVideo['playerSize']): size is [ number, number ] {
-    return size.length === 2 && typeof size[ 0 ] === 'number' && typeof size[ 1 ] === 'number';
+    return size.length === 2 && typeof size[0] === 'number' && typeof size[1] === 'number';
   }
 
   /**

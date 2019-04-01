@@ -5,6 +5,7 @@ import IConsentData = IABConsentManagement.IConsentData;
 import IVendorConsents = IABConsentManagement.IVendorConsents;
 import { ReportingService } from '../reportingService';
 import loadCmpFaktorStub = require('./cmpFaktorStub');
+import { Moli } from '../..';
 
 declare const window: IGlobalCMPApi & IFaktorCMPApi & Window;
 
@@ -40,10 +41,11 @@ export class FaktorCmp implements ICmpService {
    */
   private readonly faktorLoaded: Promise<void>;
 
-  constructor(private readonly reportingService: ReportingService) {
+  constructor(private readonly reportingService: ReportingService, private readonly logger: Moli.MoliLogger) {
     this.reportingService.markCmpInitialization();
     this.faktorLoaded = new Promise<void>(resolve => {
         loadCmpFaktorStub();
+        this.logger.debug('FaktorCMP: loaded faktor stub');
         window.__cmp('addEventListener', 'cmpReady', resolve);
       }
     );
@@ -82,6 +84,7 @@ export class FaktorCmp implements ICmpService {
   private consentDataExists(): Promise<boolean> {
     return new Promise<boolean>(resolve => {
       window.__cmp('consentDataExist', true, (exists: boolean) => {
+        this.logger.debug(`FaktorCMP: consentDataExist: ${exists}`);
         if (exists) {
           this.reportingService.measureCmpLoadTime();
         }
@@ -98,6 +101,7 @@ export class FaktorCmp implements ICmpService {
   private acceptAll(): Promise<void> {
     return new Promise<void>(resolve => {
       window.__cmp('acceptAll', true, () => {
+        this.logger.debug('FaktorCMP: calling accept all');
         this.reportingService.measureCmpLoadTime();
         resolve();
       });
