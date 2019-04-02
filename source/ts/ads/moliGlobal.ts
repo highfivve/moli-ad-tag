@@ -303,7 +303,6 @@ export const createMoliTag = (): Moli.MoliTag => {
             state: 'requestAds',
             config: config
           };
-          getLogger(state.config).info('MoliGlobal', 'Initializing DFP Service');
           return dfpService.initialize(config)
             .then(config => dfpService.requestAds(config))
             .then(() => {
