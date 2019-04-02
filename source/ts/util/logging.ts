@@ -29,24 +29,67 @@ function getNoopLogger(): Moli.MoliLogger {
 }
 
 /**
+ * returns the style for a label
+ *
+ * @param background the color of label
+ */
+function getLabelStyle(background: string): string {
+  return `background:${background}; color:#FFF; padding:3px; margin:3px; border-radius:5px; line-height: 15px;`;
+}
+
+/**
+ * defines the style for the log stage label at the beginning of the log message.
+ *
+ * @param logStage
+ */
+function getLogStageLabelStyle(logStage: 'debug' | 'info' | 'warn' | 'error'): string {
+  switch (logStage) {
+    case 'debug':
+      return getLabelStyle('#49A0CC');
+    case 'info':
+      return getLabelStyle('#61A172');
+    case 'warn':
+      return getLabelStyle('#FFC300');
+    case 'error':
+      return getLabelStyle('#C70039');
+  }
+}
+
+/**
+ * defines the style for the label source label, that tells where the log came from.
+ *
+ * @param source
+ */
+function getSourceLabelStyle(source: 'AdPerformanceService' | 'DFP Service' | 'Faktor CMP' | 'MoliGlobal'): string {
+  switch (source) {
+    case 'AdPerformanceService':
+      return getLabelStyle('#74ABC6');
+    case 'DFP Service':
+      return getLabelStyle('#74C6C0');
+    case 'Faktor CMP':
+      return getLabelStyle('#9374C6');
+    case 'MoliGlobal':
+      return getLabelStyle('#74C689');
+  }
+}
+
+/**
  * The default logger that writes everything to the console with labels.
  */
 export function getDefaultLogger(): Moli.MoliLogger {
 
-  const formatting = 'background:#49a0cc; color:#FFF; padding:5px; border-radius:5px; line-height: 15px;';
-
   return {
-    debug(message?: any, ...optionalParams: any[]): void {
-      window.console.debug(`%c[DEBUG]%c ${message}`, formatting, '', ...optionalParams);
+    debug(source?: any, message?: any, ...optionalParams: any[]): void {
+      window.console.debug(`%c[DEBUG]%c${source}%c${message}`, getLogStageLabelStyle('debug'), getSourceLabelStyle(source), '', ...optionalParams);
     },
-    info(message?: any, ...optionalParams: any[]): void {
-      window.console.info(`%c[INFO]%c ${message}`, formatting, '', ...optionalParams);
+    info(source?: any, message?: any, ...optionalParams: any[]): void {
+      window.console.info(`%c[INFO]%c${source}%c${message}`, getLogStageLabelStyle('info'), getSourceLabelStyle(source), '', ...optionalParams);
     },
-    warn(message?: any, ...optionalParams: any[]): void {
-      window.console.warn(`%c[WARN]%c ${message}`, formatting, '', ...optionalParams);
+    warn(source?: any, message?: any, ...optionalParams: any[]): void {
+      window.console.warn(`%c[WARN]%c${source}%c${message}`, getLogStageLabelStyle('warn'), getSourceLabelStyle(source), '', ...optionalParams);
     },
-    error(message?: any, ...optionalParams: any[]): void {
-      window.console.error(`%c[ERROR]%c ${message}`, formatting, '', ...optionalParams);
+    error(source?: any, message?: any, ...optionalParams: any[]): void {
+      window.console.error(`%c[ERROR]%c%c${source}%c${message}`, getLogStageLabelStyle('error'), getSourceLabelStyle(source), '', ...optionalParams);
     }
   };
 }

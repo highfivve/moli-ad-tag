@@ -45,7 +45,7 @@ export class FaktorCmp implements ICmpService {
     this.reportingService.markCmpInitialization();
     this.faktorLoaded = new Promise<void>(resolve => {
         loadCmpFaktorStub();
-        this.logger.debug('FaktorCMP: loaded faktor stub');
+        this.logger.debug('Faktor CMP', 'loaded faktor stub');
         window.__cmp('addEventListener', 'cmpReady', resolve);
       }
     );
@@ -84,7 +84,7 @@ export class FaktorCmp implements ICmpService {
   private consentDataExists(): Promise<boolean> {
     return new Promise<boolean>(resolve => {
       window.__cmp('consentDataExist', true, (exists: boolean) => {
-        this.logger.debug(`FaktorCMP: consentDataExist: ${exists}`);
+        this.logger.debug('Faktor CMP', `consentDataExist: ${exists}`);
         if (exists) {
           this.reportingService.measureCmpLoadTime();
         }
@@ -101,7 +101,7 @@ export class FaktorCmp implements ICmpService {
   private acceptAll(): Promise<void> {
     return new Promise<void>(resolve => {
       window.__cmp('acceptAll', true, () => {
-        this.logger.debug('FaktorCMP: calling accept all');
+        this.logger.debug('Faktor CMP', 'calling accept all');
         this.reportingService.measureCmpLoadTime();
         resolve();
       });

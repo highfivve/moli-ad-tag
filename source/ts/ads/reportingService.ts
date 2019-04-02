@@ -56,7 +56,7 @@ export class ReportingService {
     try {
       this.pageRequestId = this.uuidv4();
       this.isSample = Math.random() <= config.sampleRate;
-      logger.debug(`[AdPerformanceService] isSample ${this.isSample} (${config.sampleRate}) | pageRequestId ${this.pageRequestId}`);
+      logger.debug(`AdPerformanceService`, `isSample ${this.isSample} (${config.sampleRate}) | pageRequestId ${this.pageRequestId}`);
     } catch (e) {
       // fallback if anything goes wrong
       this.pageRequestId = '00000000-0000-0000-0000-000000000000';
