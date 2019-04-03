@@ -513,6 +513,11 @@ export namespace Moli {
     readonly consent: consent.ConsentConfig;
 
     /**
+     * Sovrn ad reload
+     */
+    readonly adReload?: boolean;
+
+    /**
      * Reporting configuration
      */
     readonly reporting?: reporting.ReportingConfig;
