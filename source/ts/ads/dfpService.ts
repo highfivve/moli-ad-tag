@@ -622,7 +622,8 @@ export class DfpService {
       name: 'A9',
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: '//get.s-onetag.com/c161759b-7ec8-45a6-9c6f-c6a3a8cfa02c/tag.min.js'
-    });  }
+    });
+  }
 
   private configureAdNetwork(config: Moli.MoliConfig): Promise<void> {
 
@@ -672,7 +673,7 @@ export class DfpService {
       const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
 
       const bannerSizes = mediaTypeBanner ? filterSupportedSizes(mediaTypeBanner.sizes).filter(this.isFixedSize) : [];
-      const videoSizes = mediaTypeVideo ? this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
+      const videoSizes = mediaTypeVideo ? (this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) ? this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes)! : []) : [];
 
       // filter bids ourselves and don't rely on prebid to have a stable API
       const bids = prebidAdSlotConfig.adUnit.bids.filter(bid => globalSizeConfigService.filterSlot(bid));
@@ -928,16 +929,29 @@ export class DfpService {
   }
 
   /**
-   * Filters video player sizes according to the sizeConfig; if it is a single tuple ([number, number]), then this
-   * single tuple is checked and returned, if it fits. If it's an array of sizes, the array is checked and the fitting
-   * entries are returned.
+   * Filters video player sizes according to the sizeConfig;
+   *
+   *  * if no sizes are configured the `playerSize` is undefined
+   *  * if it is a single tuple ([number, number]), then this single tuple is checked and returned, if it fits.
+   *  * if it's an array of sizes, the array is checked and the fitting entries are returned.
+   *  * if all sizes are filtered out the `playerSize` is undefined
    *
    * @param playerSize the (array of) player size(s)
    * @param filterSupportedSizes function provided by the global or slot-local sizeConfig to filter the slot's sizes
    */
-  private filterVideoPlayerSizes(playerSize: prebidjs.IMediaTypeVideo['playerSize'], filterSupportedSizes: FilterSupportedSizes): [ number, number ][] {
-    return filterSupportedSizes(
+  private filterVideoPlayerSizes(playerSize: prebidjs.IMediaTypeVideo['playerSize'], filterSupportedSizes: FilterSupportedSizes): [ number, number ][] | undefined {
+
+    const supportedSizes = filterSupportedSizes(
       this.isSinglePlayerSize(playerSize) ? [ playerSize ] : playerSize
     ).filter(this.isFixedSize);
+
+    if (playerSize.length === 0 || supportedSizes.length === 0) {
+      return;
+    } else if (supportedSizes.length > 1) {
+      this.logger.warn('DFP Service', `multiple sizes were detected for video player size: ${supportedSizes.map(size => `[${size}]`)}`);
+    }
+
+    return supportedSizes;
   }
+
 }

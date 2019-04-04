@@ -311,6 +311,7 @@ describe('DfpService', () => {
     const googletagDefineOutOfPageSlotSpy = sandbox.spy(window.googletag, 'defineOutOfPageSlot');
     const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
 
+    const noopLoggerSpy = sandbox.spy(noopLogger, 'warn');
     const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
     const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
     const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
@@ -523,7 +524,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: undefined,
               video: {
-                playerSize: [ [ 320, 180 ], [ 640, 360 ] ] as [ number, number ][],
+                playerSize: [ [316, 169], [ 320, 180 ], [ 640, 360 ] ] as [ number, number ][],
                 context: 'outstream'
               }
             },
@@ -549,7 +550,7 @@ describe('DfpService', () => {
           sizeConfig: [
             {
               labels: [],
-              sizesSupported: [ [ 605, 165 ], [ 320, 180 ] ],
+              sizesSupported: [ [ 605, 165 ], [ 320, 180 ], [316, 169] ],
               mediaQuery: '(min-width: 0px)'
             }
           ],
@@ -566,7 +567,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: undefined,
               video: {
-                playerSize: [ [ 320, 180 ] ] as [ number, number ][],
+                playerSize: [ [ 320, 180 ], [316, 169] ] as [ number, number ][],
                 context: 'outstream'
               }
             },
@@ -577,6 +578,7 @@ describe('DfpService', () => {
               }
             } ]
           } ]);
+          expect(noopLoggerSpy).to.have.been.calledTwice
         });
       });
 
