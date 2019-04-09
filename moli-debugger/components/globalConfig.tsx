@@ -285,13 +285,6 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             </div>}
           </div>
 
-        {/*<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">*/}
-        {/*  <h4>Consent</h4>*/}
-        {/*  {this.consent(config.consent)}*/}
-        {/*  {this.consentConfig(config.consent.cmpConfig)}*/}
-        {/*  {this.consentData()}*/}
-        {/*</div>*/}
-
         {<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
           <h4>
             {this.collapseToggle('performance')}
@@ -385,39 +378,6 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
   private toggleSidebar = (): void => {
     this.setState({ sidebarHidden: !this.state.sidebarHidden });
   };
-
-  // private consentData = (): JSX.Element => {
-  //   return <div>
-  //     <div class="MoliDebug-tagContainer">
-  //       <span class="MoliDebug-tagLabel">maxVendorId</span>
-  //       <Tag>{}</Tag>
-  //     </div>
-  //   </div>;
-  // };
-  //
-  // private fillConsentData = (): JSX.Element | undefined => {
-  //   console.log('###########');
-  //   if (this.isCmpFunctionAvailable) {
-  //
-  //     window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
-  //
-  //       const consentString = new ConsentString(consentData ? consentData.consentData : undefined);
-  //       const element = document.getElementById('maxVendorId');
-  //
-  //       console.log(element);
-  //
-  //       if (element) {
-  //         element.innerText = element.innerHTML = consentString.getVersion().toString();
-  //       }
-  //
-  //       console.log(consentString);
-  //
-  //     });
-  //
-  //     return <div></div>;
-  //   }
-  // };
-
 
   private singlePerformanceMeasure = (name: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): JSX.Element => {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName(name);
