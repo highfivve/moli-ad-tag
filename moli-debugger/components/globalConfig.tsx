@@ -4,7 +4,7 @@ import { ReportingService } from '../../source/ts/ads/reportingService';
 import { AdSlotConfig } from './adSlotConfig';
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
-import { classList, firstUpper } from '../util/stringUtils';
+import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
@@ -13,6 +13,7 @@ import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
+import { ConsentConfig } from './consentConfig';
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
@@ -28,6 +29,7 @@ type IGlobalConfigState = {
     a9: boolean,
     sizeConfig: boolean;
     performance: boolean;
+    consent: boolean;
   };
   messages: Message[];
   browserResized: boolean;
@@ -48,12 +50,13 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     this.state = {
       sidebarHidden: false,
       expandSection: {
-        slots: false,
-        targeting: true,
+        slots: true,
+        targeting: false,
         prebid: false,
         a9: false,
         sizeConfig: false,
-        performance: true
+        performance: false,
+        consent: false
       },
       messages: [],
       browserResized: false,
@@ -67,8 +70,6 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         this.checkForDuplicateOrMissingSlots(this.state.messages, slot);
         this.checkSlotPrebidConfig(this.state.messages, slot);
       });
-
-      this.checkConsentConfig(this.state.messages, props.config.consent);
 
       if (props.config.prebid) {
         this.checkPrebidConfig(this.state.messages, props.config.prebid);
@@ -273,11 +274,23 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         </div>
         }
 
-        <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
-          <h4>Consent</h4>
-          {this.consent(config.consent)}
-          {this.consentConfig(config.consent.cmpConfig)}
-        </div>
+          <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">
+              <h4>
+                {this.collapseToggle('consent')}
+                  Consent
+              </h4>
+
+            {this.state.expandSection.consent && <div>
+              <ConsentConfig consent={config.consent} consentConfig={config.consent.cmpConfig}/>
+            </div>}
+          </div>
+
+        {/*<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--consent">*/}
+        {/*  <h4>Consent</h4>*/}
+        {/*  {this.consent(config.consent)}*/}
+        {/*  {this.consentConfig(config.consent.cmpConfig)}*/}
+        {/*  {this.consentData()}*/}
+        {/*</div>*/}
 
         {<div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
           <h4>
@@ -373,65 +386,38 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     this.setState({ sidebarHidden: !this.state.sidebarHidden });
   };
 
-  private consent = (consent: Moli.consent.ConsentConfig): JSX.Element => {
-    const provider = <div class="MoliDebug-tagContainer">
-      <span class="MoliDebug-tagLabel">Provider</span>
-      <Tag>{consent.personalizedAds.provider}</Tag>
-    </div>;
+  // private consentData = (): JSX.Element => {
+  //   return <div>
+  //     <div class="MoliDebug-tagContainer">
+  //       <span class="MoliDebug-tagLabel">maxVendorId</span>
+  //       <Tag>{}</Tag>
+  //     </div>
+  //   </div>;
+  // };
+  //
+  // private fillConsentData = (): JSX.Element | undefined => {
+  //   console.log('###########');
+  //   if (this.isCmpFunctionAvailable) {
+  //
+  //     window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
+  //
+  //       const consentString = new ConsentString(consentData ? consentData.consentData : undefined);
+  //       const element = document.getElementById('maxVendorId');
+  //
+  //       console.log(element);
+  //
+  //       if (element) {
+  //         element.innerText = element.innerHTML = consentString.getVersion().toString();
+  //       }
+  //
+  //       console.log(consentString);
+  //
+  //     });
+  //
+  //     return <div></div>;
+  //   }
+  // };
 
-    switch (consent.personalizedAds.provider) {
-      case 'cmp':
-        return <div>
-          {provider}
-          <div class="MoliDebug-tagContainer">
-            <span className="MoliDebug-tagLabel">Available</span>
-            <Tag variant={this.isCmpFunctionAvailable() ? 'green' : 'red'}>{this.isCmpFunctionAvailable() ? 'true' : 'false'}</Tag>
-          </div>
-        </div>;
-      case 'static':
-        return <div>
-          {provider}
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Value</span>
-            <Tag>{consent.personalizedAds.value.toString()}</Tag>
-          </div>
-        </div>;
-      case 'cookie':
-        return <div>
-          {provider}
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Cookie</span>
-            <Tag>{consent.personalizedAds.cookie}</Tag>
-          </div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Cookie value for nonPersonalizedAds</span>
-            <Tag>{consent.personalizedAds.valueForNonPersonalizedAds}</Tag>
-          </div>
-        </div>;
-    }
-  };
-
-  private consentConfig = (consentConfig: Moli.consent.CmpConfigVariants | undefined): JSX.Element | undefined => {
-    if (consentConfig) {
-      const cmpProvider = <div class="MoliDebug-tagContainer">
-        <span class="MoliDebug-tagLabel">CMP Provider</span>
-        <Tag>{consentConfig.provider}</Tag>
-      </div>;
-
-      switch (consentConfig.provider) {
-        case 'publisher':
-          return cmpProvider;
-        case 'faktor':
-          return <div>
-            {cmpProvider}
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">auto-opt-in</span>
-              <Tag>{consentConfig.autoOptIn.toString()}</Tag>
-            </div>
-          </div>;
-      }
-    }
-  };
 
   private singlePerformanceMeasure = (name: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): JSX.Element => {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName(name);
@@ -450,8 +436,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     </div>;
   };
 
-  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance'>): JSX.Element => {
-    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance'>) => {
+  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance' | 'consent'>): JSX.Element => {
+    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance' | 'consent'>) => {
       const oldVal = this.state.expandSection[ section ];
       this.setState({ expandSection: { ...this.state.expandSection, [ section ]: !oldVal } });
     };
@@ -493,23 +479,6 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
 
-  private checkConsentConfig = (messages: Message[], consent?: Moli.consent.ConsentConfig): void => {
-    if (!consent) {
-      messages.push({
-        kind: 'error',
-        text: 'No consent configuration found.'
-      });
-    }
-
-    // if cmp is configured, there must be a cmp present
-    if (consent && consent.personalizedAds.provider === 'cmp' && !this.isCmpFunctionAvailable()) {
-      messages.push({
-        kind: 'error',
-        text: 'no window.__cmp function found. Consent management and ads will not work!'
-      });
-    }
-  };
-
   private checkPrebidConfig = (messages: Message[], prebid: Moli.headerbidding.PrebidConfig) => {
     if (!prebid.config.consentManagement) {
       messages.push({
@@ -544,6 +513,4 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private isSlotRendered = (slot: AdSlot): boolean => !!document.getElementById(slot.domId)
     && this.props.sizeConfigService.filterSlot(slot);
-
-  private isCmpFunctionAvailable = () => window.__cmp || typeof window.__cmp === 'function';
 }

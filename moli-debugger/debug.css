@@ -17,6 +17,11 @@
   --MoliDebug-close-handle-height: 32px;
 }
 
+.link {
+  color: white;
+  text-decoration: underline;
+}
+
 .MoliDebug {
 
   &-sidebar {
@@ -236,8 +241,21 @@
 
     &Label {
       display: inline-block;
-      min-width: 110px;
+      min-width: 140px;
       padding-right: 5px;
+    }
+
+    &LabelBtn {
+       display: inline-block;
+       min-width: 135px;
+       padding-right: 5px;
+       padding-left: 5px;
+       background: lightgray;
+       border: 1px solid lightgray;
+       border-radius: var(--MoliDebug-border-radius);
+       cursor: pointer;
+       margin-right: 5px;
+       margin-bottom: 5px;
     }
 
     &Container {

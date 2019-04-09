@@ -12,5 +12,5 @@ import { adConfiguration } from './source/ts/configuration';
 moli.configure(adConfiguration);
 moli.requestAds();
 
-console.log(window.pbjs.version);
+console.log(window.pbjs.vendorListVersion);
 console.log(adConfiguration);
