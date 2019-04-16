@@ -578,7 +578,7 @@ describe('DfpService', () => {
               }
             } ]
           } ]);
-          expect(noopLoggerSpy).to.have.been.calledTwice;
+          expect(noopLoggerSpy).to.have.been.calledOnce;
         });
       });
 
