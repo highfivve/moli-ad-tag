@@ -37,6 +37,7 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
       messages: []
     };
     this.checkConsentConfig(this.state.messages, props.consent);
+    this.getConsentData();
   }
 
   render(props: IConsentConfigProps, state: IConsentConfigState): JSX.Element {
@@ -45,13 +46,6 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
       {this.consentConfig(props.consentConfig)}
       {this.consentData()}
     </div>;
-  }
-
-  shouldComponentUpdate(nextProps: Readonly<IConsentConfigProps>, nextState: Readonly<IConsentConfigState>, nextContext: any): boolean {
-    return (nextState.consentData !== this.state.consentData) &&
-      (nextState.vendorListVersion !== this.state.vendorListVersion) &&
-      (nextState.allowedPurposes !== this.state.allowedPurposes) &&
-      (nextState.numAllowedVendors !== this.state.numAllowedVendors);
   }
 
   private consent = (consent: Moli.consent.ConsentConfig): JSX.Element => {
@@ -115,9 +109,8 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
     }
   };
 
-  private consentData = (): JSX.Element | undefined => {
+  private getConsentData = (): void => {
     if (this.isCmpFunctionAvailable) {
-
       window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
 
         const consentString = new ConsentString(consentData ? consentData.consentData : undefined);
@@ -127,6 +120,11 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
         this.setState({ numAllowedVendors: consentString.getVendorsAllowed().length });
         this.setState({ allowedPurposes: consentString.getPurposesAllowed() });
       });
+    }
+  };
+
+  private consentData = (): JSX.Element | undefined => {
+    if (this.isCmpFunctionAvailable) {
 
       return <div>
         <div class="MoliDebug-tagContainer">
@@ -161,7 +159,6 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
   };
 
   private isCmpFunctionAvailable = () => window.__cmp || typeof window.__cmp === 'function';
-
 
   private checkConsentConfig = (messages: Message[], consent?: Moli.consent.ConsentConfig): void => {
     if (!consent) {
