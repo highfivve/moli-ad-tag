@@ -110,7 +110,7 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
   };
 
   private getConsentData = (): void => {
-    if (this.isCmpFunctionAvailable) {
+    if (this.isCmpFunctionAvailable()) {
       window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
 
         const consentString = new ConsentString(consentData ? consentData.consentData : undefined);
@@ -124,7 +124,7 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
   };
 
   private consentData = (): JSX.Element | undefined => {
-    if (this.isCmpFunctionAvailable) {
+    if (this.isCmpFunctionAvailable()) {
 
       return <div>
         <div class="MoliDebug-tagContainer">
