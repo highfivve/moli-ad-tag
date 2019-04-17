@@ -515,7 +515,7 @@ export namespace Moli {
     /**
      * Sovrn ad reload
      */
-    readonly adReload?: boolean;
+    readonly sovrnAssetUrl?: string;
 
     /**
      * Reporting configuration
