@@ -2,22 +2,22 @@ import * as preact from 'preact';
 import { ReportingService } from '../../source/ts/ads/reportingService';
 
 import { AdSlotConfig } from './adSlotConfig';
-import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
-import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
 import { ConsentConfig } from './consentConfig';
+import { LabelConfigService } from '../../source/ts/ads/labelConfigService';
+import { LabelConfigDebug } from './labelConfigDebug';
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
-  sizeConfigService: SizeConfigService;
+  labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
 };
 type IGlobalConfigState = {
@@ -27,7 +27,7 @@ type IGlobalConfigState = {
     targeting: boolean;
     prebid: boolean;
     a9: boolean,
-    sizeConfig: boolean;
+    labelSizeConfig: boolean;
     performance: boolean;
     consent: boolean;
   };
@@ -54,7 +54,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         targeting: false,
         prebid: false,
         a9: false,
-        sizeConfig: false,
+        labelSizeConfig: false,
         performance: false,
         consent: false
       },
@@ -75,8 +75,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         this.checkPrebidConfig(this.state.messages, props.config.prebid);
       }
 
-      if (props.config.sizeConfig) {
-        props.config.sizeConfig.forEach(this.checkGlobalSizeConfigEntry(this.state.messages));
+      if (props.config.labelSizeConfig) {
+        props.config.labelSizeConfig.forEach(this.checkGlobalSizeConfigEntry(this.state.messages));
       }
 
       props.windowResizeService.register(this);
@@ -127,7 +127,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             {config.slots.map(slot => (this.isSlotRendered(slot) || !state.showOnlyRenderedSlots) ?
               <div>
                 <strong>{slot.behaviour}</strong> slot with DOM ID <strong>{slot.domId}</strong>
-                <AdSlotConfig sizeConfigService={props.sizeConfigService} slot={slot}/>
+                <AdSlotConfig labelConfigService={props.labelConfigService} slot={slot}/>
               </div> : null
             )}
           </div>}
@@ -146,8 +146,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
               {this.keyValues(config.targeting.keyValues)}
               <h5>Labels from publisher</h5>
               {this.labels(config.targeting.labels)}
-              <h5>Labels from size config</h5>
-              {this.labels(props.sizeConfigService.getSupportedLabels().filter(l1 => !(config.targeting!.labels || []).find(l2 => l2 === l1)))}
+              <h5>Labels from label size config</h5>
+              {this.labels(props.labelConfigService.getSupportedLabels().filter(l1 => !(config.targeting!.labels || []).find(l2 => l2 === l1)))}
             </div>}
             {!config.targeting && <span>No targeting config present.</span>}
           </div>}
@@ -155,13 +155,13 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
         <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--sizeConfig">
           <h4>
-            {this.collapseToggle('sizeConfig')}
-            Size config
+            {this.collapseToggle('labelSizeConfig')}
+            Label Size config
           </h4>
 
-          {this.state.expandSection.sizeConfig && <div>
-            {(config.sizeConfig && config.sizeConfig.length > 0) && <SizeConfigDebug sizeConfig={config.sizeConfig}/>}
-            {(!config.sizeConfig || config.sizeConfig.length === 0) && <span>No size config present.</span>}
+          {this.state.expandSection.labelSizeConfig && <div>
+            {(config.labelSizeConfig && config.labelSizeConfig.length > 0) && <LabelConfigDebug labelSizeConfig={config.labelSizeConfig}/>}
+            {(!config.labelSizeConfig || config.labelSizeConfig.length === 0) && <span>No size config present.</span>}
           </div>}
         </div>
 
@@ -396,8 +396,8 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     </div>;
   };
 
-  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance' | 'consent'>): JSX.Element => {
-    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'sizeConfig' | 'performance' | 'consent'>) => {
+  private collapseToggle = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'labelSizeConfig' | 'performance' | 'consent'>): JSX.Element => {
+    const toggleValue = (section: keyof Pick<IGlobalConfigState['expandSection'], 'slots' | 'targeting' | 'prebid' | 'a9' | 'labelSizeConfig' | 'performance' | 'consent'>) => {
       const oldVal = this.state.expandSection[ section ];
       this.setState({ expandSection: { ...this.state.expandSection, [ section ]: !oldVal } });
     };
@@ -462,15 +462,15 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     }
   };
   
-  private checkGlobalSizeConfigEntry = (messages: Message[]) =>  (entry: Moli.SizeConfigEntry, index: number): void => {
-    if (entry.sizesSupported.length > 0) {
+  private checkGlobalSizeConfigEntry = (messages: Message[]) =>  (entry: Moli.LabelSizeConfigEntry, index: number): void => {
+    if (entry.labelsSupported.length === 0) {
       messages.push({
         kind: 'warning',
-        text: `Global SizeConfig entry #${index + 1} adds supportedSizes. We recommend defining supportedSizes per slot in a slot specific SizeConfig`
+        text: `No Global LabelSizeConfig entries. We recommend defining labels.`
       });
     }
   };
 
   private isSlotRendered = (slot: AdSlot): boolean => !!document.getElementById(slot.domId)
-    && this.props.sizeConfigService.filterSlot(slot);
+    && this.props.labelConfigService.filterSlot(slot);
 }

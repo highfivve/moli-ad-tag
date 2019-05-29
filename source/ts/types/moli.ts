@@ -493,13 +493,13 @@ export namespace Moli {
     };
 
     /**
-     * Size configuration to support "responsive" ads.
+     * Label configuration to support "responsive" ads.
      * This is an alternative solution to custom () => DfpSlotSize[] functions and is taken
      * from prebid.js.
      *
      * https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
-    readonly sizeConfig?: SizeConfigEntry[];
+    readonly labelSizeConfig?: LabelSizeConfigEntry[];
 
     /** optional prebid configuration */
     readonly prebid?: headerbidding.PrebidConfig;
@@ -527,43 +527,16 @@ export namespace Moli {
 
   }
 
+
   /**
    * ## SizeConfig entry
    *
-   * Configure sizes and labels based on media queries.
+   * Configure sizes based on media queries for a single `IAdSlot`.
    *
    * This is the most complex part of a publisher ad tag setup. The size config defines
    *
    * - if an ad slot is loaded
    * - what sizes are requested
-   *
-   * ## Prebid API
-   *
-   * The API is identical to the Prebid size config feature. However we do not pass the
-   * size config down to prebid as we already apply the logic at a higher level. We only
-   * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
-   *
-   *
-   * @see [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
-   * @see [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
-   * @see [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
-   * @see [requestBids with labels](https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
-   */
-  export interface SizeConfigEntry {
-    /** media query that must match if the sizes are applicable */
-    readonly mediaQuery: string;
-
-    /** static sizes that are support if the media query matches */
-    readonly sizesSupported: DfpSlotSize[];
-
-    /** labels that are available if the media query matches */
-    readonly labels: string[];
-  }
-
-  /**
-   * ## Slot SizeConfig entry
-   *
-   * Configure sizes based on media queries for a single `IAdSlot`.
    *
    * This slot only supports the `mediaQuery` and `sizesSupported` property.
    * `labels` can only be defined globally as these can and should always be unique,
@@ -585,8 +558,34 @@ export namespace Moli {
    *
    * This result in `[[300,250]]` being always supported, which may not be something you want.
    *
+   *
+   * ## Prebid API
+   *
+   * The API is identical to the Prebid size config feature. However we do not pass the
+   * size config down to prebid as we already apply the logic at a higher level. We only
+   * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
+   *
+   *
+   * @see [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+   * @see [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
+   * @see [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
+   * @see [requestBids with labels](https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
    */
-  export type SlotSizeConfigEntry = Pick<SizeConfigEntry, 'mediaQuery' | 'sizesSupported'>;
+  export interface SizeConfigEntry {
+    /** media query that must match if the sizes are applicable */
+    readonly mediaQuery: string;
+
+    /** static sizes that are support if the media query matches */
+    readonly sizesSupported: DfpSlotSize[];
+  }
+
+  export interface LabelSizeConfigEntry {
+    /** media query that must match if the labels are applicable */
+    readonly mediaQuery: string;
+
+    /** labels that are available if the media query matches */
+    readonly labelsSupported: string[];
+  }
 
   export interface IAdSlot {
     /** id for the ad slot element */
@@ -616,18 +615,14 @@ export namespace Moli {
     readonly labelAny?: string[];
     readonly labelAll?: string[];
 
-
     /**
-     * Provide an optional size config to create supported sizes for this ad slot.
+     * Size configuration to support "responsive" ads.
+     * This is an alternative solution to custom () => DfpSlotSize[] functions and is taken
+     * from prebid.js.
      *
-     * - The global `supportedSizes` will be **ignored**
-     * - The global `labels` will be **used**
-     *
-     * NOTE: This should not be used to create labels. Use the global SizeConfig to
-     *       create labels for filtering entire ad slots.
-     *
+     * https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
-    readonly sizeConfig?: SlotSizeConfigEntry[];
+    readonly sizeConfig: SizeConfigEntry[];
 
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
     readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;

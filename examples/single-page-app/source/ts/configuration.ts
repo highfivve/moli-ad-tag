@@ -149,15 +149,13 @@ export const adConfiguration: Moli.MoliConfig = {
       'static': 'from-config'
     }
   },
-  sizeConfig: [
+  labelSizeConfig: [
     {
-      labels: [ 'mobile' ],
-      sizesSupported: [ ],
+      labelsSupported: [ 'mobile' ],
       mediaQuery: '(max-width: 767px)'
     },
     {
-      labels: [ 'desktop', 'tablet' ],
-      sizesSupported: [ ],
+      labelsSupported: [ 'desktop', 'tablet' ],
       mediaQuery: '(min-width: 768px)'
     }
   ],

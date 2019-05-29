@@ -3,28 +3,11 @@ import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 
 import DfpSlotSize = Moli.DfpSlotSize;
 import SizeConfigEntry = Moli.SizeConfigEntry;
-import MoliLogger = Moli.MoliLogger;
-import IAdSlot = Moli.IAdSlot;
-import SlotSizeConfigEntry = Moli.SlotSizeConfigEntry;
 
 /**
- * Conditionally select the ad unit based on labels.
- * Labels are supplied by the sizeConfig object in the top level moli configuration.
- *
- * This type relies on structural typing. All interfaces that provide the three fields
- * `labelAny`, `labelAll` and `sizes` can be filtered.
- *
- * The API and behaviour matches the prebid API.
- * - [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
- * - [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
- * - [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
+ * Filter sizes of an ad slot depending on media queries.
  */
-export interface ILabelledSlot {
-
-  /** at least one label must match */
-  readonly labelAny?: string[];
-  /** all labels must match */
-  readonly labelAll?: string[];
+export interface ISizedSlot {
 
   /**
    * The supported sizes by this slot.
@@ -39,75 +22,51 @@ export interface ILabelledSlot {
 }
 
 /**
- * Service that holds the slot size and labels configuration.
+ * Service that holds the slot size configuration.
  *
  * It provides methods for evaluating if a given slot or a given set of slot sizes match the configured criteria.
  */
 export class SizeConfigService {
   private readonly supportedSizes: DfpSlotSize[];
-  private readonly supportedLabels: string[];
+
   /**
    * True:  Either no size config is used or the size config produced supported sizes.
    * False: Size config produced no supported sizes thus all sizes should be filtered.
    */
   private readonly isValid: boolean;
 
-  constructor(private readonly sizeConfig: (SizeConfigEntry | SlotSizeConfigEntry)[],
-              private readonly extraLabels: string[]) {
+  constructor(private readonly sizeConfig: SizeConfigEntry[]) {
     // Matches the given slot sizes against the window's dimensions.
-    const supportedConfigs = sizeConfig
-      .filter(conf => window.matchMedia(conf.mediaQuery).matches);
+    const supportedSizeConfigs = sizeConfig.length !== 0 ?
+    sizeConfig
+      .filter(conf => window.matchMedia(conf.mediaQuery).matches) : [];
 
-    this.isValid = sizeConfig.length === 0 || !(sizeConfig.length > 0 && supportedConfigs.length === 0);
+    this.isValid = (sizeConfig.length === 0 || !(sizeConfig.length > 0 && supportedSizeConfigs.length === 0));
 
     // To filter out duplicate slot sizes, the slot size tuples are converted to strings that can be easily compared
     // using indexOf(), and back to tuples after the filtering took place.
     this.supportedSizes = flatten(
-      supportedConfigs
+      supportedSizeConfigs
         .map(conf => conf.sizesSupported)
     )
       .map(size => JSON.stringify(size))
       .filter(uniquePrimitiveFilter)
       .map(sizeAsString => JSON.parse(sizeAsString));
-
-    const supportedLabels = flatten(
-      supportedConfigs.map(conf => this.isGlobalSizeConfigEntry(conf) ? conf.labels : [])
-    );
-
-    this.supportedLabels = [ ...supportedLabels, ...extraLabels ]
-      .filter(uniquePrimitiveFilter);
   }
 
   /**
-   * Checks if the given slot fulfills the configured slot size and label matching criteria.
-   *
-   * Labels are matched in this order: labelAll, labelAny. If both are specified, only labelAll will be
-   * taken into account.
-   *
-   * If no labels have been configured, all labels are considered matching. See the implementation in prebid.js:
-   * https://github.com/prebid/Prebid.js/blob/master/src/sizeMapping.js#L96
+   * Checks if the given slot fulfills the configured slot size matching criteria.
    *
    * @param slot the ad slot to check
-   * @returns {boolean} is this slot supported (label/sizes)?
+   * @returns {boolean} is this slot supported (sizes)?
    */
-  public filterSlot(slot: ILabelledSlot): boolean {
-    let labelsMatching = true;
-
-    // filtering by labels is only done if any labels were configured.
-    if (this.supportedLabels.length > 0 && slot.labelAll && slot.labelAll.length > 0) {
-      labelsMatching = slot.labelAll.every(label => this.supportedLabels.indexOf(label) > -1);
-    }
-
-    // if labelAll was already evaluated, labelAny will be ignored.
-    if (this.supportedLabels.length > 0 && slot.labelAny && !(slot.labelAll && slot.labelAll.length > 0)) {
-      labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
-    }
+  public filterSlot(slot: ISizedSlot): boolean {
 
     // for
     //  - out-of-page slots
     //  - prebid slots
     // no sizes are provided. Therefore, we need to bypass slot size filtering for these slots.
-    return labelsMatching && (!slot.sizes || slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0);
+    return (!slot.sizes || slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0);
   }
 
   /**
@@ -138,14 +97,4 @@ export class SizeConfigService {
     );
   }
 
-  /**
-   * @returns the configured supported labels
-   */
-  public getSupportedLabels(): string[] {
-    return this.supportedLabels;
-  }
-
-  private isGlobalSizeConfigEntry(entry: SizeConfigEntry | SlotSizeConfigEntry): entry is SizeConfigEntry {
-    return entry.hasOwnProperty('labels');
-  }
 }

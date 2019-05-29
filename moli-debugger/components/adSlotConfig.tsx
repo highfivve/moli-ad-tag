@@ -12,11 +12,12 @@ import { Tag } from './tag';
 import headerbidding = Moli.headerbidding;
 import AdSlot = Moli.AdSlot;
 import DfpSlotSize = Moli.DfpSlotSize;
+import { LabelConfigService } from '../../source/ts/ads/labelConfigService';
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
   slot: AdSlot;
-  sizeConfigService: SizeConfigService;
+  labelConfigService: LabelConfigService;
 };
 type IAdSlotConfigState = {
   dimensions?: { width: number, height: number };
@@ -54,7 +55,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   }
 
   render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
-    const slotValid = props.sizeConfigService.filterSlot(props.slot);
+    const slotValid = props.labelConfigService.filterSlot(props.slot);
     const slotElementExists = !!document.getElementById(props.slot.domId);
     const slotVisible = slotValid && slotElementExists;
 
@@ -229,7 +230,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     const a9 = this.props.slot.a9;
 
     if (a9) {
-      const supportedLabels = this.props.sizeConfigService.getSupportedLabels();
+      const supportedLabels = this.props.labelConfigService.getSupportedLabels();
       if (a9.labelAll) {
         return a9.labelAll.every(label => supportedLabels.indexOf(label) > -1);
       }
@@ -247,9 +248,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
-    const sizeConfigService = slotSizeConfig ?
-      new SizeConfigService(slotSizeConfig, []) :
-      this.props.sizeConfigService;
+    const sizeConfigService = new SizeConfigService(slotSizeConfig);
 
     return sizes.map(size => ({
       valid: sizeConfigService.filterSupportedSizes([ size ]).length > 0,
@@ -271,7 +270,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   private labelConfig = (labelledSlot: {labelAll?: string[], labelAny?: string[]}): JSX.Element => {
     const labelAll = labelledSlot.labelAll;
     const labelAny = labelledSlot.labelAny;
-    const supportedLabels = this.props.sizeConfigService.getSupportedLabels();
+    const supportedLabels = this.props.labelConfigService.getSupportedLabels();
     const labelAllMatches = !!labelAll && labelAll.every(label => supportedLabels.indexOf(label) > -1);
     const labelAnyMatches = !!labelAny && labelAny.some(label => supportedLabels.indexOf(label) > -1);
 

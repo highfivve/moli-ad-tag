@@ -210,15 +210,13 @@ export const adConfiguration: Moli.MoliConfig = {
       prebidjs.IndexExchange, prebidjs.PubMatic, prebidjs.Yieldlab
     ]
   },
-  sizeConfig: [
+  labelSizeConfig: [
     {
-      labels: [ 'mobile' ],
-      sizesSupported: [],
+      labelsSupported: [ 'mobile' ],
       mediaQuery: '(max-width: 767px)'
     },
     {
-      labels: [ 'desktop', 'tablet' ],
-      sizesSupported: [],
+      labelsSupported: [ 'desktop', 'tablet' ],
       mediaQuery: '(min-width: 768px)'
     }
   ],

@@ -33,7 +33,8 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizeConfig: []
     },
     {
       position: 'in-page',
@@ -45,7 +46,8 @@ export const adConfiguration: Moli.MoliConfig = {
         source: window
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizeConfig: []
     },
     {
       position: 'in-page',
@@ -58,6 +60,7 @@ export const adConfiguration: Moli.MoliConfig = {
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
       sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
+      sizeConfig: [],
       // example for a dynamic prebid configuration
       prebid: (context) => {
         return {
@@ -90,6 +93,7 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/pos2',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizeConfig: [],
       prebid: {
         adUnit: {
           code: 'prebid-adslot',
@@ -136,13 +140,14 @@ export const adConfiguration: Moli.MoliConfig = {
         },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizeConfig: [],
       a9: { }
     }
   ],
   targeting: {
     keyValues: {}
   },
-  sizeConfig: [],
+  labelSizeConfig: [],
   prebid: {
     config: {
       bidderTimeout: 1000,

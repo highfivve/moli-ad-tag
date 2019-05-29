@@ -17,38 +17,19 @@ use(sinonChai);
 describe('SizeConfigService', () => {
   const sandbox = Sinon.createSandbox();
   const sizeConfigEntry1: SizeConfigEntry = {
-    labels: [],
     sizesSupported: [ [ 205, 200 ], 'fluid' ],
     mediaQuery: 'min-width: 300px'
   };
   const sizeConfigEntry2: SizeConfigEntry = {
-    labels: [],
     sizesSupported: [ [ 205, 200 ] ],
     mediaQuery: 'min-width: 300px'
   };
   const sizeConfigEntry3: SizeConfigEntry = {
-    labels: [],
     sizesSupported: [ [ 985, 380 ], 'fluid' ],
     mediaQuery: 'min-width: 300px'
   };
-  const sizeConfigEntry4: SizeConfigEntry = {
-    labels: [ 'desktop', 'video' ],
-    sizesSupported: [ [ 205, 200 ], 'fluid' ],
-    mediaQuery: 'min-width: 300px'
-  };
-  const sizeConfigEntry5: SizeConfigEntry = {
-    labels: [ 'mobile', 'video', 'bottom' ],
-    sizesSupported: [ [ 205, 200 ] ],
-    mediaQuery: 'min-width: 300px'
-  };
   const sizeConfigEntryWithoutSizes: SizeConfigEntry = {
-    labels: [ 'mobile', 'video', 'bottom' ],
     sizesSupported: [],
-    mediaQuery: 'min-width: 300px'
-  };
-  const sizeConfigEntryWithoutLabels: SizeConfigEntry = {
-    labels: [],
-    sizesSupported: [ 'fluid' ],
     mediaQuery: 'min-width: 300px'
   };
   const outOfPageSlot: Moli.AdSlot = {
@@ -56,60 +37,28 @@ describe('SizeConfigService', () => {
     domId: 'not-available',
     behaviour: 'eager',
     adUnitPath: '/123/eager-oop',
-    sizes: []
+    sizes: [],
+    sizeConfig: []
   };
   const adSlot605x165: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available',
     behaviour: 'eager',
     adUnitPath: '/123/eager',
-    sizes: [ [ 605, 165 ] ]
+    sizes: [ [ 605, 165 ] ],
+    sizeConfig: []
   };
   const adSlotFluid985x380: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-2',
     behaviour: 'eager',
     adUnitPath: '/123/eager-2',
-    sizes: [ 'fluid', [ 985, 380 ] ]
-  };
-  const adSlotWithLabelAny: Moli.AdSlot = {
-    position: 'in-page',
-    domId: 'not-available-3',
-    behaviour: 'eager',
-    adUnitPath: '/123/eager-3',
     sizes: [ 'fluid', [ 985, 380 ] ],
-    labelAny: [ 'video', 'visitor-uk' ]
-  };
-  const adSlotWithLabelAll: Moli.AdSlot = {
-    position: 'in-page',
-    domId: 'not-available-4',
-    behaviour: 'eager',
-    adUnitPath: '/123/eager-4',
-    sizes: [ 'fluid', [ 985, 380 ] ],
-    labelAll: [ 'video', 'visitor-uk' ]
-  };
-  const adSlotWithLabelAnyLabelAll: Moli.AdSlot = {
-    position: 'in-page',
-    domId: 'not-available-5',
-    behaviour: 'eager',
-    adUnitPath: '/123/eager-5',
-    sizes: [ 'fluid', [ 985, 380 ] ],
-    labelAny: [ 'video', 'visitor-uk' ],
-    labelAll: [ 'video', 'visitor-uk' ]
-  };
-
-  const adSlotWithDifferentLabelAnyLabelAll: Moli.AdSlot = {
-    position: 'in-page',
-    domId: 'not-available-5',
-    behaviour: 'eager',
-    adUnitPath: '/123/eager-5',
-    sizes: [ 'fluid', [ 985, 380 ] ],
-    labelAny: [ 'video' ],
-    labelAll: [ 'desktop', 'bottom' ]
+    sizeConfig: []
   };
 
   const emptySizeConfig: SizeConfigEntry[] = [];
-  const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) => new SizeConfigService(sizeConfig, []);
+  const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) => new SizeConfigService(sizeConfig);
 
   afterEach(() => {
     sandbox.reset();
@@ -168,15 +117,8 @@ describe('SizeConfigService', () => {
       );
     });
 
-    it('should let the given slot pass if label configuration is empty', () => {
-      const slotPassed = newSizeConfigService([ sizeConfigEntryWithoutLabels ])
-        .filterSlot(adSlotWithLabelAll);
-
-      expect(slotPassed).to.be.true;
-    });
-
     it('should let the given slot pass if it is an out-of-page slot with empty sizes', () => {
-      const slotPassed = newSizeConfigService([ sizeConfigEntry5 ])
+      const slotPassed = newSizeConfigService([ sizeConfigEntryWithoutSizes ])
         .filterSlot(outOfPageSlot);
 
       expect(slotPassed).to.be.true;
@@ -187,42 +129,6 @@ describe('SizeConfigService', () => {
 
       expect(sizeConfigService.filterSlot(adSlot605x165)).to.be.false;
       expect(sizeConfigService.filterSlot(adSlotFluid985x380)).to.be.true;
-    });
-
-    it('should filter out duplicate labels from the label config', () => {
-      const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ]);
-
-      expect(
-        new Set(sizeConfigService.getSupportedLabels())
-      ).to.deep.equal(
-        new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
-      );
-    });
-
-    it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
-      const sizeConfigService = newSizeConfigService([ sizeConfigEntry4, sizeConfigEntry5 ]);
-      expect(sizeConfigService.getSupportedLabels()).to.deep.equal(['desktop', 'video', 'mobile', 'bottom']);
-
-      // has labelAny "video" matching
-      expect(sizeConfigService.filterSlot(adSlotWithLabelAny)).to.be.true;
-
-      // has labelAll specified which contains "visitor-uk", but "visitor-uk" is not in supportedLabels
-      expect(sizeConfigService.filterSlot(adSlotWithLabelAll)).to.be.false;
-
-      // has both specified, but labelAll doesn't match and labelAny is ignored :(
-      expect(sizeConfigService.filterSlot(adSlotWithLabelAnyLabelAll)).to.be.false;
-
-      // has both specific and both match
-      expect(sizeConfigService.filterSlot(adSlotWithDifferentLabelAnyLabelAll)).to.be.true;
-    });
-
-    it('should add the extra labels to the supported labels', () => {
-      const sizeConfigService = new SizeConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ]);
-      expect(
-        new Set(sizeConfigService.getSupportedLabels())
-      ).to.deep.equal(
-        new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
-      );
     });
   });
 });
