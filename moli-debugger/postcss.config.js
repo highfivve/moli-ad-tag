@@ -38,7 +38,6 @@ module.exports = {
           require('postcss-extend')({}),
           require('postcss-color-function')({}),
           require('autoprefixer')({
-            browsers: [ '> 1%', 'last 2 versions' ],
             grid: true
           }),
           require('cssnano')({

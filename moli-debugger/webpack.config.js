@@ -35,11 +35,11 @@ module.exports = (env, argv) => ({
   resolve: {
     extensions: [ '.tsx', '.ts', '.js', '.css' ]
   },
-  plugins: [
-    new UglifyJsPlugin({
+  optimization: {
+    minimizer: [new UglifyJsPlugin({
       sourceMap: false,
       test: /\.min.js$/,
       parallel: true
-    }),
-  ]
+    })],
+  }
 });
