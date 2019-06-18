@@ -3,6 +3,7 @@ import * as preact from 'preact';
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
+import { performanceMeasurementService } from '../../source/ts/util/performanceService';
 
 import { classList } from '../util/stringUtils';
 
@@ -18,6 +19,8 @@ type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
   slot: AdSlot;
   labelConfigService: LabelConfigService;
+  /** required to find measurements for this slot */
+  reportingConfig?: Moli.reporting.ReportingConfig;
 };
 type IAdSlotConfigState = {
   dimensions?: { width: number, height: number };
@@ -61,6 +64,12 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
     const prebidValid = this.isVisiblePrebid();
     const a9Valid = slotVisible && this.isVisibleA9();
+
+    // This code is duplicated from the ReportingService as sharing makes things more complicated
+    // and if something breaks this is nothing serious and easy to fix.
+    const adUnitRegex = (props.reportingConfig && props.reportingConfig.adUnitRegex) || /\/\d*\//i;
+    const measureName = `${props.slot.adUnitPath.replace(adUnitRegex, '')}_content_loaded_total`;
+    const contentLoadTime = performanceMeasurementService.getMeasure(measureName);
 
     return <div class={classList('MoliDebug-adSlot', [ !!props.parentElement, 'MoliDebug-adSlot--overlay' ])}
                 style={state.dimensions}>
@@ -113,6 +122,8 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
         <div className="MoliDebug-tagContainer">
           {this.labelConfig(this.props.slot)}
         </div>
+        {contentLoadTime && this.adSlotLoadStart(contentLoadTime)}
+        {contentLoadTime && this.performance('Content Loaded', contentLoadTime)}
       </div>}
       {state.showA9 && props.slot.a9 && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         {this.a9Config(props.slot.a9)}
@@ -183,6 +194,22 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       <div class="MoliDebug-tagContainer">
         {this.labelConfig(a9)}
       </div>
+    </div>;
+  };
+
+  private adSlotLoadStart = (measure: PerformanceMeasure): JSX.Element => {
+    const color: 'green' | 'yellow' | 'red' = measure.duration > 2000 ? 'red' : (measure.duration > 1000 ? 'yellow' : 'green');
+    return <div className="MoliDebug-tagContainer">
+      <span className="MoliDebug-tagLabel">Load started</span>
+      <Tag variant={color}>{measure.startTime.toFixed(0)} ms</Tag>
+    </div>;
+  };
+
+  private performance = (name: string, measure: PerformanceMeasure): JSX.Element => {
+    const color: 'green' | 'yellow' | 'red' = measure.duration > 5000 ? 'red' : (measure.duration > 2000 ? 'yellow' : 'green');
+    return <div className="MoliDebug-tagContainer">
+      <span className="MoliDebug-tagLabel">{name}</span>
+      <Tag variant={color}>{measure.duration.toFixed(0)} ms</Tag>
     </div>;
   };
 

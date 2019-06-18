@@ -128,7 +128,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
             {config.slots.map(slot => (this.isSlotRendered(slot) || !state.showOnlyRenderedSlots) ?
               <div>
                 <strong>{slot.behaviour}</strong> slot with DOM ID <strong>{slot.domId}</strong>
-                <AdSlotConfig labelConfigService={props.labelConfigService} slot={slot}/>
+                <AdSlotConfig labelConfigService={props.labelConfigService} reportingConfig={config.reporting} slot={slot}/>
               </div> : null
             )}
           </div>}
