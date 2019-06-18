@@ -80,7 +80,7 @@ describe('SizeConfigService', () => {
 
     it('should filter all sizes if config is not empty but no slot\'s matchMedia matches', () => {
       // for this test, we assume no sizeConfig mediaQuery matches:
-      const matchMediaStub = sandbox.stub(window, 'matchMedia').returns({ matches: false });
+      const matchMediaStub = sandbox.stub(window, 'matchMedia').returns({ matches: false } as MediaQueryList);
 
       const sizeConfigService = newSizeConfigService([ sizeConfigEntry3 ]);
 

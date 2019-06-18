@@ -815,6 +815,16 @@ export namespace Moli {
     }
 
     /**
+     * A `PrebidListener` configuration can either be created
+     *
+     * - as a static value
+     * - from a function which takes a `PrebidListenerContext`
+     */
+    export type PrebidListenerProvider =
+      PrebidListener
+      | ((context: PrebidListenerContext) => PrebidListener);
+
+    /**
      * Object with additional listeners to customize the prebid behaviour.
      *
      * ## `preSetTargetingForGPTAsync` listener
@@ -844,6 +854,22 @@ export namespace Moli {
       readonly preSetTargetingForGPTAsync?: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean, slotDefinitions: SlotDefinition<AdSlot>[]) => void;
     }
 
+    /**
+     * Context for creating a dynamic `PrebidListener` configuration. Grants access to certain values
+     * from the `MoliConfig` to configure dynamic behaviour.
+     *
+     * **Use cases**
+     *
+     * * key-value targeting for special formats like wallpapers
+     *
+     */
+    export interface PrebidListenerContext {
+      /**
+       * Access key-values
+       */
+      readonly keyValues: DfpKeyValueMap;
+    }
+
     export interface PrebidConfig {
       /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
       readonly config: prebidjs.IPrebidJsConfig;
@@ -852,7 +878,7 @@ export namespace Moli {
       readonly bidderSettings?: prebidjs.IBidderSettings;
 
       /** optional listener for prebid events */
-      readonly listener?: PrebidListener;
+      readonly listener?: PrebidListenerProvider;
 
       /**
        * If true, moli will use `window.moliPbjs` to access the prebid instance. The actual renaming of this

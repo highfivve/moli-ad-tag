@@ -57,7 +57,7 @@ describe('DfpService', () => {
     assetLoaderFetch.resolves();
 
     // by default all DOM elements exist
-    getElementByIdStub.returns({});
+    getElementByIdStub.returns({} as HTMLElement);
   });
 
   afterEach(() => {
@@ -79,7 +79,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.pbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).pbjs.que[0]();
+          (window as any).pbjs.que[ 0 ]();
           window.pbjs = pbjsStub;
         })
         .then(() => init);
@@ -98,7 +98,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.moliPbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).moliPbjs.que[0]();
+          (window as any).moliPbjs.que[ 0 ]();
           window.moliPbjs = pbjsStub;
         })
         .then(() => init);
@@ -157,7 +157,7 @@ describe('DfpService', () => {
         .then(() => {
           expect(window.googletag.cmd).to.be.ok;
           // resolve queue and set stub
-          (window as any).googletag.cmd[0]();
+          (window as any).googletag.cmd[ 0 ]();
           window.googletag = googletagStub;
         })
         .then(() => init);
@@ -273,14 +273,46 @@ describe('DfpService', () => {
         ]
       };
 
+      it('should inject a valid PrebidListenerContext', () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const listenerSpy = sandbox.spy(); // sandbox.spy(configProvider);
+        const dfpService = newDfpService();
+
+        return dfpService.initialize({
+            slots: [ adSlot ],
+            logger: noopLogger,
+            consent: consentConfig,
+            targeting: {
+              keyValues: {
+                'foo': 'bar'
+              }
+            },
+            prebid: {
+              config: pbjsTestConfig,
+              listener: listenerSpy
+            }
+          }
+        ).then(config => {
+          return dfpService.requestAds(config);
+        }).then(() => {
+          expect(listenerSpy).to.be.calledOnce;
+
+          const args = listenerSpy.firstCall.args;
+
+          expect(args[ 0 ]).to.deep.equal({keyValues: {'foo': 'bar'}}); // context
+        });
+      });
+
       it('should call the preSetTargetingForGPTAsync listener', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const listener: Moli.headerbidding.PrebidListener = {
           preSetTargetingForGPTAsync: (responseMap, timeOut, slots) => {
             return;
           }
         };
+
 
         const listenerSpy = sandbox.spy(listener, 'preSetTargetingForGPTAsync');
         const dfpService = newDfpService();
@@ -358,7 +390,7 @@ describe('DfpService', () => {
       });
 
       it('should register and refresh eagerly loaded in-page slot', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -388,7 +420,7 @@ describe('DfpService', () => {
       });
 
       it('should register and refresh eagerly loaded out-of-page slot', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -422,7 +454,7 @@ describe('DfpService', () => {
       // ------------------
 
       it('should add prebidjs adUnits', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -487,7 +519,7 @@ describe('DfpService', () => {
       });
 
       it('should filter prebidjs video playerSizes (single size)', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -519,7 +551,7 @@ describe('DfpService', () => {
           sizeConfig: [
             {
               mediaQuery: '(min-width: 0px)',
-              sizesSupported: [ 'fluid', [ 605, 165 ], [ 320, 180 ]]
+              sizesSupported: [ 'fluid', [ 605, 165 ], [ 320, 180 ] ]
             }
           ],
           prebid: prebidAdslotConfig
@@ -557,7 +589,7 @@ describe('DfpService', () => {
       });
 
       it('should filter prebidjs video playerSizes (multi size)', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -585,12 +617,12 @@ describe('DfpService', () => {
           domId: 'eager-loading-adslot',
           behaviour: 'eager',
           adUnitPath: '/123/eager',
-          sizes: [ 'fluid', [ 605, 165 ], [ 320, 180 ], [316, 169] ],
+          sizes: [ 'fluid', [ 605, 165 ], [ 320, 180 ], [ 316, 169 ] ],
           prebid: prebidAdslotConfig,
           sizeConfig: [
             {
               mediaQuery: '(min-width: 0px)',
-              sizesSupported: [ 'fluid', [ 605, 165 ], [ 320, 180 ], [316, 169] ]
+              sizesSupported: [ 'fluid', [ 605, 165 ], [ 320, 180 ], [ 316, 169 ] ]
             }
           ]
         };
@@ -631,7 +663,7 @@ describe('DfpService', () => {
       });
 
       it('should filter prebidjs banner/video sizes using a slot-local sizeConfig', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -708,7 +740,7 @@ describe('DfpService', () => {
       });
 
       it('should add prebidjs adUnits with a dynamic configuration', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -802,7 +834,7 @@ describe('DfpService', () => {
       // ------------------
 
       it('should fetchBids for a9 ad slots', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -835,16 +867,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('eager-loading-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/eager');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('eager-loading-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/eager');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
           expect(bidConfig.bidTimeout).to.be.undefined;
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
         });
@@ -854,7 +886,7 @@ describe('DfpService', () => {
     describe('lazy slots', () => {
 
       it('should register and refresh lazy loaded slot based on event', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -896,7 +928,7 @@ describe('DfpService', () => {
       });
 
       it('should initPrebid for lazy loaded slot based on event', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -972,7 +1004,7 @@ describe('DfpService', () => {
       });
 
       it('should fetchBids for a9 lazy ad slots', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1016,16 +1048,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('lazy-loading-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/lazy');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('lazy-loading-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/lazy');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
           expect(bidConfig.bidTimeout).to.be.undefined;
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
         });
@@ -1036,7 +1068,7 @@ describe('DfpService', () => {
     describe('refreshable slots', () => {
 
       it('should register and refresh refreshable slot based on event without lazy loading', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1079,7 +1111,7 @@ describe('DfpService', () => {
       });
 
       it('should register and refresh refreshable slot based on event lazily', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1124,7 +1156,7 @@ describe('DfpService', () => {
       });
 
       it('should initPrebid for refreshable slot based on event', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1213,7 +1245,7 @@ describe('DfpService', () => {
       });
 
       it('should fetchBids for a9 refreshable ad slots', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1250,16 +1282,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.firstCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('refreshable-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/refreshable');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
           expect(bidConfig.bidTimeout).to.be.undefined;
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
 
@@ -1273,16 +1305,16 @@ describe('DfpService', () => {
           const fetchBidArgs = apstagFetchBidsSpy.secondCall.args;
           expect(fetchBidArgs).length(2);
 
-          const bidConfig = fetchBidArgs[0] as apstag.IBidConfig;
+          const bidConfig = fetchBidArgs[ 0 ] as apstag.IBidConfig;
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(1);
-          expect(bidConfig.slots[0].slotID).to.equal('refreshable-adslot');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/refreshable');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 340 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('refreshable-adslot');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/refreshable');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 340 ] ]);
           expect(bidConfig.bidTimeout).to.be.undefined;
 
-          expect(fetchBidArgs[1]).to.be.a('function');
+          expect(fetchBidArgs[ 1 ]).to.be.a('function');
 
           expect(apstagSetDisplayBidsSpy).to.have.been.calledTwice;
         });
@@ -1295,7 +1327,7 @@ describe('DfpService', () => {
       it('should filter out slots from prebidjs adUnits that don\'t match the sizeConfig', () => {
         const dfpService = newDfpService();
 
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
           adUnit: {
@@ -1399,12 +1431,12 @@ describe('DfpService', () => {
         };
 
         // first two calls are the global config
-        matchMediaStub.onCall(0).returns({ matches: true });
-        matchMediaStub.onCall(1).returns({ matches: false });
+        matchMediaStub.onCall(0).returns({ matches: true } as MediaQueryList);
+        matchMediaStub.onCall(1).returns({ matches: false } as MediaQueryList);
 
         // second call is the specific one
-        matchMediaStub.onCall(2).returns({ matches: true });
-        matchMediaStub.onCall(3).returns({ matches: true });
+        matchMediaStub.onCall(2).returns({ matches: true } as MediaQueryList);
+        matchMediaStub.onCall(3).returns({ matches: true } as MediaQueryList);
 
         return dfpService.initialize({
           slots: [ adSlot ],
@@ -1421,7 +1453,7 @@ describe('DfpService', () => {
       });
 
       it('should add requestBids with the supported labels', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1490,7 +1522,7 @@ describe('DfpService', () => {
       });
 
       it('should filter requestBids with the supported labels', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1561,11 +1593,11 @@ describe('DfpService', () => {
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
 
-          const adUnits = pbjsAddAdUnitSpy.firstCall.args[0] as prebidjs.IAdUnit[];
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
 
           expect(adUnits).length(1);
-          expect(adUnits[0].bids).length(3);
-          expect(adUnits[0].bids).to.deep.equal([ {
+          expect(adUnits[ 0 ].bids).length(3);
+          expect(adUnits[ 0 ].bids).to.deep.equal([ {
             bidder: prebidjs.AppNexusAst,
             params: {
               placementId: '1'
@@ -1600,7 +1632,7 @@ describe('DfpService', () => {
       });
 
       it('should filter mediaTypes.banner when sizes is empty', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1656,17 +1688,17 @@ describe('DfpService', () => {
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
 
-          const adUnits = pbjsAddAdUnitSpy.firstCall.args[0] as prebidjs.IAdUnit[];
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
 
           expect(adUnits).length(1);
-          expect(adUnits[0].mediaTypes.video).to.be.ok;
-          expect(adUnits[0].mediaTypes.banner).to.be.undefined;
+          expect(adUnits[ 0 ].mediaTypes.video).to.be.ok;
+          expect(adUnits[ 0 ].mediaTypes.banner).to.be.undefined;
 
         });
       });
 
       it('should filter mediaTypes.video when playerSize is empty', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1722,17 +1754,17 @@ describe('DfpService', () => {
         }).then(() => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
 
-          const adUnits = pbjsAddAdUnitSpy.firstCall.args[0] as prebidjs.IAdUnit[];
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[ 0 ] as prebidjs.IAdUnit[];
 
           expect(adUnits).length(1);
-          expect(adUnits[0].mediaTypes.banner).to.be.ok;
-          expect(adUnits[0].mediaTypes.video).to.be.undefined;
+          expect(adUnits[ 0 ].mediaTypes.banner).to.be.ok;
+          expect(adUnits[ 0 ].mediaTypes.video).to.be.undefined;
 
         });
       });
 
       it('should filter a9 fetchBids with the supported labels', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
@@ -1808,24 +1840,24 @@ describe('DfpService', () => {
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(2);
-          expect(bidConfig.slots[0].slotID).to.equal('no-labels');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/no-labels');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('no-labels');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/no-labels');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
 
-          expect(bidConfig.slots[1].slotID).to.equal('matching-labels');
-          expect(bidConfig.slots[1].slotName).to.equal('/123/matching-labels');
-          expect(bidConfig.slots[1].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[ 1 ].slotID).to.equal('matching-labels');
+          expect(bidConfig.slots[ 1 ].slotName).to.equal('/123/matching-labels');
+          expect(bidConfig.slots[ 1 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
         });
       });
 
       it('should filter a9 fetchBids with the supported sizes', () => {
-        matchMediaStub.returns({ matches: true });
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
 
         const dfpService = newDfpService();
 
         const sizeConfigEntry: Moli.LabelSizeConfigEntry = {
           mediaQuery: 'min-width: 300px',
-          labelsSupported: [ 'foo', 'bar' ],
+          labelsSupported: [ 'foo', 'bar' ]
         };
 
         const adSlotMatchingSizes: Moli.AdSlot = {
@@ -1848,7 +1880,7 @@ describe('DfpService', () => {
           domId: 'matching-labels',
           behaviour: 'eager',
           adUnitPath: '/123/matching-labels',
-          sizes: [  'fluid', [ 300, 250 ], [ 605, 165 ]  ],
+          sizes: [ 'fluid', [ 300, 250 ], [ 605, 165 ] ],
           sizeConfig: [
             {
               mediaQuery: '(min-width: 0px)',
@@ -1891,13 +1923,13 @@ describe('DfpService', () => {
 
           expect(bidConfig.slots).to.be.an('array');
           expect(bidConfig.slots).length(2);
-          expect(bidConfig.slots[0].slotID).to.equal('no-labels');
-          expect(bidConfig.slots[0].slotName).to.equal('/123/no-labels');
-          expect(bidConfig.slots[0].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[ 0 ].slotID).to.equal('no-labels');
+          expect(bidConfig.slots[ 0 ].slotName).to.equal('/123/no-labels');
+          expect(bidConfig.slots[ 0 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
 
-          expect(bidConfig.slots[1].slotID).to.equal('matching-labels');
-          expect(bidConfig.slots[1].slotName).to.equal('/123/matching-labels');
-          expect(bidConfig.slots[1].sizes).to.deep.equal([ [ 605, 165 ] ]);
+          expect(bidConfig.slots[ 1 ].slotID).to.equal('matching-labels');
+          expect(bidConfig.slots[ 1 ].slotName).to.equal('/123/matching-labels');
+          expect(bidConfig.slots[ 1 ].sizes).to.deep.equal([ [ 605, 165 ] ]);
         });
       });
 
@@ -1940,7 +1972,7 @@ describe('DfpService', () => {
 
 
     it('should destroy all gpt ad slots', () => {
-      matchMediaStub.returns({ matches: true });
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
 
       const dfpService = newDfpService();
 
@@ -1973,7 +2005,7 @@ describe('DfpService', () => {
       const config = {
         slots: [],
         logger: noopLogger,
-        consent: consentConfig,
+        consent: consentConfig
       };
 
       // initialize the internal adUnits data structure of prebid
