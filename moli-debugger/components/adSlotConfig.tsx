@@ -93,7 +93,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
         {props.slot.sizeConfig &&
         <button title="Show sizeConfig"
-                class={classList('MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig', [ slotValid, 'is-rendered'], [ !slotValid, 'is-notRendered' ], [ state.showSizeConfig, 'is-active' ])}
+                class={classList('MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig', [ slotValid, 'is-rendered' ], [ !slotValid, 'is-notRendered' ], [ state.showSizeConfig, 'is-active' ])}
                 onClick={this.toggleSizeConfig}></button>}
       </div>
       {state.showGeneral && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
@@ -102,10 +102,12 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <Tag variant="yellow">{props.slot.behaviour}</Tag>
         </div>
         <div class="MoliDebug-tagContainer">
-          <span class={classList('MoliDebug-tagLabel', [ slotElementExists, 'MoliDebug-tag--greenText' ], [ !slotElementExists, 'MoliDebug-tag--redText' ])}>
+          <span
+            class={classList('MoliDebug-tagLabel', [ slotElementExists, 'MoliDebug-tag--greenText' ], [ !slotElementExists, 'MoliDebug-tag--redText' ])}>
             DOM ID
           </span>
-          <Tag variant={slotElementExists ? 'green' : 'red'} title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}>
+          <Tag variant={slotElementExists ? 'green' : 'red'}
+               title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}>
             {props.slot.domId}
           </Tag>
         </div>
@@ -128,7 +130,8 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       {state.showA9 && props.slot.a9 && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         {this.a9Config(props.slot.a9)}
       </div>}
-      {state.showPrebid && props.slot.prebid && <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
+      {state.showPrebid && props.slot.prebid &&
+      <div class="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
         {this.prebidConfig(props.slot.prebid)}
       </div>}
       {state.showSizeConfig && props.slot.sizeConfig &&
@@ -270,7 +273,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   };
 
   private isSingleVideoSize = (playerSize: [ number, number ][] | [ number, number ]): playerSize is [ number, number ] => {
-    return playerSize.length === 2 && typeof playerSize[0] === 'number' && typeof playerSize[1] === 'number';
+    return playerSize.length === 2 && typeof playerSize[ 0 ] === 'number' && typeof playerSize[ 1 ] === 'number';
   };
 
   private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
@@ -286,7 +289,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   private tagFromValidatedSlotSize = (slotSize: ValidatedSlotSize, hasSlotSizeConfig: boolean): JSX.Element => {
     return <Tag variant={slotSize.valid ? 'green' : 'red'}
                 title={`${slotSize.valid ? 'Valid' : 'Invalid'} (${hasSlotSizeConfig ? 'slot' : 'global'} sizeConfig)`}>
-      {slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
+      {slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[ 0 ]}x${slotSize.size[ 1 ]}`} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
     </Tag>;
   };
 
@@ -294,7 +297,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     return size !== 'fluid';
   }
 
-  private labelConfig = (labelledSlot: {labelAll?: string[], labelAny?: string[]}): JSX.Element => {
+  private labelConfig = (labelledSlot: { labelAll?: string[], labelAny?: string[] }): JSX.Element => {
     const labelAll = labelledSlot.labelAll;
     const labelAny = labelledSlot.labelAny;
     const supportedLabels = this.props.labelConfigService.getSupportedLabels();
@@ -304,14 +307,17 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     return <div>
       {labelAll && labelAll.length > 0 &&
       <div>
-        <span className={classList('MoliDebug-tagLabel', [labelAllMatches, 'MoliDebug-tag--greenText'], [!labelAllMatches, 'MoliDebug-tag--redText'])}>labelAll</span>
+        <span
+          className={classList('MoliDebug-tagLabel', [ labelAllMatches, 'MoliDebug-tag--greenText' ], [ !labelAllMatches, 'MoliDebug-tag--redText' ])}>labelAll</span>
         {labelAll.map(label => <Tag variant={supportedLabels.indexOf(label) > -1 ? 'green' : 'red'}>{label}</Tag>)}
       </div>
       }
       {labelAny && labelAny.length > 0 &&
       <div>
-        <span className={classList('MoliDebug-tagLabel', [labelAnyMatches, 'MoliDebug-tag--greenText'], [!labelAnyMatches, 'MoliDebug-tag--redText'])}>labelAny</span>
-        {labelAll && labelAll.length > 0 && <Tag variant={'yellow'}>labelAll was already evaluated, labelAny is ignored</Tag>}
+        <span
+          className={classList('MoliDebug-tagLabel', [ labelAnyMatches, 'MoliDebug-tag--greenText' ], [ !labelAnyMatches, 'MoliDebug-tag--redText' ])}>labelAny</span>
+        {labelAll && labelAll.length > 0 &&
+        <Tag variant={'yellow'}>labelAll was already evaluated, labelAny is ignored</Tag>}
         {labelAny.map(label => {
           const labelFound = supportedLabels.indexOf(label) > -1;
           return <Tag variant={labelFound ? 'green' : 'red'}>{label}</Tag>;
