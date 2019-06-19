@@ -1,6 +1,7 @@
 import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
 import { IPerformanceMeasurementService } from './../util/performanceService';
+import { SlotEventService } from './slotEventService';
 
 /**
  * ## Reporting Service
@@ -47,6 +48,7 @@ export class ReportingService {
 
   constructor(
     private readonly performanceService: IPerformanceMeasurementService,
+    private readonly slotEventService: SlotEventService,
     private readonly config: Moli.reporting.ReportingConfig,
     private readonly logger: Moli.MoliLogger
   ) {
@@ -76,7 +78,7 @@ export class ReportingService {
     this.performanceService.mark('dfp_load_start');
     this.measureAndReportFirstAdRenderTime();
     this.measureAndReportFirstAdLoadTime();
-    this.awaitAllAdSlotsRendered(adSlots)
+    this.slotEventService.awaitAllAdSlotsRendered(adSlots)
       .then(renderedEvents => this.reportAdSlotsMetric(renderedEvents))
       .then((resolvedEvents: googletag.events.ISlotRenderEndedEvent[]) => Promise.all(
         resolvedEvents.map(renderEvent => this.awaitAdSlotContentLoaded(renderEvent).then((onLoadEvent) => this.reportAdSlotMetric(renderEvent, onLoadEvent))
@@ -268,28 +270,6 @@ export class ReportingService {
           measurement: timeToFirstAd
         });
       }
-    });
-  }
-
-  /**
-   * Returns a promise which resolves when all ad slots have been rendered.
-   *
-   * @return {Promise<googletag.events.ISlotRenderEndedEvent[]>}
-   */
-  private awaitAllAdSlotsRendered(adSlots: Moli.AdSlot[]): Promise<googletag.events.ISlotRenderEndedEvent[]> {
-
-    return new Promise<googletag.events.ISlotRenderEndedEvent[]>(resolve => {
-      const unrenderedSlots = new Set(adSlots.map(slot => slot.adUnitPath));
-      const renderEvents = new Set<googletag.events.ISlotRenderEndedEvent>();
-
-      window.googletag.pubads().addEventListener('slotRenderEnded', event => {
-        unrenderedSlots.delete(event.slot.getAdUnitPath());
-        renderEvents.add(event);
-        this.performanceService.mark(`${this.minimalAdUnitName(event.slot.getAdUnitPath())}_rendered`);
-        if (unrenderedSlots.size === 0) {
-          resolve(Array.from(renderEvents));
-        }
-      });
     });
   }
 

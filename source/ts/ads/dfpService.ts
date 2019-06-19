@@ -21,6 +21,7 @@ import DfpSlotSize = Moli.DfpSlotSize;
 import { FaktorCmp } from './cmp/faktor';
 import { getDefaultLogger, getLogger } from '../util/logging';
 import { LabelConfigService } from './labelConfigService';
+import { SlotEventService } from './slotEventService';
 
 type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -52,6 +53,7 @@ export class DfpService {
    * Report loading metrics
    */
   private reportingService: ReportingService | undefined;
+  private slotEventService: SlotEventService | undefined;
 
 
   /**
@@ -92,7 +94,9 @@ export class DfpService {
       reporters: [],
       sampleRate: 0
     };
-    this.reportingService = new ReportingService(performanceMeasurementService, reportingConfig, this.logger);
+    const slotEventService = new SlotEventService();
+    this.slotEventService = slotEventService;
+    this.reportingService = new ReportingService(performanceMeasurementService, slotEventService, reportingConfig, this.logger);
 
     // a9 script overwrites the window.apstag completely on script load
     if (config.a9) {
@@ -111,6 +115,7 @@ export class DfpService {
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
         .then(() => this.logger.debug('DFP Service', 'GPT loaded'))
+        .then(() => slotEventService.initialize())
         .then(() => this.configureCmp(config, this.reportingService!))
         .then(() => this.logger.debug('DFP Service', 'CMP configured'))
         // initialize the reporting for non-lazy slots
@@ -138,7 +143,7 @@ export class DfpService {
    *
    */
   public requestAds = (config: Moli.MoliConfig): Promise<Moli.AdSlot[]> => {
-    if (!this.initialized || !this.reportingService) {
+    if (!this.initialized || !this.reportingService || !this.slotEventService) {
       const message = 'DFP Service not initialized yet';
       this.logger.error('DFP Service', message);
       return Promise.reject(message);
@@ -151,8 +156,9 @@ export class DfpService {
       .filter(slot => globalLabelConfigService.filterSlot(slot));
     this.logger.debug('DFP Service', `filteredSlots: ${filteredSlots.map(slot => `\n\t\t\t[DomID] ${slot.domId} [AdUnitPath] ${slot.adUnitPath}`)}`);
 
-    this.reportingService.initialize(
-      this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot));
+    const instantlyLoadedSlots = this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot);
+
+    this.reportingService.initialize(instantlyLoadedSlots);
 
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
