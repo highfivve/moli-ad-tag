@@ -188,7 +188,7 @@ export const adConfiguration: Moli.MoliConfig = {
           },
           bids: [
             appNexusOutstream('13232392')
-          ]
+          ],
         }
       },
       sizeConfig: [

@@ -94,6 +94,8 @@ export class DfpService {
       reporters: [],
       sampleRate: 0
     };
+
+    // slot and reporting service are not unsable until `initialize()` is called on both services
     const slotEventService = new SlotEventService();
     this.slotEventService = slotEventService;
     this.reportingService = new ReportingService(performanceMeasurementService, slotEventService, reportingConfig, this.logger);
@@ -115,7 +117,7 @@ export class DfpService {
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
         .then(() => this.logger.debug('DFP Service', 'GPT loaded'))
-        .then(() => slotEventService.initialize())
+        .then(() => slotEventService.initialize(window.googletag))
         .then(() => this.configureCmp(config, this.reportingService!))
         .then(() => this.logger.debug('DFP Service', 'CMP configured'))
         // initialize the reporting for non-lazy slots
@@ -164,7 +166,7 @@ export class DfpService {
 
     // concurrently initialize lazy loaded slots and refreshable slots
     this.initLazyRefreshableSlots(window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, globalLabelConfigService);
-    this.initLazyLoadedSlots(window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, this.reportingService, globalLabelConfigService);
+    this.initLazyLoadedSlots(window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, this.reportingService, this.slotEventService, globalLabelConfigService);
 
     // eagerly displayed slots - this includes 'eager' slots and non-lazy 'refreshable' slots
     return Promise.resolve()
@@ -178,7 +180,7 @@ export class DfpService {
         return registeredSlots;
       })
       // We wait for a prebid response and then refresh.
-      .then(slotDefinitions => this.initHeaderBidding(window[prebidGlobal], slotDefinitions, config, this.reportingService!, globalLabelConfigService))
+      .then(slotDefinitions => this.initHeaderBidding(window[prebidGlobal], slotDefinitions, config, this.reportingService!, this.slotEventService!, globalLabelConfigService))
       .then(slotDefinitions => this.refreshAds(slotDefinitions, this.reportingService!))
       .then(slotDefinitions => slotDefinitions.map(slot => slot.moliSlot))
       .catch(reason => {
@@ -247,6 +249,7 @@ export class DfpService {
    * @param {Promise<Moli.LazyAdSlot[]>} lazyLoadingSlots
    * @param {Moli.MoliConfig} config
    * @param reportingService gather metrics
+   * @param slotEventService access to slot events
    * @param globalLabelConfigService filter supported labels
    */
   private initLazyLoadedSlots(
@@ -254,6 +257,7 @@ export class DfpService {
     lazyLoadingSlots: Moli.LazyAdSlot[],
     config: Moli.MoliConfig,
     reportingService: ReportingService,
+    slotEventService: SlotEventService,
     globalLabelConfigService: LabelConfigService
   ): void {
     lazyLoadingSlots.forEach((moliSlotLazy) => {
@@ -284,7 +288,7 @@ export class DfpService {
             bidRequests.push(this.initPrebid(pbjs, [ {
               ...slotDefinition,
               moliSlot: moliSlotLazy as Moli.PrebidAdSlot
-            } ], config, reportingService, globalLabelConfigService));
+            } ], config, reportingService, slotEventService, globalLabelConfigService));
           }
 
           if (moliSlotLazy.a9) {
@@ -438,6 +442,7 @@ export class DfpService {
    * @param availableSlots all available slots that will eventually be requested
    * @param config the moli config
    * @param reportingService performance metrics and reporting
+   * @param slotEventService access to slot events
    * @param globalLabelConfigService required for labels
    * @returns returns the unaltered adSlot definitions
    */
@@ -446,6 +451,7 @@ export class DfpService {
     availableSlots: SlotDefinition<Moli.AdSlot>[],
     config: Moli.MoliConfig,
     reportingService: ReportingService,
+    slotEventService: SlotEventService,
     globalLabelConfigService: LabelConfigService
   ): Promise<SlotDefinition<Moli.AdSlot>[]> {
     this.logger.debug('DFP Service', 'DFP activate header bidding');
@@ -453,8 +459,10 @@ export class DfpService {
     const prebidSlots: SlotDefinition<Moli.PrebidAdSlot>[] = availableSlots.filter(this.isPrebidSlotDefinition);
     const a9Slots: SlotDefinition<Moli.A9AdSlot>[] = availableSlots.filter(this.isA9SlotDefinition);
 
-    return Promise.all([ this.initA9(a9Slots, config, reportingService, globalLabelConfigService), this.initPrebid(pbjs, prebidSlots, config, reportingService, globalLabelConfigService) ])
-      .then(() => availableSlots);
+    return Promise.all([
+      this.initA9(a9Slots, config, reportingService, globalLabelConfigService),
+      this.initPrebid(pbjs, prebidSlots, config, reportingService, slotEventService, globalLabelConfigService)
+    ]).then(() => availableSlots);
   }
 
   /**
@@ -468,6 +476,7 @@ export class DfpService {
    * @param prebidSlots all slots - will be filtered for prebid slots
    * @param config full ad configuration
    * @param reportingService performance metrics and reporting
+   * @param slotEventService access to slot events
    * @param globalLabelConfigService required for labels and prebid sizes
    * @returns the bid response map. Always empty if not prebid slots are requested
    */
@@ -476,6 +485,7 @@ export class DfpService {
     prebidSlots: SlotDefinition<Moli.PrebidAdSlot>[],
     config: Moli.MoliConfig,
     reportingService: ReportingService,
+    slotEventService: SlotEventService,
     globalLabelConfigService: LabelConfigService
   ): Promise<prebidjs.IBidResponsesMap> {
     if (prebidSlots.length === 0) {
@@ -485,6 +495,14 @@ export class DfpService {
     if (!config.prebid) {
       this.logger.warn('DFP Service', `Try to init ${prebidSlots.length} prebid slots without a prebid configuration`, prebidSlots);
       return Promise.resolve({});
+    }
+
+    if (config.prebid.userSync === 'all-ads-loaded') {
+      slotEventService.awaitAllAdSlotsRendered(prebidSlots.map(def => def.moliSlot))
+        .then(() => {
+          this.logger.debug('trigger prebidjs user sync');
+          pbjs.triggerUserSyncs();
+        });
     }
 
     return Promise.resolve()

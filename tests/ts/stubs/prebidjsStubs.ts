@@ -18,7 +18,8 @@ export const pbjsStub: prebidjs.IPrebidJs = {
     }
   },
   setConfig: (_config: prebidjs.IPrebidJsConfig): void => { return; },
-  setTargetingForGPTAsync: (_adUnits: string[]): void => { return; }
+  setTargetingForGPTAsync: (_adUnits: string[]): void => { return; },
+  triggerUserSyncs(): void { return; }
 };
 
 

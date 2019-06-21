@@ -22,11 +22,13 @@ export class SlotEventService {
   private readonly slotRenderEndedEventCallbacks: Set<(event: googletag.events.ISlotRenderEndedEvent) => void> = new Set();
 
   /**
-   * Initialize the service once the gpt tag is loaded
+   * Initialize the service once the gpt tag is loaded.
+   *
+   * @param googletag the available googletag
    */
-  public initialize(): void {
+  public initialize(googletag: googletag.IGoogleTag): void {
     // Initialize the listener only once and manage the callbacks internally
-    window.googletag.pubads().addEventListener('slotRenderEnded', event => {
+    googletag.pubads().addEventListener('slotRenderEnded', event => {
       this.slotRenderEndedEventCallbacks.forEach(callback => callback(event));
     });
   }

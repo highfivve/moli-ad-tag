@@ -4,6 +4,7 @@ import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { FaktorCmp } from '../../../../source/ts/ads/cmp/faktor';
 import { ReportingService } from '../../../../source/ts/ads/reportingService';
+import { SlotEventService } from '../../../../source/ts/ads/slotEventService';
 import { performanceMeasurementService } from '../../../../source/ts/util/performanceService';
 import { Moli } from '../../../../source/ts';
 import ReportingConfig = Moli.reporting.ReportingConfig;
@@ -17,7 +18,7 @@ describe('Faktor CMP', () => {
 
   const reportingConfig: ReportingConfig = { sampleRate: 0, reporters: [] };
 
-  const reportingService = new ReportingService(performanceMeasurementService, reportingConfig, noopLogger);
+  const reportingService = new ReportingService(performanceMeasurementService, new SlotEventService(), reportingConfig, noopLogger);
 
   const cmpStub = sandbox.stub();
 

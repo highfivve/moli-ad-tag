@@ -83,6 +83,13 @@ export namespace prebidjs {
      */
     getAdserverTargeting(): object;
 
+    /**
+     * Trigger a manual user sync. This only works if you have set the `config.userSync.enableOverride` to `true`.
+     *
+     * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
+     */
+    triggerUserSyncs(): void;
+
   }
 
   /**
