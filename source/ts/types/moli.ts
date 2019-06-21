@@ -1064,6 +1064,13 @@ export namespace Moli {
      * gives the publisher various options on how to handle the consent management.
      *
      *
+     * @example Example on how to enable cmp as a personalized ads provider
+     * ```typescript
+     * {
+     *   provider: 'cmp'
+     * }
+     * ```
+     *
      * ## CMP Providers
      *
      * A list of providers that work well with this approach.
