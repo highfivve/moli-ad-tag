@@ -39,7 +39,8 @@ module.exports = (_, argv) => {
       port: 9000,
       allowedHosts: [
         'localhost',
-        '.gutefrage.net'
+        '.gutefrage.net',
+        '.h5v.eu'
       ]
     },
     plugins: [

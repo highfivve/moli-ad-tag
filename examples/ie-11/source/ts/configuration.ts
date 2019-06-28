@@ -27,6 +27,7 @@ const asArray = (value: string | string[] | undefined, fallback: string[]): stri
 };
 
 export const adConfiguration: Moli.MoliConfig = {
+  environment: 'test',
   slots: [
     {
       position: 'in-page',

@@ -29,6 +29,7 @@ export const teadsVerticalBid = (placementId: number, pageId: number, labelAll: 
 };
 
 export const adConfiguration: Moli.MoliConfig = {
+  environment: 'test',
   slots: [
     {
       position: 'in-page',

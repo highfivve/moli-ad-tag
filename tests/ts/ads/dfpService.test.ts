@@ -32,6 +32,21 @@ describe('DfpService', () => {
   const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadScript');
   const matchMediaStub = sandbox.stub(window, 'matchMedia');
 
+  // googletag spies
+  const googletagDefineSlotSpy = sandbox.spy(window.googletag, 'defineSlot');
+  const googleTagPubAdsSpy = sandbox.spy(window.googletag, 'pubads');
+  const googletagDefineOutOfPageSlotSpy = sandbox.spy(window.googletag, 'defineOutOfPageSlot');
+  const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
+
+  // pbjs spies
+  const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
+  const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
+  const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
+
+  // a9 apstag spies
+  const apstagFetchBidsSpy = sandbox.spy(window.apstag, 'fetchBids');
+  const apstagSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
+
   // create a new DfpService for testing
   const newDfpService = (): DfpService => {
     return new DfpService(assetLoaderService, cookieService);
@@ -395,7 +410,7 @@ describe('DfpService', () => {
         }).then(() => {
           // somehow trigger the slotRenderEvent
           listeners.forEach(listener => {
-            [adSlot,  adSlot2].forEach(slot => {
+            [ adSlot, adSlot2 ].forEach(slot => {
               // type cast so we only need to implement the necessary properties
               const slotRenderEnded: googletag.events.ISlotRenderEndedEvent = {
                 slot: {
@@ -419,17 +434,7 @@ describe('DfpService', () => {
 
   describe('ad slot registration', () => {
 
-    const googletagDefineSlotSpy = sandbox.spy(window.googletag, 'defineSlot');
-    const googletagDefineOutOfPageSlotSpy = sandbox.spy(window.googletag, 'defineOutOfPageSlot');
-    const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
-
     const noopLoggerSpy = sandbox.spy(noopLogger, 'warn');
-    const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
-    const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
-    const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
-
-    const apstagFetchBidsSpy = sandbox.spy(window.apstag, 'fetchBids');
-    const apstagSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
 
     describe('regular slots', () => {
 
@@ -2144,6 +2149,143 @@ describe('DfpService', () => {
     });
 
   });
+
+  describe('test environment', () => {
+
+    it('should not call the googletag pubads() service', () => {
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+      const dfpService = newDfpService();
+
+      const adSlots: Moli.AdSlot[] = [ {
+        position: 'in-page',
+        domId: 'no-labels',
+        behaviour: 'eager',
+        adUnitPath: '/123/no-labels',
+        sizes: [ [ 605, 165 ] ],
+        sizeConfig: [
+          {
+            mediaQuery: '(min-width: 0px)',
+            sizesSupported: [ [ 605, 165 ] ]
+          }
+        ]
+      }, {
+        position: 'out-of-page',
+        domId: 'eager-loading-out-of-page-adslot',
+        behaviour: 'eager',
+        adUnitPath: '/123/eager',
+        sizes: [],
+        sizeConfig: [
+          {
+            mediaQuery: '(min-width: 0px)',
+            sizesSupported: []
+          }
+        ]
+      } ];
+
+
+      return dfpService.initialize({
+        environment: 'test', slots: adSlots, consent: consentConfig, logger: noopLogger
+      }).then(config => {
+        return dfpService.requestAds(config);
+      }).then(() => {
+        expect(googleTagPubAdsSpy).to.have.not.been.called;
+        expect(pubAdsServiceStubRefreshSpy).to.have.not.been.called;
+      });
+    });
+
+    it('should not initialize prebid', () => {
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+      const dfpService = newDfpService();
+
+      const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+        adUnit: {
+          code: 'eager-loading-adslot',
+          mediaTypes: {
+            banner: {
+              sizes: [ [ 605, 165 ] ]
+            },
+            video: undefined
+          },
+          bids: [ {
+            bidder: prebidjs.AppNexusAst,
+            params: {
+              placementId: '1234'
+            }
+          } ]
+        }
+      };
+
+      const adSlot: Moli.AdSlot = {
+        position: 'in-page',
+        domId: 'eager-loading-adslot',
+        behaviour: 'eager',
+        adUnitPath: '/123/eager',
+        sizes: [ 'fluid', [ 605, 165 ] ],
+        sizeConfig: [
+          {
+            mediaQuery: '(min-width: 0px)',
+            sizesSupported: [ [ 605, 165 ] ]
+          }
+        ],
+        prebid: prebidAdslotConfig
+      };
+
+
+      return dfpService.initialize({
+        environment: 'test',
+        slots: [ adSlot ],
+        consent: consentConfig,
+        logger: noopLogger,
+        prebid: { config: pbjsTestConfig }
+      }).then(config => {
+        return dfpService.requestAds(config);
+      }).then(() => {
+        expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+        expect(pbjsAddAdUnitSpy).to.have.not.been.called;
+        expect(pbjsRequestBidsSpy).to.have.not.been.called;
+        expect(pbjsSetTargetingForGPTAsyncSpy).to.have.not.been.called;
+      });
+    });
+  });
+
+  it('should not initialize a9', () => {
+    matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+    const dfpService = newDfpService();
+
+    const adSlot: Moli.AdSlot = {
+      position: 'in-page',
+      domId: 'eager-loading-adslot',
+      behaviour: 'eager',
+      adUnitPath: '/123/eager',
+      sizes: [ 'fluid', [ 605, 165 ] ],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [ [ 605, 165 ] ]
+        }
+      ],
+      a9: {}
+    };
+
+
+    return dfpService.initialize({
+      environment: 'test',
+      slots: [ adSlot ],
+      consent: consentConfig,
+      logger: noopLogger,
+      prebid: { config: pbjsTestConfig }
+    }).then(config => {
+      return dfpService.requestAds(config);
+    }).then(() => {
+      expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+      expect(apstagFetchBidsSpy).to.have.not.been.called;
+      expect(apstagFetchBidsSpy).to.have.not.been.called;
+    });
+  });
+
 });
 
 // tslint:enable

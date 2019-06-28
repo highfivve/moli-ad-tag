@@ -16,6 +16,24 @@ export namespace Moli {
   export type MoliCommand = (moli: MoliTag) => void;
 
   /**
+   * ## Production
+   *
+   * The production environment enables all requests to DFP / Prebid / A9
+   * and other 3rd party module the ad tag may provide.
+   *
+   * This environment needs to be set if the ad tag should be used live.
+   *
+   * ## Test
+   *
+   * The test environment disables all calls to external services and instead
+   * renders placeholder in all available ad slots.
+   *
+   * This environment is recommended for early testing to get some visual feedback.
+   *
+   */
+  export type Environment = 'production' | 'test';
+
+  /**
    * # Moli Ad Tag
    *
    * This defines the publisher facing API. When the ad tag is configured in _publisher mode_, which means it doesn't fire
@@ -478,6 +496,17 @@ export namespace Moli {
   }
 
   export interface MoliConfig {
+
+    /**
+     * Configure the environment the ad tag should use.
+     *
+     * The default environment is `production` as a we have a very conservative way of deploying
+     * applications.
+     *
+     * default: 'production'
+     * @see [[Environment]]
+     */
+    readonly environment?: Environment;
 
     /** all possible ad slots */
     readonly slots: AdSlot[];

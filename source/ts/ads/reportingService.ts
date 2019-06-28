@@ -50,7 +50,8 @@ export class ReportingService {
     private readonly performanceService: IPerformanceMeasurementService,
     private readonly slotEventService: SlotEventService,
     private readonly config: Moli.reporting.ReportingConfig,
-    private readonly logger: Moli.MoliLogger
+    private readonly logger: Moli.MoliLogger,
+    private readonly env: Moli.Environment
   ) {
     // the default regex only removes the publisher id
     this.adUnitRegex = config.adUnitRegex || /\/\d*\//i;
@@ -198,7 +199,7 @@ export class ReportingService {
    * @param consentDataExists true if consent data already existed when the user came to the page
    */
   public trackConsentDataExists(consentDataExists: boolean): void {
-    this.report( {
+    this.report({
       type: 'consentDataExists',
       value: consentDataExists
     });
@@ -221,56 +222,71 @@ export class ReportingService {
    * Creates a performance measure for the `ttfr` (time to first render) metric and reports it.
    */
   private measureAndReportFirstAdRenderTime(): void {
-    new Promise<void>(resolve => {
-      let isResolved = false;
-      window.googletag.pubads().addEventListener('slotRenderEnded', () => {
-        if (!isResolved) {
-          resolve();
-          isResolved = true;
-        }
-      });
-    }).then(() => {
-      const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfr');
-      this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_render_end');
+    switch (this.env) {
+      case 'production':
+        new Promise<void>(resolve => {
+          let isResolved = false;
+          window.googletag.pubads().addEventListener('slotRenderEnded', () => {
+            if (!isResolved) {
+              resolve();
+              isResolved = true;
+            }
+          });
+        }).then(() => {
+          const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfr');
+          this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_render_end');
 
 
-      const timeToFirstAd = this.performanceService.getMeasure(measure);
-      if (timeToFirstAd) {
-        this.report({
-          type: 'ttfr',
-          pageRequestId: this.pageRequestId,
-          measurement: timeToFirstAd
+          const timeToFirstAd = this.performanceService.getMeasure(measure);
+          if (timeToFirstAd) {
+            this.report({
+              type: 'ttfr',
+              pageRequestId: this.pageRequestId,
+              measurement: timeToFirstAd
+            });
+          }
         });
-      }
-    });
+        break;
+      case 'test':
+        this.logger.warn('In test environment no time-to-first-render will be reported');
+        break;
+    }
+
   }
 
   /**
    * Creates a performance measure for the `ttfa` (time to first ad) metric and reports it.
    */
   private measureAndReportFirstAdLoadTime(): void {
-    new Promise<void>(resolve => {
-      let isResolved = false;
-      window.googletag.pubads().addEventListener('slotOnload', () => {
-        if (!isResolved) {
-          resolve();
-          isResolved = true;
-        }
-      });
-    }).then(() => {
-      const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfa');
-      this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_ad_end');
+    switch (this.env) {
+      case 'production':
+        new Promise<void>(resolve => {
+          let isResolved = false;
+          window.googletag.pubads().addEventListener('slotOnload', () => {
+            if (!isResolved) {
+              resolve();
+              isResolved = true;
+            }
+          });
+        }).then(() => {
+          const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfa');
+          this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_ad_end');
 
 
-      const timeToFirstAd = this.performanceService.getMeasure(measure);
-      if (timeToFirstAd) {
-        this.report({
-          type: 'ttfa',
-          pageRequestId: this.pageRequestId,
-          measurement: timeToFirstAd
+          const timeToFirstAd = this.performanceService.getMeasure(measure);
+          if (timeToFirstAd) {
+            this.report({
+              type: 'ttfa',
+              pageRequestId: this.pageRequestId,
+              measurement: timeToFirstAd
+            });
+          }
         });
-      }
-    });
+        break;
+      case 'test':
+        this.logger.warn('In test environment no time-to-first-loads will be reported');
+        break;
+    }
   }
 
   private awaitAdSlotContentLoaded(event: googletag.events.ISlotRenderEndedEvent): Promise<googletag.events.ISlotOnloadEvent> {

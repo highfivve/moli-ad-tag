@@ -4,16 +4,16 @@ import { bidderSettings } from './bidderSettings';
 
 const logger: Moli.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[publisher-example] ${message}`, ...optionalParams);
+    window.console.debug(`[debug] ${message}`, ...optionalParams);
   },
   info(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[publisher-example] ${message}`, ...optionalParams);
+    window.console.info(`[info] ${message}`, ...optionalParams);
   },
   warn(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[publisher-example] ${message}`, ...optionalParams);
+    window.console.warn(`[warn] ${message}`, ...optionalParams);
   },
   error(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[publisher-example] ${message}`, ...optionalParams);
+    window.console.error(`[error] ${message}`, ...optionalParams);
   }
 
 };
@@ -67,6 +67,7 @@ const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
 };
 
 export const adConfiguration: Moli.MoliConfig = {
+  environment: 'test',
   slots: [
     {
       position: 'in-page',

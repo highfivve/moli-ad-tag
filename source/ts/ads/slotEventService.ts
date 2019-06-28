@@ -25,12 +25,20 @@ export class SlotEventService {
    * Initialize the service once the gpt tag is loaded.
    *
    * @param googletag the available googletag
+   * @param env
    */
-  public initialize(googletag: googletag.IGoogleTag): void {
-    // Initialize the listener only once and manage the callbacks internally
-    googletag.pubads().addEventListener('slotRenderEnded', event => {
-      this.slotRenderEndedEventCallbacks.forEach(callback => callback(event));
-    });
+  public initialize(googletag: googletag.IGoogleTag, env: Moli.Environment): void {
+    switch (env) {
+      case 'production':
+        // Initialize the listener only once and manage the callbacks internally
+        googletag.pubads().addEventListener('slotRenderEnded', event => {
+          this.slotRenderEndedEventCallbacks.forEach(callback => callback(event));
+        });
+        break;
+      case 'test':
+        // do nothing
+        break;
+    }
   }
 
   /**
