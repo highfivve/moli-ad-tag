@@ -1,7 +1,7 @@
 // type definitions for DFP googletag
 export namespace googletag {
 
-  export type Size = [number, number] | string;
+  export type Size = [ number, number ] | string;
 
   /**
    * Base service class that contains methods common for all services.
@@ -144,7 +144,7 @@ export namespace googletag {
    *
    * @see {@link https://developers.google.com/doubleclick-gpt/reference#googletagcontentservice}
    */
-  export interface IContentService extends IService<IContentService>{
+  export interface IContentService extends IService<IContentService> {
 
     /**
      * Fills a slot with the given content. If services are not yet enabled,
