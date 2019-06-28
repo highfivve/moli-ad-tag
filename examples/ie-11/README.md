@@ -13,7 +13,10 @@ Start a local webserver with
 $ yarn && yarn start
 ```
 
-See the [index.ts](index.ts) entrypoint for more implementation details
+- `core-js` promises need to be imported
+- typescript target must be `ES5`
+
+See the [index.ts](index.ts) entrypoint and [tsconfig.json](tsconfig.json) for more implementation details.
 
 ## yarn link
 
