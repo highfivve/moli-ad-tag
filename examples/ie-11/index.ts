@@ -3,7 +3,7 @@
 // Full configuration to work with IE11
 
 // polyfill promise for IE11
-import 'core-js/es6/promise';
+import 'core-js/es/promise';
 
 import 'prebid.js/build/dist/prebid';
 // with `yarn link` we cannot import from the `index.ts` for unknown reasons.
