@@ -70,6 +70,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       props.config.slots.forEach(slot => {
         this.checkForDuplicateOrMissingSlots(this.state.messages, slot);
         this.checkSlotPrebidConfig(this.state.messages, slot);
+        this.checkForWrongPrebidCodeEntry(this.state.messages, slot);
       });
 
       if (props.config.prebid) {
@@ -468,6 +469,20 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         kind: 'warning',
         text: `No Global LabelSizeConfig entries. We recommend defining labels.`
       });
+    }
+  };
+
+  private checkForWrongPrebidCodeEntry = (messages: Message[], slot: AdSlot) => {
+    if (slot.prebid) {
+      const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {} }) : slot.prebid,
+        code = prebidConfig.adUnit.code;
+
+      if (code !== slot.domId) {
+        messages.push({
+          kind: 'error',
+          text: <span>The <code>prebid.adUnit.code</code> must match the <code>slot.domID</code>, but<br /> <strong>{code}</strong> was not <strong>{slot.domId}</strong></span>
+        });
+      }
     }
   };
 
