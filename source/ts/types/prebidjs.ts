@@ -111,6 +111,16 @@ export namespace prebidjs {
        * Available since prebid 1.37.0
        */
       readonly singleRequest: boolean;
+
+      /**
+       * By default, the adapter doesn’t send Prebid ad unit sizes to Improve Digital’s ad server
+       * and the sizes defined for each placement in the Polaris platform will be used.
+       *
+       * This configuration makes improve use the prebid sizes parameter.
+       *
+       * Available since prebid 2.8.0
+       */
+      readonly usePrebidSizes: boolean;
     };
   }
 
