@@ -198,7 +198,8 @@ export const adConfiguration: Moli.MoliConfig = {
         }
       },
       improvedigital: {
-        singleRequest: true
+        singleRequest: true,
+        usePrebidSizes: true
       }
     }
   },
