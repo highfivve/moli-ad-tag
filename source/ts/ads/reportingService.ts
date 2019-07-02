@@ -248,7 +248,7 @@ export class ReportingService {
         });
         break;
       case 'test':
-        this.logger.warn('In test environment no time-to-first-render will be reported');
+        this.logger.warn('ReportingService', 'In test environment no time-to-first-render will be reported');
         break;
     }
 

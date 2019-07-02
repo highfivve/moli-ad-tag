@@ -893,7 +893,7 @@ export class DfpService {
         adSlot.addService(window.googletag.pubads());
         break;
       case 'test':
-        this.logger.warn(`Enabling content service on ${adSlot.getSlotElementId()}`);
+        this.logger.warn('DFP Service', `Enabling content service on ${adSlot.getSlotElementId()}`);
         adSlot.addService(window.googletag.content());
     }
 
