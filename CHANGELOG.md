@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v1.10.0
+
+## Changed debug console asset path
+
+[GD-1302](https://jira.gutefrage.net/browse/GD-1302). The new URL is https://ad-tag-console.h5v.eu/moli-debug.min.js
+
 ### Test Mode [](https://jira.gutefrage.net/browse/GD-1293)
 
 An ad tag can now be configured in a `test` environment, which means that neither DFP, Prebid nor A9 will be called
