@@ -1492,10 +1492,10 @@ fsevents@^1.2.2:
     nan "^2.9.2"
     node-pre-gyp "^0.10.0"
 
-fun-hooks@^0.6.5:
-  version "0.6.5"
-  resolved "https://registry.yarnpkg.com/fun-hooks/-/fun-hooks-0.6.5.tgz#f58f40a1851859218adb01d56c19aa636ce20120"
-  integrity sha512-DV6NAc6zuTukwIiq+4+iWr9bzD19hrbh60C25u3JEpXdzCtrR1UNB81jSBUJP12xKhdRMsoVrOBVnHeWZk6P9g==
+fun-hooks@^0.9.2:
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/fun-hooks/-/fun-hooks-0.9.3.tgz#752520ba00907cb16eb0f61ed3651ce3fe32bc03"
+  integrity sha512-MC/zsGf+duq8lI6xym+H8HuL6DE1fLyE90FRzU/j2lTDmjDJ//+KC7M8vLzG9y/mhkLOH5u9wK4QEf3lBqIo4w==
 
 function-bind@^1.1.1:
   version "1.1.1"
@@ -2895,15 +2895,15 @@ posix-character-classes@^0.1.0:
   resolved "https://registry.yarnpkg.com/posix-character-classes/-/posix-character-classes-0.1.1.tgz#01eac0fe3b5af71a2a6c02feabb8c1fef7e00eab"
   integrity sha1-AerA/jta9xoqbAL+q7jB/vfgDqs=
 
-prebid.js@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-2.1.0.tgz#1df5cd15dfc3afa04ef178e6aeda76848c807142"
-  integrity sha512-4DEbSK6Ig0eG9eK5SPcMl0Lab846xsx/BsItzcqT8x2y8J0r1ZOSV5as8C1IFrPTyq4t8Hd3uK0IrXevbYRZ9g==
+prebid.js@2.21.0:
+  version "2.21.0"
+  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-2.21.0.tgz#63cbf304eee5f18080c0e5d5f1ba0ae683145e5a"
+  integrity sha512-Ab0MwXamFaVeFE8hmNiSKNTrX2touOrIJr8H/j4nvnQH1GDtB/6Cj5UKyx5VpF72DGhjmriDKNPGduuziQVdOQ==
   dependencies:
     babel-plugin-transform-object-assign "^6.22.0"
     core-js "^2.4.1"
     crypto-js "^3.1.9-1"
-    fun-hooks "^0.6.5"
+    fun-hooks "^0.9.2"
     jsencrypt "^3.0.0-rc.1"
     just-clone "^1.0.2"
 
