@@ -516,7 +516,8 @@ export namespace prebidjs {
     readonly publisherSubId?: string;
   }
 
-  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
+  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {
+  }
 
   export interface IAppNexusASTKeyword {
     [key: string]: string[];
@@ -616,7 +617,8 @@ export namespace prebidjs {
   /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> {}
+  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> {
+  }
 
   /**
    * ImproveDigital bid parameters.
@@ -639,7 +641,8 @@ export namespace prebidjs {
   /**
    * ImproveDigital bid object.
    */
-  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {}
+  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {
+  }
 
   /**
    * IndexExchange bid parameters.
@@ -649,7 +652,7 @@ export namespace prebidjs {
    */
   export interface IIndexExchangeParams {
     readonly siteId: string;
-    readonly size: [number, number];
+    readonly size: [ number, number ];
   }
 
   /**
@@ -706,7 +709,8 @@ export namespace prebidjs {
     readonly exclude?: Array<JustPremiumFormat>;
   }
 
-  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
+  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {
+  }
 
   export interface IPubMaticParams {
 
@@ -725,7 +729,8 @@ export namespace prebidjs {
     readonly adSlot: string;
   }
 
-  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
+  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {
+  }
 
   /**
    * NanoInteractive bid parameters.
@@ -750,7 +755,8 @@ export namespace prebidjs {
   /**
    * NanoInteractive bid object.
    */
-  export interface INanoInteractiveBid extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
+  export interface INanoInteractiveBid extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {
+  }
 
   /**
    * OpenX bid parameters
@@ -775,7 +781,8 @@ export namespace prebidjs {
   /**
    * OpenX bid object
    */
-  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> {}
+  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> {
+  }
 
   /**
    * Smart bid parameters
@@ -817,7 +824,8 @@ export namespace prebidjs {
   /**
    * Smart bid object
    */
-  export interface ISmartAdServerBid extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> {}
+  export interface ISmartAdServerBid extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> {
+  }
 
   /**
    * Unruly bid parameters
@@ -840,7 +848,8 @@ export namespace prebidjs {
   /**
    * Unruly bid object
    */
-  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
+  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {
+  }
 
   /**
    * Teads bid parameters
@@ -863,7 +872,8 @@ export namespace prebidjs {
   /**
    * Teads bid object
    */
-  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
+  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {
+  }
 
   export interface IYieldlabParams {
 
@@ -878,26 +888,27 @@ export namespace prebidjs {
     readonly supplyId: string;
 
     /**
-     * 	Override the default prebid size.
+     *  Override the default prebid size.
      *
-     * 	The current implementation takes the the first size from the sizes array and uses
-     * 	it. As we have a mulit-size setup, this doesn't work. So this parameter is required
-     * 	for us.
+     *  The current implementation takes the the first size from the sizes array and uses
+     *  it. As we have a mulit-size setup, this doesn't work. So this parameter is required
+     *  for us.
      *
-     * 	@example 970x250
+     *  @example 970x250
      */
     readonly adSize: string;
 
     /**
      * A simple key-value map
      */
-    readonly targeting?: {[key: string]: string };
+    readonly targeting?: { [key: string]: string };
   }
 
   /**
    * Yieldlab bid object
    */
-  export interface IYieldlabBid  extends IBidObject<typeof Yieldlab, IYieldlabParams> { }
+  export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> {
+  }
 
   /**
    * Spotx bid parameters.
@@ -1051,7 +1062,7 @@ export namespace prebidjs {
     readonly timeout?: number;
 
     /**
-     * 	Defines labels that may be matched on ad unit targeting conditions.
+     *  Defines labels that may be matched on ad unit targeting conditions.
      */
     readonly labels: string[];
 
