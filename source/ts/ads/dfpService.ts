@@ -727,18 +727,19 @@ export class DfpService {
       // filter bids ourselves and don't rely on prebid to have a stable API
       const bids = prebidAdSlotConfig.adUnit.bids.filter(bid => globalLabelConfigService.filterSlot(bid));
 
+      const video = (mediaTypeVideo && videoSizes.length > 0) ? {
+        video: {...mediaTypeVideo, playerSize: videoSizes}
+      } : undefined;
+
+      const banner = (mediaTypeBanner && bannerSizes.length > 0) ? {
+        banner: {...mediaTypeBanner, sizes: bannerSizes}
+      } : undefined;
+
       return {
         code: moliSlot.domId,
         mediaTypes: {
-          ...prebidAdSlotConfig.adUnit.mediaTypes,
-          video: (mediaTypeVideo && videoSizes.length > 0) ? {
-            ...mediaTypeVideo,
-            playerSize: videoSizes
-          } : undefined,
-          banner: (mediaTypeBanner && bannerSizes.length > 0) ? {
-            ...mediaTypeBanner,
-            sizes: bannerSizes
-          } : undefined
+          ...video,
+          ...banner,
         },
         bids: bids
       };

@@ -541,8 +541,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              },
-              video: undefined
+              }
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -653,7 +652,6 @@ describe('DfpService', () => {
           const adUnit: prebidjs.IAdUnit = {
             ...prebidAdslotConfig.adUnit,
             mediaTypes: {
-              banner: undefined,
               video: {
                 context: 'outstream',
                 playerSize: [ [ 320, 180 ] ] as [ number, number ][]
@@ -722,7 +720,6 @@ describe('DfpService', () => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledWithExactly([ {
             code: 'eager-loading-adslot',
             mediaTypes: {
-              banner: undefined,
               video: {
                 playerSize: [ [ 320, 180 ], [ 316, 169 ] ] as [ number, number ][],
                 context: 'outstream'
@@ -889,8 +886,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              },
-              video: undefined
+              }
             },
             bids: [ {
               bidder: prebidjs.ImproveDigital,
@@ -901,6 +897,62 @@ describe('DfpService', () => {
                   user: [ 'none' ]
                 }
               }
+            } ]
+          } ]);
+        });
+      });
+
+      it('should not add banner if the sizes are empty', () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const dfpService = newDfpService();
+
+        // define the prebidAdSlotConfig factory
+        const prebidAdSlotConfig: Moli.headerbidding.PrebidAdSlotConfigProvider = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: { banner: { sizes: [ [ 123, 445 ] ] } },
+            bids: [ {
+              bidder: prebidjs.ImproveDigital, params: { placementId: 123, }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ [ 300, 250 ] ],
+          prebid: prebidAdSlotConfig,
+          sizeConfig: [
+            {
+              mediaQuery: '(min-width: 0px)',
+              sizesSupported: [ 'fluid', [ 300, 250 ] ]
+            }
+          ]
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          targeting: {
+            keyValues: {
+              channel: 'PersonalAndFinance'
+            }
+          },
+          prebid: { config: pbjsTestConfig }
+        }).then(config => {
+          return dfpService.requestAds(config);
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ {
+            code: 'eager-loading-adslot',
+            mediaTypes: {},
+            bids: [ {
+              bidder: prebidjs.ImproveDigital,
+              params: { placementId: 123, }
             } ]
           } ]);
         });
@@ -1015,8 +1067,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 340 ] ]
-              },
-              video: undefined
+              }
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -1243,8 +1294,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 340 ] ]
-              },
-              video: undefined
+              }
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -1463,8 +1513,7 @@ describe('DfpService', () => {
               mediaTypes: {
                 banner: {
                   sizes: [ [ 605, 165 ] ]
-                },
-                video: undefined
+                }
               },
               bids: [ {
                 bidder: prebidjs.AppNexusAst,
@@ -1545,8 +1594,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              },
-              video: undefined
+              }
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,
@@ -1614,8 +1662,7 @@ describe('DfpService', () => {
             mediaTypes: {
               banner: {
                 sizes: [ [ 605, 165 ] ]
-              },
-              video: undefined
+              }
             },
             bids: [ {
               bidder: prebidjs.AppNexusAst,

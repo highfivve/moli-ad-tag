@@ -738,7 +738,7 @@ export namespace Moli {
     /** The moli adSlot configuration */
     readonly moliSlot: S;
 
-    /** A function from the global or slot-local sizeConfig provided to filter the sizes provided by the slot */
+    /** A function from the slot-local sizeConfig provided to filter the sizes provided by the slot */
     readonly filterSupportedSizes: (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
     /** The actual dfp slot returned by `googletag.defineSlot` or `googletag.defineOutOfPageSlot` */
