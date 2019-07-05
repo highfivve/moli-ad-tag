@@ -28,6 +28,20 @@ property in the `prebid` configuration.
 
 This featured require a new service, the SlotEventService, which can be used to manage ad events in general.
 
+### Improve Digital Single Request Mode
+
+[GD-1296](https://jira.gutefrage.net/browse/GD-1296). Improve Digital now supports the prebid `bid.sizes` object,
+which frees us from specifying the configuration on the SSP side and use labels to differentiate.
+
+Example
+
+```javascript
+improvedigital: {
+    singleRequest: true,
+    usePrebidSizes : true
+}
+```
+
 ## v1.9.0
 
 - Add dynamic way to create prebid listeners and upgrade dependencies ([GD-1278](https://jira.gutefrage.net/browse/GD-1278))
