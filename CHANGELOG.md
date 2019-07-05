@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.11.0
+
+[GD-1306](https://jira.gutefrage.net/browse/GD-1306). If no prebid `banner` or `video` media  type is requested, then
+the propery will be completely left out. The pubmatic adapter is broken when these properties are available, but `undefined`.
+
 ## v1.10.0
 
 ## Changed debug console asset path
