@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.11.1
+
+[GD-1306](https://jira.gutefrage.net/browse/GD-1306). In addition we now filter all prebid ad units that neither
+have a `banner` or `video` media type.
+
 ## v1.11.0
 
 [GD-1306](https://jira.gutefrage.net/browse/GD-1306). If no prebid `banner` or `video` media  type is requested, then
