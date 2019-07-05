@@ -911,7 +911,10 @@ describe('DfpService', () => {
         const prebidAdSlotConfig: Moli.headerbidding.PrebidAdSlotConfigProvider = {
           adUnit: {
             code: 'eager-loading-adslot',
-            mediaTypes: { banner: { sizes: [ [ 123, 445 ] ] } },
+            mediaTypes: {
+              banner: { sizes: [ [ 123, 445 ] ] },
+              video: { context: 'outstream', playerSize: [ [ 300, 250 ] ] }
+            },
             bids: [ {
               bidder: prebidjs.ImproveDigital, params: { placementId: 123, }
             } ]
@@ -949,7 +952,9 @@ describe('DfpService', () => {
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
           expect(pbjsAddAdUnitSpy).to.have.been.calledOnceWithExactly([ {
             code: 'eager-loading-adslot',
-            mediaTypes: {},
+            mediaTypes: {
+              video: { context: 'outstream', playerSize: [ [ 300, 250 ] ] }
+            },
             bids: [ {
               bidder: prebidjs.ImproveDigital,
               params: { placementId: 123, }
@@ -1883,6 +1888,65 @@ describe('DfpService', () => {
           expect(adUnits).length(1);
           expect(adUnits[0].mediaTypes.banner).to.be.ok;
           expect(adUnits[0].mediaTypes.video).to.be.undefined;
+
+        });
+      });
+
+      it('should filter prebid adUnits when video and banner is filtered completely', () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const dfpService = newDfpService();
+
+
+        const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
+          adUnit: {
+            code: 'eager-loading-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 605, 165 ] ]
+              },
+              video: {
+                context: 'outstream',
+                playerSize: [ 605, 340 ]
+              }
+            },
+            bids: [ {
+              bidder: prebidjs.AppNexusAst,
+              params: {
+                placementId: '1'
+              }
+            } ]
+          }
+        };
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 300, 250 ] ],
+          sizeConfig: [
+            {
+              mediaQuery: '(min-width: 0px)',
+              sizesSupported: [ [ 300, 250 ] ]
+            }
+          ],
+          prebid: prebidAdslotConfig
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ],
+          logger: noopLogger,
+          consent: consentConfig,
+          prebid: { config: pbjsTestConfig }
+        }).then(config => {
+          return dfpService.requestAds(config);
+        }).then(() => {
+          expect(pbjsAddAdUnitSpy).to.have.been.calledOnce;
+
+          const adUnits = pbjsAddAdUnitSpy.firstCall.args[0] as prebidjs.IAdUnit[];
+
+          expect(adUnits).length(0);
 
         });
       });

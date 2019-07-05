@@ -713,7 +713,7 @@ export class DfpService {
                               config: Moli.MoliConfig,
                               globalLabelConfigService: LabelConfigService
   ): void {
-    pbjs.addAdUnits(dfpPrebidSlots.map(({ moliSlot, filterSupportedSizes }) => {
+    const prebidAdUnits = dfpPrebidSlots.map(({ moliSlot, filterSupportedSizes }) => {
       this.logger.debug('DFP Service', `Prebid add ad unit: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
 
       const keyValues = config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {};
@@ -742,8 +742,12 @@ export class DfpService {
           ...banner,
         },
         bids: bids
-      };
-    }));
+      } as prebidjs.IAdUnit;
+    }).filter(adUnit => {
+      return adUnit.bids.length > 0 && adUnit.mediaTypes && (adUnit.mediaTypes.banner || adUnit.mediaTypes.video);
+    });
+
+    pbjs.addAdUnits(prebidAdUnits);
   }
 
   private fetchA9Slots(slots: Moli.SlotDefinition<Moli.A9AdSlot>[],
