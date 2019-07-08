@@ -187,6 +187,9 @@ export const createMoliTag = (): Moli.MoliTag => {
       case 'requestAds': {
         return state.config;
       }
+      case 'spa': {
+        return state.config;
+      }
       case 'finished': {
         return state.config;
       }
