@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.11.4
+
+The `moli.getConfig()` method now returns the current configuration instead of always `undefined`. To avoid
+future confusions the `moli.openConsole()` alerts if `undefined` is being returned by the `getConfig()` call.
+
 ## v1.11.3
 
 Check if `pbjs` is available as well in single page application modus while destroying slots.
