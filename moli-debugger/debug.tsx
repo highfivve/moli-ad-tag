@@ -30,4 +30,6 @@ if (moliConfig) {
       preact.render(<AdSlotConfig labelConfigService={labelConfigService} slot={slot} parentElement={slotDomElement}/>, slotDomElement);
     }
   });
+} else {
+  window.alert('No moli config found. The console cannot be displayed');
 }
