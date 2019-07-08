@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.11.3
+
+Check if `pbjs` is available as well in single page application modus while destroying slots.
+
 ## v1.11.2
 
 Made `pbjs.adUnits` property optional. This can happen when no prebid is configured.

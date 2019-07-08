@@ -206,7 +206,7 @@ export class DfpService {
       .then(() => {
         const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
         const pbjs = window[prebidGlobal];
-        if (pbjs.adUnits) {
+        if (pbjs && pbjs.adUnits) {
           this.logger.debug('DFP Service', `Destroying prebid adUnits`, pbjs.adUnits);
           pbjs.adUnits.forEach(adUnit => pbjs.removeAdUnit(adUnit.code));
         }
