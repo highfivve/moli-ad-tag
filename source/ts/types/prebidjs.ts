@@ -38,7 +38,7 @@ export namespace prebidjs {
      *
      * Works with prebid 1.38.0
      */
-    readonly adUnits: IAdUnit[];
+    readonly adUnits?: IAdUnit[];
 
     /**
      * Define ad units and their corresponding header bidding bidders' tag IDs.
