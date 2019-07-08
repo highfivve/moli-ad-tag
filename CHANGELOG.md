@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.11.2
+
+Made `pbjs.adUnits` property optional. This can happen when no prebid is configured.
+
 ## v1.11.1
 
 [GD-1306](https://jira.gutefrage.net/browse/GD-1306). In addition we now filter all prebid ad units that neither
