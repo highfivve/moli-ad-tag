@@ -192,10 +192,10 @@ export namespace Moli {
      * a callback.
      *
      *
-     * @returns the configuration used to initialize the ads. If not yet initialized, undefined.
+     * @returns the configuration used to initialize the ads. If not yet initialized, null.
      * @see [[beforeRequestAds]]
      */
-    getConfig(): MoliConfig | undefined;
+    getConfig(): MoliConfig | null;
 
     /**
      * @returns the current state name

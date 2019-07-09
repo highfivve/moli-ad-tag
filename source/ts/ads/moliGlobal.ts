@@ -176,10 +176,10 @@ export const createMoliTag = (): Moli.MoliTag => {
     }
   }
 
-  function getConfig(): Moli.MoliConfig | undefined {
+  function getConfig(): Moli.MoliConfig | null {
     switch (state.state) {
       case 'configurable': {
-        return undefined;
+        return null;
       }
       case 'configured': {
         return state.config;
