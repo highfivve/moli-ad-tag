@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+[GD-1320](https://jira.gutefrage.net/browse/GD-1320). Before this implementation the DfpService waited until for the consent data
+if `cmp` was used as a `PersonalizedAdsProvider` without any timeout. This effectively made the `a9` and `prebid` timeouts useless.
+
+Now you have to specify a timeout for the `PersonalizedAdsProvider` if you choose `cmp`. Example:
+
+```typescript
+const consentConfig: Moli.consent.ConsentConfig = {
+    personalizedAds: {
+        provider: 'cmp',
+        // timeout in milliseconds
+        timeout: 500
+    },
+    cmpConfig: {
+        provider: 'faktor',
+        autoOptIn: true
+    }
+}
+```
+
+The timeout should usually match with the `a9` and `prebid` timeouts as they all use the same API and thus should
+behave similar.
+
 ## v1.11.4
 
 The `moli.getConfig()` method now returns the current configuration instead of always `undefined`. To avoid
