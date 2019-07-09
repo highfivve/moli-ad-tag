@@ -1109,7 +1109,8 @@ export namespace Moli {
      * @example Example on how to enable cmp as a personalized ads provider
      * ```typescript
      * {
-     *   provider: 'cmp'
+     *   provider: 'cmp',
+     *   timeout: 500
      * }
      * ```
      *
@@ -1121,6 +1122,14 @@ export namespace Moli {
      */
     export interface Cmp extends IPersonalizedAdsProvider {
       provider: 'cmp';
+
+      /**
+       * time in milliseconds until "no consent" is being assumed and non-personalized
+       * ads will be requested.
+       *
+       * This should match with the a9 and prebid cmp timeouts.
+       */
+      timeout: number;
     }
 
     /**

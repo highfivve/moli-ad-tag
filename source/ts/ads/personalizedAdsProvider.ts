@@ -16,7 +16,7 @@ export const getPersonalizedAdSetting = (consent: Moli.consent.ConsentConfig): P
       return Promise.resolve(nonPersonalizedAds);
     }
     case 'cmp': {
-      return new Promise<0 | 1>((resolve, reject) => {
+      const result = new Promise<0 | 1>((resolve, reject) => {
         if (window.__cmp) {
           window.__cmp('getVendorConsents', null, (vendorConsents: IVendorConsents): void => {
             const consentForAds = vendorConsents.purposeConsents[ 1 ] &&
@@ -30,6 +30,12 @@ export const getPersonalizedAdSetting = (consent: Moli.consent.ConsentConfig): P
           reject('No window.__cmp object is available');
         }
       });
+      const timeout = new Promise<0 | 1>(resolve => {
+        setTimeout(resolve, personalizedAds.timeout);
+      }).then(() => 1 as const);
+
+      return Promise.race([result, timeout]);
+
     }
   }
 };

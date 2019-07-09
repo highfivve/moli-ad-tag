@@ -95,9 +95,11 @@ describe('personalizedAdsProvider', () => {
 
   describe('cmp provider', () => {
 
+    const timeout = 100;
     const cmpConsentConfig: Moli.consent.ConsentConfig = {
       personalizedAds: {
-        provider: 'cmp'
+        provider: 'cmp',
+        timeout: timeout
       },
       cmpConfig: {
         provider: 'faktor',
@@ -132,6 +134,28 @@ describe('personalizedAdsProvider', () => {
       return getPersonalizedAdSetting(cmpConsentConfig)
         .then((value) => expect(value).to.equal(1));
     });
+
+    it('should return 1 when the configured timeout is being hit', () => {
+      const vendorConsents: IVendorConsents = {
+        gdprApplies: true,
+        metadata: '',
+        hasGlobalScope: false,
+        vendorConsents: {},
+        purposeConsents: {
+          1: true,
+          2: true,
+          3: true,
+          4: true,
+          5: true
+        }
+      };
+      window.__cmp = (cmd: string, params: any, callback: Function) => {
+        window.setTimeout(() => callback(vendorConsents), 2 * timeout);
+      };
+      return getPersonalizedAdSetting(cmpConsentConfig)
+        .then((value) => expect(value).to.equal(1));
+    });
+
 
     it('should return 0 when not all purpose consents are given, but gdpr does not apply', () => {
       const vendorConsents: IVendorConsents = {
