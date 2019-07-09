@@ -13,7 +13,7 @@ import './debug.css';
 import { WindowResizeService } from './util/windowResizeService';
 import { LabelConfigService } from '../source/ts/ads/labelConfigService';
 
-const moliConfig: MoliConfig | undefined = window.moli.getConfig();
+const moliConfig: MoliConfig | null = window.moli.getConfig();
 
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');
