@@ -328,6 +328,53 @@ describe('moli', () => {
     });
   });
 
+  describe('environment override', () => {
+    it('should override the environment with test', () => {
+      const adTag = createMoliTag(dom.window);
+
+      dom.reconfigure({
+        url: 'https://localhost?moliEnv=test'
+      });
+
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.environment).to.be.equal('test');
+    });
+
+    it('should override the environment with production', () => {
+      const adTag = createMoliTag(dom.window);
+
+      dom.reconfigure({
+        url: 'https://localhost?moliEnv=production'
+      });
+
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.environment).to.be.equal('production');
+    });
+
+    it('should not change the environment if query parameter is invalid', () => {
+      const adTag = createMoliTag(dom.window);
+
+      dom.reconfigure({
+        url: 'https://localhost?moliEnv=wrong'
+      });
+
+      adTag.configure({ slots: [], consent: consentConfig });
+
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.reporting).to.be.ok;
+      expect(config!.environment).to.be.undefined;
+    });
+  });
+
   describe('multiple configurations', () => {
     it('should not miss any configuration', () => {
       const adTag = createMoliTag(dom.window);
