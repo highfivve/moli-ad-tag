@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+[GD-1325](https://jira.gutefrage.net/browse/GD-1325). This allows us to either force
+a production or test environment, which eases the integration for the publisher.
+
+- query parameter: `moliEnv`
+- allowed values: `test` | `production`
+                                                         
+Example:
+https://www.gutefrage.net/?moliEnv=test
+
 [GD-1320](https://jira.gutefrage.net/browse/GD-1320). Before this implementation the DfpService waited until for the consent data
 if `cmp` was used as a `PersonalizedAdsProvider` without any timeout. This effectively made the `a9` and `prebid` timeouts useless.
 
