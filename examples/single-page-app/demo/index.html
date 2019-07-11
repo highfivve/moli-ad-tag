@@ -87,7 +87,17 @@ window.moli.que.push(function (moliAdTag) {
     moliAdTag.requestAds();
 });</code> </pre>
 
-        <button class="btn btn-primary" onclick="moli.requestAds()">Refresh Ads</button>
+        <script>
+            function refreshAds() {
+                window.location.hash = Date.now().toFixed();
+                window.moli = window.moli || {que: []};
+                window.moli.que.push(function (moliAdTag) {
+                    // refresh ads on navigation change
+                    moliAdTag.requestAds();
+                });
+            }
+        </script>
+        <button class="btn btn-primary" onclick="refreshAds()">Refresh Ads</button>
 
     </div>
 

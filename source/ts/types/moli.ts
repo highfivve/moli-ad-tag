@@ -444,6 +444,13 @@ export namespace Moli {
        */
       readonly initialized: Promise<Moli.MoliConfig>;
 
+      /**
+       * the current href. The ad tag checks that `requestAds()` is only called once
+       * per href otherwise it will throw an error as `requestAds()` is only allowed
+       * once per page.
+       */
+      readonly href: string;
+
     }
 
     /**

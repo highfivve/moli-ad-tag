@@ -296,7 +296,8 @@ export const createMoliTag = (): Moli.MoliTag => {
             config: config,
             refreshAds: dfpService.requestAds,
             destroyAdSlots: dfpService.destroyAdSlots,
-            initialized
+            initialized,
+            href: window.location.href
           };
           state = currentState;
 
@@ -329,8 +330,14 @@ export const createMoliTag = (): Moli.MoliTag => {
       }
       // in the single page application state we first need to destroy the current setup
       case 'spa': {
-        const { initialized, refreshAds, destroyAdSlots } = state;
+        const { initialized, refreshAds, destroyAdSlots, href } = state;
         return initialized
+          .then(config => {
+            if (href === window.location.href) {
+              return Promise.reject('You are trying to refresh ads on the same page, which is not allowed.');
+            }
+            return Promise.resolve(config);
+          })
           .then(config => destroyAdSlots(config))
           .then(config => {
             refreshAds(config);
@@ -342,7 +349,8 @@ export const createMoliTag = (): Moli.MoliTag => {
               refreshAds,
               destroyAdSlots,
               config,
-              initialized
+              initialized,
+              href: window.location.href
             };
             return state;
           });
