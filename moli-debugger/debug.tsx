@@ -18,7 +18,7 @@ const moliConfig: MoliConfig | null = window.moli.getConfig();
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');
   const extraLabels = moliConfig.targeting && moliConfig.targeting.labels || [];
-  const labelConfigService = new LabelConfigService(moliConfig.labelSizeConfig || [], extraLabels);
+  const labelConfigService = new LabelConfigService(moliConfig.labelSizeConfig || [], extraLabels, window);
 
   preact.render(<GlobalConfig config={moliConfig} labelConfigService={labelConfigService} windowResizeService={new WindowResizeService()}/>, globalConfigElement);
 

@@ -278,7 +278,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
-    const sizeConfigService = new SizeConfigService(slotSizeConfig);
+    const sizeConfigService = new SizeConfigService(slotSizeConfig, window);
 
     return sizes.map(size => ({
       valid: sizeConfigService.filterSupportedSizes([ size ]).length > 0,
