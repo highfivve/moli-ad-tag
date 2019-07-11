@@ -34,13 +34,14 @@ export interface IAdRefreshListener {
  *      and they do not need to be removed manually with the removeEventListener() method.
  *
  * @param trigger the trigger configuration
+ * @param window
  * @throws an error if the trigger.source is invalid
  */
-const createEventRefreshListener = (trigger: EventTrigger): IAdRefreshListener => {
+const createEventRefreshListener = (trigger: EventTrigger, window: Window): IAdRefreshListener => {
   return {
     addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
       if (typeof trigger.source === 'string') {
-        const element = document.querySelector(trigger.source);
+        const element = window.document.querySelector(trigger.source);
         if (element) {
           element.addEventListener(trigger.event, callback);
         } else {
@@ -56,12 +57,13 @@ const createEventRefreshListener = (trigger: EventTrigger): IAdRefreshListener =
 /**
  * 
  * @param trigger the trigger configuration for the refresh listener
+ * @param window
  * @returns an IAdRefreshListener if possible otherwise null
  */
-export const createRefreshListener = (trigger: Trigger): IAdRefreshListener => {
+export const createRefreshListener = (trigger: Trigger, window: Window): IAdRefreshListener => {
   switch (trigger.name) {
     case 'event':
-      return createEventRefreshListener(trigger);
+      return createEventRefreshListener(trigger, window);
     default:
       throw new Error(`Unsupported trigger ${trigger.name}`);
   }

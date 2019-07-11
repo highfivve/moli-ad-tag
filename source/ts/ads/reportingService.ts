@@ -51,7 +51,8 @@ export class ReportingService {
     private readonly slotEventService: SlotEventService,
     private readonly config: Moli.reporting.ReportingConfig,
     private readonly logger: Moli.MoliLogger,
-    private readonly env: Moli.Environment
+    private readonly env: Moli.Environment,
+    private readonly window: Window
   ) {
     // the default regex only removes the publisher id
     this.adUnitRegex = config.adUnitRegex || /\/\d*\//i;
@@ -226,7 +227,7 @@ export class ReportingService {
       case 'production':
         new Promise<void>(resolve => {
           let isResolved = false;
-          window.googletag.pubads().addEventListener('slotRenderEnded', () => {
+          this.window.googletag.pubads().addEventListener('slotRenderEnded', () => {
             if (!isResolved) {
               resolve();
               isResolved = true;
@@ -262,7 +263,7 @@ export class ReportingService {
       case 'production':
         new Promise<void>(resolve => {
           let isResolved = false;
-          window.googletag.pubads().addEventListener('slotOnload', () => {
+          this.window.googletag.pubads().addEventListener('slotOnload', () => {
             if (!isResolved) {
               resolve();
               isResolved = true;
@@ -296,7 +297,7 @@ export class ReportingService {
     }
 
     return new Promise<googletag.events.ISlotOnloadEvent>(resolve => {
-      window.googletag.pubads().addEventListener('slotOnload', (onLoadEvent) => {
+      this.window.googletag.pubads().addEventListener('slotOnload', (onLoadEvent) => {
         if (onLoadEvent.slot.getAdUnitPath() === event.slot.getAdUnitPath()) {
           resolve(onLoadEvent);
         }
@@ -409,9 +410,9 @@ export class ReportingService {
    */
   private uuidv4(): string {
     /* tslint:disable */
-    if ('crypto' in window && 'getRandomValues' in window.crypto) {
+    if ('crypto' in this.window && 'getRandomValues' in this.window.crypto) {
       return (([ 1e7 ] as any) + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
-        (c ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        (c ^ this.window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
       );
     } else {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

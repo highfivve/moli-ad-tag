@@ -16,9 +16,9 @@ export interface ILazyLoader {
   onLoad(): Promise<void>;
 }
 
-const getElementForListener = (trigger: EventTrigger): Window | Document | Element => {
+const getElementForListener = (trigger: EventTrigger, window: Window): Window | Document | Element => {
   if (typeof trigger.source === 'string') {
-    const element = document.querySelector(trigger.source);
+    const element = window.document.querySelector(trigger.source);
     if (element) {
       return element;
     } else {
@@ -29,12 +29,12 @@ const getElementForListener = (trigger: EventTrigger): Window | Document | Eleme
   }
 };
 
-const createEventLazyLoader = (trigger: EventTrigger): ILazyLoader => {
+const createEventLazyLoader = (trigger: EventTrigger, window: Window): ILazyLoader => {
   return {
     onLoad: () => {
       return new Promise<void>((resolve, reject) => {
         try {
-          getElementForListener(trigger).addEventListener(trigger.event, () => {
+          getElementForListener(trigger, window).addEventListener(trigger.event, () => {
             resolve();
           }, { once: true, passive: true });
         } catch (e) {
@@ -45,10 +45,10 @@ const createEventLazyLoader = (trigger: EventTrigger): ILazyLoader => {
   };
 };
 
-export const createLazyLoader = (trigger: Trigger): ILazyLoader => {
+export const createLazyLoader = (trigger: Trigger, window: Window): ILazyLoader => {
   switch (trigger.name) {
     case 'event':
-      return createEventLazyLoader(trigger);
+      return createEventLazyLoader(trigger, window);
     default:
       return {
         onLoad: () => Promise.reject(`Invalid trigger configuration: ${JSON.stringify(trigger)}`)

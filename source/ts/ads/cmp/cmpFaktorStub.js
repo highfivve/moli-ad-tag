@@ -11,7 +11,7 @@
  *
  */
 
-function loadCmpFaktorStub() {
+function loadCmpFaktorStub(window) {
 
     if ((!window.__cmp || typeof window.__cmp !== 'function')) {
         var start = window.__cmp ? window.__cmp.start : {};
@@ -19,11 +19,11 @@ function loadCmpFaktorStub() {
         window.__cmp = function () {
             function addLocatorFrame() {
                 if (!window.frames['__cmpLocator']) {
-                    if (document.body) {
-                        var frame = document.createElement('iframe');
+                    if (window.document.body) {
+                        var frame = window.document.createElement('iframe');
                         frame.style.display = 'none';
                         frame.name = '__cmpLocator';
-                        document.body.appendChild(frame);
+                        window.document.body.appendChild(frame);
                     } else {
                         setTimeout(addLocatorFrame, 5);
                     }

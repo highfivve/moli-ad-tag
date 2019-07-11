@@ -1,4 +1,4 @@
-import '../../stubs/browserEnvSetup';
+import { dom } from '../../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
@@ -18,7 +18,7 @@ describe('Faktor CMP', () => {
 
   const reportingConfig: ReportingConfig = { sampleRate: 0, reporters: [] };
 
-  const reportingService = new ReportingService(performanceMeasurementService, new SlotEventService(), reportingConfig, noopLogger, 'production');
+  const reportingService = new ReportingService(performanceMeasurementService, new SlotEventService(), reportingConfig, noopLogger, 'production', dom.window);
 
   const cmpStub = sandbox.stub();
 
@@ -36,19 +36,19 @@ describe('Faktor CMP', () => {
   });
 
   it('should not load the cmpFactorStub if faktor cmp is not initialized', () => {
-    return expect(window.__cmp).to.be.undefined;
+    return expect(dom.window.__cmp).to.be.undefined;
   });
 
   it('should load the cmpFactorStub if faktor cmp is initialized', () => {
-    new FaktorCmp(reportingService, noopLogger);
-    return expect(window.__cmp).not.to.be.undefined;
+    new FaktorCmp(reportingService, noopLogger, dom.window);
+    return expect(dom.window.__cmp).not.to.be.undefined;
   });
 
   it('should not call acceptAll if consent data exists', () => {
-    window.__cmp = cmpStub;
+    dom.window.__cmp = cmpStub;
     addStubBehaviour(0);
     addStubBehaviour(1, true);
-    const faktorCmp = new FaktorCmp(reportingService, noopLogger);
+    const faktorCmp = new FaktorCmp(reportingService, noopLogger, dom.window);
 
     return faktorCmp.autoOptIn().then(() => {
       expect(cmpStub.callCount).to.equal(2);
@@ -58,11 +58,11 @@ describe('Faktor CMP', () => {
   });
 
   it('should call acceptAll if no consent data exists', () => {
-    window.__cmp = cmpStub;
+    dom.window.__cmp = cmpStub;
     addStubBehaviour(0);
     addStubBehaviour(1, false);
     addStubBehaviour(2);
-    const faktorCmp = new FaktorCmp(reportingService, noopLogger);
+    const faktorCmp = new FaktorCmp(reportingService, noopLogger, dom.window);
 
     return faktorCmp.autoOptIn().then(() => {
       expect(cmpStub.callCount).to.equal(3);

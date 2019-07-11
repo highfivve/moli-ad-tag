@@ -1,4 +1,4 @@
-import '../stubs/browserEnvSetup';
+import { dom } from '../stubs/browserEnvSetup';
 
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
@@ -75,7 +75,7 @@ describe('LabelConfigConfigService', () => {
     labelAll: [ 'desktop', 'bottom' ]
   };
 
-  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[]) => new LabelConfigService(labelConfig, []);
+  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[]) => new LabelConfigService(labelConfig, [], dom.window);
 
   afterEach(() => {
     sandbox.reset();
@@ -96,7 +96,7 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should filter out duplicate labels from the label config', () => {
-      const labelConfigService = new LabelConfigService([ labelConfigEntry1, labelConfigEntry2 ], []);
+      const labelConfigService = new LabelConfigService([ labelConfigEntry1, labelConfigEntry2 ], [], dom.window);
 
       expect(
         new Set(labelConfigService.getSupportedLabels())
@@ -107,7 +107,7 @@ describe('LabelConfigConfigService', () => {
 
     it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
       const sizeConfigService = newLabelConfigService([ labelConfigEntry1, labelConfigEntry2 ]);
-      expect(sizeConfigService.getSupportedLabels()).to.deep.equal(['desktop', 'video', 'mobile', 'bottom']);
+      expect(sizeConfigService.getSupportedLabels()).to.deep.equal([ 'desktop', 'video', 'mobile', 'bottom' ]);
 
       // has labelAny "video" matching
       expect(sizeConfigService.filterSlot(adSlotWithLabelAny)).to.be.true;
@@ -123,7 +123,7 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should add the extra labels to the supported labels', () => {
-      const labelConfigService = new LabelConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ]);
+      const labelConfigService = new LabelConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ], dom.window);
       expect(
         new Set(labelConfigService.getSupportedLabels())
       ).to.deep.equal(

@@ -1,4 +1,4 @@
-import domready = require('domready');
+import domready from '../util/domready';
 import {
   IPerformanceMeasurementService, performanceMeasurementService
 } from './performanceService';
@@ -38,7 +38,9 @@ export interface IAssetLoaderService {
 
 export class AssetLoaderService implements IAssetLoaderService {
 
-  constructor(private readonly performanceService: IPerformanceMeasurementService) {
+  constructor(
+    private readonly performanceService: IPerformanceMeasurementService,
+    private readonly window: Window) {
   }
 
   public loadScript(config: ILoadAssetParams, parent: Element = document.head!): Promise<void> {
@@ -96,7 +98,7 @@ export class AssetLoaderService implements IAssetLoaderService {
    */
   private awaitDomReady(): Promise<void> {
     return new Promise<void>((resolve): void => {
-      domready(resolve);
+      domready(this.window, resolve);
     });
   }
 
@@ -114,5 +116,5 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 }
 
-export const assetLoaderService: IAssetLoaderService = new AssetLoaderService(performanceMeasurementService);
+export const assetLoaderService: IAssetLoaderService = new AssetLoaderService(performanceMeasurementService, window);
 

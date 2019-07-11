@@ -35,7 +35,7 @@ export class SizeConfigService {
    */
   private readonly isValid: boolean;
 
-  constructor(private readonly sizeConfig: SizeConfigEntry[]) {
+  constructor(private readonly sizeConfig: SizeConfigEntry[], private readonly window: Window) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedSizeConfigs = sizeConfig.length !== 0 ?
     sizeConfig

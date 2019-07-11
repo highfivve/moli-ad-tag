@@ -5,7 +5,7 @@ import { Moli } from '..';
  * Get the parameter `moliDebug`. If set to true all logs will be written to the console.
  *
  */
-function getMoliDebugParameter(): boolean {
+function getMoliDebugParameter(window: Window): boolean {
   const key = 'moliDebug';
   const params = parseQueryString(window.location.search);
   const param = params.get(key);
@@ -102,10 +102,11 @@ export function getDefaultLogger(): Moli.MoliLogger {
  *  - log errors to console if no logger is configured
  *
  * @param config
+ * @param window the global window object
  */
-export function getLogger(config: Moli.MoliConfig): Moli.MoliLogger {
+export function getLogger(config: Moli.MoliConfig, window: Window): Moli.MoliLogger {
 
-  if (getMoliDebugParameter()) {
+  if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
 
   } else if (config.logger) {

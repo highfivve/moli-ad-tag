@@ -1,4 +1,4 @@
-import '../stubs/browserEnvSetup';
+import { dom } from '../stubs/browserEnvSetup';
 
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
@@ -58,7 +58,7 @@ describe('SizeConfigService', () => {
   };
 
   const emptySizeConfig: SizeConfigEntry[] = [];
-  const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) => new SizeConfigService(sizeConfig);
+  const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) => new SizeConfigService(sizeConfig, dom.window);
 
   afterEach(() => {
     sandbox.reset();
@@ -80,7 +80,7 @@ describe('SizeConfigService', () => {
 
     it('should filter all sizes if config is not empty but no slot\'s matchMedia matches', () => {
       // for this test, we assume no sizeConfig mediaQuery matches:
-      const matchMediaStub = sandbox.stub(window, 'matchMedia').returns({ matches: false } as MediaQueryList);
+      const matchMediaStub = sandbox.stub(dom.window, 'matchMedia').returns({ matches: false } as MediaQueryList);
 
       const sizeConfigService = newSizeConfigService([ sizeConfigEntry3 ]);
 

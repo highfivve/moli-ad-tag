@@ -1,13 +1,10 @@
 import { IABConsentManagement } from '../../types/IABConsentManagement';
 import { ICmpService } from './cmpService';
-import IGlobalCMPApi = IABConsentManagement.IGlobalCMPApi;
 import IConsentData = IABConsentManagement.IConsentData;
 import IVendorConsents = IABConsentManagement.IVendorConsents;
 import { ReportingService } from '../reportingService';
 import loadCmpFaktorStub = require('./cmpFaktorStub');
 import { Moli } from '../..';
-
-declare const window: IGlobalCMPApi & IFaktorCMPApi & Window;
 
 interface IFaktorCMPApi {
 
@@ -41,12 +38,16 @@ export class FaktorCmp implements ICmpService {
    */
   private readonly faktorLoaded: Promise<void>;
 
-  constructor(private readonly reportingService: ReportingService, private readonly logger: Moli.MoliLogger) {
+  constructor(
+    private readonly reportingService: ReportingService,
+    private readonly logger: Moli.MoliLogger,
+    private readonly window: Window
+  ) {
     this.reportingService.markCmpInitialization();
     this.faktorLoaded = new Promise<void>(resolve => {
-        loadCmpFaktorStub();
+        loadCmpFaktorStub(window);
         this.logger.debug('Faktor CMP', 'loaded faktor stub');
-        window.__cmp('addEventListener', 'cmpReady', resolve);
+        this.window.__cmp('addEventListener', 'cmpReady', resolve);
       }
     );
   }
@@ -60,7 +61,7 @@ export class FaktorCmp implements ICmpService {
   getConsentData(): Promise<IConsentData> {
     return this.faktorLoaded.then(() => {
       return new Promise<IConsentData>(resolve => {
-        window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
+        this.window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
           consentData ? resolve(consentData) : resolve();
         });
       });
@@ -70,7 +71,7 @@ export class FaktorCmp implements ICmpService {
   getVendorConsents(): Promise<IVendorConsents> {
     return this.faktorLoaded.then(() => {
       return new Promise<IVendorConsents>(resolve => {
-        window.__cmp('getVendorConsents', null, (consentData: IVendorConsents, _success) => {
+        this.window.__cmp('getVendorConsents', null, (consentData: IVendorConsents, _success) => {
           resolve(consentData);
         });
       });
@@ -83,7 +84,7 @@ export class FaktorCmp implements ICmpService {
    */
   private consentDataExists(): Promise<boolean> {
     return new Promise<boolean>(resolve => {
-      window.__cmp('consentDataExist', true, (exists: boolean) => {
+      this.window.__cmp('consentDataExist', true, (exists: boolean) => {
         this.logger.debug('Faktor CMP', `consentDataExist: ${exists}`);
         if (exists) {
           this.reportingService.measureCmpLoadTime();
@@ -100,7 +101,7 @@ export class FaktorCmp implements ICmpService {
    */
   private acceptAll(): Promise<void> {
     return new Promise<void>(resolve => {
-      window.__cmp('acceptAll', true, () => {
+      this.window.__cmp('acceptAll', true, () => {
         this.logger.debug('Faktor CMP', 'calling accept all');
         this.reportingService.measureCmpLoadTime();
         resolve();

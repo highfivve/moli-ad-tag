@@ -3,7 +3,7 @@ import { Moli } from '../types/moli';
 import { cookieService } from '../util/cookieService';
 import IVendorConsents = IABConsentManagement.IVendorConsents;
 
-export const getPersonalizedAdSetting = (consent: Moli.consent.ConsentConfig): Promise<0 | 1> => {
+export const getPersonalizedAdSetting = (consent: Moli.consent.ConsentConfig, window: Window): Promise<0 | 1> => {
 
   const personalizedAds = consent.personalizedAds;
   switch (personalizedAds.provider) {

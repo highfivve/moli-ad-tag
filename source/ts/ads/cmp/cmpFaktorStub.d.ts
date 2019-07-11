@@ -1,4 +1,4 @@
 
-declare function loadCmpFaktorStub(): void;
+declare function loadCmpFaktorStub(window: Window): void;
 export = loadCmpFaktorStub;
 

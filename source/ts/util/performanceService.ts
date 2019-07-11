@@ -93,7 +93,7 @@ class NullPerformanceMeasurementService implements IPerformanceMeasurementServic
 
 const createInstance = (): IPerformanceMeasurementService => {
   // ensure that all methods we use exists in window.performance
-  if ('performance' in window && 'mark' in window.performance && 'measure' in window.performance && 'getEntriesByName' in window.performance) {
+  if (window && 'performance' in window && 'mark' in window.performance && 'measure' in window.performance && 'getEntriesByName' in window.performance) {
     return new PerformanceMeasurementService();
   } else {
     return new NullPerformanceMeasurementService();

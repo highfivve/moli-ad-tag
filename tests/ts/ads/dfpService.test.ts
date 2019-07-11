@@ -1,4 +1,4 @@
-import '../stubs/browserEnvSetup';
+import { dom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
@@ -21,38 +21,38 @@ use(sinonChai);
 describe('DfpService', () => {
 
   // set globals before test
-  window.googletag = googletagStub;
-  window.pbjs = pbjsStub;
-  window.moliPbjs = pbjsStub;
-  window.apstag = apstagStub;
+  dom.window.googletag = googletagStub;
+  dom.window.pbjs = pbjsStub;
+  dom.window.moliPbjs = pbjsStub;
+  dom.window.apstag = apstagStub;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
   const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadScript');
-  const matchMediaStub = sandbox.stub(window, 'matchMedia');
+  const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
 
   // googletag spies
-  const googletagDefineSlotStub = sandbox.stub(window.googletag, 'defineSlot');
-  const googleTagPubAdsSpy = sandbox.spy(window.googletag, 'pubads');
-  const googletagDefineOutOfPageSlotStub = sandbox.stub(window.googletag, 'defineOutOfPageSlot');
+  const googletagDefineSlotStub = sandbox.stub(dom.window.googletag, 'defineSlot');
+  const googleTagPubAdsSpy = sandbox.spy(dom.window.googletag, 'pubads');
+  const googletagDefineOutOfPageSlotStub = sandbox.stub(dom.window.googletag, 'defineOutOfPageSlot');
   const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
 
   // pbjs spies
-  const pbjsAddAdUnitSpy = sandbox.spy(window.pbjs, 'addAdUnits');
-  const pbjsRequestBidsSpy = sandbox.spy(window.pbjs, 'requestBids');
-  const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(window.pbjs, 'setTargetingForGPTAsync');
+  const pbjsAddAdUnitSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+  const pbjsRequestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+  const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(dom.window.pbjs, 'setTargetingForGPTAsync');
 
   // a9 apstag spies
-  const apstagFetchBidsSpy = sandbox.spy(window.apstag, 'fetchBids');
-  const apstagSetDisplayBidsSpy = sandbox.spy(window.apstag, 'setDisplayBids');
+  const apstagFetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+  const apstagSetDisplayBidsSpy = sandbox.spy(dom.window.apstag, 'setDisplayBids');
 
   // create a new DfpService for testing
   const newDfpService = (): DfpService => {
-    return new DfpService(assetLoaderService, cookieService);
+    return new DfpService(assetLoaderService, cookieService, dom.window);
   };
 
-  const getElementByIdStub = sandbox.stub(document, 'getElementById');
+  const getElementByIdStub = sandbox.stub(dom.window.document, 'getElementById');
 
   const sleep = (timeInMs: number = 20) => new Promise(resolve => {
     setTimeout(resolve, timeInMs);
@@ -65,9 +65,9 @@ describe('DfpService', () => {
 
   beforeEach(() => {
     // reset the before each test
-    window.googletag = googletagStub;
-    window.pbjs = pbjsStub;
-    window.apstag = apstagStub;
+    dom.window.googletag = googletagStub;
+    dom.window.pbjs = pbjsStub;
+    dom.window.apstag = apstagStub;
 
     // by default resolve all assets
     assetLoaderFetch.resolves();
@@ -84,10 +84,10 @@ describe('DfpService', () => {
     sandbox.reset();
   });
 
-  describe('window initialization code', () => {
+  describe('dom.window initialization code', () => {
 
-    it('should configure window.pbjs.que', () => {
-      (window as any).pbjs = undefined;
+    it('should configure dom.window.pbjs.que', () => {
+      (dom.window as any).pbjs = undefined;
       const init = newDfpService().initialize({
         slots: [],
         consent: consentConfig,
@@ -97,16 +97,16 @@ describe('DfpService', () => {
 
       return sleep()
         .then(() => {
-          expect(window.pbjs.que).to.be.ok;
+          expect(dom.window.pbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).pbjs.que[0]();
-          window.pbjs = pbjsStub;
+          (dom.window as any).pbjs.que[0]();
+          dom.window.pbjs = pbjsStub;
         })
         .then(() => init);
     });
 
-    it('should configure window.moliPbjs.que if useMoliPbjs is set', () => {
-      (window as any).moliPbjs = undefined;
+    it('should configure dom.window.moliPbjs.que if useMoliPbjs is set', () => {
+      (dom.window as any).moliPbjs = undefined;
       const init = newDfpService().initialize({
         slots: [],
         consent: consentConfig,
@@ -116,28 +116,28 @@ describe('DfpService', () => {
 
       return sleep()
         .then(() => {
-          expect(window.moliPbjs.que).to.be.ok;
+          expect(dom.window.moliPbjs.que).to.be.ok;
           // resolve queue and set stub
-          (window as any).moliPbjs.que[0]();
-          window.moliPbjs = pbjsStub;
+          (dom.window as any).moliPbjs.que[0]();
+          dom.window.moliPbjs = pbjsStub;
         })
         .then(() => init);
     });
 
-    it('should not configure window.pbjs.que without prebid config', () => {
-      (window as any).pbjs = undefined;
+    it('should not configure dom.window.pbjs.que without prebid config', () => {
+      (dom.window as any).pbjs = undefined;
       const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
 
       return sleep()
         .then(() => {
-          expect(window.pbjs).to.be.undefined;
+          expect(dom.window.pbjs).to.be.undefined;
         })
         .then(() => init);
 
     });
 
-    it('should configure window.apstag', () => {
-      (window as any).apstag = undefined;
+    it('should configure dom.window.apstag', () => {
+      (dom.window as any).apstag = undefined;
       const init = newDfpService().initialize({
         slots: [],
         consent: consentConfig,
@@ -146,9 +146,9 @@ describe('DfpService', () => {
       });
       return sleep()
         .then(() => {
-          expect(window.apstag._Q).to.be.ok;
-          expect(window.apstag.init).to.be.ok;
-          expect(window.apstag.fetchBids).to.be.ok;
+          expect(dom.window.apstag._Q).to.be.ok;
+          expect(dom.window.apstag.init).to.be.ok;
+          expect(dom.window.apstag.fetchBids).to.be.ok;
 
           expect(assetLoaderFetch).to.be.calledOnceWithExactly({
             name: 'A9',
@@ -159,26 +159,26 @@ describe('DfpService', () => {
         .then(() => init);
     });
 
-    it('should not configure window.apstag if no a9 is requested', () => {
-      (window as any).apstag = undefined;
+    it('should not configure dom.window.apstag if no a9 is requested', () => {
+      (dom.window as any).apstag = undefined;
       const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
       return sleep()
         .then(() => {
-          expect(window.apstag).to.be.undefined;
+          expect(dom.window.apstag).to.be.undefined;
           expect(assetLoaderFetch).not.called;
         })
         .then(() => init);
     });
 
-    it('should configure window.googletag.cmd', () => {
-      (window as any).googletag = undefined;
+    it('should configure dom.window.googletag.cmd', () => {
+      (dom.window as any).googletag = undefined;
       const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
       return sleep()
         .then(() => {
-          expect(window.googletag.cmd).to.be.ok;
+          expect(dom.window.googletag.cmd).to.be.ok;
           // resolve queue and set stub
-          (window as any).googletag.cmd[0]();
-          window.googletag = googletagStub;
+          (dom.window as any).googletag.cmd[0]();
+          dom.window.googletag = googletagStub;
         })
         .then(() => init);
     });
@@ -221,7 +221,7 @@ describe('DfpService', () => {
   describe('prebid configuration', () => {
 
     it('should set the prebid configuration', () => {
-      const pbjsSetConfigSpy = sandbox.spy(window.pbjs, 'setConfig');
+      const pbjsSetConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
       return newDfpService().initialize({
           slots: [],
           logger: noopLogger,
@@ -237,7 +237,7 @@ describe('DfpService', () => {
     });
 
     it('should set the prebid bidderSettings', () => {
-      (window.pbjs as any).bidderSettings = undefined;
+      (dom.window.pbjs as any).bidderSettings = undefined;
       const bidderSettings: prebidjs.IBidderSettings = {
         appnexusAst: {
           adserverTargeting: []
@@ -254,8 +254,8 @@ describe('DfpService', () => {
         }
       )
         .then(() => {
-          expect(window.pbjs.bidderSettings).not.to.be.undefined;
-          expect(window.pbjs.bidderSettings).to.equal(bidderSettings);
+          expect(dom.window.pbjs.bidderSettings).not.to.be.undefined;
+          expect(dom.window.pbjs.bidderSettings).to.equal(bidderSettings);
         });
     });
 
@@ -392,7 +392,7 @@ describe('DfpService', () => {
         // force typescript to accept this overloaded definition
           .callsFake(adddSlotRenderEndedListener as any);
 
-        const triggerUserSyncsSpy = sandbox.spy(window.pbjs, 'triggerUserSyncs');
+        const triggerUserSyncsSpy = sandbox.spy(dom.window.pbjs, 'triggerUserSyncs');
         const dfpService = newDfpService();
 
         return dfpService.initialize({
@@ -1119,7 +1119,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1131,7 +1131,7 @@ describe('DfpService', () => {
           expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          window.dispatchEvent(new Event('slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -1179,7 +1179,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1191,7 +1191,7 @@ describe('DfpService', () => {
           expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          window.dispatchEvent(new Event('slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -1237,7 +1237,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1252,7 +1252,7 @@ describe('DfpService', () => {
           expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          window.dispatchEvent(new Event('slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('slot-trigger'));
           return sleep();
         }).then(() => {
 
@@ -1300,7 +1300,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'eager-slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1314,7 +1314,7 @@ describe('DfpService', () => {
           const adSlotArray = pubAdsServiceStubRefreshSpy.firstCall.lastArg;
           expect(adSlotArray).length(1);
         }).then(() => {
-          window.dispatchEvent(new Event('eager-slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('eager-slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnce;
@@ -1344,7 +1344,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'lazy-slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1357,7 +1357,7 @@ describe('DfpService', () => {
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
-          window.dispatchEvent(new Event('lazy-slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('lazy-slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnce;
@@ -1406,7 +1406,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1431,7 +1431,7 @@ describe('DfpService', () => {
           );
 
         }).then(() => {
-          window.dispatchEvent(new Event('slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('slot-trigger'));
           return sleep();
         }).then(() => {
           expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
@@ -1477,7 +1477,7 @@ describe('DfpService', () => {
           trigger: {
             name: 'event',
             event: 'slot-trigger',
-            source: window
+            source: dom.window
           }
         };
 
@@ -1508,7 +1508,7 @@ describe('DfpService', () => {
           expect(apstagSetDisplayBidsSpy).to.have.been.calledOnce;
 
         }).then(() => {
-          window.dispatchEvent(new Event('slot-trigger'));
+          dom.window.dispatchEvent(new dom.window.Event('slot-trigger'));
           return sleep();
         }).then(() => {
 
@@ -2244,7 +2244,7 @@ describe('DfpService', () => {
 
       const dfpService = newDfpService();
 
-      const destroySlotsSpy = sandbox.spy(window.googletag, 'destroySlots');
+      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
 
 
       const config = {
@@ -2267,7 +2267,7 @@ describe('DfpService', () => {
     it('should remove all prebid adUnits', () => {
       const dfpService = newDfpService();
 
-      const removeAdUnitSpy = sandbox.spy(window.pbjs, 'removeAdUnit');
+      const removeAdUnitSpy = sandbox.spy(dom.window.pbjs, 'removeAdUnit');
 
 
       const config = {
@@ -2277,7 +2277,7 @@ describe('DfpService', () => {
       };
 
       // initialize the internal adUnits data structure of prebid
-      (window.pbjs as any).adUnits = [
+      (dom.window.pbjs as any).adUnits = [
         { code: 'ad-1' },
         { code: 'ad-2' }
       ];
@@ -2298,7 +2298,7 @@ describe('DfpService', () => {
 
     it('should set correct targeting values', () => {
       const dfpService = newDfpService();
-      const setTargetingStub = sandbox.stub(window.googletag.pubads(), 'setTargeting');
+      const setTargetingStub = sandbox.stub(dom.window.googletag.pubads(), 'setTargeting');
 
       const adConfiguration: Moli.MoliConfig = {
         slots: [],

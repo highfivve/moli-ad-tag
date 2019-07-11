@@ -38,7 +38,8 @@ export class LabelConfigService {
   private readonly isValid: boolean;
 
   constructor(private readonly labelSizeConfig: LabelSizeConfigEntry[],
-              private readonly extraLabels: string[]) {
+              private readonly extraLabels: string[],
+              private readonly window: Window) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedLabelSizeConfigs = labelSizeConfig
       .filter(conf => window.matchMedia(conf.mediaQuery).matches);

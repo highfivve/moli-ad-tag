@@ -1,4 +1,4 @@
-import '../stubs/browserEnvSetup';
+import { dom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
@@ -8,7 +8,6 @@ import { IABConsentManagement } from '../../../source/ts/types/IABConsentManagem
 import { cookieService } from '../../../source/ts/util/cookieService';
 import { cmpFunction } from '../stubs/cmpStubs';
 import IVendorConsents = IABConsentManagement.IVendorConsents;
-
 
 
 // setup sinon-chai
@@ -33,7 +32,7 @@ describe('personalizedAdsProvider', () => {
         cmpConfig: {
           provider: 'publisher'
         }
-      }).then(value => {
+      }, dom.window).then(value => {
         expect(value).to.equal(0);
       });
     });
@@ -47,7 +46,7 @@ describe('personalizedAdsProvider', () => {
         cmpConfig: {
           provider: 'publisher'
         }
-      }).then(value => {
+      }, dom.window).then(value => {
         expect(value).to.equal(1);
       });
     });
@@ -71,7 +70,7 @@ describe('personalizedAdsProvider', () => {
 
     it('should return 0 when no cookie is set', () => {
       cookieExistsStub.returns(false);
-      return getPersonalizedAdSetting(cookieConsentConfig).then(value => {
+      return getPersonalizedAdSetting(cookieConsentConfig, dom.window).then(value => {
         expect(value).to.equal(0);
       });
     });
@@ -79,7 +78,7 @@ describe('personalizedAdsProvider', () => {
     it('should return 0 when the cookie value differs from the valueForNonPersonalizedAds setting', () => {
       cookieExistsStub.returns(true);
       cookieGetStub.returns('true');
-      return getPersonalizedAdSetting(cookieConsentConfig).then(value => {
+      return getPersonalizedAdSetting(cookieConsentConfig, dom.window).then(value => {
         expect(value).to.equal(0);
       });
     });
@@ -87,7 +86,7 @@ describe('personalizedAdsProvider', () => {
     it('should return 1 when the cookie value matches the valueForNonPersonalizedAds setting', () => {
       cookieExistsStub.returns(true);
       cookieGetStub.returns('false');
-      return getPersonalizedAdSetting(cookieConsentConfig).then(value => {
+      return getPersonalizedAdSetting(cookieConsentConfig, dom.window).then(value => {
         expect(value).to.equal(1);
       });
     });
@@ -109,12 +108,12 @@ describe('personalizedAdsProvider', () => {
 
 
     after(() => {
-      (window as any).__cmp = undefined;
+      (dom.window as any).__cmp = undefined;
     });
 
     it('should reject if no __cmp API is available', () => {
-      (window as any).__cmp = undefined;
-      return getPersonalizedAdSetting(cmpConsentConfig)
+      (dom.window as any).__cmp = undefined;
+      return getPersonalizedAdSetting(cmpConsentConfig, dom.window)
         .then((value) => expect.fail(value, 'rejected promise'))
         .catch(error => expect(error).to.equal('No window.__cmp object is available'));
     });
@@ -130,8 +129,8 @@ describe('personalizedAdsProvider', () => {
           2: true
         }
       };
-      window.__cmp = cmpFunction(vendorConsents);
-      return getPersonalizedAdSetting(cmpConsentConfig)
+      dom.window.__cmp = cmpFunction(vendorConsents);
+      return getPersonalizedAdSetting(cmpConsentConfig, dom.window)
         .then((value) => expect(value).to.equal(1));
     });
 
@@ -149,10 +148,10 @@ describe('personalizedAdsProvider', () => {
           5: true
         }
       };
-      window.__cmp = (cmd: string, params: any, callback: Function) => {
-        window.setTimeout(() => callback(vendorConsents), 2 * timeout);
+      dom.window.__cmp = (cmd: string, params: any, callback: Function) => {
+        dom.window.setTimeout(() => callback(vendorConsents), 2 * timeout);
       };
-      return getPersonalizedAdSetting(cmpConsentConfig)
+      return getPersonalizedAdSetting(cmpConsentConfig, dom.window)
         .then((value) => expect(value).to.equal(1));
     });
 
@@ -168,8 +167,8 @@ describe('personalizedAdsProvider', () => {
           2: true
         }
       };
-      window.__cmp = cmpFunction(vendorConsents);
-      return getPersonalizedAdSetting(cmpConsentConfig)
+      dom.window.__cmp = cmpFunction(vendorConsents);
+      return getPersonalizedAdSetting(cmpConsentConfig, dom.window)
         .then((value) => expect(value).to.equal(0));
     });
 
@@ -187,8 +186,8 @@ describe('personalizedAdsProvider', () => {
           5: true
         }
       };
-      window.__cmp = cmpFunction(vendorConsents);
-      return getPersonalizedAdSetting(cmpConsentConfig)
+      dom.window.__cmp = cmpFunction(vendorConsents);
+      return getPersonalizedAdSetting(cmpConsentConfig, dom.window)
         .then((value) => expect(value).to.equal(0));
     });
 
@@ -207,8 +206,8 @@ describe('personalizedAdsProvider', () => {
           5: true
         }
       };
-      window.__cmp = cmpFunction(vendorConsents);
-      return getPersonalizedAdSetting(cmpConsentConfig)
+      dom.window.__cmp = cmpFunction(vendorConsents);
+      return getPersonalizedAdSetting(cmpConsentConfig, dom.window)
         .then((value) => expect(value).to.equal(0));
     });
   });

@@ -1,4 +1,4 @@
-import '../stubs/browserEnvSetup';
+import { dom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 
@@ -22,15 +22,15 @@ describe('Refreshable Loading', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
         event: 'trigger-event',
-        source: window
-      });
+        source: dom.window
+      }, dom.window);
 
       const onRefresh = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve();
         });
       });
-      window.dispatchEvent(new Event('trigger-event', {}));
+      dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
 
       return onRefresh;
     });
@@ -39,15 +39,15 @@ describe('Refreshable Loading', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
         event: 'trigger-event',
-        source: document
-      });
+        source: dom.window.document
+      }, dom.window);
 
       const onRefresh = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve();
         });
       });
-      document.dispatchEvent(new Event('trigger-event', {}));
+      dom.window.document.dispatchEvent(new dom.window.Event('trigger-event', {}));
 
       return onRefresh;
     });
@@ -57,18 +57,18 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: '#refresh-trigger-element'
-      });
+      }, dom.window);
 
-      const div = document.createElement('div');
+      const div = dom.window.document.createElement('div');
       div.id = 'refresh-trigger-element';
-      document.body.append(div);
+      dom.window.document.body.append(div);
 
       const onRefresh = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve();
         });
       });
-      div.dispatchEvent(new Event('trigger-event', {}));
+      div.dispatchEvent(new dom.window.Event('trigger-event', {}));
 
       return onRefresh;
     });
@@ -77,8 +77,8 @@ describe('Refreshable Loading', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
         event: 'trigger-event',
-        source: window
-      });
+        source: dom.window
+      }, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         let counter = 0;
@@ -89,9 +89,9 @@ describe('Refreshable Loading', () => {
         });
       });
       // dispatch three events
-      window.dispatchEvent(new Event('trigger-event', {}));
-      window.dispatchEvent(new Event('trigger-event', {}));
-      window.dispatchEvent(new Event('trigger-event', {}));
+      dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
+      dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
+      dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
 
       return onRefresh;
     });
@@ -100,8 +100,8 @@ describe('Refreshable Loading', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
         event: 'trigger-event',
-        source: window
-      });
+        source: dom.window
+      }, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
@@ -110,7 +110,7 @@ describe('Refreshable Loading', () => {
       });
       const race: Promise<boolean> = sleep().then(() => false);
 
-      return Promise.race<boolean>([onRefresh, race]).then((called) => {
+      return Promise.race<boolean>([ onRefresh, race ]).then((called) => {
         expect(called).to.be.false;
       });
     });
@@ -119,18 +119,18 @@ describe('Refreshable Loading', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
         event: 'trigger-event',
-        source: window
-      });
+        source: dom.window
+      }, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve(true);
         });
       });
-      window.dispatchEvent(new Event('another-event', {}));
+      dom.window.dispatchEvent(new dom.window.Event('another-event', {}));
       const race: Promise<boolean> = sleep().then(() => false);
 
-      return Promise.race<boolean>([onRefresh, race]).then((called) => {
+      return Promise.race<boolean>([ onRefresh, race ]).then((called) => {
         expect(called).to.be.false;
       });
     });
@@ -139,18 +139,18 @@ describe('Refreshable Loading', () => {
       const refreshListener = createRefreshListener({
         name: 'event',
         event: 'trigger-event',
-        source: window
-      });
+        source: dom.window
+      }, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve(true);
         });
       });
-      document.dispatchEvent(new Event('trigger-event', {}));
+      dom.window.document.dispatchEvent(new dom.window.Event('trigger-event', {}));
       const race: Promise<boolean> = sleep().then(() => false);
 
-      return Promise.race<boolean>([onRefresh, race]).then((called) => {
+      return Promise.race<boolean>([ onRefresh, race ]).then((called) => {
         expect(called).to.be.false;
       });
     });
