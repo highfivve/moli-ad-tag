@@ -973,7 +973,7 @@ export class DfpService {
                              ">
 <div style="position: absolute; top: 5px; left: 5px">${buttons}</div>        
 <div style="margin-bottom: 12px">
-  <img src="//highfivve.com/wp-content/themes/highfivve/img/site/logo.png"> 
+  <img style="width: 100%; height: auto;" src="//highfivve.com/wp-content/themes/highfivve/img/site/logo.png"> 
 </div>
 <div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>
 </div>`;
