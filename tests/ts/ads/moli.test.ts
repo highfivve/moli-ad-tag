@@ -82,6 +82,9 @@ describe('moli', () => {
     });
 
     it('should stay in spa state if single page app is enabled and requestAds is called multiple times', () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
       const adTag = createMoliTag(dom.window);
       adTag.enableSinglePageApp();
       adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
@@ -90,8 +93,9 @@ describe('moli', () => {
         expect(state.state).to.be.eq('spa');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
-        // location.hash is currently the only supported setter in jsdom
-        dom.window.location.hash = 'foo';
+        dom.reconfigure({
+          url: 'https://localhost/page-two'
+        });
         return adTag.requestAds();
       }).then((state) => {
         expect(state.state).to.be.eq('spa');
@@ -99,6 +103,27 @@ describe('moli', () => {
         expect(spaState.config).to.be.ok;
       });
     });
+
+    it('should fail in spa state if single page app is enabled and requestAds is called multiple times without changing the window.location.href', () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+      const adTag = createMoliTag(dom.window);
+      adTag.enableSinglePageApp();
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      expect(adTag.getState()).to.be.eq('configured');
+      return adTag.requestAds().then(state => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        return adTag.requestAds();
+      }).then(() => {
+        expect.fail();
+      }, error => {
+        expect(error.toString()).to.be.equal('You are trying to refresh ads on the same page, which is not allowed.');
+      });
+    });
+
   });
 
   describe('setTargeting()', () => {
