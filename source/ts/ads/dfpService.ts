@@ -958,7 +958,7 @@ export class DfpService {
               document.getElementById('${containerWidthId}').textContent = ${width};;
               document.getElementById('${containerHeightId}').textContent = ${height};;
             })()`;
-            return `<button onclick="${resize}">${width}x${height}</button>`;
+            return `<button onclick="${resize}" style="font-size: 10px; background: #00a4a6; color: white; border: 1px dotted white;">${width}x${height}</button>`;
           }).join('\n');
 
           // CSS Pattern from https://leaverou.github.io/css3patterns/#lined-paper
@@ -972,9 +972,6 @@ export class DfpService {
                              background-size: 100% 1.2em;
                              ">
 <div style="position: absolute; top: 5px; left: 5px">${buttons}</div>        
-<div style="margin-bottom: 12px">
-  <img style="display: block; margin: auto; width: 50%; height: auto;" src="//highfivve.com/wp-content/themes/highfivve/img/site/logo.png"> 
-</div>
 <div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>
 </div>`;
 
