@@ -96,6 +96,8 @@ describe('moli', () => {
         expect(state.state).to.be.eq('spa');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
+        // location.hash is currently the only supported setter in jsdom
+        window.location.hash = 'foo';
         return adTag.requestAds();
       }).then((state) => {
         expect(state.state).to.be.eq('spa');
