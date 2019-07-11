@@ -33,9 +33,9 @@ describe('DfpService', () => {
   const matchMediaStub = sandbox.stub(window, 'matchMedia');
 
   // googletag spies
-  const googletagDefineSlotSpy = sandbox.spy(window.googletag, 'defineSlot');
+  const googletagDefineSlotStub = sandbox.stub(window.googletag, 'defineSlot');
   const googleTagPubAdsSpy = sandbox.spy(window.googletag, 'pubads');
-  const googletagDefineOutOfPageSlotSpy = sandbox.spy(window.googletag, 'defineOutOfPageSlot');
+  const googletagDefineOutOfPageSlotStub = sandbox.stub(window.googletag, 'defineOutOfPageSlot');
   const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
 
   // pbjs spies
@@ -74,6 +74,10 @@ describe('DfpService', () => {
 
     // by default all DOM elements exist
     getElementByIdStub.returns({} as HTMLElement);
+
+    // default stub behaviour
+    googletagDefineSlotStub.callThrough();
+    googletagDefineOutOfPageSlotStub.callThrough();
   });
 
   afterEach(() => {
@@ -462,7 +466,7 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy.called).to.be.false;
+          expect(googletagDefineSlotStub.called).to.be.false;
         });
       });
 
@@ -490,8 +494,8 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
         });
       });
@@ -520,10 +524,86 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineOutOfPageSlotSpy).to.have.been.calledOnce;
-          expect(googletagDefineOutOfPageSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.domId);
+          expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.domId);
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
         });
+      });
+
+
+      it('should fail if defineSlot returns null', () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const dfpService = newDfpService();
+
+        googletagDefineSlotStub.callsFake(() => null);
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [ [ 300, 250 ] ],
+          sizeConfig: [
+            {
+              mediaQuery: '(min-width: 0px)',
+              sizesSupported: []
+            }
+          ]
+        };
+
+
+        return dfpService.initialize({
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+        }).then(config => {
+          return dfpService.requestAds(config);
+        }).then(() => {
+            expect.fail('requestAds() should fail');
+          },
+          (error) => {
+            expect(googletagDefineSlotStub).to.have.been.calledOnce;
+            expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ [ 300, 250 ] ], adSlot.domId);
+            expect(error.toString()).to.contain(adSlot.domId);
+            expect(error.toString()).to.contain(adSlot.adUnitPath);
+          });
+      });
+
+
+      it('should fail if defineOutOfPageSlot returns null', () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const dfpService = newDfpService();
+
+        googletagDefineOutOfPageSlotStub.callsFake(() => null);
+
+        const adSlot: Moli.AdSlot = {
+          position: 'out-of-page',
+          domId: 'eager-loading-out-of-page-adslot',
+          behaviour: 'eager',
+          adUnitPath: '/123/eager',
+          sizes: [],
+          sizeConfig: [
+            {
+              mediaQuery: '(min-width: 0px)',
+              sizesSupported: []
+            }
+          ]
+        };
+
+
+        return dfpService.initialize({
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+        }).then(config => {
+          return dfpService.requestAds(config);
+        }).then(() => {
+            expect.fail('requestAds() should fail');
+          },
+          (error) => {
+            expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnce;
+            expect(googletagDefineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.domId);
+            expect(error.toString()).to.contain(adSlot.domId);
+            expect(error.toString()).to.contain(adSlot.adUnitPath);
+          });
       });
 
       // ------------------
@@ -1048,14 +1128,14 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.not.been.called;
+          expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
           window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
-          expect(googletagDefineSlotSpy).to.have.been.called;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.called;
           const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
           expect(adSlotArray).length(1);
         });
@@ -1108,14 +1188,14 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.not.been.called;
+          expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
           window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
-          expect(googletagDefineSlotSpy).to.have.been.called;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.called;
           const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
           expect(adSlotArray).length(1);
 
@@ -1169,7 +1249,7 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.not.been.called;
+          expect(googletagDefineSlotStub).to.have.not.been.called;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
           window.dispatchEvent(new Event('slot-trigger'));
@@ -1229,15 +1309,15 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
           const adSlotArray = pubAdsServiceStubRefreshSpy.firstCall.lastArg;
           expect(adSlotArray).length(1);
         }).then(() => {
           window.dispatchEvent(new Event('eager-slot-trigger'));
           return sleep();
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+          expect(googletagDefineSlotStub).to.have.been.calledOnce;
           const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
           expect(adSlotArray).length(1);
         });
@@ -1273,15 +1353,15 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.callCount(0);
+          expect(googletagDefineSlotStub).to.have.been.callCount(0);
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnceWithExactly([]);
         }).then(() => {
           window.dispatchEvent(new Event('lazy-slot-trigger'));
           return sleep();
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
           expect(pubAdsServiceStubRefreshSpy).to.have.calledTwice;
           const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
           expect(adSlotArray).length(1);
@@ -1354,8 +1434,8 @@ describe('DfpService', () => {
           window.dispatchEvent(new Event('slot-trigger'));
           return sleep();
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
-          expect(googletagDefineSlotSpy).to.have.been.called;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.called;
           const adSlotArray = pubAdsServiceStubRefreshSpy.secondCall.lastArg;
           expect(adSlotArray).length(1);
 
@@ -1577,8 +1657,8 @@ describe('DfpService', () => {
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
-          expect(googletagDefineSlotSpy).to.have.been.calledOnce;
-          expect(googletagDefineSlotSpy).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ 'fluid', [ 1000, 200 ] ], adSlot.domId);
+          expect(googletagDefineSlotStub).to.have.been.calledOnce;
+          expect(googletagDefineSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, [ 'fluid', [ 1000, 200 ] ], adSlot.domId);
           expect(pubAdsServiceStubRefreshSpy).to.have.been.calledOnce;
         });
       });
@@ -2353,7 +2433,7 @@ describe('DfpService', () => {
       }).then(config => {
         return dfpService.requestAds(config);
       }).then(() => {
-        expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+        expect(googletagDefineSlotStub).to.have.been.calledOnce;
         expect(pbjsAddAdUnitSpy).to.have.not.been.called;
         expect(pbjsRequestBidsSpy).to.have.not.been.called;
         expect(pbjsSetTargetingForGPTAsyncSpy).to.have.not.been.called;
@@ -2391,7 +2471,7 @@ describe('DfpService', () => {
     }).then(config => {
       return dfpService.requestAds(config);
     }).then(() => {
-      expect(googletagDefineSlotSpy).to.have.been.calledOnce;
+      expect(googletagDefineSlotStub).to.have.been.calledOnce;
       expect(apstagFetchBidsSpy).to.have.not.been.called;
       expect(apstagFetchBidsSpy).to.have.not.been.called;
     });

@@ -890,23 +890,29 @@ export class DfpService {
     const { moliSlot, filterSupportedSizes } = slotDefinition;
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
-    const adSlot: googletag.IAdSlot = moliSlot.position === 'in-page' ?
+    const adSlot: googletag.IAdSlot | null = moliSlot.position === 'in-page' ?
       window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId) :
       window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId);
 
-    adSlot.setCollapseEmptyDiv(true);
-    switch (env) {
-      case 'production':
-        adSlot.addService(window.googletag.pubads());
-        break;
-      case 'test':
-        this.logger.warn('DFP Service', `Enabling content service on ${adSlot.getSlotElementId()}`);
-        adSlot.addService(window.googletag.content());
+    if (adSlot) {
+      adSlot.setCollapseEmptyDiv(true);
+      switch (env) {
+        case 'production':
+          adSlot.addService(window.googletag.pubads());
+          break;
+        case 'test':
+          this.logger.warn('DFP Service', `Enabling content service on ${adSlot.getSlotElementId()}`);
+          adSlot.addService(window.googletag.content());
+      }
+
+
+      this.logger.debug('DFP Service', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
+      return adSlot;
+    } else {
+      const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
+      this.logger.error('DFP Service', error);
+      throw new Error(error);
     }
-
-
-    this.logger.debug('DFP Service', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
-    return adSlot;
   }
 
   private displayAds(slots: SlotDefinition<Moli.AdSlot>[]): SlotDefinition<Moli.AdSlot>[] {

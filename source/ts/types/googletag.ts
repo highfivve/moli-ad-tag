@@ -272,8 +272,9 @@ export namespace googletag {
      *        in the ad request if no responsive size mapping is provided or the size of
      *        the viewport is smaller than the smallest size provided in the mapping.
      * @param slotId ID of the div that will contain this ad unit.
+     * @return the defined slot or `null` if the slot already has been defined
      */
-    defineSlot(adUnitPath: string, size: Size[], slotId: string): IAdSlot;
+    defineSlot(adUnitPath: string, size: Size[], slotId: string): IAdSlot | null;
 
     /**
      * Destroys the given slots, removes all related objects and references of given slots from GPT.
@@ -295,8 +296,9 @@ export namespace googletag {
      *
      * @param adUnitPath - Full path of the ad unit with the network code and ad unit code.
      * @param slotId - ID of the div that will contain this ad unit.
+     * @return the defined slot or `null` if the slot already has been defined
      */
-    defineOutOfPageSlot(adUnitPath: string, slotId: string): IAdSlot;
+    defineOutOfPageSlot(adUnitPath: string, slotId: string): IAdSlot | null;
 
     /**
      * Enables all GPT services that have been defined for ad slots on the page.
