@@ -67,7 +67,6 @@ const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
 };
 
 export const adConfiguration: Moli.MoliConfig = {
-  environment: 'test',
   slots: [
     {
       position: 'in-page',

@@ -141,7 +141,7 @@ export const createMoliTag = (): Moli.MoliTag => {
             ...state.config.reporting,
             // a reporter is added without a sampling size being configured, we set the sampling rate to 0
             sampleRate: state.config.reporting ? state.config.reporting.sampleRate : 0,
-            reporters: [ ...(state.config.reporting ? state.config.reporting.reporters : []), reporter ]
+            reporters: [...(state.config.reporting ? state.config.reporting.reporters : []), reporter]
           }
         };
         break;
@@ -203,10 +203,13 @@ export const createMoliTag = (): Moli.MoliTag => {
     switch (state.state) {
       case 'configurable': {
         const shouldInitialize = state.initialize;
+        const envOverride = getEnvironmentOverride();
+
         state = {
           state: 'configured',
           config: {
             ...config,
+            ...envOverride,
             targeting: {
               keyValues: {
                 ...(config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {}),
@@ -220,7 +223,7 @@ export const createMoliTag = (): Moli.MoliTag => {
             reporting: {
               ...config.reporting,
               sampleRate: state.reporting.sampleRate ? state.reporting.sampleRate : (config.reporting && config.reporting.sampleRate) ? config.reporting.sampleRate : 0,
-              reporters: [ ...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters ]
+              reporters: [...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters]
             },
             logger: state.logger || config.logger
           },
@@ -396,6 +399,32 @@ export const createMoliTag = (): Moli.MoliTag => {
     setTargeting(key, abTest.toString());
   }
 
+  /**
+   * Overrides the environment configuration. This allows us to either force
+   * a production or test environment, which eases the integration for the publisher.
+   *
+   * query parameter: moliEnv
+   * allowed values: test | production
+   *
+   * Example:
+   * {@link https://local.h5v.eu:9000/?moliEnv=test}
+   *
+   */
+  function getEnvironmentOverride(): Pick<Moli.MoliConfig, 'environment'> {
+    const key = 'moliEnv';
+    const params = parseQueryString(window.location.search);
+    const param = params.get(key);
+
+    switch (param && param.toLowerCase()) {
+      case 'test':
+        return {environment: 'test'};
+      case 'production':
+        return {environment: 'production'};
+      default:
+        return {};
+    }
+  }
+
   const que = {
     push(cmd: Moli.MoliCommand): void {
       cmd(window.moli);
@@ -423,7 +452,7 @@ export const createMoliTag = (): Moli.MoliTag => {
 // ====== Initialization =======
 // =============================
 
-const queueCommands = window.moli ? [ ...window.moli.que as Moli.MoliCommand[] ] || [] : [];
+const queueCommands = window.moli ? [...window.moli.que as Moli.MoliCommand[]] || [] : [];
 
 /**
  * Only export the public API and hide properties and methods in the DFP Service
