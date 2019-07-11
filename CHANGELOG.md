@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+[GD-1326](https://jira.gutefrage.net/browse/GD-1326). The ad tag now checks the `window.location.href` in
+single application mode if `requestAds()` can be triggered and throws an error otherwise. 
+
 [GD-1325](https://jira.gutefrage.net/browse/GD-1325). This allows us to either force
 a production or test environment, which eases the integration for the publisher.
 
