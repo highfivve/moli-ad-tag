@@ -1,6 +1,6 @@
 {
   "name": "moli-ad-tag",
-  "version": "1.12.2",
+  "version": "1.13.0",
   "license": "UNLICENSED",
   "description": "An ad tag implementation called moli",
   "main": "source/ts/index.ts",
