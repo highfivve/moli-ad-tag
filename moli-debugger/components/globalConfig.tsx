@@ -1,6 +1,6 @@
 import * as preact from 'preact';
 import { ReportingService } from '../../source/ts/ads/reportingService';
-import { performanceMeasurementService } from '../../source/ts/util/performanceService';
+import { createPerformanceService } from '../../source/ts/util/performanceService';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { Tag } from './tag';
@@ -383,7 +383,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private singlePerformanceMeasure = (name: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): JSX.Element => {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName(name);
-    const entry = performanceMeasurementService.getMeasure(measure);
+    const entry = createPerformanceService(window).getMeasure(measure);
     if (entry) {
       const color: 'green' | 'yellow' | 'red' = entry.duration > 5000 ? 'red' : (entry.duration > 2000 ?  'yellow' : 'green');
       return <div className="MoliDebug-tagContainer">

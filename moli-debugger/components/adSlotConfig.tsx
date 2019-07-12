@@ -3,7 +3,7 @@ import * as preact from 'preact';
 import { Moli } from 'moli-ad-tag/source/ts/types/moli';
 import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
-import { performanceMeasurementService } from '../../source/ts/util/performanceService';
+import { createPerformanceService } from '../../source/ts/util/performanceService';
 
 import { classList } from '../util/stringUtils';
 
@@ -69,7 +69,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     // and if something breaks this is nothing serious and easy to fix.
     const adUnitRegex = (props.reportingConfig && props.reportingConfig.adUnitRegex) || /\/\d*\//i;
     const measureName = `${props.slot.adUnitPath.replace(adUnitRegex, '')}_content_loaded_total`;
-    const contentLoadTime = performanceMeasurementService.getMeasure(measureName);
+    const contentLoadTime = createPerformanceService(window).getMeasure(measureName);
 
     return <div class={classList('MoliDebug-adSlot', [ !!props.parentElement, 'MoliDebug-adSlot--overlay' ])}
                 style={state.dimensions}>
