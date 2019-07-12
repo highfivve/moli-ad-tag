@@ -383,6 +383,14 @@ export namespace Moli {
       readonly state: 'configured';
 
       /**
+       * The original configuration from the ad tag itself. We can use this configuration to
+       *
+       * - generate a diff for the additions made by the publisher
+       * - use this to preserve static targeting values in single application mode
+       */
+      readonly configFromAdTag: MoliConfig;
+
+      /**
        * Changeable configuration if other settings have been pushed into the que.
        */
       config: Moli.MoliConfig;
@@ -422,6 +430,39 @@ export namespace Moli {
       readonly state: 'spa';
 
       /**
+       * Additional key-values. Insert with
+       *
+       * @example
+       * window.moli.que.push(function(moli) => {
+       *   moli.setTargeting(key, value);
+       * });
+       *
+       * These will be truncated every time ads are going to be refreshed.
+       *
+       */
+      keyValues: Moli.DfpKeyValueMap;
+
+      /**
+       * Additional labels. Insert with
+       *
+       * @example
+       * window.moli.que.push(function(moli) => {
+       *   moli.addLabel('foo');
+       * });
+       *
+       * These will be truncated every time ads are going to be refreshed.
+       */
+      labels: string[];
+
+      /**
+       * The original configuration from the ad tag itself. We can use this configuration to
+       *
+       * - generate a diff for the additions made by the publisher
+       * - use this to preserve static targeting values in single application mode
+       */
+      readonly configFromAdTag: MoliConfig;
+
+      /**
        * Immutable configuration. This is the same configuration returned by
        * the initialized Promise.
        */
@@ -438,6 +479,11 @@ export namespace Moli {
        * @return promise resolves when all ad slots have been destroyed
        */
       readonly destroyAdSlots: (config: Moli.MoliConfig) => Promise<Moli.MoliConfig>;
+
+      /**
+       * Reset all key-values and set new ones according to the given config.
+       */
+      readonly resetTargeting: (config: Moli.MoliConfig) => void;
 
       /**
        * stores the information if the moli ad tag is configured yet

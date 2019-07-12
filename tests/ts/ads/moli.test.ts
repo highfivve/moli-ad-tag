@@ -201,6 +201,66 @@ describe('moli', () => {
       });
     });
 
+    it('should persists the initial key-values in spa mode for all requestAd() calls', () => {
+      dom.reconfigure({
+        url: 'https://localhost/1'
+      });
+      const adTag = createMoliTag(dom.window);
+      adTag.enableSinglePageApp();
+      adTag.setTargeting('dynamicKeyValuePre', 'value');
+      adTag.configure({
+        slots: [], consent: consentConfig, logger: noopLogger, targeting: {
+          keyValues: { keyFromAdConfig: 'value' },
+          labels: []
+        }
+      });
+      adTag.setTargeting('dynamicKeyValuePost', 'value');
+
+      expect(adTag.getState()).to.be.eq('configured');
+      return adTag.requestAds().then(state => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        expect(spaState.keyValues).to.be.deep.equal({});
+        expect(googletagPubAdsSetTargetingSpy).to.be.callCount(4);
+        expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
+        expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
+        expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
+        expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
+        googletagPubAdsSetTargetingSpy.resetHistory();
+        dom.reconfigure({
+          url: 'https://localhost/2'
+        });
+        // set targeting for next page
+        adTag.setTargeting('kv1', 'value');
+        adTag.setTargeting('kv2', 'value');
+
+        expect(spaState.keyValues).to.be.deep.equals({
+          kv1: 'value',
+          kv2: 'value'
+        });
+
+        return adTag.requestAds();
+      }).then((state) => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.keyValues).to.be.deep.equal({});
+        expect(spaState.config.targeting).to.be.ok;
+
+        const keyValues = spaState.config.targeting!.keyValues;
+        expect(keyValues).to.have.all.keys([ 'ABtest', 'keyFromAdConfig', 'kv1', 'kv2' ]);
+        expect(keyValues).to.have.property('keyFromAdConfig', 'value');
+        expect(keyValues).to.have.property('kv1', 'value');
+        expect(keyValues).to.have.property('kv2', 'value');
+
+        expect(googletagPubAdsSetTargetingSpy).to.be.callCount(4);
+        expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
+        expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv1', 'value');
+        expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv2', 'value');
+        expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
+      });
+    });
+
   });
 
   describe('addLabel()', () => {
@@ -232,6 +292,47 @@ describe('moli', () => {
       expect(config).to.be.ok;
       expect(config!.targeting).to.be.ok;
       expect(config!.targeting!.labels).to.be.deep.equals([ 'pre-existing', 'pre', 'post' ]);
+    });
+
+    it('should persists the initial labels in spa mode for all requestAd() calls', () => {
+      dom.reconfigure({
+        url: 'https://localhost/1'
+      });
+      const adTag = createMoliTag(dom.window);
+      adTag.enableSinglePageApp();
+      adTag.addLabel('dynamicLabelPre');
+      adTag.configure({
+        slots: [], consent: consentConfig, logger: noopLogger, targeting: {
+          keyValues: {},
+          labels: [ 'a9' ]
+        }
+      });
+      adTag.addLabel('dynamicLabelPost');
+
+      expect(adTag.getState()).to.be.eq('configured');
+      expect(adTag.getConfig()!.targeting!.labels).to.contain.all.members([ 'dynamicLabelPre', 'dynamicLabelPost', 'a9' ]);
+      return adTag.requestAds().then(state => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        expect(spaState.labels).to.be.empty;
+        dom.reconfigure({
+          url: 'https://localhost/2'
+        });
+        // set targeting for next page
+        adTag.addLabel('label1');
+        adTag.addLabel('label2');
+
+        expect(spaState.labels).to.contain.all.members([ 'label1', 'label2' ]);
+
+        return adTag.requestAds();
+      }).then((state) => {
+        expect(state.state).to.be.eq('spa');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.labels).to.be.empty;
+        expect(spaState.config.targeting).to.be.ok;
+        expect(spaState.config.targeting!.labels).to.contain.all.members([ 'a9', 'label1', 'label2' ]);
+      });
     });
   });
 

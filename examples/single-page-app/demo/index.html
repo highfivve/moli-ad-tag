@@ -89,9 +89,14 @@ window.moli.que.push(function (moliAdTag) {
 
         <script>
             function refreshAds() {
-                window.location.hash = Date.now().toFixed();
+                const aRandomValue = Date.now().toFixed();
+                window.location.hash = aRandomValue;
                 window.moli = window.moli || {que: []};
                 window.moli.que.push(function (moliAdTag) {
+                    // set random key-values and labels
+                    moliAdTag.setTargeting(aRandomValue, aRandomValue);
+                    moliAdTag.addLabel(aRandomValue);
+
                     // refresh ads on navigation change
                     moliAdTag.requestAds();
                 });

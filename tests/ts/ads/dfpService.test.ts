@@ -9,7 +9,7 @@ import { DfpService } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
 import { createAssetLoaderService, AssetLoadMethod } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
-import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
+import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { apstagStub, a9ConfigStub } from '../stubs/a9Stubs';
 import { consentConfig, noopLogger } from '../stubs/moliStubs';
@@ -28,10 +28,12 @@ describe('DfpService', () => {
   dom.window.googletag = googletagStub;
   dom.window.pbjs = pbjsStub;
   dom.window.moliPbjs = pbjsStub;
+
   dom.window.apstag = apstagStub;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
+  const assetLoaderService = createAssetLoaderService(dom.window);
 
   const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadScript');
   const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
@@ -2302,7 +2304,7 @@ describe('DfpService', () => {
 
     it('should set correct targeting values', () => {
       const dfpService = newDfpService();
-      const setTargetingStub = sandbox.stub(dom.window.googletag.pubads(), 'setTargeting');
+      const setTargetingStub = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
 
       const adConfiguration: Moli.MoliConfig = {
         slots: [],

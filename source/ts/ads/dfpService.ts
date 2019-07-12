@@ -217,6 +217,20 @@ export class DfpService {
   };
 
   /**
+   * Reset the gpt targeting configuration (key-values) and uses the targeting information from
+   * the given config to set new key values.
+   *
+   * This method is required for the single-page-application mode to make sure we don't send
+   * stale key-values
+   *
+   * @param config
+   */
+  public resetTargeting = (config: Moli.MoliConfig): void => {
+    this.window.googletag.pubads().clearTargeting();
+    this.configureTargeting(config);
+  };
+
+  /**
    * @param config - the ad configuration
    * @param reportingService - the reporting service that is used to report the cmp loading time
    */
@@ -673,13 +687,7 @@ export class DfpService {
   private configureAdNetwork(config: Moli.MoliConfig): Promise<void> {
     switch (this.getEnvironment(config)) {
       case 'production':
-        const keyValueMap = config.targeting ? config.targeting.keyValues : {};
-        Object.keys(keyValueMap).forEach(key => {
-          const value = keyValueMap[key];
-          if (value) {
-            this.window.googletag.pubads().setTargeting(key, value);
-          }
-        });
+        this.configureTargeting(config);
         this.window.googletag.pubads().enableAsyncRendering();
         this.window.googletag.pubads().disableInitialLoad();
         this.window.googletag.pubads().enableSingleRequest();
@@ -699,6 +707,22 @@ export class DfpService {
         return Promise.resolve();
     }
 
+  }
+
+  private configureTargeting(config: Moli.MoliConfig): void {
+    switch (this.getEnvironment(config)) {
+      case 'production':
+        const keyValueMap = config.targeting ? config.targeting.keyValues : {};
+        Object.keys(keyValueMap).forEach(key => {
+          const value = keyValueMap[key];
+          if (value) {
+            this.window.googletag.pubads().setTargeting(key, value);
+          }
+        });
+        return;
+      case 'test':
+        return;
+    }
   }
 
   private filterAvailableSlots(slots: Moli.AdSlot[]): Moli.AdSlot[] {

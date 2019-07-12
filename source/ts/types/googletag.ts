@@ -100,6 +100,12 @@ export namespace googletag {
     setTargeting(key: string, value: string | Array<string>): IPubAdsService;
 
     /**
+     * Clears custom targeting parameters for a specific key or for all keys.
+     * @param key Targeting parameter key. The key is optional; all targeting parameters will be cleared if it is unspecified.
+     */
+    clearTargeting(key?: string): IPubAdsService;
+
+    /**
      * Sets values for AdSense attributes that apply to all ad slots under the publisher ads service.
      *
      * See AdSense Attributes for a list of available keys and values.

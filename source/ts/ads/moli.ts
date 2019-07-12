@@ -3,12 +3,12 @@ import { parseQueryString } from '../util/query';
 import { DfpService } from './dfpService';
 import { createAssetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
+import { getLogger } from '../util/logging';
 import IStateMachine = Moli.state.IStateMachine;
 import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
-import { getLogger } from '../util/logging';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
 
@@ -51,6 +51,13 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         }
         break;
       }
+      case 'spa': {
+        state.keyValues = {
+          [key]: value,
+          ...state.keyValues
+        };
+        break;
+      }
       default: {
         getLogger(state.config, window).error('MoliGlobal', `Setting key-value after configuration: ${key} : ${value}`);
         break;
@@ -76,6 +83,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             }
           };
         }
+        break;
+      }
+      case 'spa': {
+        state.labels.push(label);
         break;
       }
       default: {
@@ -142,7 +153,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             ...state.config.reporting,
             // a reporter is added without a sampling size being configured, we set the sampling rate to 0
             sampleRate: state.config.reporting ? state.config.reporting.sampleRate : 0,
-            reporters: [...(state.config.reporting ? state.config.reporting.reporters : []), reporter]
+            reporters: [ ...(state.config.reporting ? state.config.reporting.reporters : []), reporter ]
           }
         };
         break;
@@ -208,6 +219,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
         state = {
           state: 'configured',
+          configFromAdTag: config,
           config: {
             ...config,
             ...envOverride,
@@ -224,7 +236,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             reporting: {
               ...config.reporting,
               sampleRate: state.reporting.sampleRate ? state.reporting.sampleRate : (config.reporting && config.reporting.sampleRate) ? config.reporting.sampleRate : 0,
-              reporters: [...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters]
+              reporters: [ ...(config.reporting ? config.reporting.reporters : []), ...state.reporting.reporters ]
             },
             logger: state.logger || config.logger
           },
@@ -294,11 +306,16 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           const initialized = dfpService.initialize(config).then(() => config);
           const currentState: ISinglePageApp = {
             state: 'spa',
+            configFromAdTag: state.configFromAdTag,
             config: config,
             refreshAds: dfpService.requestAds,
             destroyAdSlots: dfpService.destroyAdSlots,
+            resetTargeting: dfpService.resetTargeting,
             initialized,
-            href: window.location.href
+            href: window.location.href,
+            // initialize targeting values for next refreshAds call
+            labels: [],
+            keyValues: {}
           };
           state = currentState;
 
@@ -331,27 +348,57 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       }
       // in the single page application state we first need to destroy the current setup
       case 'spa': {
-        const { initialized, refreshAds, destroyAdSlots, href } = state;
+        // create new ABTest values
+        setABtestTargeting();
+
+        const { initialized, refreshAds, destroyAdSlots, resetTargeting, href, keyValues, labels, configFromAdTag } = state;
         return initialized
-          .then(config => {
+          .then((config) => {
+            // don't use the config from the initialized method as we need to alter the config
+            // here to allow different key-values for multiple pages
             if (href === window.location.href) {
               return Promise.reject('You are trying to refresh ads on the same page, which is not allowed.');
             }
             return Promise.resolve(config);
           })
           .then(config => destroyAdSlots(config))
+
           .then(config => {
-            refreshAds(config);
-            return config;
+
+            // we insert the fixed targeting values from the `configFromAdTag` and discard all others that have
+            // been set via the moli API (e.g. setTargeting or addLabel)
+            return {
+              ...config,
+              targeting: {
+                keyValues: {
+                  ...(configFromAdTag.targeting && configFromAdTag.targeting.keyValues ? configFromAdTag.targeting.keyValues : {}),
+                  ...keyValues
+                },
+                labels: [
+                  ...(configFromAdTag.targeting && configFromAdTag.targeting.labels ? configFromAdTag.targeting.labels : []),
+                  ...labels
+                ]
+              }
+            };
           })
-          .then((config) => {
+          .then(configWithTargeting => {
+            resetTargeting(configWithTargeting);
+            refreshAds(configWithTargeting);
+            return configWithTargeting;
+          })
+          .then((configWithTargeting) => {
             state = {
               state: 'spa',
-              refreshAds,
-              destroyAdSlots,
-              config,
-              initialized,
-              href: window.location.href
+              refreshAds: refreshAds,
+              destroyAdSlots: destroyAdSlots,
+              resetTargeting: resetTargeting,
+              configFromAdTag: configFromAdTag,
+              config: configWithTargeting,
+              initialized: initialized,
+              href: window.location.href,
+              // reset targeting after successful refreshAds()
+              labels: [],
+              keyValues: {}
             };
             return state;
           });
@@ -426,9 +473,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
     switch (param && param.toLowerCase()) {
       case 'test':
-        return {environment: 'test'};
+        return { environment: 'test' };
       case 'production':
-        return {environment: 'production'};
+        return { environment: 'production' };
       default:
         return {};
     }
