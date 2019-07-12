@@ -1,6 +1,6 @@
 import domready from '../util/domready';
 import {
-  IPerformanceMeasurementService, performanceMeasurementService
+  IPerformanceMeasurementService, createPerformanceService
 } from './performanceService';
 
 export enum AssetLoadMethod {
@@ -116,5 +116,4 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 }
 
-export const assetLoaderService: IAssetLoaderService = new AssetLoaderService(performanceMeasurementService, window);
-
+export const createAssetLoaderService = (window: Window): IAssetLoaderService => new AssetLoaderService(createPerformanceService(window), window);

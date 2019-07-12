@@ -1,10 +1,10 @@
-import { dom } from '../stubs/browserEnvSetup';
+import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag } from '../../../source/ts/ads/moli';
-import { googletagStub } from '../stubs/googletagStubs';
+import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
 import { consentConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
@@ -20,10 +20,11 @@ describe('moli', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  beforeEach(() => {
-    dom.window.googletag = googletagStub;
-    dom.window.pbjs = pbjsStub;
-  });
+  const dom = createDom();
+  dom.window.googletag = createGoogletagStub();
+  dom.window.pbjs = pbjsStub;
+
+  const googletagPubAdsSetTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
 
   after(() => {
     // bring everything back to normal after tests

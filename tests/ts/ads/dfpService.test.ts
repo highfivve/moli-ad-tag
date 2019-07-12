@@ -1,4 +1,4 @@
-import { dom } from '../stubs/browserEnvSetup';
+import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
@@ -7,7 +7,7 @@ import { prebidjs } from '../../../source/ts/types/prebidjs';
 import { apstag } from '../../../source/ts/types/apstag';
 import { DfpService } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
-import { assetLoaderService, AssetLoadMethod } from '../../../source/ts/util/assetLoaderService';
+import { createAssetLoaderService, AssetLoadMethod } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
 import { googletagStub, pubAdsServiceStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
@@ -20,6 +20,10 @@ use(sinonChai);
 // tslint:disable: no-unused-expression
 describe('DfpService', () => {
 
+  const dom = createDom();
+
+  const googletagStub = createGoogletagStub();
+  const pubAdsServiceStub = googletagStub.pubads();
   // set globals before test
   dom.window.googletag = googletagStub;
   dom.window.pbjs = pbjsStub;

@@ -1,7 +1,7 @@
 import { Moli } from '../types/moli';
 import { parseQueryString } from '../util/query';
 import { DfpService } from './dfpService';
-import { assetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
+import { createAssetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
 import IStateMachine = Moli.state.IStateMachine;
 import IFinished = Moli.state.IFinished;
@@ -13,6 +13,7 @@ import { getLogger } from '../util/logging';
 export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   // Creating the actual tag requires exactly one DfpService instance
+  const assetLoaderService = createAssetLoaderService(window);
   const dfpService = new DfpService(assetLoaderService, cookieService, window);
 
   /**

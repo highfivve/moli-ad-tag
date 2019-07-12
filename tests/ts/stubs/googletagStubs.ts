@@ -1,33 +1,40 @@
 import { googletag } from '../../../source/ts/types/googletag';
 
-export const pubAdsServiceStub: googletag.IPubAdsService = {
-  set: (_key: string, _value: string): googletag.IPubAdsService => {
-    return pubAdsServiceStub;
-  },
-  setTargeting: (_key: string, _value: string | string[]): googletag.IPubAdsService => {
-    return pubAdsServiceStub;
-  },
-  setRequestNonPersonalizedAds: (_value: 0 | 1): googletag.IPubAdsService => {
-    return pubAdsServiceStub;
-  },
-  refresh: (slots?: googletag.IAdSlot[], options?: { changeCorrelator: boolean }): void => {
-    return;
-  },
-  enableSingleRequest: (): boolean => {
-    return true;
-  },
-  enableAsyncRendering: (): boolean => {
-    return true;
-  },
-  disableInitialLoad: (): void => {
-    return;
-  },
-  getSlots: (): googletag.IAdSlot[] => {
-    return [];
-  },
-  addEventListener: (_eventType: string, _listener: (event: any) => void): googletag.IPubAdsService => {
-    return pubAdsServiceStub;
-  }
+const createPubAdsServiceStub = (): googletag.IPubAdsService => {
+  const stub = {
+    set: (_key: string, _value: string): googletag.IPubAdsService => {
+      return stub;
+    },
+    setTargeting: (_key: string, _value: string | string[]): googletag.IPubAdsService => {
+      return stub;
+    },
+    setRequestNonPersonalizedAds: (_value: 0 | 1): googletag.IPubAdsService => {
+      return stub;
+    },
+    clearTargeting: (_: string): googletag.IPubAdsService => {
+      return stub;
+    },
+    refresh: (slots?: googletag.IAdSlot[], options?: { changeCorrelator: boolean }): void => {
+      return;
+    },
+    enableSingleRequest: (): boolean => {
+      return true;
+    },
+    enableAsyncRendering: (): boolean => {
+      return true;
+    },
+    disableInitialLoad: (): void => {
+      return;
+    },
+    getSlots: (): googletag.IAdSlot[] => {
+      return [];
+    },
+    addEventListener: (_eventType: string, _listener: (event: any) => void): googletag.IPubAdsService => {
+      return stub;
+    }
+  };
+
+  return stub;
 };
 
 export const contentServiceStub: googletag.IContentService = {
@@ -67,7 +74,10 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
   return stub;
 };
 
-export const googletagStub: googletag.IGoogleTag = {
+export const createGoogletagStub = (): googletag.IGoogleTag => {
+  const pubAdsStub = createPubAdsServiceStub();
+
+  return {
     pubadsReady: true,
     cmd: {
       // execute every callback instantly
@@ -90,6 +100,7 @@ export const googletagStub: googletag.IGoogleTag = {
     enableServices: (): void => {
       return;
     },
-    pubads: (): googletag.IPubAdsService => pubAdsServiceStub,
+    pubads: (): googletag.IPubAdsService => pubAdsStub,
     content: (): googletag.IContentService => contentServiceStub
   };
+};

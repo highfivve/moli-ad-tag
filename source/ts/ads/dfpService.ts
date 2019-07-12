@@ -7,7 +7,7 @@ import { Moli } from '../types/moli';
 
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { ICookieService } from '../util/cookieService';
-import { performanceMeasurementService } from '../util/performanceService';
+import { createPerformanceService } from '../util/performanceService';
 
 import { createLazyLoader } from './lazyLoading';
 import { getPersonalizedAdSetting } from './personalizedAdsProvider';
@@ -101,7 +101,7 @@ export class DfpService {
     const slotEventService = new SlotEventService();
     this.slotEventService = slotEventService;
     this.reportingService = new ReportingService(
-      performanceMeasurementService, slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
+      createPerformanceService(this.window), slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
     );
 
     const env = this.getEnvironment(config);

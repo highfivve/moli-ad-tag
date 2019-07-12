@@ -91,7 +91,7 @@ class NullPerformanceMeasurementService implements IPerformanceMeasurementServic
   }
 }
 
-const createInstance = (): IPerformanceMeasurementService => {
+export const createPerformanceService = (window: Window): IPerformanceMeasurementService => {
   // ensure that all methods we use exists in window.performance
   if (window && 'performance' in window && 'mark' in window.performance && 'measure' in window.performance && 'getEntriesByName' in window.performance) {
     return new PerformanceMeasurementService();
@@ -99,5 +99,3 @@ const createInstance = (): IPerformanceMeasurementService => {
     return new NullPerformanceMeasurementService();
   }
 };
-
-export const performanceMeasurementService = createInstance();

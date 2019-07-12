@@ -5,7 +5,7 @@ import * as Sinon from 'sinon';
 import { FaktorCmp } from '../../../../source/ts/ads/cmp/faktor';
 import { ReportingService } from '../../../../source/ts/ads/reportingService';
 import { SlotEventService } from '../../../../source/ts/ads/slotEventService';
-import { performanceMeasurementService } from '../../../../source/ts/util/performanceService';
+import { createPerformanceService } from '../../../../source/ts/util/performanceService';
 import { Moli } from '../../../../source/ts';
 import ReportingConfig = Moli.reporting.ReportingConfig;
 import { noopLogger } from '../../stubs/moliStubs';
@@ -18,7 +18,7 @@ describe('Faktor CMP', () => {
 
   const reportingConfig: ReportingConfig = { sampleRate: 0, reporters: [] };
 
-  const reportingService = new ReportingService(performanceMeasurementService, new SlotEventService(), reportingConfig, noopLogger, 'production', dom.window);
+  const reportingService = new ReportingService(createPerformanceService(dom.window), new SlotEventService(), reportingConfig, noopLogger, 'production', dom.window);
 
   const cmpStub = sandbox.stub();
 
