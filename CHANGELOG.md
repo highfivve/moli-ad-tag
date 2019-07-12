@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.13.0
+
 [GD-1160](https://jira.gutefrage.net/browse/GD-1160). The ad tag now handles `setTargeting` and `addLabel` calls
 properly when the single page application mode is activated via `enableSinglePageApplication()`. The ad tag behaves
 like this
@@ -12,6 +14,7 @@ like this
 If a publisher sets key-values directly on `window.googletag.pubads().setTargeting(...)`, then those values will be
 discarded on the **second** `refreshAds()` call. We don't recommend doing this anyway!
 
+## v1.12.1
 
 [GD-1326](https://jira.gutefrage.net/browse/GD-1326). The ad tag now checks the `window.location.href` in
 single application mode if `requestAds()` can be triggered and throws an error otherwise. 
