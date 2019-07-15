@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+[GD-1307](https://jira.gutefrage.net/browse/GD-1307). A publisher can now register an `afterRequestAds()` hook, which
+will trigger after the `requestAds()` call has finished. This makes it possible to fire events after all ad slots are
+full configured and ads are being requested.
+
 ## v1.13.0
 
 [GD-1160](https://jira.gutefrage.net/browse/GD-1160). The ad tag now handles `setTargeting` and `addLabel` calls

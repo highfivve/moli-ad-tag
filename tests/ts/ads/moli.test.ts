@@ -21,10 +21,11 @@ describe('moli', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  dom.window.googletag = createGoogletagStub();
   dom.window.pbjs = pbjsStub;
 
-  const googletagPubAdsSetTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+  beforeEach(() => {
+    dom.window.googletag = createGoogletagStub();
+  });
 
   after(() => {
     // bring everything back to normal after tests
@@ -202,6 +203,7 @@ describe('moli', () => {
     });
 
     it('should persists the initial key-values in spa mode for all requestAd() calls', () => {
+      const googletagPubAdsSetTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       dom.reconfigure({
         url: 'https://localhost/1'
       });
@@ -453,6 +455,68 @@ describe('moli', () => {
         expect(hookSpy).to.be.calledOnce;
       });
     });
+
+    it('should add the afterRequestAds hook if requestAds() was successful', () => {
+      const adTag = createMoliTag(dom.window);
+
+      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(afterRequestAdsHook);
+
+      adTag.afterRequestAds(hookSpy);
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      return adTag.requestAds().then(() => {
+        expect(hookSpy).to.be.calledOnce;
+        expect(hookSpy).to.be.calledOnceWithExactly('finished');
+      });
+    });
+
+    it('should add the afterRequestAds hook with spa state if requestAds() was successful', () => {
+      const adTag = createMoliTag(dom.window);
+
+      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(afterRequestAdsHook);
+
+      adTag.afterRequestAds(hookSpy);
+      adTag.enableSinglePageApp();
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      return adTag.requestAds().then(() => {
+        expect(hookSpy).to.be.calledOnce;
+        expect(hookSpy).to.be.calledOnceWithExactly('spa');
+      });
+    });
+
+
+    it('should add the afterRequestAds hook with error state if requestAds() failed', () => {
+      dom.window.googletag = {
+        ...createGoogletagStub(),
+        cmd: {
+          push(_: Function): void {
+            throw Error('trigger an error!');
+          }
+        }
+      };
+      const adTag = createMoliTag(dom.window);
+
+      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(afterRequestAdsHook);
+
+      adTag.afterRequestAds(hookSpy);
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      return adTag.requestAds().then(() => {
+        expect(hookSpy).to.be.calledOnce;
+        expect(hookSpy).to.be.calledOnceWithExactly('error');
+      });
+    });
+
   });
 
   describe('environment override', () => {

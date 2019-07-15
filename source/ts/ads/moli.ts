@@ -187,6 +187,28 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       }
     }
   }
+  function afterRequestAds(callback: (state: Moli.state.AfterRequestAdsStates) => void): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.hooks = {
+          ...state.hooks,
+          afterRequestAds: callback
+        };
+        break;
+      }
+      case 'configured': {
+        state.hooks = {
+          ...state.hooks,
+          afterRequestAds: callback
+        };
+        break;
+      }
+      default : {
+        getLogger(state.config, window).error('MoliGlobal', 'Trying to add a hook afterRequestAds. Already configured.', state.config);
+        break;
+      }
+    }
+  }
 
   function getConfig(): Moli.MoliConfig | null {
     switch (state.state) {
@@ -300,6 +322,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         if (state.hooks && state.hooks.beforeRequestAds) {
           state.hooks.beforeRequestAds(config);
         }
+
+        const afterRequestAds =  state.hooks && state.hooks.afterRequestAds ? state.hooks.afterRequestAds : () => { return; };
+
         // handle single page application case
         if (state.isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
@@ -321,7 +346,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
           return initialized
             .then(() => dfpService.requestAds(config))
-            .then(() => currentState);
+            .then(() => {
+              afterRequestAds(currentState.state);
+              return currentState;
+            });
 
         } else {
           state = {
@@ -335,6 +363,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                 state: 'finished',
                 config: config
               };
+              afterRequestAds(state.state);
               return Promise.resolve(state);
             }).catch((error) => {
               state = {
@@ -342,6 +371,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                 config: config,
                 error: error
               };
+              afterRequestAds(state.state);
               return Promise.resolve(state);
             });
         }
@@ -495,6 +525,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     setSampleRate: setSampleRate,
     addReporter: addReporter,
     beforeRequestAds: beforeRequestAds,
+    afterRequestAds: afterRequestAds,
     getConfig: getConfig,
     configure: configure,
     enableSinglePageApp: enableSinglePageApp,

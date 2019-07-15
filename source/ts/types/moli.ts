@@ -121,6 +121,14 @@ export namespace Moli {
     beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void;
 
     /**
+     * Set the afterRequestAds hook, which is triggered after the ads have been requested.
+     * The callback will receive the name of the new state the ad tag has.
+     *
+     * @param callback
+     */
+    afterRequestAds(callback: (state: state.AfterRequestAdsStates) => void): void;
+
+    /**
      * **WARNING**
      * This method is called by the ad tag and can only be called once. If the publisher calls
      * calls `configure` then the ad configuration provided by the ad tag may not be used.
@@ -533,6 +541,8 @@ export namespace Moli {
      */
     export type IStateMachine = IConfigurable | IConfigured | ISinglePageApp | IRequestAds | IFinished | IError;
 
+    export type AfterRequestAdsStates = Extract<state.States, 'finished' | 'error' | 'spa'>;
+
     export interface IHooks {
       /**
        * This function is triggered before the state changes to `requestAds`.
@@ -544,6 +554,37 @@ export namespace Moli {
        * @param config - the final [[Moli.MoliConfig]]
        */
       beforeRequestAds?: (config: Moli.MoliConfig) => void;
+
+      /**
+       * This function is triggered after `requestAds()` is being called and the ad tag
+       * state is
+       *
+       * - `finished`
+       * - `error`
+       * - `spa`
+       *
+       * ## Use cases
+       *
+       * Use this hook if you need to trigger certain events, when all the ad slots are fully configured.
+       * For example if you can load some lazy slots immediately in certain situations and want to fire
+       * the trigger event as soon as possible.
+       *
+       * @example
+       * ```
+       * window.moli.que.push(function(moliAdTag) {
+       *    moliAdTag.afterRequestAds((state) => {
+       *       if(state === 'finished') {
+       *         triggerLazyLoadingEvents();
+       *       }
+       *    });
+       *
+       *    // trigger ads
+       *    moliAdTag.requestAds();
+       * });
+       * ```
+       *
+       */
+      afterRequestAds?: (state: AfterRequestAdsStates) => void;
 
     }
   }
