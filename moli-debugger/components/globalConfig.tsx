@@ -364,7 +364,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
       <strong>{name}</strong>
       <div class="MoliDebug-tagContainer">
         <span class="MoliDebug-tagLabel">Bidders</span>
-        {filterSetting.bidders.map(this.standardTagFromString)}
+        {filterSetting.bidders === '*' ? this.standardTagFromString('all') : filterSetting.bidders.map(this.standardTagFromString)}
       </div>
       <div class="MoliDebug-tagContainer">
         <span class="MoliDebug-tagLabel">Include/exclude</span>
