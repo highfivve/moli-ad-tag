@@ -182,7 +182,7 @@ export const adConfiguration: Moli.MoliConfig = {
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.
           image: {
-            bidders: [ '*' ],
+            bidders: '*',
             filter: 'include'
           }
         }
