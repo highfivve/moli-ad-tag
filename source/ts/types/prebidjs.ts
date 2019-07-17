@@ -294,7 +294,7 @@ export namespace prebidjs {
     /**
      * Array of bidders that should be filtered. '*' means all.
      */
-    bidders: Array<BidderCode | '*'>;
+    bidders: BidderCode[] | '*';
 
     filter: 'include' | 'exclude';
   }

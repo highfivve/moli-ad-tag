@@ -2,6 +2,37 @@
 
 ## Unreleased
 
+Fix prebid usersync filter setting types. The propery value for wild cars is `*` and not `[*]`.
+We need to change this in all new publisher tags.
+
+```javascript
+// before
+const userSyncWrong = {
+    userSync: {
+        filterSettings: {
+            image: {
+                bidders: ['*'], // <-- this is an invalid configuration option
+                filter: 'include'
+            }
+        }
+    }
+}
+
+// after
+const userSyncCorrect = {
+    userSync: {
+        filterSettings: {
+            image: {
+                bidders: '*',
+                filter: 'include'
+            }
+        }
+    }
+}
+```
+
+The setting is usually in the `prebidConfig.ts`.
+
 ## v1.14.0
 
 [GD-1307](https://jira.gutefrage.net/browse/GD-1307). A publisher can now register an `afterRequestAds()` hook, which
