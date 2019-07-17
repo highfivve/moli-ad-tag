@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.15.0
+
 Fix prebid usersync filter setting types. The propery value for wild cars is `*` and not `[*]`.
 We need to change this in all new publisher tags.
 
