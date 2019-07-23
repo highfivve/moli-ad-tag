@@ -171,7 +171,7 @@ export class DfpService {
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     // concurrently initialize lazy loaded slots and refreshable slots
-    this.initLazyRefreshableSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, globalLabelConfigService);
+    this.initLazyRefreshableSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, this.slotEventService, globalLabelConfigService);
     this.initLazyLoadedSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, this.reportingService, this.slotEventService, globalLabelConfigService);
 
     // eagerly displayed slots - this includes 'eager' slots and non-lazy 'refreshable' slots
@@ -182,7 +182,14 @@ export class DfpService {
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, this.getEnvironment(config)))
       .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots))
       .then((registeredSlots) => {
-        this.initRefreshableSlots(this.window[prebidGlobal], registeredSlots.filter(this.isRefreshableAdSlotDefinition), config, this.reportingService!, globalLabelConfigService);
+        this.initRefreshableSlots(
+          this.window[prebidGlobal],
+          registeredSlots.filter(this.isRefreshableAdSlotDefinition),
+          config,
+          this.reportingService!,
+          this.slotEventService!,
+          globalLabelConfigService
+        );
         return registeredSlots;
       })
       // We wait for a prebid response and then refresh.
@@ -340,6 +347,7 @@ export class DfpService {
    * @param registeredSlots already registered ad slots
    * @param {Moli.MoliConfig} config
    * @param reportingService performance metrics and reporting
+   * @param slotEventService
    * @param globalLabelConfigService required for labels
    */
   private initRefreshableSlots(
@@ -347,13 +355,14 @@ export class DfpService {
     registeredSlots: SlotDefinition<Moli.RefreshableAdSlot>[],
     config: Moli.MoliConfig,
     reportingService: ReportingService,
+    slotEventService: SlotEventService,
     globalLabelConfigService: LabelConfigService
   ): void {
     registeredSlots
       .filter(({ moliSlot }) => this.isValidTrigger(moliSlot.trigger))
       .forEach((slotDefinition) => {
         try {
-          createRefreshListener(slotDefinition.moliSlot.trigger, this.window).addAdRefreshListener(() => {
+          createRefreshListener(slotDefinition.moliSlot.trigger, slotEventService, this.window).addAdRefreshListener(() => {
             this.requestRefreshableSlot(pbjs, slotDefinition, config, reportingService, globalLabelConfigService);
           });
         } catch (e) {
@@ -367,6 +376,7 @@ export class DfpService {
     lazyRefreshableSlots: Moli.RefreshableAdSlot[],
     config: Moli.MoliConfig,
     reportingService: ReportingService,
+    slotEventService: SlotEventService,
     globalLabelConfigService: LabelConfigService
   ): void {
     lazyRefreshableSlots
@@ -376,7 +386,7 @@ export class DfpService {
         try {
 
           let adSlot: googletag.IAdSlot;
-          createRefreshListener(moliSlotRefreshable.trigger, this.window).addAdRefreshListener(() => {
+          createRefreshListener(moliSlotRefreshable.trigger, slotEventService, this.window).addAdRefreshListener(() => {
             if (!adSlot) {
               // ad slot has not been registered yet
               adSlot = this.registerSlot({

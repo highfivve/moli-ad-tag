@@ -1,8 +1,9 @@
-import { dom } from '../stubs/browserEnvSetup';
+import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 
 import { createRefreshListener } from '../../../source/ts/ads/refreshAd';
+import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 
 
 // setup sinon-chai
@@ -16,6 +17,8 @@ describe('Refreshable Loading', () => {
     setTimeout(resolve, 20);
   });
 
+  const dom = createDom();
+  const slotEventService = new SlotEventService();
 
   describe('Event refreshable listener', () => {
     it('should trigger when the required event is fired on window', () => {
@@ -23,7 +26,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onRefresh = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
@@ -40,7 +43,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window.document
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onRefresh = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
@@ -57,7 +60,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: '#refresh-trigger-element'
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const div = dom.window.document.createElement('div');
       div.id = 'refresh-trigger-element';
@@ -78,7 +81,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         let counter = 0;
@@ -101,7 +104,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
@@ -120,7 +123,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {
@@ -140,7 +143,7 @@ describe('Refreshable Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
         refreshListener.addAdRefreshListener(() => {

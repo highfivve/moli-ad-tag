@@ -1,6 +1,7 @@
 import { Moli } from '../types/moli';
 import Trigger = Moli.behaviour.Trigger;
 import EventTrigger = Moli.behaviour.EventTrigger;
+import { SlotEventService } from './slotEventService';
 
 /**
  * == Refresh Listener ==
@@ -34,36 +35,29 @@ export interface IAdRefreshListener {
  *      and they do not need to be removed manually with the removeEventListener() method.
  *
  * @param trigger the trigger configuration
+ * @param slotEventService
  * @param window
  * @throws an error if the trigger.source is invalid
  */
-const createEventRefreshListener = (trigger: EventTrigger, window: Window): IAdRefreshListener => {
+const createEventRefreshListener = (trigger: EventTrigger, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
   return {
     addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
-      if (typeof trigger.source === 'string') {
-        const element = window.document.querySelector(trigger.source);
-        if (element) {
-          element.addEventListener(trigger.event, callback);
-        } else {
-          throw new Error(`Invalid query selector for refresh listener trigger: ${trigger.source}`);
-        }
-      } else {
-        trigger.source.addEventListener(trigger.event, callback);
-      }
+      slotEventService.getOrCreateEventSource(trigger, window).setCallback(callback);
     }
   };
 };
 
 /**
- * 
+ *
  * @param trigger the trigger configuration for the refresh listener
+ * @param slotEventService
  * @param window
  * @returns an IAdRefreshListener if possible otherwise null
  */
-export const createRefreshListener = (trigger: Trigger, window: Window): IAdRefreshListener => {
+export const createRefreshListener = (trigger: Trigger, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
   switch (trigger.name) {
     case 'event':
-      return createEventRefreshListener(trigger, window);
+      return createEventRefreshListener(trigger, slotEventService, window);
     default:
       throw new Error(`Unsupported trigger ${trigger.name}`);
   }
