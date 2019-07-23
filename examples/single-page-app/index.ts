@@ -9,6 +9,7 @@ import 'prebid.js/build/dist/prebid';
 import { moli } from 'moli-ad-tag/source/ts/ads/moliGlobal';
 import { adConfiguration } from './source/ts/configuration';
 
+moli.enableSinglePageApp();
 // init moli
 moli.configure(adConfiguration);
 

@@ -7,9 +7,10 @@
       "es6",
       "scripthost"
     ],
+    "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2015",
+    "target": "es6",
     "typeRoots": [
       "node_modules/@types",
       "types"

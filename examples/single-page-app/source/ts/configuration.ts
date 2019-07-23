@@ -45,34 +45,43 @@ export const adConfiguration: Moli.MoliConfig = {
       ]
     },
     {
+      domId: 'ad-sidebar-1',
+      adUnitPath: '/33559401/gf/fragen/Sidebar_1',
+      labelAll: [ 'desktop' ],
+      sizes: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ],
       position: 'in-page',
-      domId: 'eager-loading-adslot-not-in-dom',
-      behaviour: 'eager',
-      adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250] ],
+      behaviour: 'refreshable',
+      lazy: true,
+      trigger: {
+        name: 'event',
+        event: 'ads.sidebar1',
+        source: window
+      },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ]]
-        },
-        {
-          mediaQuery: '(max-width: 767px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ]]
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ]
         }
       ]
     },
     {
       position: 'in-page',
-      domId: 'prebid-adslot',
-      behaviour: 'eager',
+      domId: 'spa-prebid-adslot',
+      behaviour: 'refreshable',
+      lazy: true,
+      trigger: {
+        name: 'event',
+        event: 'ads.prebid.adslot',
+        source: window
+      },
       adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: [ 'fluid', [ 300, 250 ], [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       prebid: {
         adUnit: {
           code: 'prebid-adslot',
           mediaTypes: {
             banner: {
-              sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]
+              sizes: [ [ 300, 250 ] ]
             },
             video: {
               context: 'outstream',
@@ -83,21 +92,13 @@ export const adConfiguration: Moli.MoliConfig = {
             {
               bidder: prebidjs.AppNexusAst,
               params: {
-                placementId: '13906537',
-                video: {
-                  /** This must match the configuration in the app nexus ui */
-                  frameworks: [ 1, 2 ]
-                }
+                placementId: '13906537'
               }
             },
             {
               bidder: prebidjs.AppNexusAst,
               params: {
-                placementId: '13970743',
-                video: {
-                  /** This must match the configuration in the app nexus ui */
-                  frameworks: [ 1, 2 ]
-                }
+                placementId: '13970743'
               }
             },
             // Teads Mobile
@@ -119,28 +120,32 @@ export const adConfiguration: Moli.MoliConfig = {
       },
       sizeConfig: [
         {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ]
+        },
+        {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
         }
       ]
     },
     {
       position: 'in-page',
-      domId: 'a9-adslot',
+      domId: 'spa-a9-adslot',
       behaviour: 'eager',
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ]],
+      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
       a9: {
         labelAll: [ 'a9', 'desktop' ]
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ]]
+          sizesSupported: [ 'fluid', [ 605, 165 ] ]
         },
         {
           mediaQuery: '(max-width: 767px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ]]
+          sizesSupported: [ 'fluid', [ 300, 250 ] ]
         }
       ]
     }
@@ -212,5 +217,5 @@ export const adConfiguration: Moli.MoliConfig = {
       provider: 'publisher'
     }
   },
-  logger: logger
+  // logger: logger
 };

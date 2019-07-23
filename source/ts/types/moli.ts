@@ -226,6 +226,7 @@ export namespace Moli {
    * The state machine is defined as:
    *
    * <pre style="font-size:10px;">
+   *                                                                                   setXYZ / addXYZ
    *                                                                                   requestAds()
    *
    *                                                                                   +----------+
@@ -298,11 +299,70 @@ export namespace Moli {
    *
    * ### Single Page App state
    *
-   * No changes are allowed anymore. The configuration is frozen. All `addXYZ` and `setXYZ`
-   * calls will fail. This restriction may be lifted in future versions.
+   * In this state the ad tag allows to call `requestAds()` multiple times. The ad tag state will
+   * remain `spa` if there are no errors. Note that `requestAds()` call is only allowed if the
+   * `window.location.href` has changed. This is a saftey guard against unwanted ad fraud behaviour.
    *
-   * Only called allowed is `requestAds()`, which refreshes the current ads and transitions
-   * into the `Single Page App` state effectively staying in the same state.
+   * KeyValues and Labels are handled depending on their source:
+   *
+   * - keyValues and labels from the static configuration shipped with the ad tag persist.
+   * - keyValues and labels configured via `setTargeting(...)` and `addLabel(...)` are only valid
+   *   for the next `requestAds()` call and will be cleaned afterwards.
+   *
+   *
+   * Supported loading behaviours are `eager` and `lazy-refreshable`. You should use `lazy refreshable`
+   * for slots that are part of a component that is rendered after the dom is ready.
+   *
+   * #### Integration
+   *
+   * Single page applications are quite more complex than purely server-side-rendered websites. We have
+   * a set of APIs at our disposal to deal with that.
+   *
+   * There are a three slot configurations we need to handle
+   *
+   * 1. slots that are **server-side rendered** and never removed. Examples for this are header area slots
+   *    that are part of the generic page layout that does not change on any page.
+   *    *Configuration:* Use the `eager` loading behaviour.
+   * 2. slots that are **server-side rendered**, but may dis- and reappear in the spa context.
+   *    *Configuration:* Use the `lazy refreshable` loading behaviour.
+   * 3. slots that are rendered by the SPA.
+   *    *Configuration:* Use the `lazy refreshable` loading behaviour.
+   *
+   *
+   * Eager slots (configuration 1) don't need any special handling as the DOM element is present when the
+   * site is being delivered and everything works as if it weren't a single page app.
+   *
+   * The `lazy refreshable` slots need a deeper integration. Conceptually the necessary calls look like this
+   *
+   * 1. Initial page load
+   *    1. configure moli anywhere you want. Call `moli.requestAds()`
+   *    2. the component did mount in the DOM. Then fire the event that the refreshable slot can be loaded
+   * 2. Page navigation
+   *    1. after navigation change call `moli.requestAds()`
+   *    2. the component did mount in the DOM. Then fire the event that the refreshable slot can be loaded
+   *
+   * While this is the sequential order we want things to be executed, this isn't the case in reality. Mounting
+   * in the DOM can appear before the `requestAds()` call has succesfully configured all event listeners, leading
+   * to events not being received and ads not being shown.
+   *
+   * We will provide a few examples on how to solve this in major SPA frameworks.
+   *
+   * ##### React Example
+   *
+   * Dependencies
+   * - [react](https://reactjs.org/) as SPA framework
+   * - [react-router](https://reacttraining.com/react-router/web/guides/quick-start) for routing
+   * - [history](https://github.com/ReactTraining/history) for browser history management
+   *
+   * The idea:
+   * - Provide a [React Context](https://reactjs.org/docs/context.html), e.g. `RequestAdsContext`, that contains a
+   *   flag if requestAds has already finished
+   * - use the `history.listen` method to `requestAds()` on navigation changes and update the `RequestAdsContext`
+   * - use the `moli.afterRequestAds(hook)` hook to react when the ad tag has configured everything and update the `RequestAdsContext`
+   * - managed the trigger event firing in each component
+   *
+   * If you need example source code, just ask :)
+   *
    *
    * ### Finished state
    *

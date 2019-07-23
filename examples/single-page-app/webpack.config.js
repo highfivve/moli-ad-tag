@@ -7,21 +7,24 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = (_, argv) => {
   return {
     devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
-    entry: './index.ts',
+    entry: {
+      adtag: './index.ts',
+      app: './source/demo/app.tsx'
+    },
     output: {
-      filename: 'publisher_[chunkHash].js'
+      filename: '[name]_[chunkHash].js'
     },
     module: {
       rules: [
         {
-          test: /\.ts$/,
+          test: /\.ts(x?)$/,
           loader: 'ts-loader',
           options: {'allowTsInNodeModules': true}
         }
       ]
     },
     resolve: {
-      extensions: ['.ts', '.js']
+      extensions: ['.ts', '.tsx', '.js']
     },
     // local development
     devServer: {
