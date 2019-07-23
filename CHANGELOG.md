@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v1.16.0
+
+[GD-1342](https://jira.gutefrage.net/browse/GD-1342). The single page application mode now supports `lazy refreshable` slots
+and the [examples/single-page-app](examples/single-page-app) contains a sophisticated react example that demonstrates the
+various use cases.
+
 ## v1.15.0
 
 Fix prebid usersync filter setting types. The propery value for wild cars is `*` and not `[*]`.
