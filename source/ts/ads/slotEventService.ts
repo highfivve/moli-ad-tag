@@ -2,6 +2,37 @@ import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
 
 /**
+ * # Slot EventSource
+ *
+ * An event source wraps a single eventListener and ensures that events aren't handled
+ * multiple times.
+ *
+ * The current implementation provides only a single callback that can be changed.
+ *
+ */
+export interface ISlotEventSource {
+
+  /**
+   * Set a callback that is called when the underlying event is fired.
+   * This will override any previous callback.
+   *
+   * @param callback - called when the underlying event is fired
+   */
+  setCallback(callback: EventListenerOrEventListenerObject): void;
+}
+
+// internal datastructures to managed EventSources
+type IEventSourceDictionary = {
+  [key: string]: ISlotEventSource | undefined;
+};
+
+type IEventSources = {
+  window: IEventSourceDictionary,
+  document: IEventSourceDictionary,
+  element: IEventSourceDictionary
+};
+
+/**
  * # Slot Event Service
  *
  * This services wraps events from googletag (and probably prebidjs as well in the future).
@@ -20,6 +51,13 @@ export class SlotEventService {
    * the ability to remove listeners.
    */
   private readonly slotRenderEndedEventCallbacks: Set<(event: googletag.events.ISlotRenderEndedEvent) => void> = new Set();
+
+  private readonly eventSources: IEventSources = {
+    window: {},
+    document: {},
+    element: {}
+  };
+
 
   /**
    * Initialize the service once the gpt tag is loaded.
@@ -66,5 +104,75 @@ export class SlotEventService {
       this.slotRenderEndedEventCallbacks.add(callback);
     });
   }
+
+  /**
+   * Creates or returns an EventSource for the given trigger.
+   *
+   * @param trigger the underlying trigger of the EventSource
+   * @param window global window object
+   */
+  public getOrCreateEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): ISlotEventSource {
+    const dictionary = this.getEventSourceDictionary(trigger, window);
+    const eventSource = dictionary[trigger.event] || this.createEventSource(trigger, window);
+    dictionary[trigger.event] = eventSource;
+    return eventSource;
+  }
+
+  private getEventSourceDictionary(trigger: Moli.behaviour.EventTrigger, window: Window): IEventSourceDictionary {
+    const source = trigger.source;
+    if (typeof source === 'string') {
+      return this.eventSources.element;
+    } else if (source === window) {
+      return this.eventSources.window;
+    } else {
+      return this.eventSources.document;
+    }
+  }
+
+  private createEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): ISlotEventSource {
+    const eventSource = new SlotEventSource();
+
+    if (typeof trigger.source === 'string') {
+      const element = window.document.querySelector(trigger.source);
+      if (element) {
+        element.addEventListener(trigger.event, eventSource);
+      } else {
+        throw new Error(`Invalid query selector for refresh listener trigger: ${trigger.source}`);
+      }
+    } else {
+      trigger.source.addEventListener(trigger.event, eventSource);
+    }
+
+    return eventSource;
+  }
+
+}
+
+/**
+ * # Slot EventSource
+ *
+ * Acts as the mediation layer between DOM events and Moli services that
+ * want to listen to those events.
+ *
+ */
+class SlotEventSource implements ISlotEventSource, EventListenerObject {
+
+  private currentCallback: EventListener;
+
+  constructor() {
+    // default to noop on registration
+    this.currentCallback = (_: Event) => {
+      return;
+    };
+  }
+
+  public handleEvent(evt: Event): void {
+    this.currentCallback(evt);
+  }
+
+  public setCallback(callback: EventListener): void {
+    this.currentCallback = callback;
+  }
+
 
 }
