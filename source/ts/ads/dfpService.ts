@@ -388,6 +388,7 @@ export class DfpService {
           let adSlot: googletag.IAdSlot;
           createRefreshListener(moliSlotRefreshable.trigger, slotEventService, this.window).addAdRefreshListener(() => {
             if (!adSlot) {
+              this.logger.debug('DFP Service', `Register lazy refreshable slot ${moliSlotRefreshable.domId}`);
               // ad slot has not been registered yet
               adSlot = this.registerSlot({
                 moliSlot: moliSlotRefreshable,
@@ -1039,7 +1040,7 @@ export class DfpService {
   private isInstantlyLoadedSlot(slot: Moli.AdSlot): boolean {
     return !(
       slot.behaviour === 'lazy' ||
-      slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false)
+      (slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false))
     );
   }
 

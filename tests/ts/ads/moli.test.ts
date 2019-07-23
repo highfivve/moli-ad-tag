@@ -491,6 +491,34 @@ describe('moli', () => {
       });
     });
 
+    it('should call the afterRequestAds hook with spa state on each requestAds() call', () => {
+      const adTag = createMoliTag(dom.window);
+      dom.reconfigure({
+        url: 'https://localhost/'
+      });
+
+      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(afterRequestAdsHook);
+
+      adTag.afterRequestAds(hookSpy);
+      adTag.enableSinglePageApp();
+      adTag.configure({ slots: [], consent: consentConfig, logger: noopLogger });
+      return adTag.requestAds().then(() => {
+        expect(hookSpy).to.be.calledOnce;
+        expect(hookSpy).to.be.calledOnceWithExactly('spa');
+        dom.reconfigure({
+          url: 'https://localhost/home'
+        });
+        return adTag.requestAds();
+      }).then(() => {
+        expect(hookSpy).to.be.calledTwice;
+        expect(hookSpy.secondCall.args[0]).to.be.equal('spa');
+      });
+    });
+
 
     it('should add the afterRequestAds hook with error state if requestAds() failed', () => {
       dom.window.googletag = {

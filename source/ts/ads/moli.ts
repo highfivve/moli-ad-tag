@@ -333,14 +333,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             state: 'spa',
             configFromAdTag: state.configFromAdTag,
             config: config,
-            refreshAds: dfpService.requestAds,
+            refreshAds: (moliConfig: Moli.MoliConfig) => dfpService.requestAds(moliConfig).then(() => { return; }),
             destroyAdSlots: dfpService.destroyAdSlots,
             resetTargeting: dfpService.resetTargeting,
             initialized,
             href: window.location.href,
             // initialize targeting values for next refreshAds call
             labels: [],
-            keyValues: {}
+            keyValues: {},
+            hooks: state.hooks
           };
           state = currentState;
 
@@ -381,6 +382,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // create new ABTest values
         setABtestTargeting();
 
+        const hooks = state.hooks;
+        const afterRequestAds =  hooks && hooks.afterRequestAds ? hooks.afterRequestAds : () => { return; };
+
         const { initialized, refreshAds, destroyAdSlots, resetTargeting, href, keyValues, labels, configFromAdTag } = state;
         return initialized
           .then((config) => {
@@ -413,8 +417,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           })
           .then(configWithTargeting => {
             resetTargeting(configWithTargeting);
-            refreshAds(configWithTargeting);
-            return configWithTargeting;
+            return refreshAds(configWithTargeting).then(() => configWithTargeting);
           })
           .then((configWithTargeting) => {
             state = {
@@ -426,10 +429,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               config: configWithTargeting,
               initialized: initialized,
               href: window.location.href,
+              hooks: hooks,
               // reset targeting after successful refreshAds()
               labels: [],
               keyValues: {}
             };
+            afterRequestAds(state.state);
             return state;
           });
       }

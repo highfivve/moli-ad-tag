@@ -463,6 +463,11 @@ export namespace Moli {
       labels: string[];
 
       /**
+       * Hooks configured by the user
+       */
+      hooks?: IHooks;
+
+      /**
        * The original configuration from the ad tag itself. We can use this configuration to
        *
        * - generate a diff for the additions made by the publisher
@@ -478,8 +483,9 @@ export namespace Moli {
 
       /**
        * Refresh ads
+       * @return a promise that is finished when all refresh calls have been made
        */
-      readonly refreshAds: (config: Moli.MoliConfig) => void;
+      readonly refreshAds: (config: Moli.MoliConfig) => Promise<void>;
 
       /**
        * Destroy all ad slots and prebid ad units
