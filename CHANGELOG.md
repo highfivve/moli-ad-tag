@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v1.17.0
+
+[GD-1342](https://jira.gutefrage.net/browse/GD-1342). The single page application mode now supports plain `lazy` slots.
+We take care of registering and deregistering event listeners and make sure that a slot is only refreshed once per `requestAds()` call.
+
 ## v1.16.0
 
 [GD-1342](https://jira.gutefrage.net/browse/GD-1342). The single page application mode now supports `lazy refreshable` slots
