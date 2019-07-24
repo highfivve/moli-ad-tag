@@ -141,11 +141,6 @@ class StaticContent extends React.Component<{}, IContentState> {
   static contextType = RequestAdsContext;
   context!: React.ContextType<typeof RequestAdsContext>;
 
-  // store if ads already have been requested. This is not part of the state as it
-  // doesn't change the output of the component. Putting this into the state would
-  // also lead to recursive updates of the component
-  private shouldRequestAds: boolean = true;
-
   constructor(props: {}) {
     super(props);
 
@@ -216,13 +211,9 @@ class StaticContent extends React.Component<{}, IContentState> {
 
   private dispatchAdTriggerEvent(): void {
     // only trigger the ad slot when requestAdsFinished is true and this component hasn't already fired the trigger event
-    if (this.context.requestAdsFinished && this.shouldRequestAds) {
+    if (this.context.requestAdsFinished) {
       // the event type is part of the ad tag configuration and is documented on the demo page
       window.dispatchEvent(new CustomEvent('ads.prebid.adslot'));
-      // make sure we only requestAds once
-      this.shouldRequestAds = false;
-    } else if (!this.context.requestAdsFinished) {
-      this.shouldRequestAds = true;
     }
   }
 }
@@ -301,13 +292,9 @@ class ContentDelayed extends React.Component<{}, IContentDelayState> {
 
   private dispatchAdTriggerEvent(): void {
     // only trigger the ad slot when requestAdsFinished is true and this component hasn't already fired the trigger event
-    if (this.context.requestAdsFinished && this.shouldRequestAds && !this.state.isLoading) {
+    if (this.context.requestAdsFinished && !this.state.isLoading) {
       // the event type is part of the ad tag configuration and is documented on the demo page
       window.dispatchEvent(new CustomEvent('ads.sidebar1'));
-      // make sure we only requestAds once
-      this.shouldRequestAds = false;
-    } else if (!this.context.requestAdsFinished) {
-      this.shouldRequestAds = true;
     }
   }
 
@@ -325,8 +312,6 @@ class Home extends React.Component<{}, {}> {
 
   static contextType = RequestAdsContext;
   context!: React.ContextType<typeof RequestAdsContext>;
-
-  private shouldRequestAds: boolean = true;
 
   render(): React.ReactNode {
     return <div>
@@ -352,13 +337,9 @@ class Home extends React.Component<{}, {}> {
   }
 
   private dispatchAdTriggerEvent(): void {
-    if (this.context.requestAdsFinished && this.shouldRequestAds) {
+    if (this.context.requestAdsFinished) {
       // the event type is part of the ad tag configuration and is documented on the demo page
-      window.dispatchEvent(new CustomEvent('ads.prebid.adslot'));
-      // make sure we only requestAds once
-      this.shouldRequestAds = false;
-    } else if (!this.context.requestAdsFinished) {
-      this.shouldRequestAds = true;
+      window.dispatchEvent(new CustomEvent('ads.a9.adslot'));
     }
   }
 

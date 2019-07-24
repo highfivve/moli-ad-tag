@@ -50,8 +50,7 @@ export const adConfiguration: Moli.MoliConfig = {
       labelAll: [ 'desktop' ],
       sizes: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ],
       position: 'in-page',
-      behaviour: 'refreshable',
-      lazy: true,
+      behaviour: 'lazy',
       trigger: {
         name: 'event',
         event: 'ads.sidebar1',
@@ -67,8 +66,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'spa-prebid-adslot',
-      behaviour: 'refreshable',
-      lazy: true,
+      behaviour: 'lazy',
       trigger: {
         name: 'event',
         event: 'ads.prebid.adslot',
@@ -132,7 +130,12 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'spa-a9-adslot',
-      behaviour: 'eager',
+      behaviour: 'lazy',
+      trigger: {
+        name: 'event',
+        event: 'ads.a9.adslot',
+        source: window
+      },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
       a9: {
