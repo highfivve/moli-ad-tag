@@ -98,7 +98,7 @@ export class DfpService {
     };
 
     // slot and reporting service are not unsable until `initialize()` is called on both services
-    const slotEventService = new SlotEventService();
+    const slotEventService = new SlotEventService(this.logger);
     this.slotEventService = slotEventService;
     this.reportingService = new ReportingService(
       createPerformanceService(this.window), slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
@@ -211,6 +211,9 @@ export class DfpService {
     }
 
     return Promise.resolve()
+      // remove all event listeners first
+      .then(() => this.slotEventService && this.slotEventService.removeAllEventSources(this.window))
+      //
       .then(() => this.window.googletag.destroySlots())
       .then(() => {
         const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
@@ -292,7 +295,7 @@ export class DfpService {
     lazyLoadingSlots.forEach((moliSlotLazy) => {
       const filterSupportedSizes = this.getSizeFilterFunction(moliSlotLazy);
 
-      createLazyLoader(moliSlotLazy.trigger, this.window).onLoad()
+      createLazyLoader(moliSlotLazy.trigger, slotEventService, this.window).onLoad()
         .then(() => {
           if (this.window.document.getElementById(moliSlotLazy.domId)) {
             return Promise.resolve();

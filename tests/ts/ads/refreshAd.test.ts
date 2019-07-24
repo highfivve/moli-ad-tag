@@ -1,7 +1,8 @@
 import { createDom } from '../stubs/browserEnvSetup';
+import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
-import * as sinonChai from 'sinon-chai';
 
+import * as sinonChai from 'sinon-chai';
 import { createRefreshListener } from '../../../source/ts/ads/refreshAd';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 
@@ -18,7 +19,7 @@ describe('Refreshable Loading', () => {
   });
 
   const dom = createDom();
-  const slotEventService = new SlotEventService();
+  const slotEventService = new SlotEventService(noopLogger);
 
   describe('Event refreshable listener', () => {
     it('should trigger when the required event is fired on window', () => {

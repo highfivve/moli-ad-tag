@@ -1,4 +1,5 @@
 import { createDom } from '../stubs/browserEnvSetup';
+import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -35,7 +36,7 @@ describe('EventService', () => {
   describe('getOrCreate EventSource', () => {
 
     it('should create an event source on window', () => {
-      const eventService = new SlotEventService();
+      const eventService = new SlotEventService(noopLogger);
       const eventSource = eventService.getOrCreateEventSource({
         name: 'event',
         event: 'ads',
@@ -48,7 +49,7 @@ describe('EventService', () => {
     });
 
     it('should create an event source on document', () => {
-      const eventService = new SlotEventService();
+      const eventService = new SlotEventService(noopLogger);
 
       const eventSource = eventService.getOrCreateEventSource({
         name: 'event',
@@ -62,7 +63,7 @@ describe('EventService', () => {
     });
 
     it('should create an event source on an element in the DOM', () => {
-      const eventService = new SlotEventService();
+      const eventService = new SlotEventService(noopLogger);
 
       const div = dom.window.document.createElement('div');
       div.id = 'myslot';
@@ -80,7 +81,7 @@ describe('EventService', () => {
     });
 
     it('should create an event source only once on window', () => {
-      const eventService = new SlotEventService();
+      const eventService = new SlotEventService(noopLogger);
 
       const windowTrigger: EventTrigger = {
         name: 'event',
@@ -99,7 +100,7 @@ describe('EventService', () => {
     });
 
     it('should create an event source only once on document', () => {
-      const eventService = new SlotEventService();
+      const eventService = new SlotEventService(noopLogger);
 
       const documentWindow: EventTrigger = {
         name: 'event',
@@ -117,9 +118,8 @@ describe('EventService', () => {
       expect(callbackSpy).to.be.calledOnce;
     });
 
-
     it('should create an event source only once on an element in the DOM', () => {
-      const eventService = new SlotEventService();
+      const eventService = new SlotEventService(noopLogger);
 
       const div = dom.window.document.createElement('div');
       div.id = 'myslot';
@@ -141,9 +141,120 @@ describe('EventService', () => {
       expect(callbackSpy).to.be.calledOnce;
     });
 
-
-
   });
 
+  describe('remove all event sources', () => {
+    it('should remove all event listeners', () => {
+      const eventService = new SlotEventService(noopLogger);
+
+      const windowEventSource = eventService.getOrCreateEventSource({
+        name: 'event',
+        event: 'ads',
+        source: dom.window
+      }, dom.window);
+
+      windowEventSource.setCallback(callbackSpy);
+      const documentEventSource = eventService.getOrCreateEventSource({
+        name: 'event',
+        event: 'ads',
+        source: dom.window.document
+      }, dom.window);
+
+      documentEventSource.setCallback(callbackSpy);
+      const div = dom.window.document.createElement('div');
+
+      div.id = 'myslot';
+      dom.window.document.body.append(div);
+      const elementEventSource = eventService.getOrCreateEventSource({
+        name: 'event',
+        event: 'ads',
+        source: '#myslot'
+      }, dom.window);
+
+      elementEventSource.setCallback(callbackSpy);
+
+      // dispatch first series of events
+      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', dom.window.document);
+      dispatchEvent('ads', div);
+      expect(callbackSpy).to.have.been.calledThrice;
+
+      // remove all event sources
+      eventService.removeAllEventSources(dom.window);
+
+      // firing events should have no effect
+      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', dom.window.document);
+      dispatchEvent('ads', div);
+      expect(callbackSpy).to.have.been.calledThrice;
+    });
+  });
+
+  describe('remove event source', () => {
+    it('should remove the event sources on window', () => {
+      const eventService = new SlotEventService(noopLogger);
+
+      const trigger: EventTrigger = {
+        name: 'event',
+        event: 'ads',
+        source: dom.window
+      };
+      const windowEventSource = eventService.getOrCreateEventSource(trigger, dom.window);
+
+      windowEventSource.setCallback(callbackSpy);
+      dispatchEvent('ads', dom.window);
+      eventService.removeEventSource(trigger, dom.window);
+      expect(callbackSpy).to.have.been.calledOnce;
+
+      // has no effect
+      dispatchEvent('ads', dom.window);
+      expect(callbackSpy).to.have.been.calledOnce;
+    });
+
+    it('should remove the event sources on document', () => {
+      const eventService = new SlotEventService(noopLogger);
+
+      const trigger: EventTrigger = {
+        name: 'event',
+        event: 'ads',
+        source: dom.window.document
+      };
+      const documentEventSource = eventService.getOrCreateEventSource(trigger, dom.window);
+
+      documentEventSource.setCallback(callbackSpy);
+      dispatchEvent('ads', dom.window.document);
+      eventService.removeEventSource(trigger, dom.window);
+      expect(callbackSpy).to.have.been.calledOnce;
+
+      // has no effect
+      dispatchEvent('ads', dom.window.document);
+      expect(callbackSpy).to.have.been.calledOnce;
+    });
+
+    it('should remove the event sources on DOM node', () => {
+      const eventService = new SlotEventService(noopLogger);
+
+      const div = dom.window.document.createElement('div');
+
+      div.id = 'myslot';
+      dom.window.document.body.append(div);
+
+      const trigger: EventTrigger = {
+        name: 'event',
+        event: 'ads',
+        source: '#myslot'
+      };
+      const elementEventSource = eventService.getOrCreateEventSource(trigger, dom.window);
+
+      elementEventSource.setCallback(callbackSpy);
+      dispatchEvent('ads', div);
+      eventService.removeEventSource(trigger, dom.window);
+      expect(callbackSpy).to.have.been.calledOnce;
+
+      // has no effect
+      dispatchEvent('ads', div);
+      expect(callbackSpy).to.have.been.calledOnce;
+    });
+  });
 
 });

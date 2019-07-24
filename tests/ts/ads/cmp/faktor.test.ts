@@ -18,7 +18,7 @@ describe('Faktor CMP', () => {
 
   const reportingConfig: ReportingConfig = { sampleRate: 0, reporters: [] };
 
-  const reportingService = new ReportingService(createPerformanceService(dom.window), new SlotEventService(), reportingConfig, noopLogger, 'production', dom.window);
+  const reportingService = new ReportingService(createPerformanceService(dom.window), new SlotEventService(noopLogger), reportingConfig, noopLogger, 'production', dom.window);
 
   const cmpStub = sandbox.stub();
 

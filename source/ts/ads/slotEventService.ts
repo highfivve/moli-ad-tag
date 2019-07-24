@@ -23,7 +23,7 @@ export interface ISlotEventSource {
 
 // internal datastructures to managed EventSources
 type IEventSourceDictionary = {
-  [key: string]: ISlotEventSource | undefined;
+  [key: string]: { eventSource: SlotEventSource, trigger: Moli.behaviour.EventTrigger } | undefined;
 };
 
 type IEventSources = {
@@ -52,11 +52,14 @@ export class SlotEventService {
    */
   private readonly slotRenderEndedEventCallbacks: Set<(event: googletag.events.ISlotRenderEndedEvent) => void> = new Set();
 
-  private readonly eventSources: IEventSources = {
+  private eventSources: IEventSources = {
     window: {},
     document: {},
     element: {}
   };
+
+  constructor(private readonly logger: Moli.MoliLogger) {
+  }
 
 
   /**
@@ -113,9 +116,80 @@ export class SlotEventService {
    */
   public getOrCreateEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): ISlotEventSource {
     const dictionary = this.getEventSourceDictionary(trigger, window);
-    const eventSource = dictionary[trigger.event] || this.createEventSource(trigger, window);
+    const eventSource = dictionary[trigger.event] || {
+      eventSource: this.createEventSource(trigger, window),
+      trigger: trigger
+    };
     dictionary[trigger.event] = eventSource;
-    return eventSource;
+    return eventSource.eventSource;
+  }
+
+  /**
+   * Remove a single event source so it doesn't trigger any events.
+   * @param trigger
+   * @param window
+   */
+  public removeEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): void {
+    this.logger.debug('SlotEventService', `remove EventSource configured by`, trigger);
+    const source = trigger.source;
+    const eventName = trigger.event;
+    if (typeof source === 'string') {
+      const eventSource = this.eventSources.element[eventName];
+      const element = window.document.querySelector(source);
+      if (eventSource && element) {
+        element.removeEventListener(trigger.event, eventSource.eventSource);
+      }
+    } else if (source === window) {
+      const eventSource = this.eventSources.window[eventName];
+      if (eventSource) {
+        window.removeEventListener(eventName, eventSource.eventSource);
+      }
+    } else {
+      const eventSource = this.eventSources.document[eventName];
+      if (eventSource) {
+        window.document.removeEventListener(eventName, eventSource.eventSource);
+      }
+    }
+
+  }
+
+  /**
+   * Removes all registered listeners on window, documenet and
+   * @param window
+   */
+  public removeAllEventSources(window: Window): void {
+    this.logger.debug('SlotEventService', `remove all EventSources`);
+    Object.keys(this.eventSources.window).forEach(eventName => {
+      const eventSource = this.eventSources.window[eventName];
+      if (eventSource) {
+        window.removeEventListener(eventName, eventSource.eventSource);
+      }
+    });
+
+    Object.keys(this.eventSources.document).forEach(eventName => {
+      const eventSource = this.eventSources.document[eventName];
+      if (eventSource) {
+        window.document.removeEventListener(eventName, eventSource.eventSource);
+      }
+    });
+
+    Object.keys(this.eventSources.element).forEach(eventName => {
+      const eventSource = this.eventSources.element[eventName];
+      if (eventSource && typeof eventSource.trigger.source === 'string') {
+        const element = window.document.querySelector(eventSource.trigger.source);
+        if (element) {
+          element.removeEventListener(eventName, eventSource.eventSource);
+        }
+      }
+    });
+
+    // empty
+    this.eventSources = {
+      window: {},
+      document: {},
+      element: {},
+    };
+
   }
 
   private getEventSourceDictionary(trigger: Moli.behaviour.EventTrigger, window: Window): IEventSourceDictionary {
@@ -129,18 +203,19 @@ export class SlotEventService {
     }
   }
 
-  private createEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): ISlotEventSource {
+  private createEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): SlotEventSource {
+    this.logger.debug('SlotEventService', `create EventSource for trigger`, trigger);
     const eventSource = new SlotEventSource();
 
     if (typeof trigger.source === 'string') {
       const element = window.document.querySelector(trigger.source);
       if (element) {
-        element.addEventListener(trigger.event, eventSource);
+        element.addEventListener(trigger.event, eventSource, { passive: true });
       } else {
         throw new Error(`Invalid query selector for refresh listener trigger: ${trigger.source}`);
       }
     } else {
-      trigger.source.addEventListener(trigger.event, eventSource);
+      trigger.source.addEventListener(trigger.event, eventSource, { passive: true });
     }
 
     return eventSource;

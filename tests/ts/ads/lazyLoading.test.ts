@@ -1,8 +1,10 @@
-import { dom } from '../stubs/browserEnvSetup';
+import { createDom } from '../stubs/browserEnvSetup';
+import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
-import * as sinonChai from 'sinon-chai';
 
+import * as sinonChai from 'sinon-chai';
 import { createLazyLoader } from '../../../source/ts/ads/lazyLoading';
+import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 
 
 // setup sinon-chai
@@ -16,6 +18,14 @@ describe('Lazy Loading', () => {
     setTimeout(resolve, 20);
   });
 
+  let dom = createDom();
+  let slotEventService = new SlotEventService(noopLogger);
+
+  beforeEach(() => {
+    dom = createDom();
+    slotEventService = new SlotEventService(noopLogger);
+  });
+
 
   describe('Event lazy loader', () => {
     it('should trigger when the required event is fired on window', () => {
@@ -23,7 +33,7 @@ describe('Lazy Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onLoad = eventLoader.onLoad();
       dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
@@ -36,7 +46,7 @@ describe('Lazy Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window.document
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onLoad = eventLoader.onLoad();
       dom.window.document.dispatchEvent(new dom.window.Event('trigger-event', {}));
@@ -49,7 +59,7 @@ describe('Lazy Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: '#lazy-trigger-element'
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const div = dom.window.document.createElement('div');
       div.id = 'lazy-trigger-element';
@@ -67,7 +77,7 @@ describe('Lazy Loading', () => {
         name: 'event',
         event: 'dom.window-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
       const race: Promise<boolean> = sleep().then(() => false);
@@ -82,7 +92,7 @@ describe('Lazy Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
       dom.window.dispatchEvent(new dom.window.Event('another-event', {}));
@@ -98,7 +108,7 @@ describe('Lazy Loading', () => {
         name: 'event',
         event: 'trigger-event',
         source: dom.window
-      }, dom.window);
+      }, slotEventService, dom.window);
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
       dom.window.document.dispatchEvent(new dom.window.Event('trigger-event', {}));
@@ -107,6 +117,20 @@ describe('Lazy Loading', () => {
       return Promise.race<boolean>([ onLoad, race ]).then((called) => {
         expect(called).to.be.false;
       });
+    });
+
+    it('should trigger only once when the required event is fired', () => {
+      const eventLoader = createLazyLoader({
+        name: 'event',
+        event: 'trigger-event',
+        source: dom.window
+      }, slotEventService, dom.window);
+
+      const onLoad = eventLoader.onLoad();
+      dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
+      dom.window.dispatchEvent(new dom.window.Event('trigger-event', {}));
+
+      return onLoad;
     });
 
   });

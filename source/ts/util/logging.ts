@@ -60,7 +60,7 @@ function getLogStageLabelStyle(logStage: 'debug' | 'info' | 'warn' | 'error'): s
  *
  * @param source
  */
-function getSourceLabelStyle(source: 'AdPerformanceService' | 'DFP Service' | 'Faktor CMP' | 'MoliGlobal'): string {
+function getSourceLabelStyle(source: 'AdPerformanceService' | 'DFP Service' | 'Faktor CMP' | 'MoliGlobal' | 'SlotEventService'): string {
   switch (source) {
     case 'AdPerformanceService':
       return getLabelStyle('#74ABC6');
@@ -70,6 +70,8 @@ function getSourceLabelStyle(source: 'AdPerformanceService' | 'DFP Service' | 'F
       return getLabelStyle('#9374C6');
     case 'MoliGlobal':
       return getLabelStyle('#74C689');
+    case 'SlotEventService':
+      return getLabelStyle('#4357AD');
   }
 }
 

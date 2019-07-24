@@ -1,6 +1,7 @@
 import { Moli } from '../types/moli';
 import Trigger = Moli.behaviour.Trigger;
 import EventTrigger = Moli.behaviour.EventTrigger;
+import { SlotEventService } from './slotEventService';
 
 /**
  * == Lazy Loader ==
@@ -16,39 +17,29 @@ export interface ILazyLoader {
   onLoad(): Promise<void>;
 }
 
-const getElementForListener = (trigger: EventTrigger, window: Window): Window | Document | Element => {
-  if (typeof trigger.source === 'string') {
-    const element = window.document.querySelector(trigger.source);
-    if (element) {
-      return element;
-    } else {
-      throw new Error(`Invalid query selector for refresh listener trigger: ${trigger.source}`);
-    }
-  } else {
-    return trigger.source;
-  }
-};
-
-const createEventLazyLoader = (trigger: EventTrigger, window: Window): ILazyLoader => {
+const createEventLazyLoader = (trigger: EventTrigger, slotEventService: SlotEventService, window: Window): ILazyLoader => {
   return {
     onLoad: () => {
       return new Promise<void>((resolve, reject) => {
         try {
-          getElementForListener(trigger, window).addEventListener(trigger.event, () => {
-            resolve();
-          }, { once: true, passive: true });
+          slotEventService.getOrCreateEventSource(trigger, window)
+            .setCallback(() => {
+              resolve();
+              // remove the eventSource once this
+              slotEventService.removeEventSource(trigger, window);
+            });
         } catch (e) {
-            reject(e);
+          reject(e);
         }
       });
     }
   };
 };
 
-export const createLazyLoader = (trigger: Trigger, window: Window): ILazyLoader => {
+export const createLazyLoader = (trigger: Trigger, slotEventService: SlotEventService, window: Window): ILazyLoader => {
   switch (trigger.name) {
     case 'event':
-      return createEventLazyLoader(trigger, window);
+      return createEventLazyLoader(trigger, slotEventService, window);
     default:
       return {
         onLoad: () => Promise.reject(`Invalid trigger configuration: ${JSON.stringify(trigger)}`)
