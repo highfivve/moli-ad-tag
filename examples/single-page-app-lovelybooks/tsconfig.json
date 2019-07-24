@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "sourceMap": true,
+    "lib": [
+      "dom",
+      "es6",
+      "scripthost"
+    ],
+    "jsx": "react",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es6",
+    "typeRoots": [
+      "node_modules/@types",
+      "types"
+    ]
+  },
+  "include": [
+    "node_modules/moli-ad-tag/source/**/*"
+  ]
+}
