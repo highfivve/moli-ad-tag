@@ -57,6 +57,7 @@ export default class StaticContent extends React.Component<{}, IContentState> {
             })}
             {this.state.someVariable ? <hr /> : <br />}
             <Ad domId="h5v_content_rezi_1" />
+            <hr />
             {content2.map((item, index) => {
                 return [
                     <h3 key={`2_item_title_${index}`}>{item.title}</h3>,

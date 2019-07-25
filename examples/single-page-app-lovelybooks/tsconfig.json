@@ -17,6 +17,7 @@
     ]
   },
   "include": [
+    "source/**/*",
     "node_modules/moli-ad-tag/source/**/*"
   ]
 }

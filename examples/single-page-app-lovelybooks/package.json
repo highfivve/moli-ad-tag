@@ -2,7 +2,7 @@
   "name": "publisher-tags",
   "version": "1.0.0",
   "description": "Single Page App",
-  "main": "index.ts",
+  "main": "source/demo/app.tsx",
   "scripts": {
     "build": "webpack --mode=production",
     "start": "webpack-dev-server --mode=development"
