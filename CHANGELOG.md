@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.17.1
+
+Filter sizes for dummy slots if ad tag is in `environment` test.
+
 ## v1.17.0
 
 [GD-1342](https://jira.gutefrage.net/browse/GD-1342). The single page application mode now supports plain `lazy` slots.
