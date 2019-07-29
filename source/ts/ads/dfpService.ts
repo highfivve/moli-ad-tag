@@ -976,13 +976,13 @@ export class DfpService {
   private refreshAds(slots: SlotDefinition<Moli.AdSlot>[], reportingService: ReportingService, env: Moli.Environment): SlotDefinition<Moli.AdSlot>[] {
     switch (env) {
       case 'test':
-        slots.forEach(({ adSlot, moliSlot }) => {
+        slots.forEach(({ adSlot, moliSlot, filterSupportedSizes }) => {
           const containerId = `${moliSlot.domId}__container`;
           const containerWidthId = `${moliSlot.domId}__container_width`;
           const containerHeightId = `${moliSlot.domId}__container_height`;
 
           // pick a random, fixed sizes
-          const sizes = moliSlot.sizes
+          const sizes = filterSupportedSizes(moliSlot.sizes)
           // no fluid sizes
             .filter(this.isFixedSize)
             // no 1x1 sizes
