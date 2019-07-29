@@ -167,21 +167,6 @@ export namespace Moli {
      * });
      * ```
      *
-     *
-     * ## Unsupported Features
-     *
-     * The single page application mode doesn't support all features that are provided by the static website mode.
-     *
-     * - `lazy` and `refreshable` slot loading behaviour is not support. This is due to the fact that we need to
-     *    cleanup all the event listeners initialized by these slots on each `requestAds` call. This may come in
-     *    later versions.
-     *
-     * - `targeting` and `labels` on page changes. This means that the initial targetings and labels you pushed
-     *    into moli with `addLabel(label)` and `setTargeting(key, value)` will be set for the entire lifetime of
-     *    the page.
-     *    Note that the dynamic size configuration will be evaluated on each `requestAds()`
-     *
-     *
      */
     enableSinglePageApp(): void;
 
