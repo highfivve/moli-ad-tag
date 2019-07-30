@@ -102,7 +102,8 @@ describe('personalizedAdsProvider', () => {
       },
       cmpConfig: {
         provider: 'faktor',
-        autoOptIn: true
+        autoOptIn: true,
+        timeout: timeout
       }
     };
 

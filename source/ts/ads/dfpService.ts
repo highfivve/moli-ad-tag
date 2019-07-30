@@ -257,7 +257,8 @@ export class DfpService {
         case 'faktor' : {
           const faktorCmp = new FaktorCmp(reportingService, this.logger, this.window);
           if (cmpConfig.autoOptIn) {
-            return faktorCmp.autoOptIn();
+            const timeout = new Promise<void>(resolve => setTimeout(resolve, cmpConfig.timeout));
+            return Promise.race([timeout, faktorCmp.autoOptIn()]);
           } else {
             return Promise.resolve();
           }

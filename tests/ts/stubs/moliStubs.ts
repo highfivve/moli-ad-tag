@@ -24,7 +24,8 @@ export const cmpConfig: Moli.consent.ConsentConfig = {
   },
   cmpConfig: {
     provider: 'faktor',
-    autoOptIn: true
+    autoOptIn: true,
+    timeout: 1
   }
 };
 

@@ -1352,7 +1352,15 @@ export namespace Moli {
    */
   export interface FaktorCmpConfig extends CmpConfig {
     readonly provider: 'faktor';
+    /**
+     * true if we don't any consent modal, but assume user consent based on legitimate interest.
+     */
     readonly autoOptIn: boolean;
+
+    /**
+     * A timeout in milliseconds for all commands issue against the `__cmp` function.
+     */
+    readonly timeout: number;
   }
 
   /**

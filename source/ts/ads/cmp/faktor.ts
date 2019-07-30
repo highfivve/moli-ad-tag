@@ -50,6 +50,9 @@ export class FaktorCmp implements ICmpService {
         this.window.__cmp('addEventListener', 'cmpReady', resolve);
       }
     );
+    this.faktorLoaded
+      .then(() => this.logger.debug('Faktor CMP', 'cmpReady'))
+      .catch((e) => this.logger.debug('Faktor CMP', 'cmpReady call failed', e));
   }
 
   autoOptIn(): Promise<void> {

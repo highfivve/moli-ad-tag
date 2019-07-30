@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## v1.18.0
+
+[GD-1354](https://jira.gutefrage.net/browse/GD-1354) timeout for faktor.io autoOptIn. Example:
+```
+cmpConfig: {
+  provider: 'faktor',
+  autoOptIn: true,
+  timeout: 1
+}
+```
+
 ## v1.17.1
 
 Filter sizes for dummy slots if ad tag is in `environment` test.
