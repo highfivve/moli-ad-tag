@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.18.1
+
+Don't request prebid/a9 if environment is `test`.
+
 ## v1.18.0
 
 [GD-1354](https://jira.gutefrage.net/browse/GD-1354) timeout for faktor.io autoOptIn. Example:

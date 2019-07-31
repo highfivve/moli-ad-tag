@@ -312,6 +312,12 @@ export class DfpService {
             moliSlot: moliSlotLazy,
             filterSupportedSizes
           };
+
+          // if the ad tag is in a test env don't load any header bidding stuff
+          if (this.getEnvironment(config) === 'test') {
+            this.logger.warn('DFP Service', 'initLazyLoadedSlots skips prebid requests');
+            return Promise.resolve(slotDefinition);
+          }
           // check if the lazy slot wraps a prebid slot and request prebid too
           // only executes the necessary parts of `this.initHeaderBidding`
 
@@ -441,6 +447,12 @@ export class DfpService {
     const bidRequests: Promise<unknown>[] = [];
 
     const { moliSlot, adSlot, filterSupportedSizes } = slotDefinition;
+
+    // if the ad tag is in a test env don't load any header bidding stuff
+    if (this.getEnvironment(config) === 'test') {
+      this.logger.warn('DFP Service', 'requestRefreshableSlot is ignored in test mode');
+      return;
+    }
 
     if (this.isPrebidSlot(moliSlot)) {
       const refreshPrebidSlot = this.requestPrebid(pbjs, [ {
