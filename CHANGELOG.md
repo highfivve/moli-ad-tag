@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## v1.18.1
+## v1.19.0
 
 Don't request prebid/a9 if environment is `test`.
 
