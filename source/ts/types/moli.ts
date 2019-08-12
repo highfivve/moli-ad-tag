@@ -657,14 +657,7 @@ export namespace Moli {
     readonly slots: AdSlot[];
 
     /** optional key-value targeting for DFP */
-    readonly targeting?: {
-
-      /** static or supplied key-values */
-      readonly keyValues: DfpKeyValueMap;
-
-      /** additional labels. Added in addition to the ones created by the sizeConfig. */
-      readonly labels?: string[];
-    };
+    readonly targeting?: Targeting;
 
     /**
      * Label configuration to support "responsive" ads.
@@ -699,6 +692,18 @@ export namespace Moli {
     /** configurable logger */
     readonly logger?: MoliLogger;
 
+  }
+
+  /**
+   * Add targeting information from the ad tag. Usually these are static values.
+   * Dynamic values should be added via the MoliTag API `setTargeting(key, value)` or `addLabel(label)`.
+   */
+  export interface Targeting {
+    /** static or supplied key-values */
+    readonly keyValues: DfpKeyValueMap;
+
+    /** additional labels. Added in addition to the ones created by the sizeConfig. */
+    readonly labels?: string[];
   }
 
 
