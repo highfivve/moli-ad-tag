@@ -35,7 +35,7 @@ describe('SizeConfigService', () => {
   const outOfPageSlot: Moli.AdSlot = {
     position: 'out-of-page',
     domId: 'not-available',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-oop',
     sizes: [],
     sizeConfig: []
@@ -43,7 +43,7 @@ describe('SizeConfigService', () => {
   const adSlot605x165: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager',
     sizes: [ [ 605, 165 ] ],
     sizeConfig: []
@@ -51,7 +51,7 @@ describe('SizeConfigService', () => {
   const adSlotFluid985x380: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-2',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-2',
     sizes: [ 'fluid', [ 985, 380 ] ],
     sizeConfig: []

@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+[GD-1391](https://jira.gutefrage.net/browse/GD-1391) change the `behaviour` type signature for an easier json representation.
+Before, different variables were available directly on the ad slot object. Now everything is inside the `behaviour` property.
+
+```javascript
+// before
+const adSlot = {
+    domId: 'foo',
+    behaviour: 'eager'
+}
+
+// after
+const adSlot = {
+    domId: 'foo',
+    behaviour: {
+        loaded: 'eager' 
+    }
+}
+```
+
+For `lazy` and `refreshable` slots the additional information is stored in the `behaviour` object.
+
+```javascript
+// before
+const lazyAdSlot = {
+    domId: 'foo',
+    behaviour: 'lazy',
+    trigger: { ... }
+}
+
+// after
+const lazyAdSlot = {
+    domId: 'foo',
+    behaviour: {
+        loaded: 'lazy',
+        trigger: { ... } 
+    }
+}
+```
+
+
+```javascript
+// before
+const lazyAdSlot = {
+    domId: 'foo',
+    behaviour: 'refreshable',
+    trigger: { ... },
+    lazy: true
+}
+
+// after
+const lazyAdSlot = {
+    domId: 'foo',
+    behaviour: {
+        loaded: 'refreshable',
+        lazy: true,
+        trigger: { ... } 
+    }
+}
+```
+
+
 ## v1.19.0
 
 Don't request prebid/a9 if environment is `test`.

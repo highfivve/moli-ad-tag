@@ -24,7 +24,7 @@ export const teadsVerticalBid = (placementId: number, pageId: number, labelAll: 
       placementId: placementId,
       pageId: pageId
     },
-    labelAll: [prebidjs.Teads, ...labelAll]
+    labelAll: [ prebidjs.Teads, ...labelAll ]
   };
 };
 
@@ -34,56 +34,60 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'eager-loading-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
+      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: ['fluid', [605, 165], [605, 340], [1, 1]]
+          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
         }
       ]
     },
     {
       domId: 'ad-sidebar-1',
       adUnitPath: '/33559401/gf/fragen/Sidebar_1',
-      labelAll: ['desktop'],
-      sizes: ['fluid', [300, 250], [120, 600], [160, 600], [200, 600], [300, 600]],
+      labelAll: [ 'desktop' ],
+      sizes: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ],
       position: 'in-page',
-      behaviour: 'lazy',
-      trigger: {
-        name: 'event',
-        event: 'ads.ad-sidebar-1',
-        source: window
+      behaviour: {
+        loaded: 'lazy',
+        trigger: {
+          name: 'event',
+          event: 'ads.ad-sidebar-1',
+          source: window
+        },
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: ['fluid', [300, 250], [120, 600], [160, 600], [200, 600], [300, 600]]
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ]
         }
       ]
     },
     {
       position: 'in-page',
       domId: 'spa-prebid-adslot',
-      behaviour: 'lazy',
-      trigger: {
-        name: 'event',
-        event: 'ads.spa-prebid-adslot',
-        source: window
+      behaviour: {
+        loaded: 'lazy',
+        trigger: {
+          name: 'event',
+          event: 'ads.spa-prebid-adslot',
+          source: window
+        },
       },
       adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: ['fluid', [300, 250], [605, 165], [605, 340], [1, 1]],
+      sizes: [ 'fluid', [ 300, 250 ], [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       prebid: {
         adUnit: {
           code: 'prebid-adslot',
           mediaTypes: {
             banner: {
-              sizes: [[300, 250]]
+              sizes: [ [ 300, 250 ] ]
             },
             video: {
               context: 'outstream',
-              playerSize: ([[605, 340], [536, 302], [300, 169]] as [number, number][])
+              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ] as [ number, number ][])
             }
           },
           bids: [
@@ -100,55 +104,57 @@ export const adConfiguration: Moli.MoliConfig = {
               }
             },
             // Teads Mobile
-            teadsVerticalBid(94073, 101869, ['mobile', 'gutefrage', 'Automotive']),
-            teadsVerticalBid(92425, 100164, ['mobile', 'autofrage']),
-            teadsVerticalBid(94001, 101794, ['mobile', 'computerfrage']),
-            teadsVerticalBid(93999, 101792, ['mobile', 'finanzfrage']),
-            teadsVerticalBid(93997, 101790, ['mobile', 'gesundheitsfrage']),
-            teadsVerticalBid(93995, 101788, ['mobile', 'motorradfrage']),
+            teadsVerticalBid(94073, 101869, [ 'mobile', 'gutefrage', 'Automotive' ]),
+            teadsVerticalBid(92425, 100164, [ 'mobile', 'autofrage' ]),
+            teadsVerticalBid(94001, 101794, [ 'mobile', 'computerfrage' ]),
+            teadsVerticalBid(93999, 101792, [ 'mobile', 'finanzfrage' ]),
+            teadsVerticalBid(93997, 101790, [ 'mobile', 'gesundheitsfrage' ]),
+            teadsVerticalBid(93995, 101788, [ 'mobile', 'motorradfrage' ]),
             // Teads Desktop
-            teadsVerticalBid(94072, 101870, ['desktop', 'gutefrage', 'Automotive']),
-            teadsVerticalBid(92424, 100163, ['desktop', 'autofrage']),
-            teadsVerticalBid(94000, 101793, ['desktop', 'computerfrage']),
-            teadsVerticalBid(93998, 101791, ['desktop', 'finanzfrage']),
-            teadsVerticalBid(93996, 101789, ['desktop', 'gesundheitsfrage']),
-            teadsVerticalBid(92424, 101787, ['desktop', 'motorradfrage'])
+            teadsVerticalBid(94072, 101870, [ 'desktop', 'gutefrage', 'Automotive' ]),
+            teadsVerticalBid(92424, 100163, [ 'desktop', 'autofrage' ]),
+            teadsVerticalBid(94000, 101793, [ 'desktop', 'computerfrage' ]),
+            teadsVerticalBid(93998, 101791, [ 'desktop', 'finanzfrage' ]),
+            teadsVerticalBid(93996, 101789, [ 'desktop', 'gesundheitsfrage' ]),
+            teadsVerticalBid(92424, 101787, [ 'desktop', 'motorradfrage' ])
           ]
         }
       },
       sizeConfig: [
         {
           mediaQuery: '(max-width: 767px)',
-          sizesSupported: ['fluid', [300, 250], [1, 1]]
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ]
         },
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: ['fluid', [300, 250], [605, 165], [605, 340], [1, 1]]
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
         }
       ]
     },
     {
       position: 'in-page',
       domId: 'spa-a9-adslot',
-      behaviour: 'lazy',
-      trigger: {
-        name: 'event',
-        event: 'ads.spa-a9-adslot',
-        source: window
+      behaviour: {
+        loaded: 'lazy',
+        trigger: {
+          name: 'event',
+          event: 'ads.spa-a9-adslot',
+          source: window
+        },
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: ['fluid', [605, 165], [300, 250]],
+      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
       a9: {
-        labelAll: ['a9', 'desktop']
+        labelAll: [ 'a9', 'desktop' ]
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: ['fluid', [605, 165]]
+          sizesSupported: [ 'fluid', [ 605, 165 ] ]
         },
         {
           mediaQuery: '(max-width: 767px)',
-          sizesSupported: ['fluid', [300, 250]]
+          sizesSupported: [ 'fluid', [ 300, 250 ] ]
         }
       ]
     }
@@ -160,11 +166,11 @@ export const adConfiguration: Moli.MoliConfig = {
   },
   labelSizeConfig: [
     {
-      labelsSupported: ['mobile'],
+      labelsSupported: [ 'mobile' ],
       mediaQuery: '(max-width: 767px)'
     },
     {
-      labelsSupported: ['desktop', 'tablet'],
+      labelsSupported: [ 'desktop', 'tablet' ],
       mediaQuery: '(min-width: 768px)'
     }
   ],
@@ -180,7 +186,7 @@ export const adConfiguration: Moli.MoliConfig = {
         filterSettings: {
           // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
           iframe: {
-            bidders: [prebidjs.PubMatic],
+            bidders: [ prebidjs.PubMatic ],
             filter: 'include'
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.

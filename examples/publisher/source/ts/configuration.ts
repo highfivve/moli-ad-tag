@@ -56,7 +56,7 @@ const spotxBid = (channelId: string, slot: string): prebidjs.ISpotXBid => {
 };
 
 const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
-  return            {
+  return {
     bidder: prebidjs.AppNexusAst,
     params: {
       placementId: placementId,
@@ -71,7 +71,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'eager-loading-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       sizeConfig: [
@@ -84,7 +84,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'eager-loading-adslot-not-in-dom',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
       sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
       sizeConfig: [
@@ -101,7 +101,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'prebid-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       // adUnitPath: '/33559401/gf/fragen/pos2',
       adUnitPath: '/55155651/outstream_test',
       sizes: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
@@ -141,7 +141,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'a9-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
       a9: {
@@ -167,7 +167,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'appNexus-multiformat-adSlot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/19968336/prebid_multiformat_test',
       sizes: [ [ 640, 480 ], [ 300, 250 ], [ 360, 360 ], [ 1, 1 ] ],
       prebid: {

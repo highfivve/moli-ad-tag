@@ -296,7 +296,7 @@ export class DfpService {
     lazyLoadingSlots.forEach((moliSlotLazy) => {
       const filterSupportedSizes = this.getSizeFilterFunction(moliSlotLazy);
 
-      createLazyLoader(moliSlotLazy.trigger, slotEventService, this.window).onLoad()
+      createLazyLoader(moliSlotLazy.behaviour.trigger, slotEventService, this.window).onLoad()
         .then(() => {
           if (this.window.document.getElementById(moliSlotLazy.domId)) {
             return Promise.resolve();
@@ -369,10 +369,10 @@ export class DfpService {
     globalLabelConfigService: LabelConfigService
   ): void {
     registeredSlots
-      .filter(({ moliSlot }) => this.isValidTrigger(moliSlot.trigger))
+      .filter(({ moliSlot }) => this.isValidTrigger(moliSlot.behaviour.trigger))
       .forEach((slotDefinition) => {
         try {
-          createRefreshListener(slotDefinition.moliSlot.trigger, slotEventService, this.window).addAdRefreshListener(() => {
+          createRefreshListener(slotDefinition.moliSlot.behaviour.trigger, slotEventService, this.window).addAdRefreshListener(() => {
             this.requestRefreshableSlot(pbjs, slotDefinition, config, reportingService, globalLabelConfigService);
           });
         } catch (e) {
@@ -390,13 +390,13 @@ export class DfpService {
     globalLabelConfigService: LabelConfigService
   ): void {
     lazyRefreshableSlots
-      .filter((moliSlot) => this.isValidTrigger(moliSlot.trigger))
+      .filter((moliSlot) => this.isValidTrigger(moliSlot.behaviour.trigger))
       .forEach((moliSlotRefreshable) => {
         const filterSupportedSizes = this.getSizeFilterFunction(moliSlotRefreshable);
         try {
 
           let adSlot: googletag.IAdSlot;
-          createRefreshListener(moliSlotRefreshable.trigger, slotEventService, this.window).addAdRefreshListener(() => {
+          createRefreshListener(moliSlotRefreshable.behaviour.trigger, slotEventService, this.window).addAdRefreshListener(() => {
             if (!adSlot) {
               this.logger.debug('DFP Service', `Register lazy refreshable slot ${moliSlotRefreshable.domId}`);
               // ad slot has not been registered yet
@@ -1055,8 +1055,8 @@ export class DfpService {
    */
   private isInstantlyLoadedSlot(slot: Moli.AdSlot): boolean {
     return !(
-      slot.behaviour === 'lazy' ||
-      (slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false))
+      slot.behaviour.loaded === 'lazy' ||
+      (slot.behaviour.loaded === 'refreshable' && ((slot as Moli.RefreshableAdSlot).behaviour.lazy || false))
     );
   }
 
@@ -1076,15 +1076,15 @@ export class DfpService {
   }
 
   private isLazySlot(slot: Moli.AdSlot): slot is Moli.LazyAdSlot {
-    return slot.behaviour === 'lazy';
+    return slot.behaviour.loaded === 'lazy';
   }
 
   private isLazyRefreshableAdSlot(slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot {
-    return slot.behaviour === 'refreshable' && ((slot as Moli.RefreshableAdSlot).lazy || false);
+    return slot.behaviour.loaded === 'refreshable' && ((slot as Moli.RefreshableAdSlot).behaviour.lazy || false);
   }
 
   private isRefreshableAdSlotDefinition(slotDefinition: SlotDefinition<Moli.AdSlot>): slotDefinition is SlotDefinition<Moli.RefreshableAdSlot> {
-    return slotDefinition.moliSlot.behaviour === 'refreshable';
+    return slotDefinition.moliSlot.behaviour.loaded === 'refreshable';
   }
 
   private isPrebidSlotDefinition(slotDefinition: SlotDefinition<Moli.AdSlot>): slotDefinition is SlotDefinition<Moli.PrebidAdSlot> {

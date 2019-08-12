@@ -780,7 +780,7 @@ export namespace Moli {
     readonly position: 'in-page' | 'out-of-page';
 
     /** configure how and when the slot should be loaded */
-    readonly behaviour: behaviour.SlotLoading;
+    readonly behaviour: behaviour.ISlotLoading;
 
     /**
      * Conditionally select the ad unit based on labels.
@@ -819,7 +819,7 @@ export namespace Moli {
    * This is the standard behaviour.
    */
   export interface EagerAdSlot extends IAdSlot {
-    readonly behaviour: 'eager';
+    readonly behaviour: behaviour.Eager;
   }
 
   /**
@@ -827,10 +827,7 @@ export namespace Moli {
    * DFP offers a similar implementation, but only for "load when in view port"
    */
   export interface LazyAdSlot extends IAdSlot {
-    readonly behaviour: 'lazy';
-
-    /** what triggers the loading */
-    readonly trigger: behaviour.Trigger;
+    readonly behaviour: behaviour.Lazy;
   }
 
   /**
@@ -840,20 +837,7 @@ export namespace Moli {
    * - Single page applications (SPA)
    */
   export interface RefreshableAdSlot extends IAdSlot {
-    readonly behaviour: 'refreshable';
-
-    /** what triggers the refresh */
-    readonly trigger: behaviour.Trigger;
-
-    /**
-     * Configure the refresh behaviour.
-     *
-     * - `false` (default)
-     *    the ad slot is refreshed instantly, acting like an eager loading slot
-     * - `true`
-     *    the ad slot is refreshed (requested) when the first event is fired, acting like a lazy loading slot
-     */
-    readonly lazy?: boolean;
+    readonly behaviour: behaviour.Refreshable;
   }
 
   /**
@@ -938,7 +922,51 @@ export namespace Moli {
      * @see [[RefreshableAdSlot]]
      *
      */
-    export type SlotLoading = 'eager' | 'lazy' | 'refreshable';
+    export interface ISlotLoading {
+      readonly loaded: 'eager' | 'lazy' | 'refreshable';
+    }
+    /**
+     * An ad slot which is requested during page load.
+     * This is the standard behaviour.
+     */
+    export interface Eager extends ISlotLoading {
+      readonly loaded: 'eager';
+    }
+
+    /**
+     * An ad slot which is requested lazily.
+     * DFP offers a similar implementation, but only for "load when in view port"
+     */
+    export interface Lazy extends ISlotLoading {
+      readonly loaded: 'lazy';
+
+      /** what triggers the loading */
+      readonly trigger: Trigger;
+    }
+
+    /**
+     * An ad slot which can be refreshed.
+     * Useful for
+     * - sorting lists that contain ads
+     * - Single page applications (SPA)
+     */
+    export interface Refreshable extends ISlotLoading {
+      readonly loaded: 'refreshable';
+
+      /** what triggers the loading */
+      readonly trigger: Trigger;
+
+      /**
+       * Configure the refresh behaviour.
+       *
+       * - `false` (default)
+       *    the ad slot is refreshed instantly, acting like an eager loading slot
+       * - `true`
+       *    the ad slot is refreshed (requested) when the first event is fired, acting like a lazy loading slot
+       */
+      readonly lazy?: boolean;
+    }
+
 
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;

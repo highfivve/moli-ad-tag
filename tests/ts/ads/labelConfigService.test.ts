@@ -30,7 +30,7 @@ describe('LabelConfigConfigService', () => {
   const outOfPageSlot: Moli.AdSlot = {
     position: 'out-of-page',
     domId: 'not-available',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-oop',
     sizes: [],
     sizeConfig: []
@@ -38,7 +38,7 @@ describe('LabelConfigConfigService', () => {
   const adSlotWithLabelAny: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-3',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-3',
     sizes: [ 'fluid', [ 985, 380 ] ],
     sizeConfig: [],
@@ -47,7 +47,7 @@ describe('LabelConfigConfigService', () => {
   const adSlotWithLabelAll: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-4',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-4',
     sizes: [ 'fluid', [ 985, 380 ] ],
     sizeConfig: [],
@@ -56,7 +56,7 @@ describe('LabelConfigConfigService', () => {
   const adSlotWithLabelAnyLabelAll: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-5',
     sizes: [ 'fluid', [ 985, 380 ] ],
     sizeConfig: [],
@@ -67,7 +67,7 @@ describe('LabelConfigConfigService', () => {
   const adSlotWithDifferentLabelAnyLabelAll: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
-    behaviour: 'eager',
+    behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-5',
     sizes: [ 'fluid', [ 985, 380 ] ],
     sizeConfig: [],

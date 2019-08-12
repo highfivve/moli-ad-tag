@@ -34,7 +34,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'eager-loading-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       sizeConfig: [
@@ -47,7 +47,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'eager-loading-adslot-not-in-dom',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       sizeConfig: []
@@ -55,11 +55,13 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'refreshable-adslot',
-      behaviour: 'refreshable',
-      trigger: {
-        name: 'event',
-        event: 'slot.refresh',
-        source: window
+      behaviour: {
+        loaded: 'refreshable',
+        trigger: {
+          name: 'event',
+          event: 'slot.refresh',
+          source: window
+        },
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
@@ -68,11 +70,13 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'lazy-adslot',
-      behaviour: 'lazy',
-      trigger: {
-        name: 'event',
-        event: 'timer.complete',
-        source: window
+      behaviour: {
+        loaded: 'lazy',
+        trigger: {
+          name: 'event',
+          event: 'timer.complete',
+          source: window
+        },
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
@@ -81,7 +85,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'prebid-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/pos2',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       sizeConfig: [],
@@ -139,7 +143,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'a9-adslot',
-      behaviour: 'eager',
+      behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       sizeConfig: [],

@@ -287,7 +287,9 @@ describe('DfpService', () => {
       const adSlot: Moli.AdSlot = {
         position: 'in-page',
         domId: 'eager-loading-adslot',
-        behaviour: 'eager',
+        behaviour: {
+          loaded: 'eager'
+        },
         adUnitPath: '/123/eager',
         sizes: [ 'fluid', [ 605, 165 ] ],
         prebid: prebidAdslotConfig,
@@ -302,7 +304,9 @@ describe('DfpService', () => {
       const adSlot2: Moli.AdSlot = {
         position: 'in-page',
         domId: 'eager2-loading-adslot',
-        behaviour: 'eager',
+        behaviour: {
+          loaded: 'eager'
+        },
         adUnitPath: '/123/eager2',
         sizes: [ 'fluid', [ 605, 165 ] ],
         prebid: prebidAdslotConfig,
@@ -456,7 +460,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'not-available',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -484,7 +490,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -514,7 +522,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'out-of-page',
           domId: 'eager-loading-out-of-page-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [],
           sizeConfig: [
@@ -547,7 +557,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ [ 300, 250 ] ],
           sizeConfig: [
@@ -585,7 +597,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'out-of-page',
           domId: 'eager-loading-out-of-page-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [],
           sizeConfig: [
@@ -641,7 +655,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           prebid: prebidAdslotConfig,
@@ -707,7 +723,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ], [ 320, 180 ] ],
           sizeConfig: [
@@ -776,7 +794,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ], [ 320, 180 ], [ 316, 169 ] ],
           prebid: prebidAdslotConfig,
@@ -851,7 +871,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           prebid: prebidAdslotConfig,
@@ -941,7 +963,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           prebid: prebidAdSlotConfig,
@@ -1010,7 +1034,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ [ 300, 250 ] ],
           prebid: prebidAdSlotConfig,
@@ -1061,7 +1087,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           a9: {},
@@ -1113,7 +1141,14 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'lazy-loading-adslot',
-          behaviour: 'lazy',
+          behaviour: {
+            loaded: 'lazy',
+            trigger: {
+              name: 'event',
+              event: 'slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/lazy',
           sizes: [ [ 605, 340 ] ],
           sizeConfig: [
@@ -1121,12 +1156,7 @@ describe('DfpService', () => {
               mediaQuery: '(min-width: 0px)',
               sizesSupported: [ [ 605, 340 ] ]
             }
-          ],
-          trigger: {
-            name: 'event',
-            event: 'slot-trigger',
-            source: dom.window
-          }
+          ]
         };
 
         return dfpService.initialize({
@@ -1172,7 +1202,14 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'lazy-loading-adslot',
-          behaviour: 'lazy',
+          behaviour: {
+            loaded: 'lazy',
+            trigger: {
+              name: 'event',
+              event: 'slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/lazy',
           sizes: [ [ 605, 340 ] ],
           prebid: prebidAdslotConfig,
@@ -1181,12 +1218,7 @@ describe('DfpService', () => {
               mediaQuery: '(min-width: 0px)',
               sizesSupported: [ [ 605, 340 ] ]
             }
-          ],
-          trigger: {
-            name: 'event',
-            event: 'slot-trigger',
-            source: dom.window
-          }
+          ]
         };
 
         return dfpService.initialize({
@@ -1230,7 +1262,14 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'lazy-loading-adslot',
-          behaviour: 'lazy',
+          behaviour: {
+            loaded: 'lazy',
+            trigger: {
+              name: 'event',
+              event: 'slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/lazy',
           sizes: [ [ 605, 340 ] ],
           sizeConfig: [
@@ -1239,12 +1278,7 @@ describe('DfpService', () => {
               sizesSupported: [ [ 605, 340 ] ]
             }
           ],
-          a9: {},
-          trigger: {
-            name: 'event',
-            event: 'slot-trigger',
-            source: dom.window
-          }
+          a9: {}
         };
 
         return dfpService.initialize({
@@ -1294,7 +1328,14 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'refreshable-adslot',
-          behaviour: 'refreshable',
+          behaviour: {
+            loaded: 'refreshable',
+            trigger: {
+              name: 'event',
+              event: 'eager-slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/refreshable',
           sizes: [ [ 605, 340 ] ],
           sizeConfig: [
@@ -1302,12 +1343,7 @@ describe('DfpService', () => {
               mediaQuery: '(min-width: 0px)',
               sizesSupported: [ [ 605, 340 ] ]
             }
-          ],
-          trigger: {
-            name: 'event',
-            event: 'eager-slot-trigger',
-            source: dom.window
-          }
+          ]
         };
 
         return dfpService.initialize({
@@ -1337,7 +1373,15 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'lazy-refreshable-adslot',
-          behaviour: 'refreshable',
+          behaviour: {
+            loaded: 'refreshable',
+            lazy: true,
+            trigger: {
+              name: 'event',
+              event: 'lazy-slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/refreshable',
           sizes: [ [ 605, 340 ] ],
           sizeConfig: [
@@ -1345,13 +1389,7 @@ describe('DfpService', () => {
               mediaQuery: '(min-width: 0px)',
               sizesSupported: [ [ 605, 340 ] ]
             }
-          ],
-          lazy: true,
-          trigger: {
-            name: 'event',
-            event: 'lazy-slot-trigger',
-            source: dom.window
-          }
+          ]
         };
 
         return dfpService.initialize({
@@ -1399,7 +1437,14 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'refreshable-adslot',
-          behaviour: 'refreshable',
+          behaviour: {
+            loaded: 'refreshable',
+            trigger: {
+              name: 'event',
+              event: 'slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/refreshable',
           sizes: [ [ 605, 340 ] ],
           sizeConfig: [
@@ -1408,12 +1453,7 @@ describe('DfpService', () => {
               sizesSupported: [ [ 605, 340 ] ]
             }
           ],
-          prebid: prebidAdslotConfig,
-          trigger: {
-            name: 'event',
-            event: 'slot-trigger',
-            source: dom.window
-          }
+          prebid: prebidAdslotConfig
         };
 
         return dfpService.initialize({
@@ -1470,7 +1510,14 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'refreshable-adslot',
-          behaviour: 'refreshable',
+          behaviour: {
+            loaded: 'refreshable',
+            trigger: {
+              name: 'event',
+              event: 'slot-trigger',
+              source: dom.window
+            }
+          },
           adUnitPath: '/123/refreshable',
           sizes: [ [ 605, 340 ] ],
           sizeConfig: [
@@ -1479,12 +1526,7 @@ describe('DfpService', () => {
               sizesSupported: [ [ 605, 340 ] ]
             }
           ],
-          a9: {},
-          trigger: {
-            name: 'event',
-            event: 'slot-trigger',
-            source: dom.window
-          }
+          a9: {}
         };
 
         return dfpService.initialize({
@@ -1567,7 +1609,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -1623,7 +1667,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ], [ 1000, 200 ] ],
           sizeConfig: [
@@ -1699,7 +1745,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -1785,7 +1833,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -1880,7 +1930,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ] ],
           sizeConfig: [
@@ -1946,7 +1998,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ] ],
           sizeConfig: [
@@ -2008,7 +2062,9 @@ describe('DfpService', () => {
         const adSlot: Moli.AdSlot = {
           position: 'in-page',
           domId: 'eager-loading-adslot',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/eager',
           sizes: [ 'fluid', [ 300, 250 ] ],
           sizeConfig: [
@@ -2050,7 +2106,9 @@ describe('DfpService', () => {
         const adSlotNoLabels: Moli.AdSlot = {
           position: 'in-page',
           domId: 'no-labels',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/no-labels',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -2065,7 +2123,9 @@ describe('DfpService', () => {
         const adSlotMatchingLabels: Moli.AdSlot = {
           position: 'in-page',
           domId: 'matching-labels',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/matching-labels',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -2082,7 +2142,9 @@ describe('DfpService', () => {
         const adSlotNoMatchingLabels: Moli.AdSlot = {
           position: 'in-page',
           domId: 'no-matching-labels',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/no-matching-labels',
           sizes: [ 'fluid', [ 605, 165 ] ],
           sizeConfig: [
@@ -2137,7 +2199,9 @@ describe('DfpService', () => {
         const adSlotMatchingSizes: Moli.AdSlot = {
           position: 'in-page',
           domId: 'no-labels',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/no-labels',
           sizes: [ [ 605, 165 ] ],
           sizeConfig: [
@@ -2152,7 +2216,9 @@ describe('DfpService', () => {
         const adSlotFilteredSizes: Moli.AdSlot = {
           position: 'in-page',
           domId: 'matching-labels',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/matching-labels',
           sizes: [ 'fluid', [ 300, 250 ], [ 605, 165 ] ],
           sizeConfig: [
@@ -2167,7 +2233,9 @@ describe('DfpService', () => {
         const adSlotNoSupportedSizes: Moli.AdSlot = {
           position: 'in-page',
           domId: 'no-matching-labels',
-          behaviour: 'eager',
+          behaviour: {
+            loaded: 'eager'
+          },
           adUnitPath: '/123/no-matching-labels',
           sizes: [ 'fluid', [ 605, 340 ] ],
           sizeConfig: [
@@ -2233,7 +2301,9 @@ describe('DfpService', () => {
     const adSlot: Moli.AdSlot = {
       position: 'in-page',
       domId: 'eager-loading-adslot',
-      behaviour: 'eager',
+      behaviour: {
+        loaded: 'eager'
+      },
       adUnitPath: '/123/eager',
       sizes: [ 'fluid', [ 605, 165 ] ],
       sizeConfig: [
@@ -2385,7 +2455,9 @@ describe('DfpService', () => {
       const adSlots: Moli.AdSlot[] = [ {
         position: 'in-page',
         domId: 'no-labels',
-        behaviour: 'eager',
+        behaviour: {
+          loaded: 'eager'
+        },
         adUnitPath: '/123/no-labels',
         sizes: [ [ 605, 165 ] ],
         sizeConfig: [
@@ -2397,7 +2469,9 @@ describe('DfpService', () => {
       }, {
         position: 'out-of-page',
         domId: 'eager-loading-out-of-page-adslot',
-        behaviour: 'eager',
+        behaviour: {
+          loaded: 'eager'
+        },
         adUnitPath: '/123/eager',
         sizes: [],
         sizeConfig: [
@@ -2445,7 +2519,9 @@ describe('DfpService', () => {
       const adSlot: Moli.AdSlot = {
         position: 'in-page',
         domId: 'eager-loading-adslot',
-        behaviour: 'eager',
+        behaviour: {
+          loaded: 'eager'
+        },
         adUnitPath: '/123/eager',
         sizes: [ 'fluid', [ 605, 165 ] ],
         sizeConfig: [
@@ -2483,7 +2559,9 @@ describe('DfpService', () => {
     const adSlot: Moli.AdSlot = {
       position: 'in-page',
       domId: 'eager-loading-adslot',
-      behaviour: 'eager',
+      behaviour: {
+        loaded: 'eager'
+      },
       adUnitPath: '/123/eager',
       sizes: [ 'fluid', [ 605, 165 ] ],
       sizeConfig: [
