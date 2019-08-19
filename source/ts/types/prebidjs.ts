@@ -125,6 +125,32 @@ export namespace prebidjs {
   }
 
   /**
+   * 'Consent Management' module configuration
+   *
+   * @see https://prebid.org/dev-docs/modules/consentManagement.html
+   */
+  export namespace consent {
+
+    export interface IConsentManagementConfig {
+      /**
+       * The ID for the CMP in use on the page. Default is 'iab'
+       */
+      cmpApi?: 'iab';
+
+      /**
+       * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process. Default is 10000
+       */
+      timeout: number;
+
+      /**
+       * A setting to determine what will happen when obtaining consent information from the CMP fails;
+       * either allow the auction to proceed (true) or cancel the auction (false). Default is true
+       */
+      allowAuctionWithoutConsent?: boolean;
+    }
+  }
+
+  /**
    * ## Global Prebid Configuration
    *
    * Contains various configuration options for prebid. The type is not complete. Only the necessary configuration
@@ -169,23 +195,7 @@ export namespace prebidjs {
      *
      * @see https://prebid.org/dev-docs/modules/consentManagement.html
      */
-    consentManagement?: {
-      /**
-       * The ID for the CMP in use on the page. Default is 'iab'
-       */
-      cmpApi?: 'iab';
-
-      /**
-       * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process. Default is 10000
-       */
-      timeout: number;
-
-      /**
-       * A setting to determine what will happen when obtaining consent information from the CMP fails;
-       * either allow the auction to proceed (true) or cancel the auction (false). Default is true
-       */
-      allowAuctionWithoutConsent?: boolean;
-    };
+    consentManagement?: consent.IConsentManagementConfig;
 
     /**
      * ## Configure User Syncing
