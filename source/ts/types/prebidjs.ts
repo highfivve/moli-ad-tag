@@ -150,6 +150,82 @@ export namespace prebidjs {
     }
   }
 
+  export namespace userSync {
+
+    /**
+     * ## Configure User Syncing
+     *
+     * The user sync configuration options described in this section give publishers control over how adapters behave
+     * with respect to dropping pixels or scripts to cookie users with IDs. This practice is called “user syncing”
+     * because the aim is to let the bidders match IDs between their cookie space and the DSP’s cookie space. There’s a
+     * good reason for bidders to be doing this – DSPs are more likely to bid on impressions where they know something
+     * about the history of the user. However, there are also good reasons why publishers may want to control the use of
+     * these practices:
+     *
+     * - Page performance: Publishers may wish to move ad-related cookie work to much later in the page load after ads
+     *                     and content have loaded.
+     * - User privacy:     Some publishers may want to opt out of these practices even though it limits their users’
+     *                     values on the open market.
+     * - Security:         Publishers may want to control which bidders are trusted to inject images and JavaScript into
+     *                     their pages.
+     *
+     * User syncing default behavior If you don’t tweak any of the settings described in this section, the default
+     * behavior of Prebid.js is to wait 3 seconds after the auction ends, and then allow every adapter to drop up to
+     * 5 image-based user syncs.
+     *
+     * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
+     */
+    export interface IUserSyncConfig {
+
+      /**
+       * Enable/disable the user syncing feature. Default: true.
+       */
+      syncEnabled?: boolean;
+
+      /**
+       * Delay in milliseconds for syncing after the auction ends. Default: 3000.
+       */
+      syncDelay?: number;
+
+      /**
+       * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
+       */
+      syncsPerBidder?: number;
+
+      /**
+       * Configure lists of adapters to include or exclude their user syncing based on the pixel type (image/iframe).
+       */
+      filterSettings?: IFilterSettingsConfig;
+
+      /**
+       * Enable/disable publisher to trigger user syncs by calling pbjs.triggerUserSyncs(). Default: false.
+       */
+      enableOverride?: boolean;
+    }
+
+    export interface IFilterSettingsConfig {
+      /**
+       * From the documentation:
+       * If you want to apply the same bidder inclusion/exclusion rules for both types of sync pixels,
+       * you can use the all object instead specifying both image and iframe objects like so
+       */
+      all?: IFilterSetting;
+
+      /**
+       * Allow iframe-based syncs (the presence of a valid filterSettings.iframe object automatically enables iframe type user-syncing).
+       *
+       * Note - iframe-based syncing is disabled by default.
+       */
+      iframe?: IFilterSetting;
+
+      /**
+       * Image-based syncing is enabled by default; it can be disabled by excluding all/certain bidders via the filterSettings object.
+       */
+      image?: IFilterSetting;
+    }
+
+  }
+
   /**
    * ## Global Prebid Configuration
    *
@@ -198,75 +274,10 @@ export namespace prebidjs {
     consentManagement?: consent.IConsentManagementConfig;
 
     /**
-     * ## Configure User Syncing
-     *
-     * The user sync configuration options described in this section give publishers control over how adapters behave
-     * with respect to dropping pixels or scripts to cookie users with IDs. This practice is called “user syncing”
-     * because the aim is to let the bidders match IDs between their cookie space and the DSP’s cookie space. There’s a
-     * good reason for bidders to be doing this – DSPs are more likely to bid on impressions where they know something
-     * about the history of the user. However, there are also good reasons why publishers may want to control the use of
-     * these practices:
-     *
-     * - Page performance: Publishers may wish to move ad-related cookie work to much later in the page load after ads
-     *                     and content have loaded.
-     * - User privacy:     Some publishers may want to opt out of these practices even though it limits their users’
-     *                     values on the open market.
-     * - Security:         Publishers may want to control which bidders are trusted to inject images and JavaScript into
-     *                     their pages.
-     *
-     * User syncing default behavior If you don’t tweak any of the settings described in this section, the default
-     * behavior of Prebid.js is to wait 3 seconds after the auction ends, and then allow every adapter to drop up to
-     * 5 image-based user syncs.
-     *
+     * @see userSync.IUserSyncConfig
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
      */
-    userSync?: {
-
-      /**
-       * Enable/disable the user syncing feature. Default: true.
-       */
-      syncEnabled?: boolean;
-
-      /**
-       * Delay in milliseconds for syncing after the auction ends. Default: 3000.
-       */
-      syncDelay?: number;
-
-      /**
-       * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
-       */
-      syncsPerBidder?: number;
-
-      /**
-       * Configure lists of adapters to include or exclude their user syncing based on the pixel type (image/iframe).
-       */
-      filterSettings?: {
-
-        /**
-         * From the documentation:
-         * If you want to apply the same bidder inclusion/exlusion rules for both types of sync pixels,
-         * you can use the all object instead specifying both image and iframe objects like so
-         */
-        all?: IFilterSetting
-
-        /**
-         * Allow iframe-based syncs (the presence of a valid filterSettings.iframe object automatically enables iframe type user-syncing).
-         *
-         * Note - iframe-based syncing is disabled by default.
-         */
-        iframe?: IFilterSetting
-
-        /**
-         * Image-based syncing is enabled by default; it can be disabled by excluding all/certain bidders via the filterSettings object.
-         */
-        image?: IFilterSetting
-      }
-
-      /**
-       * Enable/disable publisher to trigger user syncs by calling pbjs.triggerUserSyncs(). Default: false.
-       */
-      enableOverride?: boolean;
-    };
+    userSync?: userSync.IUserSyncConfig;
 
     /**
      * The configuration for the currency module
