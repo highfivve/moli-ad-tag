@@ -224,7 +224,46 @@ export namespace prebidjs {
       image?: IFilterSetting;
     }
 
+    export interface IFilterSetting {
+      /**
+       * Array of bidders that should be filtered. '*' means all.
+       */
+      bidders: BidderCode[] | '*';
+
+      filter: 'include' | 'exclude';
+    }
+
   }
+
+  export namespace currency {
+
+    export interface ICurrencyConfig {
+
+      /**
+       * ISO 4217 3-letter currency code.
+       * If this value is present, the currency conversion feature is activated.
+       */
+      adServerCurrency: 'EUR';
+
+      /**
+       * How much to scale the price granularity calculations. Defaults to 1.
+       * Note: The multiplier may not make sense for markets
+       * where the currency value is close to USD, e.g. GBP and EUR.
+       * In those scenarios, just leave the granularityMultiplier at 1.
+       */
+      granularityMultiplier: 1;
+
+      /**
+       * An optional parameter that defines a default rate that can be used
+       * if the currency file cannot be loaded.
+       * This option isn’t used when the rates parameter is supplied.
+       *
+       * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
+       */
+      defaultRates: { 'USD': { 'EUR': number } };
+    }
+  }
+
 
   /**
    * ## Global Prebid Configuration
@@ -284,40 +323,7 @@ export namespace prebidjs {
      *
      * https://prebid.org/dev-docs/modules/currency.html
      */
-    currency: {
-
-      /**
-       * ISO 4217 3-letter currency code.
-       * If this value is present, the currency conversion feature is activated.
-       */
-      adServerCurrency: 'EUR';
-
-      /**
-       * How much to scale the price granularity calculations. Defaults to 1.
-       * Note: The multiplier may not make sense for markets
-       * where the currency value is close to USD, e.g. GBP and EUR.
-       * In those scenarios, just leave the granularityMultiplier at 1.
-       */
-      granularityMultiplier: 1;
-
-      /**
-       * An optional parameter that defines a default rate that can be used
-       * if the currency file cannot be loaded.
-       * This option isn’t used when the rates parameter is supplied.
-       *
-       * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
-       */
-      defaultRates: { 'USD': { 'EUR': number } };
-    };
-  }
-
-  export interface IFilterSetting {
-    /**
-     * Array of bidders that should be filtered. '*' means all.
-     */
-    bidders: BidderCode[] | '*';
-
-    filter: 'include' | 'exclude';
+    currency: currency.ICurrencyConfig;
   }
 
   /**
