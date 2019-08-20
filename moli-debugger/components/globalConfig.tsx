@@ -359,7 +359,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
     </div>;
   };
 
-  private filterSetting = (name: string, filterSetting: prebidjs.IFilterSetting): JSX.Element => {
+  private filterSetting = (name: string, filterSetting: prebidjs.userSync.IFilterSetting): JSX.Element => {
     return <div>
       <strong>{name}</strong>
       <div class="MoliDebug-tagContainer">
