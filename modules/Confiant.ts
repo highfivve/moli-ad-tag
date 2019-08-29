@@ -1,5 +1,7 @@
 import { confiantPrebid } from './confiant';
 import { AssetLoadMethod, createAssetLoaderService } from '../source/ts/util/assetLoaderService';
+import { IModule, ModuleType } from '../source/ts/types/module';
+import { Moli } from '../source/ts/types/moli';
 
 interface IConfiantConfig {
   readonly gpt: IConfiantGptConfig;
@@ -47,18 +49,28 @@ declare const window: Window & IConfiantWindow;
 /**
  * == Confiant Ad Fraud Protection ==
  *
- * Confiant blocks malicious ads
+ * Confiant blocks malicious ads.
  *
  */
-export default class Confiant {
+export default class Confiant implements IModule {
 
-  constructor(config: IConfiantConfig) {
-    window._clrm = config;
+  public readonly name: string = 'confiant';
+  public readonly description: string = 'ad fraud detection and protection module';
+  public readonly moduleType: ModuleType = 'ad-fraud';
+
+  constructor(private readonly confiantConfig: IConfiantConfig) {  }
+
+  config(): Object | null {
+    return this.confiantConfig;
+  }
+
+  init(config: Moli.MoliConfig): void {
+    window._clrm = this.confiantConfig;
     confiantPrebid();
     createAssetLoaderService(window).loadScript({
       name: 'confiant',
       loadMethod: AssetLoadMethod.TAG,
-      assetUrl: `//${config.gpt.confiantCdn}/gpt/a/wrap.js?v2_1`
+      assetUrl: `//${this.confiantConfig.gpt.confiantCdn}/gpt/a/wrap.js?v2_1`
     });
   }
 }

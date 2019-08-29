@@ -9,6 +9,7 @@ import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
+import { IModule } from '../types/module';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
 
@@ -25,6 +26,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     isSinglePageApp: false,
     keyValues: {},
     labels: [],
+    modules: [],
     reporting: {
       reporters: []
     }
@@ -233,11 +235,24 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
+  function registerModule(module: IModule): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.modules.push(module);
+        return;
+      }
+      default: {
+        getLogger(state.config, window).error('Registering a module is only allowed within the ad tag before the ad tag is configured');
+      }
+    }
+  }
+
   function configure(config: Moli.MoliConfig): void {
     switch (state.state) {
       case 'configurable': {
         const shouldInitialize = state.initialize;
         const envOverride = getEnvironmentOverride();
+        const modules = state.modules;
 
         state = {
           state: 'configured',
@@ -265,6 +280,14 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           hooks: state.hooks,
           isSinglePageApp: state.isSinglePageApp
         };
+
+        // initialize modules with the config from the ad tag. There is no external configuration support for modules
+        modules.forEach(module => {
+          const log = getLogger(config, window);
+          log.debug('MoliGlobal', `initialize ${module.moduleType} module ${module.name}`, module.config());
+          module.init(config);
+        });
+
         if (shouldInitialize) {
           requestAds();
         }
@@ -532,6 +555,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     beforeRequestAds: beforeRequestAds,
     afterRequestAds: afterRequestAds,
     getConfig: getConfig,
+    registerModule: registerModule,
     configure: configure,
     enableSinglePageApp: enableSinglePageApp,
     requestAds: requestAds,

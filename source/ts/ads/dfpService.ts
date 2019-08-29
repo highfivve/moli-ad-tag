@@ -81,7 +81,7 @@ export class DfpService {
    * @param config - the ad configuration
    * @return {Promise<void>}   a promise resolving when the first ad is shown OR a timeout occurs
    */
-  public initialize = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
+  public initialize = (config: Readonly<Moli.MoliConfig>): Promise<Readonly<Moli.MoliConfig>> => {
     if (this.initialized) {
       const message = 'DFP Service already initialized';
       this.logger.error(message);

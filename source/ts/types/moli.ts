@@ -1,5 +1,6 @@
 import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
+import { IModule } from './module';
 
 /* tslint:disable:interface-name */
 export namespace Moli {
@@ -127,6 +128,14 @@ export namespace Moli {
      * @param callback
      */
     afterRequestAds(callback: (state: state.AfterRequestAdsStates) => void): void;
+
+    /**
+     * Register a module to configure publisher specific behaviour. This API is not for external
+     * usage. All list of modules can be received from highfivve.
+     *
+     * @param module
+     */
+    registerModule(module: IModule): void;
 
     /**
      * **WARNING**
@@ -409,6 +418,11 @@ export namespace Moli {
       labels: string[];
 
       /**
+       * Contains the list of modules that need to be initialized
+       */
+      modules: IModule[];
+
+      /**
        * Custom logger
        */
       logger?: MoliLogger;
@@ -657,7 +671,7 @@ export namespace Moli {
     readonly slots: AdSlot[];
 
     /** optional key-value targeting for DFP */
-    readonly targeting?: Targeting;
+    targeting?: Targeting;
 
     /**
      * Label configuration to support "responsive" ads.
@@ -666,7 +680,7 @@ export namespace Moli {
      *
      * https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
-    readonly labelSizeConfig?: LabelSizeConfigEntry[];
+    labelSizeConfig?: LabelSizeConfigEntry[];
 
     /** optional prebid configuration */
     readonly prebid?: headerbidding.PrebidConfig;
@@ -677,7 +691,7 @@ export namespace Moli {
     /**
      * GDPR consent management settings
      */
-    readonly consent: consent.ConsentConfig;
+    consent: consent.ConsentConfig;
 
     /**
      * Sovrn ad reload
@@ -687,10 +701,10 @@ export namespace Moli {
     /**
      * Reporting configuration
      */
-    readonly reporting?: reporting.ReportingConfig;
+    reporting?: reporting.ReportingConfig;
 
     /** configurable logger */
-    readonly logger?: MoliLogger;
+    logger?: MoliLogger;
 
   }
 
@@ -1098,7 +1112,7 @@ export namespace Moli {
       readonly bidderSettings?: prebidjs.IBidderSettings;
 
       /** optional listener for prebid events */
-      readonly listener?: PrebidListenerProvider;
+      listener?: PrebidListenerProvider;
 
       /**
        * If true, moli will use `window.moliPbjs` to access the prebid instance. The actual renaming of this
