@@ -254,6 +254,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         const envOverride = getEnvironmentOverride();
         const modules = state.modules;
 
+        // initialize modules with the config from the ad tag. There is no external configuration support for modules.
+        // the config will be altered by this call
+        modules.forEach(module => {
+          const log = getLogger(config, window);
+          log.debug('MoliGlobal', `initialize ${module.moduleType} module ${module.name}`, module.config());
+          module.init(config);
+        });
+
+
         state = {
           state: 'configured',
           configFromAdTag: config,
@@ -280,13 +289,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           hooks: state.hooks,
           isSinglePageApp: state.isSinglePageApp
         };
-
-        // initialize modules with the config from the ad tag. There is no external configuration support for modules
-        modules.forEach(module => {
-          const log = getLogger(config, window);
-          log.debug('MoliGlobal', `initialize ${module.moduleType} module ${module.name}`, module.config());
-          module.init(config);
-        });
 
         if (shouldInitialize) {
           requestAds();

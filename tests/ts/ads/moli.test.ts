@@ -10,6 +10,7 @@ import { consentConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
+import { IModule } from '../../../source/ts/types/module';
 
 // setup sinon-chai
 use(sinonChai);
@@ -126,6 +127,58 @@ describe('moli', () => {
       });
     });
 
+  });
+
+  describe('registerModule()', () => {
+
+    const fakeModule: IModule = {
+      description: '',
+      moduleType: 'cmp',
+      name: '',
+      config(): Object | null {
+        return null;
+      },
+      init(config: Moli.MoliConfig): void {
+        return;
+      }
+    };
+
+    const initSpy = sandbox.spy(fakeModule, 'init');
+
+    it('should init modules in the configure call', () => {
+      const adTag = createMoliTag(dom.window);
+      const config = { slots: [], consent: consentConfig };
+
+      adTag.registerModule(fakeModule);
+      adTag.configure(config);
+
+      expect(initSpy).to.have.been.calledOnceWithExactly(config);
+    });
+
+    it('should init modules and use the changed config', () => {
+      const adTag = createMoliTag(dom.window);
+      const config = { slots: [], consent: consentConfig };
+      const targeting = {
+        keyValues: { foo: 'bar'},
+        labels: [ 'module' ]
+      };
+      const configChangingModule = { ...fakeModule,
+        init(config: Moli.MoliConfig): void {
+          config.targeting = targeting;
+        }
+      };
+      const configChangingInitSpy = sandbox.spy(configChangingModule, 'init');
+
+      adTag.registerModule(configChangingModule);
+      adTag.configure(config);
+
+      expect(configChangingInitSpy).to.have.been.calledOnceWithExactly(config);
+      expect(adTag.getState()).to.be.eq('configured');
+      const newConfig = adTag.getConfig()!;
+      expect(newConfig).to.be.ok;
+
+      expect(newConfig.targeting).to.deep.equals(targeting);
+    });
   });
 
   describe('setTargeting()', () => {
