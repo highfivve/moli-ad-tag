@@ -6,7 +6,7 @@ import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag } from '../../../source/ts/ads/moli';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { consentConfig, noopLogger } from '../stubs/moliStubs';
+import { consentConfig, newNoopLogger, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
@@ -179,6 +179,21 @@ describe('moli', () => {
 
       expect(newConfig.targeting).to.deep.equals(targeting);
     });
+
+    it('should never register modules if the state is not configurable', () => {
+      const adTag = createMoliTag(dom.window);
+      const logger = newNoopLogger();
+      const config = { slots: [], consent: consentConfig, logger };
+
+      const errorLogSpy = sandbox.spy(logger, 'error');
+
+      adTag.configure(config);
+      adTag.registerModule(fakeModule);
+
+      expect(initSpy).to.have.not.been.called;
+      expect(errorLogSpy).to.have.been.calledOnceWithExactly('Registering a module is only allowed within the ad tag before the ad tag is configured');
+    });
+
   });
 
   describe('setTargeting()', () => {
