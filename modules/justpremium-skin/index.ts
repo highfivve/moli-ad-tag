@@ -1,10 +1,9 @@
-import {IModule, ModuleType} from "../source/ts/types/module";
-import {googletag, Moli, prebidjs} from "../source/ts";
-import {getLogger} from "../source/ts/util/logging";
+import {IModule, ModuleType, googletag, Moli, prebidjs} from 'ad-tag';
+import {getLogger} from 'ad-tag/source/ts/util/logging';
 
 interface IJustPremiumConfig {
-  wallpaperAdSlotDomId: string,
-  blockedAdSlotDomIds: string[]
+  wallpaperAdSlotDomId: string;
+  blockedAdSlotDomIds: string[];
 }
 
 export default class JustPremium implements IModule {
@@ -29,7 +28,7 @@ export default class JustPremium implements IModule {
     const adPresenterDesktop = bidResponses[justPremiumWallpaperDomId];
     const justPremiumWallpaperBid = adPresenterDesktop ?
       adPresenterDesktop.bids.filter((presenterBid: prebidjs.BidResponse) => {
-        return presenterBid.bidder === prebidjs.JustPremium && presenterBid.format === prebidjs.JustPremiumWallpaper && presenterBid.cpm > 0
+        return presenterBid.bidder === prebidjs.JustPremium && presenterBid.format === prebidjs.JustPremiumWallpaper && presenterBid.cpm > 0;
       }) : [];
     return justPremiumWallpaperBid.length !== 0;
   };
@@ -50,8 +49,8 @@ export default class JustPremium implements IModule {
 
   init(config: Moli.MoliConfig): void {
     const log = getLogger(config, window);
-    if(!config.prebid) {
-      log.error("Prebid isn't configured!");
+    if (!config.prebid) {
+      log.error('Prebid isn\'t configured!');
       return;
     }
 
@@ -59,19 +58,19 @@ export default class JustPremium implements IModule {
 
     config.slots.some(value => {
       let index = domIds.indexOf(value.domId);
-      if(index > -1) {
+      if (index > -1) {
         domIds.splice(index, 1);
       }
     });
 
-    if(domIds.length > 0) {
-      log.error("Couldn't find one or more ids in the ad slot config:", domIds);
+    if (domIds.length > 0) {
+      log.error('Couldn\'t find one or more ids in the ad slot config:', domIds);
       return;
     }
 
     let prebidListener = config.prebid!.listener;
-    if(prebidListener) {
-      log.error("Couldn't define prebidListener, because there was already set one.");
+    if (prebidListener) {
+      log.error('Couldn\'t define prebidListener, because there was already set one.');
       return;
     }
 
@@ -79,10 +78,10 @@ export default class JustPremium implements IModule {
       preSetTargetingForGPTAsync: (bidResponses, timedOut, slotDefinitions) => {
 
         if (this.checkForJustPremiumWallpaper(bidResponses)) {
-          this.justPremiumConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions))
+          this.justPremiumConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
         }
       }
-    }
+    };
 
   }
 

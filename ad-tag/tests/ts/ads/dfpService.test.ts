@@ -2,7 +2,7 @@ import { createDom, dom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { googletag } from '../../../source/ts';
+import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 import { apstag } from '../../../source/ts/types/apstag';
 import { DfpService } from '../../../source/ts/ads/dfpService';

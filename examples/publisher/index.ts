@@ -3,14 +3,12 @@
 // This example demonstrates the "publisher" mode, which enables the publisher
 // to configure moli and trigger `requestAds` afterwards.
 
-// import 'prebid.js/build/dist/prebid';
-// with `yarn link` we cannot import from the `index.ts` for unknown reasons.
-// ts-loader bails out, because no js has been emitted
-import { moli } from 'moli-ad-tag';
+import 'prebid.js/build/dist/prebid';
+import { moli } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 // ad fraud protection
-import Confiant from 'moli-ad-tag/modules/Confiant';
+import Confiant from '@highfivve/module-confiant';
 moli.registerModule(new Confiant({
   gpt: {
     propertyId: 'Fhkh8X7bib_CoPkwt4wiIcaO-vk',

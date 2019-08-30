@@ -10,86 +10,67 @@ pipeline {
         DEBUG_DIST = "debug-dist.tar.gz"
     }
 
+    tools {
+        nodejs 'nodejs-10.10.0'
+    }
+
+    options {
+        // only keep 5 builds around
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '20')
+        disableConcurrentBuilds()
+        timeout(activity: true, time: 15)
+    }
+
+
     stages {
         stage('Prepare environment') {
             steps {
-                ansiColor('xterm') {
-                    // use the name for the nodejs installation from the 'configure tools' page
-                    nodejs('nodejs-10.10.0') {
-                        echo "Setting up yarn and install dependencies"
-                        sh "npm install yarn@1.10.1"
-                        // clean up any old links
-                        sh "yarn unlink || true"
-                        // fresh install
-                        sh "yarn install"
-                    }
-                }
+                echo "Setting up yarn and install dependencies"
+                sh "npm install yarn@1.17.3"
+                // fresh install
+                sh "yarn install"
             }
         }
         stage('Lint') {
             steps {
-                ansiColor('xterm') {
-                    nodejs('nodejs-10.10.0') {
-                        sh "yarn lint"
-                    }
-                }
+                sh "yarn workspace @highfivve/ad-tag lint"
             }
         }
         stage('Compile') {
             steps {
-                ansiColor('xterm') {
-                    nodejs('nodejs-10.10.0') {
-                        sh "yarn compile"
-                    }
-                }
+                sh "yarn workspace @highfivve/ad-tag compile"
             }
         }
         stage('Test') {
             steps {
-                ansiColor('xterm') {
-                    nodejs('nodejs-10.10.0') {
-                        sh "yarn test:junit"
-                    }
-                }
+                sh "yarn workspace @highfivve/ad-tag test:junit"
             }
         }
         stage('Deployment') {
             parallel {
                 stage('Examples') {
                     steps {
-                        ansiColor('xterm') {
-                            nodejs('nodejs-10.10.0') {
-                                sh "yarn build:examples"
-                            }
-                        }
+                        sh "yarn workspaces run validate"
                     }
                 }
 
                 stage('API docs') {
                     steps {
-                        ansiColor('xterm') {
-                            nodejs('nodejs-10.10.0') {
-                                sh "yarn docs"
-                                sh "tar -zcvf ${DOCS_FILE} -C docs ."
-                                echo "Publishing to ${HDFS_PATH_API_DOCS}"
-                                sh "/usr/local/bin/httpfs put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
-                                sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_API_DOCS} --bind=docsFile=${DOCS_FILE}  gfaurora/frontend/prod/moli-api-docs docs.aurora"
-                            }
-                        }
+                        sh "yarn workspace @highfivve/ad-tag docs"
+                        sh "tar -zcvf ${DOCS_FILE} -C ad-tag/docs ."
+                        echo "Publishing to ${HDFS_PATH_API_DOCS}"
+                        sh "/usr/local/bin/httpfs put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
+                        sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_API_DOCS} --bind=docsFile=${DOCS_FILE}  gfaurora/frontend/prod/moli-api-docs docs.aurora"
                     }
                 }
 
                 stage('Moli debug') {
                     steps {
-                        ansiColor('xterm') {
-                            nodejs('nodejs-10.10.0') {
-                                sh "yarn build:debug"
-                                sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/dist ."
-                                echo "Publishing to ${HDFS_PATH_DEBUG}"
-                                sh "/usr/local/bin/httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
-                                sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug moli-debugger.aurora"
-                            }
-                        }
+                        sh "yarn workspace @highfivve/moli-debugger build"
+                        sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/dist ."
+                        echo "Publishing to ${HDFS_PATH_DEBUG}"
+                        sh "/usr/local/bin/httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
+                        sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug moli-debugger.aurora"
                     }
                 }
             }
@@ -97,11 +78,7 @@ pipeline {
     }
     post {
         always {
-            junit allowEmptyResults: false, testResults: 'temp/test-results.xml'
-            nodejs('nodejs-10.10.0') {
-                // remove the symlink created in yarn install
-                sh "yarn unlink"
-            }
+            junit allowEmptyResults: false, testResults: '**/test-results.xml'
         }
     }
 }

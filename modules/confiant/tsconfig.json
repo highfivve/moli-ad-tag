@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "jsx": "react",
-    "jsxFactory": "preact.h",
     "strict": true,
     "sourceMap": true,
     "lib": [
@@ -9,19 +7,19 @@
       "es6",
       "scripthost"
     ],
-    "module": "amd",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2015",
+    "target": "ES6",
     "typeRoots": [
       "node_modules/@types",
       "types"
-    ]
+    ],
+    "allowJs": true
   },
   "files": [
-    "debug.tsx"
+    "index.ts"
   ],
   "include": [
-    "components/*",
     "../ad-tag/source/**/*"
   ]
 }

@@ -1,9 +1,8 @@
 import * as preact from 'preact';
 
-import { Moli } from 'moli-ad-tag/source/ts/types/moli';
-import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
-import { SizeConfigService } from 'moli-ad-tag/source/ts/ads/sizeConfigService';
-import { createPerformanceService } from '../../source/ts/util/performanceService';
+import { Moli, prebidjs } from 'ad-tag';
+import { SizeConfigService } from 'ad-tag/source/ts/ads/sizeConfigService';
+import { createPerformanceService } from 'ad-tag/source/ts/util/performanceService';
 
 import { classList } from '../util/stringUtils';
 
@@ -13,7 +12,7 @@ import { Tag } from './tag';
 import headerbidding = Moli.headerbidding;
 import AdSlot = Moli.AdSlot;
 import DfpSlotSize = Moli.DfpSlotSize;
-import { LabelConfigService } from '../../source/ts/ads/labelConfigService';
+import { LabelConfigService } from 'ad-tag/source/ts/ads/labelConfigService';
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;

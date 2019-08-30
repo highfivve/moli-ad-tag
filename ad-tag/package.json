@@ -1,11 +1,10 @@
 {
-  "name": "ad-tag",
+  "name": "@highfivve/ad-tag",
   "version": "1.20.1",
   "license": "UNLICENSED",
   "description": "An ad tag implementation called moli",
-  "main": "source/ts/index.ts",
+  "main": "index.ts",
   "scripts": {
-    "postinstall": "yarn link",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
@@ -16,14 +15,7 @@
     "lint:ts:fix": "tslint --project ../tsconfig.json --fix",
     "test": "mocha --require ts-node/register tests/**/*.test.ts",
     "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register tests/**/*.test.ts",
-    "build:debug": "cd moli-debugger && yarn && yarn build",
-    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:instant && yarn build:example:publisher && yarn build:example:ie-11 && yarn build:example:publisher-global-prebid",
-    "build:example:instant": "mkdir -p dist/instant && cd examples/instant && yarn && yarn build && cp dist/* ../../dist/instant",
-    "build:example:publisher": "mkdir -p dist/publisher && cd examples/publisher && yarn && yarn build && cp dist/* ../../dist/publisher",
-    "build:example:publisher-global-prebid": "mkdir -p dist/publisher-prebid-global && cd examples/publisher-prebid-global && yarn && yarn build && cp dist/* ../../dist/publisher-prebid-global",
-    "build:example:ie-11": "mkdir -p dist/ie-11 && cd examples/ie-11 && yarn && yarn build && cp dist/* ../../dist/ie-11",
     "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/",
-    "preversion": "yarn validate",
     "validate": "yarn compile && yarn lint && yarn test && yarn docs"
   },
   "repository": {

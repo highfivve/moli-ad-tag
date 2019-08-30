@@ -1,4 +1,4 @@
-import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
+import { prebidjs } from 'ad-tag';
 
 /**
  * For any input cpm of type float, this method should return a string which matches the line item pattern of

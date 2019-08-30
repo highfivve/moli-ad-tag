@@ -1,5 +1,4 @@
-import { Moli } from 'moli-ad-tag/source/ts/types/moli';
-import { prebidjs } from 'moli-ad-tag/source/ts/types/prebidjs';
+import { Moli, prebidjs } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
 
 const logger: Moli.MoliLogger = {

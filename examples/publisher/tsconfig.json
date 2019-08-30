@@ -16,6 +16,8 @@
     ]
   },
   "include": [
-    "node_modules/moli-ad-tag/source/**/*"
+    "../../ad-tag/index.ts",
+    "../../ad-tag/source/**/*",
+    "../../modules/**/*"
   ]
 }

@@ -1,7 +1,6 @@
 import { confiantPrebid } from './confiantPrebid';
-import { AssetLoadMethod, createAssetLoaderService } from '../source/ts/util/assetLoaderService';
-import { IModule, ModuleType } from '../source/ts/types/module';
-import { Moli } from '../source/ts/types/moli';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/source/ts/util/assetLoaderService';
+import { Moli, IModule, ModuleType } from 'ad-tag';
 
 interface IConfiantConfig {
   readonly gpt: IConfiantGptConfig;

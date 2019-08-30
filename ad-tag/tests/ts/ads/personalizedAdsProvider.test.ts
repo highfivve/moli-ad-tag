@@ -2,7 +2,7 @@ import { dom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { Moli } from '../../../source/ts';
+import { Moli } from '../../../source/ts/types/moli';
 import { getPersonalizedAdSetting } from '../../../source/ts/ads/personalizedAdsProvider';
 import { IABConsentManagement } from '../../../source/ts/types/IABConsentManagement';
 import { cookieService } from '../../../source/ts/util/cookieService';

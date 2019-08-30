@@ -3,7 +3,7 @@ import * as preact from 'preact';
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 
-import { Moli } from 'moli-ad-tag/source/ts/types/moli';
+import { Moli } from 'ad-tag';
 import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
 
 type ISLabelConfigProps = {

@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
-import { Moli } from '../../../source/ts';
+import { Moli } from '../../../source/ts/types/moli';
 
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;

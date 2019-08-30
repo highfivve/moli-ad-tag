@@ -1,10 +1,16 @@
 {
+  "version": "1.20.1",
   "private": true,
   "workspaces": [
-    "ad-tag"
+    "ad-tag",
+    "moli-debugger",
+    "modules/*",
+    "examples/publisher"
   ],
   "scripts": {
-    "validate": "cd ad-tag && yarn validate"
+    "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../examples/prebid/modules.json"
   },
-  "version": "0.0.1"
+  "devDependencies": {
+    "prebid.js": "2.30.0"
+  }
 }

@@ -4,7 +4,7 @@ import IConsentData = IABConsentManagement.IConsentData;
 import IVendorConsents = IABConsentManagement.IVendorConsents;
 import { ReportingService } from '../reportingService';
 import loadCmpFaktorStub = require('./cmpFaktorStub');
-import { Moli } from '../..';
+import { Moli } from '../../types/moli';
 
 interface IFaktorCMPApi {
 

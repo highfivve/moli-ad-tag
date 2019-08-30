@@ -4,12 +4,9 @@
   "description": "Publisher boostrap template",
   "main": "index.ts",
   "scripts": {
-    "postinstall": "yarn link moli-ad-tag",
-    "build": "yarn build:prebid && yarn build:tag",
-    "build:tag": "webpack --mode=production",
-    "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../prebid/modules.json",
+    "build": "webpack --mode=production",
     "start": "yarn build:prebid && webpack-dev-server --mode=development",
-    "unlink": "yarn unlink moli-ad-tag"
+    "validate": "yarn build"
   },
   "repository": {
     "type": "git",
@@ -37,6 +34,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-router": "^5.0.1",
-    "react-router-dom": "^5.0.1"
+    "react-router-dom": "^5.0.1",
+    "@highfivve/ad-tag": "*"
   }
 }

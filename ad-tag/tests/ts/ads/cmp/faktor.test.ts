@@ -6,7 +6,7 @@ import { FaktorCmp } from '../../../../source/ts/ads/cmp/faktor';
 import { ReportingService } from '../../../../source/ts/ads/reportingService';
 import { SlotEventService } from '../../../../source/ts/ads/slotEventService';
 import { createPerformanceService } from '../../../../source/ts/util/performanceService';
-import { Moli } from '../../../../source/ts';
+import { Moli } from '../../../../source/ts/types/moli';
 import ReportingConfig = Moli.reporting.ReportingConfig;
 import { noopLogger } from '../../stubs/moliStubs';
 

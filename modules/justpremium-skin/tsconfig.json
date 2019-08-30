@@ -9,13 +9,16 @@
     ],
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2015",
+    "target": "ES6",
     "typeRoots": [
       "node_modules/@types",
       "types"
     ]
   },
+  "files": [
+    "index.ts"
+  ],
   "include": [
-    "node_modules/moli-ad-tag/source/**/*"
+    "../ad-tag/source/**/*"
   ]
 }

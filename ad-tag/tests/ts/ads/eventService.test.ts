@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
-import { Moli } from '../../../source/ts';
+import { Moli } from '../../../source/ts/types/moli';
 import EventTrigger = Moli.behaviour.EventTrigger;
 
 

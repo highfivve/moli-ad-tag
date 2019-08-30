@@ -1,5 +1,5 @@
 import { parseQueryString } from './query';
-import { Moli } from '..';
+import { Moli } from '../types/moli';
 
 /**
  * Get the parameter `moliDebug`. If set to true all logs will be written to the console.

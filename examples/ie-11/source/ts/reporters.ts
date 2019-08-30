@@ -1,4 +1,4 @@
-import { Moli } from 'moli-ad-tag/source/ts/types/moli';
+import { Moli } from '@highfivve/ad-tag';
 
 export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporting.Metric) => {
 

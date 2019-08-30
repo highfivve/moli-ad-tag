@@ -2,9 +2,9 @@ import * as preact from 'preact';
 
 import { Tag } from './tag';
 
-import { Moli } from 'moli-ad-tag/source/ts/types/moli';
+import { Moli } from 'ad-tag';
 import { ConsentString } from 'consent-string';
-import { IABConsentManagement } from '../../source/ts/types/IABConsentManagement';
+import { IABConsentManagement } from 'ad-tag/source/ts/types/IABConsentManagement';
 import IConsentData = IABConsentManagement.IConsentData;
 
 type IConsentConfigProps = {

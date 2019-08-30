@@ -1,10 +1,9 @@
 {
-  "name": "moli-debugger",
-  "version": "1.0.0",
+  "name": "@highfivve/moli-debugger",
+  "version": "1.20.0",
   "description": "Moli debugging tools",
   "main": "dist/debug.js",
   "scripts": {
-    "postinstall": "yarn link moli-ad-tag",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
     "start": "yarn watch",
@@ -12,7 +11,8 @@
     "compile": "yarn compile:ts",
     "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
-    "clean": "rm -rf dist/"
+    "lint": "tslint --project tsconfig.json",
+    "validate": "yarn compile"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "last 2 versions"
   ],
   "devDependencies": {
+    "@highfivve/ad-tag": "*",
     "@types/node": "^10.12.9",
     "cssnano": "^4.1.4",
     "postcss-bem-linter": "^3.1.0",
