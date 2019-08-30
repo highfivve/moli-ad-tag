@@ -1,4 +1,4 @@
-import { confiantPrebid } from './confiant';
+import { confiantPrebid } from './confiantPrebid';
 import { AssetLoadMethod, createAssetLoaderService } from '../source/ts/util/assetLoaderService';
 import { IModule, ModuleType } from '../source/ts/types/module';
 import { Moli } from '../source/ts/types/moli';
