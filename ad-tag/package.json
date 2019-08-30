@@ -1,0 +1,63 @@
+{
+  "name": "moli-ad-tag",
+  "version": "1.20.0",
+  "license": "UNLICENSED",
+  "description": "An ad tag implementation called moli",
+  "main": "source/ts/index.ts",
+  "scripts": {
+    "postinstall": "yarn link",
+    "start": "yarn watch",
+    "watch": "yarn compile:ts:watch",
+    "compile": "yarn compile:ts",
+    "compile:ts": "tsc --noEmit",
+    "compile:ts:watch": "tsc --noEmit --watch",
+    "lint": "yarn lint:ts",
+    "lint:ts": "tslint --project tsconfig.json",
+    "lint:ts:fix": "tslint --project tsconfig.json --fix",
+    "test": "mocha --require ts-node/register tests/**/*.test.ts",
+    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register tests/**/*.test.ts",
+    "build:debug": "cd moli-debugger && yarn && yarn build",
+    "build:examples": "rm -rf dist && mkdir dist && yarn build:example:instant && yarn build:example:publisher && yarn build:example:ie-11 && yarn build:example:publisher-global-prebid",
+    "build:example:instant": "mkdir -p dist/instant && cd examples/instant && yarn && yarn build && cp dist/* ../../dist/instant",
+    "build:example:publisher": "mkdir -p dist/publisher && cd examples/publisher && yarn && yarn build && cp dist/* ../../dist/publisher",
+    "build:example:publisher-global-prebid": "mkdir -p dist/publisher-prebid-global && cd examples/publisher-prebid-global && yarn && yarn build && cp dist/* ../../dist/publisher-prebid-global",
+    "build:example:ie-11": "mkdir -p dist/ie-11 && cd examples/ie-11 && yarn && yarn build && cp dist/* ../../dist/ie-11",
+    "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/",
+    "preversion": "yarn compile && yarn lint && yarn test && yarn build:debug && yarn build:examples && yarn docs",
+    "postversion": "git push && git push --tags",
+    "validate": "yarn compile && yarn lint && yarn test && yarn docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+  },
+  "engines": {
+    "node": ">=8.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@types/chai": "^4.1.7",
+    "@types/domready": "^1.0.0",
+    "@types/jsdom": "^12.2.4",
+    "@types/mocha": "^5.2.5",
+    "@types/sinon": "^5.0.5",
+    "@types/sinon-chai": "^3.2.0",
+    "babel-loader": "^8.0.2",
+    "chai": "^4.2.0",
+    "jsdom": "^15.1.1",
+    "mocha": "^5.2.0",
+    "mocha-junit-reporter": "^1.18.0",
+    "sinon": "^7.1.1",
+    "sinon-chai": "^3.2.0",
+    "ts-loader": "^5.2.2",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "tslint-loader": "^3.5.3",
+    "typedoc": "^0.14.2",
+    "typescript": "^3.5.0",
+    "webpack": "^4.22.0",
+    "webpack-cli": "^3.1.1"
+  },
+  "dependencies": {}
+}
