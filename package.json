@@ -5,7 +5,7 @@
     "ad-tag",
     "moli-debugger",
     "modules/*",
-    "examples/publisher"
+    "examples/*"
   ],
   "scripts": {
     "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../examples/prebid/modules.json"
