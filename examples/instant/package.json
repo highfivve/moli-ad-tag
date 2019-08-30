@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack --mode=production",
     "start": "yarn build:prebid && webpack-dev-server --mode=development",
-    "validate": "build"
+    "validate": "yarn build"
   },
   "repository": {
     "type": "git",

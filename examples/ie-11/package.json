@@ -1,13 +1,12 @@
 {
-  "name": "@highfivve/examples-ie11",
+  "name": "@highfivve/example-ie11",
   "version": "1.0.0",
   "description": "Demonstrating IE11 support",
   "main": "index.ts",
   "scripts": {
     "build": "webpack --mode=production",
     "start": "webpack-dev-server --mode=development",
-    "compile": "tsc --noEmit",
-    "validate": "link"
+    "validate": "yarn build"
   },
   "repository": {
     "type": "git",

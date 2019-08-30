@@ -12,6 +12,7 @@
     "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
     "lint": "tslint --project tsconfig.json",
+    "clean": "rm -rf dist/",
     "validate": "yarn compile"
   },
   "repository": {

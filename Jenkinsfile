@@ -50,6 +50,7 @@ pipeline {
             parallel {
                 stage('Examples') {
                     steps {
+                        sh "yarn build:prebid"
                         sh "yarn workspaces run validate"
                     }
                 }

@@ -1,19 +1,18 @@
 import * as preact from 'preact';
-import { ReportingService } from 'ad-tag/source/ts/ads/reportingService';
-import { createPerformanceService } from 'ad-tag/source/ts/util/performanceService';
+import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
+import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
-import { prebidjs } from 'ad-tag';
-import { Moli } from 'ad-tag';
+import { Moli, prebidjs } from '@highfivve/ad-tag';
 
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
 import { ConsentConfig } from './consentConfig';
-import { LabelConfigService } from 'ad-tag/source/ts/ads/labelConfigService';
+import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { LabelConfigDebug } from './labelConfigDebug';
 
 type IGlobalConfigProps = {

@@ -1,17 +1,16 @@
-import 'ad-tag/source/ts/types/moli';
 import preact = require('preact');
 
 import { GlobalConfig } from './components/globalConfig';
 import { AdSlotConfig } from './components/adSlotConfig';
 
-import { Moli } from 'ad-tag';
+import { Moli } from '@highfivve/ad-tag';
 
 import MoliConfig = Moli.MoliConfig;
 
 import './debug.css';
 
 import { WindowResizeService } from './util/windowResizeService';
-import { LabelConfigService } from 'ad-tag/source/ts/ads/labelConfigService';
+import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 
 const moliConfig: MoliConfig | null = window.moli.getConfig();
 
