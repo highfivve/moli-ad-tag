@@ -1,5 +1,5 @@
-import {IModule, ModuleType, googletag, Moli, prebidjs} from 'ad-tag';
-import {getLogger} from 'ad-tag/source/ts/util/logging';
+import {IModule, ModuleType, googletag, Moli, prebidjs} from '@highfivve/ad-tag';
+import {getLogger} from '@highfivve/ad-tag/source/ts/util/logging';
 
 interface IJustPremiumConfig {
   wallpaperAdSlotDomId: string;

@@ -1,4 +1,4 @@
-import { Moli, prebidjs } from 'ad-tag';
+import { Moli, prebidjs } from '@highfivve/ad-tag';
 import { bidderSettings } from './bidderSettings';
 
 const logger: Moli.MoliLogger = {

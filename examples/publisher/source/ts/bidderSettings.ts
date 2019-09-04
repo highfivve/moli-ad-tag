@@ -1,4 +1,4 @@
-import { prebidjs } from 'ad-tag';
+import { prebidjs } from '@highfivve/ad-tag';
 
 /**
  * For any input cpm of type float, this method should return a string which matches the line item pattern of

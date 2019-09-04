@@ -19,7 +19,6 @@
     "node": ">=8.0"
   },
   "devDependencies": {
-    "@highfivve/ad-tag": "*",
     "@types/chai": "^4.1.7",
     "@types/jsdom": "^12.2.4",
     "@types/mocha": "^5.2.5",
@@ -37,5 +36,8 @@
     "typedoc": "^0.14.2",
     "typescript": "^3.5.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@highfivve/ad-tag": "*",
+    "prebid.js": "2.30.0"
+  }
 }

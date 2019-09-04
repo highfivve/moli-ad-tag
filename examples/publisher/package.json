@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@highfivve/ad-tag": "*",
-    "@highfivve/module-confiant": "*"
+    "@highfivve/module-confiant": "*",
+    "prebid.js": "2.30.0"
   }
 }
