@@ -66,7 +66,7 @@ export default class Confiant implements IModule {
 
   init(config: Moli.MoliConfig): void {
     window._clrm = this.confiantConfig;
-    confiantPrebid();
+    confiantPrebid(this.confiantConfig.gpt.callback);
     createAssetLoaderService(window).loadScript({
       name: 'confiant',
       loadMethod: AssetLoadMethod.TAG,

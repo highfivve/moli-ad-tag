@@ -1,4 +1,4 @@
-export const confiantPrebid = () => {
+export const confiantPrebid = (callback) => {
     window.pbjs = window.pbjs || {que: []};
 
     // Wrapper for highfivve GmbH, generated on 2019-08-07T15:27:05-04:00, version 2018.04.02
