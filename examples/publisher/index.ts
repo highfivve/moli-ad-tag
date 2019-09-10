@@ -15,7 +15,9 @@ moli.registerModule(new Confiant({
     confiantCdn: 'clarium.global.ssl.fastly.net',
     sandbox: 0,
     mapping: 'W3siaSI6MiwidCI6Int7b319Ont7d319eHt7aH19IiwicCI6MCwiRCI6MSwiciI6W119LHsiaSI6NiwidCI6Int7Y299fTp7e3d9fXh7e2h9fSIsInAiOjUwLCJEIjowLCJyIjpbeyJ0IjoiZXgiLCJzIjpudWxsLCJ2IjoiY28ifV19XQ==',
-    activation: '|||MjQ4OTcwNjkzMQ==,|||MjQ5MDMxMzE3Mw==,|||MjQ4OTcwNjkzMQ==,|||MjQ5OTg5Mjk0NA==,|||MjQ5ODM3MjEyMA==,|co|ex|MQ==,|||MjQ5Mzc2NTI3Nw=='
+    activation: '|||MjQ4OTcwNjkzMQ==,|||MjQ5MDMxMzE3Mw==,|||MjQ4OTcwNjkzMQ==,|||MjQ5OTg5Mjk0NA==,|||MjQ5ODM3MjEyMA==,|co|ex|MQ==,|||MjQ5Mzc2NTI3Nw==',
+    // callback is required - by default we set it to noop
+    callback: () => { return; }
   }
 }));
 
