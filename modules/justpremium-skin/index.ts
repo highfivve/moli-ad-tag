@@ -2,8 +2,29 @@ import {IModule, ModuleType, googletag, Moli, prebidjs} from '@highfivve/ad-tag'
 import {getLogger} from '@highfivve/ad-tag/source/ts/util/logging';
 
 interface IJustPremiumConfig {
+
+  /**
+   * This is usually the dom id of the header ad slot.
+   *
+   * Some setups may have an ad slot only for the just premium skin.
+   * This is the case if there are direct campaign formats for wallpapers
+   * that require a DFP road block.
+   */
   wallpaperAdSlotDomId: string;
+
+  /**
+   * dom ids of the ad slots that should not be requested when a just premium
+   * skin appears in the bid responses.
+   *
+   * Depending on the wallpaperAdSlot these are usually skyscrapers left and right
+   * and if there's a specific wallpaper ad slot the header as well.
+   */
   blockedAdSlotDomIds: string[];
+
+  /**
+   * if true, the ad slot will be set to display none
+   */
+  hideWallpaperAdSlot: boolean;
 }
 
 export default class JustPremium implements IModule {
@@ -50,7 +71,7 @@ export default class JustPremium implements IModule {
   init(config: Moli.MoliConfig): void {
     const log = getLogger(config, window);
     if (!config.prebid) {
-      log.error('Prebid isn\'t configured!');
+      log.error('JustPremiumModule', 'Prebid isn\'t configured!');
       return;
     }
 
@@ -64,13 +85,13 @@ export default class JustPremium implements IModule {
     });
 
     if (domIds.length > 0) {
-      log.error('Couldn\'t find one or more ids in the ad slot config:', domIds);
+      log.error('JustPremiumModule', 'Couldn\'t find one or more ids in the ad slot config:', domIds);
       return;
     }
 
     let prebidListener = config.prebid!.listener;
     if (prebidListener) {
-      log.error('Couldn\'t define prebidListener, because there was already set one.');
+      log.error('JustPremiumModule', 'Couldn\'t define prebidListener, because there was already set one.');
       return;
     }
 
@@ -79,6 +100,16 @@ export default class JustPremium implements IModule {
 
         if (this.checkForJustPremiumWallpaper(bidResponses)) {
           this.justPremiumConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
+
+          try {
+            const wallpaperDiv = document.getElementById(this.justPremiumConfig.wallpaperAdSlotDomId);
+            if (this.justPremiumConfig.hideWallpaperAdSlot && wallpaperDiv) {
+              wallpaperDiv.style.setProperty('display', 'none');
+            }
+          } catch (e) {
+            log.error('JustPremiumModule', `Couldn't set the the wallpaper div ${this.justPremiumConfig.wallpaperAdSlotDomId} to display:none;`, e);
+          }
+
         }
       }
     };
