@@ -31,9 +31,10 @@ interface IConfiantGptConfig {
   readonly activation: string;
 
   /**
-   * We can add reporting with this callback
+   * We can add reporting with this callback.
+   * The callback is not optional otherwise the script throws an error
    */
-  readonly callback?: (blockingType: any, blockingId: any, isBlocked: Boolean, wrapperId: any, tagId: any, impressionData: any) => void;
+  readonly callback: (blockingType: any, blockingId: any, isBlocked: Boolean, wrapperId: any, tagId: any, impressionData: any) => void;
 }
 
 interface IConfiantWindow {
