@@ -1,4 +1,4 @@
-import { createDom, dom } from '../stubs/browserEnvSetup';
+import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
