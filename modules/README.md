@@ -17,5 +17,6 @@ Modules follow the same pattern. In the publisher ad tag
 You can implement a module by reusing one of the existing modules. Modules are automatically part of the
 yarn workspace as `modules/*` is used as a workspace glob pattern. Things that are important
 
-1. Your `package.json` must contain a `validate` and `validate:jenkins` script
-2. The module needs to be added in the [Jenkinsfile](../Jenkinsfile) in the `stage('Modules')`
+1. You should only have a single `index.ts` file that contains everything
+2. Your `package.json` must contain a `validate` and `validate:jenkins` script
+3. The module needs to be added in the [Jenkinsfile](../Jenkinsfile) in the `stage('Modules')`

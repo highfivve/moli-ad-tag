@@ -54,11 +54,14 @@ paths otherwise you will get a very missleading error _ts emitted no output_.
 {
   "include": [
     "node_modules/@highfivve/ad-tag/source/**/*",
-    "node_modules/@highfivve/modules/**/*"
+    "node_modules/@highfivve/modules/**/index.ts"
   ]
 }
-
 ```
+
+Note that we only import the `index.ts` and nothing else. This prevents compile errors, because
+some types for mocha cannot be found for the tests, which we don't care for. Unless we find a fix
+for this, we need to do it this way.
 
 
 
