@@ -2,7 +2,7 @@ import { confiantPrebid } from './confiantPrebid';
 import { AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { Moli, IModule, ModuleType } from '@highfivve/ad-tag';
 
-interface IConfiantConfig {
+export interface IConfiantConfig {
   readonly gpt: IConfiantGptConfig;
 }
 
@@ -66,7 +66,7 @@ export default class Confiant implements IModule {
 
   init(config: Moli.MoliConfig): void {
     window._clrm = this.confiantConfig;
-    confiantPrebid(this.confiantConfig.gpt.callback);
+    confiantPrebid(this.confiantConfig);
     createAssetLoaderService(window).loadScript({
       name: 'confiant',
       loadMethod: AssetLoadMethod.TAG,

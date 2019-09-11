@@ -1,4 +1,4 @@
-export const confiantPrebid = (callback) => {
+export const confiantPrebid = (confiantConfig) => {
     window.pbjs = window.pbjs || {que: []};
 
     // Wrapper for highfivve GmbH, generated on 2019-08-07T15:27:05-04:00, version 2018.04.02
@@ -151,7 +151,7 @@ export const confiantPrebid = (callback) => {
                         })();
 
                         // do the actual ad serving and fall back on document.write if failure
-                        if (!confiantWrap(doc, bid, 'clarium.global.ssl.fastly.net', 'Fhkh8X7bib_CoPkwt4wiIcaO-vk', callback, serializedCasprLayer, config.devMode)) {
+                        if (!confiantWrap(doc, bid, confiantConfig.gpt.confiantCdn, confiantConfig.gpt.propertyId, confiantConfig.gpt.callback, serializedCasprLayer, config.devMode)) {
                             doc.write(bid.ad);
                             doc.close();
                         }
