@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+## 1.20.4
+
+[GD-1464](https://jira.gutefrage.net/browse/GD-1464) refactor the codebase to use yarn workspaces. This allows us
+to better split the code base into separate pieces. At the moment we have
+
+- [ad-tag](ad-tag) - the core ad tag library
+- [modules](modules) - contains a separate workspace for each module
+- [moli-debugger](moli-debugger) - the moli console code
+- [examples](examples) - contains all the example projects
+
+**Usage**
+
+In your `package.json` you now need to specify the moli dependency with `@highfivve` as a name.
+
+```json
+{
+  "dependencies": {
+    "@highfivve": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git#v1.20.4"
+  }
+}
+```
+
+Then in the `index.ts` of your ad tag you can write imports like this
+
+```
+// the ad tag
+import { moli } from '@highfivve/ad-tag';
+
+// modules
+import Confiant from '@highfivve/modules/confiant';
+```
+
+Lastly, but very important you need to configure the `tsconfig.json` and add the new
+paths otherwise you will get a very missleading error _ts emitted no output_.
+
+```json
+{
+  "include": [
+    "node_modules/@highfivve/ad-tag/source/**/*",
+    "node_modules/@highfivve/modules/**/*"
+  ]
+}
+
+```
+
+
+
+## 1.20.0
+
 [GD-1391](https://jira.gutefrage.net/browse/GD-1391) change the `behaviour` type signature for an easier json representation.
 Before, different variables were available directly on the ad slot object. Now everything is inside the `behaviour` property.
 
