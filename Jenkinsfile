@@ -52,11 +52,11 @@ pipeline {
                     // a map with one entry for every module
                     def modules = [:]
 
-                    ['module-confiant', 'module-justpremium-skin'].each { module ->
+                    ['confiant', 'justpremium-skin'].each { module ->
                         modules[module] = {
                             stage('validate') {
                                 echo "Running validate:jenkins for module $module"
-                                sh "yarn workspace @highfivve/$module validate:jenkins"
+                                sh "yarn workspace @highfivve/module-$module validate:jenkins"
                             }
                         }
                     }
