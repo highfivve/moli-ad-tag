@@ -1,5 +1,5 @@
-import {IModule, ModuleType, googletag, Moli, prebidjs} from '@highfivve/ad-tag';
-import {getLogger} from '@highfivve/ad-tag/source/ts/util/logging';
+import { IModule, ModuleType, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 
 interface IJustPremiumConfig {
 
@@ -33,7 +33,8 @@ export default class JustPremium implements IModule {
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
 
-  constructor(private readonly justPremiumConfig: IJustPremiumConfig) {}
+  constructor(private readonly justPremiumConfig: IJustPremiumConfig, private readonly window: Window) {
+  }
 
   config(): Object | null {
     return this.justPremiumConfig;
@@ -65,11 +66,11 @@ export default class JustPremium implements IModule {
   destroyAdSlot = (slotDefinitions: Moli.SlotDefinition<Moli.AdSlot>[]) => (adSlotDomId: string): void => {
     const adSlot = slotDefinitions.map(slot => slot.adSlot)
       .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
-    window.googletag.destroySlots(adSlot);
+    this.window.googletag.destroySlots(adSlot);
   };
 
   init(config: Moli.MoliConfig): void {
-    const log = getLogger(config, window);
+    const log = getLogger(config, this.window);
     if (!config.prebid) {
       log.error('JustPremiumModule', 'Prebid isn\'t configured!');
       return;

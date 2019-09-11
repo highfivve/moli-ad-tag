@@ -5,7 +5,7 @@ export const newNoopLogger = (): Moli.MoliLogger => {
     debug: () => { return; },
     info: () => { return; },
     warn: () => { return; },
-    error: () => { return; }
+    error: (message?: any, ...optionalParams: any[]) => { console.error(message, ...optionalParams); }
   };
 };
 

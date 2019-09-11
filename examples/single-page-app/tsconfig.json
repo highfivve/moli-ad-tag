@@ -10,11 +10,7 @@
     "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es6",
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ]
+    "target": "es6"
   },
   "include": [
     "../../ad-tag/index.ts",

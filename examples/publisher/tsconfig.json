@@ -9,11 +9,7 @@
     ],
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2015",
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ]
+    "target": "es2015"
   },
   "include": [
     "../../ad-tag/index.ts",

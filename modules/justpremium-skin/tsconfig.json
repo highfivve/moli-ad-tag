@@ -9,14 +9,11 @@
     ],
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "ES6",
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ]
+    "target": "ES6"
   },
   "files": [
-    "index.ts"
+    "index.ts",
+    "index.test.ts"
   ],
   "include": [
     "../ad-tag/source/**/*"
