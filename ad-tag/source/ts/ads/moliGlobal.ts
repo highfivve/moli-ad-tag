@@ -7,12 +7,22 @@ import { createMoliTag } from './moli';
 // ====== Initialization =======
 // =============================
 
-const queueCommands = window.moli ? [...window.moli.que as Moli.MoliCommand[]] || [] : [];
-
 /**
+ * Initialize the ad tag, the global variable and process any elements in the command que.
+ *
  * Only export the public API and hide properties and methods in the DFP Service
+ *
+ * @param window object
+ * @return moli ad tag
  */
-export const moli: Moli.MoliTag = createMoliTag(window);
-window.moli = moli;
+export const initAdTag = (window: Window): Moli.MoliTag => {
+  const queueCommands = window.moli ? [...window.moli.que as Moli.MoliCommand[]] || [] : [];
 
-queueCommands.forEach(cmd => cmd(moli));
+  const moli: Moli.MoliTag = createMoliTag(window);
+  window.moli = moli;
+
+  queueCommands.forEach(cmd => cmd(moli));
+
+  return moli;
+};
+

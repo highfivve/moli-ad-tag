@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+[GD-1464](https://jira.gutefrage.net/browse/GD-1464) refactor the moli tag into a function `initAdTag`. This allows us
+to better test global state on the `window` object. You need to change an ad tags code like this
+
+```typescript
+import { initAdTag } from '@highfivve/ad-tag';
+
+const moli = initAdTag(window);
+
+// and then business as usual
+moli.configure(adConfiguration);
+```
+
+
 ## 1.20.4
 
 [GD-1464](https://jira.gutefrage.net/browse/GD-1464) refactor the codebase to use yarn workspaces. This allows us

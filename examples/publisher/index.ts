@@ -4,8 +4,10 @@
 // to configure moli and trigger `requestAds` afterwards.
 
 import 'prebid.js/build/dist/prebid';
-import { moli } from '@highfivve/ad-tag';
+import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
+
+const moli = initAdTag(window);
 
 // ad fraud protection
 import Confiant from '@highfivve/module-confiant';

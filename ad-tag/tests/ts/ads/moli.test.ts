@@ -4,6 +4,7 @@ import * as sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag } from '../../../source/ts/ads/moli';
+import { initAdTag } from '../../../source/ts/ads/moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
 import { consentConfig, newNoopLogger, noopLogger } from '../stubs/moliStubs';
@@ -35,6 +36,24 @@ describe('moli', () => {
 
   afterEach(() => {
     sandbox.reset();
+  });
+
+  describe('init ad tag', () => {
+
+    it('should initialize the global moli variable', () => {
+      expect(dom.window.moli).to.be.undefined;
+      const moli = initAdTag(dom.window);
+      expect(dom.window.moli).to.be.equal(moli);
+    });
+
+    it('should process the global command queue', () => {
+      const cmd1Spy = sandbox.spy();
+      const cmd2Spy = sandbox.spy();
+      dom.window.moli = { que: [ cmd1Spy, cmd2Spy ] } as any;
+      const moli = initAdTag(dom.window);
+      expect(cmd1Spy).to.have.been.calledOnceWithExactly(moli);
+      expect(cmd2Spy).to.have.been.calledOnceWithExactly(moli);
+    });
   });
 
   describe('state machine', () => {
@@ -159,10 +178,11 @@ describe('moli', () => {
       const adTag = createMoliTag(dom.window);
       const config = { slots: [], consent: consentConfig };
       const targeting = {
-        keyValues: { foo: 'bar'},
+        keyValues: { foo: 'bar' },
         labels: [ 'module' ]
       };
-      const configChangingModule = { ...fakeModule,
+      const configChangingModule = {
+        ...fakeModule,
         init(config: Moli.MoliConfig): void {
           config.targeting = targeting;
         }
