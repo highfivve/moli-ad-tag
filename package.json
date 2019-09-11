@@ -8,7 +8,9 @@
     "examples/*"
   ],
   "scripts": {
-    "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../examples/prebid/modules.json"
+    "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../examples/prebid/modules.json",
+    "preversion": "yarn build:prebid && yarn workspaces run validate",
+    "postversion": "git push && git push --tags"
   },
   "devDependencies": {
     "prebid.js": "2.30.0"
