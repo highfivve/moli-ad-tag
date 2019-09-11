@@ -12,3 +12,10 @@ Modules follow the same pattern. In the publisher ad tag
 1. import the required module. This allows webpack to treeshake all other modules that are not imported
 2. create an instance of that module
 
+## Implement a module
+
+You can implement a module by reusing one of the existing modules. Modules are automatically part of the
+yarn workspace as `modules/*` is used as a workspace glob pattern. Things that are important
+
+1. Your `package.json` must contain a `validate` and `validate:jenkins` script
+2. The module needs to be added in the [Jenkinsfile](../Jenkinsfile) in the `stage('Modules')`
