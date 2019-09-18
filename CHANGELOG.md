@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.22.0
+
 [GD-1464](https://jira.gutefrage.net/browse/GD-1464) refactor the moli tag into a function `initAdTag`. This allows us
 to better test global state on the `window` object. You need to change an ad tags code like this
 
