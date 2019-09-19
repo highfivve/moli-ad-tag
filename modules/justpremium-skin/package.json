@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@highfivve/ad-tag": "*",
-    "@types/chai": "4.2.2",
+    "@types/chai": "4.2.0",
     "@types/jsdom": "12.2.4",
     "@types/mocha": "5.2.7",
     "@types/sinon": "7.0.13",
