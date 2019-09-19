@@ -12,5 +12,6 @@
     "teadsBidAdapter",
     "spotxBidAdapter",
     "consentManagement",
-    "currency"
+    "currency",
+    "googleAnalyticsAdapter"
 ]

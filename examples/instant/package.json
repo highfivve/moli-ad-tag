@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "build": "webpack --mode=production",
-    "start": "yarn build:prebid && webpack-dev-server --mode=development",
+    "start": "webpack-dev-server --mode=development",
     "validate": "yarn build"
   },
   "repository": {
@@ -17,6 +17,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
+    "@types/google.analytics": "^0.0.40",
     "html-webpack-plugin": "^3.2.0",
     "ts-loader": "^5.2.2",
     "typescript": "^3.1.3",

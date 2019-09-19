@@ -90,6 +90,17 @@ export namespace prebidjs {
      */
     triggerUserSyncs(): void;
 
+    /**
+     * Enable sending analytics data to the analytics provider of your choice.
+     *
+     * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)
+     *
+     * @param adapters
+     * @see [[http://prebid.org/overview/analytics.html]]
+     * @see [[http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html]]
+     */
+    enableAnalytics(adapters: analytics.AnalyticsAdapter[]): void;
+
   }
 
   /**
@@ -262,6 +273,61 @@ export namespace prebidjs {
        */
       defaultRates: { 'USD': { 'EUR': number } };
     }
+  }
+
+  export namespace analytics {
+
+    export type AnalyticsAdapter = IGoogleAnalyticsAdapter;
+    export type AnalyticsProviders = 'ga';
+
+    export interface IAnalyticsAdapter<T> {
+      readonly provider: AnalyticsProviders;
+      readonly options: T;
+    }
+
+    /**
+     * Options are deducted from the source code.
+     *
+     * @see [[https://github.com/prebid/Prebid.js/blob/2.33.0/modules/googleAnalyticsAdapter.js]]
+     */
+    export interface IGoogleAnalyticsAdapterOptions {
+
+      /**
+       * set the global google analytics object if not 'ga'
+       * default: 'ga'
+       */
+      readonly global?: string;
+
+      /**
+       * rename the google analytics tracker
+       * default: 'send'
+       */
+      readonly trackerName?: string;
+
+
+      /**
+       * enable tracking of distribution metrics (load time, win rate)
+       * default: false
+       */
+      readonly enableDistribution?: boolean;
+
+      /**
+       * define the percentage (0 to 1) of samples that should be tracked.
+       *
+       * 0   =   0%
+       * 0.5 =  50%
+       * 1   = 100%
+       *
+       * default: 100%
+       */
+      readonly sampling?: number;
+
+    }
+
+    export interface IGoogleAnalyticsAdapter extends IAnalyticsAdapter<IGoogleAnalyticsAdapterOptions> {
+      readonly provider: 'ga';
+    }
+
   }
 
 
