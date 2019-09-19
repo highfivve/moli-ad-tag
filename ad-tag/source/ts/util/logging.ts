@@ -65,13 +65,15 @@ function getSourceLabelStyle(source: 'AdPerformanceService' | 'DFP Service' | 'F
     case 'AdPerformanceService':
       return getLabelStyle('#74ABC6');
     case 'DFP Service':
-      return getLabelStyle('#74C6C0');
+      return getLabelStyle('#BA0E5F');
     case 'Faktor CMP':
       return getLabelStyle('#9374C6');
     case 'MoliGlobal':
-      return getLabelStyle('#74C689');
+      return getLabelStyle('#403073');
     case 'SlotEventService':
       return getLabelStyle('#4357AD');
+    default:
+      return getLabelStyle('#052E53');
   }
 }
 
