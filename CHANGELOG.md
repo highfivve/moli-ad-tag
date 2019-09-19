@@ -2,42 +2,12 @@
 
 ## Unreleased
 
+[GD-1514](https://jira.gutefrage.net/browse/GD-1514) changed the prebid analytic adapter implementation into a module.
+See [the readme for more info](modules/prebid-google-analytics/README.md).
+
 ## 1.23.0
 
-[GD-1514](https://jira.gutefrage.net/browse/GD-1514) types for prebid analytic adapters and google universal analytics are now available.
-
-In order to enable prebid analytics you have to
-
-1. Install google analytics typings with 
-  ```bash
-  $ yarn add --dev @types/google.analytics
-  ```
-2. Setup a new tracker in the ad tag `index.ts`
-  ```typescript
-  // setup code for google analytics
-  (window as any).ga = (window as any).ga || function init(): void {
-    ga.q = ga.q || [];
-    ga.q.push(arguments);
-  };
-  ga.l = +new Date;
-
-  // h5 tracker
-  ga('create', 'UA-XXXXXX-XX', 'auto', 'h5');
-  ga('h5.send', 'pageview');
-  ```
-3. Enable the prebid google analytics adapter in the `index.ts`
-  ```typescript
-    window.pbjs.enableAnalytics([ {
-      provider: 'ga',
-      options: {
-        global: 'ga', // only necessary if it's not ga
-        trackerName: 'h5', // use the tracker that tracks into our GA property
-        enableDistribution: true, // enables events for load time distribution
-        sampling: 1 // set sampling to something appropriate
-      }
-    } ]);
-  ```
-4. Add the `googleAnalyticsAdapter` to the prebid `modules.json`
+> superseded by 1.24.0
 
 ## 1.22.0
 

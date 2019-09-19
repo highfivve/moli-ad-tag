@@ -8,28 +8,22 @@ import 'prebid.js/build/dist/prebid';
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
-(window as any).ga = (window as any).ga || function init(): void {
-  ga.q = ga.q || [];
-  ga.q.push(arguments);
-};
-ga.l = +new Date;
+import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';
 
-ga('create', 'UA-965201-41', 'auto', 'h5');
-ga('h5.send', 'pageview');
+// init moli
+const moli = initAdTag(window);
 
-// configure prebid
-window.pbjs.enableAnalytics([ {
-  provider: 'ga',
+// register modules
+moli.registerModule(new PrebidGoogleAnalytics({
+  trackingId: 'UA-965201-41',
   options: {
     global: 'ga',
     trackerName: 'h5',
     sampling: 1,
     enableDistribution: true
   }
-} ]);
+}, window));
 
-// init moli
-const moli = initAdTag(window);
 moli.configure(adConfiguration);
 moli.requestAds();
 

@@ -299,8 +299,8 @@ export namespace prebidjs {
       readonly global?: string;
 
       /**
-       * rename the google analytics tracker
-       * default: 'send'
+       * the google analytics tracker name
+       * default: 'h5'
        */
       readonly trackerName?: string;
 

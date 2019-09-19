@@ -4,7 +4,6 @@ Confiant is an ad fraud detection and blocking solution. It supports gpt and pre
 
 ## Integration
 
-
 In your `index.ts` import confiant and register the module.
 
 ```js
