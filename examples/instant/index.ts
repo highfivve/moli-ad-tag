@@ -8,7 +8,7 @@ import 'prebid.js/build/dist/prebid';
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
-(ga as any) = ga || function init(): void {
+(window as any).ga = (window as any).ga || function init(): void {
   ga.q = ga.q || [];
   ga.q.push(arguments);
 };

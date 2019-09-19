@@ -15,7 +15,7 @@ In order to enable prebid analytics you have to
 2. Setup a new tracker in the ad tag `index.ts`
   ```typescript
   // setup code for google analytics
-  (ga as any) = ga || function init(): void {
+  (window as any).ga = (window as any).ga || function init(): void {
     ga.q = ga.q || [];
     ga.q.push(arguments);
   };
