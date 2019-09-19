@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.23.0
+
 [GD-1514](https://jira.gutefrage.net/browse/GD-1514) types for prebid analytic adapters and google universal analytics are now available.
 
 In order to enable prebid analytics you have to
