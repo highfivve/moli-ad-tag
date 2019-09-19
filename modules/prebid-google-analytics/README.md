@@ -14,7 +14,7 @@ The publisher loads google universal analytics.
    ```
 2. In your `index.ts` import and register the module.
    ```javascript
-   import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';
+   import PrebidGoogleAnalytics from '@highfivve/modules/prebid-google-analytics';
    
    moli.registerModule(new PrebidGoogleAnalytics({
      trackingId: 'UA-965201-41',

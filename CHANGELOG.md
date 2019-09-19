@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.24.0
+
 [GD-1514](https://jira.gutefrage.net/browse/GD-1514) changed the prebid analytic adapter implementation into a module.
 See [the readme for more info](modules/prebid-google-analytics/README.md).
 
