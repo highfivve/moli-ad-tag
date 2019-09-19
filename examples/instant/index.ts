@@ -23,7 +23,7 @@ window.pbjs.enableAnalytics([ {
   options: {
     global: 'ga',
     trackerName: 'h5',
-    sampling: 100,
+    sampling: 1,
     enableDistribution: true
   }
 } ]);

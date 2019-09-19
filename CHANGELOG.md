@@ -31,7 +31,7 @@ In order to enable prebid analytics you have to
         global: 'ga', // only necessary if it's not ga
         trackerName: 'h5', // use the tracker that tracks into our GA property
         enableDistribution: true, // enables events for load time distribution
-        sampling: 100 // set sampling to something appropriate
+        sampling: 1 // set sampling to something appropriate
       }
     } ]);
   ```
