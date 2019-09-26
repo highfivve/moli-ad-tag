@@ -887,7 +887,7 @@ export class DfpService {
 
             if (!bidResponses) {
               this.logger.warn('DFP Service', `Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`);
-              return;
+              return resolve({});
             }
 
             adserverRequestSent = true;
