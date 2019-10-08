@@ -65,6 +65,16 @@ const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
   };
 };
 
+const showHeroes = (playerId: string): prebidjs.IShowHeroesBid => {
+  return {
+    bidder: prebidjs.ShowHeroes,
+    params: {
+      playerId: playerId,
+      vpaidMode: true
+    }
+  };
+};
+
 export const adConfiguration: Moli.MoliConfig = {
   slots: [
     {
@@ -126,7 +136,9 @@ export const adConfiguration: Moli.MoliConfig = {
             teadsVerticalBid(94140, 101937, [ 'mobile' ]),
             // AppNexus Test Placement - outstream only
             // see http://prebid.org/examples/video/outstream/outstream-dfp.html
-            appNexusOutstream('13232385')
+            appNexusOutstream('13232385'),
+            // ShowHeroes test placement
+            showHeroes('3f81f1c8-5d96-4d8b-a875-859759e9049b')
           ]
         }
       },

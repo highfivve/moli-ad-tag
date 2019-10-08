@@ -11,6 +11,7 @@
     "unrulyBidAdapter",
     "teadsBidAdapter",
     "spotxBidAdapter",
+    "shBidAdapter",
     "consentManagement",
     "currency",
     "googleAnalyticsAdapter"

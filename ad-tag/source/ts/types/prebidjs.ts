@@ -531,6 +531,7 @@ export namespace prebidjs {
   export const Teads = 'teads';
   export const Yieldlab = 'yieldlab';
   export const Spotx = 'spotx';
+  export const ShowHeroes = 'showheroesBs';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -548,7 +549,8 @@ export namespace prebidjs {
     | typeof Unruly
     | typeof Teads
     | typeof Yieldlab
-    | typeof Spotx;
+    | typeof Spotx
+    | typeof ShowHeroes;
 
   /**
    * A bid object.
@@ -1116,6 +1118,31 @@ export namespace prebidjs {
   export interface ISpotXBid extends IBidObject<typeof Spotx, ISpotxParams> {
   }
 
+  export interface IShowHeroesParams {
+    /**
+     * ShowHeroes player ID
+     * @example '0151f985-fb1a-4f37-bb26-cfc62e43ec05'
+     */
+    readonly playerId: string;
+
+    /**
+     * Vpaid wrapper
+     *
+     * default: `false`
+     */
+    readonly vpaidMode?: boolean;
+  }
+
+  /**
+   * ShowHeroes bid object
+   *
+   * Request are being made to `https://bs1.showheroes.com/api/v1/bid`
+   *
+   * @see [[http://prebid.org/dev-docs/bidders/showheroes.html]]
+   */
+  export interface IShowHeroesBid extends IBidObject<typeof ShowHeroes, IShowHeroesParams> {
+  }
+
   /**
    * Supported bid object types.
    */
@@ -1132,7 +1159,8 @@ export namespace prebidjs {
     | IUnrulyBid
     | ITeadsBid
     | IYieldlabBid
-    | ISpotXBid;
+    | ISpotXBid
+    | IShowHeroesBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
