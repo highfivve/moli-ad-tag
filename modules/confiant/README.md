@@ -7,7 +7,7 @@ Confiant is an ad fraud detection and blocking solution. It supports gpt and pre
 In your `index.ts` import confiant and register the module.
 
 ```js
-import Confiant from '@highfivve/module-confiant';
+import Confiant from '@highfivve/modules/confiant';
 moli.registerModule(new Confiant({
   gpt: {
     propertyId: '???',
