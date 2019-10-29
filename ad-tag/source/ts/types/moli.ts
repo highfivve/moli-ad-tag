@@ -1,7 +1,7 @@
 import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 import { IModule } from './module';
-import { IAssetLoaderService } from "../util/assetLoaderService";
+import { IAssetLoaderService } from '../util/assetLoaderService';
 
 /* tslint:disable:interface-name */
 export namespace Moli {
