@@ -134,10 +134,6 @@ export class DfpService {
           return Promise.reject(error);
         });
 
-    if (config.sovrnAssetUrl && env === 'production') {
-      this.loadSovrnScript(config.sovrnAssetUrl);
-    }
-
     return Promise.all([ prebidReady, dfpReady ]).then(() => config);
   };
 
@@ -687,29 +683,6 @@ export class DfpService {
     });
   }
 
-  /**
-   * We use sovrn to reload ads every 20 seconds,
-   * if the user is active on the page and the ad is in the user's viewport
-   *
-   * Sovrn has API-access (readonly) to our admanager, so that they can exclude ads
-   * based on order id, line item type or placement id from reloading.
-   *
-   * In the second dfp request ads call, sovrn is sending a key-value `sovrn-reload = true`,
-   * so that we can also exclude ads from being requested in the second round
-   * or to make reports in dfp.
-   *
-   * @see We can configure the sovrn script here @link {https://meridian.sovrn.com/#adtags/connect_tags}
-   * @see The sovrn documentation is here @link {https://www.sovrn.com/support/frequently-asked-questions-for-signal/}
-   */
-  private loadSovrnScript(assetUrl: string): Promise<void> {
-    this.logger.debug('DFP Service', 'loading sovrn script to enable ad reload');
-
-    return this.assetService.loadScript({
-      name: 'Sovrn Ad Reload',
-      loadMethod: AssetLoadMethod.TAG,
-      assetUrl: assetUrl
-    });
-  }
 
   private configureAdNetwork(config: Moli.MoliConfig): Promise<void> {
     switch (this.getEnvironment(config)) {

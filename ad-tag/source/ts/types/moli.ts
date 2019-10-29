@@ -1,6 +1,7 @@
 import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 import { IModule } from './module';
+import { IAssetLoaderService } from "../util/assetLoaderService";
 
 /* tslint:disable:interface-name */
 export namespace Moli {
@@ -211,6 +212,12 @@ export namespace Moli {
      * Request the debug bundle and start the debug mode.
      */
     openConsole(path?: string): void;
+
+
+    /**
+     * @return the asset loader service that is used to fetch additional assets / resources
+     */
+    getAssetLoaderService(): IAssetLoaderService;
   }
 
   /**
@@ -692,11 +699,6 @@ export namespace Moli {
      * GDPR consent management settings
      */
     consent: consent.ConsentConfig;
-
-    /**
-     * Sovrn ad reload
-     */
-    readonly sovrnAssetUrl?: string;
 
     /**
      * Reporting configuration

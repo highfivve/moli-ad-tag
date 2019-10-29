@@ -1,7 +1,7 @@
 import { Moli } from './moli';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 
-export type ModuleType = 'cmp' | 'reporting' | 'ad-fraud' | 'prebid';
+export type ModuleType = 'cmp' | 'reporting' | 'ad-fraud' | 'prebid' | 'ad-reload';
 
 export interface IModule {
   readonly name: string;

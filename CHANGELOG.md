@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+[GD-1563](https://jira.gutefrage.net/browse/GD-1563) added `window` parameter to confiant module.
+
+[GD-1563](https://jira.gutefrage.net/browse/GD-1563) added `assetLoaderService` to `init` function for modules.
+
+[GD-1563](https://jira.gutefrage.net/browse/GD-1563) remove the `svornAssetUrl` from the moli config and replaced
+it with a separate module. See [modules/svorn-ad-reload](modules/sovrn-ad-reload/README.md) for more information.
+
 ## 1.24.0
 
 [GD-1514](https://jira.gutefrage.net/browse/GD-1514) changed the prebid analytic adapter implementation into a module.
