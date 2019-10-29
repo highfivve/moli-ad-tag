@@ -43,7 +43,7 @@ export class AssetLoaderService implements IAssetLoaderService {
     private readonly window: Window) {
   }
 
-  public loadScript(config: ILoadAssetParams, parent: Element = document.head!): Promise<void> {
+  public loadScript(config: ILoadAssetParams, parent: Element = this.window.document.head!): Promise<void> {
     return this.awaitDomReady()
       .then(() => this.startPerformance(config.name))
       .then(() => {
