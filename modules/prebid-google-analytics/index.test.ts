@@ -6,6 +6,7 @@ import { Moli } from '@highfivve/ad-tag';
 import { consentConfig, newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createAssetLoaderService } from "@highfivve/ad-tag/source/ts/util/assetLoaderService";
 
 // setup sinon-chai
 use(sinonChai);
@@ -41,7 +42,7 @@ describe('Prebid Google Analytics Module', () => {
     const _window = dom.window as any;
 
     expect(_window.ga).to.be.undefined;
-    module.init(config);
+    module.init(config, createAssetLoaderService(dom.window));
     expect(_window.ga).to.be.ok;
   });
 
@@ -58,7 +59,7 @@ describe('Prebid Google Analytics Module', () => {
     const _window = dom.window as any;
 
     expect(_window.myGlobalAnalytics).to.be.undefined;
-    module.init(config);
+    module.init(config, createAssetLoaderService(dom.window));
     expect(_window.myGlobalAnalytics).to.be.ok;
   });
 
@@ -76,7 +77,7 @@ describe('Prebid Google Analytics Module', () => {
       }
     }, dom.window);
 
-    module.init(config);
+    module.init(config, createAssetLoaderService(dom.window));
 
     expect(gaSpy).to.have.been.calledTwice;
     expect(gaSpy).to.have.been.calledWith('create', 'UA-123456-78', 'auto', 'h5');
@@ -95,7 +96,7 @@ describe('Prebid Google Analytics Module', () => {
     const _window = dom.window as any;
 
     expect(_window.pbjs).to.be.undefined;
-    module.init(config);
+    module.init(config, createAssetLoaderService(dom.window));
     expect(_window.pbjs).to.be.ok;
     expect(_window.pbjs.que).to.be.have.lengthOf(1);
   });
@@ -113,7 +114,7 @@ describe('Prebid Google Analytics Module', () => {
     const _window = dom.window as any;
 
     expect(_window.pbjs).to.be.undefined;
-    module.init(config);
+    module.init(config, createAssetLoaderService(dom.window));
 
     const enableAnalyticsSpy = sandbox.spy();
     _window.pbjs.enableAnalytics = enableAnalyticsSpy;

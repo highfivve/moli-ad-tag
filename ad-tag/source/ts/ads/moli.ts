@@ -1,7 +1,7 @@
 import { Moli } from '../types/moli';
 import { parseQueryString } from '../util/query';
 import { DfpService } from './dfpService';
-import { createAssetLoaderService, AssetLoadMethod } from '../util/assetLoaderService';
+import { createAssetLoaderService, AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { cookieService } from '../util/cookieService';
 import { getLogger } from '../util/logging';
 import IStateMachine = Moli.state.IStateMachine;
@@ -259,7 +259,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         modules.forEach(module => {
           const log = getLogger(config, window);
           log.debug('MoliGlobal', `initialize ${module.moduleType} module ${module.name}`, module.config());
-          module.init(config);
+          module.init(config, assetLoaderService);
         });
 
 
@@ -541,6 +541,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
+  function getAssetLoaderService(): IAssetLoaderService {
+    return assetLoaderService;
+  }
+
   const que = {
     push(cmd: Moli.MoliCommand): void {
       cmd(window.moli);
@@ -562,6 +566,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     enableSinglePageApp: enableSinglePageApp,
     requestAds: requestAds,
     getState: getState,
-    openConsole: openConsole
+    openConsole: openConsole,
+    getAssetLoaderService: getAssetLoaderService
   };
 };

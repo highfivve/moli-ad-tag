@@ -69,7 +69,7 @@ describe('JustPremium Module', () => {
     moli.registerModule(module);
     moli.configure(config);
 
-    expect(initSpy).to.have.been.calledOnceWithExactly(config);
+    expect(initSpy).to.have.been.calledOnceWithExactly(config, moli.getAssetLoaderService());
     expect(errorLogSpy).to.have.not.been.called;
 
     expect(config.prebid!.listener).is.ok;
