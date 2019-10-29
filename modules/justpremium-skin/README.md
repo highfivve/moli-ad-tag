@@ -17,6 +17,6 @@ moli.registerModule(new JustPremium({
   wallpaperAdSlotDomId: 'ad-Billboard',
   blockedAdSlotDomIds: [ 'ad-Skyscraper' ],
   hideWallpaperAdSlot: true
-}));
+}, window));
 ```
 
