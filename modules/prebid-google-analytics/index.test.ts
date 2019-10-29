@@ -6,7 +6,7 @@ import { Moli } from '@highfivve/ad-tag';
 import { consentConfig, newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
-import { createAssetLoaderService } from "@highfivve/ad-tag/source/ts/util/assetLoaderService";
+import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
