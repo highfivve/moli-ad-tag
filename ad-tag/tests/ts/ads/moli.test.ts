@@ -12,6 +12,7 @@ import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
 import { IModule } from '../../../source/ts/types/module';
+import { IAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -157,7 +158,7 @@ describe('moli', () => {
       config(): Object | null {
         return null;
       },
-      init(config: Moli.MoliConfig): void {
+      init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
         return;
       }
     };
@@ -171,7 +172,7 @@ describe('moli', () => {
       adTag.registerModule(fakeModule);
       adTag.configure(config);
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config);
+      expect(initSpy).to.have.been.calledOnceWithExactly(config, adTag.getAssetLoaderService());
     });
 
     it('should init modules and use the changed config', () => {
@@ -192,7 +193,7 @@ describe('moli', () => {
       adTag.registerModule(configChangingModule);
       adTag.configure(config);
 
-      expect(configChangingInitSpy).to.have.been.calledOnceWithExactly(config);
+      expect(configChangingInitSpy).to.have.been.calledOnceWithExactly(config, adTag.getAssetLoaderService());
       expect(adTag.getState()).to.be.eq('configured');
       const newConfig = adTag.getConfig()!;
       expect(newConfig).to.be.ok;
