@@ -1,5 +1,5 @@
 import { confiantPrebid } from './confiantPrebid';
-import { AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { Moli, IModule, ModuleType } from '@highfivve/ad-tag';
 
 export interface IConfiantConfig {
@@ -44,8 +44,6 @@ interface IConfiantWindow {
   _clrm: IConfiantConfig;
 }
 
-declare const window: Window & IConfiantWindow;
-
 /**
  * == Confiant Ad Fraud Protection ==
  *
@@ -58,16 +56,17 @@ export default class Confiant implements IModule {
   public readonly description: string = 'ad fraud detection and protection module';
   public readonly moduleType: ModuleType = 'ad-fraud';
 
-  constructor(private readonly confiantConfig: IConfiantConfig) {  }
+  constructor(private readonly confiantConfig: IConfiantConfig, private readonly window: Window) {  }
 
   config(): Object | null {
     return this.confiantConfig;
   }
 
-  init(config: Moli.MoliConfig): void {
-    window._clrm = this.confiantConfig;
+  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+    const confiantWindow = this.window as Window & IConfiantWindow;
+    confiantWindow._clrm = this.confiantConfig;
     confiantPrebid(this.confiantConfig);
-    createAssetLoaderService(window).loadScript({
+    assetLoaderService.loadScript({
       name: 'confiant',
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: `//${this.confiantConfig.gpt.confiantCdn}/gpt/a/wrap.js?v2_1`

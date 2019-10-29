@@ -1,4 +1,5 @@
 import { Moli } from './moli';
+import { IAssetLoaderService } from '../util/assetLoaderService';
 
 export type ModuleType = 'cmp' | 'reporting' | 'ad-fraud' | 'prebid';
 
@@ -20,6 +21,7 @@ export interface IModule {
    * - set values in global scope
    *
    * @param config
+   * @param assetLoaderService
    */
-  init(config: Moli.MoliConfig): void;
+  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void;
 }

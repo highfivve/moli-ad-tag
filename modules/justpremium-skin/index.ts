@@ -1,5 +1,6 @@
 import { IModule, ModuleType, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 interface IJustPremiumConfig {
 
@@ -69,7 +70,7 @@ export default class JustPremium implements IModule {
     this.window.googletag.destroySlots(adSlot);
   };
 
-  init(config: Moli.MoliConfig): void {
+  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
     if (!config.prebid) {
       log.error('JustPremiumModule', 'Prebid isn\'t configured!');

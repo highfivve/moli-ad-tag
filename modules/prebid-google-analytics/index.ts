@@ -1,5 +1,6 @@
 import { IModule, Moli, prebidjs } from '@highfivve/ad-tag';
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 export interface IPrebidGoogleAnalyticsConfig {
   /**
@@ -28,7 +29,7 @@ export default class PrebidGoogleAnalytics implements IModule {
     return this.pgaConfig;
   }
 
-  init(config: Moli.MoliConfig): void {
+  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
 
     // only makes sense when prebid is enabled

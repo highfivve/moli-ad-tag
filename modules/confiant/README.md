@@ -18,7 +18,7 @@ moli.registerModule(new Confiant({
     // callback is required - by default we set it to noop
     callback: () => { return; }
   }
-}));
+}, window));
 ```
 
 ## Resources
