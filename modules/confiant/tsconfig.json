@@ -10,10 +10,6 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "ES6",
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ],
     "allowJs": true
   },
   "files": [
