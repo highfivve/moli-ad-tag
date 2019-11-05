@@ -7,7 +7,7 @@
 [GD-1563](https://jira.gutefrage.net/browse/GD-1563) added `assetLoaderService` to `init` function for modules.
 
 [GD-1563](https://jira.gutefrage.net/browse/GD-1563) remove the `svornAssetUrl` from the moli config and replaced
-it with a separate module. See [modules/svorn-ad-reload](modules/sovrn-ad-reload/README.md) for more information.
+it with a separate module. See [modules/sovrn-ad-reload](modules/sovrn-ad-reload/README.md) for more information.
 
 ## 1.24.0
 
@@ -24,7 +24,7 @@ See [the readme for more info](modules/prebid-google-analytics/README.md).
 to better test global state on the `window` object. You need to change an ad tags code like this
 
 ```typescript
-import { initAdTag } from '@highfivve/ad-tag';
+import { initAdTag } from '@highfivve/ad-tag'; import { adConfiguration } from "./configuration";
 
 const moli = initAdTag(window);
 

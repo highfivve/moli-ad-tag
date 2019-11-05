@@ -8,7 +8,7 @@ specific ad slots.
 In your `index.ts` import confiant and register the module.
 
 ```js
-import SovrnAdReload from '@highfivve/modules/svorn-ad-reload';
+import SovrnAdReload from '@highfivve/modules/sovrn-ad-reload';
 moli.registerModule(new SovrnAdReload({
     assetUrl: '//get.s-onetag.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/tag.min.js'
 }));
