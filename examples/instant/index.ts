@@ -3,8 +3,6 @@
 // This example means a fully self-contained publisher ad tag, which only needs to be added and things just work
 
 import 'prebid.js/build/dist/prebid';
-// with `yarn link` we cannot import from the `index.ts` for unknown reasons.
-// ts-loader bails out, because no js has been emitted
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
@@ -27,5 +25,4 @@ moli.registerModule(new PrebidGoogleAnalytics({
 moli.configure(adConfiguration);
 moli.requestAds();
 
-console.log(window.pbjs.version);
 console.log(adConfiguration);
