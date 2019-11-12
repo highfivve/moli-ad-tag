@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.26.1
+
+[GD-1577](https://jira.gutefrage.net/browse/GD-1577) Moli debugger and logger now show if there's no prebid instance when there is a prebid configuration 
+
+## 1.26.0
+
 [GD-1563](https://jira.gutefrage.net/browse/GD-1563) added `window` parameter to confiant module.
 
 [GD-1563](https://jira.gutefrage.net/browse/GD-1563) added `assetLoaderService` to `init` function for modules.
