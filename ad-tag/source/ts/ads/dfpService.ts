@@ -624,7 +624,21 @@ export class DfpService {
 
   private awaitPrebidLoaded(prebidGlobal: 'pbjs' | 'moliPbjs'): Promise<void> {
     this.window[prebidGlobal] = this.window[prebidGlobal] || { que: [] };
-    return new Promise(resolve => this.window[prebidGlobal].que.push(resolve));
+
+    // if we forget to remove prebid from the configuration. The timeout is arbitrary
+    const prebidTimeout = new Promise((_, reject) => {
+      setTimeout(
+        () => reject('Prebid did not resolve in time. Maybe you forgot to import the prebid distribution in the ad tag'),
+        5000
+      );
+    });
+
+    const prebidLoaded = new Promise<void>(resolve => this.window[prebidGlobal].que.push(resolve));
+    Promise.race([prebidTimeout, prebidLoaded]).catch(error => {
+      this.logger.error('DFP Service', 'Prebid did not resolve. This will stop all ads from being loaded!', error);
+    });
+
+    return prebidLoaded;
   }
 
   private initApstag(): void {

@@ -93,7 +93,7 @@ export function getDefaultLogger(): Moli.MoliLogger {
       window.console.warn(`%c[WARN]%c${source}%c${message}`, getLogStageLabelStyle('warn'), getSourceLabelStyle(source), '', ...optionalParams);
     },
     error(source?: any, message?: any, ...optionalParams: any[]): void {
-      window.console.error(`%c[ERROR]%c%c${source}%c${message}`, getLogStageLabelStyle('error'), getSourceLabelStyle(source), '', ...optionalParams);
+      window.console.error(`%c[ERROR]%c${source}%c${message}`, getLogStageLabelStyle('error'), getSourceLabelStyle(source), '', ...optionalParams);
     }
   };
 }

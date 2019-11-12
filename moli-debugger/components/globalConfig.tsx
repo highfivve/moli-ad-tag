@@ -175,6 +175,11 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
           {this.state.expandSection.prebid && <div>
             <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Version</span>
+              {window.pbjs.version ? <Tag>{window.pbjs.version.toString()}</Tag> : <Tag variant="red">Prebid not found</Tag>}
+            </div>
+
+            <div class="MoliDebug-tagContainer">
               <span class="MoliDebug-tagLabel">Prebid debug</span>
               <Tag
                 variant={config.prebid.config.debug ? 'yellow' : undefined}>{config.prebid.config.debug ? 'enabled' : 'disabled'}</Tag>
@@ -446,6 +451,14 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
         text: 'No prebid consentManagement configuration found.'
       });
     }
+
+    if (!window.pbjs.version) {
+      messages.push({
+        kind: 'error',
+        text: 'No prebid instance available! Either remove the prebid configuration or add prebid to the ad tag'
+      });
+    }
+
   };
 
   private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
