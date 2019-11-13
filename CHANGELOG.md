@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-1583](https://jira.gutefrage.net/browse/GD-1583) Add option to throttle refreshable slots.
+
 ## 1.26.1
 
 [GD-1577](https://jira.gutefrage.net/browse/GD-1577) Moli debugger and logger now show if there's no prebid instance when there is a prebid configuration 
