@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.27.0
+
 [GD-1583](https://jira.gutefrage.net/browse/GD-1583) Add option to throttle refreshable slots.
 
 ## 1.26.1
