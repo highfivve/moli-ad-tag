@@ -22,7 +22,7 @@ const createEventLazyLoader = (trigger: EventTrigger, slotEventService: SlotEven
     onLoad: () => {
       return new Promise<void>((resolve, reject) => {
         try {
-          slotEventService.getOrCreateEventSource(trigger, window)
+          slotEventService.getOrCreateEventSource(trigger, undefined, window)
             .setCallback(() => {
               resolve();
               // remove the eventSource once this

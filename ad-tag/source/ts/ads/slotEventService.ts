@@ -112,12 +112,13 @@ export class SlotEventService {
    * Creates or returns an EventSource for the given trigger.
    *
    * @param trigger the underlying trigger of the EventSource
+   * @param throttled duration in seconds in which all events are discarded before the next event will be emitted
    * @param window global window object
    */
-  public getOrCreateEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): ISlotEventSource {
+  public getOrCreateEventSource(trigger: Moli.behaviour.EventTrigger, throttled: number | undefined, window: Window): ISlotEventSource {
     const dictionary = this.getEventSourceDictionary(trigger, window);
     const eventSource = dictionary[trigger.event] || {
-      eventSource: this.createEventSource(trigger, window),
+      eventSource: this.createEventSource(trigger, throttled, window),
       trigger: trigger
     };
     dictionary[trigger.event] = eventSource;
@@ -203,9 +204,9 @@ export class SlotEventService {
     }
   }
 
-  private createEventSource(trigger: Moli.behaviour.EventTrigger, window: Window): SlotEventSource {
+  private createEventSource(trigger: Moli.behaviour.EventTrigger, throttled: number | undefined, window: Window): SlotEventSource {
     this.logger.debug('SlotEventService', `create EventSource for trigger`, trigger);
-    const eventSource = new SlotEventSource();
+    const eventSource = new SlotEventSource(throttled);
 
     if (typeof trigger.source === 'string') {
       const element = window.document.querySelector(trigger.source);
@@ -234,7 +235,16 @@ class SlotEventSource implements ISlotEventSource, EventListenerObject {
 
   private currentCallback: EventListener;
 
-  constructor() {
+  /**
+   * by default all events can pass
+   */
+  private isNotThrottled = true;
+
+  /**
+   *
+   * @param throttleDuration duration in seconds - the event source will throw away events if they were fired in the throttled duration
+   */
+  constructor(private readonly throttleDuration: number | undefined) {
     // default to noop on registration
     this.currentCallback = (_: Event) => {
       return;
@@ -242,7 +252,19 @@ class SlotEventSource implements ISlotEventSource, EventListenerObject {
   }
 
   public handleEvent(evt: Event): void {
-    this.currentCallback(evt);
+    if (this.throttleDuration) {
+      if (this.isNotThrottled) {
+        this.currentCallback(evt);
+        this.isNotThrottled = false;
+
+        // allow events after the throttle duration has settled
+        setTimeout(() => {
+          this.isNotThrottled = true;
+        }, this.throttleDuration * 1000);
+      }
+    } else {
+      this.currentCallback(evt);
+    }
   }
 
   public setCallback(callback: EventListener): void {

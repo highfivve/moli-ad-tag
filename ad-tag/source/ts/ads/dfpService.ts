@@ -368,7 +368,7 @@ export class DfpService {
       .filter(({ moliSlot }) => this.isValidTrigger(moliSlot.behaviour.trigger))
       .forEach((slotDefinition) => {
         try {
-          createRefreshListener(slotDefinition.moliSlot.behaviour.trigger, slotEventService, this.window).addAdRefreshListener(() => {
+          createRefreshListener(slotDefinition.moliSlot.behaviour.trigger, slotDefinition.moliSlot.behaviour.throttle, slotEventService, this.window).addAdRefreshListener(() => {
             this.requestRefreshableSlot(pbjs, slotDefinition, config, reportingService, globalLabelConfigService);
           });
         } catch (e) {
@@ -392,7 +392,7 @@ export class DfpService {
         try {
 
           let adSlot: googletag.IAdSlot;
-          createRefreshListener(moliSlotRefreshable.behaviour.trigger, slotEventService, this.window).addAdRefreshListener(() => {
+          createRefreshListener(moliSlotRefreshable.behaviour.trigger, moliSlotRefreshable.behaviour.throttle, slotEventService, this.window).addAdRefreshListener(() => {
             if (!adSlot) {
               this.logger.debug('DFP Service', `Register lazy refreshable slot ${moliSlotRefreshable.domId}`);
               // ad slot has not been registered yet

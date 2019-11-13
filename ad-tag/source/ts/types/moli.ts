@@ -981,6 +981,14 @@ export namespace Moli {
        *    the ad slot is refreshed (requested) when the first event is fired, acting like a lazy loading slot
        */
       readonly lazy?: boolean;
+
+      /**
+       * Option throttle delay in seconds.
+       *
+       * The slot can be refresh at most once in the specified throttle time (seconds).
+       * If no `throttle` duration is specified the slot can be unconditionally refreshed.
+       */
+      readonly throttle?: number;
     }
 
 

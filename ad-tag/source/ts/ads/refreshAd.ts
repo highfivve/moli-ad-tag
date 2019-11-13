@@ -35,14 +35,15 @@ export interface IAdRefreshListener {
  *      and they do not need to be removed manually with the removeEventListener() method.
  *
  * @param trigger the trigger configuration
+ * @param throttled
  * @param slotEventService
  * @param window
  * @throws an error if the trigger.source is invalid
  */
-const createEventRefreshListener = (trigger: EventTrigger, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
+const createEventRefreshListener = (trigger: EventTrigger, throttled: number | undefined, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
   return {
     addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
-      slotEventService.getOrCreateEventSource(trigger, window).setCallback(callback);
+      slotEventService.getOrCreateEventSource(trigger, throttled, window).setCallback(callback);
     }
   };
 };
@@ -50,14 +51,15 @@ const createEventRefreshListener = (trigger: EventTrigger, slotEventService: Slo
 /**
  *
  * @param trigger the trigger configuration for the refresh listener
+ * @param throttled if the slot can only be refreshed once during the throttle duration
  * @param slotEventService
  * @param window
  * @returns an IAdRefreshListener if possible otherwise null
  */
-export const createRefreshListener = (trigger: Trigger, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
+export const createRefreshListener = (trigger: Trigger, throttled: number | undefined, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
   switch (trigger.name) {
     case 'event':
-      return createEventRefreshListener(trigger, slotEventService, window);
+      return createEventRefreshListener(trigger, throttled, slotEventService, window);
     default:
       throw new Error(`Unsupported trigger ${trigger.name}`);
   }

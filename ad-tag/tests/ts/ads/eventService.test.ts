@@ -41,7 +41,7 @@ describe('EventService', () => {
         name: 'event',
         event: 'ads',
         source: dom.window
-      }, dom.window);
+      }, undefined, dom.window);
 
       eventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window);
@@ -55,7 +55,7 @@ describe('EventService', () => {
         name: 'event',
         event: 'ads',
         source: dom.window.document
-      }, dom.window);
+      }, undefined, dom.window);
 
       eventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window.document);
@@ -73,7 +73,7 @@ describe('EventService', () => {
         name: 'event',
         event: 'ads',
         source: '#myslot'
-      }, dom.window);
+      }, undefined, dom.window);
 
       eventSource.setCallback(callbackSpy);
       dispatchEvent('ads', div);
@@ -89,8 +89,8 @@ describe('EventService', () => {
         source: dom.window
       };
 
-      const eventSource1 = eventService.getOrCreateEventSource(windowTrigger, dom.window);
-      const eventSource2 = eventService.getOrCreateEventSource(windowTrigger, dom.window);
+      const eventSource1 = eventService.getOrCreateEventSource(windowTrigger, undefined, dom.window);
+      const eventSource2 = eventService.getOrCreateEventSource(windowTrigger, undefined, dom.window);
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
@@ -108,8 +108,8 @@ describe('EventService', () => {
         source: dom.window.document
       };
 
-      const eventSource1 = eventService.getOrCreateEventSource(documentWindow, dom.window);
-      const eventSource2 = eventService.getOrCreateEventSource(documentWindow, dom.window);
+      const eventSource1 = eventService.getOrCreateEventSource(documentWindow, undefined, dom.window);
+      const eventSource2 = eventService.getOrCreateEventSource(documentWindow, undefined, dom.window);
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
@@ -131,8 +131,8 @@ describe('EventService', () => {
         source: '#myslot'
       };
 
-      const eventSource1 = eventService.getOrCreateEventSource(elementTrigger, dom.window);
-      const eventSource2 = eventService.getOrCreateEventSource(elementTrigger, dom.window);
+      const eventSource1 = eventService.getOrCreateEventSource(elementTrigger, undefined, dom.window);
+      const eventSource2 = eventService.getOrCreateEventSource(elementTrigger, undefined, dom.window);
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
@@ -151,14 +151,14 @@ describe('EventService', () => {
         name: 'event',
         event: 'ads',
         source: dom.window
-      }, dom.window);
+      }, undefined, dom.window);
 
       windowEventSource.setCallback(callbackSpy);
       const documentEventSource = eventService.getOrCreateEventSource({
         name: 'event',
         event: 'ads',
         source: dom.window.document
-      }, dom.window);
+      }, undefined, dom.window);
 
       documentEventSource.setCallback(callbackSpy);
       const div = dom.window.document.createElement('div');
@@ -169,7 +169,7 @@ describe('EventService', () => {
         name: 'event',
         event: 'ads',
         source: '#myslot'
-      }, dom.window);
+      }, undefined, dom.window);
 
       elementEventSource.setCallback(callbackSpy);
 
@@ -199,7 +199,7 @@ describe('EventService', () => {
         event: 'ads',
         source: dom.window
       };
-      const windowEventSource = eventService.getOrCreateEventSource(trigger, dom.window);
+      const windowEventSource = eventService.getOrCreateEventSource(trigger, undefined, dom.window);
 
       windowEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window);
@@ -219,7 +219,7 @@ describe('EventService', () => {
         event: 'ads',
         source: dom.window.document
       };
-      const documentEventSource = eventService.getOrCreateEventSource(trigger, dom.window);
+      const documentEventSource = eventService.getOrCreateEventSource(trigger, undefined, dom.window);
 
       documentEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window.document);
@@ -244,7 +244,7 @@ describe('EventService', () => {
         event: 'ads',
         source: '#myslot'
       };
-      const elementEventSource = eventService.getOrCreateEventSource(trigger, dom.window);
+      const elementEventSource = eventService.getOrCreateEventSource(trigger, undefined, dom.window);
 
       elementEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', div);
@@ -256,5 +256,55 @@ describe('EventService', () => {
       expect(callbackSpy).to.have.been.calledOnce;
     });
   });
+
+  it('should throttle events with 0s throttle duration', () => {
+    const eventService = new SlotEventService(noopLogger);
+    const eventSource = eventService.getOrCreateEventSource({
+      name: 'event',
+      event: 'ads',
+      source: dom.window
+    }, 0, dom.window);
+
+    eventSource.setCallback(callbackSpy);
+    dispatchEvent('ads', dom.window);
+    dispatchEvent('ads', dom.window);
+    expect(callbackSpy).to.be.calledTwice;
+  });
+
+  it('should discard events with 1s throttle duration', () => {
+    const eventService = new SlotEventService(noopLogger);
+    const eventSource = eventService.getOrCreateEventSource({
+      name: 'event',
+      event: 'ads',
+      source: dom.window
+    }, 1, dom.window);
+
+    eventSource.setCallback(callbackSpy);
+    dispatchEvent('ads', dom.window);
+    dispatchEvent('ads', dom.window);
+    expect(callbackSpy).to.be.calledOnce;
+  });
+
+  it('should throttle events with 0.01s throttle duration', (done) => {
+    const eventService = new SlotEventService(noopLogger);
+    const eventSource = eventService.getOrCreateEventSource({
+      name: 'event',
+      event: 'ads',
+      source: dom.window
+    }, 0.01, dom.window);
+
+    eventSource.setCallback(callbackSpy);
+    dispatchEvent('ads', dom.window);
+    dispatchEvent('ads', dom.window);
+    expect(callbackSpy).to.be.calledOnce;
+
+    setTimeout(() => {
+      dispatchEvent('ads', dom.window);
+      expect(callbackSpy).to.be.calledTwice;
+      done();
+    }, 10);
+
+  });
+
 
 });
