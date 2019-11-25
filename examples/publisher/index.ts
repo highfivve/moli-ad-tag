@@ -12,15 +12,7 @@ const moli = initAdTag(window);
 // ad fraud protection
 import Confiant from '@highfivve/module-confiant';
 moli.registerModule(new Confiant({
-  gpt: {
-    propertyId: 'Fhkh8X7bib_CoPkwt4wiIcaO-vk',
-    confiantCdn: 'clarium.global.ssl.fastly.net',
-    sandbox: 0,
-    mapping: 'W3siaSI6MiwidCI6Int7b319Ont7d319eHt7aH19IiwicCI6MCwiRCI6MSwiciI6W119LHsiaSI6NiwidCI6Int7Y299fTp7e3d9fXh7e2h9fSIsInAiOjUwLCJEIjowLCJyIjpbeyJ0IjoiZXgiLCJzIjpudWxsLCJ2IjoiY28ifV19XQ==',
-    activation: '|||MjQ4OTcwNjkzMQ==,|||MjQ5MDMxMzE3Mw==,|||MjQ4OTcwNjkzMQ==,|||MjQ5OTg5Mjk0NA==,|||MjQ5ODM3MjEyMA==,|co|ex|MQ==,|||MjQ5Mzc2NTI3Nw==',
-    // callback is required - by default we set it to noop
-    callback: () => { return; }
-  }
+  assetUrl: 'https://confiant-integrations.global.ssl.fastly.net/Fhkh8X7bib_CoPkwt4wiIcaO-vk/gpt_and_prebid/config.js'
 }, window));
 
 // init moli
