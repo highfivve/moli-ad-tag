@@ -1,48 +1,14 @@
-import { confiantPrebid } from './confiantPrebid';
 import { AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { Moli, IModule, ModuleType } from '@highfivve/ad-tag';
 
 export interface IConfiantConfig {
-  readonly gpt: IConfiantGptConfig;
+
+  /**
+   * Conviant loads a single javascript file that contains all the configuration properties
+   */
+  readonly assetUrl: string;
 }
 
-interface IConfiantGptConfig {
-  readonly propertyId: string;
-  /**
-   * usually `clarium.global.ssl.fastly.net`
-   */
-  readonly confiantCdn: string;
-
-  /**
-   * Enables sandboxing on a device group
-   * All:1 , Desktop:2, Mobile: 3, iOS: 4, Android: 5, Off: 0
-   */
-  readonly sandbox: 0 | 1 | 2 | 3 | 4 | 5;
-
-  /**
-   * Confiant needs to map orderIds in DFP. This is probably a string representation for
-   * this mapping information.
-   */
-  readonly mapping: string;
-
-  /**
-   * No idea what this is for, but we need it
-   */
-  readonly activation: string;
-
-  /**
-   * We can add reporting with this callback.
-   * The callback is not optional otherwise the script throws an error
-   */
-  readonly callback: (blockingType: any, blockingId: any, isBlocked: Boolean, wrapperId: any, tagId: any, impressionData: any) => void;
-}
-
-interface IConfiantWindow {
-  /**
-   * of course the configuration is stored in a global variable
-   */
-  _clrm: IConfiantConfig;
-}
 
 /**
  * == Confiant Ad Fraud Protection ==
@@ -63,13 +29,10 @@ export default class Confiant implements IModule {
   }
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    const confiantWindow = this.window as Window & IConfiantWindow;
-    confiantWindow._clrm = this.confiantConfig;
-    confiantPrebid(this.confiantConfig);
     assetLoaderService.loadScript({
       name: 'confiant',
       loadMethod: AssetLoadMethod.TAG,
-      assetUrl: `//${this.confiantConfig.gpt.confiantCdn}/gpt/a/wrap.js?v2_1`
+      assetUrl: this.confiantConfig.assetUrl
     });
   }
 }

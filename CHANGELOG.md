@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-1612](https://jira.gutefrage.net/browse/GD-1612) Confiant now requires way less configuration.
+
 ## 1.27.0
 
 [GD-1583](https://jira.gutefrage.net/browse/GD-1583) Add option to throttle refreshable slots.

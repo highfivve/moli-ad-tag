@@ -9,16 +9,18 @@ In your `index.ts` import confiant and register the module.
 ```js
 import Confiant from '@highfivve/modules/confiant';
 moli.registerModule(new Confiant({
-  gpt: {
-    propertyId: '???',
-    confiantCdn: 'clarium.global.ssl.fastly.net',
-    sandbox: 0,
-    mapping: 'W3siaSI6MiwidCI6Int7b319Ont7d319eHt7aH19IiwicCI6MCwiRCI6MSwiciI6W119LHsiaSI6NiwidCI6Int7Y299fTp7e3d9fXh7e2h9fSIsInAiOjUwLCJEIjowLCJyIjpbeyJ0IjoiZXgiLCJzIjpudWxsLCJ2IjoiY28ifV19XQ==',
-    activation: '???',
-    // callback is required - by default we set it to noop
-    callback: () => { return; }
-  }
+  assertUrl: 'https://confiant-integrations.global.ssl.fastly.net/yqnNhQYNEfv8ldKXnwevFDx_IRM/gpt_and_prebid/config.js'
 }, window));
+```
+
+### Alternative integration
+
+A publisher can also decided to integrated it directly in the head with
+
+```html
+<head>
+    <script async src="https://confiant-integrations.global.ssl.fastly.net/yqnNhQYNEfv8ldKXnwevFDx_IRM/gpt_and_prebid/config.js"></script>
+</head>
 ```
 
 ## Resources
