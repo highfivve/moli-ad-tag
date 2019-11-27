@@ -207,7 +207,7 @@ export class DfpService {
     }
 
     return Promise.resolve()
-      // remove all event listeners first
+    // remove all event listeners first
       .then(() => this.slotEventService && this.slotEventService.removeAllEventSources(this.window))
       //
       .then(() => this.window.googletag.destroySlots())
@@ -245,26 +245,22 @@ export class DfpService {
 
     this.logger.debug('DFP Service', `Configure cmp using cmp provider: ${cmpConfig.provider}`);
 
-    if (cmpConfig) {
-      switch (cmpConfig.provider) {
-        case 'publisher' : {
-          return Promise.resolve();
-        }
-        case 'faktor' : {
-          const faktorCmp = new FaktorCmp(reportingService, this.logger, this.window);
-          if (cmpConfig.autoOptIn) {
-            const timeout = new Promise<void>(resolve => setTimeout(resolve, cmpConfig.timeout));
-            return Promise.race([timeout, faktorCmp.autoOptIn()]);
-          } else {
-            return Promise.resolve();
-          }
-        }
-        default: {
+    switch (cmpConfig.provider) {
+      case 'publisher' : {
+        return Promise.resolve();
+      }
+      case 'faktor' : {
+        const faktorCmp = new FaktorCmp(reportingService, this.logger, this.window);
+        if (cmpConfig.autoOptIn) {
+          const timeout = new Promise<void>(resolve => setTimeout(resolve, cmpConfig.timeout));
+          return Promise.race([ timeout, faktorCmp.autoOptIn() ]);
+        } else {
           return Promise.resolve();
         }
       }
-    } else {
-      return Promise.resolve();
+      default: {
+        return Promise.resolve();
+      }
     }
   }
 
@@ -634,7 +630,7 @@ export class DfpService {
     });
 
     const prebidLoaded = new Promise<void>(resolve => this.window[prebidGlobal].que.push(resolve));
-    Promise.race([prebidTimeout, prebidLoaded]).catch(error => {
+    Promise.race([ prebidTimeout, prebidLoaded ]).catch(error => {
       this.logger.error('DFP Service', 'Prebid did not resolve. This will stop all ads from being loaded!', error);
     });
 
@@ -771,11 +767,11 @@ export class DfpService {
       const bids = prebidAdSlotConfig.adUnit.bids.filter(bid => globalLabelConfigService.filterSlot(bid));
 
       const video = (mediaTypeVideo && videoSizes.length > 0) ? {
-        video: {...mediaTypeVideo, playerSize: videoSizes}
+        video: { ...mediaTypeVideo, playerSize: videoSizes }
       } : undefined;
 
       const banner = (mediaTypeBanner && bannerSizes.length > 0) ? {
-        banner: {...mediaTypeBanner, sizes: bannerSizes}
+        banner: { ...mediaTypeBanner, sizes: bannerSizes }
       } : undefined;
 
       return {
