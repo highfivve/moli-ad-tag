@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+[GD-1619](https://jira.gutefrage.net/browse/GD-1619) Refactor the consent feature into the module system. Faktor is now a CMP Module.
+
+Breaking changes to the ad configuration are
+
+- the `consent` property is now an empty object. A CMP module _should_ configure the `cmp` property there
+- you must add a cmp module in order to make the ad tag work. See [the faktor cmp module](modules/faktor-cmp/README.md) 
+
+## 1.28.0
+
 [GD-1612](https://jira.gutefrage.net/browse/GD-1612) Confiant now requires way less configuration.
 
 ## 1.27.0
