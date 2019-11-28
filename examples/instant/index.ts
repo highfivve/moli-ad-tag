@@ -7,6 +7,7 @@ import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';
+import Faktor from '@highfivve/module-cmp-faktor';
 
 // init moli
 const moli = initAdTag(window);
@@ -20,6 +21,10 @@ moli.registerModule(new PrebidGoogleAnalytics({
     sampling: 1,
     enableDistribution: true
   }
+}, window));
+
+moli.registerModule(new Faktor({
+  autoOptIn: true
 }, window));
 
 moli.configure(adConfiguration);

@@ -1,4 +1,5 @@
 import { Moli } from '../../../source/ts/types/moli';
+import { IABConsentManagement } from '../../../source/ts/types/IABConsentManagement';
 
 export const newNoopLogger = (): Moli.MoliLogger => {
   return {
@@ -9,28 +10,35 @@ export const newNoopLogger = (): Moli.MoliLogger => {
   };
 };
 
+export const cmpModule = (): Moli.consent.CmpModule => {
+  return {
+    name: 'mock cmp',
+    description: 'mock cmp',
+    moduleType: 'cmp',
+    config(): Object | null {
+      return null;
+    },
+    init(config: Moli.MoliConfig): void {
+      config.consent.cmp = this;
+      return;
+    },
+    getNonPersonalizedAdSetting(): Promise<0 | 1> {
+      return Promise.resolve(0);
+    },
+    getConsentData(): Promise<IABConsentManagement.IConsentData> {
+      return Promise.reject();
+    },
+    getVendorConsents(): Promise<IABConsentManagement.IVendorConsents> {
+      return Promise.reject();
+    }
+  };
+};
+
 export const noopLogger: Moli.MoliLogger = newNoopLogger();
 
 export const consentConfig: Moli.consent.ConsentConfig = {
-  personalizedAds: {
-    provider: 'static',
-    value: 0
-  },
-  cmpConfig: {
-    provider: 'publisher'
-  }
+  cmp: cmpModule()
 };
 
-export const cmpConfig: Moli.consent.ConsentConfig = {
-  personalizedAds: {
-    provider: 'static',
-    value: 0
-  },
-  cmpConfig: {
-    provider: 'faktor',
-    autoOptIn: true,
-    timeout: 1
-  }
-};
 
 export const emptyConfig: Moli.MoliConfig = { slots: [], consent: consentConfig, logger: noopLogger };

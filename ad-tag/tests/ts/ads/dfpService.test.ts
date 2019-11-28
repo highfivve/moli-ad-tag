@@ -2415,34 +2415,6 @@ describe('DfpService', () => {
       });
     });
 
-    it('should use the cmp timeout for faktor.io', () => {
-      const timeout = 10;
-      dom.window.__cmp = (cmd: string, params: any, callback: Function) => {
-        console.log('calling', cmd, params);
-        return;
-      };
-      const cmpSpy = sandbox.spy(dom.window, '__cmp');
-
-      return newDfpService().initialize({
-        slots: [],
-        consent: {
-          ...consentConfig,
-          cmpConfig: {
-            provider: 'faktor',
-            autoOptIn: true,
-            timeout: timeout
-          }
-        },
-        logger: noopLogger,
-      }).then(() => {
-        expect(cmpSpy).to.be.calledOnce;
-        expect(cmpSpy.firstCall.args[0]).to.be.equal('addEventListener');
-        expect(cmpSpy.firstCall.args[1]).to.be.equal('cmpReady');
-        expect(setNonPersonalizedAdsSpy).to.be.calledOnce;
-        expect(setNonPersonalizedAdsSpy).to.be.calledOnceWithExactly(0);
-      });
-    });
-
   });
 
   describe('test environment', () => {

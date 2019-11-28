@@ -216,14 +216,6 @@ export const adConfiguration: Moli.MoliConfig = {
     cmpTimeout: 500,
     pubID: 'test'
   },
-  consent: {
-    personalizedAds: {
-      provider: 'static',
-      value: 0
-    },
-    cmpConfig: {
-      provider: 'publisher'
-    }
-  },
+  consent: {  },
   // logger: logger
 };

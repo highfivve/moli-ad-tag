@@ -2,6 +2,7 @@ import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
+import { IABConsentManagement } from './IABConsentManagement';
 
 /* tslint:disable:interface-name */
 export namespace Moli {
@@ -1238,6 +1239,42 @@ export namespace Moli {
    */
   export namespace consent {
 
+
+    /**
+     * ## CMP Module
+     *
+     * Provides an interface for the IAB CMP standard. This module will not be versioned,
+     * thus there will be breaking changes when the new IAB CMP v2 standard is being activated
+     * and publisher ad tags will need to upgrade.     *
+     *
+     * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/v1.1%20Implementation%20Guidelines.md
+     * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20CMP%20API%20v2.md
+     */
+    export interface CmpModule extends IModule {
+
+      readonly moduleType: 'cmp';
+
+      /**
+       * Use to call the `googletag.pubads().setRequestNonPersonalizedAds(...)` method.
+       *
+       * 0 = request personalized ads
+       * 1 = request no personalized ads
+       *
+       * This method is required as long google doesn't use the IAB standard.
+       */
+      getNonPersonalizedAdSetting(): Promise<0 | 1>;
+
+      /**
+       * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/CMP%20JS%20API%20v1.1%20Final.md#what-api-will-need-to-be-provided-by-the-cmp-
+       */
+      getConsentData(): Promise<IABConsentManagement.IConsentData>;
+
+      /**
+       * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/CMP%20JS%20API%20v1.1%20Final.md#vendorconsents
+       */
+      getVendorConsents(): Promise<IABConsentManagement.IVendorConsents>;
+    }
+
     /**
      * # Consent Configuration
      *
@@ -1253,171 +1290,14 @@ export namespace Moli {
      */
     export interface ConsentConfig {
 
-      /** DFP `setNonPersonalizedAds` configuration provider */
-      readonly personalizedAds: consent.PersonalizedAdsProvider;
-
-      /** CMP - publisher specific or faktor.io */
-      readonly cmpConfig: consent.CmpConfigVariants;
-    }
-
-    /**
-     * Union type for the different dfp `setNonPersonalizedAds` implementations.
-     */
-    export type PersonalizedAdsProvider = Static | Cmp | Cookie;
-
-    /**
-     * Union type for different CMPs
-     */
-    export type CmpConfigVariants = PublisherCmpConfig | FaktorCmpConfig;
-
-    /**
-     * Base interface for personalizedAds implementations.
-     */
-    export interface IPersonalizedAdsProvider {
-      provider: 'static' | 'cmp' | 'cookie';
-    }
-
-    /**
-     * ## Static
-     *
-     * Configures a fixed value for the `setNonPersonalizedAds` call.
-     *
-     * @example Example to set `googletag.setNonPersonalizedAds(0)` which results in **personalized** ads.<br>
-     * ```typescript
-     * {
-     *   provider: 'static',
-     *   value: 0
-     * }
-     * ```
-     *
-     *
-     */
-    export interface Static extends IPersonalizedAdsProvider {
-      provider: 'static';
-      value: 0 | 1;
-    }
-
-    /**
-     * ## CMP - Consent Management Platform
-     *
-     * Uses the IAB `window.__cmp` API to check if consent has been given for all relevant
-     * purposes.
-     *
-     * **RECOMMENDED**
-     * This is the recommended implementation as it is fully IAB and GDPR compliant and
-     * gives the publisher various options on how to handle the consent management.
-     *
-     *
-     * @example Example on how to enable cmp as a personalized ads provider
-     * ```typescript
-     * {
-     *   provider: 'cmp',
-     *   timeout: 500
-     * }
-     * ```
-     *
-     * ## CMP Providers
-     *
-     * A list of providers that work well with this approach.
-     *
-     * - Faktor.io
-     */
-    export interface Cmp extends IPersonalizedAdsProvider {
-      provider: 'cmp';
-
       /**
-       * time in milliseconds until "no consent" is being assumed and non-personalized
-       * ads will be requested.
+       * This property will be set by a registered CmpModule.
        *
-       * This should match with the a9 and prebid cmp timeouts.
+       * If no CmpModule is registered no ads will be loaded.
        */
-      timeout: number;
+      cmp?: CmpModule;
     }
 
-    /**
-     * ## Cookie
-     *
-     * Configure a cookie that is checked for a specific value.
-     *
-     * **Note**
-     * The implementation favors the _legitimate interest_ approach, which means that
-     * if no cookie is set, consent is assumed. If the cookie is set, then the value
-     * must match.
-     *
-     *
-     * @example Example for a cookie based configuration. <br>
-     * ```typescript
-     * {
-     *   provider: 'cookie',
-     *   cookie: '_sp_enable_dfp_personalized_ads',
-     *   valueForNonPersonalizedAds: 'false'
-     * }
-     * ```
-     *
-     * If a cookie `_sp_enable_dfp_personalized_ads` is available and set to `false`, then
-     *
-     * ```
-     * googletag.setNonPersonalizedAds(1)
-     * ```
-     *
-     * is being called. Otherwise
-     *
-     * ```
-     * googletag.setNonPersonalizedAds(0)
-     * ```
-     *
-     *
-     * ## CMP Providers
-     *
-     * A list of providers that work well with this approach.
-     *
-     * - Sourcepoint
-     *
-     */
-    export interface Cookie extends IPersonalizedAdsProvider {
-      provider: 'cookie';
-
-      /**
-       * The cookie name to look for.
-       */
-      cookie: string;
-
-      /**
-       * if cookie exists and contains this value, nonPersonalizedAds will be displayed.
-       */
-      valueForNonPersonalizedAds: string;
-    }
-
-  }
-
-  /**
-   * Base interface for CMP differentiating between differen CMP providers
-   */
-  export interface CmpConfig {
-    readonly provider: 'publisher' | 'faktor';
-  }
-
-  /**
-   * If the publisher has it's own cmp
-   */
-  export interface PublisherCmpConfig extends CmpConfig {
-    readonly provider: 'publisher';
-  }
-
-  /**
-   * If faktor.io is used as cmp
-   */
-  export interface FaktorCmpConfig extends CmpConfig {
-    readonly provider: 'faktor';
-    /**
-     * true if we don't any consent modal, but assume user consent based on legitimate interest.
-     */
-    readonly autoOptIn: boolean;
-
-    /**
-     * A timeout in milliseconds for all commands issue against the `__cmp` function.
-     */
-    readonly timeout: number;
   }
 
   /**

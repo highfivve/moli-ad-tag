@@ -10,7 +10,6 @@ import { ICookieService } from '../util/cookieService';
 import { createPerformanceService } from '../util/performanceService';
 
 import { createLazyLoader } from './lazyLoading';
-import { getPersonalizedAdSetting } from './personalizedAdsProvider';
 import { createRefreshListener } from './refreshAd';
 import { ReportingService } from './reportingService';
 import { SizeConfigService } from './sizeConfigService';
@@ -18,7 +17,6 @@ import { SizeConfigService } from './sizeConfigService';
 import SlotDefinition = Moli.SlotDefinition;
 import RefreshableAdSlot = Moli.RefreshableAdSlot;
 import DfpSlotSize = Moli.DfpSlotSize;
-import { FaktorCmp } from './cmp/faktor';
 import { getDefaultLogger, getLogger } from '../util/logging';
 import { LabelConfigService } from './labelConfigService';
 import { SlotEventService } from './slotEventService';
@@ -125,9 +123,8 @@ export class DfpService {
         .then(() => this.logger.debug('DFP Service', 'GPT loaded'))
         .then(() => slotEventService.initialize(this.window.googletag, this.getEnvironment(config)))
         .then(() => this.configureCmp(config, this.reportingService!))
-        .then(() => this.logger.debug('DFP Service', 'CMP configured'))
         // initialize the reporting for non-lazy slots
-        .then(() => this.configureAdNetwork(config))
+        .then((nonPersonalizeAds) => this.configureAdNetwork(config, nonPersonalizeAds))
         .then(() => this.logger.debug('DFP Service', 'Ad Network configured'))
         .catch(error => {
           this.logger.error('DFP Service', 'failed configuring gpt', error);
@@ -239,29 +236,23 @@ export class DfpService {
   /**
    * @param config - the ad configuration
    * @param reportingService - the reporting service that is used to report the cmp loading time
+   * @return Promise with nonPersonalizedAds flag - when the promise resolves consent is given or a timeout was hit
    */
-  private configureCmp(config: Moli.MoliConfig, reportingService: ReportingService): Promise<void> {
-    const cmpConfig = config.consent.cmpConfig;
-
-    this.logger.debug('DFP Service', `Configure cmp using cmp provider: ${cmpConfig.provider}`);
-
-    switch (cmpConfig.provider) {
-      case 'publisher' : {
-        return Promise.resolve();
-      }
-      case 'faktor' : {
-        const faktorCmp = new FaktorCmp(reportingService, this.logger, this.window);
-        if (cmpConfig.autoOptIn) {
-          const timeout = new Promise<void>(resolve => setTimeout(resolve, cmpConfig.timeout));
-          return Promise.race([ timeout, faktorCmp.autoOptIn() ]);
-        } else {
-          return Promise.resolve();
-        }
-      }
-      default: {
-        return Promise.resolve();
-      }
+  private configureCmp(config: Moli.MoliConfig, reportingService: ReportingService): Promise<0 | 1> {
+    const cmp = config.consent.cmp;
+    if (!cmp) {
+      this.logger.error('DFP Service', 'No CMP module is configured');
+      return Promise.reject();
     }
+
+    reportingService.markCmpInitialization();
+    this.logger.debug('DFP Service', `Configure cmp using cmp provider: ${cmp.name}`);
+
+    return cmp.getNonPersonalizedAdSetting().then(nonPersonalizedAds => {
+      this.logger.debug('DFP Service', 'CMP configured');
+      reportingService.measureCmpLoadTime();
+      return nonPersonalizedAds;
+    });
   }
 
   /**
@@ -694,21 +685,22 @@ export class DfpService {
   }
 
 
-  private configureAdNetwork(config: Moli.MoliConfig): Promise<void> {
+  private configureAdNetwork(config: Moli.MoliConfig, nonPersonalizedAds: 0 | 1): Promise<void> {
     switch (this.getEnvironment(config)) {
       case 'production':
         this.configureTargeting(config);
         this.window.googletag.pubads().enableAsyncRendering();
         this.window.googletag.pubads().disableInitialLoad();
         this.window.googletag.pubads().enableSingleRequest();
-        return getPersonalizedAdSetting(config.consent, this.window).then(nonPersonalizedAds => {
-          this.logger.debug('DFP Service', `googletag setRequestNonPersonalizedAds(${nonPersonalizedAds})`);
-          if (nonPersonalizedAds) {
-            this.logger.debug('DFP Service', 'Serve non-personalized ads');
-          }
-          this.window.googletag.pubads().setRequestNonPersonalizedAds(nonPersonalizedAds);
-          this.window.googletag.enableServices();
-        });
+
+        this.logger.debug('DFP Service', `googletag setRequestNonPersonalizedAds(${nonPersonalizedAds})`);
+        if (nonPersonalizedAds) {
+          this.logger.debug('DFP Service', 'Serve non-personalized ads');
+        }
+
+        this.window.googletag.pubads().setRequestNonPersonalizedAds(nonPersonalizedAds);
+        this.window.googletag.enableServices();
+        return Promise.resolve();
       case 'test':
         // Note that this call is actually important to initialize the content service. Otherwise
         // the service won't be enabled with the `googletag.enableServices()`.

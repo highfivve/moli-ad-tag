@@ -10,8 +10,14 @@ import 'prebid.js/build/dist/prebid';
 // ts-loader bails out, because no js has been emitted
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
+import Faktor from '@highfivve/module-cmp-faktor';
 
 // init moli
 const moli = initAdTag(window);
+
+moli.registerModule(new Faktor({
+  autoOptIn: true
+}, window));
+
 moli.configure(adConfiguration);
 moli.requestAds();

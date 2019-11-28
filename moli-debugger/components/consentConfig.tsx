@@ -9,13 +9,13 @@ import IConsentData = IABConsentManagement.IConsentData;
 
 type IConsentConfigProps = {
   consent: Moli.consent.ConsentConfig
-  consentConfig: Moli.consent.CmpConfigVariants
 };
 
 type IConsentConfigState = {
-  consentData: IConsentData | undefined,
-  vendorListVersion: number | undefined,
-  numAllowedVendors: number | undefined,
+  consentData?: IConsentData,
+  nonPersonalizedAds?: 0 | 1,
+  vendorListVersion?: number,
+  numAllowedVendors?: number,
   allowedPurposes: number[],
   messages: Message[];
 };
@@ -30,95 +30,55 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
   constructor(props: IConsentConfigProps) {
     super();
     this.state = {
-      consentData: undefined,
-      vendorListVersion: undefined,
-      numAllowedVendors: undefined,
       allowedPurposes: [],
       messages: []
     };
     this.checkConsentConfig(this.state.messages, props.consent);
-    this.getConsentData();
+    this.initConsentData(this.state.messages, props.consent);
   }
 
   render(props: IConsentConfigProps, state: IConsentConfigState): JSX.Element {
     return <div>
       {this.consent(props.consent)}
-      {this.consentConfig(props.consentConfig)}
       {this.consentData()}
     </div>;
   }
 
   private consent = (consent: Moli.consent.ConsentConfig): JSX.Element => {
-    const provider = <div class="MoliDebug-tagContainer">
-      <span class="MoliDebug-tagLabel">Provider</span>
-      <Tag>{consent.personalizedAds.provider}</Tag>
+    return <div>
+      <div className="MoliDebug-tagContainer">
+        <span className="MoliDebug-tagLabel">Module</span>
+        {consent.cmp ? <Tag>{consent.cmp.name}</Tag> : <Tag variant="red">No defined</Tag>}
+      </div>
+      <div className="MoliDebug-tagContainer">
+        <span className="MoliDebug-tagLabel">Config</span>
+        {consent.cmp ? <Tag>{JSON.stringify(consent.cmp.config())}</Tag> : <Tag variant="red">No config</Tag>}
+      </div>
     </div>;
-
-    switch (consent.personalizedAds.provider) {
-      case 'cmp':
-        return <div>
-          {provider}
-          <div class="MoliDebug-tagContainer">
-            <span className="MoliDebug-tagLabel">Available</span>
-            <Tag
-              variant={this.isCmpFunctionAvailable() ? 'green' : 'red'}>{this.isCmpFunctionAvailable() ? 'true' : 'false'}</Tag>
-          </div>
-        </div>;
-      case 'static':
-        return <div>
-          {provider}
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Value</span>
-            <Tag>{consent.personalizedAds.value.toString()}</Tag>
-          </div>
-        </div>;
-      case 'cookie':
-        return <div>
-          {provider}
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Cookie</span>
-            <Tag>{consent.personalizedAds.cookie}</Tag>
-          </div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Cookie value for nonPersonalizedAds</span>
-            <Tag>{consent.personalizedAds.valueForNonPersonalizedAds}</Tag>
-          </div>
-        </div>;
-    }
   };
 
-  private consentConfig = (consentConfig: Moli.consent.CmpConfigVariants | undefined): JSX.Element | undefined => {
-    if (consentConfig) {
-      const cmpProvider = <div class="MoliDebug-tagContainer">
-        <span class="MoliDebug-tagLabel">CMP Provider</span>
-        <Tag>{consentConfig.provider}</Tag>
-      </div>;
-
-      switch (consentConfig.provider) {
-        case 'publisher':
-          return cmpProvider;
-        case 'faktor':
-          return <div>
-            {cmpProvider}
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">auto-opt-in</span>
-              <Tag>{consentConfig.autoOptIn.toString()}</Tag>
-            </div>
-          </div>;
-      }
-    }
-  };
-
-  private getConsentData = (): void => {
-    if (this.isCmpFunctionAvailable()) {
-      window.__cmp('getConsentData', null, (consentData: IConsentData | null, _success) => {
-
+  private initConsentData = (messages: Message[], consent?: Moli.consent.ConsentConfig): void => {
+    if (consent && consent.cmp) {
+      consent.cmp.getConsentData().then(consentData => {
+        this.setState({ consentData });
         const consentString = new ConsentString(consentData ? consentData.consentData : undefined);
-
-        this.setState({ consentData: consentData ? consentData : undefined });
         this.setState({ vendorListVersion: consentString.getVendorListVersion() });
         this.setState({ numAllowedVendors: consentString.getVendorsAllowed().length });
         this.setState({ allowedPurposes: consentString.getPurposesAllowed() });
+      }).catch(error => {
+        messages.push({
+          kind: 'error',
+          text: `Could'nt get ConsentData. ${error}`
+        });
+      });
+
+      consent.cmp.getNonPersonalizedAdSetting().then(nonPersonalizedAds => {
+        this.setState({ nonPersonalizedAds });
+      }).catch(error => {
+        messages.push({
+          kind: 'error',
+          text: `Could'nt get nonPersonalizedAds setting. ${error}`
+        });
       });
     }
   };
@@ -142,12 +102,13 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
 
         <div class="MoliDebug-tagContainer">
           <span class="MoliDebug-tagLabelBtn" type="button" data-toggle="collapse" data-target="#collapseConsentString"
-                  aria-expanded="false" aria-controls="collapseConsentString">
+                aria-expanded="false" aria-controls="collapseConsentString">
             consent string
           </span>
           <Tag>
-            <a class="link" href={`https://useless.af/consent-decoder?gdpr_consent=${this.state.consentData ? this.state.consentData.consentData : ''}`}>
-            useless.af
+            <a class="link"
+               href={`https://useless.af/consent-decoder?gdpr_consent=${this.state.consentData ? this.state.consentData.consentData : ''}`}>
+              useless.af
             </a>
           </Tag>
           <div class="collapse" id="collapseConsentString">
@@ -167,9 +128,15 @@ export class ConsentConfig extends preact.Component<IConsentConfigProps, IConsen
         text: 'No consent configuration found.'
       });
     }
+    if (consent && !consent.cmp) {
+      messages.push({
+        kind: 'error',
+        text: 'no cmp module configured!'
+      });
+    }
 
     // if cmp is configured, there must be a cmp present
-    if (consent && consent.personalizedAds.provider === 'cmp' && !this.isCmpFunctionAvailable()) {
+    if (consent && consent.cmp && !this.isCmpFunctionAvailable()) {
       messages.push({
         kind: 'error',
         text: 'no window.__cmp function found. Consent management and ads will not work!'
