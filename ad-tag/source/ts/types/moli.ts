@@ -832,6 +832,28 @@ export namespace Moli {
      * be set indicating this is a passback request. The rest of the key-values will be untouched
      * keeping the prebid / a9 auction key-values.
      *
+     *
+     * ## Example creative snippet
+     *
+     * This is an example of how a passback function could look like in a creative.
+     *
+     * ```
+     * var passbackCallback = function() {
+     *   var request = JSON.stringify({
+     *     type: 'passback',
+     *     domId: '[AD-SLOT-DOM-ID]',
+     *     passbackOrigin: '[ADVERTISER-NAME]'
+     *   });
+     *   try {
+     *     // first try to post a message on the top most window
+     *     window.top.postMessage(request, '*');
+     *   } catch (_) {
+     *     // best-effort postMessage
+     *     window.postMessage(request, '*');
+     *   }
+     * }
+     * ```
+     *
      * Default is `false`
      */
     readonly passbackSupport?: Boolean;

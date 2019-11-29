@@ -33,17 +33,19 @@ In the advertiser creative we need to define a passback function or whatever the
 us that executes this code to trigger the passback feature.
 
 ```js
-var request = {
-  type: 'passback',
-  domId: 'content-2',
-  passbackOrigin: '<advertiser name>'
-}
-try {
-  // first try to post a message on the top most window
-  window.top.postMessage(JSON.stringify(request), '*');
-} catch (_) {
-  // best-effort postMessage
-  window.postMessage(JSON.stringify(request), '*');
+var passbackCallback = function() {
+    var request = JSON.stringify({
+      type: 'passback',
+      domId: 'content-2',
+      passbackOrigin: '<advertiser name>'
+    });
+    try {
+      // first try to post a message on the top most window
+      window.top.postMessage(request, '*');
+    } catch (_) {
+      // best-effort postMessage
+      window.postMessage(request, '*');
+    }
 }
 ```
 
