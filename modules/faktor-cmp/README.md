@@ -7,7 +7,7 @@ Faktor provides an IAB compliant CMP.
 In your `index.ts` import confiant and register the module.
 
 ```js
-import Faktor from '@highfivve/module-cmp-faktor';
+import Faktor from '@highfivve/modules/faktor-cmp';
 moli.registerModule(new Faktor({
   autoOptIn: false
 }, window));
