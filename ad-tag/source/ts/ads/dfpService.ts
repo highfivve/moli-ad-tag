@@ -103,10 +103,6 @@ export class DfpService {
     this.reportingService = new ReportingService(
       createPerformanceService(this.window), slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
     );
-    // we pass in the googletag even it may not be available yet. This is not an issue as the first
-    // action we take is to wait for the gpt tag to be available.
-    this.passbackService = new PassbackService(this.window.googletag, this.logger, this.window);
-
     const env = this.getEnvironment(config);
 
     // a9 script overwrites the window.apstag completely on script load
@@ -126,6 +122,11 @@ export class DfpService {
       this.awaitDomReady()
         .then(() => this.awaitGptLoaded())
         .then(() => this.logger.debug('DFP Service', 'GPT loaded'))
+        .then(() => {
+          // we pass in the googletag even it may not be available yet. This is not an issue as the first
+          // action we take is to wait for the gpt tag to be available.
+          this.passbackService = new PassbackService(this.window.googletag, this.logger, this.window);
+        })
         .then(() => slotEventService.initialize(this.window.googletag, this.getEnvironment(config)))
         .then(() => this.configureCmp(config, this.reportingService!))
         // initialize the reporting for non-lazy slots
