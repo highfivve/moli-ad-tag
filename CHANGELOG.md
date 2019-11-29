@@ -2,7 +2,80 @@
 
 ## Unreleased
 
-[GD-1619](https://jira.gutefrage.net/browse/GD-1619) Refactor the consent feature into the module system. Faktor is now a CMP Module.
+### [GD-1613](https://jira.gutefrage.net/browse/GD-1613) Add passback support without passback slots.
+
+Passback support can be enable by setting the `passbackSupport` property to `true` on an ad slot configuration.
+This will cause a `window` message listener to be registered, which listens to certain passback events and
+refreshs the ad slot if the proper event was sent while also setting two additional key-values `passback` to `true`
+and `passbackOrigin` to the value sent in the message.
+
+#### Example
+
+The slot is configured as usual. Only the `passbackSupport` property is set to `true`. The `domId`
+is important as it acts as the identifier for the ad slot where the passback should be triggered
+
+```js
+const slot = {
+  domId: 'content-2',
+  passbackSupport: true,
+  // ... other settings
+}
+```
+
+In the advertiser creative we need to define a passback function or whatever the advertiser gives
+us that executes this code to trigger the passback feature.
+
+```js
+var request = {
+  type: 'passback',
+  domId: 'content-2',
+  passbackOrigin: '<advertiser name>'
+}
+try {
+  // first try to post a message on the top most window
+  window.top.postMessage(JSON.stringify(request), '*');
+} catch (_) {
+  // best-effort postMessage
+  window.postMessage(JSON.stringify(request), '*');
+}
+```
+
+Note that we sent the json objects as strings, because Internet Explorer only supports strings.
+
+
+#### A word on key values
+
+Both key-values serve a purpose
+
+- `passback` - the only value this can be set to is `true`. **All** line items that contain creatives that might trigger
+  a passback need to have a targeting setting that says `NOT passback=true`. Otherwise we get infinite passback loops
+- `passbackOrigin` - this key value contains the advertiser name how's creative triggered the passback. This allows us
+  to get more detailed reports on how much each advertiser is responsible for passbacks
+  
+
+#### Impression tracking
+
+We force the `correlator` to not be changed when we trigger a "passback refresh". Following the docs this should mean
+that everything is still counted as a single page view, which is the correct way.
+
+From the [gpt.js API documentation](https://developers.google.com/doubleclick-gpt/reference#refreshopt_slots,-opt_options)
+
+> Configuration options associated with this refresh call. changeCorrelator specifies whether or not a new correlator is
+> to be generated for fetching ads. Our ad servers maintain this correlator value briefly (currently for 30 seconds, but 
+> subject to change), such that requests with the same correlator received close together will be considered a
+> single page view. By default a new correlator is generated for every refresh. Note that this option has no effect
+> on GPT's long-lived pageview, which automatically reflects the ads currently on the page and has no expiration time.
+
+
+#### Resources
+
+- [postMessage browser support](http://caniuse.com/#search=postMessage)
+- [Mozilla MDN postMessage docs](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
+- [Mozilla MDN Channel_Messaging_API](https://developer.mozilla.org/en/docs/Web/API/Channel_Messaging_API)
+
+### [GD-1619](https://jira.gutefrage.net/browse/GD-1619) CMP Module
+
+Refactor the consent feature into the module system. Faktor is now a CMP Module.
 
 Breaking changes to the ad configuration are
 

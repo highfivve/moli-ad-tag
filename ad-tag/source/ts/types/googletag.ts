@@ -376,6 +376,13 @@ export namespace googletag {
      *                     Service-level targeting parameters are not included.
      */
     getTargeting(key: string): string[];
+
+    /**
+     * Clears specific or all custom slot-level targeting parameters for this slot.
+     * @param {string} key - optional key, if unspecified all slot targetings will be cleared
+     * @see https://developers.google.com/doubleclick-gpt/reference#googletag.Slot_clearTargeting
+     */
+    clearTargeting(key?: string): void;
   }
 
 }

@@ -825,6 +825,16 @@ export namespace Moli {
 
     /** optional a9 configuration if this ad slot can also be used by a9 */
     readonly a9?: headerbidding.A9AdSlotConfig;
+
+    /**
+     * If true this ad slot will be refreshed if a window.postMessage event is being sent from
+     * a creative identifying the ad slot by domId. In additional key value `passback:true` will
+     * be set indicating this is a passback request. The rest of the key-values will be untouched
+     * keeping the prebid / a9 auction key-values.
+     *
+     * Default is `false`
+     */
+    readonly passbackSupport?: Boolean;
   }
 
   // -----------------------------------------

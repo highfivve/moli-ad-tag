@@ -78,11 +78,12 @@ const showHeroes = (playerId: string): prebidjs.IShowHeroesBid => {
 export const adConfiguration: Moli.MoliConfig = {
   slots: [
     {
-      position: 'in-page',
       domId: 'eager-loading-adslot',
+      position: 'in-page',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
       sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      passbackSupport: true,
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
@@ -113,6 +114,7 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: { loaded: 'eager' },
       // adUnitPath: '/33559401/gf/fragen/pos2',
       adUnitPath: '/55155651/outstream_test',
+      passbackSupport: true,
       sizes: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
       prebid: {
         adUnit: {
@@ -211,6 +213,9 @@ export const adConfiguration: Moli.MoliConfig = {
     }
 
   ],
+  // -----------------------------
+  // ----- standard config -------
+  // -----------------------------
   targeting: {
     keyValues: {
       'static': 'from-config'

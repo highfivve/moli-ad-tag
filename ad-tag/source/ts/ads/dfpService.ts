@@ -20,6 +20,7 @@ import DfpSlotSize = Moli.DfpSlotSize;
 import { getDefaultLogger, getLogger } from '../util/logging';
 import { LabelConfigService } from './labelConfigService';
 import { SlotEventService } from './slotEventService';
+import { PassbackService } from './passbackService';
 
 type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -52,6 +53,7 @@ export class DfpService {
    */
   private reportingService: ReportingService | undefined;
   private slotEventService: SlotEventService | undefined;
+  private passbackService: PassbackService | undefined;
 
 
   /**
@@ -101,6 +103,9 @@ export class DfpService {
     this.reportingService = new ReportingService(
       createPerformanceService(this.window), slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
     );
+    // we pass in the googletag even it may not be available yet. This is not an issue as the first
+    // action we take is to wait for the gpt tag to be available.
+    this.passbackService = new PassbackService(this.window.googletag, this.logger, this.window);
 
     const env = this.getEnvironment(config);
 
@@ -144,7 +149,7 @@ export class DfpService {
    *
    */
   public requestAds = (config: Moli.MoliConfig): Promise<Moli.AdSlot[]> => {
-    if (!this.initialized || !this.reportingService || !this.slotEventService) {
+    if (!this.initialized || !this.reportingService || !this.slotEventService || !this.passbackService) {
       const message = 'DFP Service not initialized yet';
       this.logger.error('DFP Service', message);
       return Promise.reject(message);
@@ -164,16 +169,15 @@ export class DfpService {
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     // concurrently initialize lazy loaded slots and refreshable slots
-    this.initLazyRefreshableSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, this.slotEventService, globalLabelConfigService);
-    this.initLazyLoadedSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, this.reportingService, this.slotEventService, globalLabelConfigService);
+    this.initLazyRefreshableSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, this.reportingService, this.slotEventService, globalLabelConfigService, this.passbackService);
+    this.initLazyLoadedSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, this.reportingService, this.slotEventService, globalLabelConfigService, this.passbackService);
 
     // eagerly displayed slots - this includes 'eager' slots and non-lazy 'refreshable' slots
-    return Promise.resolve()
-    // request all existing and non-lazy loading slots
-      .then(() => this.filterAvailableSlots(filteredSlots).filter(this.isInstantlyLoadedSlot))
-      // configure slots with gpt
+    return Promise.resolve(instantlyLoadedSlots)
+    // configure slots with gpt
       .then((availableSlots: Moli.AdSlot[]) => this.registerSlots(availableSlots, this.getEnvironment(config)))
       .then((registeredSlots: SlotDefinition<Moli.AdSlot>[]) => this.displayAds(registeredSlots))
+      .then((registeredSlots) => this.configurePassback(registeredSlots, this.passbackService!))
       .then((registeredSlots) => {
         this.initRefreshableSlots(
           this.window[prebidGlobal],
@@ -267,6 +271,7 @@ export class DfpService {
    * @param reportingService gather metrics
    * @param slotEventService access to slot events
    * @param globalLabelConfigService filter supported labels
+   * @param passbackService
    */
   private initLazyLoadedSlots(
     pbjs: prebidjs.IPrebidJs,
@@ -274,7 +279,8 @@ export class DfpService {
     config: Moli.MoliConfig,
     reportingService: ReportingService,
     slotEventService: SlotEventService,
-    globalLabelConfigService: LabelConfigService
+    globalLabelConfigService: LabelConfigService,
+    passbackService: PassbackService
   ): void {
     lazyLoadingSlots.forEach((moliSlotLazy) => {
       const filterSupportedSizes = this.getSizeFilterFunction(moliSlotLazy);
@@ -301,6 +307,9 @@ export class DfpService {
             this.logger.warn('DFP Service', 'initLazyLoadedSlots skips prebid requests');
             return Promise.resolve(slotDefinition);
           }
+
+          this.configurePassback([ slotDefinition ], passbackService);
+
           // check if the lazy slot wraps a prebid slot and request prebid too
           // only executes the necessary parts of `this.initHeaderBidding`
 
@@ -370,7 +379,8 @@ export class DfpService {
     config: Moli.MoliConfig,
     reportingService: ReportingService,
     slotEventService: SlotEventService,
-    globalLabelConfigService: LabelConfigService
+    globalLabelConfigService: LabelConfigService,
+    passbackService: PassbackService
   ): void {
     lazyRefreshableSlots
       .filter((moliSlot) => this.isValidTrigger(moliSlot.behaviour.trigger))
@@ -397,13 +407,10 @@ export class DfpService {
               }
               this.displayAd(moliSlotRefreshable);
             }
-            this.requestRefreshableSlot(
-              pbjs,
-              { moliSlot: moliSlotRefreshable, adSlot, filterSupportedSizes },
-              config,
-              reportingService,
-              globalLabelConfigService
-            );
+            const slotDefinition = { moliSlot: moliSlotRefreshable, adSlot, filterSupportedSizes };
+
+            this.configurePassback([ slotDefinition ], passbackService);
+            this.requestRefreshableSlot(pbjs, slotDefinition, config, reportingService, globalLabelConfigService);
           });
         } catch (e) {
           this.logger.warn('DFP Service', `creating lazy refreshable slots failed ${moliSlotRefreshable.adUnitPath}`, e);
@@ -944,6 +951,13 @@ export class DfpService {
     }
   }
 
+  private configurePassback(slots: SlotDefinition<Moli.AdSlot>[], passbackService: PassbackService): SlotDefinition<Moli.AdSlot>[] {
+    slots.filter(slot => slot.moliSlot.passbackSupport).forEach(slot => {
+      passbackService.addAdSlot(slot);
+    });
+    return slots;
+  }
+
   private displayAds(slots: SlotDefinition<Moli.AdSlot>[]): SlotDefinition<Moli.AdSlot>[] {
     slots.forEach((definition: SlotDefinition<Moli.AdSlot>) => this.displayAd(definition.moliSlot));
     return slots;
@@ -1008,6 +1022,8 @@ export class DfpService {
         });
         break;
       case 'production':
+        // clear targetings for each slot before refreshing
+        slots.forEach(slot => slot.adSlot.clearTargeting());
         this.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
         break;
     }

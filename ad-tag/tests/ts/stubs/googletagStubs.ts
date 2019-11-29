@@ -52,6 +52,9 @@ export const contentServiceStub: googletag.IContentService = {
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
 
   const stub: googletag.IAdSlot = {
+    clearTargeting(_key?: string): void {
+      return;
+    },
     setTargeting: (_key: string, _value: string | string[]): googletag.IAdSlot => {
       return stub;
     },
