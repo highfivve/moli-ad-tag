@@ -2,11 +2,11 @@
 
 This is the moli api documentation. It provides an overview over the provided types.
 
-## [Moli Tag](interfaces/_moli_.moli.molitag.html)
+## [Moli Tag](interfaces/_types_moli_.moli.molitag.html)
 
 The public API that should be used by publishers is the Moli tag.
 
-## [Moli Config](interfaces/_moli_.moli.moliconfig.html)
+## [Moli Config](interfaces/_types_moli_.moli.moliconfig.html)
 
 This is the "ad configuration", which contains all necessary information to request and render ads on the publisher page.
 
@@ -43,14 +43,14 @@ window.moli.que.push(function(moliAdTag) {
 
 ### API summary
 
-- [`setTarget(key,value)`](interfaces/_moli_.moli.molitag.html#settargeting). Add dynamic key value pairs from the publisher site
-- [`addLabel`](interfaces/_moli_.moli.molitag.html#addlabel). Add custom labels for ad slot filtering
-- [`setLogger`](interfaces/_moli_.moli.molitag.html#setlogger). Provide a custom logger implementation
-- [`addReporter`](interfaces/_moli_.moli.molitag.html#addreporter). Add custom reporting functions to measure general metrics and ad slot related metrics
-- [`setSampleRate`](interfaces/_moli_.moli.molitag.html#setsamplerate). Restrict the number of metrics pushed to the configured reporters
+- [`setTarget(key,value)`](interfaces/_types_moli_.moli.molitag.html#settargeting). Add dynamic key value pairs from the publisher site
+- [`addLabel`](interfaces/_types_moli_.moli.molitag.html#addlabel). Add custom labels for ad slot filtering
+- [`setLogger`](interfaces/_types_moli_.moli.molitag.html#setlogger). Provide a custom logger implementation
+- [`addReporter`](interfaces/_types_moli_.moli.molitag.html#addreporter). Add custom reporting functions to measure general metrics and ad slot related metrics
+- [`setSampleRate`](interfaces/_types_moli_.moli.molitag.html#setsamplerate). Restrict the number of metrics pushed to the configured reporters
 
 
-The [`configure()`](interfaces/_moli_.moli.molitag.html#configure) method should never be called by the publisher. The ad tag contains the
+The [`configure()`](interfaces/_types_moli_.moli.molitag.html#configure) method should never be called by the publisher. The ad tag contains the
 static configuration. Use this method for initial testing during the integration face, but not in production.
 
 ## Integration
@@ -103,9 +103,9 @@ window.moli.que.push(function(moliAdTag) {
 </script>
 ```
 
-You can use the [full Moli Tag API](interfaces/_moli_.moli.molitag.html). Note that the moli tag is always
+You can use the [full Moli Tag API](interfaces/_types_moli_.moli.molitag.html). Note that the moli tag is always
 in a certain state. Depending on the state, different actions are allowed. 
-You can [learn more about all state transitions in the state module](modules/_moli_.moli.state.html).
+You can [learn more about all state transitions in the state module](modules/_types_moli_.moli.state.html).
 
 #### Requesting Ads
 
