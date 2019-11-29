@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.29.1
+
+[GD-1613](https://jira.gutefrage.net/browse/GD-1613) BUGFIX: initialize passback service after gpt has been loaded
+
+
 [GD-1619](https://jira.gutefrage.net/browse/GD-1619) Add timeout for cmp operations.
 
 Configure a timeout in ms for operations on the cmp module. If not configures all operations will block 
