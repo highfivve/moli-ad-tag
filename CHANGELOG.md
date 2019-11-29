@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.29.0
+
 ### [GD-1613](https://jira.gutefrage.net/browse/GD-1613) Add passback support without passback slots.
 
 Passback support can be enable by setting the `passbackSupport` property to `true` on an ad slot configuration.
