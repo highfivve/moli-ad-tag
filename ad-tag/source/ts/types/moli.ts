@@ -1306,6 +1306,15 @@ export namespace Moli {
        * If no CmpModule is registered no ads will be loaded.
        */
       cmp?: CmpModule;
+
+      /**
+       * Configure a timeout in ms for operations on the cmp module.
+       *
+       * If not configures all operations will block until they have finished.
+       *
+       * default: none - meaning operations block until finished
+       */
+      timeout?: number;
     }
 
   }

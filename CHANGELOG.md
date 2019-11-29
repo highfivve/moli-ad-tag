@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+[GD-1619](https://jira.gutefrage.net/browse/GD-1619) Add timeout for cmp operations.
+
+Configure a timeout in ms for operations on the cmp module. If not configures all operations will block 
+until they have finished. The default is none meaning operations block until finished. 
+
 ## 1.29.0
 
 ### [GD-1613](https://jira.gutefrage.net/browse/GD-1613) Add passback support without passback slots.

@@ -252,11 +252,23 @@ export class DfpService {
     reportingService.markCmpInitialization();
     this.logger.debug('DFP Service', `Configure cmp using cmp provider: ${cmp.name}`);
 
-    return cmp.getNonPersonalizedAdSetting().then(nonPersonalizedAds => {
+    const personalizedAds = cmp.getNonPersonalizedAdSetting().then(nonPersonalizedAds => {
       this.logger.debug('DFP Service', 'CMP configured');
       reportingService.measureCmpLoadTime();
       return nonPersonalizedAds;
     });
+
+    // only add a timeout if configured otherwise rely on the behaviour of the provider
+    // which is usually blocking!
+    if (config.consent.timeout) {
+      const noPersonalizedAdsFallback = new Promise<0 | 1>(resolve => {
+        setTimeout(() => resolve(1), config.consent.timeout);
+      });
+      return Promise.race([noPersonalizedAdsFallback, personalizedAds]);
+    } else {
+      return personalizedAds;
+    }
+
   }
 
   /**
