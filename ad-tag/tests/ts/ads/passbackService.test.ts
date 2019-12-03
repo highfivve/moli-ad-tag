@@ -121,4 +121,31 @@ describe('Passback Service', () => {
         expect(googleAdSlotSetTargetingSpy.secondCall.args[1]).to.be.equals('outstream-partner-1');
       });
   });
+
+  it('should allow passbacks only once', () => {
+    const passbackService = new PassbackService(gpt, noopLogger, dom.window);
+    const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
+
+    const adSlotDefinition: Moli.SlotDefinition<any> = {
+      moliSlot: { domId: 'foo' } as any,
+      adSlot: googleAdSlot,
+      filterSupportedSizes: {} as any
+    };
+
+    passbackService.addAdSlot(adSlotDefinition);
+
+    return Promise.all([
+      postMessage(JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' })),
+      postMessage(JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' }))
+    ]).then(() => {
+        expect(pubadsRefreshSpy).to.have.be.calledOnce;
+        expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
+          Sinon.match.array.and(Sinon.match((adSlots) => {
+            return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
+          }, 'more or less than 1 ad slot used OR wrong slot')),
+          Sinon.match.has('changeCorrelator', false)
+        );
+      });
+
+  });
 });

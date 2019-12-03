@@ -69,6 +69,9 @@ export class PassbackService {
         adSlot.adSlot.setTargeting(this.passbackKeyValue, 'true');
         adSlot.adSlot.setTargeting(this.passbackOriginKeyValue, message.passbackOrigin);
         this.gpt.pubads().refresh([ adSlot.adSlot ], { changeCorrelator: false });
+        
+        // allow passback only once
+        delete this.adSlots[message.domId];
       }
     });
   }
