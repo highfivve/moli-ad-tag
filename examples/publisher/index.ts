@@ -3,7 +3,7 @@
 // This example demonstrates the "publisher" mode, which enables the publisher
 // to configure moli and trigger `requestAds` afterwards.
 
-import 'prebid.js/build/dist/prebid';
+import 'prebid.js/build/dev/prebid';
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import Faktor from '@highfivve/module-cmp-faktor';

@@ -6180,10 +6180,10 @@ prebid.js@2.30.0:
     jsencrypt "^3.0.0-rc.1"
     just-clone "^1.0.2"
 
-prebid.js@2.34.0:
-  version "2.34.0"
-  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-2.34.0.tgz#3c98a4c7a8ae1b4fc12aec9e0512223d1b0b901b"
-  integrity sha512-NYuMLWAWFw0YKGSwh0PJC5+9jt8O5wexlcjBiAJhqPCbV3wuhLiiboNSl9u0Gc2NjI1DR6oZpQE7KXbQtl1D1Q==
+prebid.js@2.41.0:
+  version "2.41.0"
+  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-2.41.0.tgz#294d38881eface1423fff3a1eed014566c10a061"
+  integrity sha512-fuqzEFIVOCSO+AyX1Q0eMo5Ca5GGGQ6VR0O1ot5xvXK5eeoVlh4uzNbNvDReP+QRF8zR7ltxmOOIv3JjqaE/uA==
   dependencies:
     babel-plugin-transform-object-assign "^6.22.0"
     core-js "^2.4.1"
