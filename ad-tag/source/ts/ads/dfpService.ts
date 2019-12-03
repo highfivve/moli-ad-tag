@@ -1036,7 +1036,6 @@ export class DfpService {
         break;
       case 'production':
         // clear targetings for each slot before refreshing
-        slots.forEach(slot => slot.adSlot.clearTargeting());
         this.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
         break;
     }
