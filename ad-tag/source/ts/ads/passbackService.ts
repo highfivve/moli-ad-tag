@@ -68,6 +68,9 @@ export class PassbackService {
         this.logger.debug('Passback Service', 'Process passback for ad slot');
         adSlot.adSlot.setTargeting(this.passbackKeyValue, 'true');
         adSlot.adSlot.setTargeting(this.passbackOriginKeyValue, message.passbackOrigin);
+
+        // the changeCorrelator: false should count this impression as one and not two
+        // see the changelog for more information
         this.gpt.pubads().refresh([ adSlot.adSlot ], { changeCorrelator: false });
         
         // allow passback only once
