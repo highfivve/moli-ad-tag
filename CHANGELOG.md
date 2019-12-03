@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-## 1.29.1
+## 1.29.2
+
+BUGFIX: clearTargeting must not be called before refreshing as this removes all the prebid key values.
+
+## 1.29.1 - DO NOT USE
 
 [GD-1613](https://jira.gutefrage.net/browse/GD-1613) BUGFIX: initialize passback service after gpt has been loaded
 
@@ -12,7 +16,7 @@
 Configure a timeout in ms for operations on the cmp module. If not configures all operations will block 
 until they have finished. The default is none meaning operations block until finished. 
 
-## 1.29.0
+## 1.29.0 - DO NOT USE
 
 ### [GD-1613](https://jira.gutefrage.net/browse/GD-1613) Add passback support without passback slots.
 
