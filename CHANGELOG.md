@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.29.3
+
+[GD-1613](https://jira.gutefrage.net/browse/GD-1613) Allow passbacks to trigger at most once.
+
 ## 1.29.2
 
 BUGFIX: clearTargeting must not be called before refreshing as this removes all the prebid key values.
