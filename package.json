@@ -10,6 +10,7 @@
   "scripts": {
     "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../examples/prebid/modules.json",
     "build:prebid-dev": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build-bundle-dev --modules=../../examples/prebid/modules.json",
+    "postinstall": "yarn build:prebid",
     "preversion": "yarn build:prebid && yarn workspaces run validate",
     "postversion": "git push && git push --tags"
   },
