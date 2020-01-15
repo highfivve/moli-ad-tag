@@ -110,8 +110,7 @@ describe('Passback Service', () => {
         expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
           Sinon.match.array.and(Sinon.match((adSlots) => {
             return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
-          }, 'more or less than 1 ad slot used OR wrong slot')),
-          Sinon.match.has('changeCorrelator', false)
+          }, 'more or less than 1 ad slot used OR wrong slot'))
         );
 
         expect(googleAdSlotSetTargetingSpy).to.have.been.calledTwice;
@@ -142,8 +141,7 @@ describe('Passback Service', () => {
         expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
           Sinon.match.array.and(Sinon.match((adSlots) => {
             return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
-          }, 'more or less than 1 ad slot used OR wrong slot')),
-          Sinon.match.has('changeCorrelator', false)
+          }, 'more or less than 1 ad slot used OR wrong slot'))
         );
       });
 

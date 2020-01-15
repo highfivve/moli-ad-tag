@@ -69,9 +69,9 @@ export class PassbackService {
         adSlot.adSlot.setTargeting(this.passbackKeyValue, 'true');
         adSlot.adSlot.setTargeting(this.passbackOriginKeyValue, message.passbackOrigin);
 
-        // the changeCorrelator: false should count this impression as one and not two
-        // see the changelog for more information
-        this.gpt.pubads().refresh([ adSlot.adSlot ], { changeCorrelator: false });
+        // previously we had changeCorrelator: true (see GD-1615), but this hadn't the intended effect
+        // so we removed it (see GD-1696)
+        this.gpt.pubads().refresh([ adSlot.adSlot ] );
         
         // allow passback only once
         delete this.adSlots[message.domId];
