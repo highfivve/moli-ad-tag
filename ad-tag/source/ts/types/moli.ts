@@ -1332,7 +1332,13 @@ export namespace Moli {
       /**
        * Configure a timeout in ms for operations on the cmp module.
        *
-       * If not configures all operations will block until they have finished.
+       * If not configured we rely on the vendor behaviour. This can either be blocking or not.
+       * Make sure to check this.
+       *
+       * In order to force ad loading without any consent make sure to
+       *
+       * - configure a timeout greater than 0
+       * - allow prebid to proceed without consent
        *
        * default: none - meaning operations block until finished
        */

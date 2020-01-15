@@ -261,7 +261,7 @@ export class DfpService {
 
     // only add a timeout if configured otherwise rely on the behaviour of the provider
     // which is usually blocking!
-    if (config.consent.timeout) {
+    if (config.consent.timeout && config.consent.timeout > 0) {
       const noPersonalizedAdsFallback = new Promise<0 | 1>(resolve => {
         setTimeout(() => resolve(1), config.consent.timeout);
       });
