@@ -1648,6 +1648,89 @@ export namespace Moli {
 
   }
 
+  /**
+   * == Yield Optimization ==
+   *
+   * The systems is designed to work with Google Ad Managers _Unified Pricing Rules_. The general idea is that
+   * key values are being used to target specific pricing rules per ad unit. The configuration when a pricing rule
+   * should be applied can be fetched from an external system to allow dynamic floor price optimizations.
+   *
+   * @see https://support.google.com/admanager/answer/9298008?hl=en
+   */
+  export namespace yield_optimization {
+
+    export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
+
+    /**
+     * Available options to configure yield optimization
+     */
+    export type YieldOptimizationConfig = NoYieldOptimizationConfig | StaticYieldOptimizationConfig | DynamicYieldOptimizationConfig;
+
+    export interface IYieldOptimizationConfig {
+      readonly provider: YieldOptimizationConfigProvider;
+    }
+
+    /**
+     * No key values will be applied. The system is inactive.
+     */
+    export interface NoYieldOptimizationConfig extends IYieldOptimizationConfig {
+      readonly provider: 'none';
+    }
+
+    /**
+     * A static configuration for all ad units is being used
+     */
+    export interface StaticYieldOptimizationConfig extends IYieldOptimizationConfig {
+      readonly provider: 'static';
+
+      readonly config: ReadonlyArray<AdUnitPriceRules>;
+    }
+
+    /**
+     * A dynamic configuration
+     */
+    export interface DynamicYieldOptimizationConfig extends IYieldOptimizationConfig {
+      readonly provider: 'dynamic';
+
+      /**
+       * URL to a json config file that contains a list of AdUnitPriceRules.
+       */
+      readonly configEndpoint: string;
+
+      /**
+       * If the json file could not be fetched or parsed, this fallback id will be used instead.
+       * This ensure a minimum floor price will always be used.
+       */
+      readonly fallbackUprId: number;
+
+    }
+
+    export interface AdUnitPriceRules {
+      /**
+       * The ad unit that is being configured
+       */
+      readonly adUnit: string;
+
+      /**
+       * The main price rule which is applied to the main traffic share (usually 80%).
+       */
+      readonly main: PriceRule;
+
+      /**
+       * A list of pricing rules that are evenly distributed over the test traffic share (usually 20%).
+       */
+      readonly tests: ReadonlyArray<PriceRule>;
+    }
+
+    export interface PriceRule {
+      /**
+       * Unique identifier for a pricing rule. This is will be sent as a key_value `upr_id` per ad unit
+       * and will trigger the matching unified pricing rule in Google Ad Manager.
+       */
+      readonly priceRuleId: number;
+    }
+
+  }
 
   /**
    * # Logger interface

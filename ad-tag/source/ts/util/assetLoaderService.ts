@@ -34,6 +34,14 @@ export interface IAssetLoaderService {
    * @param parent [optional] the element to which the assetLoader should append the asset. defaults to document.head.
    */
   loadScript(config: ILoadAssetParams, parent?: Element): Promise<void>;
+
+  /**
+   * Loads a JSON asset from the given assetURL.
+   *
+   * @param name human readable name of the asset that should be fetched. Used to measure loading performance
+   * @param assetUrl the asset url
+   */
+  loadJson<T>(name: string, assetUrl: string): Promise<T>;
 }
 
 export class AssetLoaderService implements IAssetLoaderService {
@@ -57,8 +65,28 @@ export class AssetLoaderService implements IAssetLoaderService {
       .then(() => this.measurePerformance(config.name));
   }
 
+  public loadJson<T>(name: string, assetUrl: string): Promise<T> {
+    this.startPerformance(name);
+    return this.window.fetch(assetUrl, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => {
+        return response.ok ?
+          response.json() :
+          response.text().then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
+      })
+      .catch(error => {
+        this.measurePerformance(name);
+        return Promise.reject(error);
+      });
+  }
+
   private loadAssetViaFetch(config: ILoadAssetParams, parentElement: Element): Promise<any> {
-    return window.fetch(config.assetUrl)
+    return this.window.fetch(config.assetUrl)
       .then((response: Response) => response.ok ? Promise.resolve(response) : Promise.reject(response))
       .then((response: Response) => response.text())
       .then((body: string) => this.scriptTagWithBody(body))
@@ -66,7 +94,7 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 
   private scriptTagWithBody(body: string): HTMLScriptElement {
-    const scriptTag = document.createElement('script');
+    const scriptTag = this.window.document.createElement('script');
     scriptTag.type = 'text/javascript';
     scriptTag.async = true;
     scriptTag.text = body;
@@ -84,7 +112,7 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 
   private scriptTagWithSrc(src: string): HTMLScriptElement {
-    const scriptTag = document.createElement('script');
+    const scriptTag = this.window.document.createElement('script');
     scriptTag.type = 'text/javascript';
     scriptTag.async = true;
     scriptTag.src = src;
