@@ -17,6 +17,10 @@ type AdUnitsPriceRuleSelection = {
 export class YieldOptimizationService {
 
   private readonly adUnitPricingRules: Promise<AdUnitsPriceRuleSelection>;
+
+  /**
+   * Generates a number between [0-99]
+   */
   private readonly trafficShare: () => number;
 
   /**
