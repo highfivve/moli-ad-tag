@@ -1,12 +1,22 @@
 import { Moli } from '../../../source/ts/types/moli';
 import { IABConsentManagement } from '../../../source/ts/types/IABConsentManagement';
 
-export const newNoopLogger = (): Moli.MoliLogger => {
+export const newNoopLogger = (withErrorLogs?: boolean): Moli.MoliLogger => {
   return {
-    debug: () => { return; },
-    info: () => { return; },
-    warn: () => { return; },
-    error: (message?: any, ...optionalParams: any[]) => { console.error(message, ...optionalParams); }
+    debug: () => {
+      return;
+    },
+    info: () => {
+      return;
+    },
+    warn: () => {
+      return;
+    },
+    error: (message?: any, ...optionalParams: any[]) => {
+      if (withErrorLogs) {
+        console.error(message, ...optionalParams);
+      }
+    }
   };
 };
 
