@@ -202,8 +202,7 @@ describe('YieldOptimizationService', () => {
     describe('error handling', () => {
       const config: DynamicYieldOptimizationConfig = {
         provider: 'dynamic',
-        configEndpoint: '//localhost',
-        fallbackUprId: 0
+        configEndpoint: '//localhost'
       };
 
       it('should always return undefined if the asset loading fails', () => {
@@ -245,8 +244,7 @@ describe('YieldOptimizationService', () => {
       const adUnit = 'ad_content_1';
       const config: DynamicYieldOptimizationConfig = {
         provider: 'dynamic',
-        configEndpoint: '//localhost/config.json',
-        fallbackUprId: 0
+        configEndpoint: '//localhost/config.json'
       };
 
       const adUnitPriceRules: AdUnitPriceRules[] = [
