@@ -281,57 +281,8 @@ export const adConfiguration: Moli.MoliConfig = {
   },
   consent: {},
   yieldOptimization: {
-    provider: 'static',
-    config: [
-      {
-        adUnitName: 'eager-loading-adslot',
-        main: {
-          priceRuleId: 3
-        },
-        tests: [
-          { priceRuleId: 1 },
-          { priceRuleId: 2 },
-          { priceRuleId: 4 },
-          { priceRuleId: 5 }
-        ]
-      },
-      {
-        adUnitName: 'prebid-adslot',
-        main: {
-          priceRuleId: 3
-        },
-        tests: [
-          { priceRuleId: 1 },
-          { priceRuleId: 2 },
-          { priceRuleId: 4 },
-          { priceRuleId: 5 }
-        ]
-      }, {
-        adUnitName: 'a9-adslot',
-        main: {
-          priceRuleId: 3
-        },
-        tests: [
-          { priceRuleId: 1 },
-          { priceRuleId: 2 },
-          { priceRuleId: 4 },
-          { priceRuleId: 5 }
-        ]
-      }, {
-        adUnitName: 'appNexus-multiformat-adSlot',
-        main: {
-          priceRuleId: 3
-        },
-        tests: [
-          { priceRuleId: 1 },
-          { priceRuleId: 2 },
-          { priceRuleId: 4 },
-          { priceRuleId: 5 }
-        ]
-      }
-
-
-    ]
+    provider: 'dynamic',
+    configEndpoint: '//local.h5v.eu:9000/yield-config.json'
   },
 
   logger: logger

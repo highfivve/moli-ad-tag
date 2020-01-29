@@ -17,11 +17,23 @@ module.exports = (_, argv) => {
           test: /\.ts$/,
           loader: 'ts-loader',
           options: {'allowTsInNodeModules': true}
+        },
+        // this separate rule is required to make sure that the Prebid.js files are babel-ified.  this rule will
+        // override the regular exclusion from above (for being inside node_modules).
+        {
+          test: /.js$/,
+          include: new RegExp(`\\${path.sep}prebid\.js`),
+          use: {
+            loader: 'babel-loader',
+            // presets and plugins for Prebid.js must be manually specified separate from your other babel rule.
+            // this can be accomplished by requiring prebid's .babelrc.js file (requires Babel 7 and Node v8.9.0+)
+            options: require('prebid.js/.babelrc.js')
+          }
         }
       ]
     },
     resolve: {
-      extensions: ['.ts', '.js']
+      extensions: ['.ts', '.js', '.json']
     },
     // local development
     devServer: {
@@ -32,6 +44,7 @@ module.exports = (_, argv) => {
       },
       contentBase: [
         path.join(__dirname, 'dist'),
+        path.join(__dirname, 'yield-config'),
         // always use the latest moli-debugger
         '../../moli-debugger/dist'
       ],

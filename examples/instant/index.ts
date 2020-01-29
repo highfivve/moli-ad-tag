@@ -2,12 +2,22 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // This example means a fully self-contained publisher ad tag, which only needs to be added and things just work
 
-import 'prebid.js/build/dist/prebid';
+import prebid from 'prebid.js';
+import 'prebid.js/modules/consentManagement';
+import 'prebid.js/modules/currency';
+import 'prebid.js/modules/appnexusBidAdapter';
+import 'prebid.js/modules/pubmaticBidAdapter';
+import 'prebid.js/modules/smartadserverBidAdapter';
+import 'prebid.js/modules/teadsBidAdapter';
+import 'prebid.js/modules/unrulyBidAdapter';
+
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';
 import Faktor from '@highfivve/module-cmp-faktor';
+
+prebid.processQueue();
 
 // init moli
 const moli = initAdTag(window);

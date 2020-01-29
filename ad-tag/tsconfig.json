@@ -11,7 +11,8 @@
       "browser-env": [ "source/ts/types/browserEnv" ]
     },
     // we need this for importing the cmpFaktorStub.js file
-    "allowJs": true
+    "allowJs": true,
+    "skipLibCheck": true
   },
   "include": [
     "source/**/*",

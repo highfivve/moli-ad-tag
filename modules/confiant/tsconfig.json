@@ -10,7 +10,8 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "ES6",
-    "allowJs": true
+    "allowJs": true,
+    "skipLibCheck": true
   },
   "files": [
     "index.ts"
