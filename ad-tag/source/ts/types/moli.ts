@@ -1702,12 +1702,6 @@ export namespace Moli {
        */
       readonly configEndpoint: string;
 
-      /**
-       * If the json file could not be fetched or parsed, this fallback id will be used instead.
-       * This ensure a minimum floor price will always be used.
-       */
-      readonly fallbackUprId: number;
-
     }
 
     export interface AdUnitPriceRules {
