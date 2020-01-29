@@ -8,10 +8,8 @@
     "examples/*"
   ],
   "scripts": {
-    "build:prebid": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build --modules=../../examples/prebid/modules.json",
-    "build:prebid-dev": "cd node_modules/prebid.js && npm install && node_modules/.bin/gulp build-bundle-dev --modules=../../examples/prebid/modules.json",
     "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts",
-    "preversion": "yarn build:prebid && yarn workspaces run validate",
+    "preversion": "yarn workspaces run validate",
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
