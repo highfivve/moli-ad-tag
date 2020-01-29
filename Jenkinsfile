@@ -26,7 +26,7 @@ pipeline {
         stage('Prepare environment') {
             steps {
                 echo "Setting up yarn and install dependencies"
-                sh "npm install yarn@1.17.3"
+                sh "npm install yarn@1.19.2"
                 // fresh install
                 sh "yarn install"
             }
@@ -70,7 +70,6 @@ pipeline {
             parallel {
                 stage('Examples') {
                     steps {
-                        sh "yarn build:prebid"
                         sh "yarn workspaces run validate"
                     }
                 }
