@@ -84,13 +84,17 @@ export class YieldOptimizationService {
    * @param adSlot
    */
   public setTargeting(adSlot: IAdSlot): Promise<void> {
-    return this.getPriceRule(adSlot.getSlotElementId())
+    const adUnitDomId = adSlot.getSlotElementId();
+    return this.getPriceRule(adUnitDomId)
       .then(rule => {
         if (rule) {
+          this.log.debug('YieldOptimizationService', `set price rule id ${rule.priceRuleId}. Main traffic share ${!!rule.main}`);
           adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           if (rule.main) {
             adSlot.setTargeting('upr_main', 'true');
           }
+        } else {
+          this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitDomId}`);
         }
       });
   }
@@ -99,7 +103,7 @@ export class YieldOptimizationService {
     const adUnitPriceRules: AdUnitsPriceRuleSelection = {};
 
     priceRules.forEach(adUnitRules => {
-      adUnitPriceRules[adUnitRules.adUnit] = this.chooseAdUnitPriceRule(adUnitRules);
+      adUnitPriceRules[adUnitRules.adUnitName] = this.chooseAdUnitPriceRule(adUnitRules);
     });
 
     return adUnitPriceRules;

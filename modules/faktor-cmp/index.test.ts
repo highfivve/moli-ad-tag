@@ -17,7 +17,7 @@ describe('Faktor CMP Module', () => {
   let dom = createDom();
 
   const emptyConfig = (): Moli.MoliConfig => {
-    return { slots: [], consent: {} };
+    return { slots: [], consent: {}, yieldOptimization: { provider: 'none' } };
   };
 
   const cmpStub = sandbox.stub();

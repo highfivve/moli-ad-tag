@@ -697,6 +697,11 @@ export namespace Moli {
     readonly a9?: headerbidding.A9Config;
 
     /**
+     * Yield optimization configuration
+     */
+    readonly yieldOptimization: yield_optimization.YieldOptimizationConfig;
+
+    /**
      * GDPR consent management settings
      */
     consent: consent.ConsentConfig;
@@ -1709,7 +1714,7 @@ export namespace Moli {
       /**
        * The ad unit that is being configured
        */
-      readonly adUnit: string;
+      readonly adUnitName: string;
 
       /**
        * The main price rule which is applied to the main traffic share (usually 80%).

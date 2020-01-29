@@ -19,7 +19,8 @@ describe('Prebid Google Analytics Module', () => {
     slots: [],
     consent: consentConfig,
     logger: newNoopLogger(),
-    prebid: { config: pbjsTestConfig }
+    prebid: { config: pbjsTestConfig },
+    yieldOptimization: { provider: 'none' }
   };
 
   const sandbox = Sinon.createSandbox();

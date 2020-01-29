@@ -11,6 +11,7 @@ import { googleAdSlotStub } from '../stubs/googletagStubs';
 import StaticYieldOptimizationConfig = Moli.yield_optimization.StaticYieldOptimizationConfig;
 import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig;
 import DynamicYieldOptimizationConfig = Moli.yield_optimization.DynamicYieldOptimizationConfig;
+import AdUnitPriceRules = Moli.yield_optimization.AdUnitPriceRules;
 
 // setup sinon-chai
 use(sinonChai);
@@ -93,7 +94,7 @@ describe('YieldOptimizationService', () => {
       const config: StaticYieldOptimizationConfig = {
         provider: 'static', config: [
           {
-            adUnit: adUnit,
+            adUnitName: adUnit,
             main: {
               priceRuleId: 3
             },
@@ -248,9 +249,9 @@ describe('YieldOptimizationService', () => {
         fallbackUprId: 0
       };
 
-      const adUnitPriceRules = [
+      const adUnitPriceRules: AdUnitPriceRules[] = [
         {
-          adUnit: adUnit,
+          adUnitName: adUnit,
           main: {
             priceRuleId: 3
           },

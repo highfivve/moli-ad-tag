@@ -9,10 +9,11 @@ import { DfpService } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
 import { createAssetLoaderService, AssetLoadMethod } from '../../../source/ts/util/assetLoaderService';
 import { cookieService } from '../../../source/ts/util/cookieService';
-import { createGoogletagStub } from '../stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { apstagStub, a9ConfigStub } from '../stubs/a9Stubs';
 import { consentConfig, noopLogger } from '../stubs/moliStubs';
+import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig;
 
 // setup sinon-chai
 use(sinonChai);
@@ -98,7 +99,8 @@ describe('DfpService', () => {
         slots: [],
         consent: consentConfig,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig }
+        prebid: { config: pbjsTestConfig },
+        yieldOptimization: { provider: 'none' }
       });
 
       return sleep()
@@ -117,7 +119,8 @@ describe('DfpService', () => {
         slots: [],
         consent: consentConfig,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig, useMoliPbjs: true }
+        prebid: { config: pbjsTestConfig, useMoliPbjs: true },
+        yieldOptimization: { provider: 'none' }
       });
 
       return sleep()
@@ -132,7 +135,10 @@ describe('DfpService', () => {
 
     it('should not configure dom.window.pbjs.que without prebid config', () => {
       (dom.window as any).pbjs = undefined;
-      const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
+      const init = newDfpService().initialize({
+        slots: [], consent: consentConfig, logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
+      });
 
       return sleep()
         .then(() => {
@@ -148,7 +154,8 @@ describe('DfpService', () => {
         slots: [],
         consent: consentConfig,
         logger: noopLogger,
-        a9: a9ConfigStub
+        a9: a9ConfigStub,
+        yieldOptimization: { provider: 'none' }
       });
       return sleep()
         .then(() => {
@@ -167,7 +174,12 @@ describe('DfpService', () => {
 
     it('should not configure dom.window.apstag if no a9 is requested', () => {
       (dom.window as any).apstag = undefined;
-      const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
+      const init = newDfpService().initialize({
+        slots: [],
+        consent: consentConfig,
+        logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
+      });
       return sleep()
         .then(() => {
           expect(dom.window.apstag).to.be.undefined;
@@ -178,7 +190,12 @@ describe('DfpService', () => {
 
     it('should configure dom.window.googletag.cmd', () => {
       (dom.window as any).googletag = undefined;
-      const init = newDfpService().initialize({ slots: [], consent: consentConfig, logger: noopLogger });
+      const init = newDfpService().initialize({
+        slots: [],
+        consent: consentConfig,
+        logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
+      });
       return sleep()
         .then(() => {
           expect(dom.window.googletag.cmd).to.be.ok;
@@ -202,7 +219,8 @@ describe('DfpService', () => {
             scriptUrl: '//foo.bar'
           },
           consent: consentConfig,
-          logger: noopLogger
+          logger: noopLogger,
+          yieldOptimization: { provider: 'none' }
         }
       )
         .then(() => {
@@ -234,7 +252,8 @@ describe('DfpService', () => {
           consent: consentConfig,
           prebid: {
             config: pbjsTestConfig
-          }
+          },
+          yieldOptimization: { provider: 'none' }
         }
       )
         .then(() => {
@@ -256,7 +275,8 @@ describe('DfpService', () => {
           prebid: {
             config: pbjsTestConfig,
             bidderSettings: bidderSettings
-          }
+          },
+          yieldOptimization: { provider: 'none' }
         }
       )
         .then(() => {
@@ -336,7 +356,8 @@ describe('DfpService', () => {
             prebid: {
               config: pbjsTestConfig,
               listener: listenerSpy
-            }
+            },
+            yieldOptimization: { provider: 'none' }
           }
         ).then(config => {
           return dfpService.requestAds(config);
@@ -369,7 +390,8 @@ describe('DfpService', () => {
             prebid: {
               config: pbjsTestConfig,
               listener: listener
-            }
+            },
+            yieldOptimization: { provider: 'none' }
           }
         ).then(config => {
           return dfpService.requestAds(config);
@@ -399,7 +421,7 @@ describe('DfpService', () => {
         };
 
         sandbox.stub(pubAdsServiceStub, 'addEventListener')
-        // force typescript to accept this overloaded definition
+          // force typescript to accept this overloaded definition
           .callsFake(adddSlotRenderEndedListener as any);
 
         const triggerUserSyncsSpy = sandbox.spy(dom.window.pbjs, 'triggerUserSyncs');
@@ -417,7 +439,8 @@ describe('DfpService', () => {
                 }
               },
               userSync: 'all-ads-loaded'
-            }
+            },
+            yieldOptimization: { provider: 'none' }
           }
         ).then(config => {
           return dfpService.requestAds(config);
@@ -474,7 +497,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -504,7 +527,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -536,7 +559,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -572,7 +595,7 @@ describe('DfpService', () => {
 
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -612,7 +635,7 @@ describe('DfpService', () => {
 
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -673,7 +696,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -747,7 +771,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -818,7 +843,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -838,7 +864,7 @@ describe('DfpService', () => {
               }
             } ]
           } ]);
-          expect(noopLoggerSpy).to.have.been.calledOnce;
+          expect(noopLoggerSpy).to.have.been.calledWith('DFP Service', 'multiple sizes were detected for video player size: [320,180],[316,169]');
         });
       });
 
@@ -895,7 +921,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -986,7 +1013,8 @@ describe('DfpService', () => {
               channel: 'PersonalAndFinance'
             }
           },
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1057,7 +1085,8 @@ describe('DfpService', () => {
               channel: 'PersonalAndFinance'
             }
           },
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1105,7 +1134,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          a9: a9ConfigStub
+          a9: a9ConfigStub,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1160,7 +1190,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1222,7 +1252,11 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], prebid: { config: pbjsTestConfig }, consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ],
+          prebid: { config: pbjsTestConfig },
+          consent: consentConfig,
+          logger: noopLogger,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1285,7 +1319,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          a9: a9ConfigStub
+          a9: a9ConfigStub,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1347,7 +1382,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1393,7 +1428,7 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1457,7 +1492,11 @@ describe('DfpService', () => {
         };
 
         return dfpService.initialize({
-          slots: [ adSlot ], prebid: { config: pbjsTestConfig }, consent: consentConfig, logger: noopLogger
+          slots: [ adSlot ],
+          prebid: { config: pbjsTestConfig },
+          consent: consentConfig,
+          logger: noopLogger,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1533,7 +1572,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          a9: a9ConfigStub
+          a9: a9ConfigStub,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1637,7 +1677,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ],
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1705,7 +1746,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           labelSizeConfig: [ sizeConfigEntry1, sizeConfigEntry2 ],
           consent: consentConfig,
-          logger: noopLogger
+          logger: noopLogger,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1764,7 +1806,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry ],
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1852,7 +1895,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry ],
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -1949,7 +1993,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry ],
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -2017,7 +2062,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry ],
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -2080,7 +2126,8 @@ describe('DfpService', () => {
           slots: [ adSlot ],
           logger: noopLogger,
           consent: consentConfig,
-          prebid: { config: pbjsTestConfig }
+          prebid: { config: pbjsTestConfig },
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -2163,7 +2210,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry ],
-          a9: a9ConfigStub
+          a9: a9ConfigStub,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -2252,7 +2300,8 @@ describe('DfpService', () => {
           logger: noopLogger,
           consent: consentConfig,
           labelSizeConfig: [ sizeConfigEntry ],
-          a9: a9ConfigStub
+          a9: a9ConfigStub,
+          yieldOptimization: { provider: 'none' }
         }).then(config => {
           return dfpService.requestAds(config);
         }).then(() => {
@@ -2277,26 +2326,65 @@ describe('DfpService', () => {
 
 
     });
+
+    describe('yield optimization', () => {
+
+      const yieldOptimization: YieldOptimizationConfig = {
+        provider: 'static',
+        config: [
+          {
+            adUnitName: 'eager-loading-adslot',
+            main: { priceRuleId: 3 },
+            tests: [
+              { priceRuleId: 1 },
+              { priceRuleId: 2 },
+              { priceRuleId: 4 },
+              { priceRuleId: 5 },
+            ]
+          }
+        ]
+      };
+
+      it('should set the key values on each configured slot', () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        const googleAdSlot = googleAdSlotStub('/123/eager', 'eager-loading-adslot');
+        const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
+        googletagDefineSlotStub.callsFake(() => googleAdSlot);
+
+        const dfpService = newDfpService();
+
+        const adSlot: Moli.AdSlot = {
+          position: 'in-page',
+          domId: 'eager-loading-adslot',
+          behaviour: {
+            loaded: 'eager'
+          },
+          adUnitPath: '/123/eager',
+          sizes: [ 'fluid', [ 605, 165 ] ],
+          sizeConfig: [
+            {
+              mediaQuery: '(min-width: 0px)',
+              sizesSupported: [ 'fluid', [ 605, 165 ] ]
+            }
+          ]
+        };
+
+        return dfpService.initialize({
+          slots: [ adSlot ], consent: consentConfig, logger: noopLogger, yieldOptimization
+        }).then(config => dfpService.requestAds(config))
+          .then(() => {
+            expect(googleAdSlotSetTargetingSpy).to.have.been.called;
+            expect(googleAdSlotSetTargetingSpy).to.have.been.calledWith(
+              'upr_id',
+              Sinon.match.string
+            );
+          });
+      });
+
+    });
   });
 
   describe('destroy ad slots', () => {
-
-    const prebidAdslotConfig: Moli.headerbidding.PrebidAdSlotConfig = {
-      adUnit: {
-        code: 'eager-loading-adslot',
-        mediaTypes: {
-          banner: {
-            sizes: [ [ 605, 165 ] ]
-          }
-        },
-        bids: [ {
-          bidder: prebidjs.AppNexusAst,
-          params: {
-            placementId: '1234'
-          }
-        } ]
-      }
-    };
 
     const adSlot: Moli.AdSlot = {
       position: 'in-page',
@@ -2323,10 +2411,11 @@ describe('DfpService', () => {
       const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
 
 
-      const config = {
+      const config: Moli.MoliConfig = {
         slots: [ adSlot ],
         logger: noopLogger,
-        consent: consentConfig
+        consent: consentConfig,
+        yieldOptimization: { provider: 'none' }
       };
 
       return dfpService.initialize(config)
@@ -2346,10 +2435,11 @@ describe('DfpService', () => {
       const removeAdUnitSpy = sandbox.spy(dom.window.pbjs, 'removeAdUnit');
 
 
-      const config = {
+      const config: Moli.MoliConfig = {
         slots: [],
         logger: noopLogger,
-        consent: consentConfig
+        consent: consentConfig,
+        yieldOptimization: { provider: 'none' }
       };
 
       // initialize the internal adUnits data structure of prebid
@@ -2387,7 +2477,8 @@ describe('DfpService', () => {
             'undefined': undefined
           }
         },
-        labelSizeConfig: []
+        labelSizeConfig: [],
+        yieldOptimization: { provider: 'none' }
       };
 
       return dfpService.initialize(adConfiguration)
@@ -2408,7 +2499,8 @@ describe('DfpService', () => {
       return newDfpService().initialize({
         slots: [],
         consent: consentConfig,
-        logger: noopLogger
+        logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
       }).then(() => {
         expect(setNonPersonalizedAdsSpy).to.be.calledOnce;
         expect(setNonPersonalizedAdsSpy).to.be.calledOnceWithExactly(0);
@@ -2456,7 +2548,11 @@ describe('DfpService', () => {
 
 
       return dfpService.initialize({
-        environment: 'test', slots: adSlots, consent: consentConfig, logger: noopLogger
+        environment: 'test',
+        slots: adSlots,
+        consent: consentConfig,
+        logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
       }).then(config => {
         return dfpService.requestAds(config);
       }).then(() => {
@@ -2511,7 +2607,8 @@ describe('DfpService', () => {
         slots: [ adSlot ],
         consent: consentConfig,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig }
+        prebid: { config: pbjsTestConfig },
+        yieldOptimization: { provider: 'none' }
       }).then(config => {
         return dfpService.requestAds(config);
       }).then(() => {
@@ -2521,43 +2618,44 @@ describe('DfpService', () => {
         expect(pbjsSetTargetingForGPTAsyncSpy).to.have.not.been.called;
       });
     });
-  });
 
-  it('should not initialize a9', () => {
-    matchMediaStub.returns({ matches: true } as MediaQueryList);
+    it('should not initialize a9', () => {
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-    const dfpService = newDfpService();
+      const dfpService = newDfpService();
 
-    const adSlot: Moli.AdSlot = {
-      position: 'in-page',
-      domId: 'eager-loading-adslot',
-      behaviour: {
-        loaded: 'eager'
-      },
-      adUnitPath: '/123/eager',
-      sizes: [ 'fluid', [ 605, 165 ] ],
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: [ [ 605, 165 ] ]
-        }
-      ],
-      a9: {}
-    };
+      const adSlot: Moli.AdSlot = {
+        position: 'in-page',
+        domId: 'eager-loading-adslot',
+        behaviour: {
+          loaded: 'eager'
+        },
+        adUnitPath: '/123/eager',
+        sizes: [ 'fluid', [ 605, 165 ] ],
+        sizeConfig: [
+          {
+            mediaQuery: '(min-width: 0px)',
+            sizesSupported: [ [ 605, 165 ] ]
+          }
+        ],
+        a9: {}
+      };
 
 
-    return dfpService.initialize({
-      environment: 'test',
-      slots: [ adSlot ],
-      consent: consentConfig,
-      logger: noopLogger,
-      prebid: { config: pbjsTestConfig }
-    }).then(config => {
-      return dfpService.requestAds(config);
-    }).then(() => {
-      expect(googletagDefineSlotStub).to.have.been.calledOnce;
-      expect(apstagFetchBidsSpy).to.have.not.been.called;
-      expect(apstagFetchBidsSpy).to.have.not.been.called;
+      return dfpService.initialize({
+        environment: 'test',
+        slots: [ adSlot ],
+        consent: consentConfig,
+        logger: noopLogger,
+        prebid: { config: pbjsTestConfig },
+        yieldOptimization: { provider: 'none' }
+      }).then(config => {
+        return dfpService.requestAds(config);
+      }).then(() => {
+        expect(googletagDefineSlotStub).to.have.been.calledOnce;
+        expect(apstagFetchBidsSpy).to.have.not.been.called;
+        expect(apstagFetchBidsSpy).to.have.not.been.called;
+      });
     });
   });
 

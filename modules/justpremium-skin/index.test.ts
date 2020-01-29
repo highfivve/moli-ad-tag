@@ -64,7 +64,8 @@ describe('JustPremium Module', () => {
       slots: slots,
       consent: consentConfig,
       logger: noopLogger,
-      prebid: { config: pbjsTestConfig }
+      prebid: { config: pbjsTestConfig },
+      yieldOptimization: { provider: 'none' }
     };
     moli.registerModule(module);
     moli.configure(config);

@@ -124,6 +124,10 @@ window.moli.que.push(function (moliAdTag) {
         <h3>Moli Console</h3>
         <p>You can get more details by opening the moli console.</p>
         <button class="btn btn-success" onclick="window.moli.openConsole()">Open Moli Console</button>
+        <a class="btn btn-secondary" href="?moliDebug=true">enable ad tag console logs</a>
+        <a class="btn btn-secondary" href="?pbjs_debug=true">enable prebid console logs</a>
+        <a class="btn btn-secondary" href="?moliEnv=test">enable test mode</a>
+
         <p>Or if you are developer type this into the javascript console</p>
         <pre><code class="html hljs xml">moli.openConsole()</code></pre>
 
@@ -136,21 +140,6 @@ window.moli.que.push(function (moliAdTag) {
             <a href="?label=teads" class="list-group-item list-group-item-action">Activate Teads</a>
             <a href="?label=unruly" class="list-group-item list-group-item-action">Activate Unruly</a>
             <a href="?label=showheroesBs" class="list-group-item list-group-item-action">Activate ShowHeroes</a>
-        </div>
-
-        <h3>Ads.txt</h3>
-        <p>
-            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseAdsTxt" aria-expanded="false" aria-controls="collapseAdsTxt">
-                Show ads.txt
-            </button>
-        </p>
-        <div class="collapse" id="collapseAdsTxt">
-            <pre><code>
-#GoogleAdx
-google.com,pub-9934539733884172,DIRECT,f08c47fec0942fa0
-#GoogleAdsense
-google.com,pub-1602621474554678,DIRECT,f08c47fec0942fa0
-            </code></pre>
         </div>
 
     </div>

@@ -50,5 +50,13 @@ export const consentConfig: Moli.consent.ConsentConfig = {
   cmp: cmpModule()
 };
 
+export const newEmptyConfig = (): Moli.MoliConfig => {
+  return {
+    slots: [],
+    consent: consentConfig,
+    logger: newNoopLogger(),
+    yieldOptimization: { provider: 'none' }
+  };
+};
 
-export const emptyConfig: Moli.MoliConfig = { slots: [], consent: consentConfig, logger: noopLogger };
+export const emptyConfig: Moli.MoliConfig = newEmptyConfig();
