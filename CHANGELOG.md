@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## 1.3.0
+
+[GD-1667](https://jira.gutefrage.net/browse/GD-1667) Configure yield optimization. All configurations now require
+a new property `yieldOptimization`.
+
+```javascript
+yieldOptimization: {
+   provider: 'none'
+}
+```
+
+The simplest configuration is using provider `none`. This means no yield optimization is performed.
+For testing we should use the `static` provider with a static configuration inlined in the ad tag.
+The `dynamic` provider is used for production.
+
+```javascript
+yieldOptimization: {
+   provider: 'dynamic',
+   configEndpoint: '//yield.h5v.eu/the-publisher-name.json'
+}
+```
+
+Note that you can create a local config json file as well and point to localhost or something else for development.
+
 ## 1.29.3
 
 [GD-1613](https://jira.gutefrage.net/browse/GD-1613) Allow passbacks to trigger at most once.
