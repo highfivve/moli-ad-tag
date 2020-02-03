@@ -100,7 +100,7 @@ export default class Faktor implements CmpModule {
   private autoOptIn(): Promise<void> {
     return this.consentDataExists()
       .then(exists => {
-        return exists ? Promise.resolve() : this.acceptAll();
+        return exists ? Promise.resolve() : this.acceptAll().then(() => this.showConsentManager());
       });
   }
 
@@ -123,6 +123,14 @@ export default class Faktor implements CmpModule {
   private acceptAll(): Promise<void> {
     return new Promise<void>(resolve => {
       this.window.__cmp('acceptAll', true, () => {
+        resolve();
+      });
+    });
+  }
+
+  private showConsentManager(): Promise<void> {
+    return new Promise<void>(resolve => {
+      this.window.__cmp('showConsentManager', true, () => {
         resolve();
       });
     });

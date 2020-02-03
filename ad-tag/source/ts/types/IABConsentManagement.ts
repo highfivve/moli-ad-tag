@@ -105,6 +105,17 @@ export namespace IABConsentManagement {
      */
     __cmp(command: 'consentDataExist', param: boolean, callback: (exists: boolean) => void): void;
 
+    /**
+     * Faktor.io specific call to summon the consent manager.
+     *
+     * @param command - showConsentManager
+     * @param show - To show or hide consent manager, if not passed of value is true consent manager will be shown and
+     *                if value is false consent manager will be hidden
+     * @param callback
+     * @private
+     */
+    __cmp(command: 'showConsentManager', show: boolean, callback: (success: boolean) => void): void;
+
   }
 
   export interface IVendorConsentsObject {

@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+[GD-1731](https://jira.gutefrage.net/browse/GD-1731). The `autoOptIn` behaviour for the faktor.io CMP module change.
+
+### Auto Opt In: `true`
+
+1. if the user has no consent data (opt-in/out) then
+   1. call `acceptAll`, which performs an full opt-in. Then
+   2. call `showConsentManager`, which will display the consent manager. This will not block ad loading!
+2. if the user has consent data present do nothing
+
+This behaviour allows us to perform fully personalized ads on the first user impression, while giving the user the
+opportunity to opt-out for the future.
+
+After the first impression no consent dialog will be displayed as the auto-opt-in was performed.
+
+### Auto Opt In: `false`
+
+No changes.
+
 ## 1.32.0
 
 Add [static cmp module](modules/static-cmp) which always returns the static configured values.

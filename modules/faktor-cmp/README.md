@@ -2,6 +2,27 @@
 
 Faktor provides an IAB compliant CMP.
 
+## Consent Dialog
+
+Depending on the auto opt in setting there are two alternatives.
+
+### Auto Opt In: `true`
+
+1. if the user has no consent data (opt-in/out) then
+   1. call `acceptAll`, which performs an full opt-in. Then
+   2. call `showConsentManager`, which will display the consent manager. This will not block ad loading!
+2. if the user has consent data present do nothing
+
+This behaviour allows us to perform fully personalized ads on the first user impression, while giving the user the
+opportunity to opt-out for the future.
+
+After the first impression no consent dialog will be displayed as the auto-opt-in was performed.
+
+### Auto Opt In: `false`
+
+The faktor.io tag needs to be configured so that the UI will be shown. Depending on the configuration this may block
+or not block ad loading.
+
 ## Integration
 
 In your `index.ts` import confiant and register the module.

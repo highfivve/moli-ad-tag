@@ -65,19 +65,26 @@ describe('Faktor CMP Module', () => {
     });
   });
 
-  it('should call acceptAll if no consent data exists', () => {
+  it('should call acceptAll and showConsentManager if no consent data exists', () => {
     dom.window.__cmp = cmpStub;
     addStubBehaviour(0);
+    // consentDataExists
     addStubBehaviour(1, false);
+    // acceptAll
     addStubBehaviour(2);
+    // showConsentManager
+    addStubBehaviour(3);
     const faktorCmp = new Faktor({ autoOptIn: true }, dom.window);
 
     return faktorCmp.getFaktorLoaded().then(() => {
-      expect(cmpStub.callCount).to.equal(3);
+      expect(cmpStub.callCount).to.equal(4);
       expect(cmpStub.secondCall.args[0]).to.equal('consentDataExist');
       expect(cmpStub.secondCall.args[1]).to.equal(true);
       expect(cmpStub.thirdCall.args[0]).to.equal('acceptAll');
       expect(cmpStub.thirdCall.args[1]).to.equal(true);
+      const fourthCall = cmpStub.getCall(3);
+      expect(fourthCall.args[0]).to.equal('showConsentManager');
+      expect(fourthCall.args[1]).to.equal(true);
     });
   });
 
