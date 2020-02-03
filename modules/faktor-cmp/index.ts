@@ -130,7 +130,7 @@ export default class Faktor implements CmpModule {
 
   private showConsentManager(): Promise<void> {
     return new Promise<void>(resolve => {
-      this.window.__cmp('showConsentManager', true, () => {
+      this.window.__cmp('showConsentTool', true, () => {
         resolve();
       });
     });

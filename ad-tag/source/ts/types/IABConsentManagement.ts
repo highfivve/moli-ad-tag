@@ -108,13 +108,13 @@ export namespace IABConsentManagement {
     /**
      * Faktor.io specific call to summon the consent manager.
      *
-     * @param command - showConsentManager
-     * @param show - To show or hide consent manager, if not passed of value is true consent manager will be shown and
-     *                if value is false consent manager will be hidden
+     * @param command - showConsentTool
+     * @param show - To show or hide consent tool, if not passed of value is true consent tool will be shown and if
+     *               value is false consent tool will be hidden
      * @param callback
      * @private
      */
-    __cmp(command: 'showConsentManager', show: boolean, callback: (success: boolean) => void): void;
+    __cmp(command: 'showConsentTool', show: boolean, callback: (success: boolean) => void): void;
 
   }
 

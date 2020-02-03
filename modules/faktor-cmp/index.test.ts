@@ -83,7 +83,7 @@ describe('Faktor CMP Module', () => {
       expect(cmpStub.thirdCall.args[0]).to.equal('acceptAll');
       expect(cmpStub.thirdCall.args[1]).to.equal(true);
       const fourthCall = cmpStub.getCall(3);
-      expect(fourthCall.args[0]).to.equal('showConsentManager');
+      expect(fourthCall.args[0]).to.equal('showConsentTool');
       expect(fourthCall.args[1]).to.equal(true);
     });
   });
