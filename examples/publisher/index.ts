@@ -15,8 +15,7 @@ import 'prebid.js/modules/shBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-// import Faktor from '@highfivve/module-cmp-faktor';
-import Cmp from '@highfivve/module-cmp-generic';
+import Cmp from '@highfivve/module-cmp-faktor';
 import Confiant from '@highfivve/module-confiant';
 
 prebid.processQueue();
@@ -29,7 +28,7 @@ moli.registerModule(new Confiant({
 }, window));
 
 // cmp
-moli.registerModule(new Cmp(window));
+moli.registerModule(new Cmp({ autoOptIn: true }, window));
 
 // init moli
 moli.configure(adConfiguration);
