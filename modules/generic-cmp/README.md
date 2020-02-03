@@ -4,7 +4,7 @@ Provides a generic CMP module that provides readiness checking and a cmp stub.
 
 ## Integration
 
-In your `index.ts` import confiant and register the module.
+In your `index.ts` import generic cmp and register the module.
 
 ```js
 import Cmp from '@highfivve/modules/generic-cmp';
