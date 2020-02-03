@@ -36,20 +36,34 @@ describe('Generic CMP Module', () => {
     expect((dom.window as any).__cmp).to.be.undefined;
 
     const config = emptyConfig();
-    const module = new CMP(dom.window);
+    const cmp = new CMP(dom.window);
 
-    module.init(config, {} as any);
+    cmp.init(config, {} as any);
     expect((dom.window as any).__cmp).to.be.ok;
+
+    // resolve isReady and then cleanup
+    dom.window.__cmp = cmpStub;
+    addStubBehaviour(0, { cmpLoaded: true });
+    return cmp.isCmpRead().then(() => {
+      (dom.window as any).__cmp = undefined;
+    });
   });
 
   it('should add itself as a cmp module', () => {
     const config = emptyConfig();
-    const module = new CMP(dom.window);
+    const cmp = new CMP(dom.window);
 
     expect(config.consent.cmp).to.be.undefined;
-    module.init(config, {} as any);
+    cmp.init(config, {} as any);
     expect(config.consent.cmp).to.be.ok;
     expect(config.consent.cmp!.name).to.be.equals('generic-cmp');
+
+    // resolve isReady and then cleanup
+    dom.window.__cmp = cmpStub;
+    addStubBehaviour(0, { cmpLoaded: true });
+    return cmp.isCmpRead().then(() => {
+      (dom.window as any).__cmp = undefined;
+    });
   });
 
   it('should return nonPersonalizedAds 0 if all gdpr does not apply', () => {
