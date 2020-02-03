@@ -14,6 +14,18 @@ export namespace IABConsentManagement {
    */
   export interface IGlobalCMPApi {
 
+    /**
+     * The "ping" command invokes the callback immediately with information about whether the main CMP script has
+     * loaded yet and if GDPR has been configured for all users or just EU users.
+     *
+     * This requires this command's implementation and this configuration to be in the stub.
+     *
+     * @param command - 'ping'
+     * @param args - ignored
+     * @param callback - Callback(PingReturn object, success: boolean)
+     * @private
+     */
+    __cmp(command: 'ping', args: null, callback: (data: IPingReturn) => void): void;
 
     /**
      *
