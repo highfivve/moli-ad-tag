@@ -24,6 +24,11 @@ export class YieldOptimizationService {
   private readonly trafficShare: () => number;
 
   /**
+   * true if the yield optimization is enabled (provider is not `none`)
+   */
+  private readonly isEnabled: boolean;
+
+  /**
    *
    * @param config the yield optimization config
    * @param assetLoaderService required to load dynamic yield configurations
@@ -40,13 +45,16 @@ export class YieldOptimizationService {
     switch (config.provider) {
       case 'none':
         log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
+        this.isEnabled = false;
         this.adUnitPricingRules = Promise.resolve({});
         break;
       case 'static':
         log.warn('YieldOptimizationService', 'Yield optimization is static!');
+        this.isEnabled = true;
         this.adUnitPricingRules = Promise.resolve(this.choosePriceRules(config.config));
         break;
       case 'dynamic':
+        this.isEnabled = true;
         this.adUnitPricingRules = assetLoaderService
           .loadJson<ReadonlyArray<AdUnitPriceRules>>('yield-config.json', config.configEndpoint)
           .then(rules => {
@@ -59,6 +67,7 @@ export class YieldOptimizationService {
           });
         break;
       default:
+        this.isEnabled = false;
         this.adUnitPricingRules = Promise.reject('Unknown config provider');
     }
   }
@@ -93,7 +102,7 @@ export class YieldOptimizationService {
           if (rule.main) {
             adSlot.setTargeting('upr_main', 'true');
           }
-        } else {
+        } else if (this.isEnabled) {
           this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitDomId}`);
         }
       });
