@@ -2,7 +2,16 @@
 
 ## Unreleased
 
-## 1.3.0
+## 1.32.0
+
+Add [static cmp module](modules/static-cmp) which always returns the static configured values.
+This is **not** iab compliant and will thus configure no stubs or return any consent values.
+
+## 1.31.0
+
+Add [generic cmp module](modules/generic-cmp) which is not tied to faktor.io.
+
+## 1.30.0
 
 [GD-1667](https://jira.gutefrage.net/browse/GD-1667) Configure yield optimization. All configurations now require
 a new property `yieldOptimization`.
