@@ -22,7 +22,6 @@ describe('Generic CMP Module', () => {
 
   const cmpStub = sandbox.stub();
   const addStubBehaviour = (onCall: number, returnValue?: any) => {
-    // @ts-ignore TS7031
     cmpStub.onCall(onCall).callsFake((command, param, callback) => callback(returnValue));
   };
 
