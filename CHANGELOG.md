@@ -2,9 +2,14 @@
 
 ## Unreleased
 
-[GD-1731](https://jira.gutefrage.net/browse/GD-1731). The `autoOptIn` behaviour for the faktor.io CMP module change.
+## 1.35.0
 
 [GD-1667](https://jira.gutefrage.net/browse/GD-1667). Changed the yield optimization config structure.
+
+## 1.34.0
+
+[GD-1731](https://jira.gutefrage.net/browse/GD-1731). The `autoOptIn` behaviour for the faktor.io CMP module change.
+
 
 ### Auto Opt In: `true`
 
