@@ -2331,18 +2331,20 @@ describe('DfpService', () => {
 
       const yieldOptimization: YieldOptimizationConfig = {
         provider: 'static',
-        config: [
-          {
-            adUnitName: 'eager-loading-adslot',
-            main: { priceRuleId: 3 },
-            tests: [
-              { priceRuleId: 1 },
-              { priceRuleId: 2 },
-              { priceRuleId: 4 },
-              { priceRuleId: 5 },
-            ]
-          }
-        ]
+        config: {
+          rules: [
+            {
+              adUnitName: 'eager-loading-adslot',
+              main: { priceRuleId: 3 },
+              tests: [
+                { priceRuleId: 1 },
+                { priceRuleId: 2 },
+                { priceRuleId: 4 },
+                { priceRuleId: 5 },
+              ]
+            }
+          ]
+        }
       };
 
       it('should set the key values on each configured slot', () => {

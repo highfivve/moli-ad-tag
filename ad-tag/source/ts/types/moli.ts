@@ -1688,7 +1688,7 @@ export namespace Moli {
     export interface StaticYieldOptimizationConfig extends IYieldOptimizationConfig {
       readonly provider: 'static';
 
-      readonly config: ReadonlyArray<AdUnitPriceRules>;
+      readonly config: PublisherYieldConfiguration;
     }
 
     /**
@@ -1727,6 +1727,20 @@ export namespace Moli {
        * and will trigger the matching unified pricing rule in Google Ad Manager.
        */
       readonly priceRuleId: number;
+    }
+
+    /**
+     * == Publisher Yield Configuration ==
+     *
+     * This configuration defines the yield optimization. It contains all necessary information to
+     * decide which pricing rule key value should be set for a slot.
+     *
+     */
+    export interface PublisherYieldConfiguration {
+      /**
+       * ad unit price rules that should be applied
+       */
+      readonly rules: ReadonlyArray<AdUnitPriceRules>;
     }
 
   }

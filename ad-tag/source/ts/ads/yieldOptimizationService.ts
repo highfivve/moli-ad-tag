@@ -5,6 +5,7 @@ import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig
 import AdUnitPriceRules = Moli.yield_optimization.AdUnitPriceRules;
 import MoliLogger = Moli.MoliLogger;
 import IAdSlot = googletag.IAdSlot;
+import PublisherYieldConfiguration = Moli.yield_optimization.PublisherYieldConfiguration;
 
 /**
  * internal representation which adds a flag `main` indicating if the main traffic share price rule was selected
@@ -30,19 +31,19 @@ export class YieldOptimizationService {
 
   /**
    *
-   * @param config the yield optimization config
+   * @param yieldConfig the yield optimization config
    * @param assetLoaderService required to load dynamic yield configurations
    * @param log logging
    * @param randomTrafficShare must generate a number between 0-99
    */
   constructor(
-    private readonly config: YieldOptimizationConfig,
+    private readonly yieldConfig: YieldOptimizationConfig,
     private readonly assetLoaderService: IAssetLoaderService,
     private readonly log: MoliLogger,
     private readonly randomTrafficShare?: () => number
   ) {
     this.trafficShare = randomTrafficShare || (() => Math.round(Math.random() * 99));
-    switch (config.provider) {
+    switch (yieldConfig.provider) {
       case 'none':
         log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
         this.isEnabled = false;
@@ -51,15 +52,15 @@ export class YieldOptimizationService {
       case 'static':
         log.warn('YieldOptimizationService', 'Yield optimization is static!');
         this.isEnabled = true;
-        this.adUnitPricingRules = Promise.resolve(this.choosePriceRules(config.config));
+        this.adUnitPricingRules = Promise.resolve(this.choosePriceRules(yieldConfig.config.rules));
         break;
       case 'dynamic':
         this.isEnabled = true;
         this.adUnitPricingRules = assetLoaderService
-          .loadJson<ReadonlyArray<AdUnitPriceRules>>('yield-config.json', config.configEndpoint)
-          .then(rules => {
-            log.info('YieldOptimizationService', 'loaded pricing rules', rules);
-            return this.choosePriceRules(rules);
+          .loadJson<PublisherYieldConfiguration>('yield-config.json', yieldConfig.configEndpoint)
+          .then(config => {
+            log.info('YieldOptimizationService', 'loaded pricing rules', config);
+            return this.choosePriceRules(config.rules);
           })
           .catch(error => {
             log.error('YieldOptimizationService', 'failed to initialize service', error);

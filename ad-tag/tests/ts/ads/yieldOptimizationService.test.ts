@@ -12,6 +12,7 @@ import StaticYieldOptimizationConfig = Moli.yield_optimization.StaticYieldOptimi
 import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig;
 import DynamicYieldOptimizationConfig = Moli.yield_optimization.DynamicYieldOptimizationConfig;
 import AdUnitPriceRules = Moli.yield_optimization.AdUnitPriceRules;
+import PublisherYieldConfiguration = Moli.yield_optimization.PublisherYieldConfiguration;
 
 // setup sinon-chai
 use(sinonChai);
@@ -68,7 +69,7 @@ describe('YieldOptimizationService', () => {
   describe('provider: static', () => {
 
     describe('empty config', () => {
-      const config: StaticYieldOptimizationConfig = { provider: 'static', config: [] };
+      const config: StaticYieldOptimizationConfig = { provider: 'static', config: { rules: [ ]} };
       const service = createService(config);
 
       it('should always return undefined', () => {
@@ -92,20 +93,22 @@ describe('YieldOptimizationService', () => {
     describe('non empty config', () => {
       const adUnit = 'ad_content_1';
       const config: StaticYieldOptimizationConfig = {
-        provider: 'static', config: [
-          {
-            adUnitName: adUnit,
-            main: {
-              priceRuleId: 3
-            },
-            tests: [
-              { priceRuleId: 1 },
-              { priceRuleId: 2 },
-              { priceRuleId: 4 },
-              { priceRuleId: 5 }
-            ]
-          }
-        ]
+        provider: 'static', config: {
+          rules: [
+            {
+              adUnitName: adUnit,
+              main: {
+                priceRuleId: 3
+              },
+              tests: [
+                { priceRuleId: 1 },
+                { priceRuleId: 2 },
+                { priceRuleId: 4 },
+                { priceRuleId: 5 }
+              ]
+            }
+          ]
+        }
       };
 
       it('should return undefined if the ad slot is not configured', () => {
@@ -247,23 +250,25 @@ describe('YieldOptimizationService', () => {
         configEndpoint: '//localhost/config.json'
       };
 
-      const adUnitPriceRules: AdUnitPriceRules[] = [
-        {
-          adUnitName: adUnit,
-          main: {
-            priceRuleId: 3
-          },
-          tests: [
-            { priceRuleId: 1 },
-            { priceRuleId: 2 },
-            { priceRuleId: 4 },
-            { priceRuleId: 5 }
-          ]
-        }
-      ];
+      const publisherYieldConfiguration: PublisherYieldConfiguration = {
+        rules: [
+          {
+            adUnitName: adUnit,
+            main: {
+              priceRuleId: 3
+            },
+            tests: [
+              { priceRuleId: 1 },
+              { priceRuleId: 2 },
+              { priceRuleId: 4 },
+              { priceRuleId: 5 }
+            ]
+          }
+        ]
+      };
 
       beforeEach(() => {
-        assetLoaderLoadJsonStub.resolves(adUnitPriceRules);
+        assetLoaderLoadJsonStub.resolves(publisherYieldConfiguration);
       });
 
 
