@@ -4,6 +4,8 @@
 
 [GD-1731](https://jira.gutefrage.net/browse/GD-1731). The `autoOptIn` behaviour for the faktor.io CMP module change.
 
+[GD-1667](https://jira.gutefrage.net/browse/GD-1667). Changed the yield optimization config structure.
+
 ### Auto Opt In: `true`
 
 1. if the user has no consent data (opt-in/out) then
