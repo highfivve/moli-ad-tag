@@ -532,6 +532,7 @@ export namespace prebidjs {
   export const Yieldlab = 'yieldlab';
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
+  export const Xaxis = 'xhb';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -550,7 +551,8 @@ export namespace prebidjs {
     | typeof Teads
     | typeof Yieldlab
     | typeof Spotx
-    | typeof ShowHeroes;
+    | typeof ShowHeroes
+    | typeof Xaxis;
 
   /**
    * A bid object.
@@ -1143,6 +1145,25 @@ export namespace prebidjs {
   export interface IShowHeroesBid extends IBidObject<typeof ShowHeroes, IShowHeroesParams> {
   }
 
+  export interface IXaxisParams {
+    /**
+     * placement id
+     */
+    readonly placementId: string;
+  }
+
+  /**
+   * Xaxis / GroupM bid object
+   *
+   * Request are being made to `https://ib.adnxs.com/ut/v3/prebid` (App Nexus Ad Server).
+   *
+   * `Deal ID` Ad Server Key: `hb_deal_xhb`
+   *
+   * @see [[http://prebid.org/dev-docs/bidders/xaxis.html]]
+   */
+  export interface IXaxisBid extends IBidObject<typeof Xaxis, IXaxisParams> {
+  }
+
   /**
    * Supported bid object types.
    */
@@ -1160,7 +1181,8 @@ export namespace prebidjs {
     | ITeadsBid
     | IYieldlabBid
     | ISpotXBid
-    | IShowHeroesBid;
+    | IShowHeroesBid
+    | IXaxisBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
@@ -1338,6 +1360,9 @@ export namespace prebidjs {
 
     /** spotx bidder settings */
     readonly spotx?: IBidderSetting;
+
+    /** xaxis xhb bidder settings */
+    readonly xhb?: IBidderSetting;
   }
 
   /**
