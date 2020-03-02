@@ -31,6 +31,8 @@ export default class Faktor implements CmpModule {
    */
   private readonly faktorLoaded: Promise<void>;
 
+  private log?: Moli.MoliLogger;
+
   constructor(private readonly faktorConfig: IFaktorConfig, private readonly window: Window) {
     loadCmpFaktorStub(window);
     this.faktorLoaded = new Promise<void>(resolve => {
@@ -51,6 +53,7 @@ export default class Faktor implements CmpModule {
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
+    this.log = log;
     if (config.consent.cmp) {
       log.error('Faktor CMP', `There is already another cmp module registered: ${config.consent.cmp.name}`);
       return;
@@ -77,6 +80,7 @@ export default class Faktor implements CmpModule {
     return this.faktorLoaded.then(() => {
       return new Promise<IABConsentManagement.IConsentData>(resolve => {
         this.window.__cmp('getConsentData', null, (consentData: IABConsentManagement.IConsentData | null, _success) => {
+          this.logDebug('getConsentData');
           consentData ? resolve(consentData) : resolve();
         });
       });
@@ -87,6 +91,7 @@ export default class Faktor implements CmpModule {
     return this.faktorLoaded.then(() => {
       return new Promise<IABConsentManagement.IVendorConsents>(resolve => {
         this.window.__cmp('getVendorConsents', null, (consentData: IABConsentManagement.IVendorConsents, _success) => {
+          this.logDebug('getVendorConsents');
           resolve(consentData);
         });
       });
@@ -111,6 +116,7 @@ export default class Faktor implements CmpModule {
   private consentDataExists(): Promise<boolean> {
     return new Promise<boolean>(resolve => {
       this.window.__cmp('consentDataExist', true, (exists: boolean) => {
+        this.logDebug(`consent data exists: ${exists}`);
         resolve(exists);
       });
     });
@@ -123,6 +129,7 @@ export default class Faktor implements CmpModule {
   private acceptAll(): Promise<void> {
     return new Promise<void>(resolve => {
       this.window.__cmp('acceptAll', true, () => {
+        this.logDebug('acceptAll');
         resolve();
       });
     });
@@ -131,8 +138,15 @@ export default class Faktor implements CmpModule {
   private showConsentManager(): Promise<void> {
     return new Promise<void>(resolve => {
       this.window.__cmp('showConsentTool', true, () => {
+        this.logDebug('show consent tool');
         resolve();
       });
     });
+  }
+
+  private logDebug(msg: string): void {
+    if(this.log) {
+      this.log.debug('Faktor CMP', msg);
+    }
   }
 }
