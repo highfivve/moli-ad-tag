@@ -145,7 +145,7 @@ export default class Faktor implements CmpModule {
   }
 
   private logDebug(msg: string): void {
-    if(this.log) {
+    if (this.log) {
       this.log.debug('Faktor CMP', msg);
     }
   }
