@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.36.0
+
+[GD-1739](https://jira.gutefrage.net/browse/GD-1739). Add Xaxis Header Bidding types
+
 ## 1.35.0
 
 [GD-1667](https://jira.gutefrage.net/browse/GD-1667). Changed the yield optimization config structure.
