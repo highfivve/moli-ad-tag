@@ -1203,7 +1203,7 @@ export namespace prebidjs {
    *
    * @see [[https://prebid.org/dev-docs/bidders/dspx.html]]
    */
-  export interface IDSPXBid extends IBidObject<typeof Xaxis, IDSPXParams> {
+  export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> {
   }
 
   /**
