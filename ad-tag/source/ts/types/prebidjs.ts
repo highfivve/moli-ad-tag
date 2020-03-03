@@ -533,6 +533,7 @@ export namespace prebidjs {
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
   export const Xaxis = 'xhb';
+  export const DSPX = 'dspx';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -552,7 +553,8 @@ export namespace prebidjs {
     | typeof Yieldlab
     | typeof Spotx
     | typeof ShowHeroes
-    | typeof Xaxis;
+    | typeof Xaxis
+    | typeof DSPX;
 
   /**
    * A bid object.
@@ -1164,6 +1166,46 @@ export namespace prebidjs {
   export interface IXaxisBid extends IBidObject<typeof Xaxis, IXaxisParams> {
   }
 
+  export interface IDSPXParams {
+    /**
+     * placement id
+     */
+    readonly placement: string;
+
+    /**
+     * enables local development mode
+     */
+    readonly devMode?: boolean;
+
+    /**
+     * Selection filter
+     */
+    readonly pfilter?: {
+
+      /**
+       * floor price in EUR * 1.000.000
+       */
+      readonly floorprice?: number;
+
+      /**
+       * Is private auction?  0  - no, 1 - yes
+       */
+      readonly private_auction?: 0 | 1;
+    };
+  }
+
+  /**
+   * DSPX (Screen on Demand)
+   *
+   * Request are being made to `https://buyer.dspx.tv/request/`.
+   * In dev mode requrest are being made to `https://dcbuyer.dspx.tv/request/`
+   *
+   *
+   * @see [[https://prebid.org/dev-docs/bidders/dspx.html]]
+   */
+  export interface IDSPXBid extends IBidObject<typeof Xaxis, IDSPXParams> {
+  }
+
   /**
    * Supported bid object types.
    */
@@ -1182,7 +1224,8 @@ export namespace prebidjs {
     | IYieldlabBid
     | ISpotXBid
     | IShowHeroesBid
-    | IXaxisBid;
+    | IXaxisBid
+    | IDSPXBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
@@ -1363,6 +1406,9 @@ export namespace prebidjs {
 
     /** xaxis xhb bidder settings */
     readonly xhb?: IBidderSetting;
+
+    /** dspx bidder settings */
+    readonly dpsx?: IBidderSetting;
   }
 
   /**
