@@ -38,7 +38,6 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "*",
-    "prebid.js": "2.30.0"
+    "@highfivve/ad-tag": "*"
   }
 }
