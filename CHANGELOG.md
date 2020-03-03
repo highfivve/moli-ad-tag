@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+[GD-1791](https://jira.gutefrage.net/browse/GD-1791). Add generic-skin module
+
+## 1.37.1
+
 [GD-1189](https://jira.gutefrage.net/browse/GD-1189). Add DSPX (Screen on Demand) Header Bidding types
 
 ## 1.36.0
