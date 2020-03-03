@@ -54,6 +54,16 @@ const spotxBid = (channelId: string, slot: string): prebidjs.ISpotXBid => {
   };
 };
 
+const dspxBid = (placement: string): prebidjs.IDSPXBid => {
+  return {
+    bidder: prebidjs.DSPX,
+    params: {
+      placement,
+      devMode: true
+    }
+  }
+};
+
 const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
   return {
     bidder: prebidjs.AppNexusAst,
@@ -139,8 +149,6 @@ export const adConfiguration: Moli.MoliConfig = {
             // AppNexus Test Placement - outstream only
             // see http://prebid.org/examples/video/outstream/outstream-dfp.html
             appNexusOutstream('13232385'),
-            // ShowHeroes test placement
-            showHeroes('3f81f1c8-5d96-4d8b-a875-859759e9049b')
           ]
         }
       },
@@ -151,6 +159,37 @@ export const adConfiguration: Moli.MoliConfig = {
         }
       ]
     },
+
+    /** prebid banner slot*/
+    {
+      position: 'in-page',
+      domId: 'prebid-adslot-2',
+      behaviour: { loaded: 'eager' },
+      // adUnitPath: '/33559401/gf/fragen/pos2',
+      adUnitPath: '/55155651/outstream_test',
+      passbackSupport: true,
+      sizes: [ [ 300, 250 ] ],
+      prebid: {
+        adUnit: {
+          code: 'prebid-adslot-2',
+          mediaTypes: {
+            banner: {
+              sizes: [ [ 300, 250 ] ]
+            }
+          },
+          bids: [
+            dspxBid('210')
+          ]
+        }
+      },
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [ [ 300, 250 ] ]
+        }
+      ]
+    },
+
     {
       position: 'in-page',
       domId: 'a9-adslot',

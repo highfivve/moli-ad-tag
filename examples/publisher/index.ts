@@ -11,7 +11,7 @@ import 'prebid.js/modules/pubmaticBidAdapter';
 import 'prebid.js/modules/smartadserverBidAdapter';
 import 'prebid.js/modules/teadsBidAdapter';
 import 'prebid.js/modules/unrulyBidAdapter';
-import 'prebid.js/modules/shBidAdapter';
+import 'prebid.js/modules/dspxBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
