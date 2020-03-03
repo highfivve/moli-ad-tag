@@ -77,14 +77,8 @@ export default class JustPremium implements IModule {
       return;
     }
 
-    let domIds = this.justPremiumConfig.blockedAdSlotDomIds.concat(this.justPremiumConfig.wallpaperAdSlotDomId);
-
-    config.slots.some(value => {
-      let index = domIds.indexOf(value.domId);
-      if (index > -1) {
-        domIds.splice(index, 1);
-      }
-    });
+    const domIds = this.justPremiumConfig.blockedAdSlotDomIds.concat(this.justPremiumConfig.wallpaperAdSlotDomId)
+      .filter(domId => !config.slots.some(slot => slot.domId === domId));
 
     if (domIds.length > 0) {
       log.error('JustPremiumModule', 'Couldn\'t find one or more ids in the ad slot config:', domIds);

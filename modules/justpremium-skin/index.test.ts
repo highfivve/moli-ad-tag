@@ -53,8 +53,6 @@ describe('JustPremium Module', () => {
       hideWallpaperAdSlot: false
     }, dom.window);
 
-    // create div elements
-    const document = dom.window.document;
     const slots = createAdSlots(dom.window, [ 'wp-slot', 'sky-slot' ]);
 
     const initSpy = sandbox.spy(module, 'init');
@@ -74,6 +72,36 @@ describe('JustPremium Module', () => {
     expect(errorLogSpy).to.have.not.been.called;
 
     expect(config.prebid!.listener).is.ok;
+  });
+
+  it('should fail if not all slots are available in the config', () => {
+    const moli = createMoliTag(dom.window);
+    const noopLogger = newNoopLogger();
+    const module = new JustPremium({
+      wallpaperAdSlotDomId: 'wp-slot',
+      blockedAdSlotDomIds: [ 'sky-slot' ],
+      hideWallpaperAdSlot: false
+    }, dom.window);
+
+    const slots = createAdSlots(dom.window, [ 'wp-slot' ]);
+
+    const initSpy = sandbox.spy(module, 'init');
+    const errorLogSpy = sandbox.spy(noopLogger, 'error');
+
+    const config: Moli.MoliConfig = {
+      slots: slots,
+      consent: consentConfig,
+      logger: noopLogger,
+      prebid: { config: pbjsTestConfig },
+      yieldOptimization: { provider: 'none' }
+    };
+    moli.registerModule(module);
+    moli.configure(config);
+
+    expect(initSpy).to.have.been.calledOnceWithExactly(config, moli.getAssetLoaderService());
+    expect(errorLogSpy).to.have.been.called;
+
+    expect(config.prebid!.listener).is.undefined;
   });
 });
 
