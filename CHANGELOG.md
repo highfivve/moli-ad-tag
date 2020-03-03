@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-1189](https://jira.gutefrage.net/browse/GD-1189). Add DSPX (Screen on Demand) Header Bidding types
+
 ## 1.36.0
 
 [GD-1739](https://jira.gutefrage.net/browse/GD-1739). Add Xaxis Header Bidding types
