@@ -160,13 +160,12 @@ export const adConfiguration: Moli.MoliConfig = {
       ]
     },
 
-    /** prebid banner slot*/
+    /* prebid banner slot*/
     {
       position: 'in-page',
       domId: 'prebid-adslot-2',
       behaviour: { loaded: 'eager' },
-      // adUnitPath: '/33559401/gf/fragen/pos2',
-      adUnitPath: '/55155651/outstream_test',
+      adUnitPath: '/55155651/prebid_test',
       passbackSupport: true,
       sizes: [ [ 300, 250 ] ],
       prebid: {
@@ -178,7 +177,7 @@ export const adConfiguration: Moli.MoliConfig = {
             }
           },
           bids: [
-            dspxBid('210')
+            dspxBid('101')
           ]
         }
       },
