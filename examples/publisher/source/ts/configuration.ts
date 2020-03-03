@@ -61,7 +61,7 @@ const dspxBid = (placement: string): prebidjs.IDSPXBid => {
       placement,
       devMode: true
     }
-  }
+  };
 };
 
 const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
