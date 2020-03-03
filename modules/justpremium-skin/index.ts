@@ -48,10 +48,10 @@ export default class JustPremium implements IModule {
   checkForJustPremiumWallpaper = (bidResponses: prebidjs.IBidResponsesMap): boolean => {
     const justPremiumWallpaperDomId = this.justPremiumConfig.wallpaperAdSlotDomId;
 
-    const adPresenterDesktop = bidResponses[justPremiumWallpaperDomId];
-    const justPremiumWallpaperBid = adPresenterDesktop ?
-      adPresenterDesktop.bids.filter((presenterBid: prebidjs.BidResponse) => {
-        return presenterBid.bidder === prebidjs.JustPremium && presenterBid.format === prebidjs.JustPremiumWallpaper && presenterBid.cpm > 0;
+    const justPremiumBidResponse = bidResponses[justPremiumWallpaperDomId];
+    const justPremiumWallpaperBid = justPremiumBidResponse ?
+      justPremiumBidResponse.bids.filter((bid: prebidjs.BidResponse) => {
+        return bid.bidder === prebidjs.JustPremium && bid.format === prebidjs.JustPremiumWallpaper && bid.cpm > 0;
       }) : [];
     return justPremiumWallpaperBid.length !== 0;
   };
