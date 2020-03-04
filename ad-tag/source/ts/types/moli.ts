@@ -931,6 +931,9 @@ export namespace Moli {
 
     /** The actual dfp slot returned by `googletag.defineSlot` or `googletag.defineOutOfPageSlot` */
     readonly adSlot: googletag.IAdSlot;
+
+    /** An optional price rule associated with this ad slot */
+    readonly priceRule: yield_optimization.PriceRule | undefined;
   }
 
   /** slot behaviour namespace */
@@ -1081,6 +1084,11 @@ export namespace Moli {
        * Access key-values
        */
       readonly keyValues: DfpKeyValueMap;
+
+      /**
+       *
+       */
+      readonly floorPrice: number | undefined;
     }
 
     /**
@@ -1727,6 +1735,11 @@ export namespace Moli {
        * and will trigger the matching unified pricing rule in Google Ad Manager.
        */
       readonly priceRuleId: number;
+
+      /**
+       * The floor price CPM in EUR if available.
+       */
+      readonly cpm?: number;
     }
 
     /**

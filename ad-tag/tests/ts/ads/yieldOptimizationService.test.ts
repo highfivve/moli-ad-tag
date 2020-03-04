@@ -369,5 +369,62 @@ describe('YieldOptimizationService', () => {
     });
   });
 
+  describe('price rule cpms', () => {
+
+    it('resolve cpms for known price rule ids', () => {
+      const adUnit = 'ad_content_1';
+      const config: StaticYieldOptimizationConfig = {
+        provider: 'static', config: {
+          rules: [
+            {
+              adUnitName: adUnit,
+              main: {
+                priceRuleId: 39558984
+              },
+              tests: [
+                { priceRuleId: 39836957 },
+                { priceRuleId: 39837404 },
+                { priceRuleId: 39837407 },
+                { priceRuleId: 39707353 }
+              ]
+            }
+          ]
+        }
+      };
+      return createService(config).getPriceRule(adUnit).then(priceRule => {
+        expect(priceRule).to.be.ok;
+        expect(priceRule?.cpm).to.be.ok;
+        expect(priceRule?.cpm).to.be.oneOf([0.15, 0.10, 0.30, 0.35 ]);
+      });
+    });
+
+    it('leaves cpm undefined for unknown price rules ', () => {
+      const adUnit = 'ad_content_1';
+      const config: StaticYieldOptimizationConfig = {
+        provider: 'static', config: {
+          rules: [
+            {
+              adUnitName: adUnit,
+              main: {
+                priceRuleId: 1
+              },
+              tests: [
+                { priceRuleId: 2 },
+                { priceRuleId: 3 },
+                { priceRuleId: 4 },
+                { priceRuleId: 5 }
+              ]
+            }
+          ]
+        }
+      };
+
+      return createService(config).getPriceRule(adUnit).then(priceRule => {
+        expect(priceRule).to.be.ok;
+        expect(priceRule?.cpm).to.be.undefined;
+      });
+    });
+  });
+
 });
 // tslint:enable

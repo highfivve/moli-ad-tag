@@ -22,6 +22,7 @@ import { LabelConfigService } from './labelConfigService';
 import { SlotEventService } from './slotEventService';
 import { PassbackService } from './passbackService';
 import { YieldOptimizationService } from './yieldOptimizationService';
+import PriceRule = Moli.yield_optimization.PriceRule;
 
 type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -32,6 +33,12 @@ type Services = {
   readonly labelService: LabelConfigService;
   readonly yieldOptimizationService: YieldOptimizationService;
 };
+
+/**
+ * Intermediate slot representation after it has been registered with gpt.js
+ * and the price rules have been set
+ */
+type RegisteredSlot = { adSlot: googletag.IAdSlot, priceRule: PriceRule | undefined };
 
 export class DfpService {
 
@@ -322,11 +329,15 @@ export class DfpService {
           this.logger.error('DFP Service', message);
           return Promise.reject(message);
         })
-        .then(() => this.registerSlot({ moliSlot: moliSlotLazy, filterSupportedSizes }, this.getEnvironment(config), services.yieldOptimizationService))
-        .then(googleTagAdSlot => {
+        .then(() => this.registerSlot({
+          moliSlot: moliSlotLazy,
+          filterSupportedSizes
+        }, this.getEnvironment(config), services.yieldOptimizationService))
+        .then(({adSlot, priceRule}) => {
           const slotDefinition: SlotDefinition<Moli.AdSlot> = {
-            adSlot: googleTagAdSlot,
+            adSlot: adSlot,
             moliSlot: moliSlotLazy,
+            priceRule,
             filterSupportedSizes
           };
 
@@ -413,7 +424,7 @@ export class DfpService {
         const filterSupportedSizes = this.getSizeFilterFunction(moliSlotRefreshable);
         try {
 
-          let adSlotPromise: Promise<googletag.IAdSlot>;
+          let adSlotPromise: Promise<RegisteredSlot>;
           createRefreshListener(moliSlotRefreshable.behaviour.trigger, moliSlotRefreshable.behaviour.throttle, services.slotEventService, this.window).addAdRefreshListener(() => {
             if (!adSlotPromise) {
               this.logger.debug('DFP Service', `Register lazy refreshable slot ${moliSlotRefreshable.domId}`);
@@ -424,14 +435,15 @@ export class DfpService {
               }, this.getEnvironment(config), services.yieldOptimizationService);
 
               if (this.isPrebidSlot(moliSlotRefreshable)) {
-                adSlotPromise = adSlotPromise.then(adSlot => {
+                adSlotPromise = adSlotPromise.then(({adSlot, priceRule}) => {
                   // make sure that the slot is also registered on prebid
                   this.registerPrebidSlots(pbjs, [ {
                     moliSlot: moliSlotRefreshable,
                     adSlot: adSlot,
+                    priceRule: priceRule,
                     filterSupportedSizes
-                  } ], config, services.labelService);
-                  return adSlot;
+                  } ], config, services);
+                  return { adSlot, priceRule};
                 });
               }
               adSlotPromise = adSlotPromise.then(adSlot => {
@@ -440,8 +452,8 @@ export class DfpService {
               });
             }
 
-            adSlotPromise.then(adSlot => {
-              const slotDefinition = { moliSlot: moliSlotRefreshable, adSlot: adSlot, filterSupportedSizes };
+            adSlotPromise.then(({adSlot, priceRule}) => {
+              const slotDefinition = { moliSlot: moliSlotRefreshable, adSlot: adSlot, priceRule, filterSupportedSizes };
               this.configurePassback([ slotDefinition ], services.passbackService);
               this.requestRefreshableSlot(pbjs, slotDefinition, config, services.reportingService, services.labelService);
             }).catch(error => this.logger.error('DFP Service', `Failed to refresh slot ${moliSlotRefreshable.domId}`, error));
@@ -471,7 +483,7 @@ export class DfpService {
     globalLabelConfigService: LabelConfigService): void {
     const bidRequests: Promise<unknown>[] = [];
 
-    const { moliSlot, adSlot, filterSupportedSizes } = slotDefinition;
+    const { moliSlot, adSlot, priceRule, filterSupportedSizes } = slotDefinition;
 
     // if the ad tag is in a test env don't load any header bidding stuff
     if (this.getEnvironment(config) === 'test') {
@@ -483,6 +495,7 @@ export class DfpService {
       const refreshPrebidSlot = this.requestPrebid(pbjs, [ {
         adSlot,
         moliSlot,
+        priceRule,
         filterSupportedSizes
       } ], config, reportingService, globalLabelConfigService)
         .catch(reason => {
@@ -583,7 +596,7 @@ export class DfpService {
     }
 
     return Promise.resolve()
-      .then(() => this.registerPrebidSlots(pbjs, prebidSlots, config, services.labelService))
+      .then(() => this.registerPrebidSlots(pbjs, prebidSlots, config, services))
       .then(() => this.requestPrebid(pbjs, prebidSlots, config, services.reportingService, services.labelService))
       .catch(reason => {
         this.logger.warn('DFP Service', 'init prebid failed', reason);
@@ -771,18 +784,21 @@ export class DfpService {
    * @param pbjs the prebid instance
    * @param dfpPrebidSlots that should be registered
    * @param config the moli global config
-   * @param globalLabelConfigService - filter prebid ad unit objects (bids) by label
+   * @param services - access to all services
    * @returns the unaltered prebid slots
    */
   private registerPrebidSlots(pbjs: prebidjs.IPrebidJs, dfpPrebidSlots: SlotDefinition<Moli.PrebidAdSlot>[],
                               config: Moli.MoliConfig,
-                              globalLabelConfigService: LabelConfigService
+                              services: Services
   ): void {
-    const prebidAdUnits = dfpPrebidSlots.map(({ moliSlot, filterSupportedSizes }) => {
+    const prebidAdUnits = dfpPrebidSlots.map(({ moliSlot, priceRule, filterSupportedSizes }) => {
       this.logger.debug('DFP Service', `Prebid add ad unit: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
 
       const keyValues = config.targeting && config.targeting.keyValues ? config.targeting.keyValues : {};
-      const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ? moliSlot.prebid({ keyValues: keyValues }) : moliSlot.prebid;
+      const floorPrice = priceRule ? priceRule.cpm : undefined;
+      const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ?
+        moliSlot.prebid({ keyValues: keyValues, floorPrice: floorPrice }) :
+        moliSlot.prebid;
       const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
       const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
 
@@ -790,7 +806,7 @@ export class DfpService {
       const videoSizes = mediaTypeVideo ? this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
 
       // filter bids ourselves and don't rely on prebid to have a stable API
-      const bids = prebidAdSlotConfig.adUnit.bids.filter(bid => globalLabelConfigService.filterSlot(bid));
+      const bids = prebidAdSlotConfig.adUnit.bids.filter(bid => services.labelService.filterSlot(bid));
 
       const video = (mediaTypeVideo && videoSizes.length > 0) ? {
         video: { ...mediaTypeVideo, playerSize: videoSizes }
@@ -949,8 +965,8 @@ export class DfpService {
       return this.registerSlot({
         moliSlot,
         filterSupportedSizes
-      }, env, yieldOptimizationService).then(googleTagAdSlot => {
-        return { moliSlot: moliSlot, adSlot: googleTagAdSlot, filterSupportedSizes };
+      }, env, yieldOptimizationService).then(({ adSlot, priceRule }) => {
+        return { moliSlot: moliSlot, adSlot: adSlot, priceRule: priceRule, filterSupportedSizes };
       });
     });
 
@@ -961,7 +977,7 @@ export class DfpService {
     slotDefinition: Pick<SlotDefinition<Moli.AdSlot>, 'moliSlot' | 'filterSupportedSizes'>,
     env: Moli.Environment,
     yieldOptimizationService: YieldOptimizationService
-  ): Promise<googletag.IAdSlot> {
+  ): Promise<RegisteredSlot> {
     const { moliSlot, filterSupportedSizes } = slotDefinition;
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
@@ -975,11 +991,13 @@ export class DfpService {
         case 'production':
           adSlot.addService(this.window.googletag.pubads());
           this.logger.debug('DFP Service', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
-          return yieldOptimizationService.setTargeting(adSlot).then(_ => adSlot);
+          return yieldOptimizationService.setTargeting(adSlot).then(priceRule => {
+            return { adSlot, priceRule };
+          });
         case 'test':
           this.logger.warn('DFP Service', `Enabling content service on ${adSlot.getSlotElementId()}`);
           adSlot.addService(this.window.googletag.content());
-          return Promise.resolve(adSlot);
+          return Promise.resolve({ adSlot: adSlot, priceRule: undefined });
         default:
           return Promise.reject(`invalid environment: ${env}`);
       }
