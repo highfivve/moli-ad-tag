@@ -142,7 +142,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   }
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
-    const prebidAdUnit: prebidjs.IAdUnit = (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {} })).adUnit;
+    const prebidAdUnit: prebidjs.IAdUnit = (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {}, floorPrice: undefined })).adUnit;
     const slotSizeConfig = this.props.slot.sizeConfig;
     const banner = prebidAdUnit.mediaTypes.banner;
     const video = prebidAdUnit.mediaTypes.video;
@@ -239,7 +239,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     const prebid = this.props.slot.prebid;
 
     if (prebid) {
-      const prebidAdUnit: prebidjs.IAdUnit = this.isPrebidConfigObject(prebid) ? prebid.adUnit : prebid({ keyValues: {} }).adUnit;
+      const prebidAdUnit: prebidjs.IAdUnit = this.isPrebidConfigObject(prebid) ? prebid.adUnit : prebid({ keyValues: {}, floorPrice: undefined }).adUnit;
 
       const video = prebidAdUnit.mediaTypes.video;
       const banner = prebidAdUnit.mediaTypes.banner;

@@ -499,7 +499,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
-      const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {} }) : slot.prebid,
+      const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {}, floorPrice: undefined }) : slot.prebid,
         mediaTypes = prebidConfig.adUnit.mediaTypes;
 
       if (!!mediaTypes && !mediaTypes.banner && !mediaTypes.video) {
@@ -522,7 +522,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
 
   private checkForWrongPrebidCodeEntry = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
-      const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {} }) : slot.prebid,
+      const prebidConfig = typeof slot.prebid === 'function' ? slot.prebid({ keyValues: {}, floorPrice: undefined }) : slot.prebid,
         code = prebidConfig.adUnit.code;
 
       if (code !== slot.domId) {
