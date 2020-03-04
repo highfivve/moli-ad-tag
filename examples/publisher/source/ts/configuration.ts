@@ -85,14 +85,14 @@ const showHeroes = (playerId: string): prebidjs.IShowHeroesBid => {
   };
 };
 
-const ixBid = (siteId: string, size: [number, number]): prebidjs.IIndexExchangeBid => {
+const ixBid = (siteId: string, size: [ number, number ], bidFloor: number | undefined): prebidjs.IIndexExchangeBid => {
+  const bidConfig: { bidFloor?: number, bidFloorCur?: 'EUR'} = bidFloor ? { bidFloor: bidFloor, bidFloorCur: 'EUR' } : {};
   return {
     bidder: prebidjs.IndexExchange,
     params: {
       siteId: siteId,
       size: size,
-      bidFloor: 0.10,
-      bidFloorCur: 'EUR'
+      ...bidConfig
     }
   };
 };
@@ -180,18 +180,21 @@ export const adConfiguration: Moli.MoliConfig = {
       adUnitPath: '/55155651/prebid_test',
       passbackSupport: true,
       sizes: [ [ 300, 250 ] ],
-      prebid: {
-        adUnit: {
-          code: 'prebid-adslot-2',
-          mediaTypes: {
-            banner: {
-              sizes: [ [ 300, 250 ] ]
-            }
-          },
-          bids: [
-            dspxBid('101')
-          ]
-        }
+      prebid: context => {
+        return {
+          adUnit: {
+            code: 'prebid-adslot-2',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 300, 250 ] ]
+              }
+            },
+            bids: [
+              dspxBid('101'),
+              ixBid('0', [ 300, 250 ], context.floorPrice)
+            ]
+          }
+        };
       },
       sizeConfig: [
         {

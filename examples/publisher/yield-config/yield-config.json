@@ -3,78 +3,98 @@
     {
       "adUnitName": "eager-loading-adslot",
       "main": {
-        "priceRuleId": 3
+        "priceRuleId": 39837386
       },
       "tests": [
         {
-          "priceRuleId": 1
+          "priceRuleId": 39836957
         },
         {
-          "priceRuleId": 2
+          "priceRuleId": 39558984
         },
         {
-          "priceRuleId": 4
+          "priceRuleId": 39837407
         },
         {
-          "priceRuleId": 5
+          "priceRuleId": 39707353
         }
       ]
     },
     {
       "adUnitName": "prebid-adslot",
       "main": {
-        "priceRuleId": 3
+        "priceRuleId": 39837386
       },
       "tests": [
         {
-          "priceRuleId": 1
+          "priceRuleId": 39836957
         },
         {
-          "priceRuleId": 2
+          "priceRuleId": 39558984
         },
         {
-          "priceRuleId": 4
+          "priceRuleId": 39837407
         },
         {
-          "priceRuleId": 5
+          "priceRuleId": 39707353
+        }
+      ]
+    },
+    {
+      "adUnitName": "prebid-adslot-2",
+      "main": {
+        "priceRuleId": 39837386
+      },
+      "tests": [
+        {
+          "priceRuleId": 39836957
+        },
+        {
+          "priceRuleId": 39558984
+        },
+        {
+          "priceRuleId": 39837407
+        },
+        {
+          "priceRuleId": 39707353
         }
       ]
     }, {
       "adUnitName": "a9-adslot",
       "main": {
-        "priceRuleId": 3
+        "priceRuleId": 39837386
       },
       "tests": [
         {
-          "priceRuleId": 1
+          "priceRuleId": 39836957
         },
         {
-          "priceRuleId": 2
+          "priceRuleId": 39558984
         },
         {
-          "priceRuleId": 4
+          "priceRuleId": 39837407
         },
         {
-          "priceRuleId": 5
+          "priceRuleId": 39707353
         }
       ]
     }, {
       "adUnitName": "appNexus-multiformat-adSlot",
       "main": {
-        "priceRuleId": 3
+        "priceRuleId": 39837386
       },
       "tests": [
         {
-          "priceRuleId": 1
+          "priceRuleId": 39836957
         },
         {
-          "priceRuleId": 2
+          "priceRuleId": 39558984
         },
         {
-          "priceRuleId": 4
+          "priceRuleId": 39837407
         },
         {
-          "priceRuleId": 5
+          "priceRuleId": 39707353
         }
       ]
     }
