@@ -735,6 +735,19 @@ export namespace prebidjs {
       /** key value map */
       [key: string]: string[];
     };
+
+    /**
+     * Bid floor price
+     *
+     * @example 0.01
+     */
+    readonly bidFloor?: number;
+
+    /**
+     * Bid floor price currency. Supported values: USD (default), EUR, GBP, AUD, DKK, SEK, CZK, CHF, NOK
+     */
+    readonly bidFloorCur?: 'EUR';
+
   }
 
   /**
@@ -750,9 +763,34 @@ export namespace prebidjs {
    * @see Documentation https://prebid.org/dev-docs/bidders/indexExchange.html
    */
   export interface IIndexExchangeParams {
+    /**
+     * An IX-specific identifier that is associated with a specific size on this ad unit. This is similar to
+     * a placement ID or an ad unit ID that some other modules have.
+     */
     readonly siteId: string;
+
+    /**
+     * The single size associated with the site ID. It should be one of the sizes listed in the ad unit under
+     * `adUnits[].sizes` or `adUnits[].mediaTypes.banner.sizes`.
+     *
+     * Note that the ‘ix’ Prebid Server bid adapter ignores this parameter.
+     */
     readonly size: [ number, number ];
+
+    /**
+     * Taken from source code:
+     * @see https://github.com/prebid/Prebid.js/blob/3.9.0/modules/ixBidAdapter.js#L363-L371
+     *
+     * You must set the `bidFloorCur` parameter as well if you set this
+     */
+    readonly bidFloor?: number;
+
+    /**
+     * only required if the `bidFloor` parameter is set
+     */
+    readonly bidFloorCur?: 'EUR';
   }
+
 
   /**
    * IndexExchange bid object.
@@ -826,6 +864,13 @@ export namespace prebidjs {
      * Example: 123456@300x250
      */
     readonly adSlot: string;
+
+    /**
+     * Bid Floor
+     *
+     * @example '1.75'
+     */
+    readonly kadfloor?: string;
   }
 
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {
@@ -875,6 +920,15 @@ export namespace prebidjs {
      * example: "1611023122"
      */
     unit: string;
+
+    /**
+     * Minimum price in `USD`. customFloor applies to a specific unit. For example,
+     * use the following value to set a $1.50 floor: 1.50
+     *
+     * *WARNING:*
+     * Misuse of this parameter can impact revenue
+     */
+    readonly customFloor?: number;
   }
 
   /**
@@ -894,30 +948,36 @@ export namespace prebidjs {
      * The network domain
      * example: "https://prg.smartadserver.com"
      */
-    domain: string;
+    readonly domain: string;
 
     /**
      * The placement site ID
      * example: 1234
      */
-    siteId: number;
+    readonly siteId: number;
 
     /**
      * The placement page ID
      * examples: 1234
      */
-    pageId: number;
+    readonly pageId: number;
 
     /**
      *  The placement format ID
      *  example: 1234
      */
-    formatId: number;
+    readonly formatId: number;
 
     /**
-     *
+     * Override the default currency code (ISO 4217) of the ad request. (Default: 'USD')
      */
-    currency?: 'EUR' | 'USD';
+    readonly currency?: 'EUR' | 'USD';
+
+    /**
+     * Bid floor for this placement in USD or in the currency specified by the currency parameter. (Default: 0.0)
+     */
+    readonly bidfloor?: number;
+
   }
 
   /**

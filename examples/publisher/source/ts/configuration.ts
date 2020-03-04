@@ -85,6 +85,18 @@ const showHeroes = (playerId: string): prebidjs.IShowHeroesBid => {
   };
 };
 
+const ixBid = (siteId: string, size: [number, number]): prebidjs.IIndexExchangeBid => {
+  return {
+    bidder: prebidjs.IndexExchange,
+    params: {
+      siteId: siteId,
+      size: size,
+      bidFloor: 0.10,
+      bidFloorCur: 'EUR'
+    }
+  };
+};
+
 export const adConfiguration: Moli.MoliConfig = {
   slots: [
     {

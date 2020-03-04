@@ -3,6 +3,7 @@
 ## Unreleased
 
 [GD-1791](https://jira.gutefrage.net/browse/GD-1791). Add generic-skin module
+[GD-1794](https://jira.gutefrage.net/browse/GD-1794). Add floorprice params for prebid partners
 
 ## 1.37.1
 
