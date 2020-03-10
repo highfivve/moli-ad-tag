@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.38.1
+
+Added `currency` parameter to pubmatic.
+
+## 1.38.0
+
 [GD-1791](https://jira.gutefrage.net/browse/GD-1791). Add generic-skin module
 [GD-1794](https://jira.gutefrage.net/browse/GD-1794). Add floorprice params for prebid partners
 [GD-1798](https://jira.gutefrage.net/browse/GD-1794). Provide cpm in PrebidAdSlot context
