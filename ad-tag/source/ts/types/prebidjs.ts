@@ -871,6 +871,13 @@ export namespace prebidjs {
      * @example '1.75'
      */
     readonly kadfloor?: string;
+
+    /**
+     * Bid currency
+     * Value configured only in the 1st adunit will be passed on.
+     * Values if present in subsequent adunits, will be ignored.
+     */
+    readonly currency?: 'EUR' | 'USD';
   }
 
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {
