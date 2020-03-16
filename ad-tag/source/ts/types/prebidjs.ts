@@ -807,6 +807,8 @@ export namespace prebidjs {
   export const JustPremiumSideAd = 'sa';
   export const JustPremiumWallpaper = 'wp';
   export const JustPremiumMobileScroller = 'is';
+  export const JustPremiumMobileSkin = 'mt';
+  export const JustPremiumCascadeAd = 'ca';
 
   /**
    * The JustPremium HeaderBidding Guide offers a complete list of all formats.
@@ -823,7 +825,9 @@ export namespace prebidjs {
     typeof JustPremiumClassicFloorAd |
     typeof JustPremiumSideAd |
     typeof JustPremiumWallpaper |
-    typeof JustPremiumMobileScroller;
+    typeof JustPremiumMobileScroller |
+    typeof JustPremiumMobileSkin |
+    typeof JustPremiumCascadeAd;
 
   /**
    * JustPremium bid parameters
