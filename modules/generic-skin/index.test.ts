@@ -323,6 +323,46 @@ describe('Skin Module', () => {
       });
     });
 
+    describe('selectConfig filter selection', () => {
+
+      const wallpaperConfig: ISkinConfig = {
+        formatFilter: [
+          { bidder: 'justpremium', format: 'wp' }
+        ],
+        skinAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: [ 'sky-slot' ],
+        hideSkinAdSlot: false
+      };
+
+      const mobileSkinConfig: ISkinConfig = {
+        formatFilter: [
+          { bidder: 'justpremium', format: 'mt' }
+        ],
+        skinAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: [ 'sky-slot' ],
+        hideSkinAdSlot: false
+      };
+
+      it('should select the first rule that applies', () => {
+        const configuredModule = new Skin({
+          configs: [ wallpaperConfig, mobileSkinConfig ]
+        }, dom.window);
+
+        // select desktop wallpaper
+        const wpConfig = configuredModule.selectConfig({ 'wp-slot': { bids: [ jpBidResponse('wp') ] } });
+        expect(wpConfig).to.be.equal(wallpaperConfig);
+
+        // select mobile skin
+        const mobileConfig = configuredModule.selectConfig({ 'wp-slot': { bids: [ jpBidResponse('mt') ] } });
+        expect(mobileConfig).to.be.equal(mobileSkinConfig);
+
+        // select wallpaper config skin
+        const wp2Config = configuredModule.selectConfig({ 'wp-slot': { bids: [ jpBidResponse('wp'), jpBidResponse('mt') ] } });
+        expect(wp2Config).to.be.equal(wallpaperConfig);
+      });
+
+    });
+
   });
 
 });

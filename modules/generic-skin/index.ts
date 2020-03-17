@@ -92,6 +92,15 @@ export default class Skin implements IModule {
   };
 
   /**
+   *
+   * @param bidResponses
+   * @return the first skin config with matching filters. If no config matches, undefined is being returned
+   */
+  selectConfig = (bidResponses: prebidjs.IBidResponsesMap): ISkinConfig | undefined => {
+    return this.skinModuleConfig.configs.find(config => this.checkConfig(config, bidResponses));
+  };
+
+  /**
    * Destroy the slot defined by the give DOM ID.
    *
    * NOTE: Accesses the global gpt.js tag (window.googletag).
@@ -131,7 +140,7 @@ export default class Skin implements IModule {
     config.prebid.listener = {
       preSetTargetingForGPTAsync: (bidResponses, timedOut, slotDefinitions) => {
 
-        const skinConfig = this.skinModuleConfig.configs.find(config => this.checkConfig(config, bidResponses));
+        const skinConfig = this.selectConfig(bidResponses);
 
         if (skinConfig) {
           log.debug('SkinModule', 'Skin configuration applied', skinConfig);
