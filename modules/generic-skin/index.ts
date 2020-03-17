@@ -1,8 +1,37 @@
-import { IModule, ModuleType, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { googletag, IModule, ModuleType, Moli, prebidjs } from '@highfivve/ad-tag';
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
-interface ISkinConfig {
+interface ISkinModuleConfig {
+
+  /**
+   * A list of configurations. The first configuration with matching
+   * format filters will be used.
+   */
+  readonly configs: ISkinConfig[];
+}
+
+interface IJustPremiumFormatFilter {
+  readonly bidder: typeof prebidjs.JustPremium;
+
+  readonly format: prebidjs.JustPremiumFormat;
+}
+
+interface IDSPXFormatFilter {
+  readonly bidder: typeof prebidjs.DSPX;
+}
+
+type FormatFilter = IJustPremiumFormatFilter | IDSPXFormatFilter;
+
+export interface ISkinConfig {
+
+  /**
+   * A list of filters. If one of the filter applies then this
+   * configuration will be executed.
+   */
+  readonly formatFilter: FormatFilter[];
+
+
 
   /**
    * This is usually the dom id of the header ad slot.
@@ -11,7 +40,7 @@ interface ISkinConfig {
    * This is the case if there are direct campaign formats for wallpapers
    * that require a DFP road block.
    */
-  wallpaperAdSlotDomId: string;
+  readonly skinAdSlotDomId: string;
 
   /**
    * dom ids of the ad slots that should not be requested when a just premium
@@ -20,12 +49,12 @@ interface ISkinConfig {
    * Depending on the wallpaperAdSlot these are usually skyscrapers left and right
    * and if there's a specific wallpaper ad slot the header as well.
    */
-  blockedAdSlotDomIds: string[];
+  readonly blockedAdSlotDomIds: string[];
 
   /**
    * if true, the ad slot will be set to display none
    */
-  hideWallpaperAdSlot: boolean;
+  readonly hideSkinAdSlot: boolean;
 }
 
 export default class Skin implements IModule {
@@ -34,29 +63,33 @@ export default class Skin implements IModule {
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
 
-  constructor(private readonly skinConfig: ISkinConfig, private readonly window: Window) {
+  constructor(private readonly skinModuleConfig: ISkinModuleConfig, private readonly window: Window) {
   }
 
   config(): Object | null {
-    return this.skinConfig;
+    return this.skinModuleConfig;
   }
 
-  /**
-   * Checks if bid responses contains a JustPremium bid that has the wallpaper format or a DSPX bid
-   * @param bidResponses the prebid bid response from a prebid request
-   */
-  checkForWallpaper = (bidResponses: prebidjs.IBidResponsesMap): boolean => {
-    const wallpaperDomId = this.skinConfig.wallpaperAdSlotDomId;
+  checkConfig = (config: ISkinConfig, bidResponses: prebidjs.IBidResponsesMap): boolean => {
 
-    const wallpaperBidResponse = bidResponses[wallpaperDomId];
-    const justPremiumWallpaperBid = wallpaperBidResponse ?
-      wallpaperBidResponse.bids.filter((bid: prebidjs.BidResponse) => {
-        return bid.cpm > 0 && (
-          (bid.bidder === prebidjs.JustPremium && bid.format === prebidjs.JustPremiumWallpaper) ||
-          (bid.bidder === prebidjs.DSPX)
-        );
-      }) : [];
-    return justPremiumWallpaperBid.length !== 0;
+    const skinBidResponse = bidResponses[config.skinAdSlotDomId];
+
+    const skinBids = skinBidResponse ? skinBidResponse.bids.filter(bid => {
+      // go through all filters and check if one matches
+      const oneFilterApplied = config.formatFilter.some(filter => {
+        switch (filter.bidder) {
+          case 'justpremium':
+            return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
+          case 'dspx':
+            return bid.bidder === prebidjs.DSPX;
+          default: return false;
+        }
+      });
+      // check cpm to make sure this is a valid bid
+      return bid.cpm > 0 && oneFilterApplied;
+    }) : [];
+
+    return skinBids.length !== 0;
   };
 
   /**
@@ -80,7 +113,9 @@ export default class Skin implements IModule {
       return;
     }
 
-    const domIds = this.skinConfig.blockedAdSlotDomIds.concat(this.skinConfig.wallpaperAdSlotDomId)
+    const domIds = this.skinModuleConfig.configs.reduce<string[]>((domIds, config) => {
+      return [...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds];
+    }, [])
       .filter(domId => !config.slots.some(slot => slot.domId === domId));
 
     if (domIds.length > 0) {
@@ -97,18 +132,19 @@ export default class Skin implements IModule {
     config.prebid.listener = {
       preSetTargetingForGPTAsync: (bidResponses, timedOut, slotDefinitions) => {
 
-        if (this.checkForWallpaper(bidResponses)) {
-          this.skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
+        const skinConfig = this.skinModuleConfig.configs.find(config => this.checkConfig(config, bidResponses));
+
+        if (skinConfig) {
+          skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
 
           try {
-            const wallpaperDiv = document.getElementById(this.skinConfig.wallpaperAdSlotDomId);
-            if (this.skinConfig.hideWallpaperAdSlot && wallpaperDiv) {
+            const wallpaperDiv = document.getElementById(skinConfig.skinAdSlotDomId);
+            if (skinConfig.hideSkinAdSlot && wallpaperDiv) {
               wallpaperDiv.style.setProperty('display', 'none');
             }
           } catch (e) {
-            log.error('SkinModule', `Couldn't set the the wallpaper div ${this.skinConfig.wallpaperAdSlotDomId} to display:none;`, e);
+            log.error('SkinModule', `Couldn't set the the wallpaper div ${skinConfig.skinAdSlotDomId} to display:none;`, e);
           }
-
         }
       }
     };

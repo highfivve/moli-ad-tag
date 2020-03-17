@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-1816](https://jira.gutefrage.net/browse/GD-1816). Make generic-skin module configurable for just premium mobile format
+
 ## 1.38.1
 
 Added `currency` parameter to pubmatic.

@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import Skin from './index';
+import Skin, { ISkinConfig } from './index';
 import { Moli, prebidjs } from '@highfivve/ad-tag';
 import { createMoliTag } from '@highfivve/ad-tag/source/ts/ads/moli';
 import { consentConfig, newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
@@ -50,9 +50,14 @@ describe('Skin Module', () => {
       const moli = createMoliTag(dom.window);
       const noopLogger = newNoopLogger();
       const module = new Skin({
-        wallpaperAdSlotDomId: 'wp-slot',
-        blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideWallpaperAdSlot: false
+        configs: [
+          {
+            formatFilter: [],
+            skinAdSlotDomId: 'wp-slot',
+            blockedAdSlotDomIds: [ 'sky-slot' ],
+            hideSkinAdSlot: false
+          }
+        ]
       }, dom.window);
 
       const slots = createAdSlots(dom.window, [ 'wp-slot', 'sky-slot' ]);
@@ -80,9 +85,14 @@ describe('Skin Module', () => {
       const moli = createMoliTag(dom.window);
       const noopLogger = newNoopLogger();
       const module = new Skin({
-        wallpaperAdSlotDomId: 'wp-slot',
-        blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideWallpaperAdSlot: false
+        configs: [
+          {
+            formatFilter: [],
+            skinAdSlotDomId: 'wp-slot',
+            blockedAdSlotDomIds: [ 'sky-slot' ],
+            hideSkinAdSlot: false
+          }
+        ]
       }, dom.window);
 
       const slots = createAdSlots(dom.window, [ 'wp-slot' ]);
@@ -107,27 +117,35 @@ describe('Skin Module', () => {
     });
   });
 
-  describe('check for wallpaper', () => {
+  describe('checkConfig filter evaluation', () => {
     const module = new Skin({
-      wallpaperAdSlotDomId: 'wp-slot',
-      blockedAdSlotDomIds: [ 'sky-slot' ],
-      hideWallpaperAdSlot: false
+      configs: []
     }, dom.window);
 
-    describe('just premium', () => {
-      const jpBidResponse = (format: prebidjs.JustPremiumFormat): prebidjs.IJustPremiumBidResponse => {
-        return {
-          bidder: prebidjs.JustPremium,
-          format: format,
-          adId: '',
-          cpm: 10.00,
-          height: 1,
-          width: 1
-        };
+    const jpBidResponse = (format: prebidjs.JustPremiumFormat): prebidjs.IJustPremiumBidResponse => {
+      return {
+        bidder: prebidjs.JustPremium,
+        format: format,
+        adId: '',
+        cpm: 10.00,
+        height: 1,
+        width: 1
+      };
+    };
+
+    describe('just premium wallpaper', () => {
+
+      const config: ISkinConfig = {
+        formatFilter: [
+          { bidder: 'justpremium', format: 'wp' }
+        ],
+        skinAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: [ 'sky-slot' ],
+        hideSkinAdSlot: false
       };
 
       it('should return true if a just premium wallpaper was found', () => {
-        const hasWallpaper = module.checkForWallpaper({
+        const hasWallpaper = module.checkConfig(config, {
           'wp-slot': {
             bids: [ jpBidResponse('wp') ]
           }
@@ -137,7 +155,7 @@ describe('Skin Module', () => {
       });
 
       it('should return false if a just premium wallpaper was found but cpm 0', () => {
-        const hasWallpaper = module.checkForWallpaper({
+        const hasWallpaper = module.checkConfig(config, {
           'wp-slot': {
             bids: [ { ...jpBidResponse('wp'), cpm: 0 } ]
           }
@@ -147,7 +165,7 @@ describe('Skin Module', () => {
       });
 
       it('should return false if the just premium format does not match was found', () => {
-        const hasWallpaper = module.checkForWallpaper({
+        const hasWallpaper = module.checkConfig(config, {
           'wp-slot': {
             bids: [
               jpBidResponse('pu'),
@@ -155,14 +173,112 @@ describe('Skin Module', () => {
               jpBidResponse('fa'),
               jpBidResponse('cf'),
               jpBidResponse('sa'),
-              jpBidResponse('is')
+              jpBidResponse('is'),
+              jpBidResponse('mt'),
+              jpBidResponse('ca'),
             ]
           }
         });
         expect(hasWallpaper).to.be.false;
       });
+    });
 
+    describe('just premium cascade ad', () => {
 
+      const config: ISkinConfig = {
+        formatFilter: [
+          { bidder: 'justpremium', format: 'ca' }
+        ],
+        skinAdSlotDomId: 'cascade-ad-slot',
+        blockedAdSlotDomIds: [ 'sky-slot' ],
+        hideSkinAdSlot: false
+      };
+
+      it('should return true if a just premium mobile skin was found', () => {
+        const hasWallpaper = module.checkConfig(config, {
+          'cascade-ad-slot': {
+            bids: [ jpBidResponse('ca') ]
+          }
+        });
+
+        expect(hasWallpaper).to.be.true;
+      });
+
+      it('should return false if a just premium mobile skin was found but cpm 0', () => {
+        const hasWallpaper = module.checkConfig(config, {
+          'cascade-ad-slot': {
+            bids: [ { ...jpBidResponse('ca'), cpm: 0 } ]
+          }
+        });
+
+        expect(hasWallpaper).to.be.false;
+      });
+
+      it('should return false if the just premium format does not match was found', () => {
+        const hasWallpaper = module.checkConfig(config, {
+          'cascade-ad-slot': {
+            bids: [
+              jpBidResponse('pu'),
+              jpBidResponse('pd'),
+              jpBidResponse('fa'),
+              jpBidResponse('cf'),
+              jpBidResponse('sa'),
+              jpBidResponse('is'),
+              jpBidResponse('mt'),
+            ]
+          }
+        });
+        expect(hasWallpaper).to.be.false;
+      });
+    });
+
+    describe('just premium mobile skin', () => {
+
+      const config: ISkinConfig = {
+        formatFilter: [
+          { bidder: 'justpremium', format: 'mt' }
+        ],
+        skinAdSlotDomId: 'mobile-skin-slot',
+        blockedAdSlotDomIds: [ 'sky-slot' ],
+        hideSkinAdSlot: false
+      };
+
+      it('should return true if a just premium mobile skin was found', () => {
+        const hasWallpaper = module.checkConfig(config, {
+          'mobile-skin-slot': {
+            bids: [ jpBidResponse('mt') ]
+          }
+        });
+
+        expect(hasWallpaper).to.be.true;
+      });
+
+      it('should return false if a just premium mobile skin was found but cpm 0', () => {
+        const hasWallpaper = module.checkConfig(config, {
+          'mobile-skin-slot': {
+            bids: [ { ...jpBidResponse('mt'), cpm: 0 } ]
+          }
+        });
+
+        expect(hasWallpaper).to.be.false;
+      });
+
+      it('should return false if the just premium format does not match was found', () => {
+        const hasWallpaper = module.checkConfig(config, {
+          'mobile-skin-slot': {
+            bids: [
+              jpBidResponse('pu'),
+              jpBidResponse('pd'),
+              jpBidResponse('fa'),
+              jpBidResponse('cf'),
+              jpBidResponse('sa'),
+              jpBidResponse('is'),
+              jpBidResponse('ca'),
+            ]
+          }
+        });
+        expect(hasWallpaper).to.be.false;
+      });
     });
 
     describe('dspx', () => {
@@ -177,8 +293,17 @@ describe('Skin Module', () => {
         };
       };
 
+      const config: ISkinConfig = {
+        formatFilter: [
+          { bidder: 'dspx' }
+        ],
+        skinAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: [ 'sky-slot' ],
+        hideSkinAdSlot: false
+      };
+
       it('should return true if a dspx response was found', () => {
-        const hasWallpaper = module.checkForWallpaper({
+        const hasWallpaper = module.checkConfig(config, {
           'wp-slot': {
             bids: [ dpsxBidResponse(10.00) ]
           }
@@ -188,7 +313,7 @@ describe('Skin Module', () => {
       });
 
       it('should return false if a dspx response was found but with cpm 0', () => {
-        const hasWallpaper = module.checkForWallpaper({
+        const hasWallpaper = module.checkConfig(config, {
           'wp-slot': {
             bids: [ dpsxBidResponse(0) ]
           }
