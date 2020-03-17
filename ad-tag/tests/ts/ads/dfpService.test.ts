@@ -44,6 +44,7 @@ describe('DfpService', () => {
   const googleTagPubAdsSpy = sandbox.spy(dom.window.googletag, 'pubads');
   const googletagDefineOutOfPageSlotStub = sandbox.stub(dom.window.googletag, 'defineOutOfPageSlot');
   const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
+  const setTargetingStub = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
 
   // pbjs spies
   const pbjsAddAdUnitSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
@@ -2466,7 +2467,6 @@ describe('DfpService', () => {
 
     it('should set correct targeting values', () => {
       const dfpService = newDfpService();
-      const setTargetingStub = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
 
       const adConfiguration: Moli.MoliConfig = {
         slots: [],
@@ -2485,9 +2485,10 @@ describe('DfpService', () => {
 
       return dfpService.initialize(adConfiguration)
         .then(() => {
-          expect(setTargetingStub).to.be.calledTwice;
+          expect(setTargetingStub).to.be.calledThrice;
           expect(setTargetingStub).to.be.calledWith('gfversion', Sinon.match.array.deepEquals([ 'v2016' ]));
           expect(setTargetingStub).to.be.calledWith('sprechstunde', 'true');
+          // third call for the `consent` key value
           expect(setTargetingStub).not.to.be.calledWith('undefined', undefined);
         });
     });
@@ -2496,7 +2497,6 @@ describe('DfpService', () => {
   describe('consent management', () => {
 
     const setNonPersonalizedAdsSpy = sandbox.spy(pubAdsServiceStub, 'setRequestNonPersonalizedAds');
-    const setTargetingStub = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
 
     const stubCmpModule = cmpModule();
     const stubGetNonPersonalizedAdSetting = sandbox.stub(stubCmpModule, 'getNonPersonalizedAdSetting');

@@ -319,11 +319,12 @@ describe('moli', () => {
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         expect(spaState.keyValues).to.be.deep.equal({});
-        expect(googletagPubAdsSetTargetingSpy).to.be.callCount(4);
+        expect(googletagPubAdsSetTargetingSpy).to.be.callCount(5);
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
+        expect(googletagPubAdsSetTargetingSpy).calledWithMatch('consent', Sinon.match.in(['full', 'none']));
         googletagPubAdsSetTargetingSpy.resetHistory();
         dom.reconfigure({
           url: 'https://localhost/2'
