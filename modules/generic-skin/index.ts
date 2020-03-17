@@ -71,7 +71,6 @@ export default class Skin implements IModule {
   }
 
   checkConfig = (config: ISkinConfig, bidResponses: prebidjs.IBidResponsesMap): boolean => {
-
     const skinBidResponse = bidResponses[config.skinAdSlotDomId];
 
     const skinBids = skinBidResponse ? skinBidResponse.bids.filter(bid => {
@@ -135,6 +134,7 @@ export default class Skin implements IModule {
         const skinConfig = this.skinModuleConfig.configs.find(config => this.checkConfig(config, bidResponses));
 
         if (skinConfig) {
+          log.debug('SkinModule', 'Skin configuration applied', skinConfig);
           skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
 
           try {
