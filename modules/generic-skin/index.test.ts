@@ -55,7 +55,8 @@ describe('Skin Module', () => {
             formatFilter: [],
             skinAdSlotDomId: 'wp-slot',
             blockedAdSlotDomIds: [ 'sky-slot' ],
-            hideSkinAdSlot: false
+            hideSkinAdSlot: false,
+            hideBlockedSlots: false
           }
         ]
       }, dom.window);
@@ -90,7 +91,8 @@ describe('Skin Module', () => {
             formatFilter: [],
             skinAdSlotDomId: 'wp-slot',
             blockedAdSlotDomIds: [ 'sky-slot' ],
-            hideSkinAdSlot: false
+            hideSkinAdSlot: false,
+            hideBlockedSlots: false
           }
         ]
       }, dom.window);
@@ -141,7 +143,8 @@ describe('Skin Module', () => {
         ],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideSkinAdSlot: false
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false
       };
 
       it('should return true if a just premium wallpaper was found', () => {
@@ -191,7 +194,8 @@ describe('Skin Module', () => {
         ],
         skinAdSlotDomId: 'cascade-ad-slot',
         blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideSkinAdSlot: false
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false
       };
 
       it('should return true if a just premium mobile skin was found', () => {
@@ -240,7 +244,8 @@ describe('Skin Module', () => {
         ],
         skinAdSlotDomId: 'mobile-skin-slot',
         blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideSkinAdSlot: false
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false
       };
 
       it('should return true if a just premium mobile skin was found', () => {
@@ -299,7 +304,8 @@ describe('Skin Module', () => {
         ],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideSkinAdSlot: false
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false
       };
 
       it('should return true if a dspx response was found', () => {
@@ -331,7 +337,8 @@ describe('Skin Module', () => {
         ],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideSkinAdSlot: false
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false
       };
 
       const mobileSkinConfig: ISkinConfig = {
@@ -340,7 +347,8 @@ describe('Skin Module', () => {
         ],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: [ 'sky-slot' ],
-        hideSkinAdSlot: false
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false
       };
 
       it('should select the first rule that applies', () => {
