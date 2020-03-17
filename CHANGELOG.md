@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.40.0
+
 [GD-1824](https://jira.gutefrage.net/browse/GD-1824). Add standard `consent` key value to dfp service for nonPersonalizedAds tracking (full, none). 
 [GD-1816](https://jira.gutefrage.net/browse/GD-1816). Make generic-skin module configurable for just premium mobile format
 
