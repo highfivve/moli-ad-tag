@@ -333,7 +333,7 @@ export class DfpService {
           moliSlot: moliSlotLazy,
           filterSupportedSizes
         }, this.getEnvironment(config), services.yieldOptimizationService))
-        .then(({adSlot, priceRule}) => {
+        .then(({ adSlot, priceRule }) => {
           const slotDefinition: SlotDefinition<Moli.AdSlot> = {
             adSlot: adSlot,
             moliSlot: moliSlotLazy,
@@ -435,7 +435,7 @@ export class DfpService {
               }, this.getEnvironment(config), services.yieldOptimizationService);
 
               if (this.isPrebidSlot(moliSlotRefreshable)) {
-                adSlotPromise = adSlotPromise.then(({adSlot, priceRule}) => {
+                adSlotPromise = adSlotPromise.then(({ adSlot, priceRule }) => {
                   // make sure that the slot is also registered on prebid
                   this.registerPrebidSlots(pbjs, [ {
                     moliSlot: moliSlotRefreshable,
@@ -443,7 +443,7 @@ export class DfpService {
                     priceRule: priceRule,
                     filterSupportedSizes
                   } ], config, services);
-                  return { adSlot, priceRule};
+                  return { adSlot, priceRule };
                 });
               }
               adSlotPromise = adSlotPromise.then(adSlot => {
@@ -452,7 +452,7 @@ export class DfpService {
               });
             }
 
-            adSlotPromise.then(({adSlot, priceRule}) => {
+            adSlotPromise.then(({ adSlot, priceRule }) => {
               const slotDefinition = { moliSlot: moliSlotRefreshable, adSlot: adSlot, priceRule, filterSupportedSizes };
               this.configurePassback([ slotDefinition ], services.passbackService);
               this.requestRefreshableSlot(pbjs, slotDefinition, config, services.reportingService, services.labelService);
@@ -736,6 +736,8 @@ export class DfpService {
     switch (this.getEnvironment(config)) {
       case 'production':
         this.configureTargeting(config);
+        this.window.googletag.pubads().setTargeting('consent', nonPersonalizedAds === 0 ? 'full' : 'none');
+
         this.window.googletag.pubads().enableAsyncRendering();
         this.window.googletag.pubads().disableInitialLoad();
         this.window.googletag.pubads().enableSingleRequest();

@@ -12,7 +12,7 @@ import { cookieService } from '../../../source/ts/util/cookieService';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { apstagStub, a9ConfigStub } from '../stubs/a9Stubs';
-import { consentConfig, noopLogger } from '../stubs/moliStubs';
+import { cmpModule, consentConfig, noopLogger } from '../stubs/moliStubs';
 import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig;
 
 // setup sinon-chai
@@ -2496,6 +2496,13 @@ describe('DfpService', () => {
   describe('consent management', () => {
 
     const setNonPersonalizedAdsSpy = sandbox.spy(pubAdsServiceStub, 'setRequestNonPersonalizedAds');
+    const setTargetingStub = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+
+    const stubCmpModule = cmpModule();
+    const stubGetNonPersonalizedAdSetting = sandbox.stub(stubCmpModule, 'getNonPersonalizedAdSetting');
+    const stubConsentConfig: Moli.consent.ConsentConfig = {
+      cmp: stubCmpModule
+    };
 
     it('should setNonPersonalizedAds based on the consent configuration', () => {
       return newDfpService().initialize({
@@ -2506,6 +2513,32 @@ describe('DfpService', () => {
       }).then(() => {
         expect(setNonPersonalizedAdsSpy).to.be.calledOnce;
         expect(setNonPersonalizedAdsSpy).to.be.calledOnceWithExactly(0);
+      });
+    });
+
+    it('should set key-value consent "full" for nonPersonalizedAds = 0', () => {
+      stubGetNonPersonalizedAdSetting.resolves(0);
+      return newDfpService().initialize({
+        slots: [],
+        consent: stubConsentConfig,
+        logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
+      }).then(() => {
+        expect(setTargetingStub).to.be.calledOnce;
+        expect(setTargetingStub).to.be.calledOnceWithExactly('consent', 'full');
+      });
+    });
+
+    it('should set key-value consent "none" for nonPersonalizedAds = 1', () => {
+      stubGetNonPersonalizedAdSetting.resolves(1);
+      return newDfpService().initialize({
+        slots: [],
+        consent: stubConsentConfig,
+        logger: noopLogger,
+        yieldOptimization: { provider: 'none' }
+      }).then(() => {
+        expect(setTargetingStub).to.be.calledOnce;
+        expect(setTargetingStub).to.be.calledOnceWithExactly('consent', 'none');
       });
     });
 
