@@ -23,6 +23,7 @@ moli.registerModule(new Skin({
       ],
       skinAdSlotDomId: 'my_header',
       hideSkinAdSlot: false,
+      hideBlockedSlots: true,
       blockedAdSlotDomIds: [
         'my_sidebar_1',
         'my_sidebar_2',

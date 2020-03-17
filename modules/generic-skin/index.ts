@@ -32,7 +32,6 @@ export interface ISkinConfig {
   readonly formatFilter: FormatFilter[];
 
 
-
   /**
    * This is usually the dom id of the header ad slot.
    *
@@ -55,6 +54,11 @@ export interface ISkinConfig {
    * if true, the ad slot will be set to display none
    */
   readonly hideSkinAdSlot: boolean;
+
+  /**
+   * if true, the blocked ad slots will be set to display none
+   */
+  readonly hideBlockedSlots: boolean;
 }
 
 export default class Skin implements IModule {
@@ -81,7 +85,8 @@ export default class Skin implements IModule {
             return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
           case 'dspx':
             return bid.bidder === prebidjs.DSPX;
-          default: return false;
+          default:
+            return false;
         }
       });
       // check cpm to make sure this is a valid bid
@@ -122,7 +127,7 @@ export default class Skin implements IModule {
     }
 
     const domIds = this.skinModuleConfig.configs.reduce<string[]>((domIds, config) => {
-      return [...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds];
+      return [ ...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds ];
     }, [])
       .filter(domId => !config.slots.some(slot => slot.domId === domId));
 
@@ -146,17 +151,28 @@ export default class Skin implements IModule {
           log.debug('SkinModule', 'Skin configuration applied', skinConfig);
           skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
 
-          try {
-            const wallpaperDiv = document.getElementById(skinConfig.skinAdSlotDomId);
-            if (skinConfig.hideSkinAdSlot && wallpaperDiv) {
-              wallpaperDiv.style.setProperty('display', 'none');
-            }
-          } catch (e) {
-            log.error('SkinModule', `Couldn't set the the wallpaper div ${skinConfig.skinAdSlotDomId} to display:none;`, e);
+          if (skinConfig.hideBlockedSlots) {
+            skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(log));
+          }
+
+          if (skinConfig.hideSkinAdSlot) {
+            this.hideAdSlot(log)(skinConfig.skinAdSlotDomId);
           }
         }
       }
     };
+  }
+
+  private hideAdSlot = (log: Moli.MoliLogger) => (domId: string): void => {
+    const element = this.window.document.getElementById(domId);
+    try {
+      if (element) {
+        log.debug('SkinModule', `Set display:none for ${domId}`);
+        element.style.setProperty('display', 'none');
+      }
+    } catch (e) {
+      log.error('SkinModule', `Couldn't set the the wallpaper div ${domId} to display:none;`, e);
+    }
 
   }
 
