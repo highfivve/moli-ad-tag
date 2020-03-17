@@ -75,6 +75,7 @@ export class AssetLoaderService implements IAssetLoaderService {
       }
     })
       .then(response => {
+        this.measurePerformance(name);
         return response.ok ?
           response.json() :
           response.text().then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));

@@ -11,7 +11,6 @@ import { googleAdSlotStub } from '../stubs/googletagStubs';
 import StaticYieldOptimizationConfig = Moli.yield_optimization.StaticYieldOptimizationConfig;
 import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig;
 import DynamicYieldOptimizationConfig = Moli.yield_optimization.DynamicYieldOptimizationConfig;
-import AdUnitPriceRules = Moli.yield_optimization.AdUnitPriceRules;
 import PublisherYieldConfiguration = Moli.yield_optimization.PublisherYieldConfiguration;
 
 // setup sinon-chai
@@ -69,7 +68,7 @@ describe('YieldOptimizationService', () => {
   describe('provider: static', () => {
 
     describe('empty config', () => {
-      const config: StaticYieldOptimizationConfig = { provider: 'static', config: { rules: [ ]} };
+      const config: StaticYieldOptimizationConfig = { provider: 'static', config: { rules: [] } };
       const service = createService(config);
 
       it('should always return undefined', () => {
@@ -201,20 +200,49 @@ describe('YieldOptimizationService', () => {
   describe('provider: dynamic', () => {
 
     const adUnit = 'ad_content_1';
+    const config: DynamicYieldOptimizationConfig = {
+      provider: 'dynamic',
+      configEndpoint: '//localhost'
+    };
+
+    const publisherYieldConfiguration: PublisherYieldConfiguration = {
+      rules: [
+        {
+          adUnitName: adUnit,
+          main: {
+            priceRuleId: 3
+          },
+          tests: [
+            { priceRuleId: 1 },
+            { priceRuleId: 2 },
+            { priceRuleId: 4 },
+            { priceRuleId: 5 }
+          ]
+        }
+      ]
+    };
 
     describe('error handling', () => {
-      const config: DynamicYieldOptimizationConfig = {
-        provider: 'dynamic',
-        configEndpoint: '//localhost'
-      };
 
-      it('should always return undefined if the asset loading fails', () => {
+      it('should retry three times', () => {
+        assetLoaderLoadJsonStub.onFirstCall().rejects('FetchRequestFailed');
+        assetLoaderLoadJsonStub.onSecondCall().rejects('FetchRequestFailed');
+        assetLoaderLoadJsonStub.onThirdCall().resolves(publisherYieldConfiguration);
+        const service = createService(config);
+
+        return service.getPriceRule(adUnit).then(rule => {
+          expect(rule).not.to.be.undefined;
+          expect(assetLoaderLoadJsonStub).to.have.been.calledThrice;
+        });
+      });
+
+      it('should always return undefined if the asset loading fails after 3 retries', () => {
         assetLoaderLoadJsonStub.rejects('FetchRequestFailed');
         const service = createService(config);
 
         return service.getPriceRule(adUnit).then(rule => {
           expect(rule).to.be.undefined;
-          expect(assetLoaderLoadJsonStub).to.have.been.called;
+          expect(assetLoaderLoadJsonStub).to.have.been.calledThrice;
         });
       });
 
@@ -244,29 +272,6 @@ describe('YieldOptimizationService', () => {
     });
 
     describe('non empty config', () => {
-      const adUnit = 'ad_content_1';
-      const config: DynamicYieldOptimizationConfig = {
-        provider: 'dynamic',
-        configEndpoint: '//localhost/config.json'
-      };
-
-      const publisherYieldConfiguration: PublisherYieldConfiguration = {
-        rules: [
-          {
-            adUnitName: adUnit,
-            main: {
-              priceRuleId: 3
-            },
-            tests: [
-              { priceRuleId: 1 },
-              { priceRuleId: 2 },
-              { priceRuleId: 4 },
-              { priceRuleId: 5 }
-            ]
-          }
-        ]
-      };
-
       beforeEach(() => {
         assetLoaderLoadJsonStub.resolves(publisherYieldConfiguration);
       });
@@ -394,7 +399,7 @@ describe('YieldOptimizationService', () => {
       return createService(config).getPriceRule(adUnit).then(priceRule => {
         expect(priceRule).to.be.ok;
         expect(priceRule?.cpm).to.be.ok;
-        expect(priceRule?.cpm).to.be.oneOf([0.15, 0.10, 0.30, 0.35 ]);
+        expect(priceRule?.cpm).to.be.oneOf([ 0.15, 0.10, 0.30, 0.35 ]);
       });
     });
 

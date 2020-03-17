@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-1830](https://jira.gutefrage.net/browse/GD-1830). Add retry for yield optimization fetching
+
 ## 1.40.0
 
 [GD-1824](https://jira.gutefrage.net/browse/GD-1824). Add standard `consent` key value to dfp service for nonPersonalizedAds tracking (full, none). 

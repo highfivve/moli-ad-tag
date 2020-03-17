@@ -108,8 +108,7 @@ export class YieldOptimizationService {
         break;
       case 'dynamic':
         this.isEnabled = true;
-        this.adUnitPricingRules = assetLoaderService
-          .loadJson<PublisherYieldConfiguration>('yield-config.json', yieldConfig.configEndpoint)
+        this.adUnitPricingRules = this.loadConfigWithRetry( yieldConfig.configEndpoint, 3)
           .then(config => {
             log.info('YieldOptimizationService', 'loaded pricing rules', config);
             return this.choosePriceRules(config.rules);
@@ -166,6 +165,19 @@ export class YieldOptimizationService {
           this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitDomId}`);
         }
         return rule;
+      });
+  }
+
+  private loadConfigWithRetry(configEndpoint: string, retriesLeft: number, lastError: any | null = null): Promise<PublisherYieldConfiguration> {
+    if (retriesLeft <= 0) {
+      return Promise.reject(lastError);
+    }
+
+    return this.assetLoaderService.loadJson<PublisherYieldConfiguration>('yield-config.json', configEndpoint)
+      .catch(error => {
+        // for 3 retries the backoff time will be 33ms / 50ms / 100ms
+        const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
+        return exponentialBackoff.then(() => this.loadConfigWithRetry(configEndpoint, retriesLeft - 1, error));
       });
   }
 
