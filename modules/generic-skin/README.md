@@ -11,11 +11,25 @@ In your `index.ts` import the generic-skin module and register it.
 
 
 ```javascript
-import SkinModule from '@highfivve/modules/generic-skin'
+import Skin from '@highfivve/modules/generic-skin'
 
-moli.registerModule(new SkinModule({
-  wallpaperAdSlotDomId: 'ad-Billboard',
-  blockedAdSlotDomIds: [ 'ad-Skyscraper' ],
-  hideWallpaperAdSlot: true
+moli.registerModule(new Skin({
+  configs: [
+    // configuration for regular wallpaper/skin from JustPremium or Screen on Demand (DSPX) 
+    {
+      formatFilter: [
+        { bidder: 'justpremium', format: 'wp' },
+        { bidder: 'dspx' },
+      ],
+      skinAdSlotDomId: 'my_header',
+      hideSkinAdSlot: false,
+      blockedAdSlotDomIds: [
+        'my_sidebar_1',
+        'my_sidebar_2',
+        'my_sidebar_left',
+        'my_floorad'
+      ]
+    }
+  ]
 }, window));
 ```
