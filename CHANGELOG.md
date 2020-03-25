@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+[GD-1908](https://jira.gutefrage.net/browse/GD-1908). Allow multiple calls to `enableSinglePageApp` if ad tag is already in `spa` mode
+
+## 1.40.3
+
 [GD-1830](https://jira.gutefrage.net/browse/GD-1830). Add retry for yield optimization fetching
 
 ## 1.40.0

@@ -323,7 +323,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'configured': {
         state.isSinglePageApp = true;
         break;
-
+      }
+      case 'spa': {
+        // already in spa mode
+        break;
       }
       default : {
         getLogger(state.config, window).error('MoliGlobal', 'Trying enable single page app. Already configured.', state.config);
