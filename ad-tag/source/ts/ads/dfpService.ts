@@ -1072,6 +1072,7 @@ export class DfpService {
                              linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
                              linear-gradient(#eee .1em, transparent .1em);
                              background-size: 100% 1.2em;
+                             margin: auto;
                              ">
 <div style="position: absolute; top: 5px; left: 5px">${buttons}</div>        
 <div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>
