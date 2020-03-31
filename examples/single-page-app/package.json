@@ -1,5 +1,5 @@
 {
-  "name": "publisher-tags",
+  "name": "@highfivve/example-single-page-app",
   "version": "1.0.0",
   "description": "Publisher bootstrap template",
   "main": "index.ts",

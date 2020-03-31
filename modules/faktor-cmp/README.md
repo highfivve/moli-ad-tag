@@ -40,6 +40,28 @@ On the publisher page a factor script tag must be added. Example:
 <script async src="https://config-prod.choice.faktor.io/cb5df6d3-99b4-4d5b-8237-2ff9fa97d1a0/faktor.js"></script>
 ```
 
+### Fetch faktor.js
+
+The module is also capable of fetching the `faktor.js` itself without any additional script integration by the
+publisher.
+
+```js
+import Faktor from '@highfivve/module-cmp-faktor';
+
+moli.registerModule(new Faktor({
+  autoOptIn: true,
+  site: {
+    mode: 'lazy',
+    url: 'https://config-prod.choice.faktor.io/cb5df6d3-99b4-4d5b-8237-2ff9fa97d1a0/faktor.js'
+  }
+}, window));
+```
+
+The `mode` controls when the javascript is being fetched. 
+
+- `eager`: javascript is fetched during the module `init` phase
+- `lazy` : javascript is fetched on the first API call
+
 
 ## Resources
 

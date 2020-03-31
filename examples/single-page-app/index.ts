@@ -21,7 +21,11 @@ prebid.processQueue();
 const moli = initAdTag(window);
 
 moli.registerModule(new Faktor({
-  autoOptIn: true
+  autoOptIn: true,
+  site: {
+    mode: 'lazy',
+    url: 'https://config-prod.choice.faktor.io/cb5df6d3-99b4-4d5b-8237-2ff9fa97d1a0/faktor.js'
+  }
 }, window));
 
 moli.enableSinglePageApp();
