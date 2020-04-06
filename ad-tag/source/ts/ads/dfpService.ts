@@ -114,7 +114,7 @@ export class DfpService {
       sampleRate: 0
     };
 
-    // slot and reporting service are not unsable until `initialize()` is called on both services
+    // slot and reporting service are not usable until `initialize()` is called on both services
     const slotEventService = new SlotEventService(this.logger);
     this.slotEventService = slotEventService;
     this.reportingService = new ReportingService(
@@ -131,10 +131,9 @@ export class DfpService {
       this.loadA9Script(config); // load a9 script, but we don't have to wait until loaded
     }
 
-    const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     const prebidReady = config.prebid ?
-      this.awaitPrebidLoaded(prebidGlobal).then(() => this.configurePrebid(this.window[prebidGlobal], config)) :
+      this.awaitPrebidLoaded().then(() => this.configurePrebid(this.window.pbjs, config)) :
       Promise.resolve();
 
 
@@ -198,8 +197,8 @@ export class DfpService {
     const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
 
     // concurrently initialize lazy loaded slots and refreshable slots
-    this.initLazyRefreshableSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazyRefreshableAdSlot), config, services);
-    this.initLazyLoadedSlots(this.window[prebidGlobal], filteredSlots.filter(this.isLazySlot), config, services);
+    this.initLazyRefreshableSlots(this.window.pbjs, filteredSlots.filter(this.isLazyRefreshableAdSlot), config, services);
+    this.initLazyLoadedSlots(this.window.pbjs, filteredSlots.filter(this.isLazySlot), config, services);
 
     // eagerly displayed slots - this includes 'eager' slots and non-lazy 'refreshable' slots
     return Promise.resolve(instantlyLoadedSlots)
@@ -209,7 +208,7 @@ export class DfpService {
       .then((registeredSlots) => this.configurePassback(registeredSlots, this.passbackService!))
       .then((registeredSlots) => {
         this.initRefreshableSlots(
-          this.window[prebidGlobal],
+          this.window.pbjs,
           registeredSlots.filter(this.isRefreshableAdSlotDefinition),
           config,
           this.reportingService!,
@@ -219,7 +218,7 @@ export class DfpService {
         return registeredSlots;
       })
       // We wait for a prebid response and then refresh.
-      .then(slotDefinitions => this.initHeaderBidding(this.window[prebidGlobal], slotDefinitions, config, services))
+      .then(slotDefinitions => this.initHeaderBidding(this.window.pbjs, slotDefinitions, config, services))
       .then(slotDefinitions => this.refreshAds(slotDefinitions, this.reportingService!, this.getEnvironment(config)))
       .then(slotDefinitions => slotDefinitions.map(slot => slot.moliSlot))
       .catch(reason => {
@@ -243,7 +242,7 @@ export class DfpService {
       .then(() => this.window.googletag.destroySlots())
       .then(() => {
         const prebidGlobal = config.prebid && config.prebid.useMoliPbjs ? 'moliPbjs' : 'pbjs';
-        const pbjs = this.window[prebidGlobal];
+        const pbjs = this.window.pbjs;
         if (pbjs && pbjs.adUnits) {
           this.logger.debug('DFP Service', `Destroying prebid adUnits`, pbjs.adUnits);
           pbjs.adUnits.forEach(adUnit => pbjs.removeAdUnit(adUnit.code));
@@ -656,8 +655,8 @@ export class DfpService {
     return new Promise<void>(resolve => this.window.googletag.cmd.push(resolve));
   }
 
-  private awaitPrebidLoaded(prebidGlobal: 'pbjs' | 'moliPbjs'): Promise<void> {
-    this.window[prebidGlobal] = this.window[prebidGlobal] || { que: [] };
+  private awaitPrebidLoaded(): Promise<void> {
+    this.window.pbjs = this.window.pbjs || { que: [] };
 
     // if we forget to remove prebid from the configuration. The timeout is arbitrary
     const prebidTimeout = new Promise((_, reject) => {
@@ -667,7 +666,7 @@ export class DfpService {
       );
     });
 
-    const prebidLoaded = new Promise<void>(resolve => this.window[prebidGlobal].que.push(resolve));
+    const prebidLoaded = new Promise<void>(resolve => this.window.pbjs.que.push(resolve));
     Promise.race([ prebidTimeout, prebidLoaded ]).catch(error => {
       this.logger.error('DFP Service', 'Prebid did not resolve. This will stop all ads from being loaded!', error);
     });

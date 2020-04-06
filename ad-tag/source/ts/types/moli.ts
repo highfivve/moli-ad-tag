@@ -916,6 +916,8 @@ export namespace Moli {
    */
   export type AdSlot = EagerAdSlot | LazyAdSlot | RefreshableAdSlot | PrebidAdSlot | A9AdSlot;
 
+  export type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
+
   /**
    * Combines the moli slot configuration (`Moli.AdSlot`) along with the actual `googletag.IAdSlot` definition.
    *
@@ -927,7 +929,7 @@ export namespace Moli {
     readonly moliSlot: S;
 
     /** A function from the slot-local sizeConfig provided to filter the sizes provided by the slot */
-    readonly filterSupportedSizes: (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
+    readonly filterSupportedSizes: FilterSupportedSizes;
 
     /** The actual dfp slot returned by `googletag.defineSlot` or `googletag.defineOutOfPageSlot` */
     readonly adSlot: googletag.IAdSlot;
@@ -1855,13 +1857,6 @@ declare global {
      * the global moli tag definition
      */
     moli: Moli.MoliTag;
-
-    /**
-     * moli prebid.js instance if the publisher tag renames the globalVarName setting for prebid.
-     *
-     * @see [[PrebidConfig.useMoliPbjs]]
-     */
-    moliPbjs: prebidjs.IPrebidJs;
   }
 }
 

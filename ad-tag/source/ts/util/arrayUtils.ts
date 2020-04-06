@@ -10,3 +10,11 @@ export function flatten<T>(arr: T[][]): Array<T> {
 export function uniquePrimitiveFilter<T>(elm: T, position: number, arr: T[]): boolean {
   return arr.indexOf(elm) === position;
 }
+
+/**
+ * filter out all elements that are null or undefined in an array
+ * @param elem
+ */
+export function isNotNull<T>(elem: T | null | undefined): elem is T {
+  return elem !== null && elem !== undefined;
+}
