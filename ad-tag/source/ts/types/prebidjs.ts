@@ -421,6 +421,223 @@ export namespace prebidjs {
     readonly playerSize: [ number, number ][] | [ number, number ];
   }
 
+  interface IMediaTypeNativeRequirement {
+    /**
+     * true if the field is required for the native ad
+     */
+    readonly required: boolean;
+
+    /**
+     * Prebid.js sends received asset values to a native template defined in your ad server using key-value targeting.
+     * The key-value targeting pairs are passed to the ad server as query string parameters. In some cases, sending
+     * native asset values as query string parameters may cause errors. For example, a long clickUrl value can exceed
+     * an ad request URL limit, or special characters within a body can get mangled by URL encoding. In these cases,
+     * you can opt to send URL-safe placeholder values to the ad server, and then in the native template, replace the
+     * placeholder values with the actual native values through a non-URL request to and response from Prebid.js.
+     *
+     * Within mediaTypes.native, add sendId: true to any asset object you wish to send as a placeholder.
+     * For example, to send body and clickUrl as placeholders
+     *
+     * ```
+     * mediaTypes: {
+     *   native: {
+     *     body: {
+     *       sendId: true
+     *     },
+     *     clickUrl: {
+     *       sendId: true
+     *     },
+     *   },
+     * },
+     * ```
+     *
+     * @see http://prebid.org/dev-docs/show-native-ads.html#sending-asset-placeholders
+     */
+    readonly sendId?: boolean;
+  }
+
+  /**
+   * NOTE: If you’re using aspect_ratios in a native request sent to Prebid Server, the min_width and min_height
+   * fields become required instead of optional. If these fields are not included, that native request will be rejected.
+   */
+  type MediaTypeNativeAspectRatio = {
+    readonly min_width?: number;
+    readonly min_height?: number;
+    readonly ratio_width: number;
+    readonly ratio_height: number;
+  };
+
+  /**
+   * There are two methods for defining sizes for image-like assets (image and icon). Both are shown below,
+   * but the first example (using sizes) is more widely supported by demand partners.
+   *
+   * - Using `mediaTypes.native.image.sizes` (or `mediaTypes.native.icon.sizes` for icons)
+   * - Using `mediaTypes.native.image.aspect_ratios` (or `mediaTypes.native.icon.aspect_ratios` for icons)
+   */
+  interface IMediaTypeNativeRequirementImage extends IMediaTypeNativeRequirement {
+
+    readonly sizes?: [number, number];
+
+    readonly aspect_ratios?: MediaTypeNativeAspectRatio[];
+  }
+
+  /**
+   * @see http://prebid.org/dev-docs/show-native-ads.html#native-ad-keys
+   */
+  export interface IMediaTypeNative {
+
+    /**
+     * Prebid.js defines “types” of native ad for you as a convenience. This way you have less code to maintain,
+     * that is hopefully more descriptive of your intent.
+     *
+     * For now there is only the image type, but more will be added.
+     *
+     * The image native ad type implies the following required fields:
+     *
+     * - image
+     * - title
+     * - sponsoredBy
+     * - clickUrl
+     *
+     * And the following optional fields:
+     *
+     * - body
+     * - icon
+     * - cta
+     *
+     *
+     * @see http://prebid.org/dev-docs/show-native-ads.html#pre-defined-native-types
+     */
+    readonly type?: 'image';
+
+
+    /**
+     * The title of the ad, usually a call to action or a brand name.
+     *
+     * ad server key-value: `hb_native_title`
+     */
+    readonly title?: IMediaTypeNativeRequirement;
+
+    /**
+     * Text of the ad copy.
+     *
+     * ad server key-value: `hb_native_body`
+     */
+    readonly body?: IMediaTypeNativeRequirement;
+
+    /**
+     * Additional Text of the ad copy.
+     *
+     * ad server key-value: `hb_native_body2`
+     */
+    readonly body2?: IMediaTypeNativeRequirement;
+
+    /**
+     * The name of the brand associated with the ad.
+     *
+     * ad server key-value: `hb_native_brand`
+     */
+    readonly sponsoredBy?: IMediaTypeNativeRequirement;
+
+    /**
+     * The brand icon that will appear with the ad.
+     *
+     * ad server key-value: `hb_native_icon`
+     */
+    readonly icon?: IMediaTypeNativeRequirement;
+
+    /**
+     * A picture that is associated with the brand, or grabs the user’s attention.
+     *
+     * ad server key-value: `hb_native_image`
+     */
+    readonly image?: IMediaTypeNativeRequirementImage
+
+    /**
+     * Where the user will end up if they click the ad.
+     *
+     * ad server key-value: `hb_native_linkurl`
+     */
+    readonly clickUrl?: IMediaTypeNativeRequirement;
+
+    /**
+     * Text that can be displayed instead of the raw click URL. e.g, “Example.com/Specials”
+     *
+     * ad server key-value: `hb_native_displayUrl`
+     */
+    readonly displayUrl?: IMediaTypeNativeRequirement;
+
+    /**
+     * Link to the Privacy Policy of the Buyer, e.g. http://example.com/privacy
+     *
+     * ad server key-value: `hb_native_privacy`
+     */
+    readonly privacyLink?: IMediaTypeNativeRequirement;
+
+    /**
+     * Icon to display for the privacy link, e.g. http://example.com/privacy_icon.png
+     *
+     * ad server key-value: `hb_native_privicon`
+     */
+    readonly privacyIcon?: IMediaTypeNativeRequirement;
+
+    /**
+     * Call to Action text, e.g., “Click here for more information”.
+     *
+     * ad server key-value: `hb_native_cta`
+     */
+    readonly cta?: IMediaTypeNativeRequirement;
+
+    /**
+     * Rating information, e.g., “4” out of 5.
+     *
+     * ad server key-value: `hb_native_rating`
+     */
+    readonly rating?: IMediaTypeNativeRequirement;
+
+    /**
+     * The total downloads of the advertised application/product
+     *
+     * ad server key-value: `hb_native_downloads`
+     */
+    readonly downloads?: IMediaTypeNativeRequirement;
+
+    /**
+     * The total number of individuals who like the advertised application/product
+     *
+     * ad server key-value: `hb_native_likes`
+     */
+    readonly likes?: IMediaTypeNativeRequirement;
+
+    /**
+     * The non-sale price of the advertised application/product
+     *
+     * ad server key-value: `hb_native_likes`
+     */
+    readonly price?: IMediaTypeNativeRequirement;
+
+    /**
+     * The sale price of the advertised application/product
+     *
+     * ad server key-value: `hb_native_saleprice`
+     */
+    readonly salePrice?: IMediaTypeNativeRequirement;
+
+    /**
+     * Address of the Buyer/Store. e.g, “123 Main Street, Anywhere USA”
+     *
+     * ad server key-value: `hb_native_address`
+     */
+    readonly address?: IMediaTypeNativeRequirement;
+
+    /**
+     * Phone Number of the Buyer/Store. e.g, “(123) 456-7890”
+     *
+     * ad server key-value: `hb_native_phone`
+     */
+    readonly phone?: IMediaTypeNativeRequirement;
+  }
+
   /**
    * Defines one or multiple media types the ad unit supports.
    * Media Types can be "banner", "native" or "video.
@@ -442,6 +659,15 @@ export namespace prebidjs {
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#adUnit-video
      */
     readonly video?: IMediaTypeVideo;
+
+    /**
+     * Defines properties of a native ad.
+     *
+     * @see http://prebid.org/dev-docs/show-native-ads.htm
+     * @see http://prebid.org/adops/setting-up-prebid-native-in-dfp.html
+     * @see http://prebid.org/dev-docs/examples/native-ad-example.html
+     */
+    readonly native?: IMediaTypeNative;
   }
 
   /**
@@ -520,6 +746,7 @@ export namespace prebidjs {
   // Supported SSPs
   export const Criteo = 'criteo';
   export const AppNexusAst = 'appnexusAst';
+  export const AppNexus = 'appnexus';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
   export const NanoInteractive = 'nanointeractive';
@@ -541,6 +768,7 @@ export namespace prebidjs {
   export type BidderCode =
     typeof Criteo
     | typeof AppNexusAst
+    | typeof AppNexus
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof JustPremium
@@ -716,7 +944,7 @@ export namespace prebidjs {
   /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst, IAppNexusASTParams> {
+  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {
   }
 
   /**

@@ -5,7 +5,7 @@
 
 import prebid from 'prebid.js';
 import 'prebid.js/modules/consentManagement';
-import 'prebid.js/modules/currency';
+// import 'prebid.js/modules/currency';
 import 'prebid.js/modules/appnexusBidAdapter';
 import 'prebid.js/modules/justpremiumBidAdapter';
 import 'prebid.js/modules/pubmaticBidAdapter';
@@ -19,16 +19,10 @@ import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import Cmp from '@highfivve/module-cmp-faktor';
 import Confiant from '@highfivve/module-confiant';
-// import Skin from '@highfivve/module-generic-skin';
 
 prebid.processQueue();
 
 const moli = initAdTag(window);
-
-// skin
-// moli.registerModule(new Skin({
-//   wallpaperAdSlotDomId: 'gf_header'
-// }));
 
 // ad fraud protection
 moli.registerModule(new Confiant({
@@ -40,4 +34,3 @@ moli.registerModule(new Cmp({ autoOptIn: true }, window));
 
 // init moli
 moli.configure(adConfiguration);
-

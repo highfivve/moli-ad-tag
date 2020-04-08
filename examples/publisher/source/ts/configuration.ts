@@ -1,5 +1,4 @@
 import { Moli, prebidjs } from '@highfivve/ad-tag';
-import { bidderSettings } from './bidderSettings';
 
 const logger: Moli.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
@@ -60,7 +59,8 @@ const dspxBid = (placement: string): prebidjs.IDSPXBid => {
     params: {
       placement,
       devMode: true
-    }
+    },
+    labelAll: [ prebidjs.DSPX ]
   };
 };
 
@@ -75,6 +75,18 @@ const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
   };
 };
 
+const appNexusNative = (placementId: string): prebidjs.IAppNexusASTBid => {
+  return {
+    bidder: prebidjs.AppNexusAst,
+    params: {
+      placementId: placementId,
+      allowSmallerSizes: true
+    },
+    labelAll: [ prebidjs.AppNexusAst ]
+  };
+};
+
+
 const showHeroes = (playerId: string): prebidjs.IShowHeroesBid => {
   return {
     bidder: prebidjs.ShowHeroes,
@@ -86,7 +98,10 @@ const showHeroes = (playerId: string): prebidjs.IShowHeroesBid => {
 };
 
 const ixBid = (siteId: string, size: [ number, number ], bidFloor: number | undefined): prebidjs.IIndexExchangeBid => {
-  const bidConfig: { bidFloor?: number, bidFloorCur?: 'EUR'} = bidFloor ? { bidFloor: bidFloor, bidFloorCur: 'EUR' } : {};
+  const bidConfig: { bidFloor?: number, bidFloorCur?: 'EUR' } = bidFloor ? {
+    bidFloor: bidFloor,
+    bidFloorCur: 'EUR'
+  } : {};
   return {
     bidder: prebidjs.IndexExchange,
     params: {
@@ -134,7 +149,6 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager' },
-      // adUnitPath: '/33559401/gf/fragen/pos2',
       adUnitPath: '/55155651/outstream_test',
       passbackSupport: true,
       sizes: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
@@ -147,7 +161,7 @@ export const adConfiguration: Moli.MoliConfig = {
             },
             video: {
               context: 'outstream',
-              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ] as [ number, number ][])
+              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 1, 1 ] ] as [ number, number ][])
             }
           },
           bids: [
@@ -168,6 +182,10 @@ export const adConfiguration: Moli.MoliConfig = {
         {
           mediaQuery: '(min-width: 768px)',
           sizesSupported: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+        },
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [ [ 1, 1 ] ]
         }
       ]
     },
@@ -228,42 +246,61 @@ export const adConfiguration: Moli.MoliConfig = {
     // AppNexus Test Placements
     // -------------------------
 
-    // multi format
-    // see http://prebid.org/examples/multi_format_example.html
+    // native formats
     {
       position: 'in-page',
-      domId: 'appNexus-multiformat-adSlot',
+      domId: 'appnexus-native-example-1',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '/19968336/prebid_multiformat_test',
-      sizes: [ [ 640, 480 ], [ 300, 250 ], [ 360, 360 ], [ 1, 1 ] ],
+      // adUnitPath: '/19968336/prebid_native_example_1',
+      adUnitPath: '/55155651/prebid_native_1',
+      sizes: [ [ 1, 1 ], 'fluid' ],
       prebid: {
         adUnit: {
-          code: 'appNexus-multiformat-adSlot',
+          code: 'appnexus-native-example-1',
           mediaTypes: {
-            banner: {
-              sizes: [ [ 300, 250 ] ]
-            },
-            // enable once we support native
-            // native: {
-            //   type: 'image'
-            // }
-            video: {
-              context: 'outstream',
-              playerSize: [ 300, 250 ]
+            native: {
+              title: { required: true },
+              image: { required: true },
+              clickUrl: { required: true, sendId: true},
+              sponsoredBy: { required: true }
             }
           },
-          bids: [
-            appNexusOutstream('13232392')
-          ],
+          bids: [ appNexusNative('13232354') ],
         }
       },
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ [ 640, 480 ], [ 300, 250 ], [ 360, 360 ], [ 1, 1 ] ]
+      sizeConfig: [ {
+        mediaQuery: '(min-width: 0px)',
+        sizesSupported: [ [ 1, 1 ], 'fluid' ]
+      } ]
+    },
+    {
+      position: 'in-page',
+      domId: 'appnexus-native-example-2',
+      behaviour: { loaded: 'eager' },
+      // adUnitPath: '/19968336/prebid_native_example_2',
+      adUnitPath: '/55155651/prebid_native_2',
+      sizes: [ [ 1, 1 ], 'fluid' ],
+      prebid: {
+        adUnit: {
+          code: 'appnexus-native-example-2',
+          mediaTypes: {
+            native: {
+              title: { required: true },
+              body: { required: true, sendId: true },
+              clickUrl: { required: true, sendId: true},
+              image: { required: true },
+              sponsoredBy: { required: true },
+              icon: { required: false }
+            }
+          },
+          bids: [ appNexusNative('13232354') ],
         }
-      ]
-    }
+      },
+      sizeConfig: [ {
+        mediaQuery: '(min-width: 0px)',
+        sizesSupported: [ [ 1, 1 ], 'fluid' ]
+      } ]
+    },
 
   ],
   // -----------------------------
@@ -275,8 +312,6 @@ export const adConfiguration: Moli.MoliConfig = {
     },
     labels: [
       // activate teads, spotx, appNexus and/or unruly via the label query param
-      prebidjs.Criteo, prebidjs.ImproveDigital,
-      prebidjs.IndexExchange, prebidjs.PubMatic, prebidjs.Yieldlab
     ]
   },
   labelSizeConfig: [
@@ -290,7 +325,7 @@ export const adConfiguration: Moli.MoliConfig = {
     }
   ],
   prebid: {
-    bidderSettings: bidderSettings,
+    // bidderSettings: bidderSettings,
     config: {
       bidderTimeout: 1000,
       consentManagement: {

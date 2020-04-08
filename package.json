@@ -13,6 +13,6 @@
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
-    "prebid.js": "3.9.0"
+    "prebid.js": "3.14.0"
   }
 }

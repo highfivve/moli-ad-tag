@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-1947](https://jira.gutefrage.net/browse/GD-1947). Enable prebid native support.
+
 ## 1.41.0
 
 [GD-1934](https://jira.gutefrage.net/browse/GD-1934). Extend faktor cmp module to fetch `faktor.js`. Either lazy or eager.
