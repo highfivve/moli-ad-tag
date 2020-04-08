@@ -551,7 +551,7 @@ export namespace prebidjs {
      *
      * ad server key-value: `hb_native_image`
      */
-    readonly image?: IMediaTypeNativeRequirementImage
+    readonly image?: IMediaTypeNativeRequirementImage;
 
     /**
      * Where the user will end up if they click the ad.
