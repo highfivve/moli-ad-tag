@@ -13,7 +13,10 @@ import { a9Configure, a9Init, a9PrepareRequestAds } from './a9';
 import { isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
-import { consentConfigureGpt } from "./consent";
+import { consentConfigureGpt } from './consent';
+import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
+import { passbackPrepareRequestAds } from "./passback";
+import { PassbackService } from "./passbackService";
 
 
 export class AdService {
@@ -64,16 +67,6 @@ export class AdService {
       createPerformanceService(this.window), this.slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
     );
 
-    // TODO yield optimization - should this be a module?
-    // TODO this may not be a service, but a prepareRequestAds step
-    const yieldOptimizationService = new YieldOptimizationService(
-      config.yieldOptimization, this.assetService, this.logger
-    );
-
-    // TODO passbackService may not be a service, but a prepareRequestAds step
-    // TODO passbackService could be a module as well
-
-
     // 2. build the AdPipeline
     const init: InitStep[] = [
       this.awaitDomReady,
@@ -87,7 +80,10 @@ export class AdService {
       configure.push(consentConfigureGpt(this.window, config.consent.cmp, this.logger));
     }
 
-    const prepareRequestAds: PrepareRequestAdsStep[] = [];
+    const prepareRequestAds: PrepareRequestAdsStep[] = [
+      passbackPrepareRequestAds(new PassbackService(this.window.googletag, this.logger, this.window)),
+      yieldOptimizationPrepareRequestAds(new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger))
+    ];
 
     // prebid
     if (config.prebid) {
@@ -109,7 +105,7 @@ export class AdService {
       configure,
       defineSlots: gptDefineSlots(this.window, env, this.logger),
       prepareRequestAds,
-      requestAds: gptRequestAds(this.window)
+      requestAds: gptRequestAds(this.window, env, this.logger, reportingService)
     }, this.logger);
 
     return Promise.resolve(config);

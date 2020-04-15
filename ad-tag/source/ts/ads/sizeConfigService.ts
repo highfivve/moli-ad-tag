@@ -35,6 +35,11 @@ export class SizeConfigService {
    */
   private readonly isValid: boolean;
 
+
+  public static isFixedSize(size: Moli.DfpSlotSize): size is [ number, number ] {
+    return size !== 'fluid';
+  }
+
   constructor(private readonly sizeConfig: SizeConfigEntry[], private readonly window: Window) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedSizeConfigs = sizeConfig.length !== 0 ?

@@ -24,5 +24,14 @@ export const prebidConfigure = (window: Window, prebidConfig: Moli.headerbidding
 
 export const prebidPrepareRequestAds = (window: Window, prebidConfig: Moli.headerbidding.PrebidConfig): PrepareRequestAdsStep =>
   (slots: Moli.SlotDefinition<any>[]) => new Promise<Moli.SlotDefinition<any>[]>(resolve => {
+    // TODO make sure that we don't call addUnits for a slot more than once
     resolve();
   });
+
+/**
+ * If a slot is being refreshed or reloaded.
+ * @param window
+ */
+export const prebidRemoveHbKeyValues = (window: Window): PrepareRequestAdsStep => (slots) => new Promise<Moli.SlotDefinition<any>[]>(resolve => {
+  resolve(slots);
+});
