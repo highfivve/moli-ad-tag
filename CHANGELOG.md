@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.42.0
+
 [GD-1978](https://jira.gutefrage.net/browse/GD-1978). Add user id module types.
 [GD-1947](https://jira.gutefrage.net/browse/GD-1947). Enable prebid native support.
 
