@@ -261,7 +261,7 @@ export const adConfiguration: Moli.MoliConfig = {
             native: {
               title: { required: true },
               image: { required: true },
-              clickUrl: { required: true, sendId: true},
+              clickUrl: { required: true, sendId: true },
               sponsoredBy: { required: true }
             }
           },
@@ -287,7 +287,7 @@ export const adConfiguration: Moli.MoliConfig = {
             native: {
               title: { required: true },
               body: { required: true, sendId: true },
-              clickUrl: { required: true, sendId: true},
+              clickUrl: { required: true, sendId: true },
               image: { required: true },
               sponsoredBy: { required: true },
               icon: { required: false }
@@ -344,7 +344,21 @@ export const adConfiguration: Moli.MoliConfig = {
             bidders: '*',
             filter: 'include'
           }
-        }
+        },
+        // user id systems
+        userIds: [
+          {
+            name: 'unifiedId',
+            params: {
+              partner: 'myTpId'
+            },
+            storage: {
+              type: 'cookie',
+              name: 'pbjs-unifiedid',       // create a cookie with this name
+              expires: 60                   // cookie can last for 60 days
+            }
+          }
+        ]
       },
       currency: {
         adServerCurrency: 'EUR',

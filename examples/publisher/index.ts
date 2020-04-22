@@ -14,6 +14,8 @@ import 'prebid.js/modules/teadsBidAdapter';
 import 'prebid.js/modules/unrulyBidAdapter';
 import 'prebid.js/modules/ixBidAdapter';
 import 'prebid.js/modules/dspxBidAdapter';
+import 'prebid.js/modules/userId/index';
+import 'prebid.js/modules/unifiedIdSystem';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';

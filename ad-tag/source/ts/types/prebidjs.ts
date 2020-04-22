@@ -211,8 +211,157 @@ export namespace prebidjs {
       /**
        * Enable/disable publisher to trigger user syncs by calling pbjs.triggerUserSyncs(). Default: false.
        */
-      enableOverride?: boolean;
+      readonly enableOverride?: boolean;
+
+      readonly userIds?: UserIdProvider[];
     }
+
+    /**
+     * All supported id providers
+     */
+    export type UserIdProvider = IUnifiedIdProvider | IDigitTrustProvider | ICriteoProvider | IID5Provider | IPubCommonIdProvider;
+
+    interface IUserIdProvider<P, N extends string> {
+      /**
+       * the provider name
+       */
+      readonly name: N;
+
+      /**
+       * provider specific params
+       */
+      readonly params: P;
+
+      /**
+       * The publisher can specify some kind of local storage in which to store the results of the call to get
+       * the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or
+       * the ID system is managing its own storage
+       */
+      readonly storage?: IUserIdStorage;
+    }
+    export interface IUserIdStorage {
+
+      /**
+       * 	The publisher can specify some kind of local storage in which to store the results of the call to get the
+       * 	user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the
+       * 	ID system is managing its own storage
+       */
+      readonly type: 'cookie' | 'html5';
+
+      /**
+       * The name of the cookie or html5 local storage where the user ID will be stored.
+       * @example '_unifiedId'
+       */
+      readonly name: string;
+
+      /**
+       * How long (in **days**) the user ID information will be stored. If this parameter isn’t specified, session
+       * cookies are used in cookie-mode, and local storage mode will create new IDs on every page.
+       *
+       * Note: This field is optional, but prebid strongly requires it so we make it mandatory.
+       */
+      readonly expires: number;
+
+      /**
+       * The amount of time (in **seconds**) the user ID should be cached in storage before calling the provider again
+       * to retrieve a potentially updated value for their user ID. If set, this value should equate to a time period
+       * less than the number of days defined in `storage.expires`.
+       *
+       * By default the ID will not be refreshed until it expires.
+       */
+      readonly refreshInSeconds?: number;
+
+      /**
+       * Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the
+       * values to be sent to the adapters.
+       *
+       * @example
+       * ```json
+       * {"tdid": "1111", "pubcid": {2222}, "id5id": "ID5-12345" }
+       * ```
+       */
+      readonly value?: any;
+    }
+
+    export interface IUnifiedIdProviderParams {
+      /**
+       * This is the partner ID value obtained from registering with The Trade Desk
+       * or working with a Prebid.js managed services provider.
+       *
+       * @example "myTtdPid"
+       */
+      readonly partner?: string;
+
+      /**
+       * If specified for UnifiedId, overrides the default Trade Desk URL.
+       *
+       * @example "https://unifiedid.org/somepath?args"
+       */
+      readonly url?: string;
+
+      /**
+       *
+       * 	Used only if the page has a separate mechanism for storing the Unified ID. The value is an object
+       * 	containing the values to be sent to the adapters. In this scenario, no URL is called and nothing
+       * 	is added to local storage
+       *
+       * @example
+       * ```json
+       * {"tdid": "D6885E90-2A7A-4E0F-87CB-7734ED1B99A3"}
+       * ```
+       */
+      readonly value?: {
+        readonly tdid: string;
+      };
+    }
+
+    /**
+     * @see http://prebid.org/dev-docs/modules/userId.html#unified-id
+     */
+    export interface IUnifiedIdProvider extends IUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> { }
+
+    /**
+     * @see http://prebid.org/dev-docs/modules/userId.html#criteo-id-for-exchanges
+     */
+    export interface ICriteoProvider extends IUserIdProvider<undefined, 'criteo'> {  }
+
+    /**
+     * @see http://prebid.org/dev-docs/modules/userId.html#digitrust
+     */
+    export interface IDigitTrustProviderParams {
+        readonly init: {
+          readonly member: string;
+          readonly site: string;
+        };
+        /** Allows init error handling */
+        readonly callback?: ((result: any) => void);
+    }
+
+    export interface IDigitTrustProvider extends IUserIdProvider<IDigitTrustProviderParams, 'digitrust'> { }
+
+    export interface IID5ProviderParams {
+      /***
+       * This is the ID5 Partner Number obtained from registering with ID5.
+       * @example 173
+       */
+      readonly partner: number;
+    }
+
+    /**
+     * The ID5 Universal ID that is delivered to Prebid will be encrypted by ID5 with a rotating key to avoid
+     * unauthorized usage and to enforce privacy requirements. Therefore, we strongly recommend setting
+     * `storage.refreshInSeconds` to 8 hours (8*3600 seconds) to ensure all demand partners receive an ID that
+     * has been encrypted with the latest key, has up-to-date privacy signals, and allows them to transact against it.
+     *
+     * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
+     */
+    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5'> { }
+
+    /**
+     * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
+     */
+    export interface IPubCommonIdProvider extends IUserIdProvider<undefined, 'pubCommonId'> { }
+
 
     export interface IFilterSettingsConfig {
       /**
