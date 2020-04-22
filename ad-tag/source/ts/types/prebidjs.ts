@@ -191,7 +191,7 @@ export namespace prebidjs {
       /**
        * Enable/disable the user syncing feature. Default: true.
        */
-      readonly yncEnabled?: boolean;
+      readonly syncEnabled?: boolean;
 
       /**
        * Delay in milliseconds for syncing after the auction ends. Default: 3000.
