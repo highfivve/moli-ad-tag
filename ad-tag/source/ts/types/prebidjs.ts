@@ -146,18 +146,18 @@ export namespace prebidjs {
       /**
        * The ID for the CMP in use on the page. Default is 'iab'
        */
-      cmpApi?: 'iab';
+      readonly cmpApi?: 'iab';
 
       /**
        * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process. Default is 10000
        */
-      timeout: number;
+      readonly timeout: number;
 
       /**
        * A setting to determine what will happen when obtaining consent information from the CMP fails;
        * either allow the auction to proceed (true) or cancel the auction (false). Default is true
        */
-      allowAuctionWithoutConsent?: boolean;
+      readonly allowAuctionWithoutConsent?: boolean;
     }
   }
 
@@ -191,22 +191,22 @@ export namespace prebidjs {
       /**
        * Enable/disable the user syncing feature. Default: true.
        */
-      syncEnabled?: boolean;
+      readonly yncEnabled?: boolean;
 
       /**
        * Delay in milliseconds for syncing after the auction ends. Default: 3000.
        */
-      syncDelay?: number;
+      readonly syncDelay?: number;
 
       /**
        * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
        */
-      syncsPerBidder?: number;
+      readonly syncsPerBidder?: number;
 
       /**
        * Configure lists of adapters to include or exclude their user syncing based on the pixel type (image/iframe).
        */
-      filterSettings?: IFilterSettingsConfig;
+      readonly filterSettings?: IFilterSettingsConfig;
 
       /**
        * Enable/disable publisher to trigger user syncs by calling pbjs.triggerUserSyncs(). Default: false.
@@ -220,28 +220,28 @@ export namespace prebidjs {
        * If you want to apply the same bidder inclusion/exclusion rules for both types of sync pixels,
        * you can use the all object instead specifying both image and iframe objects like so
        */
-      all?: IFilterSetting;
+      readonly all?: IFilterSetting;
 
       /**
        * Allow iframe-based syncs (the presence of a valid filterSettings.iframe object automatically enables iframe type user-syncing).
        *
        * Note - iframe-based syncing is disabled by default.
        */
-      iframe?: IFilterSetting;
+      readonly iframe?: IFilterSetting;
 
       /**
        * Image-based syncing is enabled by default; it can be disabled by excluding all/certain bidders via the filterSettings object.
        */
-      image?: IFilterSetting;
+      readonly image?: IFilterSetting;
     }
 
     export interface IFilterSetting {
       /**
        * Array of bidders that should be filtered. '*' means all.
        */
-      bidders: BidderCode[] | '*';
+      readonly bidders: BidderCode[] | '*';
 
-      filter: 'include' | 'exclude';
+      readonly filter: 'include' | 'exclude';
     }
 
   }
@@ -254,7 +254,7 @@ export namespace prebidjs {
        * ISO 4217 3-letter currency code.
        * If this value is present, the currency conversion feature is activated.
        */
-      adServerCurrency: 'EUR';
+      readonly adServerCurrency: 'EUR';
 
       /**
        * How much to scale the price granularity calculations. Defaults to 1.
@@ -262,7 +262,7 @@ export namespace prebidjs {
        * where the currency value is close to USD, e.g. GBP and EUR.
        * In those scenarios, just leave the granularityMultiplier at 1.
        */
-      granularityMultiplier: 1;
+      readonly granularityMultiplier: 1;
 
       /**
        * An optional parameter that defines a default rate that can be used
@@ -271,7 +271,7 @@ export namespace prebidjs {
        *
        * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
        */
-      defaultRates: { 'USD': { 'EUR': number } };
+      readonly defaultRates: { 'USD': { 'EUR': number } };
     }
   }
 
@@ -347,12 +347,12 @@ export namespace prebidjs {
     /**
      * Turn on debugging
      */
-    debug?: boolean;
+    readonly debug?: boolean;
 
     /**
      * global bidder timeout
      */
-    bidderTimeout?: number;
+    readonly bidderTimeout?: number;
 
     /**
      * After this method is called, Prebid.js will generate bid keywords for all bids, instead of the default behavior
@@ -369,27 +369,27 @@ export namespace prebidjs {
      *
      * Default: true
      */
-    enableSendAllBids?: boolean;
+    readonly enableSendAllBids?: boolean;
 
     /**
      * 'Consent Management' module configuration
      *
      * @see https://prebid.org/dev-docs/modules/consentManagement.html
      */
-    consentManagement?: consent.IConsentManagementConfig;
+    readonly consentManagement?: consent.IConsentManagementConfig;
 
     /**
      * @see userSync.IUserSyncConfig
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
      */
-    userSync?: userSync.IUserSyncConfig;
+    readonly userSync?: userSync.IUserSyncConfig;
 
     /**
      * The configuration for the currency module
      *
      * https://prebid.org/dev-docs/modules/currency.html
      */
-    currency: currency.ICurrencyConfig;
+    readonly currency: currency.ICurrencyConfig;
   }
 
   /**
