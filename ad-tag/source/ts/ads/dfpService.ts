@@ -802,6 +802,7 @@ export class DfpService {
         moliSlot.prebid;
       const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
       const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
+      const mediaTypeNative = prebidAdSlotConfig.adUnit.mediaTypes.native;
 
       const bannerSizes = mediaTypeBanner ? filterSupportedSizes(mediaTypeBanner.sizes).filter(this.isFixedSize) : [];
       const videoSizes = mediaTypeVideo ? this.filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
@@ -817,16 +818,21 @@ export class DfpService {
         banner: { ...mediaTypeBanner, sizes: bannerSizes }
       } : undefined;
 
+      const native = mediaTypeNative ? {
+        native: { ...mediaTypeNative }
+      } : undefined;
+
       return {
         code: moliSlot.domId,
         mediaTypes: {
           ...video,
           ...banner,
+          ...native
         },
         bids: bids
       } as prebidjs.IAdUnit;
     }).filter(adUnit => {
-      return adUnit.bids.length > 0 && adUnit.mediaTypes && (adUnit.mediaTypes.banner || adUnit.mediaTypes.video);
+      return adUnit.bids.length > 0 && adUnit.mediaTypes && (adUnit.mediaTypes.banner || adUnit.mediaTypes.video || adUnit.mediaTypes.native);
     });
 
     pbjs.addAdUnits(prebidAdUnits);
@@ -1071,6 +1077,7 @@ export class DfpService {
                              linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
                              linear-gradient(#eee .1em, transparent .1em);
                              background-size: 100% 1.2em;
+                             margin: auto;
                              ">
 <div style="position: absolute; top: 5px; left: 5px">${buttons}</div>        
 <div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>

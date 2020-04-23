@@ -146,6 +146,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     const slotSizeConfig = this.props.slot.sizeConfig;
     const banner = prebidAdUnit.mediaTypes.banner;
     const video = prebidAdUnit.mediaTypes.video;
+    const native = prebidAdUnit.mediaTypes.native;
 
     return <div>
       <div class="MoliDebug-tagContainer">
@@ -164,6 +165,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
         {this.validateSlotSizes(this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize)
           .map(validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig))
         }
+      </div>}
+      {native && <div class="MoliDebug-tagContainer">
+        <span class="MoliDebug-tagLabel">Native</span>
+        <Tag variant="green">true</Tag>
       </div>}
       {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => [
           <hr/>,
@@ -243,12 +248,13 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
       const video = prebidAdUnit.mediaTypes.video;
       const banner = prebidAdUnit.mediaTypes.banner;
+      const native = prebidAdUnit.mediaTypes.native;
 
       const videoValid = !!video && this.validateSlotSizes(
         this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize
       ).some(validatedSlotSize => validatedSlotSize.valid);
 
-      return videoValid || (!!banner && this.validateSlotSizes(banner.sizes)
+      return !!native || videoValid || (!!banner && this.validateSlotSizes(banner.sizes)
         .some(validatedSlotSize => validatedSlotSize.valid));
     }
 

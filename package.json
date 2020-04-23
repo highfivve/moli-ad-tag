@@ -1,5 +1,5 @@
 {
-  "version": "1.40.4",
+  "version": "1.42.0",
   "private": true,
   "workspaces": [
     "ad-tag",
@@ -13,6 +13,6 @@
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
-    "prebid.js": "3.9.0"
+    "prebid.js": "3.16.0"
   }
 }

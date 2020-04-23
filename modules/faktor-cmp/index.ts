@@ -1,11 +1,9 @@
-import {
-  IAssetLoaderService
-} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 import { IABConsentManagement } from '@highfivve/ad-tag/source/ts/types/IABConsentManagement';
 import { Moli } from '@highfivve/ad-tag';
-import CmpModule = Moli.consent.CmpModule;
 import loadCmpFaktorStub = require('./faktorStub');
+import CmpModule = Moli.consent.CmpModule;
 
 
 export interface IFaktorConfig {
@@ -14,7 +12,30 @@ export interface IFaktorConfig {
    * This will be disallowed in 2020
    *
    */
-  autoOptIn: boolean;
+  readonly autoOptIn: boolean;
+
+  /**
+   * Optional faktor site configuration. If this property is set then the faktor module will
+   * load the specified faktor.js. The user must not add the script manually.
+   *
+   */
+  readonly site?: IFaktorSiteConfig;
+}
+
+export interface IFaktorSiteConfig {
+
+  /**
+   * faktor.js script
+   *
+   * @example https://config-prod.choice.faktor.io/cb5df6d3-99b4-4d5b-8237-2ff9fa97d1a0/faktor.js
+   */
+  readonly url: string;
+
+  /**
+   * eager: script loading is triggered on module initialization
+   * lazy : script loading is triggered on first API call (getNonPersonalizedAdSetting, getConsentData, getVendorConsents)
+   */
+  readonly mode: 'eager' | 'lazy';
 }
 
 /**
@@ -31,11 +52,17 @@ export default class Faktor implements CmpModule {
    */
   private readonly faktorLoaded: Promise<void>;
 
+  /**
+   * If a faktor site is configured this indicates if it has already been loaded.
+   */
+  private faktorSiteLoaded: boolean = true;
+
   private log?: Moli.MoliLogger;
 
   constructor(private readonly faktorConfig: IFaktorConfig, private readonly window: Window) {
     loadCmpFaktorStub(window);
     this.faktorLoaded = new Promise<void>(resolve => {
+        // resolve on proprietary API extension from faktor
         this.window.__cmp('addEventListener', 'cmpReady', resolve);
       }
     ).then(() => {
@@ -59,9 +86,12 @@ export default class Faktor implements CmpModule {
       return;
     }
     config.consent.cmp = this;
+
+    this.initFaktorSite(assetLoaderService);
   }
 
   getNonPersonalizedAdSetting(): Promise<0 | 1> {
+    this.fetchFaktorJs();
     return this.getVendorConsents().then(vendorConsents => {
       // if gdpr doesn't apply we allow personalized ads
       if (!vendorConsents.gdprApplies) {
@@ -77,6 +107,7 @@ export default class Faktor implements CmpModule {
   }
 
   getConsentData(): Promise<IABConsentManagement.IConsentData> {
+    this.fetchFaktorJs();
     return this.faktorLoaded.then(() => {
       return new Promise<IABConsentManagement.IConsentData>(resolve => {
         this.window.__cmp('getConsentData', null, (consentData: IABConsentManagement.IConsentData | null, _success) => {
@@ -88,6 +119,7 @@ export default class Faktor implements CmpModule {
   }
 
   getVendorConsents(): Promise<IABConsentManagement.IVendorConsents> {
+    this.fetchFaktorJs();
     return this.faktorLoaded.then(() => {
       return new Promise<IABConsentManagement.IVendorConsents>(resolve => {
         this.window.__cmp('getVendorConsents', null, (consentData: IABConsentManagement.IVendorConsents, _success) => {
@@ -143,6 +175,40 @@ export default class Faktor implements CmpModule {
       });
     });
   }
+
+  private initFaktorSite(assetLoaderService: IAssetLoaderService): void {
+    if (this.faktorConfig.site) {
+      const url = this.faktorConfig.site.url;
+
+      switch (this.faktorConfig.site.mode) {
+        case 'eager':
+          this.faktorSiteLoaded = true;
+          assetLoaderService.loadScript({ name: 'faktor.js', assetUrl: url, loadMethod: AssetLoadMethod.TAG });
+          break;
+        case 'lazy':
+          // override the fetchFaktorJs method to actually fetch the js script
+          this.faktorSiteLoaded = false;
+          this.fetchFaktorJs = () => {
+            // only load the script once
+            if (!this.faktorSiteLoaded) {
+              this.faktorSiteLoaded = true;
+              this.logDebug('Lazy loading faktor.js');
+              assetLoaderService.loadScript({ name: 'faktor.js', assetUrl: url, loadMethod: AssetLoadMethod.TAG });
+            }
+          };
+          break;
+      }
+    }
+  }
+
+  /**
+   * This method will be override in the init() step if the faktor site property
+   * is configured in lazy mode. Otherwise this method will do nothing as
+   *
+   * - either the eager mode has already initialized the faktor.js
+   * - no site is configured and the publisher added the faktor.js in another way
+   */
+  private fetchFaktorJs(): void { return; }
 
   private logDebug(msg: string): void {
     if (this.log) {

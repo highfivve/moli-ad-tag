@@ -4,6 +4,7 @@ import * as sinonChai from 'sinon-chai';
 import Faktor from './index';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import { Moli } from '@highfivve/ad-tag';
+import { AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 
 // setup sinon-chai
@@ -15,6 +16,7 @@ describe('Faktor CMP Module', () => {
 
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
+  let assetLoaderService = createAssetLoaderService(dom.window);
 
   const emptyConfig = (): Moli.MoliConfig => {
     return { slots: [], consent: {}, yieldOptimization: { provider: 'none' } };
@@ -27,6 +29,7 @@ describe('Faktor CMP Module', () => {
 
   afterEach(() => {
     dom = createDom();
+    assetLoaderService = createAssetLoaderService(dom.window);
     sandbox.reset();
   });
 
@@ -137,6 +140,64 @@ describe('Faktor CMP Module', () => {
 
     return faktorCmp.getNonPersonalizedAdSetting().then((nonPersonalizedAds) => {
       expect(nonPersonalizedAds).to.equal(1);
+    });
+  });
+
+  describe('faktor site config', () => {
+
+    beforeEach(() => {
+      dom.window.__cmp = cmpStub;
+      // always resolve with an empty object. This is enough to make things work
+      cmpStub.callsFake((command, param, callback) => callback({}));
+    });
+
+    it('should immediately load the fakor.js in eager mode', () => {
+      const faktorCmp = new Faktor({
+        autoOptIn: false, site: {
+          mode: 'eager',
+          url: 'https://localhost/faktor.js'
+        }
+      }, dom.window);
+
+      const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
+      faktorCmp.init(emptyConfig(), assetLoaderService);
+
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: 'faktor.js', assetUrl: 'https://localhost/faktor.js', loadMethod: AssetLoadMethod.TAG
+      });
+
+      // all other calls should never fetch the script
+      return faktorCmp.getNonPersonalizedAdSetting()
+        .then(() => faktorCmp.getConsentData())
+        .then(() => faktorCmp.getVendorConsents())
+        .then(() => expect(loadScriptStub).to.have.been.calledOnce);
+    });
+
+    it('should load the fakor.js on the first API call in eager lazy', () => {
+      const faktorCmp = new Faktor({
+        autoOptIn: false, site: {
+          mode: 'lazy',
+          url: 'https://localhost/faktor.js'
+        }
+      }, dom.window);
+
+      const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
+      faktorCmp.init(emptyConfig(), assetLoaderService);
+
+      expect(loadScriptStub).to.have.not.been.called;
+
+      // all other calls should never fetch the script
+      return faktorCmp.getNonPersonalizedAdSetting()
+        .then(() => {
+          expect(loadScriptStub).to.have.been.calledOnce;
+          expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+            name: 'faktor.js', assetUrl: 'https://localhost/faktor.js', loadMethod: AssetLoadMethod.TAG
+          });
+        })
+        .then(() => faktorCmp.getNonPersonalizedAdSetting())
+        .then(() => faktorCmp.getConsentData())
+        .then(() => faktorCmp.getVendorConsents())
+        .then(() => expect(loadScriptStub).to.have.been.calledOnce);
     });
   });
 });

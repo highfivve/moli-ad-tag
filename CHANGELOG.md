@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## 1.42.0
+
+[GD-1978](https://jira.gutefrage.net/browse/GD-1978). Add user id module types.
+[GD-1947](https://jira.gutefrage.net/browse/GD-1947). Enable prebid native support.
+
+## 1.41.0
+
+[GD-1934](https://jira.gutefrage.net/browse/GD-1934). Extend faktor cmp module to fetch `faktor.js`. Either lazy or eager.
+
+Example
+
+```javascript
+import Faktor from '@highfivve/module-cmp-faktor';
+
+moli.registerModule(new Faktor({
+  autoOptIn: true,
+  site: {
+    mode: 'lazy',
+    url: 'https://config-prod.choice.faktor.io/cb5df6d3-99b4-4d5b-8237-2ff9fa97d1a0/faktor.js'
+  }
+}, window));
+```
+
 ## 1.40.4
 
 [GD-1908](https://jira.gutefrage.net/browse/GD-1908). Allow multiple calls to `enableSinglePageApp` if ad tag is already in `spa` mode
