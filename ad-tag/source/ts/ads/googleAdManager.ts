@@ -60,7 +60,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => (context
   }
 });
 
-export const gptDefineSlots = (env: Moli.Environment): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
+export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
   const slotDefinitions = slots.map(moliSlot => {
     const filterSupportedSizes = getSizeFilterFunction(window, moliSlot);
     const sizes = filterSupportedSizes(moliSlot.sizes);
@@ -77,7 +77,7 @@ export const gptDefineSlots = (env: Moli.Environment): DefineSlotsStep => (conte
 
       // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
       window.googletag.display(adSlot.getSlotElementId());
-      switch (env) {
+      switch (context.env) {
         case 'production':
           adSlot.addService(window.googletag.pubads());
           context.logger.debug('DFP Service', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
@@ -89,7 +89,7 @@ export const gptDefineSlots = (env: Moli.Environment): DefineSlotsStep => (conte
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
           return Promise.resolve<SlotDefinition<any>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
         default:
-          return Promise.reject(`invalid environment: ${env}`);
+          return Promise.reject(`invalid environment: ${context.env}`);
       }
     } else {
       const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
@@ -102,8 +102,8 @@ export const gptDefineSlots = (env: Moli.Environment): DefineSlotsStep => (conte
   return Promise.all(slotDefinitions);
 };
 
-export const gptRequestAds = (env: Moli.Environment, reportingService: ReportingService): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition<any>[]) => new Promise<void>(resolve => {
-  switch (env) {
+export const gptRequestAds = (reportingService: ReportingService): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition<any>[]) => new Promise<void>(resolve => {
+  switch (context.env) {
     case 'test':
       slots.forEach(({ adSlot, moliSlot, filterSupportedSizes }) => {
         const containerId = `${moliSlot.domId}__container`;

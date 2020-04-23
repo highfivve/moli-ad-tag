@@ -10,6 +10,11 @@ export type AdPipelineContext = {
     readonly logger: Moli.MoliLogger;
 
     /**
+     * current environment for the ad pipeline
+     */
+    readonly env: Moli.Environment;
+
+    /**
      * access to the global window. Never access the global window object
      */
     readonly window: Window;
@@ -88,6 +93,7 @@ export class AdPipeline {
     constructor(
         private readonly config: IAdPiplineConfiguration,
         private readonly logger: Moli.MoliLogger,
+        private readonly env: Moli.Environment,
         private readonly window: Window) {
     }
 
@@ -97,7 +103,8 @@ export class AdPipeline {
     run(slots: Moli.AdSlot[]): Promise<void> {
         const context: AdPipelineContext = {
             logger: this.logger,
-            window: this.window
+            env: this.env,
+            window: this.window,
         };
         this.init = this.init ? this.init : this.logStage('init').then(() => Promise.all(this.config.init.map(step => step(context))));
 

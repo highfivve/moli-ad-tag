@@ -27,7 +27,7 @@ export class AdService {
   private logger: Moli.MoliLogger;
 
   /**
-   * Slot event mangement
+   * Slot event management
    */
   private slotEventService = new SlotEventService(this.logger);
 
@@ -43,13 +43,24 @@ export class AdService {
     prepareRequestAds: [],
     requestAds: () => Promise.resolve()
 
-  }, this.logger, this.window);
+  }, this.logger, 'test', this.window);
 
   constructor(private assetService: IAssetLoaderService,
               private window: Window) {    // initialize the logger with a default one
     this.logger = getDefaultLogger();
   }
 
+  /**
+   * Must only be called once.
+   *
+   * This step configures
+   * - logging
+   * - services
+   * - ad pipeline
+   *
+   *
+   * @param config
+   */
   public initialize = (config: Readonly<Moli.MoliConfig>): Promise<Readonly<Moli.MoliConfig>> => {
     const env = this.getEnvironment(config);
     // 1. setup all services
@@ -99,21 +110,19 @@ export class AdService {
       prepareRequestAds.push(a9PrepareRequestAds(config.a9));
     }
 
-
     this.adPipeline = new AdPipeline({
       init,
       configure,
-      defineSlots: gptDefineSlots(env),
+      defineSlots: gptDefineSlots(),
       prepareRequestAds,
-      requestAds: gptRequestAds(env, reportingService)
-    }, this.logger, this.window);
+      requestAds: gptRequestAds(reportingService)
+    }, this.logger, env, this.window);
 
     return Promise.resolve(config);
   };
 
 
   public requestAds = (config: Readonly<Moli.MoliConfig>): Promise<Moli.AdSlot[]> => {
-
     const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
       .map(slot => {
         if (this.isLazySlot(slot)) {
