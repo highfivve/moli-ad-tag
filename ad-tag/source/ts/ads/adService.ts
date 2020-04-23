@@ -65,6 +65,7 @@ export class AdService {
     const env = this.getEnvironment(config);
     // 1. setup all services
     this.logger = getLogger(config, this.window);
+    this.logger.debug('AdService', `Initializing with environment ${env}`);
 
     // slot and reporting service are not usable until `initialize()` is called on both services
 
@@ -123,38 +124,76 @@ export class AdService {
 
 
   public requestAds = (config: Readonly<Moli.MoliConfig>): Promise<Moli.AdSlot[]> => {
-    const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
-      .map(slot => {
-        if (this.isLazySlot(slot)) {
-          // initialize lazy slot
-          createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window).onLoad()
-            .then(() => {
-              if (this.isSlotAvailable(slot)) {
-                return Promise.resolve();
-              }
-              const message = `lazy slot dom element not available: ${slot.adUnitPath} / ${slot.domId}`;
-              this.logger.error('DFP Service', message);
-              return Promise.reject(message);
-            })
-            .then(() => this.adPipeline.run([ slot ]));
+    this.logger.info('AdService', 'RequestAds');
+    try {
+      const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
+          .map(slot => {
+            if (this.isLazySlot(slot)) {
+              // initialize lazy slot
+              createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window).onLoad()
+                  .then(() => {
+                    if (this.isSlotAvailable(slot)) {
+                      return Promise.resolve();
+                    }
+                    const message = `lazy slot dom element not available: ${slot.adUnitPath} / ${slot.domId}`;
+                    this.logger.error('DFP Service', message);
+                    return Promise.reject(message);
+                  })
+                  .then(() => this.adPipeline.run([ slot ]));
 
-          return null;
-        } else if (this.isRefreshableAdSlot(slot)) {
-          // initialize lazy refreshable slot
-          createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
-            .addAdRefreshListener(() => this.adPipeline.run([ slot ]));
+              return null;
+            } else if (this.isRefreshableAdSlot(slot)) {
+              // initialize lazy refreshable slot
+              createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
+                  .addAdRefreshListener(() => this.adPipeline.run([ slot ]));
 
-          // if the slot should be lazy loaded don't return it
-          return slot.behaviour.lazy ? null : slot;
-        } else {
-          return slot;
-        }
-      })
-      .filter(isNotNull)
-      .filter(this.isSlotAvailable);
+              // if the slot should be lazy loaded don't return it
+              return slot.behaviour.lazy ? null : slot;
+            } else {
+              return slot;
+            }
+          })
+          .filter(isNotNull)
+          .filter(this.isSlotAvailable);
+      return this.adPipeline.run(immediatelyLoadedSlots).then(() => immediatelyLoadedSlots);
+    } catch (e) {
+      this.logger.error('AdPipeline', 'slot filtering failed', e);
+      return Promise.reject(e);
+    }
+  };
 
+  // FIXME this must be a init step in the SPA mode!
+  public destroyAdSlots = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
+    return Promise.resolve()
+        // remove all event listeners first
+        .then(() => this.slotEventService && this.slotEventService.removeAllEventSources(this.window))
+        //
+        .then(() => this.window.googletag.destroySlots())
+        .then(() => {
+          const pbjs = this.window.pbjs;
+          if (pbjs && pbjs.adUnits) {
+            this.logger.debug('DFP Service', `Destroying prebid adUnits`, pbjs.adUnits);
+            pbjs.adUnits.forEach(adUnit => pbjs.removeAdUnit(adUnit.code));
+          }
+        })
+        .then(() => config);
+  }
 
-    return this.adPipeline.run(immediatelyLoadedSlots).then(() => immediatelyLoadedSlots);
+  /**
+   * Reset the gpt targeting configuration (key-values) and uses the targeting information from
+   * the given config to set new key values.
+   *
+   * This method is required for the single-page-application mode to make sure we don't send
+   * stale key-values
+   *
+   * @param config
+   */
+  // FIXME this must be a init step in the SPA mode!
+  public resetTargeting = (config: Moli.MoliConfig): void => {
+    this.window.googletag.pubads().clearTargeting();
+
+    // FIXME apply constant targeting again
+    // this.configureTargeting(config);
   };
 
 
@@ -168,15 +207,15 @@ export class AdService {
     }).then(() => this.logger.debug('dom ready'));
   };
 
-  private isLazySlot(slot: Moli.AdSlot): slot is Moli.LazyAdSlot {
+  private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {
     return slot.behaviour.loaded === 'lazy';
   }
 
-  private isRefreshableAdSlot(slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot {
+  private isRefreshableAdSlot = (slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot => {
     return slot.behaviour.loaded === 'refreshable';
   }
 
-  private isSlotAvailable(slot: Moli.AdSlot): boolean {
+  private isSlotAvailable = (slot: Moli.AdSlot): boolean  => {
     return !!this.window.document.getElementById(slot.domId);
   }
 

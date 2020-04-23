@@ -106,6 +106,7 @@ export class AdPipeline {
             env: this.env,
             window: this.window,
         };
+        this.logger.debug('AdPipeline', 'starting run');
         this.init = this.init ? this.init : this.logStage('init').then(() => Promise.all(this.config.init.map(step => step(context))));
 
         return this.init
@@ -116,6 +117,9 @@ export class AdPipeline {
                     .then(() => Promise.all(this.config.prepareRequestAds.map(step => step(context, definedSlots))))
                     .then(() => this.logStage('requestAds'))
                     .then(() => this.config.requestAds(context, definedSlots));
+            }).catch(error => {
+                this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
+                return Promise.reject(error);
             });
     }
 

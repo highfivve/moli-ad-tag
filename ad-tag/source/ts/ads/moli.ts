@@ -1,8 +1,6 @@
 import { Moli } from '../types/moli';
 import { parseQueryString } from '../util/query';
-import { DfpService } from './dfpService';
 import { createAssetLoaderService, AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
-import { cookieService } from '../util/cookieService';
 import { getLogger } from '../util/logging';
 import IStateMachine = Moli.state.IStateMachine;
 import IFinished = Moli.state.IFinished;
@@ -10,12 +8,13 @@ import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
 import { IModule } from '../types/module';
+import { AdService } from './adService';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
 
-  // Creating the actual tag requires exactly one DfpService instance
+  // Creating the actual tag requires exactly one AdService instance
   const assetLoaderService = createAssetLoaderService(window);
-  const dfpService = new DfpService(assetLoaderService, cookieService, window);
+  const adService = new AdService(assetLoaderService, window);
 
   /**
    * Initial state is configurable
@@ -356,14 +355,14 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // handle single page application case
         if (state.isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
-          const initialized = dfpService.initialize(config).then(() => config);
+          const initialized = adService.initialize(config).then(() => config);
           const currentState: ISinglePageApp = {
             state: 'spa',
             configFromAdTag: state.configFromAdTag,
             config: config,
-            refreshAds: (moliConfig: Moli.MoliConfig) => dfpService.requestAds(moliConfig).then(() => { return; }),
-            destroyAdSlots: dfpService.destroyAdSlots,
-            resetTargeting: dfpService.resetTargeting,
+            refreshAds: (moliConfig: Moli.MoliConfig) => adService.requestAds(moliConfig).then(() => { return; }),
+            destroyAdSlots: adService.destroyAdSlots,
+            resetTargeting: adService.resetTargeting,
             initialized,
             href: window.location.href,
             // initialize targeting values for next refreshAds call
@@ -374,7 +373,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           state = currentState;
 
           return initialized
-            .then(() => dfpService.requestAds(config))
+            .then(() => adService.requestAds(config))
             .then(() => {
               afterRequestAds(currentState.state);
               return currentState;
@@ -385,8 +384,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             state: 'requestAds',
             config: config
           };
-          return dfpService.initialize(config)
-            .then(config => dfpService.requestAds(config))
+          return adService.initialize(config)
+            .then(config => adService.requestAds(config))
             .then(() => {
               state = {
                 state: 'finished',
@@ -395,6 +394,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               afterRequestAds(state.state);
               return Promise.resolve(state);
             }).catch((error) => {
+              getLogger(config, window).error('Moli', error);
               state = {
                 state: 'error',
                 config: config,
