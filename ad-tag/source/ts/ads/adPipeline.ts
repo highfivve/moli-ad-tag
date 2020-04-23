@@ -2,6 +2,20 @@ import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 
 /**
+ * Context passed to every pipeline step.
+ *
+ * Used to inject general purpose external dependencies
+ */
+export type AdPipelineContext = {
+    readonly logger: Moli.MoliLogger;
+
+    /**
+     * access to the global window. Never access the global window object
+     */
+    readonly window: Window;
+};
+
+/**
  * ## Init Step
  *
  * - domReady
@@ -11,7 +25,7 @@ import SlotDefinition = Moli.SlotDefinition;
  * - async fetching of external resources
  *
  */
-export type InitStep = () => Promise<void>;
+export type InitStep = (context: AdPipelineContext) => Promise<void>;
 
 /**
  * ## Configure Step
@@ -22,7 +36,7 @@ export type InitStep = () => Promise<void>;
  * - consent / cmp configuration
  *
  */
-export type ConfigureStep = (slots: Moli.AdSlot[]) => Promise<void>;
+export type ConfigureStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>;
 
 /**
  * ## Define Slots
@@ -33,7 +47,7 @@ export type ConfigureStep = (slots: Moli.AdSlot[]) => Promise<void>;
  * - filter sizes
  *
  */
-export type DefineSlotsStep = (slots: Moli.AdSlot[]) => Promise<SlotDefinition<any>[]>;
+export type DefineSlotsStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<SlotDefinition<any>[]>;
 
 /**
  * ## Prepare RequestAds
@@ -46,55 +60,63 @@ export type DefineSlotsStep = (slots: Moli.AdSlot[]) => Promise<SlotDefinition<a
  * - remove stale prebid / a9 key-values
  *
  */
-export type PrepareRequestAdsStep = (slots: SlotDefinition<any>[]) => Promise<SlotDefinition<any>[]>;
+export type PrepareRequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition<any>[]) => Promise<SlotDefinition<any>[]>;
 
 /**
  * ## RequestAds
  *
  * Fire googletag ad request.
  */
-export type RequestAdsStep = (slots: SlotDefinition<any>[]) => Promise<void>;
+export type RequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition<any>[]) => Promise<void>;
 
 export interface IAdPiplineConfiguration {
 
-  readonly init: InitStep[];
-  readonly configure: ConfigureStep[];
-  readonly defineSlots: DefineSlotsStep;
-  readonly prepareRequestAds: PrepareRequestAdsStep[];
-  readonly requestAds: RequestAdsStep;
+    readonly init: InitStep[];
+    readonly configure: ConfigureStep[];
+    readonly defineSlots: DefineSlotsStep;
+    readonly prepareRequestAds: PrepareRequestAdsStep[];
+    readonly requestAds: RequestAdsStep;
 }
 
 export class AdPipeline {
 
-  /**
-   * the init process should only be called once and we store the result here.
-   */
-  private init: Promise<void[]> | null = null;
+    /**
+     * the init process should only be called once and we store the result here.
+     */
+    private init: Promise<void[]> | null = null;
 
-  constructor(private readonly config: IAdPiplineConfiguration, private readonly logger: Moli.MoliLogger) {
-  }
+    constructor(
+        private readonly config: IAdPiplineConfiguration,
+        private readonly logger: Moli.MoliLogger,
+        private readonly window: Window) {
+    }
 
-  /**
-   * run the pipeline
-   */
-  run(slots: Moli.AdSlot[]): Promise<void> {
-    this.init = this.init ? this.init : this.logStage('init').then(() => Promise.all(this.config.init.map(step => step())));
+    /**
+     * run the pipeline
+     */
+    run(slots: Moli.AdSlot[]): Promise<void> {
+        const context: AdPipelineContext = {
+            logger: this.logger,
+            window: this.window
+        };
+        this.init = this.init ? this.init : this.logStage('init').then(() => Promise.all(this.config.init.map(step => step(context))));
 
-    return this.init
-      .then(() => this.logStage('configure').then(() => Promise.all(this.config.configure.map(step => step(slots)))))
-      .then(() => this.logStage('defineSlots').then(() => this.config.defineSlots(slots)))
-      .then((definedSlots) => {
-        return this.logStage('prepareRequestAds')
-          .then(() => Promise.all(this.config.prepareRequestAds.map(step => step(definedSlots))))
-          .then(() => this.logStage('requestAds'))
-          .then(() => this.config.requestAds(definedSlots));
-      });
-  }
+        return this.init
+            .then(() => this.logStage('configure').then(() => Promise.all(this.config.configure.map(step => step(context, slots)))))
+            .then(() => this.logStage('defineSlots').then(() => this.config.defineSlots(context, slots)))
+            .then((definedSlots) => {
+                return this.logStage('prepareRequestAds')
+                    .then(() => Promise.all(this.config.prepareRequestAds.map(step => step(context, definedSlots))))
+                    .then(() => this.logStage('requestAds'))
+                    .then(() => this.config.requestAds(context, definedSlots));
+            });
+    }
 
-  private logStage(stageName: string): Promise<void> {
-    return new Promise<void>(resolve => {
-      this.logger.debug('AdPipeline', `stage: ${stageName}`);
-    });
-  }
+    private logStage(stageName: string): Promise<void> {
+        return new Promise<void>(resolve => {
+            this.logger.debug('AdPipeline', `stage: ${stageName}`);
+            resolve();
+        });
+    }
 
 }

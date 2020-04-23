@@ -1,4 +1,4 @@
-import { ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
+import { AdPipelineContext, ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
 import { Moli } from '../types/moli';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 
@@ -13,9 +13,9 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
  *
  * @returns {Promise<void>}
  */
-export const a9Init = (window: Window, config: Moli.headerbidding.A9Config, assetService: IAssetLoaderService): InitStep =>
-  () =>  new Promise<void>(resolve => {
-    window.apstag = window.apstag || {
+export const a9Init = (config: Moli.headerbidding.A9Config, assetService: IAssetLoaderService): InitStep =>
+  (context: AdPipelineContext) =>  new Promise<void>(resolve => {
+      context.window.apstag = window.apstag || {
       _Q: [],
       init: function (): void {
         window.apstag._Q.push([ 'i', arguments ]);
@@ -41,9 +41,9 @@ export const a9Init = (window: Window, config: Moli.headerbidding.A9Config, asse
     resolve();
   });
 
-export const a9Configure = (window: Window, config: Moli.headerbidding.A9Config): ConfigureStep =>
-  (slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
-    window.apstag.init({
+export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep =>
+  (context: AdPipelineContext, slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
+    context.window.apstag.init({
       pubID: config.pubID,
       adServer: 'googletag',
       bidTimeout: config.timeout,
@@ -54,7 +54,7 @@ export const a9Configure = (window: Window, config: Moli.headerbidding.A9Config)
     resolve();
   });
 
-export const a9PrepareRequestAds = (window: Window, config: Moli.headerbidding.A9Config): PrepareRequestAdsStep =>
-  (slots: Moli.SlotDefinition<any>[]) => new Promise<Moli.SlotDefinition<any>[]>(resolve => {
+export const a9PrepareRequestAds = (config: Moli.headerbidding.A9Config): PrepareRequestAdsStep =>
+  (context: AdPipelineContext, slots: Moli.SlotDefinition<any>[]) => new Promise<Moli.SlotDefinition<any>[]>(resolve => {
     resolve();
   });

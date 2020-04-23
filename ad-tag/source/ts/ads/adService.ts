@@ -15,8 +15,8 @@ import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { consentConfigureGpt } from './consent';
 import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
-import { passbackPrepareRequestAds } from "./passback";
-import { PassbackService } from "./passbackService";
+import { passbackPrepareRequestAds } from './passback';
+import { PassbackService } from './passbackService';
 
 
 export class AdService {
@@ -43,7 +43,7 @@ export class AdService {
     prepareRequestAds: [],
     requestAds: () => Promise.resolve()
 
-  }, this.logger);
+  }, this.logger, this.window);
 
   constructor(private assetService: IAssetLoaderService,
               private window: Window) {    // initialize the logger with a default one
@@ -70,14 +70,14 @@ export class AdService {
     // 2. build the AdPipeline
     const init: InitStep[] = [
       this.awaitDomReady,
-      gptInit(this.window)
+      gptInit()
     ];
     const configure: ConfigureStep[] = [
-      gptConfigure(this.window, config, this.logger)
+      gptConfigure(config)
     ];
 
     if (config.consent.cmp) {
-      configure.push(consentConfigureGpt(this.window, config.consent.cmp, this.logger));
+      configure.push(consentConfigureGpt(config.consent.cmp));
     }
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
@@ -88,25 +88,25 @@ export class AdService {
     // prebid
     if (config.prebid) {
       init.push(prebidInit(this.window));
-      configure.push(prebidConfigure(this.window, config.prebid));
-      prepareRequestAds.push(prebidPrepareRequestAds(this.window, config.prebid));
+      configure.push(prebidConfigure(config.prebid));
+      prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
     }
 
     // amazon a9
     if (config.a9) {
-      init.push(a9Init(this.window, config.a9, this.assetService));
-      configure.push(a9Configure(this.window, config.a9));
-      prepareRequestAds.push(a9PrepareRequestAds(this.window, config.a9));
+      init.push(a9Init(config.a9, this.assetService));
+      configure.push(a9Configure(config.a9));
+      prepareRequestAds.push(a9PrepareRequestAds(config.a9));
     }
 
 
     this.adPipeline = new AdPipeline({
       init,
       configure,
-      defineSlots: gptDefineSlots(this.window, env, this.logger),
+      defineSlots: gptDefineSlots(env),
       prepareRequestAds,
-      requestAds: gptRequestAds(this.window, env, this.logger, reportingService)
-    }, this.logger);
+      requestAds: gptRequestAds(env, reportingService)
+    }, this.logger, this.window);
 
     return Promise.resolve(config);
   };
