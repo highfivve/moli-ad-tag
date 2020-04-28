@@ -2,6 +2,7 @@ import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { LabelConfigService } from './labelConfigService';
 import { ReportingService } from './reportingService';
+import { SlotEventService } from "./slotEventService";
 
 /**
  * Context passed to every pipeline step.
@@ -31,6 +32,11 @@ export type AdPipelineContext = {
    * enables steps to access the reporting API
    */
   readonly reportingService: ReportingService;
+
+  /**
+   * access to the slot event service API
+   */
+  readonly slotEventService: SlotEventService;
 
   /**
    * access to the global window. Never access the global window object
@@ -129,7 +135,8 @@ export class AdPipeline {
     private readonly logger: Moli.MoliLogger,
     private readonly env: Moli.Environment,
     private readonly window: Window,
-    private readonly reportingService: ReportingService
+    private readonly reportingService: ReportingService,
+    private readonly slotEventService: SlotEventService
     ) {
   }
 
@@ -150,9 +157,10 @@ export class AdPipeline {
       env: this.env,
       labelConfigService: labelConfigService,
       reportingService: this.reportingService,
+      slotEventService: this.slotEventService,
       window: this.window
     };
-    this.logger.debug('AdPipeline', 'starting run');
+    this.logger.debug('AdPipeline', `starting run ${currentRequestId}`);
     this.init = this.init ? this.init : this.logStage('init').then(() => Promise.all(this.config.init.map(step => step(context))));
 
     return this.init
@@ -162,6 +170,8 @@ export class AdPipeline {
         return this.logStage('prepareRequestAds')
           .then(() => Promise.all(this.config.prepareRequestAds.map(step => step(context, definedSlots))))
           .then(() => this.logStage('requestBids'))
+          // TODO add a general timeout for the requestBids call
+          // TODO add a catch call to not break the request chain
           .then(() => Promise.all(this.config.requestBids.map(step => step(context, definedSlots))))
           .then(() => this.logStage('requestAds'))
           .then(() => this.config.requestAds(context, definedSlots));

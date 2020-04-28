@@ -6,16 +6,16 @@ import { SlotEventService } from './slotEventService';
 import { ReportingService } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { gptConfigure, gptDefineSlots, gptInit, gptRequestAds } from './googleAdManager';
+import { gptConfigure, gptDefineSlots, gptDestroyAdSlots, gptInit, gptRequestAds } from './googleAdManager';
 import domready from '../util/domready';
 import {
   prebidConfigure,
   prebidInit,
-  prebidPrepareRequestAds,
+  prebidPrepareRequestAds, prebidRemoveAdUnits,
   prebidRemoveHbKeyValues,
   prebidRequestBids
 } from './prebid';
-import { a9Configure, a9Init, a9PrepareRequestAds } from './a9';
+import { a9Configure, a9Init, a9RemoveKeyValues, a9RequestBids } from './a9';
 import { isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
@@ -50,7 +50,7 @@ export class AdService {
     requestBids: [],
     requestAds: () => Promise.resolve()
 
-  }, this.logger, 'test', this.window, null as any);
+  }, this.logger, 'test', this.window, null as any, this.slotEventService);
 
   constructor(private assetService: IAssetLoaderService,
               private window: Window) {    // initialize the logger with a default one
@@ -67,8 +67,9 @@ export class AdService {
    *
    *
    * @param config
+   * @param isSinglePageApp
    */
-  public initialize = (config: Readonly<Moli.MoliConfig>): Promise<Readonly<Moli.MoliConfig>> => {
+  public initialize = (config: Readonly<Moli.MoliConfig>, isSinglePageApp: boolean): Promise<Readonly<Moli.MoliConfig>> => {
     const env = this.getEnvironment(config);
     // 1. setup all services
     this.logger = getLogger(config, this.window);
@@ -91,6 +92,11 @@ export class AdService {
       this.awaitDomReady,
       gptInit()
     ];
+
+    if (isSinglePageApp) {
+      init.push(gptDestroyAdSlots());
+    }
+
     const configure: ConfigureStep[] = [
       gptConfigure(config)
     ];
@@ -109,6 +115,10 @@ export class AdService {
     // prebid
     if (config.prebid) {
       init.push(prebidInit());
+      if (isSinglePageApp) {
+        init.push(prebidRemoveAdUnits());
+      }
+
       configure.push(prebidConfigure(config.prebid, config.targeting));
       prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds(config.prebid, config.targeting));
       requestBids.push(prebidRequestBids(config.prebid, config.targeting));
@@ -118,7 +128,8 @@ export class AdService {
     if (config.a9) {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9));
-      prepareRequestAds.push(a9PrepareRequestAds(config.a9));
+      prepareRequestAds.push(a9RemoveKeyValues());
+      requestBids.push(a9RequestBids());
     }
 
     this.adPipeline = new AdPipeline({
@@ -128,7 +139,7 @@ export class AdService {
       prepareRequestAds,
       requestBids,
       requestAds: gptRequestAds(reportingService)
-    }, this.logger, env, this.window, reportingService);
+    }, this.logger, env, this.window, reportingService, this.slotEventService);
 
     return Promise.resolve(config);
   };
@@ -138,57 +149,40 @@ export class AdService {
     this.logger.info('AdService', 'RequestAds');
     try {
       const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
-          .map(slot => {
-            if (this.isLazySlot(slot)) {
-              // initialize lazy slot
-              createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window).onLoad()
-                  .then(() => {
-                    if (this.isSlotAvailable(slot)) {
-                      return Promise.resolve();
-                    }
-                    const message = `lazy slot dom element not available: ${slot.adUnitPath} / ${slot.domId}`;
-                    this.logger.error('DFP Service', message);
-                    return Promise.reject(message);
-                  })
-                  .then(() => this.adPipeline.run([ slot ], config));
+        .map(slot => {
+          if (this.isLazySlot(slot)) {
+            // initialize lazy slot
+            createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window).onLoad()
+              .then(() => {
+                if (this.isSlotAvailable(slot)) {
+                  return Promise.resolve();
+                }
+                const message = `lazy slot dom element not available: ${slot.adUnitPath} / ${slot.domId}`;
+                this.logger.error('DFP Service', message);
+                return Promise.reject(message);
+              })
+              .then(() => this.adPipeline.run([ slot ], config));
 
-              return null;
-            } else if (this.isRefreshableAdSlot(slot)) {
-              // initialize lazy refreshable slot
-              createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
-                  .addAdRefreshListener(() => this.adPipeline.run([ slot ], config));
+            return null;
+          } else if (this.isRefreshableAdSlot(slot)) {
+            // initialize lazy refreshable slot
+            createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
+              .addAdRefreshListener(() => this.adPipeline.run([ slot ], config));
 
-              // if the slot should be lazy loaded don't return it
-              return slot.behaviour.lazy ? null : slot;
-            } else {
-              return slot;
-            }
-          })
-          .filter(isNotNull)
-          .filter(this.isSlotAvailable);
+            // if the slot should be lazy loaded don't return it
+            return slot.behaviour.lazy ? null : slot;
+          } else {
+            return slot;
+          }
+        })
+        .filter(isNotNull)
+        .filter(this.isSlotAvailable);
       return this.adPipeline.run(immediatelyLoadedSlots, config).then(() => immediatelyLoadedSlots);
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
       return Promise.reject(e);
     }
   };
-
-  // FIXME this must be a init step in the SPA mode!
-  public destroyAdSlots = (config: Moli.MoliConfig): Promise<Moli.MoliConfig> => {
-    return Promise.resolve()
-        // remove all event listeners first
-        .then(() => this.slotEventService && this.slotEventService.removeAllEventSources(this.window))
-        //
-        .then(() => this.window.googletag.destroySlots())
-        .then(() => {
-          const pbjs = this.window.pbjs;
-          if (pbjs && pbjs.adUnits) {
-            this.logger.debug('DFP Service', `Destroying prebid adUnits`, pbjs.adUnits);
-            pbjs.adUnits.forEach(adUnit => pbjs.removeAdUnit(adUnit.code));
-          }
-        })
-        .then(() => config);
-  }
 
   /**
    * Reset the gpt targeting configuration (key-values) and uses the targeting information from
@@ -199,7 +193,7 @@ export class AdService {
    *
    * @param config
    */
-  // FIXME this must be a init step in the SPA mode!
+    // FIXME this must be a init step in the SPA mode!
   public resetTargeting = (config: Moli.MoliConfig): void => {
     this.window.googletag.pubads().clearTargeting();
 
@@ -226,7 +220,7 @@ export class AdService {
     return slot.behaviour.loaded === 'refreshable';
   }
 
-  private isSlotAvailable = (slot: Moli.AdSlot): boolean  => {
+  private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
     return !!this.window.document.getElementById(slot.domId);
   }
 

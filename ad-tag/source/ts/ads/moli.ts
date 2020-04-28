@@ -188,6 +188,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       }
     }
   }
+
   function afterRequestAds(callback: (state: Moli.state.AfterRequestAdsStates) => void): void {
     switch (state.state) {
       case 'configurable': {
@@ -350,18 +351,21 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           state.hooks.beforeRequestAds(config);
         }
 
-        const afterRequestAds =  state.hooks && state.hooks.afterRequestAds ? state.hooks.afterRequestAds : () => { return; };
-
+        const afterRequestAds = state.hooks && state.hooks.afterRequestAds ? state.hooks.afterRequestAds : () => {
+          return;
+        };
+        const isSinglePageApp = state.isSinglePageApp;
         // handle single page application case
-        if (state.isSinglePageApp) {
+        if (isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
-          const initialized = adService.initialize(config).then(() => config);
+          const initialized = adService.initialize(config, isSinglePageApp).then(() => config);
           const currentState: ISinglePageApp = {
             state: 'spa',
             configFromAdTag: state.configFromAdTag,
             config: config,
-            refreshAds: (moliConfig: Moli.MoliConfig) => adService.requestAds(moliConfig).then(() => { return; }),
-            destroyAdSlots: adService.destroyAdSlots,
+            refreshAds: (moliConfig: Moli.MoliConfig) => adService.requestAds(moliConfig).then(() => {
+              return;
+            }),
             resetTargeting: adService.resetTargeting,
             initialized,
             href: window.location.href,
@@ -384,7 +388,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             state: 'requestAds',
             config: config
           };
-          return adService.initialize(config)
+          return adService.initialize(config, isSinglePageApp)
             .then(config => adService.requestAds(config))
             .then(() => {
               state = {
@@ -411,9 +415,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         setABtestTargeting();
 
         const hooks = state.hooks;
-        const afterRequestAds =  hooks && hooks.afterRequestAds ? hooks.afterRequestAds : () => { return; };
+        const afterRequestAds = hooks && hooks.afterRequestAds ? hooks.afterRequestAds : () => {
+          return;
+        };
 
-        const { initialized, refreshAds, destroyAdSlots, resetTargeting, href, keyValues, labels, configFromAdTag } = state;
+        const { initialized, refreshAds, resetTargeting, href, keyValues, labels, configFromAdTag } = state;
         return initialized
           .then((config) => {
             // don't use the config from the initialized method as we need to alter the config
@@ -423,8 +429,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             }
             return Promise.resolve(config);
           })
-          .then(config => destroyAdSlots(config))
-
           .then(config => {
 
             // we insert the fixed targeting values from the `configFromAdTag` and discard all others that have
@@ -451,7 +455,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             state = {
               state: 'spa',
               refreshAds: refreshAds,
-              destroyAdSlots: destroyAdSlots,
               resetTargeting: resetTargeting,
               configFromAdTag: configFromAdTag,
               config: configWithTargeting,

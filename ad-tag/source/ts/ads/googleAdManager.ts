@@ -37,6 +37,16 @@ export const gptInit = (): InitStep => (context: AdPipelineContext) => new Promi
   context.window.googletag.cmd.push(resolve);
 });
 
+/**
+ * Destroy slots before anything. This step is required for single page applications to ensure
+ * a fresh setup
+ */
+export const gptDestroyAdSlots = (): InitStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+  context.slotEventService.removeAllEventSources(context.window);
+  context.window.googletag.destroySlots();
+  resolve();
+});
+
 export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
   const env = config.environment || 'production';
   switch (env) {

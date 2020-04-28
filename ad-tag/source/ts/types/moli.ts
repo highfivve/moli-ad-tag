@@ -555,13 +555,6 @@ export namespace Moli {
       readonly refreshAds: (config: Moli.MoliConfig) => Promise<void>;
 
       /**
-       * Destroy all ad slots and prebid ad units
-       *
-       * @return promise resolves when all ad slots have been destroyed
-       */
-      readonly destroyAdSlots: (config: Moli.MoliConfig) => Promise<Moli.MoliConfig>;
-
-      /**
        * Reset all key-values and set new ones according to the given config.
        */
       readonly resetTargeting: (config: Moli.MoliConfig) => void;

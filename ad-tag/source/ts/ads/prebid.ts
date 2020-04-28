@@ -30,6 +30,20 @@ const isAdUnitDefined = (adUnit: prebidjs.IAdUnit, window: Window): boolean => {
 
 export const prebidInit = (): InitStep => (context) => Promise.race([ prebidInitAndReady(context.window), prebidTimeout(context.window) ]);
 
+export const prebidRemoveAdUnits = (): InitStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+  context.window.pbjs = window.pbjs || { que: [] };
+  const adUnits = context.window.pbjs.adUnits;
+  if (adUnits) {
+    context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
+    context.window.pbjs.que.push(() => {
+      adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
+      resolve();
+    });
+  } else {
+    resolve();
+  }
+});
+
 export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): ConfigureStep =>
   (context: AdPipelineContext, _slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
     if (prebidConfig.bidderSettings) {
@@ -101,8 +115,9 @@ export const prebidRequestBids = (prebidConfig: Moli.headerbidding.PrebidConfig,
   // afterwards anyway the bidsBackHandler is called a second time.
   let adserverRequestSent = false;
 
-  const dfpSlots = slots.map(slot => slot.moliSlot);
-  const adUnitCodes = dfpSlots.map(slot => slot.domId);
+  const adUnitCodes = slots
+    .filter(isPrebidSlotDefinition)
+    .map(slot => slot.moliSlot.domId);
 
   context.logger.debug('Prebid', `Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`);
 
