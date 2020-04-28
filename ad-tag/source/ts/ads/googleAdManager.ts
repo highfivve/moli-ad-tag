@@ -16,7 +16,7 @@ const getSizeFilterFunction = (window: Window, moliSlot: Moli.AdSlot): Moli.Filt
   return (givenSizes: Moli.DfpSlotSize[]) => new SizeConfigService(moliSlot.sizeConfig, window).filterSupportedSizes(givenSizes);
 };
 
-const configureTargeting = (targeting: Moli.Targeting | undefined, env: Moli.Environment): void => {
+const configureTargeting = (window: Window, targeting: Moli.Targeting | undefined, env: Moli.Environment): void => {
   switch (env) {
     case 'production':
       const keyValueMap = targeting ? targeting.keyValues : {};
@@ -41,7 +41,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => (context
   const env = config.environment || 'production';
   switch (env) {
     case 'production':
-      configureTargeting(config.targeting, env);
+      configureTargeting(window, config.targeting, env);
 
       context.window.googletag.pubads().enableAsyncRendering();
       context.window.googletag.pubads().disableInitialLoad();
@@ -62,7 +62,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => (context
 
 export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
   const slotDefinitions = slots.map(moliSlot => {
-    const filterSupportedSizes = getSizeFilterFunction(window, moliSlot);
+    const filterSupportedSizes = getSizeFilterFunction(context.window, moliSlot);
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
     // lookup existing slots and use those if already present. This makes defineSlots idempotent
@@ -76,16 +76,16 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
       adSlot.setCollapseEmptyDiv(true);
 
       // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
-      window.googletag.display(adSlot.getSlotElementId());
+      context.window.googletag.display(adSlot.getSlotElementId());
       switch (context.env) {
         case 'production':
-          adSlot.addService(window.googletag.pubads());
-          context.logger.debug('DFP Service', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
+          adSlot.addService(context.window.googletag.pubads());
+          context.logger.debug('GAM', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
           return Promise.resolve<SlotDefinition<any>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
         case 'test':
-          context.logger.warn('DFP Service', `Enabling content service on ${adSlot.getSlotElementId()}`);
-          adSlot.addService(window.googletag.content());
+          context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
+          adSlot.addService(context.window.googletag.content());
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
           return Promise.resolve<SlotDefinition<any>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
         default:
@@ -93,7 +93,7 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
       }
     } else {
       const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
-      context.logger.error('DFP Service', error);
+      context.logger.error('GAM', error);
       return Promise.reject(new Error(error));
     }
 
@@ -156,7 +156,7 @@ export const gptRequestAds = (reportingService: ReportingService): RequestAdsSte
       break;
   }
   slots.forEach(slot => {
-    context.logger.debug('DFP Service', `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`);
+    context.logger.debug('GAM', `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`);
     reportingService.markRefreshed(slot.moliSlot);
   });
 

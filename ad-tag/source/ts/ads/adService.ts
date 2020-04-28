@@ -1,14 +1,20 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger } from '../util/logging';
 import { Moli } from '../types/moli';
-import { AdPipeline, ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
+import { AdPipeline, ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from './adPipeline';
 import { SlotEventService } from './slotEventService';
 import { ReportingService } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import { gptConfigure, gptDefineSlots, gptInit, gptRequestAds } from './googleAdManager';
 import domready from '../util/domready';
-import { prebidConfigure, prebidInit, prebidPrepareRequestAds } from './prebid';
+import {
+  prebidConfigure,
+  prebidInit,
+  prebidPrepareRequestAds,
+  prebidRemoveHbKeyValues,
+  prebidRequestBids
+} from './prebid';
 import { a9Configure, a9Init, a9PrepareRequestAds } from './a9';
 import { isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
@@ -41,9 +47,10 @@ export class AdService {
     configure: [],
     defineSlots: () => Promise.resolve([]),
     prepareRequestAds: [],
+    requestBids: [],
     requestAds: () => Promise.resolve()
 
-  }, this.logger, 'test', this.window);
+  }, this.logger, 'test', this.window, null as any);
 
   constructor(private assetService: IAssetLoaderService,
               private window: Window) {    // initialize the logger with a default one
@@ -97,11 +104,14 @@ export class AdService {
       yieldOptimizationPrepareRequestAds(new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger))
     ];
 
+    const requestBids: RequestBidsStep[] = [];
+
     // prebid
     if (config.prebid) {
-      init.push(prebidInit(this.window));
-      configure.push(prebidConfigure(config.prebid));
-      prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
+      init.push(prebidInit());
+      configure.push(prebidConfigure(config.prebid, config.targeting));
+      prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds(config.prebid, config.targeting));
+      requestBids.push(prebidRequestBids(config.prebid, config.targeting));
     }
 
     // amazon a9
@@ -116,8 +126,9 @@ export class AdService {
       configure,
       defineSlots: gptDefineSlots(),
       prepareRequestAds,
+      requestBids,
       requestAds: gptRequestAds(reportingService)
-    }, this.logger, env, this.window);
+    }, this.logger, env, this.window, reportingService);
 
     return Promise.resolve(config);
   };
@@ -139,13 +150,13 @@ export class AdService {
                     this.logger.error('DFP Service', message);
                     return Promise.reject(message);
                   })
-                  .then(() => this.adPipeline.run([ slot ]));
+                  .then(() => this.adPipeline.run([ slot ], config));
 
               return null;
             } else if (this.isRefreshableAdSlot(slot)) {
               // initialize lazy refreshable slot
               createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
-                  .addAdRefreshListener(() => this.adPipeline.run([ slot ]));
+                  .addAdRefreshListener(() => this.adPipeline.run([ slot ], config));
 
               // if the slot should be lazy loaded don't return it
               return slot.behaviour.lazy ? null : slot;
@@ -155,7 +166,7 @@ export class AdService {
           })
           .filter(isNotNull)
           .filter(this.isSlotAvailable);
-      return this.adPipeline.run(immediatelyLoadedSlots).then(() => immediatelyLoadedSlots);
+      return this.adPipeline.run(immediatelyLoadedSlots, config).then(() => immediatelyLoadedSlots);
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
       return Promise.reject(e);
@@ -204,7 +215,7 @@ export class AdService {
   private awaitDomReady: InitStep = () => {
     return new Promise<void>(resolve => {
       domready(this.window, resolve);
-    }).then(() => this.logger.debug('dom ready'));
+    }).then(() => this.logger.debug('DOM', 'dom ready'));
   };
 
   private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {
