@@ -1762,6 +1762,11 @@ export namespace prebidjs {
      * The height of the returned creative size.
      */
     readonly height: number;
+
+    /**
+     * The media type of the bid response
+     */
+    readonly mediaType: 'banner' | 'video' | 'display';
   }
 
   export interface IGenericBidResponse extends IBidResponse {
