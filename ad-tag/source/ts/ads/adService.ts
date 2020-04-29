@@ -6,7 +6,14 @@ import { SlotEventService } from './slotEventService';
 import { ReportingService } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { gptConfigure, gptDefineSlots, gptDestroyAdSlots, gptInit, gptRequestAds } from './googleAdManager';
+import {
+  gptConfigure,
+  gptDefineSlots,
+  gptDestroyAdSlots,
+  gptInit,
+  gptRequestAds,
+  gptResetTargeting
+} from './googleAdManager';
 import domready from '../util/domready';
 import {
   prebidConfigure,
@@ -50,7 +57,7 @@ export class AdService {
     requestBids: [],
     requestAds: () => Promise.resolve()
 
-  }, this.logger, 'test', this.window, null as any, this.slotEventService);
+  }, this.logger, this.window, null as any, this.slotEventService);
 
   constructor(private assetService: IAssetLoaderService,
               private window: Window) {    // initialize the logger with a default one
@@ -84,7 +91,11 @@ export class AdService {
       sampleRate: 0
     };
     const reportingService = new ReportingService(
-      createPerformanceService(this.window), this.slotEventService, reportingConfig, this.logger, this.getEnvironment(config), this.window
+      createPerformanceService(this.window),
+      this.slotEventService, reportingConfig,
+      this.logger,
+      env,
+      this.window
     );
 
     // 2. build the AdPipeline
@@ -93,13 +104,13 @@ export class AdService {
       gptInit()
     ];
 
-    if (isSinglePageApp) {
-      init.push(gptDestroyAdSlots());
-    }
-
     const configure: ConfigureStep[] = [
       gptConfigure(config)
     ];
+
+    if (isSinglePageApp) {
+      configure.push(gptDestroyAdSlots(), gptResetTargeting());
+    }
 
     if (config.consent.cmp) {
       configure.push(consentConfigureGpt(config.consent.cmp));
@@ -113,19 +124,19 @@ export class AdService {
     const requestBids: RequestBidsStep[] = [];
 
     // prebid
-    if (config.prebid) {
+    if (config.prebid && env === 'production') {
       init.push(prebidInit());
-      if (isSinglePageApp) {
-        init.push(prebidRemoveAdUnits());
-      }
 
-      configure.push(prebidConfigure(config.prebid, config.targeting));
-      prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds(config.prebid, config.targeting));
+      configure.push(prebidConfigure(config.prebid));
+      if (isSinglePageApp) {
+        configure.push(prebidRemoveAdUnits());
+      }
+      prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds(config.prebid));
       requestBids.push(prebidRequestBids(config.prebid, config.targeting));
     }
 
     // amazon a9
-    if (config.a9) {
+    if (config.a9 && env === 'production') {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9));
       prepareRequestAds.push(a9RemoveKeyValues());
@@ -138,8 +149,8 @@ export class AdService {
       defineSlots: gptDefineSlots(),
       prepareRequestAds,
       requestBids,
-      requestAds: gptRequestAds(reportingService)
-    }, this.logger, env, this.window, reportingService, this.slotEventService);
+      requestAds: gptRequestAds()
+    }, this.logger, this.window, reportingService, this.slotEventService);
 
     return Promise.resolve(config);
   };
@@ -183,24 +194,6 @@ export class AdService {
       return Promise.reject(e);
     }
   };
-
-  /**
-   * Reset the gpt targeting configuration (key-values) and uses the targeting information from
-   * the given config to set new key values.
-   *
-   * This method is required for the single-page-application mode to make sure we don't send
-   * stale key-values
-   *
-   * @param config
-   */
-    // FIXME this must be a init step in the SPA mode!
-  public resetTargeting = (config: Moli.MoliConfig): void => {
-    this.window.googletag.pubads().clearTargeting();
-
-    // FIXME apply constant targeting again
-    // this.configureTargeting(config);
-  };
-
 
   private getEnvironment(config: Moli.MoliConfig): Moli.Environment {
     return config.environment || 'production';

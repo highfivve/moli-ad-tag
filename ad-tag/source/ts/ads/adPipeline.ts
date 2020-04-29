@@ -2,7 +2,7 @@ import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { LabelConfigService } from './labelConfigService';
 import { ReportingService } from './reportingService';
-import { SlotEventService } from "./slotEventService";
+import { SlotEventService } from './slotEventService';
 
 /**
  * Context passed to every pipeline step.
@@ -19,9 +19,14 @@ export type AdPipelineContext = {
   readonly logger: Moli.MoliLogger;
 
   /**
-   * current environment for the ad pipeline
+   * Environment from the config with a default set to production
    */
   readonly env: Moli.Environment;
+
+  /**
+   * The config used for the ad configuration run
+   */
+  readonly config: Moli.MoliConfig;
 
   /**
    * required for filtering based on labels
@@ -133,7 +138,6 @@ export class AdPipeline {
   constructor(
     private readonly config: IAdPiplineConfiguration,
     private readonly logger: Moli.MoliLogger,
-    private readonly env: Moli.Environment,
     private readonly window: Window,
     private readonly reportingService: ReportingService,
     private readonly slotEventService: SlotEventService
@@ -154,7 +158,8 @@ export class AdPipeline {
     const context: AdPipelineContext = {
       requestId: currentRequestId,
       logger: this.logger,
-      env: this.env,
+      env: config.environment || 'production',
+      config: config,
       labelConfigService: labelConfigService,
       reportingService: this.reportingService,
       slotEventService: this.slotEventService,

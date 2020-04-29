@@ -366,7 +366,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             refreshAds: (moliConfig: Moli.MoliConfig) => adService.requestAds(moliConfig).then(() => {
               return;
             }),
-            resetTargeting: adService.resetTargeting,
             initialized,
             href: window.location.href,
             // initialize targeting values for next refreshAds call
@@ -419,7 +418,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           return;
         };
 
-        const { initialized, refreshAds, resetTargeting, href, keyValues, labels, configFromAdTag } = state;
+        const { initialized, refreshAds, href, keyValues, labels, configFromAdTag } = state;
         return initialized
           .then((config) => {
             // don't use the config from the initialized method as we need to alter the config
@@ -448,14 +447,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             };
           })
           .then(configWithTargeting => {
-            resetTargeting(configWithTargeting);
             return refreshAds(configWithTargeting).then(() => configWithTargeting);
           })
           .then((configWithTargeting) => {
             state = {
               state: 'spa',
               refreshAds: refreshAds,
-              resetTargeting: resetTargeting,
               configFromAdTag: configFromAdTag,
               config: configWithTargeting,
               initialized: initialized,

@@ -17,18 +17,14 @@ const getSizeFilterFunction = (window: Window, moliSlot: Moli.AdSlot): Moli.Filt
 };
 
 const configureTargeting = (window: Window, targeting: Moli.Targeting | undefined, env: Moli.Environment): void => {
-  switch (env) {
-    case 'production':
-      const keyValueMap = targeting ? targeting.keyValues : {};
-      Object.keys(keyValueMap).forEach(key => {
-        const value = keyValueMap[key];
-        if (value) {
-          window.googletag.pubads().setTargeting(key, value);
-        }
-      });
-      return;
-    case 'test':
-      return;
+  if (env === 'production') {
+    const keyValueMap = targeting ? targeting.keyValues : {};
+    Object.keys(keyValueMap).forEach(key => {
+      const value = keyValueMap[key];
+      if (value) {
+        window.googletag.pubads().setTargeting(key, value);
+      }
+    });
   }
 };
 
@@ -41,9 +37,29 @@ export const gptInit = (): InitStep => (context: AdPipelineContext) => new Promi
  * Destroy slots before anything. This step is required for single page applications to ensure
  * a fresh setup
  */
-export const gptDestroyAdSlots = (): InitStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const gptDestroyAdSlots = (): ConfigureStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+  context.logger.debug('GAM', 'destroy all ad slots');
   context.slotEventService.removeAllEventSources(context.window);
   context.window.googletag.destroySlots();
+  resolve();
+});
+
+/**
+ * Reset the gpt targeting configuration (key-values) and uses the targeting information from
+ * the given config to set new key values.
+ *
+ * This method is required for the single-page-application mode to make sure we don't send
+ * stale key-values
+ *
+ * @param config
+ */
+export const gptResetTargeting = (): ConfigureStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+  if (context.config.environment === 'production') {
+    context.logger.debug('GAM', 'reset top level targeting');
+    context.window.googletag.pubads().clearTargeting();
+    configureTargeting(context.window, context.config.targeting, context.config.environment);
+  }
+
   resolve();
 });
 
@@ -79,7 +95,7 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
     const existingSlot = context.window.googletag.pubads().getSlots().find(s => s.getSlotElementId() === moliSlot.domId);
     const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : (moliSlot.position === 'in-page' ?
         context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId) :
-            context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId)
+        context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId)
     );
 
     if (adSlot) {
@@ -92,14 +108,14 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
           adSlot.addService(context.window.googletag.pubads());
           context.logger.debug('GAM', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
-          return Promise.resolve<SlotDefinition<any>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
+          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
         case 'test':
           context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
           adSlot.addService(context.window.googletag.content());
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
-          return Promise.resolve<SlotDefinition<any>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
+          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
         default:
-          return Promise.reject(`invalid environment: ${context.env}`);
+          return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
     } else {
       const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
@@ -112,7 +128,8 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
   return Promise.all(slotDefinitions);
 };
 
-export const gptRequestAds = (reportingService: ReportingService): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition<any>[]) => new Promise<void>(resolve => {
+export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition<any>[]) => new Promise<void>(resolve => {
+  context.logger.debug('GAM', 'requestAds');
   switch (context.env) {
     case 'test':
       slots.forEach(({ adSlot, moliSlot, filterSupportedSizes }) => {
@@ -158,17 +175,18 @@ export const gptRequestAds = (reportingService: ReportingService): RequestAdsSte
 </div>`;
 
         context.window.googletag.content().setContent(adSlot, html);
+        context.logger.debug('GAM', `Set content for slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
       });
       break;
     case 'production':
       // clear targetings for each slot before refreshing
       context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
+      slots.forEach(slot => {
+        context.logger.debug('GAM', `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`);
+        context.reportingService.markRefreshed(slot.moliSlot);
+      });
       break;
   }
-  slots.forEach(slot => {
-    context.logger.debug('GAM', `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`);
-    reportingService.markRefreshed(slot.moliSlot);
-  });
 
   resolve();
 });

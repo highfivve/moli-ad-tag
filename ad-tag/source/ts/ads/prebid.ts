@@ -30,21 +30,17 @@ const isAdUnitDefined = (adUnit: prebidjs.IAdUnit, window: Window): boolean => {
 
 export const prebidInit = (): InitStep => (context) => Promise.race([ prebidInitAndReady(context.window), prebidTimeout(context.window) ]);
 
-export const prebidRemoveAdUnits = (): InitStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const prebidRemoveAdUnits = (): ConfigureStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
   context.window.pbjs = window.pbjs || { que: [] };
   const adUnits = context.window.pbjs.adUnits;
   if (adUnits) {
     context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
-    context.window.pbjs.que.push(() => {
-      adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
-      resolve();
-    });
-  } else {
-    resolve();
+    adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
   }
+  resolve();
 });
 
-export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): ConfigureStep =>
+export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep =>
   (context: AdPipelineContext, _slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
     if (prebidConfig.bidderSettings) {
       context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
@@ -52,13 +48,13 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig, t
     resolve();
   });
 
-export const prebidPrepareRequestAds = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): PrepareRequestAdsStep =>
+export const prebidPrepareRequestAds = (prebidConfig: Moli.headerbidding.PrebidConfig): PrepareRequestAdsStep =>
   (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise<Moli.SlotDefinition<Moli.AdSlot>[]>(resolve => {
     const prebidAdUnits = slots
       .filter(isPrebidSlotDefinition)
       .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
         context.logger.debug('Prebid', `Prebid add ad unit: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
-
+        const targeting = context.config.targeting;
         const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
         const floorPrice = priceRule ? priceRule.cpm : undefined;
         const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ?
