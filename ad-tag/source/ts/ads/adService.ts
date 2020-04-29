@@ -169,7 +169,7 @@ export class AdService {
                   return Promise.resolve();
                 }
                 const message = `lazy slot dom element not available: ${slot.adUnitPath} / ${slot.domId}`;
-                this.logger.error('DFP Service', message);
+                this.logger.error('AdService', message);
                 return Promise.reject(message);
               })
               .then(() => this.adPipeline.run([ slot ], config));
