@@ -42,7 +42,7 @@ export class AdService {
   /**
    * Slot event management
    */
-  private slotEventService = new SlotEventService(this.logger);
+  private readonly slotEventService: SlotEventService;
 
   /**
    * TODO add an API to push steps into the pipeline via the Moli API
@@ -62,6 +62,7 @@ export class AdService {
   constructor(private assetService: IAssetLoaderService,
               private window: Window) {    // initialize the logger with a default one
     this.logger = getDefaultLogger();
+    this.slotEventService = new SlotEventService(this.logger);
   }
 
   /**

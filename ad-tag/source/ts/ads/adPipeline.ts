@@ -165,20 +165,20 @@ export class AdPipeline {
       slotEventService: this.slotEventService,
       window: this.window
     };
-    this.logger.debug('AdPipeline', `starting run ${currentRequestId}`);
-    this.init = this.init ? this.init : this.logStage('init').then(() => Promise.all(this.config.init.map(step => step(context))));
+    this.logger.debug('AdPipeline', currentRequestId, `starting run ${currentRequestId}`);
+    this.init = this.init ? this.init : this.logStage('init', currentRequestId).then(() => Promise.all(this.config.init.map(step => step(context))));
 
     return this.init
-      .then(() => this.logStage('configure').then(() => Promise.all(this.config.configure.map(step => step(context, slots)))))
-      .then(() => this.logStage('defineSlots').then(() => this.config.defineSlots(context, slots)))
+      .then(() => this.logStage('configure', currentRequestId).then(() => Promise.all(this.config.configure.map(step => step(context, slots)))))
+      .then(() => this.logStage('defineSlots', currentRequestId).then(() => this.config.defineSlots(context, slots)))
       .then((definedSlots) => {
-        return this.logStage('prepareRequestAds')
+        return this.logStage('prepareRequestAds', currentRequestId)
           .then(() => Promise.all(this.config.prepareRequestAds.map(step => step(context, definedSlots))))
-          .then(() => this.logStage('requestBids'))
+          .then(() => this.logStage('requestBids', currentRequestId))
           // TODO add a general timeout for the requestBids call
           // TODO add a catch call to not break the request chain
           .then(() => Promise.all(this.config.requestBids.map(step => step(context, definedSlots))))
-          .then(() => this.logStage('requestAds'))
+          .then(() => this.logStage('requestAds', currentRequestId))
           .then(() => this.config.requestAds(context, definedSlots));
       }).catch(error => {
         this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
@@ -186,9 +186,9 @@ export class AdPipeline {
       });
   }
 
-  private logStage(stageName: string): Promise<void> {
+  private logStage(stageName: string, requestId: number): Promise<void> {
     return new Promise<void>(resolve => {
-      this.logger.debug('AdPipeline', `stage: ${stageName}`);
+      this.logger.debug('AdPipeline', requestId, `stage: ${stageName}`);
       resolve();
     });
   }

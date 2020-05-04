@@ -163,18 +163,36 @@ window.moli.que.push(function (moliAdTag) {
 
     <hr>
 
-    <h1>Eager Loading AdSlot</h1>
-    <div id="eager-loading-adslot"></div>
+    <div class="row">
+        <div class="col-md">
+            <h1>Eager Loading AdSlot</h1>
+            <div id="eager-loading-adslot"></div>
+        </div>
+        <div class="col-md">
+            <h1>Prebid AdSlot Banner only</h1>
+            <div id="prebid-adslot-2"></div>
+        </div>
+        <div class="col-md">
+            <h1>Amazon A9 AdSlot</h1>
+            <div id="a9-adslot"></div>
+        </div>
+    </div>
 
-    <hr>
+    <div class="row">
+        <div class="col-md">
+            <h1>Lazy AdSlot</h1>
+            <button class="btn btn-primary" onclick="window.dispatchEvent(new Event('ads.lazy-adslot'))">Load</button>
+            <div id="lazy-adslot"></div>
+        </div>
+        <div class="col-md">
+            <h1>Refreshable AdSlot</h1>
+            <button class="btn btn-primary" onclick="window.dispatchEvent(new Event('ads.refreshable-adslot'))">Refresh</button>
+            <div id="refreshable-adslot"></div>
+        </div>
+    </div>
 
-    <h1>Prebid AdSlot Banner only</h1>
-    <div id="prebid-adslot-2"></div>
 
-    <hr>
 
-    <h1>Amazon A9 AdSlot</h1>
-    <div id="a9-adslot"></div>
 </div>
 <!-- update the {{domain}} variable in the integration example -->
 <script>

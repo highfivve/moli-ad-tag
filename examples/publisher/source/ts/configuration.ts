@@ -302,6 +302,50 @@ export const adConfiguration: Moli.MoliConfig = {
       } ]
     },
 
+    /* lazy & refreshable */
+    {
+      domId: 'lazy-adslot',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'lazy',
+        trigger: {
+          name: 'event',
+          event: 'ads.lazy-adslot',
+          source: window
+        }
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [ [ 300, 250 ] ],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [ [ 300, 250 ] ]
+        }
+      ]
+    },
+    {
+      domId: 'refreshable-adslot',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'refreshable',
+        trigger: {
+          name: 'event',
+          event: 'ads.refreshable-adslot',
+          source: window
+        }
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [ [ 300, 250 ]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [ [ 300, 250 ] ]
+        }
+      ]
+    },
+
   ],
   // -----------------------------
   // ----- standard config -------

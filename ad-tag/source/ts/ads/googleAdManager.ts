@@ -92,7 +92,10 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
     // lookup existing slots and use those if already present. This makes defineSlots idempotent
-    const existingSlot = context.window.googletag.pubads().getSlots().find(s => s.getSlotElementId() === moliSlot.domId);
+    const allSlots = context.env === 'production'
+      ? context.window.googletag.pubads().getSlots()
+      : context.window.googletag.content().getSlots();
+    const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
     const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : (moliSlot.position === 'in-page' ?
         context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId) :
         context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId)
@@ -108,12 +111,22 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
           adSlot.addService(context.window.googletag.pubads());
           context.logger.debug('GAM', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
-          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
+          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({
+            moliSlot,
+            adSlot,
+            filterSupportedSizes,
+            priceRule: undefined
+          });
         case 'test':
           context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
           adSlot.addService(context.window.googletag.content());
           // TODO priceRule is handled in another module and should be remove from the slotDefinitions
-          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({ moliSlot, adSlot, filterSupportedSizes, priceRule: undefined });
+          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({
+            moliSlot,
+            adSlot,
+            filterSupportedSizes,
+            priceRule: undefined
+          });
         default:
           return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
