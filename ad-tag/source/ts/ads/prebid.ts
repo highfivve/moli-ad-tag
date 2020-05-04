@@ -40,13 +40,22 @@ export const prebidRemoveAdUnits = (): ConfigureStep => (context: AdPipelineCont
   resolve();
 });
 
-export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep =>
-  (context: AdPipelineContext, _slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
-    if (prebidConfig.bidderSettings) {
-      context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
+export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep => {
+  let result: Promise<void>;
+
+  return (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+    if (!result) {
+      new Promise<void>(resolve => {
+        if (prebidConfig.bidderSettings) {
+          context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
+        }
+        resolve();
+      });
     }
-    resolve();
-  });
+    return result;
+  }
+
+};
 
 export const prebidPrepareRequestAds = (prebidConfig: Moli.headerbidding.PrebidConfig): PrepareRequestAdsStep =>
   (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise<Moli.SlotDefinition<Moli.AdSlot>[]>(resolve => {

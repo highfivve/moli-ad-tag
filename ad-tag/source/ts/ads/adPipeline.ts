@@ -81,7 +81,7 @@ export type ConfigureStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) =
  * - filter sizes
  *
  */
-export type DefineSlotsStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<SlotDefinition<any>[]>;
+export type DefineSlotsStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<SlotDefinition[]>;
 
 /**
  * ## Prepare RequestAds
@@ -95,7 +95,7 @@ export type DefineSlotsStep = (context: AdPipelineContext, slots: Moli.AdSlot[])
  * - remove stale prebid / a9 key-values
  *
  */
-export type PrepareRequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition<Moli.AdSlot>[]) => Promise<SlotDefinition<any>[]>;
+export type PrepareRequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<SlotDefinition[]>;
 
 /**
  * ## Request Bids
@@ -107,16 +107,16 @@ export type PrepareRequestAdsStep = (context: AdPipelineContext, slots: SlotDefi
  * - prebid requestBids / setGptTargeting
  * - a9 fetchBids
  */
-export type RequestBidsStep = (context: AdPipelineContext, slots: SlotDefinition<Moli.AdSlot>[]) => Promise<void>;
+export type RequestBidsStep = (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<void>;
 
 /**
  * ## RequestAds
  *
  * Fire googletag ad request.
  */
-export type RequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition<Moli.AdSlot>[]) => Promise<void>;
+export type RequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<void>;
 
-export interface IAdPiplineConfiguration {
+export interface IAdPipelineConfiguration {
 
   readonly init: InitStep[];
   readonly configure: ConfigureStep[];
@@ -136,7 +136,7 @@ export class AdPipeline {
   private requestId: number = 0;
 
   constructor(
-    private readonly config: IAdPiplineConfiguration,
+    private readonly config: IAdPipelineConfiguration,
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window,
     private readonly reportingService: ReportingService,

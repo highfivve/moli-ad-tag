@@ -28,10 +28,19 @@ const configureTargeting = (window: Window, targeting: Moli.Targeting | undefine
   }
 };
 
-export const gptInit = (): InitStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
-  context.window.googletag = window.googletag || { cmd: [] };
-  context.window.googletag.cmd.push(resolve);
-});
+export const gptInit = (): InitStep => {
+  let result: Promise<void>;
+  return (context: AdPipelineContext) => {
+    if (!result) {
+      result = new Promise<void>(resolve => {
+        context.logger.debug('GAM', 'init googletag stub');
+        context.window.googletag = window.googletag || { cmd: [] };
+        context.window.googletag.cmd.push(resolve);
+      });
+    }
+    return result;
+  };
+};
 
 /**
  * Destroy slots before anything. This step is required for single page applications to ensure
@@ -63,28 +72,37 @@ export const gptResetTargeting = (): ConfigureStep => (context: AdPipelineContex
   resolve();
 });
 
-export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
-  const env = config.environment || 'production';
-  switch (env) {
-    case 'production':
-      configureTargeting(window, config.targeting, env);
+export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
+  let result: Promise<void>;
+  return (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+    if (!result) {
+      result = new Promise<void>(resolve => {
+        const env = config.environment || 'production';
+        context.logger.debug('GAM', 'configure googletag');
+        switch (env) {
+          case 'production':
+            configureTargeting(window, config.targeting, env);
 
-      context.window.googletag.pubads().enableAsyncRendering();
-      context.window.googletag.pubads().disableInitialLoad();
-      context.window.googletag.pubads().enableSingleRequest();
+            context.window.googletag.pubads().enableAsyncRendering();
+            context.window.googletag.pubads().disableInitialLoad();
+            context.window.googletag.pubads().enableSingleRequest();
 
-      context.window.googletag.enableServices();
-      resolve();
-      return;
-    case 'test':
-      // Note that this call is actually important to initialize the content service. Otherwise
-      // the service won't be enabled with the `googletag.enableServices()`.
-      context.window.googletag.content().getSlots();
-      context.window.googletag.enableServices();
-      resolve();
-      return;
-  }
-});
+            context.window.googletag.enableServices();
+            resolve();
+            return;
+          case 'test':
+            // Note that this call is actually important to initialize the content service. Otherwise
+            // the service won't be enabled with the `googletag.enableServices()`.
+            context.window.googletag.content().getSlots();
+            context.window.googletag.enableServices();
+            resolve();
+            return;
+        }
+      });
+    }
+    return result;
+  };
+};
 
 export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
   const slotDefinitions = slots.map(moliSlot => {

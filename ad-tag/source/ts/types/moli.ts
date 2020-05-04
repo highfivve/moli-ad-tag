@@ -912,7 +912,7 @@ export namespace Moli {
    * This model lets you work with the materialized slot (`googletag.IAdSlot`), while having access to the
    * configuration settings from the `Moli.AdSlot` definition.
    */
-  export interface SlotDefinition<S extends Moli.AdSlot> {
+  export interface SlotDefinition<S extends Moli.AdSlot = Moli.AdSlot> {
     /** The moli adSlot configuration */
     readonly moliSlot: S;
 
