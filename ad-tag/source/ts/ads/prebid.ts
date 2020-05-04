@@ -197,5 +197,6 @@ const filterVideoPlayerSizes = (playerSize: prebidjs.IMediaTypeVideo['playerSize
  * If a slot is being refreshed or reloaded.
  */
 export const prebidRemoveHbKeyValues = (): PrepareRequestAdsStep => (context: AdPipelineContext, slots) => new Promise<Moli.SlotDefinition<any>[]>(resolve => {
+  // TODO check if prebid is taking care of this by itself in setGptTargetingAsync
   resolve(slots);
 });
