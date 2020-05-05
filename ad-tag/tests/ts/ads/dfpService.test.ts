@@ -28,7 +28,6 @@ describe('DfpService', () => {
   // set globals before test
   dom.window.googletag = googletagStub;
   dom.window.pbjs = pbjsStub;
-  dom.window.moliPbjs = pbjsStub;
 
   dom.window.apstag = apstagStub;
 
@@ -110,26 +109,6 @@ describe('DfpService', () => {
           // resolve queue and set stub
           (dom.window as any).pbjs.que[0]();
           dom.window.pbjs = pbjsStub;
-        })
-        .then(() => init);
-    });
-
-    it('should configure dom.window.moliPbjs.que if useMoliPbjs is set', () => {
-      (dom.window as any).moliPbjs = undefined;
-      const init = newDfpService().initialize({
-        slots: [],
-        consent: consentConfig,
-        logger: noopLogger,
-        prebid: { config: pbjsTestConfig, useMoliPbjs: true },
-        yieldOptimization: { provider: 'none' }
-      });
-
-      return sleep()
-        .then(() => {
-          expect(dom.window.moliPbjs.que).to.be.ok;
-          // resolve queue and set stub
-          (dom.window as any).moliPbjs.que[0]();
-          dom.window.moliPbjs = pbjsStub;
         })
         .then(() => init);
     });
