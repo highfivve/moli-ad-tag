@@ -1,4 +1,11 @@
-import { AdPipelineContext, ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from './adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep, LOW_PRIORITY,
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep,
+  RequestBidsStep
+} from './adPipeline';
 import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
 import { SizeConfigService } from './sizeConfigService';
@@ -53,19 +60,18 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
       });
     }
     return result;
-  }
-
+  };
 };
 
-export const prebidPrepareRequestAds = (prebidConfig: Moli.headerbidding.PrebidConfig): PrepareRequestAdsStep =>
-  (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise<Moli.SlotDefinition<Moli.AdSlot>[]>(resolve => {
+export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
+  (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => new Promise(resolve => {
     const prebidAdUnits = slots
       .filter(isPrebidSlotDefinition)
       .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
-        context.logger.debug('Prebid', `Prebid add ad unit: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
         const targeting = context.config.targeting;
         const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
         const floorPrice = priceRule ? priceRule.cpm : undefined;
+        context.logger.debug('Prebid', context.requestId, 'Price Rule', priceRule, moliSlot.domId);
         const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ?
           moliSlot.prebid({ keyValues: keyValues, floorPrice: floorPrice }) :
           moliSlot.prebid;
@@ -110,9 +116,13 @@ export const prebidPrepareRequestAds = (prebidConfig: Moli.headerbidding.PrebidC
           !isAdUnitDefined(adUnit, context.window);
       });
 
+    prebidAdUnits.forEach(adUnit => {
+      context.logger.debug('Prebid', context.requestId, `Prebid add ad unit: [Code] ${adUnit.code}`, adUnit);
+    });
     context.window.pbjs.addAdUnits(prebidAdUnits);
     resolve();
-  });
+  }), LOW_PRIORITY
+);
 
 export const prebidRequestBids = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): RequestBidsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise(resolve => {
   // It seems that the bidBackHandler can be triggered more than once. The reason might be that
@@ -205,7 +215,9 @@ const filterVideoPlayerSizes = (playerSize: prebidjs.IMediaTypeVideo['playerSize
 /**
  * If a slot is being refreshed or reloaded.
  */
-export const prebidRemoveHbKeyValues = (): PrepareRequestAdsStep => (context: AdPipelineContext, slots) => new Promise<Moli.SlotDefinition<any>[]>(resolve => {
-  // TODO check if prebid is taking care of this by itself in setGptTargetingAsync
-  resolve(slots);
-});
+export const prebidRemoveHbKeyValues = (): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
+  (context: AdPipelineContext, slots) => new Promise(resolve => {
+    // TODO check if prebid is taking care of this by itself in setGptTargetingAsync
+    resolve();
+  }), 10
+);

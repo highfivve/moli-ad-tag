@@ -1,9 +1,20 @@
-import { AdPipelineContext, PrepareRequestAdsStep } from './adPipeline';
+import { AdPipelineContext, HIGH_PRIORITY, mkPrepareRequestAdsStep, PrepareRequestAdsStep } from './adPipeline';
 import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { YieldOptimizationService } from './yieldOptimizationService';
 
-export const yieldOptimizationPrepareRequestAds = (yieldOptimizationService: YieldOptimizationService): PrepareRequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition<any>[]) => {
-  const slotsWithPriceRule = slots.map(slot => yieldOptimizationService.setTargeting(slot.adSlot));
-  return Promise.all(slotsWithPriceRule).then(() => slots);
-};
+/**
+ * This step adds a `priceRule` to the slot definition if possible. It does so by **mutating**
+ * the slot definition.
+ *
+ * @param yieldOptimizationService
+ */
+export const yieldOptimizationPrepareRequestAds = (yieldOptimizationService: YieldOptimizationService): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
+  (context: AdPipelineContext, slots: SlotDefinition[]) => {
+    context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
+    const slotsWithPriceRule = slots.map(slot => {
+      return yieldOptimizationService.setTargeting(slot.adSlot).then(priceRule => slot.priceRule = priceRule);
+    });
+    return Promise.all(slotsWithPriceRule);
+  }, HIGH_PRIORITY
+);

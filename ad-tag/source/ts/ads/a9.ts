@@ -59,11 +59,6 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
     resolve();
   });
 
-export const a9RemoveKeyValues = (): PrepareRequestAdsStep => (_context: AdPipelineContext, _slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise(resolve => {
-  // TODO implement
-  resolve();
-});
-
 export const a9RequestBids = (): RequestBidsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise<void>(resolve => {
   const filteredSlots = slots
     .filter(isA9SlotDefinition)

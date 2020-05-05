@@ -3,7 +3,6 @@ import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
-import { ReportingService } from './reportingService';
 
 /**
  * Decides which sizeConfigService to use - if the slot brings its own sizeConfig, it gets precedence over the
@@ -128,23 +127,11 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
         case 'production':
           adSlot.addService(context.window.googletag.pubads());
           context.logger.debug('GAM', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
-          // TODO priceRule is handled in another module and should be remove from the slotDefinitions
-          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({
-            moliSlot,
-            adSlot,
-            filterSupportedSizes,
-            priceRule: undefined
-          });
+          return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         case 'test':
           context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
           adSlot.addService(context.window.googletag.content());
-          // TODO priceRule is handled in another module and should be remove from the slotDefinitions
-          return Promise.resolve<SlotDefinition<Moli.AdSlot>>({
-            moliSlot,
-            adSlot,
-            filterSupportedSizes,
-            priceRule: undefined
-          });
+          return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         default:
           return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
@@ -159,7 +146,7 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
   return Promise.all(slotDefinitions);
 };
 
-export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition<any>[]) => new Promise<void>(resolve => {
+export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition[]) => new Promise<void>(resolve => {
   context.logger.debug('GAM', 'requestAds');
   switch (context.env) {
     case 'test':

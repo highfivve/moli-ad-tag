@@ -79,7 +79,6 @@ describe('Passback Service', () => {
     const adSlotDefinition: Moli.SlotDefinition<any> = {
       moliSlot: { domId: 'foo' } as any,
       adSlot: googleAdSlot,
-      priceRule: undefined,
       filterSupportedSizes: {} as any
     };
 
@@ -100,7 +99,6 @@ describe('Passback Service', () => {
     const adSlotDefinition: Moli.SlotDefinition<any> = {
       moliSlot: { domId: 'foo' } as any,
       adSlot: googleAdSlot,
-      priceRule: undefined,
       filterSupportedSizes: {} as any
     };
 
@@ -130,7 +128,6 @@ describe('Passback Service', () => {
     const adSlotDefinition: Moli.SlotDefinition<any> = {
       moliSlot: { domId: 'foo' } as any,
       adSlot: googleAdSlot,
-      priceRule: undefined,
       filterSupportedSizes: {} as any
     };
 

@@ -22,7 +22,7 @@ import {
   prebidRemoveHbKeyValues,
   prebidRequestBids
 } from './prebid';
-import { a9Configure, a9Init, a9RemoveKeyValues, a9RequestBids } from './a9';
+import { a9Configure, a9Init, a9RequestBids } from './a9';
 import { isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
@@ -132,7 +132,7 @@ export class AdService {
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits());
       }
-      prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds(config.prebid));
+      prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds());
       requestBids.push(prebidRequestBids(config.prebid, config.targeting));
     }
 
@@ -140,7 +140,6 @@ export class AdService {
     if (config.a9 && env === 'production') {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9));
-      prepareRequestAds.push(a9RemoveKeyValues());
       requestBids.push(a9RequestBids());
     }
 

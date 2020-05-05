@@ -911,6 +911,8 @@ export namespace Moli {
    *
    * This model lets you work with the materialized slot (`googletag.IAdSlot`), while having access to the
    * configuration settings from the `Moli.AdSlot` definition.
+   *
+   * It also contains meta information that are being added in the `prepareRequestAds` phase.
    */
   export interface SlotDefinition<S extends Moli.AdSlot = Moli.AdSlot> {
     /** The moli adSlot configuration */
@@ -922,8 +924,12 @@ export namespace Moli {
     /** The actual dfp slot returned by `googletag.defineSlot` or `googletag.defineOutOfPageSlot` */
     readonly adSlot: googletag.IAdSlot;
 
-    /** An optional price rule associated with this ad slot */
-    readonly priceRule: yield_optimization.PriceRule | undefined;
+    /**
+     * An optional price rule associated with this ad slot.
+     *
+     * This may be added by some step in the prepareRequestAds phase.
+     */
+    priceRule?: yield_optimization.PriceRule;
   }
 
   /** slot behaviour namespace */

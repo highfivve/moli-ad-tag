@@ -97,6 +97,44 @@
           "priceRuleId": 39707353
         }
       ]
+    }, {
+      "adUnitName": "appnexus-native-example-1",
+      "main": {
+        "priceRuleId": 39837386
+      },
+      "tests": [
+        {
+          "priceRuleId": 39836957
+        },
+        {
+          "priceRuleId": 39558984
+        },
+        {
+          "priceRuleId": 39837407
+        },
+        {
+          "priceRuleId": 39707353
+        }
+      ]
+    }, {
+      "adUnitName": "appnexus-native-example-2",
+      "main": {
+        "priceRuleId": 39837386
+      },
+      "tests": [
+        {
+          "priceRuleId": 39836957
+        },
+        {
+          "priceRuleId": 39558984
+        },
+        {
+          "priceRuleId": 39837407
+        },
+        {
+          "priceRuleId": 39707353
+        }
+      ]
     }
   ]
 }

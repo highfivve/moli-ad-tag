@@ -95,7 +95,14 @@ export type DefineSlotsStep = (context: AdPipelineContext, slots: Moli.AdSlot[])
  * - remove stale prebid / a9 key-values
  *
  */
-export type PrepareRequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<SlotDefinition[]>;
+export type PrepareRequestAdsStep = {
+  (context: AdPipelineContext, slots: SlotDefinition[]): Promise<unknown>;
+
+  /**
+   * higher number means higher priority means runs before lower priorties
+   */
+  readonly priority: number;
+};
 
 /**
  * ## Request Bids
@@ -126,6 +133,13 @@ export interface IAdPipelineConfiguration {
   readonly requestAds: RequestAdsStep;
 }
 
+export const HIGH_PRIORITY = 100;
+export const LOW_PRIORITY = 10;
+
+export const mkPrepareRequestAdsStep = (fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<unknown>, priority: number): PrepareRequestAdsStep => Object.assign(
+  fn, { priority: priority }
+);
+
 export class AdPipeline {
 
   /**
@@ -141,7 +155,7 @@ export class AdPipeline {
     private readonly window: Window,
     private readonly reportingService: ReportingService,
     private readonly slotEventService: SlotEventService
-    ) {
+  ) {
   }
 
   /**
@@ -165,7 +179,7 @@ export class AdPipeline {
       slotEventService: this.slotEventService,
       window: this.window
     };
-    this.logger.debug('AdPipeline', currentRequestId, `starting run ${currentRequestId}`);
+    this.logger.debug('AdPipeline', `starting run with requestId ${currentRequestId}`);
     this.init = this.init ? this.init : this.logStage('init', currentRequestId).then(() => Promise.all(this.config.init.map(step => step(context))));
 
     return this.init
@@ -173,7 +187,7 @@ export class AdPipeline {
       .then(() => this.logStage('defineSlots', currentRequestId).then(() => this.config.defineSlots(context, slots)))
       .then((definedSlots) => {
         return this.logStage('prepareRequestAds', currentRequestId)
-          .then(() => Promise.all(this.config.prepareRequestAds.map(step => step(context, definedSlots))))
+          .then(() => this.runPrepareRequestAds(context, definedSlots))
           .then(() => this.logStage('requestBids', currentRequestId))
           // TODO add a general timeout for the requestBids call
           // TODO add a catch call to not break the request chain
@@ -185,6 +199,29 @@ export class AdPipeline {
         return Promise.reject(error);
       });
   }
+
+  private runPrepareRequestAds = (context: AdPipelineContext, definedSlots: Moli.SlotDefinition[]) => {
+    const byPriority = new Map<number, PrepareRequestAdsStep[]>();
+    this.config.prepareRequestAds.forEach(step => {
+      const steps = byPriority.get(step.priority);
+      if (steps) {
+        steps.push(step);
+      } else {
+        byPriority.set(step.priority, [ step ]);
+      }
+    });
+
+    return Array.from(byPriority.entries())
+      // order by priority. Higher priorities first
+      .sort(([ prio1 ], [ prio2 ]) => prio1 > prio2 ? -1 : 1)
+      // reduce to a single promise by chaining in order of priority
+      .reduce((prevSteps, [ priority, steps ]) => {
+        return prevSteps.then(() => {
+          context.logger.debug('AdPipeline', context.requestId, `run prepareRequestAds with priority ${priority}`);
+          return Promise.all(steps.map(step => step(context, definedSlots)));
+        });
+      }, Promise.resolve<unknown>(undefined));
+  };
 
   private logStage(stageName: string, requestId: number): Promise<void> {
     return new Promise<void>(resolve => {
