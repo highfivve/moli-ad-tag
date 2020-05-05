@@ -3,13 +3,64 @@ import { googletag } from '../../../source/ts/types/googletag';
 import { IPerformanceMeasurementService } from './../util/performanceService';
 import { SlotEventService } from './slotEventService';
 
+export interface IReportingService {
+
+  /**
+   * Adds all required listeners and starts gathering performance metrics.
+   *
+   * @param adSlots all available ad slots that will be requested.
+   *        Should not contain lazy loading slots as these skew the results
+   */
+  initialize(adSlots: Moli.AdSlot[]): void;
+
+  /**
+   * Set a marker when the given adSlot is being refreshed.
+   * @param adSlot
+   */
+  markRefreshed(adSlot: Moli.AdSlot): void;
+
+  /**
+   * @param callIndex describes which call should be marked. Prebid slots can be requested
+   *        multiple times, which is why we need to add this information to the mark name.
+   */
+  markPrebidSlotsRequested(callIndex: number): void;
+
+  /**
+   * @param callIndex describes which call should be marked. Prebid slots can be requested
+   *        multiple times, which is why we need to add this information to the mark name.
+   */
+  measureAndReportPrebidBidsBack(callIndex: number): void;
+
+  /**
+   * @param callIndex describes which call should be marked. Prebid slots can be requested
+   *        multiple times, which is why we need to add this information to the mark name.
+   */
+  markA9fetchBids(callIndex: number): void;
+
+  /**
+   * @param callIndex describes which call should be marked. Prebid slots can be requested
+   *        multiple times, which is why we need to add this information to the mark name.
+   */
+  measureAndReportA9BidsBack(callIndex: number): void;
+
+  /**
+   * Set a marker when the cmp started loading
+   */
+  markCmpInitialization(): void;
+
+  /**
+   * Creates a performance measure for `cmp_load_time` metric and reports it
+   */
+  measureCmpLoadTime(): void;
+}
+
 /**
  * ## Reporting Service
  *
  * Provides an API for reporting and exports Web Performance API marks and measures.
  *
  */
-export class ReportingService {
+export class ReportingService implements IReportingService {
 
   private readonly adUnitRegex: string | RegExp;
 
@@ -70,12 +121,6 @@ export class ReportingService {
   }
 
 
-  /**
-   * Adds all required listeners and starts gathering performance metrics.
-   *
-   * @param adSlots all available ad slots that will be requested.
-   *        Should not contain lazy loading slots as these skew the results
-   */
   public initialize(adSlots: Moli.AdSlot[]): void {
     this.performanceService.mark('dfp_load_start');
     this.measureAndReportFirstAdRenderTime();
@@ -89,27 +134,15 @@ export class ReportingService {
   }
 
 
-  /**
-   * Set a marker when the given adSlot is being refreshed.
-   * @param adSlot
-   */
   public markRefreshed(adSlot: Moli.AdSlot): void {
     this.performanceService.mark(`${this.minimalAdUnitName(adSlot.adUnitPath)}_refreshed`);
   }
 
 
-  /**
-   * @param callIndex describes which call should be marked. Prebid slots can be requested
-   *        multiple times, which is why we need to add this information to the mark name.
-   */
   public markPrebidSlotsRequested(callIndex: number): void {
     this.performanceService.mark(`prebid_requested_${callIndex}`);
   }
 
-  /**
-   * @param callIndex describes which call should be marked. Prebid slots can be requested
-   *        multiple times, which is why we need to add this information to the mark name.
-   */
   public measureAndReportPrebidBidsBack(callIndex: number): void {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName('prebidLoad');
     this.performanceService.measure(
@@ -138,18 +171,10 @@ export class ReportingService {
     }
   }
 
-  /**
-   * @param callIndex describes which call should be marked. Prebid slots can be requested
-   *        multiple times, which is why we need to add this information to the mark name.
-   */
   public markA9fetchBids(callIndex: number): void {
     this.performanceService.mark(`a9_requested_${callIndex}`);
   }
 
-  /**
-   * @param callIndex describes which call should be marked. Prebid slots can be requested
-   *        multiple times, which is why we need to add this information to the mark name.
-   */
   public measureAndReportA9BidsBack(callIndex: number): void {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName('a9Load');
     this.performanceService.measure(`${measure}_${callIndex}`, `a9_requested_${callIndex}`, `a9_bids_back_${callIndex}`);
@@ -170,16 +195,10 @@ export class ReportingService {
     }
   }
 
-  /**
-   * Set a marker when the cmp started loading
-   */
   public markCmpInitialization(): void {
     this.performanceService.mark('cmp_load_start');
   }
 
-  /**
-   * Creates a performance measure for `cmp_load_time` metric and reports it
-   */
   public measureCmpLoadTime(): void {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName('cmpLoad');
     this.performanceService.mark('cmp_load_end');

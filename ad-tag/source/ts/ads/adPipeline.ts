@@ -1,7 +1,7 @@
 import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { LabelConfigService } from './labelConfigService';
-import { ReportingService } from './reportingService';
+import { IReportingService } from './reportingService';
 import { SlotEventService } from './slotEventService';
 
 /**
@@ -36,7 +36,7 @@ export type AdPipelineContext = {
   /**
    * enables steps to access the reporting API
    */
-  readonly reportingService: ReportingService;
+  readonly reportingService: IReportingService;
 
   /**
    * access to the slot event service API
@@ -153,7 +153,7 @@ export class AdPipeline {
     private readonly config: IAdPipelineConfiguration,
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window,
-    private readonly reportingService: ReportingService,
+    private readonly reportingService: IReportingService,
     private readonly slotEventService: SlotEventService
   ) {
   }
@@ -162,6 +162,9 @@ export class AdPipeline {
    * run the pipeline
    */
   run(slots: Moli.AdSlot[], config: Moli.MoliConfig): Promise<void> {
+    if (slots.length === 0) {
+      return Promise.resolve();
+    }
     const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
     const labelConfigService = new LabelConfigService(config.labelSizeConfig || [], extraLabels, this.window);
 
@@ -181,7 +184,6 @@ export class AdPipeline {
     };
     this.logger.debug('AdPipeline', `starting run with requestId ${currentRequestId}`);
     this.init = this.init ? this.init : this.logStage('init', currentRequestId).then(() => Promise.all(this.config.init.map(step => step(context))));
-
     return this.init
       .then(() => this.logStage('configure', currentRequestId).then(() => Promise.all(this.config.configure.map(step => step(context, slots)))))
       .then(() => this.logStage('defineSlots', currentRequestId).then(() => this.config.defineSlots(context, slots)))
