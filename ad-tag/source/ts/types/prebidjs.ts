@@ -219,7 +219,12 @@ export namespace prebidjs {
     /**
      * All supported id providers
      */
-    export type UserIdProvider = IUnifiedIdProvider | IDigitTrustProvider | ICriteoProvider | IID5Provider | IPubCommonIdProvider;
+    export type UserIdProvider =
+      IUnifiedIdProvider
+      | IDigitTrustProvider
+      | ICriteoProvider
+      | IID5Provider
+      | IPubCommonIdProvider;
 
     interface IUserIdProvider<P, N extends string> {
       /**
@@ -239,12 +244,13 @@ export namespace prebidjs {
        */
       readonly storage?: IUserIdStorage;
     }
+
     export interface IUserIdStorage {
 
       /**
-       * 	The publisher can specify some kind of local storage in which to store the results of the call to get the
-       * 	user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the
-       * 	ID system is managing its own storage
+       *  The publisher can specify some kind of local storage in which to store the results of the call to get the
+       *  user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the
+       *  ID system is managing its own storage
        */
       readonly type: 'cookie' | 'html5';
 
@@ -301,9 +307,9 @@ export namespace prebidjs {
 
       /**
        *
-       * 	Used only if the page has a separate mechanism for storing the Unified ID. The value is an object
-       * 	containing the values to be sent to the adapters. In this scenario, no URL is called and nothing
-       * 	is added to local storage
+       *  Used only if the page has a separate mechanism for storing the Unified ID. The value is an object
+       *  containing the values to be sent to the adapters. In this scenario, no URL is called and nothing
+       *  is added to local storage
        *
        * @example
        * ```json
@@ -318,26 +324,29 @@ export namespace prebidjs {
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#unified-id
      */
-    export interface IUnifiedIdProvider extends IUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> { }
+    export interface IUnifiedIdProvider extends IUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {
+    }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#criteo-id-for-exchanges
      */
-    export interface ICriteoProvider extends IUserIdProvider<undefined, 'criteo'> {  }
+    export interface ICriteoProvider extends IUserIdProvider<undefined, 'criteo'> {
+    }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#digitrust
      */
     export interface IDigitTrustProviderParams {
-        readonly init: {
-          readonly member: string;
-          readonly site: string;
-        };
-        /** Allows init error handling */
-        readonly callback?: ((result: any) => void);
+      readonly init: {
+        readonly member: string;
+        readonly site: string;
+      };
+      /** Allows init error handling */
+      readonly callback?: ((result: any) => void);
     }
 
-    export interface IDigitTrustProvider extends IUserIdProvider<IDigitTrustProviderParams, 'digitrust'> { }
+    export interface IDigitTrustProvider extends IUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {
+    }
 
     export interface IID5ProviderParams {
       /***
@@ -355,12 +364,14 @@ export namespace prebidjs {
      *
      * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
      */
-    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5'> { }
+    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5'> {
+    }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
      */
-    export interface IPubCommonIdProvider extends IUserIdProvider<undefined, 'pubCommonId'> { }
+    export interface IPubCommonIdProvider extends IUserIdProvider<undefined, 'pubCommonId'> {
+    }
 
 
     export interface IFilterSettingsConfig {
@@ -625,7 +636,7 @@ export namespace prebidjs {
    */
   interface IMediaTypeNativeRequirementImage extends IMediaTypeNativeRequirement {
 
-    readonly sizes?: [number, number];
+    readonly sizes?: [ number, number ];
 
     readonly aspect_ratios?: MediaTypeNativeAspectRatio[];
   }
@@ -910,6 +921,7 @@ export namespace prebidjs {
   export const ShowHeroes = 'showheroesBs';
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
+  export const Rubicon = 'rubicon';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -931,7 +943,8 @@ export namespace prebidjs {
     | typeof Spotx
     | typeof ShowHeroes
     | typeof Xaxis
-    | typeof DSPX;
+    | typeof DSPX
+    | typeof Rubicon;
 
   /**
    * A bid object.
@@ -1655,6 +1668,96 @@ export namespace prebidjs {
   }
 
   /**
+   * @see http://prebid.org/dev-docs/bidders/rubicon.html
+   */
+  export interface IRubiconParams {
+
+    /**
+     * The publisher account ID
+     * @example '4934'
+     */
+    readonly accountId: string;
+
+    /**
+     *  The site ID
+     * @example '13945'
+     */
+    readonly siteId: string;
+
+    /**
+     * The zone ID
+     * @example '23948'
+     */
+    readonly zoneId: string;
+
+    /**
+     * Array of Rubicon Project size IDs. If not specified, the system will try to
+     * convert from the AdUnit’s mediaTypes.banner.sizes.
+     */
+    readonly sizes?: number[];
+
+    /**
+     * An object defining arbitrary key-value pairs concerning the page for use in targeting. The values must be arrays.
+     * @example `{"rating":["5-star"], "prodtype":["tech","mobile"]}`
+     */
+    readonly inventory?: { [key: string]: string[] };
+
+    /**
+     * An object defining arbitrary key-value pairs concerning the visitor for use in targeting. The values must be arrays.
+     * @example `{"ucat":["new"], "search":["iphone"]}`
+     */
+    readonly visitor?: { [key: string]: string[] };
+
+    /**
+     * Set the page position. Valid values are “atf” and “btf”.
+     */
+    readonly position?: 'atf' | 'btf';
+
+    /**
+     * Site-specific user ID may be reflected back in creatives for analysis.
+     * Note that userId needs to be the same for all slots.
+     */
+    readonly userId?: string;
+
+    /**
+     * Sets the global floor – no bids will be made under this value.
+     * @example 0.50
+     */
+    readonly floor?: number;
+
+    /**
+     * Video targeting parameters
+     * Required for video
+     */
+    readonly video?: {
+      /**
+       *  Video player width in pixels. If not specified, takes width set in mediaTypes.video.playerSize
+       *  @example '640'
+       */
+      readonly playerWidth?: string;
+
+      /**
+       *  Video player height in pixels. If not specified, takes height set in mediaTypes.video.playerSize
+       *  @example '360'
+       */
+      readonly playerHeight?: string;
+
+      /**
+       * Indicates the language of the content video, in ISO 639-1/alpha2. Highly recommended for successful
+       * monetization for pre-, mid-, and post-roll video ads. Not applicable for interstitial and outstream.
+       */
+      readonly language?: string;
+
+    };
+  }
+
+  /**
+   * @see http://prebid.org/dev-docs/bidders/rubicon.html
+   */
+  export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> {
+  }
+
+  /**
    * Supported bid object types.
    */
   export type IBid =
@@ -1673,7 +1776,8 @@ export namespace prebidjs {
     | ISpotXBid
     | IShowHeroesBid
     | IXaxisBid
-    | IDSPXBid;
+    | IDSPXBid
+    | IRubiconBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
