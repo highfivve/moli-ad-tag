@@ -108,7 +108,19 @@ const ixBid = (siteId: string, size: [ number, number ], bidFloor: number | unde
       siteId: siteId,
       size: size,
       ...bidConfig
-    }
+    },
+    labelAll: [ prebidjs.IndexExchange]
+  };
+};
+
+const rubiconBid = (accountId: string, siteId: string, zoneId: string, bidFloor: number | undefined): prebidjs.IRubiconBid => {
+  return {
+    bidder: prebidjs.Rubicon,
+    params: {
+      accountId, siteId, zoneId,
+      floor: bidFloor
+    },
+    labelAll: [ prebidjs.Rubicon]
   };
 };
 
@@ -209,7 +221,8 @@ export const adConfiguration: Moli.MoliConfig = {
             },
             bids: [
               dspxBid('101'),
-              ixBid('0', [ 300, 250 ], context.floorPrice)
+              ixBid('0', [ 300, 250 ], context.floorPrice),
+              rubiconBid('14062', '70608', '498816', context.floorPrice)
             ]
           }
         };

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.43.0
+
+[GD-2002](https://jira.gutefrage.net/browse/GD-2002). Add rubicon types.
+
 ## 1.42.0
 
 [GD-1978](https://jira.gutefrage.net/browse/GD-1978). Add user id module types.

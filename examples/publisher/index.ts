@@ -16,6 +16,7 @@ import 'prebid.js/modules/ixBidAdapter';
 import 'prebid.js/modules/dspxBidAdapter';
 import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
+import 'prebid.js/modules/rubiconBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
