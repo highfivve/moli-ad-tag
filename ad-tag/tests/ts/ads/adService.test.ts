@@ -64,25 +64,86 @@ describe('AdService', () => {
 
   describe('initialize', () => {
 
-    describe('gpt', () => {
-      it('should add the gptInit step', () => {
-        return initialize().then(pipeline => {
-          expect(pipeline.init).to.have.length.greaterThan(0);
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).to.contain('gpt-init');
-        });
+    it('should add the await-dom-ready step', () => {
+      return initialize().then(pipeline => {
+        expect(pipeline.init).to.have.length.greaterThan(0);
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('await-dom-ready');
       });
+    });
 
-      it('should add the gptInit step', () => {
-        return initialize().then(pipeline => {
-          expect(pipeline.init).to.have.length.greaterThan(0);
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).to.contain('gpt-init');
-        });
+    it('should add the gptInit step', () => {
+      return initialize().then(pipeline => {
+        expect(pipeline.init).to.have.length.greaterThan(0);
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('gpt-init');
       });
+    });
+  });
 
+  describe('configure', () => {
+    it('should add the gptConfigure step', () => {
+      return initialize().then(pipeline => {
+        expect(pipeline.configure).to.have.length.greaterThan(0);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('gpt-configure');
+      });
+    });
+
+    describe('prebid', () => {
+      it('initialize pbjs', () => {
+        expect.fail('not implemented yet');
+      });
+    });
+
+    describe('a9', () => {
+      it('initialize apstag', () => {
+        expect.fail('not implemented yet');
+      });
     });
 
   });
 
+  describe('defineSlots', () => {
+    it('should add the gptDefineStlos step', () => {
+      expect.fail('not implemented yet');
+    });
+  });
+
+  describe('prepareRequestAds', () => {
+
+    describe('prebid', () => {
+      it('should add the gptDefineStlos step', () => {
+        expect.fail('not implemented yet');
+      });
+    });
+
+    describe('yieldOptimization', () => {
+      it('should enhance ad slots with yield optimizations', () => {
+        expect.fail('not implemented yet');
+      });
+      it('should set the price rule in the given slot definitions', () => {
+        expect.fail('not implemented yet');
+      });
+    });
+
+    describe('passback', () => {
+      it('should configure passback slots', () => {
+        expect.fail('not implemented yet');
+      });
+    });
+  });
+
+  describe('requestBids', () => {
+    describe('prebid', () => {
+      it('should request prebid bids', () => {
+        expect.fail('not implemented yet');
+      });
+    });
+    describe('a9', () => {
+      it('request a9 bids', () => {
+        expect.fail('not implemented yet');
+      });
+    });
+  });
 });
