@@ -109,7 +109,7 @@ const ixBid = (siteId: string, size: [ number, number ], bidFloor: number | unde
       size: size,
       ...bidConfig
     },
-    labelAll: [ prebidjs.IndexExchange]
+    labelAll: [ prebidjs.IndexExchange ]
   };
 };
 
@@ -120,7 +120,7 @@ const rubiconBid = (accountId: string, siteId: string, zoneId: string, bidFloor:
       accountId, siteId, zoneId,
       floor: bidFloor
     },
-    labelAll: [ prebidjs.Rubicon]
+    labelAll: [ prebidjs.Rubicon ]
   };
 };
 
@@ -130,13 +130,13 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       position: 'in-page',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      adUnitPath: '//55155651/test-ad-unit',
+      sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
       passbackSupport: true,
       sizeConfig: [
         {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ]
         }
       ]
     },
@@ -144,16 +144,12 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       domId: 'eager-loading-adslot-not-in-dom',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
+      adUnitPath: '/55155651/test-ad-unit',
+      sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
       sizeConfig: [
         {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ] ]
-        },
-        {
-          mediaQuery: '(max-width: 767px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ] ]
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ]
         }
       ]
     },
@@ -349,7 +345,7 @@ export const adConfiguration: Moli.MoliConfig = {
         }
       },
       adUnitPath: '/55155651/prebid_test',
-      sizes: [ [ 300, 250 ]],
+      sizes: [ [ 300, 250 ] ],
       passbackSupport: true,
       sizeConfig: [
         {

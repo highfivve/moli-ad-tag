@@ -20,7 +20,7 @@ import 'prebid.js/modules/rubiconBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import Cmp from '@highfivve/module-cmp-faktor';
+// import Cmp from '@highfivve/module-cmp-faktor';
 import Confiant from '@highfivve/module-confiant';
 
 prebid.processQueue();
@@ -33,7 +33,7 @@ moli.registerModule(new Confiant({
 }, window));
 
 // cmp
-moli.registerModule(new Cmp({ autoOptIn: true }, window));
+// moli.registerModule(new Cmp({ autoOptIn: true }, window));
 
 // init moli
 moli.configure(adConfiguration);
