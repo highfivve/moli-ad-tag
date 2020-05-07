@@ -2,8 +2,8 @@ import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger } from '../util/logging';
 import { Moli } from '../types/moli';
 import { AdPipeline, ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from './adPipeline';
-import { SlotEventService } from './slotEventService';
-import { ReportingService } from './reportingService';
+import { SlotEventService, slotEventServiceConfigure } from './slotEventService';
+import { reportingConfigure, ReportingService } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import {
@@ -83,9 +83,6 @@ export class AdService {
     this.logger = getLogger(config, this.window);
     this.logger.debug('AdService', `Initializing with environment ${env}`);
 
-    // slot and reporting service are not usable until `initialize()` is called on both services
-
-
     // always create performance marks and metrics even without a config
     const reportingConfig: Moli.reporting.ReportingConfig = config.reporting || {
       reporters: [],
@@ -106,7 +103,9 @@ export class AdService {
     ];
 
     const configure: ConfigureStep[] = [
-      gptConfigure(config)
+      gptConfigure(config),
+      reportingConfigure(reportingService),
+      slotEventServiceConfigure(this.slotEventService)
     ];
 
     if (isSinglePageApp) {
