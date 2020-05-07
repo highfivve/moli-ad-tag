@@ -130,6 +130,13 @@ export namespace apstag {
      */
     sizes: [number, number][];
   }
+
+  export type WindowA9 = {
+    /**
+     * global apstag object
+     */
+    apstag: apstag.IApsTag;
+  };
 }
 
 /* tslint:disable:interface-name */

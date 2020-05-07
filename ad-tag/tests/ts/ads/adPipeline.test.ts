@@ -3,19 +3,15 @@ import { expect, use } from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { googletag } from '../../../source/ts/types/googletag';
-import { prebidjs } from '../../../source/ts/types/prebidjs';
-import { apstag } from '../../../source/ts/types/apstag';
-import { DfpService } from '../../../source/ts/ads/dfpService';
 import { Moli } from '../../../source/ts/types/moli';
-import { createAssetLoaderService, AssetLoadMethod } from '../../../source/ts/util/assetLoaderService';
-import { cookieService } from '../../../source/ts/util/cookieService';
-import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
-import { pbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
-import { apstagStub, a9ConfigStub } from '../stubs/a9Stubs';
-import { cmpModule, consentConfig, emptyConfig, noopLogger } from '../stubs/moliStubs';
-import YieldOptimizationConfig = Moli.yield_optimization.YieldOptimizationConfig;
-import { AdPipeline, IAdPipelineConfiguration } from '../../../source/ts/ads/adPipeline';
+
+import {  emptyConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  AdPipeline,
+  ConfigureStep,
+  IAdPipelineConfiguration,
+  InitStep
+} from '../../../source/ts/ads/adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 
@@ -46,40 +42,13 @@ describe('AdPipeline', () => {
 
   const dom = createDom();
 
-  const googletagStub = createGoogletagStub();
-  const pubAdsServiceStub = googletagStub.pubads();
-  // set globals before test
-  dom.window.googletag = googletagStub;
-  dom.window.pbjs = pbjsStub;
-
-  dom.window.apstag = apstagStub;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
-  const assetLoaderService = createAssetLoaderService(dom.window);
-
-  const assetLoaderFetch = sandbox.stub(assetLoaderService, 'loadScript');
-  const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
 
   const reportingService = reportingServiceStub();
-
   const slotEventService = new SlotEventService(noopLogger);
 
-  // googletag spies
-  const googletagDefineSlotStub = sandbox.stub(dom.window.googletag, 'defineSlot');
-  const googleTagPubAdsSpy = sandbox.spy(dom.window.googletag, 'pubads');
-  const googletagDefineOutOfPageSlotStub = sandbox.stub(dom.window.googletag, 'defineOutOfPageSlot');
-  const pubAdsServiceStubRefreshSpy = sandbox.spy(pubAdsServiceStub, 'refresh');
-  const setTargetingStub = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-
-  // pbjs spies
-  const pbjsAddAdUnitSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-  const pbjsRequestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-  const pbjsSetTargetingForGPTAsyncSpy = sandbox.spy(dom.window.pbjs, 'setTargetingForGPTAsync');
-
-  // a9 apstag spies
-  const apstagFetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-  const apstagSetDisplayBidsSpy = sandbox.spy(dom.window.apstag, 'setDisplayBids');
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
@@ -98,20 +67,10 @@ describe('AdPipeline', () => {
   });
 
   beforeEach(() => {
-    // reset the before each test
-    dom.window.googletag = googletagStub;
-    dom.window.pbjs = pbjsStub;
-    dom.window.apstag = apstagStub;
-
-    // by default resolve all assets
-    assetLoaderFetch.resolves();
 
     // by default all DOM elements exist
     getElementByIdStub.returns({} as HTMLElement);
 
-    // default stub behaviour
-    googletagDefineSlotStub.callThrough();
-    googletagDefineOutOfPageSlotStub.callThrough();
   });
 
   afterEach(() => {
@@ -121,9 +80,16 @@ describe('AdPipeline', () => {
   describe('run', () => {
 
     it('should not run when the slots array is empty', () => {
-      const pipeline = newAdPipeline(emptyPipelineConfig);
+      let callCount: number = 0;
+      const initSteps: InitStep[] = [
+        (() => {
+          callCount = callCount + 1;
+          return Promise.resolve();
+        })
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
       return pipeline.run([], emptyConfig).then(() => {
-        expect(googletagDefineSlotStub).has.not.been.called;
+        expect(callCount).to.be.equals(0);
       });
     });
 
@@ -132,6 +98,47 @@ describe('AdPipeline', () => {
       return expect(pipeline.run([ adSlot ], emptyConfig)).eventually.be.rejectedWith('init failed');
     });
 
+    it('should run the init phase only once', () => {
+      let callCount: number = 0;
+      const initSteps: InitStep[] = [
+        (() => {
+          callCount = callCount + 1;
+          return Promise.resolve();
+        })
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
+
+      return pipeline.run([ adSlot ], emptyConfig)
+        .then(() => {
+          expect(callCount).to.be.equals(1);
+          return pipeline.run([ adSlot ], emptyConfig);
+        })
+        .then(() => {
+          expect(callCount).to.be.equals(1);
+        });
+    });
+  });
+
+  describe('pipeline context', () => {
+    it('should contain an auto incremented request id', () => {
+      let requestId: number | undefined;
+      const configureStep: ConfigureStep[] = [
+        (context => {
+          requestId = context.requestId;
+          return Promise.resolve();
+        })
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+
+      return pipeline.run([ adSlot ], emptyConfig)
+        .then(() => {
+          expect(requestId).to.be.equals(1);
+          return pipeline.run([ adSlot ], emptyConfig);
+        })
+        .then(() => {
+          expect(requestId).to.be.equals(2);
+        });
+    });
   });
 
 });

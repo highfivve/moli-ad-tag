@@ -1,9 +1,9 @@
-import { AdPipelineContext, ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from './adPipeline';
+import { AdPipelineContext, ConfigureStep, InitStep, mkConfigureStep, mkInitStep, RequestBidsStep } from './adPipeline';
 import { Moli } from '../types/moli';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { SizeConfigService } from './sizeConfigService';
 
-const isA9SlotDefinition = (slotDefinition: Moli.SlotDefinition<Moli.AdSlot>): slotDefinition is Moli.SlotDefinition<Moli.A9AdSlot> => {
+const isA9SlotDefinition = (slotDefinition: Moli.SlotDefinition): slotDefinition is Moli.SlotDefinition<Moli.A9AdSlot> => {
   return !!slotDefinition.moliSlot.a9;
 };
 
@@ -18,15 +18,16 @@ const isA9SlotDefinition = (slotDefinition: Moli.SlotDefinition<Moli.AdSlot>): s
  *
  * @returns {Promise<void>}
  */
-export const a9Init = (config: Moli.headerbidding.A9Config, assetService: IAssetLoaderService): InitStep =>
+export const a9Init = (config: Moli.headerbidding.A9Config, assetService: IAssetLoaderService): InitStep => mkInitStep(
+  'a9-init',
   (context: AdPipelineContext) => new Promise<void>(resolve => {
-    context.window.apstag = window.apstag || {
+    context.window.apstag = context.window.apstag || {
       _Q: [],
       init: function (): void {
-        window.apstag._Q.push([ 'i', arguments ]);
+        context.window.apstag._Q.push([ 'i', arguments ]);
       },
       fetchBids: function (): void {
-        window.apstag._Q.push([ 'f', arguments ]);
+        context.window.apstag._Q.push([ 'f', arguments ]);
       },
       setDisplayBids: function (): void {
         return;
@@ -44,9 +45,11 @@ export const a9Init = (config: Moli.headerbidding.A9Config, assetService: IAsset
     });
 
     resolve();
-  });
+  })
+);
 
-export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep =>
+export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep => mkConfigureStep(
+  'a9-configure',
   (context: AdPipelineContext, _slots: Moli.AdSlot[]) => new Promise<void>(resolve => {
     context.window.apstag.init({
       pubID: config.pubID,
@@ -57,7 +60,8 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
       }
     });
     resolve();
-  });
+  }));
+
 
 export const a9RequestBids = (): RequestBidsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise<void>(resolve => {
   const filteredSlots = slots

@@ -1,4 +1,12 @@
-import { AdPipelineContext, ConfigureStep, DefineSlotsStep, InitStep, RequestAdsStep } from './adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  DefineSlotsStep,
+  InitStep,
+  mkConfigureStep,
+  mkInitStep,
+  RequestAdsStep
+} from './adPipeline';
 import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { SizeConfigService } from './sizeConfigService';
@@ -29,7 +37,7 @@ const configureTargeting = (window: Window, targeting: Moli.Targeting | undefine
 
 export const gptInit = (): InitStep => {
   let result: Promise<void>;
-  return (context: AdPipelineContext) => {
+  return mkInitStep('gpt-init', (context: AdPipelineContext) => {
     if (!result) {
       result = new Promise<void>(resolve => {
         context.logger.debug('GAM', 'init googletag stub');
@@ -38,19 +46,19 @@ export const gptInit = (): InitStep => {
       });
     }
     return result;
-  };
+  });
 };
 
 /**
  * Destroy slots before anything. This step is required for single page applications to ensure
  * a fresh setup
  */
-export const gptDestroyAdSlots = (): ConfigureStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStep('gpt-destroy-ad-slots', (context: AdPipelineContext) => new Promise<void>(resolve => {
   context.logger.debug('GAM', 'destroy all ad slots');
   context.slotEventService.removeAllEventSources(context.window);
   context.window.googletag.destroySlots();
   resolve();
-});
+}));
 
 /**
  * Reset the gpt targeting configuration (key-values) and uses the targeting information from
@@ -61,7 +69,7 @@ export const gptDestroyAdSlots = (): ConfigureStep => (context: AdPipelineContex
  *
  * @param config
  */
-export const gptResetTargeting = (): ConfigureStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const gptResetTargeting = (): ConfigureStep => mkConfigureStep('gpt-reset-targeting', (context: AdPipelineContext) => new Promise<void>(resolve => {
   if (context.config.environment === 'production') {
     context.logger.debug('GAM', 'reset top level targeting');
     context.window.googletag.pubads().clearTargeting();
@@ -69,11 +77,11 @@ export const gptResetTargeting = (): ConfigureStep => (context: AdPipelineContex
   }
 
   resolve();
-});
+}));
 
 export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
   let result: Promise<void>;
-  return (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+  return mkConfigureStep('gpt-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
     if (!result) {
       result = new Promise<void>(resolve => {
         const env = config.environment || 'production';
@@ -100,7 +108,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
       });
     }
     return result;
-  };
+  });
 };
 
 export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {

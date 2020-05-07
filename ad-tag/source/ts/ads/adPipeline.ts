@@ -3,6 +3,7 @@ import SlotDefinition = Moli.SlotDefinition;
 import { LabelConfigService } from './labelConfigService';
 import { IReportingService } from './reportingService';
 import { SlotEventService } from './slotEventService';
+import { apstag } from '../types/apstag';
 
 /**
  * Context passed to every pipeline step.
@@ -46,7 +47,7 @@ export type AdPipelineContext = {
   /**
    * access to the global window. Never access the global window object
    */
-  readonly window: Window;
+  readonly window: Window & apstag.WindowA9;
 };
 
 /**
@@ -136,9 +137,23 @@ export interface IAdPipelineConfiguration {
 export const HIGH_PRIORITY = 100;
 export const LOW_PRIORITY = 10;
 
-export const mkPrepareRequestAdsStep = (fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<unknown>, priority: number): PrepareRequestAdsStep => Object.assign(
-  fn, { priority: priority }
-);
+export const mkInitStep = (name: string, fn: (context: AdPipelineContext) => Promise<void>): InitStep => {
+  Object.defineProperty(fn, 'name', { value: name });
+  return fn;
+};
+export const mkConfigureStep = (name: string, fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>): ConfigureStep => {
+  Object.defineProperty(fn, 'name', { value: name });
+  return fn;
+};
+
+export const mkPrepareRequestAdsStep = (
+  name: string,
+  priority: number,
+  fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<unknown>): PrepareRequestAdsStep => {
+  const step = Object.assign(fn, { priority: priority });
+  Object.defineProperty(fn, 'name', { value: name });
+  return step;
+};
 
 export class AdPipeline {
 
@@ -149,8 +164,16 @@ export class AdPipeline {
 
   private requestId: number = 0;
 
+  /**
+   *
+   * @param config public available for testing and building APIs for configuration from outside
+   * @param logger
+   * @param window
+   * @param reportingService
+   * @param slotEventService
+   */
   constructor(
-    private readonly config: IAdPipelineConfiguration,
+    public readonly config: IAdPipelineConfiguration,
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window,
     private readonly reportingService: IReportingService,

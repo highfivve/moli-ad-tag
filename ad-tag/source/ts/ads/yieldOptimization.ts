@@ -10,11 +10,13 @@ import { YieldOptimizationService } from './yieldOptimizationService';
  * @param yieldOptimizationService
  */
 export const yieldOptimizationPrepareRequestAds = (yieldOptimizationService: YieldOptimizationService): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
+  'yield-optimiziation',
+  HIGH_PRIORITY,
   (context: AdPipelineContext, slots: SlotDefinition[]) => {
     context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
     const slotsWithPriceRule = slots.map(slot => {
       return yieldOptimizationService.setTargeting(slot.adSlot).then(priceRule => slot.priceRule = priceRule);
     });
     return Promise.all(slotsWithPriceRule);
-  }, HIGH_PRIORITY
+  }
 );

@@ -64,6 +64,8 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
 };
 
 export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
+  'prebid-prepare-adunits',
+  LOW_PRIORITY,
   (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => new Promise(resolve => {
     const prebidAdUnits = slots
       .filter(isPrebidSlotDefinition)
@@ -121,7 +123,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareReq
     });
     context.window.pbjs.addAdUnits(prebidAdUnits);
     resolve();
-  }), LOW_PRIORITY
+  })
 );
 
 export const prebidRequestBids = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): RequestBidsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise(resolve => {
@@ -216,8 +218,10 @@ const filterVideoPlayerSizes = (playerSize: prebidjs.IMediaTypeVideo['playerSize
  * If a slot is being refreshed or reloaded.
  */
 export const prebidRemoveHbKeyValues = (): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
+  'prebid-remove-hb-keyvalues',
+  LOW_PRIORITY,
   (context: AdPipelineContext, slots) => new Promise(resolve => {
     // TODO check if prebid is taking care of this by itself in setGptTargetingAsync
     resolve();
-  }), 10
+  })
 );

@@ -98,7 +98,7 @@ export class AdService {
 
     // 2. build the AdPipeline
     const init: InitStep[] = [
-      this.awaitDomReady,
+      this.awaitDomReady(),
       gptInit()
     ];
 
@@ -194,14 +194,23 @@ export class AdService {
     }
   };
 
+  /**
+   * Returns the underlying ad pipeline.
+   */
+  public getAdPipeline = () => {
+    return this.adPipeline;
+  }
+
   private getEnvironment(config: Moli.MoliConfig): Moli.Environment {
     return config.environment || 'production';
   }
 
-  private awaitDomReady: InitStep = () => {
-    return new Promise<void>(resolve => {
+  private awaitDomReady = (): InitStep => {
+    const fn = () => new Promise<void>(resolve => {
       domready(this.window, resolve);
     }).then(() => this.logger.debug('DOM', 'dom ready'));
+    Object.defineProperty(fn, 'name', { value: 'await-dom-ready'});
+    return fn;
   };
 
   private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {
