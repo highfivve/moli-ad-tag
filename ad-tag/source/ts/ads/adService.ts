@@ -1,9 +1,16 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { getDefaultLogger, getLogger } from '../util/logging';
+import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
 import { Moli } from '../types/moli';
-import { AdPipeline, ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from './adPipeline';
+import {
+  AdPipeline,
+  ConfigureStep,
+  IAdPipelineConfiguration,
+  InitStep,
+  PrepareRequestAdsStep,
+  RequestBidsStep
+} from './adPipeline';
 import { SlotEventService, slotEventServiceConfigure } from './slotEventService';
-import { reportingConfigure, ReportingService } from './reportingService';
+import { noopReportingService, reportingConfigure, ReportingService } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import {
@@ -37,7 +44,7 @@ export class AdService {
   /**
    * Access to a logger
    */
-  private logger: Moli.MoliLogger;
+  private logger: ProxyLogger;
 
   /**
    * Slot event management
@@ -57,12 +64,24 @@ export class AdService {
     requestBids: [],
     requestAds: () => Promise.resolve()
 
-  }, this.logger, this.window, null as any, this.slotEventService);
+  }, this.logger, this.window, noopReportingService, this.slotEventService);
 
-  constructor(private assetService: IAssetLoaderService,
-              private window: Window) {    // initialize the logger with a default one
-    this.logger = getDefaultLogger();
+  /**
+   *
+   * @param assetService
+   * @param window
+   * @param adPipelineConfig only for testing purposes at this point. This configuration will be overriden by
+   *        a call to initialize. This should not be the API for extending the pipeline!
+   */
+  constructor(private readonly assetService: IAssetLoaderService,
+              private readonly window: Window,
+              private readonly adPipelineConfig?: IAdPipelineConfiguration
+  ) {    // initialize the logger with a default one
+    this.logger = new ProxyLogger(getDefaultLogger(window));
     this.slotEventService = new SlotEventService(this.logger);
+    if (adPipelineConfig) {
+      this.adPipeline = new AdPipeline(adPipelineConfig, this.logger, window, noopReportingService, this.slotEventService);
+    }
   }
 
   /**
@@ -80,7 +99,7 @@ export class AdService {
   public initialize = (config: Readonly<Moli.MoliConfig>, isSinglePageApp: boolean): Promise<Readonly<Moli.MoliConfig>> => {
     const env = this.getEnvironment(config);
     // 1. setup all services
-    this.logger = getLogger(config, this.window);
+    this.logger.setLogger(getLogger(config, this.window));
     this.logger.debug('AdService', `Initializing with environment ${env}`);
 
     // always create performance marks and metrics even without a config
@@ -197,8 +216,12 @@ export class AdService {
   /**
    * Returns the underlying ad pipeline.
    */
-  public getAdPipeline = () => {
+  public getAdPipeline = (): AdPipeline => {
     return this.adPipeline;
+  }
+
+  public setLogger = (logger: Moli.MoliLogger): void => {
+    this.logger.setLogger(logger);
   }
 
   private getEnvironment(config: Moli.MoliConfig): Moli.Environment {

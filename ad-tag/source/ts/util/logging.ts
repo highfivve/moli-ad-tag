@@ -82,7 +82,7 @@ function getSourceLabelStyle(source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor C
 /**
  * The default logger that writes everything to the console with labels.
  */
-export function getDefaultLogger(): Moli.MoliLogger {
+export function getDefaultLogger(window: Window): Moli.MoliLogger {
 
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
@@ -113,12 +113,41 @@ export function getDefaultLogger(): Moli.MoliLogger {
 export function getLogger(config: Moli.MoliConfig, window: Window): Moli.MoliLogger {
 
   if (getMoliDebugParameter(window)) {
-    return getDefaultLogger();
+    return getDefaultLogger(window);
 
   } else if (config.logger) {
     return config.logger;
 
   } else {
     return getNoopLogger();
+  }
+}
+
+/**
+ * Allows to change the underlying logging during runtime.
+ */
+export class ProxyLogger implements Moli.MoliLogger {
+
+  constructor(private logger: Moli.MoliLogger) {
+  }
+
+  setLogger = (newLogger: Moli.MoliLogger): void => {
+    this.logger = newLogger;
+  }
+
+  debug(message?: any, ...optionalParams: any[]): void {
+    this.logger.debug(message, ...optionalParams);
+  }
+
+  error(message?: any, ...optionalParams: any[]): void {
+    this.logger.error(message, ...optionalParams);
+  }
+
+  info(message?: any, ...optionalParams: any[]): void {
+    this.logger.info(message, ...optionalParams);
+  }
+
+  warn(message?: any, ...optionalParams: any[]): void {
+    this.logger.warn(message, ...optionalParams);
   }
 }

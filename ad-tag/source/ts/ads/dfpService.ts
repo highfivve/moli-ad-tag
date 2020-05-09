@@ -84,7 +84,7 @@ export class DfpService {
               private window: Window) {
 
     // initialize the logger with a default one
-    this.logger = getDefaultLogger();
+    this.logger = getDefaultLogger(window);
   }
 
   /**

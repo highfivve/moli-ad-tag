@@ -441,3 +441,22 @@ export class ReportingService implements IReportingService {
   }
 
 }
+
+export const noopReportingService: IReportingService = {
+  initialize: () => {
+  },
+  markRefreshed: () => {
+  },
+  markPrebidSlotsRequested: () => {
+  },
+  measureAndReportPrebidBidsBack: () => {
+  },
+  markA9fetchBids: () => {
+  },
+  measureAndReportA9BidsBack: () => {
+  },
+  markCmpInitialization: () => {
+  },
+  measureCmpLoadTime: () => {
+  }
+};
