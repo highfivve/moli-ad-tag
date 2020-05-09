@@ -2,15 +2,15 @@ import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
 import { IPerformanceMeasurementService } from './../util/performanceService';
 import { SlotEventService } from './slotEventService';
-import { ConfigureStep } from './adPipeline';
+import { ConfigureStep, mkConfigureStep } from './adPipeline';
 
-export const reportingConfigure = (reportingService: IReportingService): ConfigureStep => (ctx, slots) => {
+export const reportingConfigure = (reportingService: IReportingService): ConfigureStep => mkConfigureStep('reporting-configured', (ctx, slots) => {
   if (ctx.requestId === 1) {
     ctx.logger.debug('Reporting', 'initialize reporting');
     reportingService.initialize(slots);
   }
   return Promise.resolve();
-};
+});
 
 export interface IReportingService {
 

@@ -10,7 +10,7 @@ import { YieldOptimizationService } from './yieldOptimizationService';
  * @param yieldOptimizationService
  */
 export const yieldOptimizationPrepareRequestAds = (yieldOptimizationService: YieldOptimizationService): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
-  'yield-optimiziation',
+  'yield-optimization',
   HIGH_PRIORITY,
   (context: AdPipelineContext, slots: SlotDefinition[]) => {
     context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');

@@ -141,6 +141,7 @@ export const mkInitStep = (name: string, fn: (context: AdPipelineContext) => Pro
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
 };
+
 export const mkConfigureStep = (name: string, fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>): ConfigureStep => {
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
@@ -153,6 +154,11 @@ export const mkPrepareRequestAdsStep = (
   const step = Object.assign(fn, { priority: priority });
   Object.defineProperty(fn, 'name', { value: name });
   return step;
+};
+
+export const mkRequestBidsStep = (name: string, fn: (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => Promise<void>): RequestBidsStep => {
+  Object.defineProperty(fn, 'name', { value: name });
+  return fn;
 };
 
 export class AdPipeline {

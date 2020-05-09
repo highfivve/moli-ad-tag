@@ -1,8 +1,8 @@
 import {
   AdPipelineContext,
   ConfigureStep,
-  InitStep, LOW_PRIORITY,
-  mkPrepareRequestAdsStep,
+  InitStep, LOW_PRIORITY, mkConfigureStep, mkInitStep,
+  mkPrepareRequestAdsStep, mkRequestBidsStep,
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
@@ -35,9 +35,12 @@ const isAdUnitDefined = (adUnit: prebidjs.IAdUnit, window: Window): boolean => {
 };
 
 
-export const prebidInit = (): InitStep => (context) => Promise.race([ prebidInitAndReady(context.window), prebidTimeout(context.window) ]);
+export const prebidInit = (): InitStep => mkInitStep(
+  'prebid-init',
+  (context) => Promise.race([ prebidInitAndReady(context.window), prebidTimeout(context.window) ])
+);
 
-export const prebidRemoveAdUnits = (): ConfigureStep => (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const prebidRemoveAdUnits = (): ConfigureStep => mkConfigureStep('prebid-remove-adunits', (context: AdPipelineContext) => new Promise<void>(resolve => {
   context.window.pbjs = window.pbjs || { que: [] };
   const adUnits = context.window.pbjs.adUnits;
   if (adUnits) {
@@ -45,12 +48,12 @@ export const prebidRemoveAdUnits = (): ConfigureStep => (context: AdPipelineCont
     adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
   }
   resolve();
-});
+}));
 
 export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep => {
   let result: Promise<void>;
 
-  return (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+  return mkConfigureStep('prebid-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
     if (!result) {
       new Promise<void>(resolve => {
         if (prebidConfig.bidderSettings) {
@@ -60,7 +63,7 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
       });
     }
     return result;
-  };
+  });
 };
 
 export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
@@ -126,72 +129,75 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareReq
   })
 );
 
-export const prebidRequestBids = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): RequestBidsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise(resolve => {
-  // It seems that the bidBackHandler can be triggered more than once. The reason might be that
-  // when a timeout for the prebid request occurs, the callback is executed. When the request finishes
-  // afterwards anyway the bidsBackHandler is called a second time.
-  let adserverRequestSent = false;
+export const prebidRequestBids = (prebidConfig: Moli.headerbidding.PrebidConfig, targeting: Moli.Targeting | undefined): RequestBidsStep => mkRequestBidsStep(
+  'prebid-request-bids',
+  (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => new Promise(resolve => {
+    // It seems that the bidBackHandler can be triggered more than once. The reason might be that
+    // when a timeout for the prebid request occurs, the callback is executed. When the request finishes
+    // afterwards anyway the bidsBackHandler is called a second time.
+    let adserverRequestSent = false;
 
-  const adUnitCodes = slots
-    .filter(isPrebidSlotDefinition)
-    .map(slot => slot.moliSlot.domId);
+    const adUnitCodes = slots
+      .filter(isPrebidSlotDefinition)
+      .map(slot => slot.moliSlot.domId);
 
-  context.logger.debug('Prebid', `Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`);
+    context.logger.debug('Prebid', `Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`);
 
-  // FIXME add reporting
-  context.reportingService.markPrebidSlotsRequested(context.requestId);
+    // FIXME add reporting
+    context.reportingService.markPrebidSlotsRequested(context.requestId);
 
-  context.window.pbjs.requestBids({
-    adUnitCodes: adUnitCodes,
-    labels: context.labelConfigService.getSupportedLabels(),
-    bidsBackHandler: (bidResponses?: prebidjs.IBidResponsesMap, timedOut?: boolean) => {
-      // the bids back handler seems to run on a different thread
-      // in consequence, we need to catch errors here to propagate them to top levels
-      try {
-        if (adserverRequestSent) {
-          return;
-        }
+    context.window.pbjs.requestBids({
+      adUnitCodes: adUnitCodes,
+      labels: context.labelConfigService.getSupportedLabels(),
+      bidsBackHandler: (bidResponses?: prebidjs.IBidResponsesMap, timedOut?: boolean) => {
+        // the bids back handler seems to run on a different thread
+        // in consequence, we need to catch errors here to propagate them to top levels
+        try {
+          if (adserverRequestSent) {
+            return;
+          }
 
-        if (!bidResponses) {
-          context.logger.warn('Prebid', `Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`);
-          return resolve();
-        }
+          if (!bidResponses) {
+            context.logger.warn('Prebid', `Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`);
+            return resolve();
+          }
 
-        adserverRequestSent = true;
-        context.reportingService.measureAndReportPrebidBidsBack(context.requestId);
+          adserverRequestSent = true;
+          context.reportingService.measureAndReportPrebidBidsBack(context.requestId);
 
-        // execute listener
-        if (prebidConfig.listener) {
-          const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-          const prebidListener = (typeof prebidConfig.listener === 'function') ?
-            prebidConfig.listener({ keyValues: keyValues }) : prebidConfig.listener;
-          if (prebidListener.preSetTargetingForGPTAsync) {
-            try {
-              prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut || false, slots);
-            } catch (e) {
-              context.logger.error('Prebid', `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`);
+          // execute listener
+          if (prebidConfig.listener) {
+            const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
+            const prebidListener = (typeof prebidConfig.listener === 'function') ?
+              prebidConfig.listener({ keyValues: keyValues }) : prebidConfig.listener;
+            if (prebidListener.preSetTargetingForGPTAsync) {
+              try {
+                prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut || false, slots);
+              } catch (e) {
+                context.logger.error('Prebid', `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`);
+              }
             }
           }
+
+          // set key-values for DFP to target the correct line items
+          context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
+
+          adUnitCodes.forEach(adUnitPath => {
+            const bidResponse = bidResponses[adUnitPath];
+            bidResponse ?
+              context.logger.debug('Prebid', `Prebid bid response: [DomID]: ${adUnitPath} \n\t\t\t${bidResponse.bids.map(bid => `[bidder] ${bid.bidder} [width] ${bid.width} [height] ${bid.height} [cpm] ${bid.cpm}`)}`) :
+              context.logger.debug('Prebid', `Prebid bid response: [DomID] ${adUnitPath} ---> no bid response`);
+          });
+
+          resolve();
+        } catch (error) {
+          context.logger.error('Prebid', 'DfpService:: could not resolve bidsBackHandler' + JSON.stringify(error));
+          resolve();
         }
-
-        // set key-values for DFP to target the correct line items
-        context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
-
-        adUnitCodes.forEach(adUnitPath => {
-          const bidResponse = bidResponses[adUnitPath];
-          bidResponse ?
-            context.logger.debug('Prebid', `Prebid bid response: [DomID]: ${adUnitPath} \n\t\t\t${bidResponse.bids.map(bid => `[bidder] ${bid.bidder} [width] ${bid.width} [height] ${bid.height} [cpm] ${bid.cpm}`)}`) :
-            context.logger.debug('Prebid', `Prebid bid response: [DomID] ${adUnitPath} ---> no bid response`);
-        });
-
-        resolve();
-      } catch (error) {
-        context.logger.error('Prebid', 'DfpService:: could not resolve bidsBackHandler' + JSON.stringify(error));
-        resolve();
       }
-    }
-  });
-});
+    });
+  })
+);
 
 /**
  * Filters video player sizes according to the sizeConfig;

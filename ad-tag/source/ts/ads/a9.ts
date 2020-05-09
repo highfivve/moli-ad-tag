@@ -1,4 +1,12 @@
-import { AdPipelineContext, ConfigureStep, InitStep, mkConfigureStep, mkInitStep, RequestBidsStep } from './adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  mkConfigureStep,
+  mkInitStep,
+  mkRequestBidsStep,
+  RequestBidsStep
+} from './adPipeline';
 import { Moli } from '../types/moli';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { SizeConfigService } from './sizeConfigService';
@@ -63,33 +71,36 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
   }));
 
 
-export const a9RequestBids = (): RequestBidsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition<Moli.AdSlot>[]) => new Promise<void>(resolve => {
-  const filteredSlots = slots
-    .filter(isA9SlotDefinition)
-    .filter(slot => {
-      const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
-      const sizesNotEmpty = slot.filterSupportedSizes(slot.moliSlot.sizes).filter(SizeConfigService.isFixedSize).length > 0;
-      return filterSlot && sizesNotEmpty;
-    });
+export const a9RequestBids = (): RequestBidsStep => mkRequestBidsStep(
+  'a9-fetch-bids',
+  (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => new Promise<void>(resolve => {
+    const filteredSlots = slots
+      .filter(isA9SlotDefinition)
+      .filter(slot => {
+        const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
+        const sizesNotEmpty = slot.filterSupportedSizes(slot.moliSlot.sizes).filter(SizeConfigService.isFixedSize).length > 0;
+        return filterSlot && sizesNotEmpty;
+      });
 
-  context.logger.debug('A9', `Fetch '${filteredSlots.length}' A9 slots: ${filteredSlots.map(slot => `[DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`)}`);
+    context.logger.debug('A9', `Fetch '${filteredSlots.length}' A9 slots: ${filteredSlots.map(slot => `[DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`)}`);
 
-  if (filteredSlots.length === 0) {
-    resolve();
-  } else {
-    context.reportingService.markA9fetchBids(context.requestId);
-    context.window.apstag.fetchBids({
-      slots: filteredSlots.map(({ moliSlot, filterSupportedSizes }) => {
-        return {
-          slotID: moliSlot.domId,
-          slotName: moliSlot.adUnitPath,
-          sizes: filterSupportedSizes(moliSlot.sizes).filter(SizeConfigService.isFixedSize)
-        };
-      })
-    }, (_bids: Object[]) => {
-      context.reportingService.measureAndReportA9BidsBack(context.requestId);
-      context.window.apstag.setDisplayBids();
+    if (filteredSlots.length === 0) {
       resolve();
-    });
-  }
-});
+    } else {
+      context.reportingService.markA9fetchBids(context.requestId);
+      context.window.apstag.fetchBids({
+        slots: filteredSlots.map(({ moliSlot, filterSupportedSizes }) => {
+          return {
+            slotID: moliSlot.domId,
+            slotName: moliSlot.adUnitPath,
+            sizes: filterSupportedSizes(moliSlot.sizes).filter(SizeConfigService.isFixedSize)
+          };
+        })
+      }, (_bids: Object[]) => {
+        context.reportingService.measureAndReportA9BidsBack(context.requestId);
+        context.window.apstag.setDisplayBids();
+        resolve();
+      });
+    }
+  })
+);

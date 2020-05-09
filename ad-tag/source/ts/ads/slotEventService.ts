@@ -1,10 +1,10 @@
 import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
-import { ConfigureStep } from "./adPipeline";
+import { AdPipelineContext, ConfigureStep, mkConfigureStep } from './adPipeline';
 
 export const slotEventServiceConfigure = (slotService: SlotEventService): ConfigureStep => {
   let result: Promise<void>;
-  return (ctx) => {
+  return mkConfigureStep('slot-event-service-configure', (ctx: AdPipelineContext) => {
     if (!result) {
       result = new Promise<void>(resolve => {
         slotService.initialize(ctx.window.googletag, ctx.env);
@@ -12,7 +12,7 @@ export const slotEventServiceConfigure = (slotService: SlotEventService): Config
       });
     }
     return result;
-  };
+  });
 };
 
 /**
