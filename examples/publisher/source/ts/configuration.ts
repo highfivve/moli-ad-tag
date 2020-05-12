@@ -270,7 +270,7 @@ export const adConfiguration: Moli.MoliConfig = {
             native: {
               title: { required: true },
               image: { required: true },
-              clickUrl: { required: true, sendId: true },
+              clickUrl: { required: true },
               sponsoredBy: { required: true }
             }
           },
@@ -295,8 +295,8 @@ export const adConfiguration: Moli.MoliConfig = {
           mediaTypes: {
             native: {
               title: { required: true },
-              body: { required: true, sendId: true },
-              clickUrl: { required: true, sendId: true },
+              body: { required: true },
+              clickUrl: { required: true},
               image: { required: true },
               sponsoredBy: { required: true },
               icon: { required: false }
