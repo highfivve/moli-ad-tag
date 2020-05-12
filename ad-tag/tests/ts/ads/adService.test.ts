@@ -8,6 +8,8 @@ import { createAssetLoaderService } from '../../../source/ts/util/assetLoaderSer
 import { AdPipeline, IAdPipelineConfiguration } from '../../../source/ts/ads/adPipeline';
 import { AdService } from '../../../source/ts/ads/adService';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import * as lazyLoaderModule from '../../../source/ts/ads/lazyLoading';
+import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
 
 // setup sinon-chai
 use(sinonChai);
@@ -412,5 +414,42 @@ describe('AdService', () => {
       addToDom(allSlots);
       return expect(requestAds(allSlots)).to.eventually.be.deep.equals(expectedSlots);
     });
+
+    describe('lazy slots', () => {
+
+      const createLazyLoaderSpy = sandbox.spy(lazyLoaderModule, 'createLazyLoader');
+
+      it('should create a lazy loader for lazy slots', () => {
+        const lazySlot = lazyAdSlot();
+        return requestAds([ lazySlot ])
+          .then(() => {
+            expect(createLazyLoaderSpy).to.have.been.calledOnce;
+            expect(createLazyLoaderSpy).to.have.been.calledOnceWith(
+              Sinon.match.same(lazySlot.behaviour.trigger),
+              Sinon.match.any,
+              Sinon.match.same(dom.window)
+            );
+          });
+      });
+    });
+
+    describe('refreshable slots', () => {
+      const createRefreshListenerSpy = sandbox.spy(refreshableAdsModule, 'createRefreshListener');
+
+      it('should create a refreshable listener for refreshable slots', () => {
+        const lazySlot = refreshableAdSlot(true);
+        return requestAds([ lazySlot ])
+          .then(() => {
+            expect(createRefreshListenerSpy).to.have.been.calledOnce;
+            expect(createRefreshListenerSpy).to.have.been.calledOnceWith(
+              Sinon.match.same(lazySlot.behaviour.trigger),
+              Sinon.match.same(undefined),
+              Sinon.match.any,
+              Sinon.match.same(dom.window)
+            );
+          });
+      });
+    });
+
   });
 });

@@ -191,7 +191,6 @@ export class AdService {
                 return Promise.reject(message);
               })
               .then(() => this.adPipeline.run([ slot ], config));
-
             return null;
           } else if (this.isRefreshableAdSlot(slot)) {
             // initialize lazy refreshable slot
