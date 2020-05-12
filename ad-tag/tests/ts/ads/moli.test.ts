@@ -29,7 +29,7 @@ describe('moli', () => {
   let domIdCounter: number = 0;
   const mkAdSlotInDOM = (): Moli.EagerAdSlot => {
     domIdCounter = domIdCounter + 1;
-    const domId = `dom-id-${domIdCounter}`
+    const domId = `dom-id-${domIdCounter}`;
     const adDiv = dom.window.document.createElement('div');
     adDiv.id = domId;
     dom.window.document.body.appendChild(adDiv);
