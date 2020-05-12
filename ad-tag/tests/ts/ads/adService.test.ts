@@ -18,15 +18,6 @@ use(chaiAsPromised);
 // tslint:disable: no-unused-expression
 describe('AdService', () => {
 
-  const adSlot: Moli.AdSlot = {
-    domId: 'dom-id',
-    adUnitPath: '/123/dom-id',
-    behaviour: { loaded: 'eager' },
-    position: 'in-page',
-    sizes: [],
-    sizeConfig: []
-  };
-
   let dom = createDom();
 
   // single sandbox instance to create spies and stubs
