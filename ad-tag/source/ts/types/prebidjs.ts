@@ -611,6 +611,17 @@ export namespace prebidjs {
      * },
      * ```
      *
+     * Note: The creative designs must have the universal-prebid-creative included
+     * ```
+     * <script src="https://cdn.jsdelivr.net/npm/prebid-universal-creative@1.7.0/dist/native-trk.js"></script>
+     * ```
+     *
+     * or for the latest version
+     *
+     * ```
+     * <script src="https://cdn.jsdelivr.net/npm/prebid-universal-creative@latest/dist/native-trk.js"></script>
+     * ```
+     *
      * @see http://prebid.org/dev-docs/show-native-ads.html#sending-asset-placeholders
      */
     readonly sendId?: boolean;
