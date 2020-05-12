@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 2.0.1
+
+[GD-1738](https://jira.gutefrage.net/browse/GD-1738). Support `adUnitPath` in passback messages.
+
+## 2.0.0
+
+Rework of the internal ad processing. The `DfpService` is called `AdService` and constructs an `AdPipeline`, which
+can be called on a set of ad slots. The `AdPipeline` is responsible for initializing, configuring and requesting ads.
+
 ## 1.43.0
 
 [GD-2002](https://jira.gutefrage.net/browse/GD-2002). Add rubicon types.
