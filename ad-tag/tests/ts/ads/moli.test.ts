@@ -7,7 +7,7 @@ import { createMoliTag } from '../../../source/ts/ads/moli';
 import { initAdTag } from '../../../source/ts/ads/moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { consentConfig, emptyConfig, newEmptyConfig, newNoopLogger, noopLogger } from '../stubs/moliStubs';
+import { consentConfig, emptyConfig, newEmptyConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
@@ -25,6 +25,29 @@ describe('moli', () => {
 
   const dom = createDom();
   dom.window.pbjs = pbjsStub;
+
+  let domIdCounter: number = 0;
+  const mkAdSlotInDOM = (): Moli.EagerAdSlot => {
+    domIdCounter = domIdCounter + 1;
+    const domId = `dom-id-${domIdCounter}`
+    const adDiv = dom.window.document.createElement('div');
+    adDiv.id = domId;
+    dom.window.document.body.appendChild(adDiv);
+    return {
+      domId: domId,
+      adUnitPath: `/123/ad-unit-${domIdCounter}`,
+      sizes: [],
+      position: 'in-page',
+      sizeConfig: [],
+      behaviour: { loaded: 'eager' }
+    };
+  };
+
+  const defaultSlots: Moli.AdSlot[] = [ mkAdSlotInDOM() ];
+  const defaultConfig: Moli.MoliConfig = {
+    ...emptyConfig,
+    slots: defaultSlots
+  };
 
   beforeEach(() => {
     dom.window.googletag = createGoogletagStub();
@@ -72,20 +95,20 @@ describe('moli', () => {
 
     it('should transition into configured state after configure()', () => {
       const adTag = createMoliTag(dom.window);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
     });
 
     it('should stay in configured state after setTargeting()', () => {
       const adTag = createMoliTag(dom.window);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       adTag.setTargeting('key', 'value');
       expect(adTag.getState()).to.be.eq('configured');
     });
 
     it('should transition into requestAds state after requestAds()', () => {
       const adTag = createMoliTag(dom.window);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('requestAds');
       return finished.then(state => {
@@ -110,7 +133,7 @@ describe('moli', () => {
       });
       const adTag = createMoliTag(dom.window);
       adTag.enableSinglePageApp();
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
         expect(state.state).to.be.eq('spa');
@@ -133,7 +156,7 @@ describe('moli', () => {
       });
       const adTag = createMoliTag(dom.window);
       adTag.enableSinglePageApp();
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
         expect(state.state).to.be.eq('spa');
@@ -167,7 +190,7 @@ describe('moli', () => {
 
     it('should init modules in the configure call', () => {
       const adTag = createMoliTag(dom.window);
-      const config = newEmptyConfig();
+      const config = newEmptyConfig(defaultSlots);
 
       adTag.registerModule(fakeModule);
       adTag.configure(config);
@@ -177,7 +200,7 @@ describe('moli', () => {
 
     it('should init modules and use the changed config', () => {
       const adTag = createMoliTag(dom.window);
-      const config = newEmptyConfig();
+      const config = newEmptyConfig(defaultSlots);
       const targeting = {
         keyValues: { foo: 'bar' },
         labels: [ 'module' ]
@@ -203,7 +226,7 @@ describe('moli', () => {
 
     it('should never register modules if the state is not configurable', () => {
       const adTag = createMoliTag(dom.window);
-      const config = newEmptyConfig();
+      const config = newEmptyConfig(defaultSlots);
       const logger = config.logger!;
 
       const errorLogSpy = sandbox.spy(logger, 'error');
@@ -222,7 +245,7 @@ describe('moli', () => {
     it('should add key-values to the config', () => {
       const adTag = createMoliTag(dom.window);
       adTag.setTargeting('pre', 'configure1');
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       adTag.setTargeting('post', 'configure2');
 
       const config = adTag.getConfig();
@@ -238,7 +261,7 @@ describe('moli', () => {
       const adTag = createMoliTag(dom.window);
       adTag.setTargeting('pre', 'configure1');
       adTag.configure({
-        slots: [], consent: consentConfig, targeting: {
+        slots: defaultSlots, consent: consentConfig, targeting: {
           keyValues: {
             pre: 'dismiss',
             post: 'dismiss'
@@ -277,7 +300,7 @@ describe('moli', () => {
 
     it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', () => {
       const adTag = createMoliTag(dom.window);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
@@ -303,7 +326,7 @@ describe('moli', () => {
       adTag.enableSinglePageApp();
       adTag.setTargeting('dynamicKeyValuePre', 'value');
       adTag.configure({
-        slots: [], consent: consentConfig, logger: noopLogger, targeting: {
+        slots: defaultSlots, consent: consentConfig, logger: noopLogger, targeting: {
           keyValues: { keyFromAdConfig: 'value' },
           labels: []
         },
@@ -319,7 +342,7 @@ describe('moli', () => {
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         expect(spaState.keyValues).to.be.deep.equal({});
-        expect(googletagPubAdsSetTargetingSpy).to.be.callCount(5);
+        expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(5);
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
@@ -351,7 +374,7 @@ describe('moli', () => {
         expect(keyValues).to.have.property('kv1', 'value');
         expect(keyValues).to.have.property('kv2', 'value');
 
-        expect(googletagPubAdsSetTargetingSpy).to.be.callCount(4);
+        expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(4);
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv1', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv2', 'value');
@@ -366,7 +389,7 @@ describe('moli', () => {
     it('should add label to the config', () => {
       const adTag = createMoliTag(dom.window);
       adTag.addLabel('pre');
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       adTag.addLabel('post');
 
       const config = adTag.getConfig();
@@ -379,7 +402,7 @@ describe('moli', () => {
       const adTag = createMoliTag(dom.window);
       adTag.addLabel('pre');
       adTag.configure({
-        slots: [], consent: consentConfig, targeting: {
+        slots: defaultSlots, consent: consentConfig, targeting: {
           keyValues: {},
           labels: [ 'pre-existing' ]
         },
@@ -403,7 +426,7 @@ describe('moli', () => {
       adTag.enableSinglePageApp();
       adTag.addLabel('dynamicLabelPre');
       adTag.configure({
-        slots: [], consent: consentConfig, logger: noopLogger, targeting: {
+        slots: defaultSlots, consent: consentConfig, logger: noopLogger, targeting: {
           keyValues: {},
           labels: [ 'a9' ]
         },
@@ -459,7 +482,7 @@ describe('moli', () => {
       };
 
       adTag.setLogger(customLogger);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       const config = adTag.getConfig();
       expect(config).to.be.ok;
@@ -473,7 +496,7 @@ describe('moli', () => {
       const adTag = createMoliTag(dom.window);
 
       adTag.setSampleRate(0.23);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       const config = adTag.getConfig();
       expect(config).to.be.ok;
@@ -484,7 +507,7 @@ describe('moli', () => {
     it('should set the given sample rate instance after configure() is called', () => {
       const adTag = createMoliTag(dom.window);
 
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       adTag.setSampleRate(0.23);
 
       const config = adTag.getConfig();
@@ -496,7 +519,7 @@ describe('moli', () => {
     it('should set the reporters array to an empty array', () => {
       const adTag = createMoliTag(dom.window);
 
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       adTag.setSampleRate(0.23);
 
       const config = adTag.getConfig();
@@ -514,7 +537,7 @@ describe('moli', () => {
         return;
       };
       adTag.addReporter(voidReporter);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       adTag.addReporter(voidReporter);
 
       const config = adTag.getConfig();
@@ -531,7 +554,7 @@ describe('moli', () => {
         return;
       };
       adTag.addReporter(voidReporter);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       const config = adTag.getConfig();
       expect(config).to.be.ok;
@@ -552,7 +575,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
       });
@@ -568,7 +591,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
         expect(hookSpy).to.be.calledOnceWithExactly('finished');
@@ -586,7 +609,7 @@ describe('moli', () => {
 
       adTag.afterRequestAds(hookSpy);
       adTag.enableSinglePageApp();
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
         expect(hookSpy).to.be.calledOnceWithExactly('spa');
@@ -607,7 +630,7 @@ describe('moli', () => {
 
       adTag.afterRequestAds(hookSpy);
       adTag.enableSinglePageApp();
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
         expect(hookSpy).to.be.calledOnceWithExactly('spa');
@@ -640,7 +663,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
         expect(hookSpy).to.be.calledOnceWithExactly('error');
@@ -657,7 +680,7 @@ describe('moli', () => {
         url: 'https://localhost?moliEnv=test'
       });
 
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       const config = adTag.getConfig();
       expect(config).to.be.ok;
@@ -672,7 +695,7 @@ describe('moli', () => {
         url: 'https://localhost?moliEnv=production'
       });
 
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       const config = adTag.getConfig();
       expect(config).to.be.ok;
@@ -687,7 +710,7 @@ describe('moli', () => {
         url: 'https://localhost?moliEnv=wrong'
       });
 
-      adTag.configure(emptyConfig);
+      adTag.configure(defaultConfig);
 
       const config = adTag.getConfig();
       expect(config).to.be.ok;
@@ -702,7 +725,7 @@ describe('moli', () => {
       adTag.setTargeting('pre', 'configure1');
       adTag.addLabel('pre');
       adTag.configure({
-        slots: [], consent: consentConfig, targeting: {
+        slots: defaultSlots, consent: consentConfig, targeting: {
           keyValues: {
             pre: 'dismiss',
             post: 'dismiss',

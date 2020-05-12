@@ -41,7 +41,7 @@ export const gptInit = (): InitStep => {
     if (!result) {
       result = new Promise<void>(resolve => {
         context.logger.debug('GAM', 'init googletag stub');
-        context.window.googletag = window.googletag || { cmd: [] };
+        context.window.googletag = context.window.googletag || { cmd: [] };
         context.window.googletag.cmd.push(resolve);
       });
     }
@@ -70,10 +70,10 @@ export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStep('gpt-destr
  * @param config
  */
 export const gptResetTargeting = (): ConfigureStep => mkConfigureStep('gpt-reset-targeting', (context: AdPipelineContext) => new Promise<void>(resolve => {
-  if (context.config.environment === 'production') {
+  if (context.env === 'production') {
     context.logger.debug('GAM', 'reset top level targeting');
     context.window.googletag.pubads().clearTargeting();
-    configureTargeting(context.window, context.config.targeting, context.config.environment);
+    configureTargeting(context.window, context.config.targeting, context.env);
   }
 
   resolve();
@@ -88,7 +88,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
         context.logger.debug('GAM', 'configure googletag');
         switch (env) {
           case 'production':
-            configureTargeting(window, config.targeting, env);
+            configureTargeting(context.window, config.targeting, env);
 
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
