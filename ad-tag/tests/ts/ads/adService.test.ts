@@ -5,7 +5,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 import { createAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
-import { AdPipeline, IAdPipelineConfiguration } from '../../../source/ts/ads/adPipeline';
+import { IAdPipelineConfiguration } from '../../../source/ts/ads/adPipeline';
 import { AdService } from '../../../source/ts/ads/adService';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import * as lazyLoaderModule from '../../../source/ts/ads/lazyLoading';

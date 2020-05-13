@@ -143,7 +143,6 @@ export const prebidRequestBids = (prebidConfig: Moli.headerbidding.PrebidConfig,
 
     context.logger.debug('Prebid', `Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`);
 
-    // FIXME add reporting
     context.reportingService.markPrebidSlotsRequested(context.requestId);
 
     context.window.pbjs.requestBids({
