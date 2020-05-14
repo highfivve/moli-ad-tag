@@ -16,7 +16,7 @@ function getMoliDebugParameter(window: Window): boolean {
 /**
  * The noop logger that only writes error to the console.
  */
-function getNoopLogger(): Moli.MoliLogger {
+function getNoopLogger(window: Window): Moli.MoliLogger {
   const noop = () => {
     return;
   };
@@ -24,7 +24,7 @@ function getNoopLogger(): Moli.MoliLogger {
     debug: noop,
     info: noop,
     warn: noop,
-    error: console.error
+    error: window.console.error
   };
 }
 
@@ -119,7 +119,7 @@ export function getLogger(config: Moli.MoliConfig, window: Window): Moli.MoliLog
     return config.logger;
 
   } else {
-    return getNoopLogger();
+    return getNoopLogger(window);
   }
 }
 
