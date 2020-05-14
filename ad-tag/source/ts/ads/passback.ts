@@ -5,7 +5,12 @@ export const passbackPrepareRequestAds = (passbackService: PassbackService): Pre
   'passback-prepare-slots',
   LOW_PRIORITY,
   (context: AdPipelineContext, slots) => new Promise(resolve => {
-    slots.filter(slot => slot.moliSlot.passbackSupport).forEach(slot => passbackService.addAdSlot(slot));
+    slots
+      .filter(slot => slot.moliSlot.passbackSupport)
+      .forEach(slot => {
+        context.logger.debug('passback', 'add passback support for slot', slot.moliSlot.domId);
+        passbackService.addAdSlot(slot);
+      });
     resolve();
   })
 );
