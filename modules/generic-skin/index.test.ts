@@ -2,9 +2,8 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import Skin, { ISkinConfig } from './index';
-import { Moli, prebidjs } from '@highfivve/ad-tag';
-import { createMoliTag } from '@highfivve/ad-tag/source/ts/ads/moli';
-import { consentConfig, newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
+import { Moli, prebidjs, createAssetLoaderService } from '@highfivve/ad-tag';
+import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 
@@ -47,8 +46,8 @@ describe('Skin Module', () => {
   describe('init', () => {
 
     it('should set the prebidResponse listener', () => {
-      const moli = createMoliTag(dom.window);
       const noopLogger = newNoopLogger();
+      const assetLoaderService = createAssetLoaderService(dom.window);
       const module = new Skin({
         configs: [
           {
@@ -68,23 +67,23 @@ describe('Skin Module', () => {
 
       const config: Moli.MoliConfig = {
         slots: slots,
-        consent: consentConfig,
+        consent: {},
         logger: noopLogger,
         prebid: { config: pbjsTestConfig },
         yieldOptimization: { provider: 'none' }
       };
-      moli.registerModule(module);
-      moli.configure(config);
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config, moli.getAssetLoaderService());
+      module.init(config, assetLoaderService);
+
+      expect(initSpy).to.have.been.calledOnceWithExactly(config, assetLoaderService);
       expect(errorLogSpy).to.have.not.been.called;
 
       expect(config.prebid!.listener).is.ok;
     });
 
     it('should fail if not all slots are available in the config', () => {
-      const moli = createMoliTag(dom.window);
       const noopLogger = newNoopLogger();
+      const assetLoaderService = createAssetLoaderService(dom.window);
       const module = new Skin({
         configs: [
           {
@@ -104,15 +103,15 @@ describe('Skin Module', () => {
 
       const config: Moli.MoliConfig = {
         slots: slots,
-        consent: consentConfig,
+        consent: { },
         logger: noopLogger,
         prebid: { config: pbjsTestConfig },
         yieldOptimization: { provider: 'none' }
       };
-      moli.registerModule(module);
-      moli.configure(config);
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config, moli.getAssetLoaderService());
+      module.init(config, assetLoaderService);
+
+      expect(initSpy).to.have.been.calledOnceWithExactly(config, assetLoaderService);
       expect(errorLogSpy).to.have.been.called;
 
       expect(config.prebid!.listener).is.undefined;

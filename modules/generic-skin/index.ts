@@ -1,6 +1,4 @@
-import { googletag, IModule, ModuleType, Moli, prebidjs } from '@highfivve/ad-tag';
-import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
-import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { googletag, IModule, ModuleType, Moli, prebidjs, getLogger, IAssetLoaderService } from '@highfivve/ad-tag';
 
 interface ISkinModuleConfig {
 
