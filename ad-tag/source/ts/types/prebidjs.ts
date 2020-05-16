@@ -1912,9 +1912,9 @@ export namespace prebidjs {
     readonly source: 'client' | 'server';
 
     /**
-     * A deal id if present
+     * (Optional) If the bid is associated with a Deal, this field contains the deal ID.
      */
-    readonly deal?: string;
+    readonly dealId?: string;
   }
 
   export interface IGenericBidResponse extends IBidResponse {
