@@ -24,7 +24,7 @@ function getNoopLogger(): Moli.MoliLogger {
     debug: noop,
     info: noop,
     warn: noop,
-    error: window.console.error
+    error: console.error
   };
 }
 
@@ -85,16 +85,16 @@ function getSourceLabelStyle(source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor C
 export function getDefaultLogger(): Moli.MoliLogger {
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
-      window.console.debug(`%c[DEBUG]%c${source}%c${message}`, getLogStageLabelStyle('debug'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.debug(`%c[DEBUG]%c${source}%c${message}`, getLogStageLabelStyle('debug'), getSourceLabelStyle(source), '', ...optionalParams);
     },
     info(source?: any, message?: any, ...optionalParams: any[]): void {
-      window.console.info(`%c[INFO]%c${source}%c${message}`, getLogStageLabelStyle('info'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.info(`%c[INFO]%c${source}%c${message}`, getLogStageLabelStyle('info'), getSourceLabelStyle(source), '', ...optionalParams);
     },
     warn(source?: any, message?: any, ...optionalParams: any[]): void {
-      window.console.warn(`%c[WARN]%c${source}%c${message}`, getLogStageLabelStyle('warn'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.warn(`%c[WARN]%c${source}%c${message}`, getLogStageLabelStyle('warn'), getSourceLabelStyle(source), '', ...optionalParams);
     },
     error(source?: any, message?: any, ...optionalParams: any[]): void {
-      window.console.error(`%c[ERROR]%c${source}%c${message}`, getLogStageLabelStyle('error'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.error(`%c[ERROR]%c${source}%c${message}`, getLogStageLabelStyle('error'), getSourceLabelStyle(source), '', ...optionalParams);
     }
   };
 }
