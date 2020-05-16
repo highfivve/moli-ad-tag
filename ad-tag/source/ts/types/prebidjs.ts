@@ -134,6 +134,23 @@ export namespace prebidjs {
       readonly usePrebidSizes: boolean;
     };
   }
+  
+  export namespace targetingcontrols {
+    
+    export interface ITargetingControls {
+
+      /**
+       * Specifies the maximum number of characters the system can add to ad server targeting.
+       */
+      readonly auctionKeyMaxChars?: number;
+
+      /**
+       * To make sure that deal bids are sent along with the winning bid in the `enableSendAllBids:false` scenario,
+       * use the alwaysIncludeDeals flag that’s part of targetingControls
+       */
+      readonly alwaysIncludeDeals?: boolean;
+    }
+  }
 
   /**
    * 'Consent Management' module configuration
@@ -530,6 +547,12 @@ export namespace prebidjs {
      * Default: true
      */
     readonly enableSendAllBids?: boolean;
+
+    /**
+     * The `targetingControls` object passed to pbjs.setConfig provides some options to influence how an auction’s
+     * targeting keys are generated and managed.
+     */
+    readonly targetingControls?: targetingcontrols.ITargetingControls;
 
     /**
      * 'Consent Management' module configuration
@@ -1882,6 +1905,16 @@ export namespace prebidjs {
      * The media type of the bid response
      */
     readonly mediaType: 'banner' | 'video' | 'display';
+
+    /**
+     * Origin of the bid
+     */
+    readonly source: 'client' | 'server';
+
+    /**
+     * A deal id if present
+     */
+    readonly deal: string | undefined;
   }
 
   export interface IGenericBidResponse extends IBidResponse {
