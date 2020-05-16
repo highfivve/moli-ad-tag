@@ -77,7 +77,7 @@ export class AdService {
               private readonly window: Window,
               private readonly adPipelineConfig?: IAdPipelineConfiguration
   ) {    // initialize the logger with a default one
-    this.logger = new ProxyLogger(getDefaultLogger(window));
+    this.logger = new ProxyLogger(getDefaultLogger());
     this.slotEventService = new SlotEventService(this.logger);
     if (adPipelineConfig) {
       this.adPipeline = new AdPipeline(adPipelineConfig, this.logger, window, noopReportingService, this.slotEventService);

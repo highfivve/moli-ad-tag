@@ -16,7 +16,7 @@ function getMoliDebugParameter(window: Window): boolean {
 /**
  * The noop logger that only writes error to the console.
  */
-function getNoopLogger(window: Window): Moli.MoliLogger {
+function getNoopLogger(): Moli.MoliLogger {
   const noop = () => {
     return;
   };
@@ -82,8 +82,7 @@ function getSourceLabelStyle(source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor C
 /**
  * The default logger that writes everything to the console with labels.
  */
-export function getDefaultLogger(window: Window): Moli.MoliLogger {
-
+export function getDefaultLogger(): Moli.MoliLogger {
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
       window.console.debug(`%c[DEBUG]%c${source}%c${message}`, getLogStageLabelStyle('debug'), getSourceLabelStyle(source), '', ...optionalParams);
@@ -113,13 +112,13 @@ export function getDefaultLogger(window: Window): Moli.MoliLogger {
 export function getLogger(config: Moli.MoliConfig, window: Window): Moli.MoliLogger {
 
   if (getMoliDebugParameter(window)) {
-    return getDefaultLogger(window);
+    return getDefaultLogger();
 
   } else if (config.logger) {
     return config.logger;
 
   } else {
-    return getNoopLogger(window);
+    return getNoopLogger();
   }
 }
 
