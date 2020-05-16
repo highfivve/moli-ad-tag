@@ -132,7 +132,8 @@ describe('Skin Module', () => {
         cpm: 10.00,
         height: 1,
         width: 1,
-        mediaType: 'banner'
+        mediaType: 'banner',
+        source: 'client'
       };
     };
 
@@ -296,7 +297,8 @@ describe('Skin Module', () => {
           adId: '',
           height: 1,
           width: 1,
-          mediaType: 'banner'
+          mediaType: 'banner',
+          source: 'client'
         };
       };
 

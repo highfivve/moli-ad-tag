@@ -1914,7 +1914,7 @@ export namespace prebidjs {
     /**
      * A deal id if present
      */
-    readonly deal: string | undefined;
+    readonly deal?: string;
   }
 
   export interface IGenericBidResponse extends IBidResponse {
