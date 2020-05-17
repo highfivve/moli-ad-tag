@@ -2044,7 +2044,10 @@ export namespace prebidjs {
   export interface IAdServerTargeting {
     readonly key: string;
 
-    val(bidResponse: IBidResponse): string;
+    /**
+     * @param bidResponse returns the key value value. May be undefined, e.g. for `dealId` if not set
+     */
+    val(bidResponse: IBidResponse): string | undefined;
   }
 }
 
