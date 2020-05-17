@@ -43,8 +43,7 @@ export class SizeConfigService {
   constructor(private readonly sizeConfig: SizeConfigEntry[], private readonly window: Window) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedSizeConfigs = sizeConfig.length !== 0 ?
-    sizeConfig
-      .filter(conf => window.matchMedia(conf.mediaQuery).matches) : [];
+      sizeConfig.filter(conf => window.matchMedia(conf.mediaQuery).matches) : [];
 
     this.isValid = (sizeConfig.length === 0 || !(sizeConfig.length > 0 && supportedSizeConfigs.length === 0));
 
@@ -83,7 +82,7 @@ export class SizeConfigService {
    * @param givenSizes
    * @returns {DfpSlotSize[]}
    */
-  public filterSupportedSizes(givenSizes: DfpSlotSize[]): DfpSlotSize[] {
+  public filterSupportedSizes = (givenSizes: DfpSlotSize[]): DfpSlotSize[] => {
     if (!this.isValid) {
       return [];
     }

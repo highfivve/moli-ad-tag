@@ -6,18 +6,10 @@ import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
-import {
-  AdPipeline, AdPipelineContext,
-  ConfigureStep,
-  IAdPipelineConfiguration,
-  InitStep
-} from '../../../source/ts/ads/adPipeline';
-import { reportingServiceStub } from '../stubs/reportingServiceStub';
+import { AdPipelineContext, } from '../../../source/ts/ads/adPipeline';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
-import { pbjsStub } from '../stubs/prebidjsStubs';
-import { apstagStub } from '../stubs/a9Stubs';
 import { createGoogletagStub } from '../stubs/googletagStubs';
-import { gptDestroyAdSlots, gptInit, gptResetTargeting } from '../../../source/ts/ads/googleAdManager';
+import { gptDefineSlots, gptDestroyAdSlots, gptInit, gptResetTargeting } from '../../../source/ts/ads/googleAdManager';
 import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 
@@ -31,7 +23,7 @@ describe('google ad manager', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  let dom = createDom();
+  const dom = createDom();
   const adPipelineContext = (env: Moli.Environment = 'production', config: Moli.MoliConfig = emptyConfig): AdPipelineContext => {
     return {
       requestId: 0,
@@ -45,6 +37,8 @@ describe('google ad manager', () => {
     };
   };
 
+  const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
+
   const sleep = (timeInMs: number = 20) => new Promise(resolve => {
     setTimeout(resolve, timeInMs);
   });
@@ -57,6 +51,7 @@ describe('google ad manager', () => {
   beforeEach(() => {
     // reset the before each test
     dom.window.googletag = createGoogletagStub();
+    matchMediaStub.returns({ matches: true } as MediaQueryList);
   });
 
   afterEach(() => {
@@ -153,5 +148,64 @@ describe('google ad manager', () => {
 
   });
 
+  describe('gptDefineSlots', () => {
+
+    const adSlot: Moli.AdSlot = {
+      domId: 'dom-id',
+      adUnitPath: '/123/dom-id',
+      behaviour: { loaded: 'eager' },
+      position: 'in-page',
+      sizes: [ [ 300, 250 ] ],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [ [ 300, 250 ] ]
+        }
+      ]
+    };
+
+    it('should filter slots if the size config matches', () => {
+      const step = gptDefineSlots();
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+      return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+        expect(slotDefinitions).to.have.length(1);
+      });
+    });
+
+    it('should remove slots if the size config doesn\'t match', () => {
+      const step = gptDefineSlots();
+      matchMediaStub.returns({ matches: false } as MediaQueryList);
+
+      return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+        expect(slotDefinitions).to.have.length(0);
+      });
+    });
+
+    it('should filter slots if the label configuration matches', () => {
+      const step = gptDefineSlots();
+      const context = adPipelineContext();
+
+      const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+      filterSlotStub.returns(true);
+
+      return step(context, [ adSlot ]).then(slotDefinitions => {
+        expect(slotDefinitions).to.have.length(1);
+      });
+    });
+
+    it('should remove slots if the label configuration doesn\'t match', () => {
+      const step = gptDefineSlots();
+      const context = adPipelineContext();
+
+      const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+      filterSlotStub.returns(false);
+
+      return step(context, [ adSlot ]).then(slotDefinitions => {
+        expect(slotDefinitions).to.have.length(0);
+      });
+    });
+
+  });
 });
 

@@ -11,17 +11,7 @@ import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
-
-/**
- * Decides which sizeConfigService to use - if the slot brings its own sizeConfig, it gets precedence over the
- * global one.
- *
- * @param window
- * @param moliSlot the ad slot
- */
-const getSizeFilterFunction = (window: Window, moliSlot: Moli.AdSlot): Moli.FilterSupportedSizes => {
-  return (givenSizes: Moli.DfpSlotSize[]) => new SizeConfigService(moliSlot.sizeConfig, window).filterSupportedSizes(givenSizes);
-};
+import { isNotNull } from '../util/arrayUtils';
 
 const configureTargeting = (window: Window, targeting: Moli.Targeting | undefined, env: Moli.Environment): void => {
   if (env === 'production') {
@@ -113,7 +103,14 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
 
 export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
   const slotDefinitions = slots.map(moliSlot => {
-    const filterSupportedSizes = getSizeFilterFunction(context.window, moliSlot);
+    const sizeConfigService = new SizeConfigService(moliSlot.sizeConfig, context.window);
+    const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
+
+    // filter slots that shouldn't be displayed
+    if (!(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))) {
+      return Promise.resolve(null);
+    }
+
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
     // lookup existing slots and use those if already present. This makes defineSlots idempotent
@@ -151,7 +148,7 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
 
   });
 
-  return Promise.all(slotDefinitions);
+  return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
 };
 
 export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition[]) => new Promise<void>(resolve => {

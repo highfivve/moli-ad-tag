@@ -231,7 +231,7 @@ export class AdService {
     const fn = () => new Promise<void>(resolve => {
       domready(this.window, resolve);
     }).then(() => this.logger.debug('DOM', 'dom ready'));
-    Object.defineProperty(fn, 'name', { value: 'await-dom-ready'});
+    Object.defineProperty(fn, 'name', { value: 'await-dom-ready' });
     return fn;
   };
 
