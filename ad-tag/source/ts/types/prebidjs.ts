@@ -134,9 +134,9 @@ export namespace prebidjs {
       readonly usePrebidSizes: boolean;
     };
   }
-  
+
   export namespace targetingcontrols {
-    
+
     export interface ITargetingControls {
 
       /**
@@ -175,6 +175,73 @@ export namespace prebidjs {
        * either allow the auction to proceed (true) or cancel the auction (false). Default is true
        */
       readonly allowAuctionWithoutConsent?: boolean;
+    }
+  }
+
+  /**
+   * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
+   *
+   * @see http://prebid.org/dev-docs/publisher-api-reference.html#price-granularity
+   */
+  export namespace priceGranularity {
+
+    export type PriceGranularityConfig = 'low' | 'medium' | 'high' | 'auto' | 'dense' | ICustomPriceGranularityConfig;
+
+    /**
+     * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
+     */
+    export interface ICustomPriceGranularityConfig {
+      readonly buckets: IPriceBucketConfig[];
+    }
+
+    /**
+     * The default Prebid price granularities cap out at $20, which isn’t always convenient for video ads, which
+     * can command more than $20. One solution is to just set up a custom price granularity as described above.
+     * Another approach is mediaTypePriceGranularity config that may be set to define granularities for each of
+     * five media types: banner, video, video-instream, video-outstream, and native.
+     */
+    export interface IMediaTypePriceGranularityConfig {
+      readonly video: PriceGranularityConfig;
+      readonly 'video-outstream': PriceGranularityConfig;
+      readonly banner: PriceGranularityConfig;
+      readonly native: PriceGranularityConfig;
+    }
+
+    /**
+     * @example
+     * ```javascript
+     * const customConfigObject = {
+     * "buckets" : [{
+     *     "precision": 2,  //default is 2 if omitted - means 2.1234 rounded to 2 decimal places = 2.12
+     *     "max" : 5,
+     *     "increment" : 0.01  // from $0 to $5, 1-cent increments
+     *  },
+     *  {
+     *    "max" : 8,
+     *    "increment" : 0.05  // from $5 to $8, round down to the previous 5-cent increment
+     *  },
+     *  {
+     *    "max" : 40,
+     *    "increment" : 0.5   // from $8 to $40, round down to the previous 50-cent increment
+     *  }]
+     * };
+     * ```
+     */
+    export interface IPriceBucketConfig {
+      /**
+       * default is 2 if omitted - means 2.1234 rounded to 2 decimal places = 2.12
+       */
+      readonly precision?: number;
+
+      /**
+       * Upper limit for this price bucket
+       */
+      readonly max: number;
+
+      /**
+       * Increment steps in publisher currency
+       */
+      readonly increment: number;
     }
   }
 
@@ -547,6 +614,22 @@ export namespace prebidjs {
      * Default: true
      */
     readonly enableSendAllBids?: boolean;
+
+    /**
+     * Set the publisher’s domain where Prebid is running, for cross-domain iframe communication
+     */
+    readonly publisherDomain?: string;
+
+    /**
+     * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
+     */
+    readonly priceGranularity?: priceGranularity.PriceGranularityConfig;
+
+    /**
+     * The default Prebid price granularities cap out at $20, which isn’t always convenient for video ads, which can
+     * command more than $20. One solution is to just set up a custom price granularity as described above. Another approach is mediaTypePriceGranularity config that may be set to define granularities for each of five media types: banner, video, video-instream, video-outstream, and native. e.g.
+     */
+    readonly mediaTypePriceGranularity?: priceGranularity.IMediaTypePriceGranularityConfig;
 
     /**
      * The `targetingControls` object passed to pbjs.setConfig provides some options to influence how an auction’s
