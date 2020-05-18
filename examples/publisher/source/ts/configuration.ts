@@ -79,8 +79,7 @@ const appNexusNative = (placementId: string): prebidjs.IAppNexusASTBid => {
   return {
     bidder: prebidjs.AppNexusAst,
     params: {
-      placementId: placementId,
-      allowSmallerSizes: true
+      placementId: placementId
     },
     labelAll: [ prebidjs.AppNexusAst ]
   };

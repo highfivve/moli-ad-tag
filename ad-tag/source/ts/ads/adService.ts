@@ -136,7 +136,7 @@ export class AdService {
     }
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
-      passbackPrepareRequestAds(new PassbackService(this.window.googletag, this.logger, this.window)),
+      passbackPrepareRequestAds(new PassbackService(this.logger, this.window)),
       yieldOptimizationPrepareRequestAds(new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger))
     ];
 

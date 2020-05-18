@@ -49,7 +49,6 @@ export class PassbackService {
   private readonly passbackOriginKeyValue: string = 'passbackOrigin';
 
   constructor(
-    private readonly gpt: googletag.IGoogleTag,
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window
   ) {
@@ -85,7 +84,7 @@ export class PassbackService {
 
         // previously we had changeCorrelator: true (see GD-1615), but this hadn't the intended effect
         // so we removed it (see GD-1696)
-        this.gpt.pubads().refresh([ adSlot.adSlot ] );
+        this.window.googletag.pubads().refresh([ adSlot.adSlot ] );
         
         // allow passback only once
         delete this.adSlots[adSlot.moliSlot.domId];
