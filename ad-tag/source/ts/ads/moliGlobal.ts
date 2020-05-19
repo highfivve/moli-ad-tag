@@ -16,10 +16,11 @@ import { createMoliTag } from './moli';
  * @return moli ad tag
  */
 export const initAdTag = (window: Window): Moli.MoliTag => {
-  const queueCommands = window.moli ? [...window.moli.que as Moli.MoliCommand[]] || [] : [];
+  const moliWindow = window as Moli.MoliWindow;
+  const queueCommands = moliWindow.moli ? [...moliWindow.moli.que as Moli.MoliCommand[]] || [] : [];
 
   const moli: Moli.MoliTag = createMoliTag(window);
-  window.moli = moli;
+  moliWindow.moli = moli;
 
   queueCommands.forEach(cmd => cmd(moli));
 

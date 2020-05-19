@@ -3,7 +3,7 @@ import { prebidjs } from './prebidjs';
 import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { IABConsentManagement } from './IABConsentManagement';
-import { ConfigureStep, PrepareRequestAdsStep } from "../ads/adPipeline";
+import { ConfigureStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 
 /* tslint:disable:interface-name */
 export namespace Moli {
@@ -984,6 +984,7 @@ export namespace Moli {
     export interface ISlotLoading {
       readonly loaded: 'eager' | 'lazy' | 'refreshable';
     }
+
     /**
      * An ad slot which is requested during page load.
      * This is the standard behaviour.
@@ -1704,7 +1705,10 @@ export namespace Moli {
     /**
      * Available options to configure yield optimization
      */
-    export type YieldOptimizationConfig = NoYieldOptimizationConfig | StaticYieldOptimizationConfig | DynamicYieldOptimizationConfig;
+    export type YieldOptimizationConfig =
+      NoYieldOptimizationConfig
+      | StaticYieldOptimizationConfig
+      | DynamicYieldOptimizationConfig;
 
     export interface IYieldOptimizationConfig {
       readonly provider: YieldOptimizationConfigProvider;
@@ -1869,20 +1873,13 @@ export namespace Moli {
 
   }
 
-}
-
-declare global {
-
-  /**
-   * Add moli to the global Window instance
-   */
-  interface Window {
-
+  export type MoliWindow = Window & {
     /**
      * the global moli tag definition
      */
     moli: Moli.MoliTag;
-  }
+  };
+
 }
 
 /* tslint:enable:interface-name */

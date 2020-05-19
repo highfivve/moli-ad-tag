@@ -12,6 +12,8 @@ import './debug.css';
 import { WindowResizeService } from './util/windowResizeService';
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 
+declare const window: Moli.MoliWindow;
+
 const moliConfig: MoliConfig | null = window.moli.getConfig();
 
 if (moliConfig) {

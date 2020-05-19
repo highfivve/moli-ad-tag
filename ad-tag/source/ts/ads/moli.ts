@@ -15,6 +15,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
   const assetLoaderService = createAssetLoaderService(window);
   const adService = new AdService(assetLoaderService, window);
+  const moliWindow = window as Moli.MoliWindow;
 
   /**
    * Initial state is configurable
@@ -550,7 +551,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   const que = {
     push(cmd: Moli.MoliCommand): void {
-      cmd(window.moli);
+      cmd(moliWindow.moli);
     }
   };
 
