@@ -10,7 +10,7 @@ import {
   AdPipeline,
   ConfigureStep,
   IAdPipelineConfiguration,
-  InitStep
+  InitStep, mkPrepareRequestAdsStep
 } from '../../../source/ts/ads/adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
@@ -115,6 +115,27 @@ describe('AdPipeline', () => {
         })
         .then(() => {
           expect(callCount).to.be.equals(1);
+        });
+    });
+
+    it('should execute prepareRequestAds by priority', () => {
+      const spyFn = sandbox.spy();
+
+      // higher priority / earlier execution
+      const prepareRequestAdsSteps = [
+        mkPrepareRequestAdsStep('first', 3, () => sleep(20).then(() => spyFn('1', 'priority 3'))),
+        mkPrepareRequestAdsStep('second', 2, () => sleep(5).then(() => spyFn('2', 'priority 2'))),
+        mkPrepareRequestAdsStep('third', 1, () => sleep(10).then(() => spyFn('3', 'priority 1')))
+      ];
+
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, prepareRequestAds: prepareRequestAdsSteps });
+
+      return pipeline.run([ adSlot ], emptyConfig)
+        .then(() => {
+          expect(spyFn).to.have.been.calledThrice;
+          expect(spyFn.firstCall).calledWithExactly('1', 'priority 3');
+          expect(spyFn.secondCall).calledWithExactly('2', 'priority 2');
+          expect(spyFn.thirdCall).calledWithExactly('3', 'priority 1');
         });
     });
   });
