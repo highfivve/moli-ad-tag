@@ -9,7 +9,7 @@ In your `index.ts` import the blacklist-urls module and register it.
 
 
 ```javascript
-import BlacklistedUrls from '@highfivve/module-blacklist-url';
+import BlacklistedUrls from '@highfivve/modules/blacklist-urls';
 
 moli.registerModule(new BlacklistedUrls({
   mode: 'block',
