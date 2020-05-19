@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.1.0
+
+[GD-2027](https://jira.gutefrage.net/browse/GD-2027). Add `Blacklist URLs` module to send key-values or block the
+ad pipeline for blacklisted url patterns.
+
 ## 2.0.1
 
 [GD-1738](https://jira.gutefrage.net/browse/GD-1738). Support `adUnitPath` in passback messages.

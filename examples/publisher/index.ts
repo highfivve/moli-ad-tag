@@ -23,6 +23,8 @@ import { adConfiguration } from './source/ts/configuration';
 // import Cmp from '@highfivve/module-cmp-faktor';
 import Confiant from '@highfivve/module-confiant';
 
+import BlacklistedUrls from '@highfivve/module-blacklist-url';
+
 prebid.processQueue();
 
 const moli = initAdTag(window);
@@ -34,6 +36,20 @@ moli.registerModule(new Confiant({
 
 // cmp
 // moli.registerModule(new Cmp({ autoOptIn: true }, window));
+
+// blacklist urls
+moli.registerModule(new BlacklistedUrls({
+  mode: 'block',
+  blacklist: {
+    provider: 'static',
+    blacklist: {
+      urls: [
+        // { pattern: 'local\.h5v\.eu' },
+        { pattern: 'invalid' }
+      ]
+    }
+  }
+}, window));
 
 // init moli
 moli.configure(adConfiguration);
