@@ -161,6 +161,12 @@ export class AdService {
       requestBids.push(a9RequestBids());
     }
 
+    // add additional steps if configured
+    if (config.pipeline) {
+      configure.push(...config.pipeline.configureSteps);
+      prepareRequestAds.push(...config.pipeline.prepareRequestAdsSteps);
+    }
+
     this.adPipeline = new AdPipeline({
       init,
       configure,

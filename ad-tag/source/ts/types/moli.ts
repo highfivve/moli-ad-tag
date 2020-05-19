@@ -3,6 +3,7 @@ import { prebidjs } from './prebidjs';
 import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { IABConsentManagement } from './IABConsentManagement';
+import { ConfigureStep, PrepareRequestAdsStep } from "../ads/adPipeline";
 
 /* tslint:disable:interface-name */
 export namespace Moli {
@@ -699,6 +700,11 @@ export namespace Moli {
      */
     reporting?: reporting.ReportingConfig;
 
+    /**
+     * AdPipeline configuration
+     */
+    pipeline?: pipeline.PipelineConfig;
+
     /** configurable logger */
     logger?: MoliLogger;
 
@@ -1352,6 +1358,31 @@ export namespace Moli {
        * default: none - meaning operations block until finished
        */
       timeout?: number;
+    }
+
+  }
+
+  export namespace pipeline {
+
+    /**
+     * ## Pipeline Config
+     *
+     * The AdPipeline is the driving data structure behind every ad request. It executes a set of steps in various
+     * phases. This additional configuration lets the publisher or modules add new steps to the pipeline.
+     *
+     */
+    export interface PipelineConfig {
+
+      /**
+       *  Additional configureSteps that should be executed in every AdPipline run.
+       */
+      readonly configureSteps: ConfigureStep[];
+
+      /**
+       *  Additional prepareRequestAdsSteps that should be executed in every AdPipline run.
+       */
+      readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
+
     }
 
   }
