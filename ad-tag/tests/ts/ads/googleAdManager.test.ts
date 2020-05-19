@@ -8,7 +8,7 @@ import { Moli } from '../../../source/ts/types/moli';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext, } from '../../../source/ts/ads/adPipeline';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
-import { createGoogletagStub } from '../stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import { gptDefineSlots, gptDestroyAdSlots, gptInit, gptResetTargeting } from '../../../source/ts/ads/googleAdManager';
 import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
@@ -163,6 +163,50 @@ describe('google ad manager', () => {
         }
       ]
     };
+
+    describe('production mode', () => {
+
+      it('should define in-page slots', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineSlotsStub = sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+          expect(defineSlotsStub).to.have.been.calledOnce;
+          expect(defineSlotsStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(addServiceSpy).to.have.been.calledOnce;
+          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+          expect(displaySpy).to.have.been.calledOnce;
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlot.domId);
+          expect(slotDefinitions).to.have.length(1);
+          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+        });
+      });
+
+      it('should define a slot only once', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const defineSlotsSpy = sandbox.spy(dom.window.googletag, 'defineSlot');
+        // slot is already defined
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([
+          googleAdSlotStub(adSlot.adUnitPath, adSlot.domId)
+        ]);
+
+        return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+          expect(defineSlotsSpy).to.have.not.been.called;
+        });
+      });
+
+
+    });
 
     it('should filter slots if the size config matches', () => {
       const step = gptDefineSlots();
