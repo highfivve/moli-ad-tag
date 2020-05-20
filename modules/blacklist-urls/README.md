@@ -28,3 +28,37 @@ moli.registerModule(new BlacklistedUrls({
 ```
 
 The `pattern` property in the `urls` list **must** be a valid Regex.
+
+You can combine `block` and `key-value` mode by adding the module twice.
+
+```javascript
+import BlacklistedUrls from '@highfivve/modules/blacklist-urls';
+
+moli.registerModule(new BlacklistedUrls({
+  mode: 'block',
+  blacklist: {
+    provider: 'static',
+    blacklist: {
+      urls: [
+        { pattern: '\/login$' },
+        { pattern: '\/register' },
+      ]
+    }
+  }
+}, window));
+
+moli.registerModule(new BlacklistedUrls({
+  mode: 'key-value',
+  blacklist: {
+    provider: 'static',
+    blacklist: {
+      urls: [
+        // a specific path
+        { pattern: '\/path\/that\/should\/be\/blacklisted' },
+        // all http sites
+        { pattern: '^http:\/\/.*' }
+      ]
+    }
+  }
+}, window));
+```
