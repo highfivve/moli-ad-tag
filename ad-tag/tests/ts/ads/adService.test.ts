@@ -286,7 +286,7 @@ describe('AdService', () => {
           expect(stepNames).to.contain('reporting-enabled');
         });
       });
-    })
+    });
   });
 
   describe('requestBids', () => {
