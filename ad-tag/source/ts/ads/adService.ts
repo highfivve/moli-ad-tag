@@ -131,7 +131,7 @@ export class AdService {
     }
 
     if (config.consent.cmp) {
-      configure.push(consentConfigureGpt(config.consent.cmp));
+      configure.push(consentConfigureGpt(config.consent.cmp, reportingService));
     }
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
