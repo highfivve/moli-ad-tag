@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.1.2
+
+Fix reporting - add cmp load time measurement
+
 ## 2.1.1
 
 Fix reporting.
