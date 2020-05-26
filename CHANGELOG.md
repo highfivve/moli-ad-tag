@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.1.1
+
+Fix reporting.
+
 ## 2.1.0
 
 [GD-2027](https://jira.gutefrage.net/browse/GD-2027). Add `Blacklist URLs` module to send key-values or block the
