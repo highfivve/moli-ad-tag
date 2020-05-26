@@ -10,7 +10,7 @@ import {
   RequestBidsStep
 } from './adPipeline';
 import { SlotEventService, slotEventServiceConfigure } from './slotEventService';
-import { noopReportingService, reportingConfigure, ReportingService } from './reportingService';
+import { noopReportingService, reportingPrepareRequestAds, ReportingService } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import {
@@ -123,7 +123,6 @@ export class AdService {
 
     const configure: ConfigureStep[] = [
       gptConfigure(config),
-      reportingConfigure(reportingService),
       slotEventServiceConfigure(this.slotEventService)
     ];
 
@@ -136,6 +135,7 @@ export class AdService {
     }
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
+      reportingPrepareRequestAds(reportingService),
       passbackPrepareRequestAds(new PassbackService(this.logger, this.window)),
       yieldOptimizationPrepareRequestAds(new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger))
     ];

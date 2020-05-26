@@ -2,12 +2,22 @@ import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
 import { IPerformanceMeasurementService } from './../util/performanceService';
 import { SlotEventService } from './slotEventService';
-import { ConfigureStep, mkConfigureStep } from './adPipeline';
+import {
+  HIGH_PRIORITY,
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep
+} from './adPipeline';
 
-export const reportingConfigure = (reportingService: IReportingService): ConfigureStep => mkConfigureStep('reporting-configured', (ctx, slots) => {
+/**
+ * Add event listeners on the slots that should be monitored.
+ * The reporting is only active for the first request.
+ *
+ * @param reportingService
+ */
+export const reportingPrepareRequestAds = (reportingService: IReportingService): PrepareRequestAdsStep => mkPrepareRequestAdsStep('reporting-enabled', HIGH_PRIORITY, (ctx, slots) => {
   if (ctx.requestId === 1) {
-    ctx.logger.debug('Reporting', 'initialize reporting');
-    reportingService.initialize(slots);
+    ctx.logger.debug('Reporting', 'initialize reporting', slots);
+    reportingService.initialize(slots.map(slot => slot.moliSlot));
   }
   return Promise.resolve();
 });

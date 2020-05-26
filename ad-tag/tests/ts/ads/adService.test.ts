@@ -141,13 +141,6 @@ describe('AdService', () => {
       });
     });
 
-    it('should add the reporting-configured step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('reporting-configured');
-      });
-    });
-
     it('should add the slot-event-service-configure step', () => {
       return initialize().then(pipeline => {
         const stepNames = pipeline.configure.map(step => step.name);
@@ -285,6 +278,15 @@ describe('AdService', () => {
         });
       });
     });
+
+    describe('reporting', () => {
+      it('should add the reporting-enabled step', () => {
+        return initialize().then(pipeline => {
+          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+          expect(stepNames).to.contain('reporting-enabled');
+        });
+      });
+    })
   });
 
   describe('requestBids', () => {
