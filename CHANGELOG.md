@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.1.3
+
+[GD-2029](https://jira.gutefrage.net/browse/GD-2029). Match `matchType` to blacklist module
+
 ## 2.1.2
 
 Fix reporting - add cmp load time measurement

@@ -15,6 +15,15 @@ export interface IBlacklistEntry {
    */
   readonly pattern: string;
 
+  /**
+   * Defines how the pattern should be matched against the url
+   *
+   * - `regex` - transform the pattern into a regex and runs `regex.test(url)`
+   * - `contains` - checks if the url contains the given pattern string
+   * - `exact` - checks if the url exactly matches the given pattern string
+   */
+  readonly matchType: 'regex' | 'contains' | 'exact';
+
 }
 
 export interface IBlacklist {
@@ -147,18 +156,27 @@ export default class BlacklistedUrls implements IModule {
     }
   }
 
-  private isBlacklisted = (blacklist: IBlacklist, href: string, log: Moli.MoliLogger): boolean => {
-    return blacklist.urls.some(({ pattern }) => {
-      try {
-        const matched = RegExp(pattern).test(href);
-        if (matched) {
-          log.debug(this.name, `Url '${href}' matched pattern '${pattern}'`);
-        }
-        return matched;
-      } catch (e) {
-        log.error(this.name, `Invalid pattern ${pattern}`, e);
-        return false;
+  isBlacklisted = (blacklist: IBlacklist, href: string, log: Moli.MoliLogger): boolean => {
+    return blacklist.urls.some(({ pattern, matchType }) => {
+      switch (matchType) {
+        case 'exact':
+          return href === pattern;
+        case 'contains':
+          return href.indexOf(pattern) > -1;
+        case 'regex':
+          try {
+            const matched = RegExp(pattern).test(href);
+            if (matched) {
+              log.debug(this.name, `Url '${href}' matched pattern '${pattern}'`);
+            }
+            return matched;
+          } catch (e) {
+            log.error(this.name, `Invalid pattern ${pattern}`, e);
+            console.log(this.name, `Invalid pattern ${pattern}`, e);
+            return false;
+          }
       }
+
     });
   }
 

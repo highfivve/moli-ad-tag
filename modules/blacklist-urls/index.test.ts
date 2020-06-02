@@ -4,7 +4,6 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import BlacklistUrls, {
   IBlacklist,
-  IBlacklistEntry,
   IDynamicBlacklistProvider,
   IStaticBlacklistProvider
 } from './index';
@@ -40,16 +39,16 @@ describe('BlacklistUrls Module', () => {
 
   const emptyBlacklist: IBlacklist = { urls: [] };
 
-  const blacklist = (patterns: string[]): IBlacklist => {
+  const blacklist = (patterns: string[], matchType: 'regex' | 'contains' | 'exact' = 'regex'): IBlacklist => {
     return {
       urls: patterns.map(pattern => {
-        return { pattern };
+        return { pattern, matchType };
       })
     };
   };
 
-  const staticBlacklistProvider = (patterns: string[] = []): IStaticBlacklistProvider => {
-    return { provider: 'static', blacklist: blacklist(patterns) };
+  const staticBlacklistProvider = (patterns: string[] = [], matchType: 'regex' | 'contains' | 'exact' = 'regex'): IStaticBlacklistProvider => {
+    return { provider: 'static', blacklist: blacklist(patterns, matchType) };
   };
 
   const dynamicBlacklistProvider: IDynamicBlacklistProvider = {
@@ -351,6 +350,85 @@ describe('BlacklistUrls Module', () => {
         expect(loadJsonStub).to.have.been.calledOnceWithExactly('blacklist-urls.json', dynamicBlacklistProvider.endpoint);
       });
     });
+  });
+
+  describe('isBlacklisted method', () => {
+
+    // the isBlacklisted method is stateless
+    const module = new BlacklistUrls({
+      mode: 'block', blacklist: staticBlacklistProvider()
+    }, dom.window);
+
+    describe('matchType: regex', () => {
+      it('is not blacklisted for empty urls array', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([], 'regex'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+      it('is not blacklisted if no url matches', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([
+          'foo', 'bar'
+        ], 'regex'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+      it('is not blacklisted if the pattern is not a valid regex', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([
+          //  it seems to be impossible to create an invalid regex in js
+          '$example^' as any
+        ], 'regex'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+      it('is blacklisted if an url matches', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([ 'example\.com$' ], 'regex'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.true;
+      });
+
+    });
+
+    describe('matchType: contains', () => {
+      it('is not blacklisted for empty urls array', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([], 'contains'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+      it('is not blacklisted if no url matches', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([
+          'foo', 'bar'
+        ], 'contains'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+
+      it('is blacklisted if an url matches', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([ 'http://www.example' ], 'contains'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.true;
+      });
+
+    });
+
+    describe('matchType: exact', () => {
+      it('is not blacklisted for empty urls array', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([], 'exact'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+      it('is not blacklisted if no url matches', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([
+          'http://www.example.de', 'bar'
+        ], 'exact'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.false;
+      });
+
+
+      it('is blacklisted if an url matches', () => {
+        const isBlacklisted = module.isBlacklisted(blacklist([ 'http://www.example.com' ], 'exact'), 'http://www.example.com', noopLogger);
+        expect(isBlacklisted).to.be.true;
+      });
+
+    });
+
   });
 
 });

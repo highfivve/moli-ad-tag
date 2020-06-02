@@ -44,8 +44,8 @@ moli.registerModule(new BlacklistedUrls({
     provider: 'static',
     blacklist: {
       urls: [
-        // { pattern: 'local\.h5v\.eu' },
-        { pattern: 'invalid' }
+        // { pattern: 'local\.h5v\.eu', matchType: 'regex' },
+        { pattern: 'invalid', matchType: 'contains' }
       ]
     }
   }
