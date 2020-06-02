@@ -1,4 +1,5 @@
 import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { consoleLogReporter } from './reporters';
 
 const logger: Moli.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
@@ -438,6 +439,13 @@ export const adConfiguration: Moli.MoliConfig = {
     provider: 'dynamic',
     configEndpoint: '//local.h5v.eu:9000/yield-config.json'
   },
-
+  reporting: {
+    // report everything
+    sampleRate: 1,
+    adUnitRegex: /\/\d*\/gf\//i,
+    reporters: [
+      consoleLogReporter
+    ]
+  },
   logger: logger
 };
