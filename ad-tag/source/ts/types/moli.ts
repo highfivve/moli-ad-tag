@@ -3,7 +3,7 @@ import { prebidjs } from './prebidjs';
 import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { IABConsentManagement } from './IABConsentManagement';
-import { ConfigureStep, PrepareRequestAdsStep } from '../ads/adPipeline';
+import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 
 /* tslint:disable:interface-name */
 export namespace Moli {
@@ -1375,12 +1375,17 @@ export namespace Moli {
     export interface PipelineConfig {
 
       /**
-       *  Additional configureSteps that should be executed in every AdPipline run.
+       * Additional initSteps that should be executed in every AdPipeline run.
+       */
+      readonly initSteps: InitStep[];
+
+      /**
+       *  Additional configureSteps that should be executed in every AdPipeline run.
        */
       readonly configureSteps: ConfigureStep[];
 
       /**
-       *  Additional prepareRequestAdsSteps that should be executed in every AdPipline run.
+       *  Additional prepareRequestAdsSteps that should be executed in every AdPipeline run.
        */
       readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
 

@@ -121,6 +121,7 @@ export default class BlacklistedUrls implements IModule {
 
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
+      initSteps: [],
       configureSteps: [],
       prepareRequestAdsSteps: []
     };

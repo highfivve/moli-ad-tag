@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-2045](https://jira.gutefrage.net/browse/GD-2045). Add liveramp TCF 2 module
+
 ## 2.1.3
 
 [GD-2029](https://jira.gutefrage.net/browse/GD-2029). Match `matchType` to blacklist module

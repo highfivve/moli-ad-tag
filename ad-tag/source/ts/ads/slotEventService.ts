@@ -59,8 +59,8 @@ type IEventSources = {
 export class SlotEventService {
 
   /**
-   * Internal data structure to add callbacks for the SlotRenderEndedEvent. We require this
-   * so we can remove callbacks that are finished (Promise resolved) and don't create a memory
+   * Internal data structure to add responses for the SlotRenderEndedEvent. We require this
+   * so we can remove responses that are finished (Promise resolved) and don't create a memory
    * leak for single page applications. This would not be necessary if the gpt tag would have
    * the ability to remove listeners.
    */
@@ -85,7 +85,7 @@ export class SlotEventService {
   public initialize(googletag: googletag.IGoogleTag, env: Moli.Environment): void {
     switch (env) {
       case 'production':
-        // Initialize the listener only once and manage the callbacks internally
+        // Initialize the listener only once and manage the responses internally
         googletag.pubads().addEventListener('slotRenderEnded', event => {
           this.slotRenderEndedEventCallbacks.forEach(callback => callback(event));
         });

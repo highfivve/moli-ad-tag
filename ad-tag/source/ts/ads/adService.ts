@@ -70,7 +70,7 @@ export class AdService {
    *
    * @param assetService
    * @param window
-   * @param adPipelineConfig only for testing purposes at this point. This configuration will be overriden by
+   * @param adPipelineConfig only for testing purpose at this point. This configuration will be overriden by
    *        a call to initialize. This should not be the API for extending the pipeline!
    */
   constructor(private readonly assetService: IAssetLoaderService,
@@ -163,6 +163,7 @@ export class AdService {
 
     // add additional steps if configured
     if (config.pipeline) {
+      init.push(...config.pipeline.initSteps);
       configure.push(...config.pipeline.configureSteps);
       prepareRequestAds.push(...config.pipeline.prepareRequestAdsSteps);
     }

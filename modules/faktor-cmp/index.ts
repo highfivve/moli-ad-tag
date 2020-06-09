@@ -155,7 +155,7 @@ export default class Faktor implements CmpModule {
   }
 
   /**
-   * Accepts all vendors and purposes in our configuration. Overrides any existing consent data
+   * Accepts all vendors and purpose in our configuration. Overrides any existing consent data
    * if present. Make sure that you first check `consentDataExists` first.
    */
   private acceptAll(): Promise<void> {

@@ -140,7 +140,7 @@ export namespace IABConsentManagement {
   }
 
   /**
-   * contains the global purposes, and vendors, consented by the user.
+   * contains the global purpose, and vendors, consented by the user.
    */
   export interface IVendorConsents {
     /**
