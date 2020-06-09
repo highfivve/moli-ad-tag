@@ -176,7 +176,10 @@ export namespace prebidjs {
        */
       readonly allowAuctionWithoutConsent?: boolean;
 
-      readonly gdpr: IGdprConfig;
+      /**
+       * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+       */
+      readonly gdpr?: IGdprConfig;
     }
 
     /**
