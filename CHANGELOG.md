@@ -3,6 +3,7 @@
 ## Unreleased
 
 [GD-2045](https://jira.gutefrage.net/browse/GD-2045). Add liveramp TCF 2 module
+[GD-2044](https://jira.gutefrage.net/browse/GD-2044). Add gdprEnforcement types to prebid.ts
 
 ## 2.1.3
 

@@ -175,6 +175,50 @@ export namespace prebidjs {
        * either allow the auction to proceed (true) or cancel the auction (false). Default is true
        */
       readonly allowAuctionWithoutConsent?: boolean;
+
+      readonly gdpr: IGdprConfig;
+    }
+
+    /**
+     * A page needs to define configuration rules about how Prebid.js should enforce each in-scope activity
+     *
+     * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+     */
+    export interface IGdprConfig {
+      readonly rules: IGdprConfigRule[];
+    }
+
+    export interface IGdprConfigRule {
+      /**
+       * The only currently supported value is “storage”, corresponding to TCF Purpose 1.
+       */
+      readonly purpose: 'storage';
+
+      /**
+       * Determines whether to enforce the purpose consent or not. The default in Prebid.js 3.x is not to enforce
+       * purposes. The plan for Prebid.js 4.0 is to enforce consent for Purpose 1 and no others.
+       */
+      readonly enforcePurpose: boolean;
+
+      /**
+       * Determines whether to enforce vendor signals for this purpose or not. The default in Prebid.js 3.x is not to
+       * enforce vendor signals. The plan for Prebid.js 4.0 to enforce signals for Purpose 1 and no others.
+       */
+      readonly enforceVendor: boolean;
+
+      /**
+       * Defines a list of biddercodes or module names that are exempt from the enforcement of this Purpose.
+       *
+       * The vendorExceptions list is based on Prebid.js biddercodes instead of Global Vendor List (GVL) IDs,
+       * i.e. "rubicon" instead of "52". This was done to accomodate Prebid.js modules and adapters that don’t have
+       * GVL IDs.
+       *
+       * @example
+       * ```js
+       * ["bidderA", "userID-module-B"]
+       * ```
+       */
+      readonly vendorExceptions?: string[];
     }
   }
 
