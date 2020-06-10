@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-2081](https://jira.gutefrage.net/browse/GD-2081). Send labels as key value
+
 ## 2.2.0
 
 [GD-2045](https://jira.gutefrage.net/browse/GD-2045). Add liveramp TCF 2 module

@@ -17,7 +17,7 @@ import {
   gptConfigure,
   gptDefineSlots,
   gptDestroyAdSlots,
-  gptInit,
+  gptInit, gptLDeviceLabelKeyValue,
   gptRequestAds,
   gptResetTargeting
 } from './googleAdManager';
@@ -123,7 +123,8 @@ export class AdService {
 
     const configure: ConfigureStep[] = [
       gptConfigure(config),
-      slotEventServiceConfigure(this.slotEventService)
+      slotEventServiceConfigure(this.slotEventService),
+      gptLDeviceLabelKeyValue()
     ];
 
     if (isSinglePageApp) {

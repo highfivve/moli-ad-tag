@@ -9,7 +9,13 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext, } from '../../../source/ts/ads/adPipeline';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
-import { gptDefineSlots, gptDestroyAdSlots, gptInit, gptResetTargeting } from '../../../source/ts/ads/googleAdManager';
+import {
+  gptDefineSlots,
+  gptDestroyAdSlots,
+  gptInit,
+  gptLDeviceLabelKeyValue,
+  gptResetTargeting
+} from '../../../source/ts/ads/googleAdManager';
 import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 
@@ -143,6 +149,77 @@ describe('google ad manager', () => {
         expect(setTargetingSpy).to.have.been.calledTwice;
         expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
         expect(setTargetingSpy).to.have.been.calledWith('tags', [ 'car', 'truck' ]);
+      });
+    });
+
+  });
+
+  describe('gptLDeviceLabelKeyValue', () => {
+
+    const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
+    const getSupportedLabelsStub = sandbox.stub(ctxWithLabelServiceStub.labelConfigService, 'getSupportedLabels');
+
+    it('should set no device label if no valid device labels are available', () => {
+      const step = gptLDeviceLabelKeyValue();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      getSupportedLabelsStub.returns([]);
+
+      return step(ctxWithLabelServiceStub, []).then(() => {
+        expect(setTargetingSpy).to.have.not.been.called;
+      });
+    });
+
+    it('should set no device label if more than one valid device labels are available', () => {
+      const step = gptLDeviceLabelKeyValue();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      getSupportedLabelsStub.returns([ 'mobile', 'tablet' ]);
+
+      return step(ctxWithLabelServiceStub, []).then(() => {
+        expect(setTargetingSpy).to.have.not.been.called;
+      });
+    });
+
+    it('should set mobile as a device label', () => {
+      const step = gptLDeviceLabelKeyValue();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      getSupportedLabelsStub.returns([ 'mobile' ]);
+
+      return step(ctxWithLabelServiceStub, []).then(() => {
+        expect(setTargetingSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'mobile' ]);
+      });
+    });
+
+    it('should set tablet as a device label', () => {
+      const step = gptLDeviceLabelKeyValue();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      getSupportedLabelsStub.returns([ 'tablet' ]);
+
+      return step(ctxWithLabelServiceStub, []).then(() => {
+        expect(setTargetingSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'tablet' ]);
+      });
+    });
+
+    it('should set desktop as a device label', () => {
+      const step = gptLDeviceLabelKeyValue();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      getSupportedLabelsStub.returns([ 'desktop' ]);
+
+      return step(ctxWithLabelServiceStub, []).then(() => {
+        expect(setTargetingSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'desktop' ]);
+      });
+    });
+
+    it('should filter out irrelevant labels', () => {
+      const step = gptLDeviceLabelKeyValue();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      getSupportedLabelsStub.returns([ 'mobile', 'mobile-320', 'ix' ]);
+
+      return step(ctxWithLabelServiceStub, []).then(() => {
+        expect(setTargetingSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'mobile' ]);
       });
     });
 

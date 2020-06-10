@@ -177,6 +177,12 @@ describe('AdService', () => {
       });
     });
 
+    it('should add the gpt-device-label-keyValue step', () => {
+      return initialize().then(pipeline => {
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('gpt-device-label-keyValue');
+      });
+    });
 
     describe('prebid', () => {
       it('should add pbjs if available in the config', () => {

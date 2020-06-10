@@ -373,7 +373,7 @@ export const adConfiguration: Moli.MoliConfig = {
       mediaQuery: '(max-width: 767px)'
     },
     {
-      labelsSupported: [ 'desktop', 'tablet' ],
+      labelsSupported: [ 'desktop' ],
       mediaQuery: '(min-width: 768px)'
     }
   ],

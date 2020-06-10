@@ -101,6 +101,28 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
   });
 };
 
+/**
+ * Adds a key-value `deviceLabel` to the targeting if a single device label could be found.
+ * A valid device label is `mobile`, `tablet` and `desktop`.
+ *
+ * The `LabelConfigService` is used to fetch the supported labels.
+ *
+ */
+export const gptLDeviceLabelKeyValue = (): ConfigureStep => mkConfigureStep('gpt-device-label-keyValue', (ctx) => new Promise<void>(resolve => {
+  const whitelist = [ 'mobile', 'tablet', 'desktop' ];
+  const deviceLabels = ctx.labelConfigService.getSupportedLabels()
+    .filter(label => whitelist.some(deviceLabel => deviceLabel === label));
+
+  if (deviceLabels.length === 1) {
+    ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabels);
+    ctx.window.googletag.pubads().setTargeting('device_label', deviceLabels);
+  } else {
+    ctx.logger.warn('GAM', `Expected one device label, but found ${deviceLabels.length}`, deviceLabels);
+  }
+
+  resolve();
+}));
+
 export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
   const slotDefinitions = slots.map(moliSlot => {
     const sizeConfigService = new SizeConfigService(moliSlot.sizeConfig, context.window);
