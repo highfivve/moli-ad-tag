@@ -1,7 +1,7 @@
 import { AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 import { IABConsentManagement } from '@highfivve/ad-tag/source/ts/types/IABConsentManagement';
-import { mkInitStep, Moli } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag';
 import loadCmpFaktorStub = require('./faktorStub');
 import CmpModule = Moli.consent.CmpModule;
 
@@ -88,16 +88,6 @@ export default class Faktor implements CmpModule {
     config.consent.cmp = this;
 
     this.initFaktorSite(assetLoaderService);
-
-    // init additional pipeline steps if not already defined
-    config.pipeline = config.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
-
-    // wait until the cmp is ready
-    config.pipeline.initSteps.push(mkInitStep('cmp-faktor-ready', () => this.faktorLoaded));
   }
 
   getNonPersonalizedAdSetting(): Promise<0 | 1> {

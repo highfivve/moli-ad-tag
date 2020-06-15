@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-## 2.3.1
-
-[GD-2042](https://jira.gutefrage.net/browse/GD-2042). Wait 
-
 ## 2.3.0
 
 [GD-2081](https://jira.gutefrage.net/browse/GD-2081). Send labels as key value
