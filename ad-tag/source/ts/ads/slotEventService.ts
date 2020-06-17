@@ -150,17 +150,20 @@ export class SlotEventService {
     const eventName = trigger.event;
     if (typeof source === 'string') {
       const eventSource = this.eventSources.element[eventName];
+      delete this.eventSources.element[eventName];
       const element = window.document.querySelector(source);
       if (eventSource && element) {
         element.removeEventListener(trigger.event, eventSource.eventSource);
       }
     } else if (source === window) {
       const eventSource = this.eventSources.window[eventName];
+      delete this.eventSources.window[eventName];
       if (eventSource) {
         window.removeEventListener(eventName, eventSource.eventSource);
       }
     } else {
       const eventSource = this.eventSources.document[eventName];
+      delete this.eventSources.document[eventName];
       if (eventSource) {
         window.document.removeEventListener(eventName, eventSource.eventSource);
       }
