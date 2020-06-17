@@ -30,9 +30,10 @@ describe('google ad manager', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const adPipelineContext = (env: Moli.Environment = 'production', config: Moli.MoliConfig = emptyConfig): AdPipelineContext => {
+  const adPipelineContext = (env: Moli.Environment = 'production', config: Moli.MoliConfig = emptyConfig, requestAdsCalls: number = 1): AdPipelineContext => {
     return {
       requestId: 0,
+      requestAdsCalls: requestAdsCalls,
       env: env,
       logger: noopLogger,
       config: config,
@@ -107,14 +108,17 @@ describe('google ad manager', () => {
       });
     });
 
-    it('should call removeAllEventSources on the slotEventService', () => {
-      const context = adPipelineContext();
-      const removeAllEventSourcesSpy = sandbox.spy(context.slotEventService, 'removeAllEventSources');
+    it('should only run once per requestAds cycle', () => {
+      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
       const step = gptDestroyAdSlots();
 
-      return step(context, []).then(() => {
-        expect(removeAllEventSourcesSpy).to.have.been.calledOnce;
-        expect(removeAllEventSourcesSpy).to.have.been.calledOnceWithExactly(dom.window);
+      return Promise.all([
+        step(adPipelineContext('production', emptyConfig, 1), []),
+        step(adPipelineContext('production', emptyConfig, 1), []),
+        step(adPipelineContext('production', emptyConfig, 2), []),
+        step(adPipelineContext('production', emptyConfig, 2), []),
+      ]).then(() => {
+        expect(destroySlotsSpy).to.have.been.calledTwice;
       });
     });
 
@@ -149,6 +153,20 @@ describe('google ad manager', () => {
         expect(setTargetingSpy).to.have.been.calledTwice;
         expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
         expect(setTargetingSpy).to.have.been.calledWith('tags', [ 'car', 'truck' ]);
+      });
+    });
+
+    it('should only be executed once per requestAds cycle', () => {
+      const step = gptResetTargeting();
+      const clearTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'clearTargeting');
+
+      return Promise.all([
+        step(adPipelineContext('production', emptyConfig, 1), []),
+        step(adPipelineContext('production', emptyConfig, 1), []),
+        step(adPipelineContext('production', emptyConfig, 2), []),
+        step(adPipelineContext('production', emptyConfig, 2), []),
+      ]).then(() => {
+        expect(clearTargetingSpy).to.have.been.calledTwice;
       });
     });
 

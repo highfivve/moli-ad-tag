@@ -88,14 +88,14 @@ describe('AdPipeline', () => {
         })
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
-      return pipeline.run([], emptyConfig).then(() => {
+      return pipeline.run([], emptyConfig, 1).then(() => {
         expect(callCount).to.be.equals(0);
       });
     });
 
     it('should fail if the init phase fails', () => {
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: [ () => Promise.reject('init failed') ] });
-      return expect(pipeline.run([ adSlot ], emptyConfig)).eventually.be.rejectedWith('init failed');
+      return expect(pipeline.run([ adSlot ], emptyConfig, 1)).eventually.be.rejectedWith('init failed');
     });
 
     it('should run the init phase only once', () => {
@@ -108,10 +108,10 @@ describe('AdPipeline', () => {
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
 
-      return pipeline.run([ adSlot ], emptyConfig)
+      return pipeline.run([ adSlot ], emptyConfig, 1)
         .then(() => {
           expect(callCount).to.be.equals(1);
-          return pipeline.run([ adSlot ], emptyConfig);
+          return pipeline.run([ adSlot ], emptyConfig, 1);
         })
         .then(() => {
           expect(callCount).to.be.equals(1);
@@ -130,7 +130,7 @@ describe('AdPipeline', () => {
 
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, prepareRequestAds: prepareRequestAdsSteps });
 
-      return pipeline.run([ adSlot ], emptyConfig)
+      return pipeline.run([ adSlot ], emptyConfig, 1)
         .then(() => {
           expect(spyFn).to.have.been.calledThrice;
           expect(spyFn.firstCall).calledWithExactly('1', 'priority 3');
@@ -151,10 +151,10 @@ describe('AdPipeline', () => {
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
 
-      return pipeline.run([ adSlot ], emptyConfig)
+      return pipeline.run([ adSlot ], emptyConfig, 1)
         .then(() => {
           expect(requestId).to.be.equals(1);
-          return pipeline.run([ adSlot ], emptyConfig);
+          return pipeline.run([ adSlot ], emptyConfig, 1);
         })
         .then(() => {
           expect(requestId).to.be.equals(2);

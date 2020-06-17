@@ -59,6 +59,7 @@ describe('BlacklistUrls Module', () => {
   const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
+      requestAdsCalls: 1,
       env: 'production',
       logger: noopLogger,
       config: config,

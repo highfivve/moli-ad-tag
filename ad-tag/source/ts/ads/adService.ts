@@ -44,12 +44,17 @@ export class AdService {
   /**
    * Access to a logger
    */
-  private logger: ProxyLogger;
+  private readonly logger: ProxyLogger;
 
   /**
    * Slot event management
    */
   private readonly slotEventService: SlotEventService;
+
+  /**
+   * increments with every call to requestAds
+   */
+  private requestAdsCalls: number = 0;
 
   /**
    * TODO add an API to push steps into the pipeline via the Moli API
@@ -183,11 +188,13 @@ export class AdService {
 
 
   public requestAds = (config: Readonly<Moli.MoliConfig>): Promise<Moli.AdSlot[]> => {
-    this.logger.info('AdService', 'RequestAds');
+    this.requestAdsCalls = this.requestAdsCalls + 1;
+    this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`);
     try {
       const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
         .map(slot => {
           if (this.isLazySlot(slot)) {
+            this.logger.debug('AdService', `create lazy loader for ${slot.domId}`, slot);
             // initialize lazy slot
             createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window).onLoad()
               .then(() => {
@@ -198,12 +205,13 @@ export class AdService {
                 this.logger.error('AdService', message);
                 return Promise.reject(message);
               })
-              .then(() => this.adPipeline.run([ slot ], config));
+              .then(() => this.adPipeline.run([ slot ], config, this.requestAdsCalls));
             return null;
           } else if (this.isRefreshableAdSlot(slot)) {
+            this.logger.debug('AdService', `create refresh listener for ${slot.domId}`, slot);
             // initialize lazy refreshable slot
             createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
-              .addAdRefreshListener(() => this.adPipeline.run([ slot ], config));
+              .addAdRefreshListener(() => this.adPipeline.run([ slot ], config,  this.requestAdsCalls));
 
             // if the slot should be lazy loaded don't return it
             return slot.behaviour.lazy ? null : slot;
@@ -213,7 +221,7 @@ export class AdService {
         })
         .filter(isNotNull)
         .filter(this.isSlotAvailable);
-      return this.adPipeline.run(immediatelyLoadedSlots, config).then(() => immediatelyLoadedSlots);
+      return this.adPipeline.run(immediatelyLoadedSlots, config, this.requestAdsCalls).then(() => immediatelyLoadedSlots);
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
       return Promise.reject(e);

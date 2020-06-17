@@ -50,7 +50,8 @@ export const adConfiguration: Moli.MoliConfig = {
       sizes: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ],
       position: 'in-page',
       behaviour: {
-        loaded: 'lazy',
+        loaded: 'refreshable',
+        lazy: true,
         trigger: {
           name: 'event',
           event: 'ads.ad-sidebar-1',
@@ -169,7 +170,7 @@ export const adConfiguration: Moli.MoliConfig = {
       mediaQuery: '(max-width: 767px)'
     },
     {
-      labelsSupported: [ 'desktop', 'tablet' ],
+      labelsSupported: [ 'desktop' ],
       mediaQuery: '(min-width: 768px)'
     }
   ],

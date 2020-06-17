@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.3.3
+
+[GD-2119](https://jira.gutefrage.net/browse/GD-2119). `gpt-destroy-ad-slots` and `gpt-reset-targeting` are called only once per requestAds cycle
+This is only relevant for single page applications.
+
+[GD-2119](https://jira.gutefrage.net/browse/GD-2119). Fix slot service remove slots method.
+
+
 ## 2.3.0
 
 [GD-2081](https://jira.gutefrage.net/browse/GD-2081). Send labels as key value

@@ -16,6 +16,15 @@ export type AdPipelineContext = {
    */
   readonly requestId: number;
 
+  /**
+   * A counter for requestAds() calls.
+   *
+   * This is only useful for steps that should run only once in single page application mode.
+   * For server side rendered pages this is always 1.
+   *
+   */
+  readonly requestAdsCalls: number;
+
 
   readonly logger: Moli.MoliLogger;
 
@@ -147,6 +156,27 @@ export const mkConfigureStep = (name: string, fn: (context: AdPipelineContext, s
   return fn;
 };
 
+/**
+ * Construct configure steps that only run once per requestAds call.
+ * This is only useful for single page application
+ *
+ * @param name
+ * @param fn
+ */
+export const mkConfigureStepOncePerRequestAdsCycle = (name: string, fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>): ConfigureStep => {
+  Object.defineProperty(fn, 'name', { value: name });
+  let currentRequestAdsCalls = 0;
+
+  return mkConfigureStep(name, (context, slots) => {
+    if (currentRequestAdsCalls !== context.requestAdsCalls) {
+      currentRequestAdsCalls = context.requestAdsCalls;
+      return fn(context, slots);
+    } else {
+      return Promise.resolve();
+    }
+  });
+};
+
 export const mkPrepareRequestAdsStep = (
   name: string,
   priority: number,
@@ -190,7 +220,7 @@ export class AdPipeline {
   /**
    * run the pipeline
    */
-  run(slots: Moli.AdSlot[], config: Moli.MoliConfig): Promise<void> {
+  run(slots: Moli.AdSlot[], config: Moli.MoliConfig, requestAdsCalls: number): Promise<void> {
     if (slots.length === 0) {
       return Promise.resolve();
     }
@@ -203,6 +233,7 @@ export class AdPipeline {
 
     const context: AdPipelineContext = {
       requestId: currentRequestId,
+      requestAdsCalls: requestAdsCalls,
       logger: this.logger,
       env: config.environment || 'production',
       config: config,
@@ -211,7 +242,7 @@ export class AdPipeline {
       slotEventService: this.slotEventService,
       window: this.window
     };
-    this.logger.debug('AdPipeline', `starting run with requestId ${currentRequestId}`);
+    this.logger.debug('AdPipeline', `starting run with requestId ${currentRequestId} on ${requestAdsCalls}. call`, slots);
     this.init = this.init ? this.init : this.logStage('init', currentRequestId).then(() => Promise.all(this.config.init.map(step => step(context))));
     return this.init
       .then(() => this.logStage('configure', currentRequestId).then(() => Promise.all(this.config.configure.map(step => step(context, slots)))))

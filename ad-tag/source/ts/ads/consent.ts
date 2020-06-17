@@ -1,8 +1,8 @@
-import { AdPipelineContext, ConfigureStep, mkConfigureStep } from './adPipeline';
+import { AdPipelineContext, ConfigureStep, mkConfigureStepOncePerRequestAdsCycle } from './adPipeline';
 import { Moli } from '../types/moli';
 import {ReportingService} from './reportingService';
 
-export const consentConfigureGpt = (cmp: Moli.consent.CmpModule, reportingService: ReportingService): ConfigureStep => mkConfigureStep('gpt-personalized-ads', (context: AdPipelineContext) => {
+export const consentConfigureGpt = (cmp: Moli.consent.CmpModule, reportingService: ReportingService): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-personalized-ads', (context: AdPipelineContext) => {
   reportingService.markCmpInitialization();
 
   return cmp.getNonPersonalizedAdSetting().then(nonPersonalizedAds => {

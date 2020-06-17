@@ -3,7 +3,7 @@ import {
   ConfigureStep,
   DefineSlotsStep,
   InitStep,
-  mkConfigureStep,
+  mkConfigureStep, mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   RequestAdsStep
 } from './adPipeline';
@@ -40,15 +40,17 @@ export const gptInit = (): InitStep => {
 };
 
 /**
- * Destroy slots before anything. This step is required for single page applications to ensure
- * a fresh setup
+ * Destroy slots before anything. This step is required for single page applications to ensure a fresh setup.
+ *
+ * This step is run once per request ads cycle. An alternative implementation could delete google slots y for the ad
+ * slots provided in the slot array. However this keeps old slots lingering around, which we surely don't want.
  */
-export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStep('gpt-destroy-ad-slots', (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-destroy-ad-slots', (context: AdPipelineContext) => new Promise<void>(resolve => {
   context.logger.debug('GAM', 'destroy all ad slots');
-  context.slotEventService.removeAllEventSources(context.window);
   context.window.googletag.destroySlots();
   resolve();
 }));
+
 
 /**
  * Reset the gpt targeting configuration (key-values) and uses the targeting information from
@@ -59,7 +61,7 @@ export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStep('gpt-destr
  *
  * @param config
  */
-export const gptResetTargeting = (): ConfigureStep => mkConfigureStep('gpt-reset-targeting', (context: AdPipelineContext) => new Promise<void>(resolve => {
+export const gptResetTargeting = (): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-reset-targeting', (context: AdPipelineContext) => new Promise<void>(resolve => {
   if (context.env === 'production') {
     context.logger.debug('GAM', 'reset top level targeting');
     context.window.googletag.pubads().clearTargeting();
@@ -108,7 +110,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
  * The `LabelConfigService` is used to fetch the supported labels.
  *
  */
-export const gptLDeviceLabelKeyValue = (): ConfigureStep => mkConfigureStep('gpt-device-label-keyValue', (ctx) => new Promise<void>(resolve => {
+export const gptLDeviceLabelKeyValue = (): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-device-label-keyValue', (ctx) => new Promise<void>(resolve => {
   const whitelist = [ 'mobile', 'tablet', 'desktop' ];
   const deviceLabels = ctx.labelConfigService.getSupportedLabels()
     .filter(label => whitelist.some(deviceLabel => deviceLabel === label));
