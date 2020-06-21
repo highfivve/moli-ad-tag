@@ -1,32 +1,5 @@
 import { Moli, prebidjs } from '@highfivve/ad-tag';
 
-const logger: Moli.MoliLogger = {
-  debug(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[spa-example] ${message}`, ...optionalParams);
-  },
-  info(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[spa-example] ${message}`, ...optionalParams);
-  },
-  warn(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[spa-example] ${message}`, ...optionalParams);
-  },
-  error(message?: any, ...optionalParams: any[]): void {
-    window.console.log(`[spa-example] ${message}`, ...optionalParams);
-  }
-
-};
-
-export const teadsVerticalBid = (placementId: number, pageId: number, labelAll: string[]): prebidjs.ITeadsBid => {
-  return {
-    bidder: prebidjs.Teads,
-    params: {
-      placementId: placementId,
-      pageId: pageId
-    },
-    labelAll: [ prebidjs.Teads, ...labelAll ]
-  };
-};
-
 export const adConfiguration: Moli.MoliConfig = {
   environment: 'test',
   slots: [
@@ -87,7 +60,7 @@ export const adConfiguration: Moli.MoliConfig = {
             },
             video: {
               context: 'outstream',
-              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ] as [ number, number ][])
+              playerSize: [ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ]
             }
           },
           bids: [
@@ -102,21 +75,7 @@ export const adConfiguration: Moli.MoliConfig = {
               params: {
                 placementId: '13970743'
               }
-            },
-            // Teads Mobile
-            teadsVerticalBid(94073, 101869, [ 'mobile', 'gutefrage', 'Automotive' ]),
-            teadsVerticalBid(92425, 100164, [ 'mobile', 'autofrage' ]),
-            teadsVerticalBid(94001, 101794, [ 'mobile', 'computerfrage' ]),
-            teadsVerticalBid(93999, 101792, [ 'mobile', 'finanzfrage' ]),
-            teadsVerticalBid(93997, 101790, [ 'mobile', 'gesundheitsfrage' ]),
-            teadsVerticalBid(93995, 101788, [ 'mobile', 'motorradfrage' ]),
-            // Teads Desktop
-            teadsVerticalBid(94072, 101870, [ 'desktop', 'gutefrage', 'Automotive' ]),
-            teadsVerticalBid(92424, 100163, [ 'desktop', 'autofrage' ]),
-            teadsVerticalBid(94000, 101793, [ 'desktop', 'computerfrage' ]),
-            teadsVerticalBid(93998, 101791, [ 'desktop', 'finanzfrage' ]),
-            teadsVerticalBid(93996, 101789, [ 'desktop', 'gesundheitsfrage' ]),
-            teadsVerticalBid(92424, 101787, [ 'desktop', 'motorradfrage' ])
+            }
           ]
         }
       },
@@ -135,12 +94,7 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       domId: 'spa-a9-adslot',
       behaviour: {
-        loaded: 'lazy',
-        trigger: {
-          name: 'event',
-          event: 'ads.spa-a9-adslot',
-          source: window
-        },
+        loaded: 'manual'
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
       sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
@@ -220,6 +174,5 @@ export const adConfiguration: Moli.MoliConfig = {
   consent: {},
   yieldOptimization: {
     provider: 'none',
-  },
-  // logger: logger
+  }
 };

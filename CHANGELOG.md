@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## 2.4.0
+
+[GD-2121](https://jira.gutefrage.net/browse/GD-2121). `refreshAdSlot` API for the moli ad tag.
+
+This new API method allows publishers to refresh an ad slot programmatically at any point. This feature is specifically
+interesting for single page applications where components can load and unload at every point in time.
+
+To use this feature the ad slot requires a loading behaviour `manual`, which means that the slot can only be refreshed
+via the `refreshAdSlot` API. Note that there are no safety nets that ensure the slot is not triggered too often.
+
+Depending on the loading state of the ad tag `refreshAdSlot` may do one of two things
+
+1. If `requestAds()` has already been called then `refreshAdSlot` will immediately run a new ad pipeline, which causes
+   the ad slot to be loaded
+2. If `requestAds()` hasn't been called yet then the ad slot will be queued and requested along with all other ad slots
+   when `requestAds()` has been invoked
+   
+Note that option 2 is the one that requires less requests. There are multiple ways to optimize for this behaviour.
+Either wait until the components have been mounted, delay the `requestAds` call by some amount of milliseconds or even
+wait for some user interaction. 
+
 ## 2.3.3
 
 [GD-2119](https://jira.gutefrage.net/browse/GD-2119). `gpt-destroy-ad-slots` and `gpt-reset-targeting` are called only once per requestAds cycle

@@ -109,14 +109,12 @@ export function getDefaultLogger(): Moli.MoliLogger {
  * @param config
  * @param window the global window object
  */
-export function getLogger(config: Moli.MoliConfig, window: Window): Moli.MoliLogger {
+export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.MoliLogger {
 
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
-
-  } else if (config.logger) {
+  } else if (config && config.logger) {
     return config.logger;
-
   } else {
     return getNoopLogger();
   }

@@ -27,7 +27,7 @@ describe('moli', () => {
   dom.window.pbjs = pbjsStub;
 
   let domIdCounter: number = 0;
-  const mkAdSlotInDOM = (): Moli.EagerAdSlot => {
+  const mkAdSlotInDOM = (): Moli.AdSlot => {
     domIdCounter = domIdCounter + 1;
     const domId = `dom-id-${domIdCounter}`;
     const adDiv = dom.window.document.createElement('div');
@@ -138,7 +138,7 @@ describe('moli', () => {
       adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         dom.reconfigure({
@@ -146,7 +146,7 @@ describe('moli', () => {
         });
         return adTag.requestAds();
       }).then((state) => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
       });
@@ -161,7 +161,7 @@ describe('moli', () => {
       adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         return adTag.requestAds();
@@ -238,6 +238,176 @@ describe('moli', () => {
 
       expect(initSpy).to.have.not.been.called;
       expect(errorLogSpy).to.have.been.calledOnceWithExactly('Registering a module is only allowed within the ad tag before the ad tag is configured');
+    });
+
+  });
+
+  describe('refreshAds()', () => {
+
+    describe('server side application mode', () => {
+      it('should batch slots until requestAds is called', () => {
+        // create all slots
+        const slots: Moli.AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
+        ];
+
+        const adTag = createMoliTag(dom.window);
+
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        adTag.refreshAdSlot(slots[0].domId);
+        adTag.configure({ ...defaultConfig, slots: slots });
+        adTag.refreshAdSlot(slots[1].domId);
+
+        expect(adTag.getState()).to.be.eq('configured');
+        return adTag.requestAds().then(state => {
+          expect(state.state).to.be.eq('finished');
+          expect(refreshSpy).to.have.been.calledOnce;
+          const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+
+          expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
+        });
+      });
+
+      it('should refresh ads after requestAds have been called', () => {
+        // create all slots
+        const slots: Moli.AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
+        ];
+
+        const adTag = createMoliTag(dom.window);
+
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        adTag.refreshAdSlot(slots[0].domId);
+        adTag.configure({ ...defaultConfig, slots: slots });
+
+        expect(adTag.getState()).to.be.eq('configured');
+        return adTag.requestAds()
+          .then(state => adTag.refreshAdSlot(slots[1].domId).then(() => state))
+          .then(state => {
+            expect(state.state).to.be.eq('finished');
+            const firstCallDomIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+            expect(firstCallDomIds).to.have.length(1);
+
+            expect(firstCallDomIds[0]).to.be.eq(slots[0].domId);
+            // refreshAds call after requestAds
+            const secondCallDomIds = refreshSpy.secondCall.args[0]!.map(slot => slot.getSlotElementId());
+
+            expect(secondCallDomIds).to.have.length(1);
+            expect(secondCallDomIds[0]).to.be.eq(slots[1].domId);
+
+            expect(refreshSpy).to.have.been.calledTwice;
+          });
+      });
+
+    });
+
+    describe('single page application mode (spa)', () => {
+
+      it('should batch refresh calls before requestAds() is called', () => {
+        // create all slots
+        const slots: Moli.AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
+        ];
+
+        const adTag = createMoliTag(dom.window);
+
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        adTag.refreshAdSlot(slots[0].domId);
+        adTag.enableSinglePageApp();
+        adTag.refreshAdSlot(slots[1].domId);
+        adTag.configure({ ...defaultConfig, slots: slots });
+        adTag.refreshAdSlot(slots[2].domId);
+
+        expect(adTag.getState()).to.be.eq('configured');
+        return adTag.requestAds().then(state => {
+          expect(state.state).to.be.eq('spa-finished');
+          const spaState: ISinglePageApp = state as ISinglePageApp;
+          expect(spaState.config).to.be.ok;
+          expect(spaState.refreshSlots).to.be.empty;
+          expect(refreshSpy).to.have.been.calledOnce;
+          const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+
+          expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
+        });
+      });
+
+      it('should call refresh after refreshAds is being called', () => {
+        // create all slots
+        const slots: Moli.AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
+        ];
+
+        const adTag = createMoliTag(dom.window);
+
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        adTag.enableSinglePageApp();
+        adTag.configure({ ...defaultConfig, slots: slots });
+        adTag.refreshAdSlot(slots[0].domId);
+
+        expect(adTag.getState()).to.be.eq('configured');
+        return adTag.requestAds()
+          // refresh after requestAds has been called
+          .then(state => adTag.refreshAdSlot(slots[1].domId).then(() => state))
+          .then(state => {
+            expect(state.state).to.be.eq('spa-finished');
+            const spaState: ISinglePageApp = state as ISinglePageApp;
+            expect(spaState.config).to.be.ok;
+            expect(spaState.refreshSlots).to.be.empty;
+            expect(refreshSpy).to.have.been.calledTwice;
+            const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+            expect(domIds).to.have.length(1);
+            expect(domIds[0]).to.be.eq(slots[0].domId);
+          });
+      });
+
+      it('should queue refreshAds calls if a navigation changed happened and no requestAds() call has happend yet', () => {
+        dom.reconfigure({
+          url: 'https://localhost/page-one'
+        });
+
+        // create all slots
+        const slots: Moli.AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
+        ];
+
+        const adTag = createMoliTag(dom.window);
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        adTag.enableSinglePageApp();
+        adTag.configure({ ...defaultConfig, slots: slots });
+
+        expect(adTag.getState()).to.be.eq('configured');
+
+        // we must set the state to 'spa-finished' here
+        return adTag.requestAds()
+          .then((state) => {
+            // navigation change
+            dom.reconfigure({
+              url: 'https://localhost/page-two'
+            });
+            return state;
+          })
+          // refresh after requestAds has been called - this should be queue up
+          .then(state => adTag.refreshAdSlot(slots[0].domId).then(() => state))
+          .then(state => {
+            expect(state.state).to.be.eq('spa-finished');
+            const spaState: ISinglePageApp = state as ISinglePageApp;
+            expect(spaState.config).to.be.ok;
+            expect(spaState.refreshSlots).to.have.length(1);
+
+            expect(refreshSpy).to.have.not.been.called;
+            expect(spaState.refreshSlots).to.contain(slots[0].domId);
+          });
+      });
     });
 
   });
@@ -340,7 +510,7 @@ describe('moli', () => {
 
       expect(adTag.getState()).to.be.eq('configured');
       return adTag.requestAds().then(state => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         expect(spaState.keyValues).to.be.deep.equal({});
@@ -349,7 +519,7 @@ describe('moli', () => {
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
-        expect(googletagPubAdsSetTargetingSpy).calledWithMatch('consent', Sinon.match.in(['full', 'none']));
+        expect(googletagPubAdsSetTargetingSpy).calledWithMatch('consent', Sinon.match.in([ 'full', 'none' ]));
         googletagPubAdsSetTargetingSpy.resetHistory();
         dom.reconfigure({
           url: 'https://localhost/2'
@@ -365,7 +535,7 @@ describe('moli', () => {
 
         return adTag.requestAds();
       }).then((state) => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.keyValues).to.be.deep.equal({});
         expect(spaState.config.targeting).to.be.ok;
@@ -441,7 +611,7 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('configured');
       expect(adTag.getConfig()!.targeting!.labels).to.contain.all.members([ 'dynamicLabelPre', 'dynamicLabelPost', 'a9' ]);
       return adTag.requestAds().then(state => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         expect(spaState.labels).to.be.empty;
@@ -456,7 +626,7 @@ describe('moli', () => {
 
         return adTag.requestAds();
       }).then((state) => {
-        expect(state.state).to.be.eq('spa');
+        expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.labels).to.be.empty;
         expect(spaState.config.targeting).to.be.ok;
@@ -614,11 +784,11 @@ describe('moli', () => {
       adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
-        expect(hookSpy).to.be.calledOnceWithExactly('spa');
+        expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
       });
     });
 
-    it('should call the afterRequestAds hook with spa state on each requestAds() call', () => {
+    it('should call the afterRequestAds hook with finished state on each requestAds() call', () => {
       const adTag = createMoliTag(dom.window);
       dom.reconfigure({
         url: 'https://localhost/'
@@ -635,14 +805,14 @@ describe('moli', () => {
       adTag.configure(defaultConfig);
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
-        expect(hookSpy).to.be.calledOnceWithExactly('spa');
+        expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
         dom.reconfigure({
           url: 'https://localhost/home'
         });
         return adTag.requestAds();
       }).then(() => {
         expect(hookSpy).to.be.calledTwice;
-        expect(hookSpy.secondCall.args[0]).to.be.equal('spa');
+        expect(hookSpy.secondCall.args[0]).to.be.equal('spa-finished');
       });
     });
 

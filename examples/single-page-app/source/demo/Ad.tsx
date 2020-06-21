@@ -3,7 +3,21 @@ import { RequestAdsContext } from './AdContext';
 
 export interface IAdProps {
   readonly domId: string;
+
+  readonly trigger: 'event' | 'manual';
 }
+
+type Moli = {
+  readonly que: MoliCommand[]
+
+  refreshAdSlot(domId: string): void;
+};
+type MoliCommand = (moli: Moli) => void;
+
+declare const window: Window & {
+  moli: { que: MoliCommand[] }
+};
+
 
 /**
  * # Ad Component
@@ -33,12 +47,23 @@ export class Ad extends React.Component<IAdProps, {}> {
    * and `componentDidUpdate` may not be triggered.
    */
   componentDidMount(): void {
+    console.log('componentDidMount', this.props.domId);
+
+    if (this.props.trigger === 'manual') {
+      // refreshAds based ad reload
+      window.moli = window.moli || { que: [] };
+      window.moli.que.push(moli => {
+        moli.refreshAdSlot(this.props.domId);
+      });
+    }
+
+    // event based ad reload
     this.dispatchAdTriggerEvent();
   }
 
   private dispatchAdTriggerEvent(): void {
     // only trigger the ad slot when requestAdsFinished is true and this component hasn't already fired the trigger event
-    if (this.context.requestAdsFinished) {
+    if (this.props.trigger === 'event' && this.context.requestAdsFinished) {
       // the event type is part of the ad tag configuration and is documented on the demo page
       window.dispatchEvent(new CustomEvent(`ads.${this.props.domId}`));
     }

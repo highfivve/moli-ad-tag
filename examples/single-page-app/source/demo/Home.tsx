@@ -19,8 +19,7 @@ export default class Home extends React.Component<{}, {}> {
           takimata sanctus est Lorem ipsum dolor sit amet.</p>
 
             <h3>spa a9 adslot</h3>
-            <Ad domId="spa-a9-adslot" />
-            <div id="spa-a9-adslot" />
+            <Ad domId="spa-a9-adslot" trigger="manual" />
         </div>;
     }
 }

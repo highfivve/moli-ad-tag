@@ -330,7 +330,7 @@ describe('AdService', () => {
 
   describe('requestAds', () => {
     let domIdCounter: number = 0;
-    const requestAds = (slots: Moli.AdSlot[]): Promise<Moli.AdSlot[]> => {
+    const requestAds = (slots: Moli.AdSlot[], refreshSlots: string[] = []): Promise<Moli.AdSlot[]> => {
       const adPipelineConfiguration: IAdPipelineConfiguration = {
         init: [],
         configure: [],
@@ -341,7 +341,7 @@ describe('AdService', () => {
       };
       const adService = new AdService(assetLoaderService, dom.window, adPipelineConfiguration);
       adService.setLogger(noopLogger);
-      return adService.requestAds({ ...emptyConfig, slots: slots });
+      return adService.requestAds({ ...emptyConfig, slots: slots }, refreshSlots);
     };
 
     const eventTrigger: Moli.behaviour.Trigger = {
@@ -368,6 +368,10 @@ describe('AdService', () => {
 
     const lazyAdSlot = (): Moli.LazyAdSlot => {
       return { ...eagerAdSlot(), behaviour: { loaded: 'lazy', trigger: eventTrigger } };
+    };
+
+    const manualAdSlot = (): Moli.ManualAdSlot => {
+      return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
     };
 
     const addToDom = (adSlots: Moli.IAdSlot[]): void => {
@@ -412,6 +416,15 @@ describe('AdService', () => {
       const allSlots = [ ...expectedSlots, ...filteredSlots ];
       addToDom(allSlots);
       return expect(requestAds(allSlots)).to.eventually.be.deep.equals(expectedSlots);
+    });
+
+    it('should only refresh manual slots that are defined in the refreshSlots array', () => {
+      const adSlot = manualAdSlot();
+      const filteredSlots = [ lazyAdSlot(), manualAdSlot() ];
+      const expectedSlots = [ eagerAdSlot(), adSlot ];
+      const allSlots = [ ...expectedSlots, ...filteredSlots ];
+      addToDom(allSlots);
+      return expect(requestAds(allSlots, [ adSlot.domId ])).to.eventually.be.deep.equals(expectedSlots);
     });
 
     describe('lazy slots', () => {

@@ -56,7 +56,7 @@ export default class StaticContent extends React.Component<{}, IContentState> {
                 ];
             })}
             {this.state.someVariable ? <hr /> : <br />}
-            <Ad domId="spa-prebid-adslot" />
+            <Ad domId="spa-prebid-adslot" trigger="event" />
             {content2.map((item, index) => {
                 return [
                     <h3 key={`2_item_title_${index}`}>{item.title}</h3>,

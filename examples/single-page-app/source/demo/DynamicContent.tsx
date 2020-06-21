@@ -35,7 +35,7 @@ export default class DynamicContent extends React.Component<{}, IDynamicContentS
             <h2>Dynamic Content</h2>
             <p>{text}</p>
             <h2>Ad Sidebar 1</h2>
-            <Ad domId="ad-sidebar-1" />
+            <Ad domId="ad-sidebar-1" trigger="event"/>
         </div>;
     }
 

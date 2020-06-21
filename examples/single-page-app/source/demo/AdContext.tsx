@@ -87,9 +87,10 @@ export default class RequestAds extends React.Component<IRequestAdsProps, IReque
             moliAdTag.afterRequestAds(() => {
                 this.setState({ requestAdsFinished: true });
             });
-
-            // first requestAds() call
+            // first requestAds() call - you could delay this until the ad components are mounted, e.g. with a small
+            // timeout, which allows the ad tag to batch the ad calls, reducing the total amount of ad requests
             moliAdTag.requestAds();
+
         });
 
         // react on navigation changes
@@ -102,7 +103,13 @@ export default class RequestAds extends React.Component<IRequestAdsProps, IReque
                         prevPathname: location.pathname
                     });
                     // configure ads for this page
-                    moliAdTag.requestAds();
+
+                    setTimeout(() => {
+                        // delay this call a bit so the Ad components mount before the requestAds call and the ad tag
+                        // can batch the requests
+                        moliAdTag.requestAds();
+                    }, 500);
+
                 });
             }
         });

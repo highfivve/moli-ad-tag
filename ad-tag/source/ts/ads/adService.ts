@@ -187,9 +187,15 @@ export class AdService {
   };
 
 
-  public requestAds = (config: Readonly<Moli.MoliConfig>): Promise<Moli.AdSlot[]> => {
+  /**
+   *
+   * @param config
+   * @param refreshSlots a list of ad slots that are already manually refreshed via the `moli.refreshAdSlot` API
+   *         and can be part of the requestAds cycle
+   */
+  public requestAds = (config: Readonly<Moli.MoliConfig>, refreshSlots: string[]): Promise<Moli.AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
-    this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`);
+    this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);
     try {
       const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
         .map(slot => {
@@ -211,10 +217,13 @@ export class AdService {
             this.logger.debug('AdService', `create refresh listener for ${slot.domId}`, slot);
             // initialize lazy refreshable slot
             createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
-              .addAdRefreshListener(() => this.adPipeline.run([ slot ], config,  this.requestAdsCalls));
+              .addAdRefreshListener(() => this.adPipeline.run([ slot ], config, this.requestAdsCalls));
 
             // if the slot should be lazy loaded don't return it
             return slot.behaviour.lazy ? null : slot;
+          } else if (this.isManualSlot(slot)) {
+            // only load the slot immediately if it's available in the refreshSlots array
+            return refreshSlots.some((domId) => domId === slot.domId) ? slot : null;
           } else {
             return slot;
           }
@@ -227,6 +236,22 @@ export class AdService {
       return Promise.reject(e);
     }
   };
+
+  public refreshAdSlots(domIds: string[], config: Moli.MoliConfig): Promise<void> {
+    if (domIds.length === 0) {
+      return Promise.resolve();
+    }
+    const manualSlots = config.slots.filter(this.isManualSlot);
+    const availableSlots = manualSlots.filter(slot => domIds.some(domId => domId === slot.domId));
+
+    if (domIds.length !== availableSlots.length) {
+      const unavailableSlots = domIds.filter(domId => !manualSlots.some(slot => slot.domId === domId));
+      this.logger.warn('AdService', 'Trying to refresh slots that are not available', unavailableSlots);
+    }
+
+    this.logger.debug('AdService', 'refresh ad slots', availableSlots);
+    return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
+  }
 
   /**
    * Returns the underlying ad pipeline.
@@ -257,6 +282,10 @@ export class AdService {
 
   private isRefreshableAdSlot = (slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot => {
     return slot.behaviour.loaded === 'refreshable';
+  }
+
+  private isManualSlot = (slot: Moli.AdSlot): slot is Moli.ManualAdSlot => {
+    return slot.behaviour.loaded === 'manual';
   }
 
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {

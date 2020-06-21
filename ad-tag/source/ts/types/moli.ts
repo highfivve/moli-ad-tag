@@ -192,6 +192,18 @@ export namespace Moli {
     requestAds(): Promise<state.IConfigurable | state.ISinglePageApp | state.IFinished | state.IError>;
 
     /**
+     * Refresh the given ad slot as soon as possible.
+     *
+     * This is only possible for ad slots with a `manual` loading behaviour.
+     *
+     * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
+     * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
+     *
+     * @param domId - identifies the ad slot
+     */
+    refreshAdSlot(domId: string): Promise<'queued' | 'refreshed'>;
+
+    /**
      * Returns the  current state of the configuration. This configuration may not be final!
      * If you need to access the final configuration use the `beforeRequestAds` method to configure
      * a callback.
@@ -237,11 +249,11 @@ export namespace Moli {
    *                                                                                   |          |
    *                                                                                   |          v
    *                                                                                   |
-   *                                         +------------+     requestAds()     +-----+------------------+
-   *                                         |            |                      |                        |
-   *                                         | configured |  +---------------->  | Single Page App (spa)  |
-   *                                         |            |                      |                        |
-   *                                         +------------+                      +------------------------+
+   *                                         +------------+     requestAds()     +-----+-------------------------+
+   *                                         |            |                      |                               |
+   *                                         | configured |  +---------------->  | Single Page App               |
+   *                                         |            |                      | spa-requestAds / spa-finished |
+   *                                         +------------+                      +-------------------------------+
    *
    *                                               ^
    *                                               |
@@ -378,7 +390,7 @@ export namespace Moli {
    */
   export namespace state {
 
-    export type States = 'configurable' | 'configured' | 'spa' | 'requestAds' | 'finished' | 'error';
+    export type States = 'configurable' | 'configured' | 'spa-finished' | 'spa-requestAds' | 'requestAds' | 'finished' | 'error';
 
     /**
      * Base interface for all states.
@@ -450,6 +462,11 @@ export namespace Moli {
        */
       hooks?: IHooks;
 
+      /**
+       * A list of ad slots that should be refreshed
+       */
+      readonly refreshSlots: string[];
+
     }
 
     /**
@@ -481,6 +498,11 @@ export namespace Moli {
        * If set to false the `requestAds() call will transition the state to [[IRequestAds]]
        */
       isSinglePageApp: boolean;
+
+      /**
+       * A list of ad slots that should be refreshed
+       */
+      readonly refreshSlots: string[];
     }
 
     /**
@@ -503,7 +525,7 @@ export namespace Moli {
      * Publisher enabled the single page application mode.
      */
     export interface ISinglePageApp extends IState {
-      readonly state: 'spa';
+      readonly state: 'spa-finished' | 'spa-requestAds';
 
       /**
        * Additional key-values. Insert with
@@ -536,6 +558,11 @@ export namespace Moli {
       hooks?: IHooks;
 
       /**
+       * A list of ad slots that should be refreshed
+       */
+      readonly refreshSlots: string[];
+
+      /**
        * The original configuration from the ad tag itself. We can use this configuration to
        *
        * - generate a diff for the additions made by the publisher
@@ -551,9 +578,12 @@ export namespace Moli {
 
       /**
        * Refresh ads
+       *
+       * @param config
+       * @param refreshSlots - domIds of the manually triggered ad slots that should be refreshed immediately
        * @return a promise that is finished when all refresh calls have been made
        */
-      readonly refreshAds: (config: Moli.MoliConfig) => Promise<void>;
+      readonly refreshAds: (config: Moli.MoliConfig, refreshSlots: string[]) => Promise<void>;
 
       /**
        * stores the information if the moli ad tag is configured yet
@@ -603,7 +633,7 @@ export namespace Moli {
      */
     export type IStateMachine = IConfigurable | IConfigured | ISinglePageApp | IRequestAds | IFinished | IError;
 
-    export type AfterRequestAdsStates = Extract<state.States, 'finished' | 'error' | 'spa'>;
+    export type AfterRequestAdsStates = Extract<state.States, 'finished' | 'error' | 'spa-finished'>;
 
     export interface IHooks {
       /**
@@ -871,6 +901,13 @@ export namespace Moli {
   }
 
   /**
+   * An ad slot that is manually triggered via the `moli.refreshAdSlot` API.
+   */
+  export interface ManualAdSlot extends IAdSlot {
+    readonly behaviour: behaviour.Manual;
+  }
+
+  /**
    * An ad slot which is requested lazily.
    * DFP offers a similar implementation, but only for "load when in view port"
    */
@@ -908,7 +945,7 @@ export namespace Moli {
    * Used for discriminating unions to make type safe assumptions about the existence
    * or type of individual properties.
    */
-  export type AdSlot = EagerAdSlot | LazyAdSlot | RefreshableAdSlot | PrebidAdSlot | A9AdSlot;
+  export type AdSlot = EagerAdSlot | ManualAdSlot | LazyAdSlot | RefreshableAdSlot | PrebidAdSlot | A9AdSlot;
 
   export type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -982,7 +1019,7 @@ export namespace Moli {
      *
      */
     export interface ISlotLoading {
-      readonly loaded: 'eager' | 'lazy' | 'refreshable';
+      readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual';
     }
 
     /**
@@ -991,6 +1028,13 @@ export namespace Moli {
      */
     export interface Eager extends ISlotLoading {
       readonly loaded: 'eager';
+    }
+
+    /**
+     * An ad slot which must be triggered via the `moli.refreshAdSlot` API.
+     */
+    export interface Manual extends ISlotLoading {
+      readonly loaded: 'manual';
     }
 
     /**
