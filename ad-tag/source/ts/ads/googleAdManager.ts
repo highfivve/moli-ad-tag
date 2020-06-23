@@ -209,7 +209,7 @@ export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, 
 
         // CSS Pattern from https://leaverou.github.io/css3patterns/#lined-paper
         const html = `<div id="${containerId}"
-                             style="position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                             style="position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
                              width: ${width}px; height: ${height}px; padding: 6px; border: 2px dotted gray;
                              background-color: #fff;
                              background-image:
