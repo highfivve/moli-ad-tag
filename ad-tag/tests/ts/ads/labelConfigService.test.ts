@@ -75,7 +75,7 @@ describe('LabelConfigConfigService', () => {
     labelAll: [ 'desktop', 'bottom' ]
   };
 
-  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[]) => new LabelConfigService(labelConfig, [], dom.window);
+  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[], extraLabels: string[] = []) => new LabelConfigService(labelConfig, extraLabels, dom.window);
 
   afterEach(() => {
     sandbox.reset();
@@ -129,6 +129,11 @@ describe('LabelConfigConfigService', () => {
       ).to.deep.equal(
         new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
       );
+    });
+
+    it('should allow slots with a single value in labelAny', () => {
+      const sizeConfigService = newLabelConfigService([], [ 'check' ]);
+      expect(sizeConfigService.filterSlot({ labelAny: [ 'check' ] })).to.be.true;
     });
   });
 });
