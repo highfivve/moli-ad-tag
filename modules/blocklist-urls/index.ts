@@ -8,7 +8,7 @@ import {
   HIGH_PRIORITY, mkConfigureStep
 } from '@highfivve/ad-tag';
 
-export interface IBlacklistEntry {
+export interface IBlocklistEntry {
 
   /**
    * A regex pattern for the complete href of the page
@@ -26,35 +26,35 @@ export interface IBlacklistEntry {
 
 }
 
-export interface IBlacklist {
-  readonly urls: IBlacklistEntry[];
+export interface IBlocklist {
+  readonly urls: IBlocklistEntry[];
 }
 
 /**
- * A fixed set of blacklisted urls. Requires an ad tag update if new entries should be added
+ * A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added
  */
-export interface IStaticBlacklistProvider {
+export interface IStaticBlocklistProvider {
   readonly provider: 'static';
 
-  readonly blacklist: IBlacklist;
+  readonly blocklist: IBlocklist;
 }
 
 /**
  * The dynamic configuration provider that lets you update entries without updating the ad tag
  */
-export interface IDynamicBlacklistProvider {
+export interface IDynamicBlocklistProvider {
   readonly provider: 'dynamic';
 
   /**
-   * Fetch the blacklist json from the specified endpoint
+   * Fetch the blocklist json from the specified endpoint
    */
   readonly endpoint: string;
 }
 
-export type BlacklistProvider = IStaticBlacklistProvider | IDynamicBlacklistProvider;
+export type BlocklistProvider = IStaticBlocklistProvider | IDynamicBlocklistProvider;
 
 
-export interface IBlacklistUrlsBlockingConfig {
+export interface IBlocklistUrlsBlockingConfig {
 
   /**
    * `block` - this mode blocks ad requests entirely
@@ -63,13 +63,13 @@ export interface IBlacklistUrlsBlockingConfig {
   readonly mode: 'block';
 
   /**
-   * blacklist content
+   * blocklist content
    */
-  readonly blacklist: BlacklistProvider;
+  readonly blocklist: BlocklistProvider;
 
 }
 
-export interface IBlacklistUrlsKeyValueConfig {
+export interface IBlocklistUrlsKeyValueConfig {
 
   /**
    * `block` - this mode blocks ad requests entirely
@@ -77,7 +77,7 @@ export interface IBlacklistUrlsKeyValueConfig {
    */
   readonly mode: 'key-value';
 
-  readonly blacklist: BlacklistProvider;
+  readonly blocklist: BlocklistProvider;
 
   /**
    * The key that is used for the key value
@@ -89,23 +89,23 @@ export interface IBlacklistUrlsKeyValueConfig {
    *
    * default is `true`
    */
-  readonly isBlacklistedValue?: string;
+  readonly isBlocklistedValue?: string;
 
 }
 
-export type BlacklistUrlsConfig = IBlacklistUrlsBlockingConfig | IBlacklistUrlsKeyValueConfig;
+export type BlocklistUrlsConfig = IBlocklistUrlsBlockingConfig | IBlocklistUrlsKeyValueConfig;
 
-export default class BlacklistedUrls implements IModule {
+export default class BlocklistedUrls implements IModule {
 
-  public readonly name: string = 'Blacklist URLs';
-  public readonly description: string = 'Blocks ad requests entirely or adds key-values for blacklistd urls';
+  public readonly name: string = 'Blocklist URLs';
+  public readonly description: string = 'Blocks ad requests entirely or adds key-values for blocklistd urls';
   public readonly moduleType: ModuleType = 'policy';
 
-  constructor(private readonly blacklistUrlsConfig: BlacklistUrlsConfig, private readonly window: Window) {
+  constructor(private readonly blocklistUrlsConfig: BlocklistUrlsConfig, private readonly window: Window) {
   }
 
   config(): Object | null {
-    return this.blacklistUrlsConfig;
+    return this.blocklistUrlsConfig;
   }
 
 
@@ -113,11 +113,11 @@ export default class BlacklistedUrls implements IModule {
     const log = getLogger(config, this.window);
 
     if (config.environment === 'test') {
-      log.debug(this.name, 'ad tag in test mode. Blacklist module is disabled');
+      log.debug(this.name, 'ad tag in test mode. Blocklist module is disabled');
       return;
     }
 
-    log.debug(this.name, 'Initialize module with config', this.blacklistUrlsConfig);
+    log.debug(this.name, 'Initialize module with config', this.blocklistUrlsConfig);
 
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -127,17 +127,17 @@ export default class BlacklistedUrls implements IModule {
     };
 
 
-    const fetchBlacklist = this.getBlacklist(this.blacklistUrlsConfig.blacklist, assetLoaderService, log);
+    const fetchBlocklist = this.getBlocklist(this.blocklistUrlsConfig.blocklist, assetLoaderService, log);
 
-    switch (this.blacklistUrlsConfig.mode) {
+    switch (this.blocklistUrlsConfig.mode) {
       case 'key-value':
-        const key = this.blacklistUrlsConfig.key;
-        const value = this.blacklistUrlsConfig.isBlacklistedValue || 'true';
+        const key = this.blocklistUrlsConfig.key;
+        const value = this.blocklistUrlsConfig.isBlocklistedValue || 'true';
         config.pipeline.prepareRequestAdsSteps.push(mkPrepareRequestAdsStep(
-          'blacklist-urls', HIGH_PRIORITY, () => {
-            return fetchBlacklist().then(blacklist => {
-              log.debug(this.name, 'using blacklist', blacklist);
-              if (this.isBlacklisted(blacklist, this.window.location.href, log)) {
+          'blocklist-urls', HIGH_PRIORITY, () => {
+            return fetchBlocklist().then(blocklist => {
+              log.debug(this.name, 'using blocklist', blocklist);
+              if (this.isBlocklisted(blocklist, this.window.location.href, log)) {
                 this.window.googletag.pubads().setTargeting(key, value);
               }
             });
@@ -145,11 +145,11 @@ export default class BlacklistedUrls implements IModule {
         return;
       case 'block':
         config.pipeline.configureSteps.push(mkConfigureStep(
-          'blacklist-urls', () => {
-            return fetchBlacklist().then(blacklist => {
-              log.debug(this.name, 'using blacklist', blacklist);
-              if (this.isBlacklisted(blacklist, this.window.location.href, log)) {
-                return Promise.reject('blacklisted url found. Abort ad pipeline run');
+          'blocklist-urls', () => {
+            return fetchBlocklist().then(blocklist => {
+              log.debug(this.name, 'using blocklist', blocklist);
+              if (this.isBlocklisted(blocklist, this.window.location.href, log)) {
+                return Promise.reject('blocklisted url found. Abort ad pipeline run');
               }
             });
           }));
@@ -157,8 +157,8 @@ export default class BlacklistedUrls implements IModule {
     }
   }
 
-  isBlacklisted = (blacklist: IBlacklist, href: string, log: Moli.MoliLogger): boolean => {
-    return blacklist.urls.some(({ pattern, matchType }) => {
+  isBlocklisted = (blocklist: IBlocklist, href: string, log: Moli.MoliLogger): boolean => {
+    return blocklist.urls.some(({ pattern, matchType }) => {
       switch (matchType) {
         case 'exact':
           return href === pattern;
@@ -181,18 +181,18 @@ export default class BlacklistedUrls implements IModule {
     });
   }
 
-  private getBlacklist(blacklist: BlacklistProvider, assetLoaderService: IAssetLoaderService, log: Moli.MoliLogger): (() => Promise<IBlacklist>) {
-    switch (blacklist.provider) {
+  private getBlocklist(blocklist: BlocklistProvider, assetLoaderService: IAssetLoaderService, log: Moli.MoliLogger): (() => Promise<IBlocklist>) {
+    switch (blocklist.provider) {
       case 'static':
-        return () => Promise.resolve(blacklist.blacklist);
+        return () => Promise.resolve(blocklist.blocklist);
       case 'dynamic':
-        let cachedResult: Promise<IBlacklist>;
+        let cachedResult: Promise<IBlocklist>;
         return () => {
           if (!cachedResult) {
             cachedResult = this
-              .loadConfigWithRetry(assetLoaderService, blacklist.endpoint, 3)
+              .loadConfigWithRetry(assetLoaderService, blocklist.endpoint, 3)
               .catch((e) => {
-                log.error(this.name, 'Fetching blacklisted urls failed', e);
+                log.error(this.name, 'Fetching blocklisted urls failed', e);
                 // fallback to no urls
                 return { urls: [] };
               });
@@ -202,12 +202,12 @@ export default class BlacklistedUrls implements IModule {
     }
   }
 
-  private loadConfigWithRetry(assetLoaderService: IAssetLoaderService, endpoint: string, retriesLeft: number, lastError: any | null = null): Promise<IBlacklist> {
+  private loadConfigWithRetry(assetLoaderService: IAssetLoaderService, endpoint: string, retriesLeft: number, lastError: any | null = null): Promise<IBlocklist> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
 
-    return assetLoaderService.loadJson<IBlacklist>('blacklist-urls.json', endpoint)
+    return assetLoaderService.loadJson<IBlocklist>('blocklist-urls.json', endpoint)
       .catch(error => {
         // for 3 retries the backoff time will be 33ms / 50ms / 100ms
         const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));

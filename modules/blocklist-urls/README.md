@@ -1,26 +1,26 @@
-# Blacklist URLs
+# Blocklist URLs
 
 This module adds `configureStep` or `prepareRequestAds` steps to the ad pipeline in order to prevent ad requests entirely
-or a set a configurable key-value, which can be used in the ad server to handle blacklisted urls
+or a set a configurable key-value, which can be used in the ad server to handle blocklisted urls
 
 ## Integration
 
-In your `index.ts` import the blacklist-urls module and register it.
+In your `index.ts` import the blocklist-urls module and register it.
 
 The configuration has multiple parameters
 
-- `mode` - this describes what the module does if a blacklisted url is detected
+- `mode` - this describes what the module does if a blocklisted url is detected
   - `key-value` - sets a specific key-value on the googletag
   - `block` - rejects the pipeline step which leads to no ads being loaded
-- `blacklist` - this config object contains the blacklist configuration
-  - `provider` - select how the blacklist is being loaded
+- `blocklist` - this config object contains the blocklist configuration
+  - `provider` - select how the blocklist is being loaded
     - `static` - inline configuration inside the ad tag
     - `dynamic` - loads an external json file
 
 
-### Blacklist format
+### Blocklist format
 
-A blacklist contains a list of blacklist entries stored in the `urls` property. A `IBlacklistEntry` has two
+A blocklist contains a list of blocklist entries stored in the `urls` property. A `IBlocklistEntry` has two
 properties.
 
 - `pattern` - a string that is evaluated depending on the `matchType`
@@ -33,16 +33,16 @@ properties.
 
 
 ```javascript
-import BlacklistedUrls from '@highfivve/modules/blacklist-urls';
+import BlocklistedUrls from '@highfivve/modules/blocklist-urls';
 
-moli.registerModule(new BlacklistedUrls({
+moli.registerModule(new BlocklistedUrls({
   mode: 'block',
-  blacklist: {
+  blocklist: {
     provider: 'static',
-    blacklist: {
+    blocklist: {
       urls: [
         // a specific path
-        { pattern: '\/path\/that\/should\/be\/blacklisted', matchType: 'regex' },
+        { pattern: '\/path\/that\/should\/be\/blocklisted', matchType: 'regex' },
         // all http sites
         { pattern: '^http:\/\/.*', matchType: 'regex' },
         // contains a bad word
@@ -58,13 +58,13 @@ moli.registerModule(new BlacklistedUrls({
 You can combine `block` and `key-value` mode by adding the module twice.
 
 ```javascript
-import BlacklistedUrls from '@highfivve/modules/blacklist-urls';
+import BlocklistedUrls from '@highfivve/modules/blocklist-urls';
 
-moli.registerModule(new BlacklistedUrls({
+moli.registerModule(new BlocklistedUrls({
   mode: 'block',
-  blacklist: {
+  blocklist: {
     provider: 'static',
-    blacklist: {
+    blocklist: {
       urls: [
         { pattern: '\/login$' },
         { pattern: '\/register$' },
@@ -73,14 +73,14 @@ moli.registerModule(new BlacklistedUrls({
   }
 }, window));
 
-moli.registerModule(new BlacklistedUrls({
+moli.registerModule(new BlocklistedUrls({
   mode: 'key-value',
-  blacklist: {
+  blocklist: {
     provider: 'static',
-    blacklist: {
+    blocklist: {
       urls: [
         // a specific path
-        { pattern: '\/path\/that\/should\/be\/blacklisted' },
+        { pattern: '\/path\/that\/should\/be\/blocklisted' },
         // all http sites
         { pattern: '^http:\/\/.*' }
       ]

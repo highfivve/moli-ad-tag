@@ -23,7 +23,7 @@ import { adConfiguration } from './source/ts/configuration';
 import Cmp from '@highfivve/module-cmp-liveramp-tcf2';
 import Confiant from '@highfivve/module-confiant';
 
-import BlacklistedUrls from '@highfivve/module-blacklist-url';
+import BlocklistedUrls from '@highfivve/module-blocklist-url';
 
 prebid.processQueue();
 
@@ -38,11 +38,11 @@ moli.registerModule(new Confiant({
 moli.registerModule(new Cmp(window));
 
 // blacklist urls
-moli.registerModule(new BlacklistedUrls({
+moli.registerModule(new BlocklistedUrls({
   mode: 'block',
-  blacklist: {
+  blocklist: {
     provider: 'static',
-    blacklist: {
+    blocklist: {
       urls: [
         // { pattern: 'local\.h5v\.eu', matchType: 'regex' },
         { pattern: 'invalid', matchType: 'contains' }

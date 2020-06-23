@@ -1,8 +1,8 @@
 {
-  "name": "@highfivve/module-blacklist-url",
+  "name": "@highfivve/module-blocklist-url",
   "version": "1.20.1",
   "license": "UNLICENSED",
-  "description": "Handles blacklisted urls",
+  "description": "Handles blocklisted urls",
   "main": "index.ts",
   "scripts": {
     "compile": "tsc --noEmit",
