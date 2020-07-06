@@ -65,7 +65,7 @@ export namespace googletag {
      * to enabling the service. Single request mode must be set before the service is enabled.
      *
      * @return Returns true if single request mode was enabled and false if it is impossible
-     *         to enable single requesxt mode because the method was called after the service was enabled.
+     *         to enable single request mode because the method was called after the service was enabled.
      */
     enableSingleRequest(): boolean;
 
