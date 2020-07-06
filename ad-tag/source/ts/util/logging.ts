@@ -113,7 +113,7 @@ export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.
 
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
-  } else if (config && config.logger) {
+  } else if (config?.logger) {
     return config.logger;
   } else {
     return getNoopLogger();
