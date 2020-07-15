@@ -35,7 +35,7 @@ moli.registerModule(new Confiant({
 }, window));
 
 // cmp
-moli.registerModule(new Cmp(270, /*'https://consent.gutefrage.net' */'https://message.sp-prod.net' /*'https://mms.sp-stage.net'*/ /* propertyHref: 'https://local.h5v.eu'*/, window));
+moli.registerModule(new Cmp(window));
 
 // blacklist urls
 moli.registerModule(new BlocklistedUrls({
