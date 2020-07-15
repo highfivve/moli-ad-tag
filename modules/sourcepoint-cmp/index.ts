@@ -244,19 +244,13 @@ export default class SourcepointCmp implements IModule {
     return null;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: Moli.MoliConfig): void {
     const log = getLogger(config, this._window);
     this.logger = log;
     if (config.consent.cmp) {
       log.error('Generic CMP', `There is already another cmp module registered: ${config.consent.cmp.name}`);
       return;
     }
-
-    assetLoaderService.loadScript({
-      name: 'sourcepoint cmp',
-      loadMethod: AssetLoadMethod.TAG,
-      assetUrl: 'https://gdpr-tcfv2.sp-prod.net/wrapperMessagingWithoutDetection.js'
-    });
 
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
