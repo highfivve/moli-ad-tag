@@ -52,7 +52,7 @@ pipeline {
                     // a map with one entry for every module
                     def modules = [:]
 
-                    ['confiant', 'justpremium-skin', 'generic-skin', 'prebid-google-analytics', 'sovrn-ad-reload', 'cmp-faktor', 'cmp-generic', 'cmp-static', 'blocklist-url'].each { module ->
+                    ['confiant', 'justpremium-skin', 'generic-skin', 'prebid-google-analytics', 'sovrn-ad-reload', 'cmp-faktor', 'cmp-generic', 'cmp-static', 'cmp-sourcepoint', 'blocklist-url'].each { module ->
                         modules[module] = {
                             stage('validate') {
                                 echo "Running validate:jenkins for module $module"

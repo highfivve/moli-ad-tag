@@ -14,8 +14,7 @@
     "allowJs": true
   },
   "files": [
-    "index.ts",
-    "index.test.ts"
+    "index.ts"
   ],
   "include": [
     "../ad-tag/source/**/*"
