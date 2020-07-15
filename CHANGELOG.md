@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.6.2
+
+[GD-1686](https://jira.gutefrage.net/browse/GD-1686). Don't load sourcepoint script via cmp module
+
 ## 2.6.1
 
 [GD-1686](https://jira.gutefrage.net/browse/GD-1686). Add initial draf implementation for sourcepoint cmp module
