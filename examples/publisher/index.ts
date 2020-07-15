@@ -20,7 +20,7 @@ import 'prebid.js/modules/rubiconBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import Cmp from '@highfivve/module-cmp-liveramp-tcf2';
+import Cmp from '@highfivve/module-cmp-sourcepoint';
 import Confiant from '@highfivve/module-confiant';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
@@ -35,7 +35,7 @@ moli.registerModule(new Confiant({
 }, window));
 
 // cmp
-moli.registerModule(new Cmp(window));
+moli.registerModule(new Cmp(270, /*'https://consent.gutefrage.net' */'https://message.sp-prod.net' /*'https://mms.sp-stage.net'*/ /* propertyHref: 'https://local.h5v.eu'*/, window));
 
 // blacklist urls
 moli.registerModule(new BlocklistedUrls({

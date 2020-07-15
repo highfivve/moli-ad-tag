@@ -480,7 +480,7 @@ export const adConfiguration: Moli.MoliConfig = {
     sampleRate: 1,
     adUnitRegex: /\/\d*\/gf\//i,
     reporters: [
-      consoleLogReporter
+      // consoleLogReporter
     ]
   },
   logger: logger

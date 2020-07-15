@@ -52,11 +52,6 @@ export default class LiveRampCmp implements IModule {
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this._window);
 
-    if (config.environment === 'test') {
-      log.debug(this.name, 'ad tag in test mode. Blacklist module is disabled');
-      return;
-    }
-
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
       initSteps: [],
