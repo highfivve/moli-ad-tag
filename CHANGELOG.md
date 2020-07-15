@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.6.0
+
+[GD-2139](https://jira.gutefrage.net/browse/GD-2139). Add ability to add multiple preb adunits per ad slot
+
+## 2.5.0
+
+Rename blacklist to blocklist module.
+
 ## 2.4.0
 
 [GD-2121](https://jira.gutefrage.net/browse/GD-2121). `refreshAdSlot` API for the moli ad tag.

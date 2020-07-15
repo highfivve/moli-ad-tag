@@ -160,32 +160,50 @@ export const adConfiguration: Moli.MoliConfig = {
       adUnitPath: '/55155651/outstream_test',
       passbackSupport: true,
       sizes: [ [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
-      prebid: {
-        adUnit: {
-          code: 'prebid-adslot',
-          mediaTypes: {
-            banner: {
-              sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]
+      prebid: [
+        {
+          adUnit: {
+            code: 'prebid-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]
+              },
+              video: {
+                context: 'outstream',
+                playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 1, 1 ] ] as [ number, number ][])
+              }
             },
-            video: {
-              context: 'outstream',
-              playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 1, 1 ] ] as [ number, number ][])
-            }
-          },
-          bids: [
-            // Unruly test placement
-            unrulyBid(1081534, '6f15e139-5f18-49a1-b52f-87e5e69ee65e'),
-            // SpotX test placement
-            spotxBid('85394', 'prebid-adslot'),
-            // Teads fallback placements
-            teadsVerticalBid(94142, 101939, [ 'desktop' ]),
-            teadsVerticalBid(94140, 101937, [ 'mobile' ]),
-            // AppNexus Test Placement - outstream only
-            // see http://prebid.org/examples/video/outstream/outstream-dfp.html
-            appNexusOutstream('13232385'),
-          ]
+            bids: [
+              // Unruly test placement
+              unrulyBid(1081534, '6f15e139-5f18-49a1-b52f-87e5e69ee65e'),
+              // SpotX test placement
+              spotxBid('85394', 'prebid-adslot'),
+              // Teads fallback placements
+              teadsVerticalBid(94142, 101939, [ 'desktop' ]),
+              teadsVerticalBid(94140, 101937, [ 'mobile' ])
+            ]
+          }
+        },
+        {
+          adUnit: {
+            code: 'prebid-adslot',
+            mediaTypes: {
+              banner: {
+                sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]
+              },
+              video: {
+                context: 'outstream',
+                playerSize: ([ [ 605, 340 ], [ 536, 302 ], [ 1, 1 ] ] as [ number, number ][])
+              }
+            },
+            bids: [
+                  // AppNexus Test Placement - outstream only
+              // see http://prebid.org/examples/video/outstream/outstream-dfp.html
+              appNexusOutstream('13232385'),
+            ]
+          }
         }
-      },
+      ],
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',

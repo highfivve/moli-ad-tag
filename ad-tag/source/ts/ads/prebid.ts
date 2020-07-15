@@ -66,6 +66,21 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
   });
 };
 
+/**
+ * Evaluates the prebid ad slot configuration provider and returns the result in an array.
+ *
+ * @param context
+ * @param provider
+ */
+const extractPrebidAdSlotConfigs = (context: Moli.headerbidding.PrebidAdSlotContext, provider: Moli.headerbidding.PrebidAdSlotConfigProvider): Moli.headerbidding.PrebidAdSlotConfig[] => {
+  if (typeof provider === 'function') {
+    const oneOrMoreConfigs = provider(context);
+    return Array.isArray(oneOrMoreConfigs) ? oneOrMoreConfigs : [ oneOrMoreConfigs ];
+  } else {
+    return Array.isArray(provider) ? provider : [ provider ];
+  }
+};
+
 export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
   'prebid-prepare-adunits',
   LOW_PRIORITY,
@@ -77,54 +92,59 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareReq
         const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
         const floorPrice = priceRule ? priceRule.cpm : undefined;
         context.logger.debug('Prebid', context.requestId, 'Price Rule', priceRule, moliSlot.domId);
-        const prebidAdSlotConfig = (typeof moliSlot.prebid === 'function') ?
-          moliSlot.prebid({ keyValues: keyValues, floorPrice: floorPrice }) :
-          moliSlot.prebid;
-        const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
-        const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
-        const mediaTypeNative = prebidAdSlotConfig.adUnit.mediaTypes.native;
 
-        const bannerSizes = mediaTypeBanner ? filterSupportedSizes(mediaTypeBanner.sizes).filter(SizeConfigService.isFixedSize) : [];
-        const videoSizes = mediaTypeVideo ? filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
+        return extractPrebidAdSlotConfigs({
+          keyValues: keyValues,
+          floorPrice: floorPrice
+        }, moliSlot.prebid).map(prebidAdSlotConfig => {
 
-        // filter bids ourselves and don't rely on prebid to have a stable API
-        const bids = prebidAdSlotConfig.adUnit.bids
-          .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid));
+          const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
+          const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
+          const mediaTypeNative = prebidAdSlotConfig.adUnit.mediaTypes.native;
 
-        const video = (mediaTypeVideo && videoSizes.length > 0) ? {
-          video: { ...mediaTypeVideo, playerSize: videoSizes }
-        } : undefined;
+          const bannerSizes = mediaTypeBanner ? filterSupportedSizes(mediaTypeBanner.sizes).filter(SizeConfigService.isFixedSize) : [];
+          const videoSizes = mediaTypeVideo ? filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes) : [];
 
-        const banner = (mediaTypeBanner && bannerSizes.length > 0) ? {
-          banner: { ...mediaTypeBanner, sizes: bannerSizes }
-        } : undefined;
+          // filter bids ourselves and don't rely on prebid to have a stable API
+          const bids = prebidAdSlotConfig.adUnit.bids
+            .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid));
 
-        const native = mediaTypeNative ? {
-          native: { ...mediaTypeNative }
-        } : undefined;
+          const video = (mediaTypeVideo && videoSizes.length > 0) ? {
+            video: { ...mediaTypeVideo, playerSize: videoSizes }
+          } : undefined;
 
-        return {
-          code: moliSlot.domId,
-          mediaTypes: {
-            ...video,
-            ...banner,
-            ...native
-          },
-          bids: bids
-        } as prebidjs.IAdUnit;
-      }).filter(adUnit => {
-        return adUnit.bids.length > 0 &&
-          adUnit.mediaTypes &&
-          // some mediaType must be defined
-          (adUnit.mediaTypes.banner || adUnit.mediaTypes.video || adUnit.mediaTypes.native) &&
-          // if an adUnit is already defined we should not add it a second time
-          !isAdUnitDefined(adUnit, context.window);
+          const banner = (mediaTypeBanner && bannerSizes.length > 0) ? {
+            banner: { ...mediaTypeBanner, sizes: bannerSizes }
+          } : undefined;
+
+          const native = mediaTypeNative ? {
+            native: { ...mediaTypeNative }
+          } : undefined;
+
+          return {
+            code: moliSlot.domId,
+            mediaTypes: {
+              ...video,
+              ...banner,
+              ...native
+            },
+            bids: bids
+          } as prebidjs.IAdUnit;
+        }).filter(adUnit => {
+          return adUnit.bids.length > 0 &&
+            adUnit.mediaTypes &&
+            // some mediaType must be defined
+            (adUnit.mediaTypes.banner || adUnit.mediaTypes.video || adUnit.mediaTypes.native) &&
+            // if an adUnit is already defined we should not add it a second time
+            !isAdUnitDefined(adUnit, context.window);
+        });
       });
 
-    prebidAdUnits.forEach(adUnit => {
+    const prebidAdUnitsFlat = prebidAdUnits.reduce((acc, adUnits) => [ ...acc, ...adUnits ], []);
+    prebidAdUnitsFlat.forEach(adUnit => {
       context.logger.debug('Prebid', context.requestId, `Prebid add ad unit: [Code] ${adUnit.code}`, adUnit);
     });
-    context.window.pbjs.addAdUnits(prebidAdUnits);
+    context.window.pbjs.addAdUnits(prebidAdUnitsFlat);
     resolve();
   })
 );

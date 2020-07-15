@@ -13,6 +13,7 @@ import headerbidding = Moli.headerbidding;
 import AdSlot = Moli.AdSlot;
 import DfpSlotSize = Moli.DfpSlotSize;
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
+import { extractPrebidAdSlotConfigs } from '../util/prebid';
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
@@ -142,50 +143,68 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   }
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
-    const prebidAdUnit: prebidjs.IAdUnit = (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {}, floorPrice: undefined })).adUnit;
-    const slotSizeConfig = this.props.slot.sizeConfig;
-    const banner = prebidAdUnit.mediaTypes.banner;
-    const video = prebidAdUnit.mediaTypes.video;
-    const native = prebidAdUnit.mediaTypes.native;
+    // (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {}, floorPrice: undefined })).adUnit;
+    const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs({ keyValues: {}, floorPrice: undefined }, prebid)
+      .map(config => config.adUnit);
 
-    return <div>
-      <div class="MoliDebug-tagContainer">
-        <span class="MoliDebug-tagLabel">Code</span>
-        <Tag variant="green">{prebidAdUnit.code}</Tag>
-      </div>
-      {banner && <div class="MoliDebug-tagContainer">
-        <span class="MoliDebug-tagLabel">Banner sizes</span>
-        {this.validateSlotSizes(banner.sizes).map(validatedSlotSize =>
-          this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
+    const hasMultipleBids = prebidAdUnits.length > 1;
+
+    const elements = prebidAdUnits.map((prebidAdUnit, index) => {
+      const slotSizeConfig = this.props.slot.sizeConfig;
+      const banner = prebidAdUnit.mediaTypes.banner;
+      const video = prebidAdUnit.mediaTypes.video;
+      const native = prebidAdUnit.mediaTypes.native;
+      return <div>
+        {index > 0 && <hr/> }
+        {hasMultipleBids && <h5>{index + 1}. config</h5>}
+        <div class="MoliDebug-tagContainer">
+          <span class="MoliDebug-tagLabel">Code</span>
+          <Tag variant="green">{prebidAdUnit.code}</Tag>
+        </div>
+        {banner && <div class="MoliDebug-tagContainer">
+            <span class="MoliDebug-tagLabel">Banner sizes</span>
+          {this.validateSlotSizes(banner.sizes).map(validatedSlotSize =>
+            this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
+          )}
+        </div>}
+        {video && <div class="MoliDebug-tagContainer">
+            <span class="MoliDebug-tagLabel">Video</span>
+            <Tag variant="green">{video.context}</Tag>
+          {this.validateSlotSizes(this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize)
+            .map(validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig))
+          }
+        </div>}
+        {native && <div class="MoliDebug-tagContainer">
+            <span class="MoliDebug-tagLabel">Native</span>
+            <Tag variant="green">true</Tag>
+        </div>}
+        {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => [
+            <hr/>,
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
+              <Tag variant="blue">{bid.bidder}</Tag>
+            </div>,
+            <div className="MoliDebug-tagContainer">
+              {this.labelConfig(bid)}
+            </div>,
+            <div class="MoliDebug-tagContainer">
+              <span class="MoliDebug-tagLabel">Params</span>
+              <Tag>{JSON.stringify(bid.params)}</Tag>
+            </div>
+          ]
         )}
-      </div>}
-      {video && <div class="MoliDebug-tagContainer">
-        <span class="MoliDebug-tagLabel">Video</span>
-        <Tag variant="green">{video.context}</Tag>
-        {this.validateSlotSizes(this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize)
-          .map(validatedSlotSize => this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig))
-        }
-      </div>}
-      {native && <div class="MoliDebug-tagContainer">
-        <span class="MoliDebug-tagLabel">Native</span>
-        <Tag variant="green">true</Tag>
-      </div>}
-      {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => [
-          <hr/>,
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
-            <Tag variant="blue">{bid.bidder}</Tag>
-          </div>,
-          <div className="MoliDebug-tagContainer">
-            {this.labelConfig(bid)}
-          </div>,
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">Params</span>
-            <Tag>{JSON.stringify(bid.params)}</Tag>
-          </div>
-        ]
-      )}
-    </div>;
+      </div>;
+    });
+
+    if (elements.length === 1) {
+      return elements[0];
+    } else {
+      return <div>
+        <h5>{elements.length} bid configurations</h5>
+        {elements}
+      </div>;
+    }
+
   };
 
   private a9Config = (a9: headerbidding.A9AdSlotConfig): JSX.Element => {
@@ -236,26 +255,24 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     this.setState({ ...defaultPanelState, showSizeConfig: !this.state.showSizeConfig });
   };
 
-  private isPrebidConfigObject = (prebid: headerbidding.PrebidAdSlotConfigProvider): prebid is headerbidding.PrebidAdSlotConfig => {
-    return typeof prebid !== 'function';
-  };
-
   private isVisiblePrebid = (): boolean => {
     const prebid = this.props.slot.prebid;
 
     if (prebid) {
-      const prebidAdUnit: prebidjs.IAdUnit = this.isPrebidConfigObject(prebid) ? prebid.adUnit : prebid({ keyValues: {}, floorPrice: undefined }).adUnit;
+      return extractPrebidAdSlotConfigs({ keyValues: {}, floorPrice: undefined }, prebid)
+        .map(config => config.adUnit)
+        .some(prebidAdUnit => {
+          const video = prebidAdUnit.mediaTypes.video;
+          const banner = prebidAdUnit.mediaTypes.banner;
+          const native = prebidAdUnit.mediaTypes.native;
 
-      const video = prebidAdUnit.mediaTypes.video;
-      const banner = prebidAdUnit.mediaTypes.banner;
-      const native = prebidAdUnit.mediaTypes.native;
+          const videoValid = !!video && this.validateSlotSizes(
+            this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize
+          ).some(validatedSlotSize => validatedSlotSize.valid);
 
-      const videoValid = !!video && this.validateSlotSizes(
-        this.isSingleVideoSize(video.playerSize) ? [ video.playerSize ] : video.playerSize
-      ).some(validatedSlotSize => validatedSlotSize.valid);
-
-      return !!native || videoValid || (!!banner && this.validateSlotSizes(banner.sizes)
-        .some(validatedSlotSize => validatedSlotSize.valid));
+          return !!native || videoValid || (!!banner && this.validateSlotSizes(banner.sizes)
+            .some(validatedSlotSize => validatedSlotSize.valid));
+        });
     }
 
     return true;

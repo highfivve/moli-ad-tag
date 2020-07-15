@@ -390,7 +390,14 @@ export namespace Moli {
    */
   export namespace state {
 
-    export type States = 'configurable' | 'configured' | 'spa-finished' | 'spa-requestAds' | 'requestAds' | 'finished' | 'error';
+    export type States =
+      'configurable'
+      | 'configured'
+      | 'spa-finished'
+      | 'spa-requestAds'
+      | 'requestAds'
+      | 'finished'
+      | 'error';
 
     /**
      * Base interface for all states.
@@ -1111,10 +1118,16 @@ export namespace Moli {
      *
      * - as a static value
      * - from a function which takes a `PrebidAdSlotContext`
+     *
+     * An ad slot config can either be a single value or an array of values.
+     * Prebid merges those multiple definitions back into one. This allows size
+     * configuration hacks, e.g. for the xaxis prebid integration.
      */
     export type PrebidAdSlotConfigProvider =
       PrebidAdSlotConfig
-      | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig);
+      | PrebidAdSlotConfig[]
+      | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig)
+      | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig[]);
 
     /**
      * Context for creating a dynamic `PrebidAdSlotConfig`. Grants access to certain values
