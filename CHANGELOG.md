@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+## 2.6.1
+
+[GD-1686](https://jira.gutefrage.net/browse/GD-1686). Add initial draf implementation for sourcepoint cmp module
+
 ## 2.6.0
 
-[GD-2139](https://jira.gutefrage.net/browse/GD-2139). Add ability to add multiple preb adunits per ad slot
+[GD-2139](https://jira.gutefrage.net/browse/GD-2139). Add ability to add multiple prebid adunits per ad slot
 
 ## 2.5.0
 
