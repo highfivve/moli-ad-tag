@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.6.3
+
+[GD-1686](https://jira.gutefrage.net/browse/GD-1686). Remove sourcepoint config completely and use vanilla tcfapi
+
 ## 2.6.2
 
 [GD-1686](https://jira.gutefrage.net/browse/GD-1686). Don't load sourcepoint script via cmp module
