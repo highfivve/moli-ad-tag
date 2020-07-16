@@ -12,23 +12,15 @@ export interface ISourcepointWindowConfig {
   readonly accountId: number;
 
   /**
-   * "https://wrapper-api.sp-prod.net/tcfv2" is the endpoint from where the GDPR & TCF v2 service is served. Keep as is.
-   *
-   * @example `"https://wrapper-api.sp-prod.net/tcfv2"`
-   */
-  readonly wrapperAPIOrigin: string;
-
-  /**
-   * For maintenance and optimization reasons the mmsDomain is account-specific. All mms Domains follow the pattern
-   * 'https://message{accountIdHere}.sp-prod.net' where {accountIdHere} needs to be replaced with your individual
-   * Sourcepoint account ID (see below). The mmsDomain can also be changed to a CNAMED 1st party subdomain in order
+   * "https://cdn.privacy-mgmt.com" is a single server endpoint from where the messaging as well as the GDPR and
+   * TCFv2 experience is served. The baseEndpoint can also be changed to a CNAMED 1st party subdomain in order
    * to persist 1st party cookies on Safari web browser (due to Safari’s ITP) by setting cookies through the server
-   * with "set-cookie" rather than using "document.cookie" on the page. Changing the mmsDomain is optional!
+   * with "set-cookie" rather than using "document.cookie" on the page. Changing the baseEndpoint domain is optional
+   * but recommended!
    *
-   *
-   * @example `"https://message.sp-prod.net"`
+   * @see [[https://documentation.sourcepoint.com/cmp/configurations/setting-up-the-cname-dns-record-for-single-cname]]
    */
-  readonly mmsDomain: string;
+  readonly baseEndpoint: string;
 
   /**
    * Maps the implementation to a specific URL as set up in the Sourcepoint account dashboard
