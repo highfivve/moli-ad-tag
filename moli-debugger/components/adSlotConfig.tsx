@@ -143,7 +143,6 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
   }
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
-    // (this.isPrebidConfigObject(prebid) ? prebid : prebid({ keyValues: {}, floorPrice: undefined })).adUnit;
     const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs({ keyValues: {}, floorPrice: undefined }, prebid)
       .map(config => config.adUnit);
 
