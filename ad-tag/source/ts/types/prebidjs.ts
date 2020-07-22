@@ -1777,6 +1777,21 @@ export namespace prebidjs {
      * placement id
      */
     readonly placementId: string;
+
+    /**
+     * A set of key-value pairs applied to all ad slots on the page.
+     * Mapped to query string segments for buy-side targeting.
+     *
+     * Example:
+     *
+     * keywords: { genre: ['rock', 'pop'] }
+     */
+    readonly keywords?: IAppNexusASTKeyword;
+
+    /**
+     * Sets a floor price for the bid that is returned.
+     */
+    readonly reserve?: number;
   }
 
   /**
