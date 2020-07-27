@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.6.4
+## 2.6.5
 
 Set prebid config
 
