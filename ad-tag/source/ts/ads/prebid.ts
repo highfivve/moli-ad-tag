@@ -55,10 +55,11 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
 
   return mkConfigureStep('prebid-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
     if (!result) {
-      new Promise<void>(resolve => {
+      result = new Promise<void>(resolve => {
         if (prebidConfig.bidderSettings) {
           context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
         }
+        context.window.pbjs.setConfig(prebidConfig.config);
         resolve();
       });
     }

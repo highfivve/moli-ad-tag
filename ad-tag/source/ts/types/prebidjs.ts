@@ -71,7 +71,7 @@ export namespace prebidjs {
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
      * @param {prebidjs.IPrebidJsConfig} config
      */
-    setConfig(config: IPrebidJsConfig): void;
+    setConfig(config: Partial<IPrebidJsConfig>): void;
 
     /**
      * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.

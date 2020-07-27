@@ -10,11 +10,12 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext, } from '../../../source/ts/ads/adPipeline';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 import {
+  prebidConfigure,
   prebidPrepareRequestAds
 } from '../../../source/ts/ads/prebid';
 import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
-import { createPbjsStub } from '../stubs/prebidjsStubs';
+import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 
 
@@ -96,6 +97,21 @@ describe('prebid', () => {
 
   afterEach(() => {
     sandbox.reset();
+  });
+
+  describe('prebid configure step', () => {
+    it('should set the prebid config', () => {
+      const prebidConfig: Moli.headerbidding.PrebidConfig = {
+        config: pbjsTestConfig
+      };
+      const step = prebidConfigure(prebidConfig);
+      const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
+
+      return step(adPipelineContext(), []).then(() => {
+        expect(setConfigSpy).to.have.been.calledOnce;
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly(pbjsTestConfig);
+      });
+    });
   });
 
   describe('prebid prepare request ads', () => {
