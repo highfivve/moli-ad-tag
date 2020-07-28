@@ -171,7 +171,6 @@ export const adConfiguration: Moli.MoliConfig = {
     cmpTimeout: 500,
     pubID: 'test'
   },
-  consent: {},
   yieldOptimization: {
     provider: 'none',
   }

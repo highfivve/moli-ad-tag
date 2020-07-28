@@ -4,7 +4,7 @@ import * as sinonChai from 'sinon-chai';
 import JustPremium from './index';
 import { Moli } from '@highfivve/ad-tag';
 import { createMoliTag } from '@highfivve/ad-tag/source/ts/ads/moli';
-import { consentConfig, newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
+import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 
@@ -60,7 +60,6 @@ describe('JustPremium Module', () => {
 
     const config: Moli.MoliConfig = {
       slots: slots,
-      consent: consentConfig,
       logger: noopLogger,
       prebid: { config: pbjsTestConfig },
       yieldOptimization: { provider: 'none' }
@@ -90,7 +89,6 @@ describe('JustPremium Module', () => {
 
     const config: Moli.MoliConfig = {
       slots: slots,
-      consent: consentConfig,
       logger: noopLogger,
       prebid: { config: pbjsTestConfig },
       yieldOptimization: { provider: 'none' }

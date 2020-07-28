@@ -2,7 +2,6 @@ import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { IABConsentManagement } from './IABConsentManagement';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 
 /* tslint:disable:interface-name */
@@ -728,11 +727,6 @@ export namespace Moli {
     readonly yieldOptimization: yield_optimization.YieldOptimizationConfig;
 
     /**
-     * GDPR consent management settings
-     */
-    consent: consent.ConsentConfig;
-
-    /**
      * Reporting configuration
      */
     reporting?: reporting.ReportingConfig;
@@ -1305,119 +1299,6 @@ export namespace Moli {
       /** Filter ad slot based on the given labels */
       readonly labelAny?: string[];
     }
-  }
-
-  /**
-   * # Consent Management
-   *
-   * GDPR compliant consent management configuration.
-   *
-   * ## GPT - Google Publisher Tag
-   *
-   * The [PersonalizedAdsProvider](#personalizedadsprovider) configures the `setNonPersonalizedAds()`
-   * method call on the `PubAdsService`.
-   *
-   * There are three variants
-   *
-   * - [Static](/interfaces/_moli_.moli.consent.static.html) - a fixed value
-   * - [Cookie](/interfaces/_moli_.moli.consent.cookie.html) - based on a cookie
-   * - [CMP](/interfaces/_moli_.moli.consent.cmp.html) - use an IAB CMP API
-   *
-   * ## Prebid
-   *
-   * Prebid comes with its IAB compliant consent management framework. Make sure you have the
-   * `ConsentManagement` module. This must be in the `modules.json`.
-   *
-   * ```json
-   * [
-   *   ...
-   *   "consentManagement",
-   *   ...
-   * ]
-   * ```
-   *
-   *
-   * @see [Prebid GDPR ConsentManagement Module](https://prebid.org/dev-docs/modules/consentManagement.html)
-   * @see [[ConsentConfig]] for the overall configuration options
-   * @see [[PersonalizedAdsProvider]] for DFP consent configuration options
-   *
-   */
-  export namespace consent {
-
-
-    /**
-     * ## CMP Module
-     *
-     * Provides an interface for the IAB CMP standard. This module will not be versioned,
-     * thus there will be breaking changes when the new IAB CMP v2 standard is being activated
-     * and publisher ad tags will need to upgrade.     *
-     *
-     * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/v1.1%20Implementation%20Guidelines.md
-     * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20CMP%20API%20v2.md
-     */
-    export interface CmpModule extends IModule {
-
-      readonly moduleType: 'cmp';
-
-      /**
-       * Use to call the `googletag.pubads().setRequestNonPersonalizedAds(...)` method.
-       *
-       * 0 = request personalized ads
-       * 1 = request no personalized ads
-       *
-       * This method is required as long google doesn't use the IAB standard.
-       */
-      getNonPersonalizedAdSetting(): Promise<0 | 1>;
-
-      /**
-       * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/CMP%20JS%20API%20v1.1%20Final.md#what-api-will-need-to-be-provided-by-the-cmp-
-       */
-      getConsentData(): Promise<IABConsentManagement.IConsentData>;
-
-      /**
-       * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/CMP%20JS%20API%20v1.1%20Final.md#vendorconsents
-       */
-      getVendorConsents(): Promise<IABConsentManagement.IVendorConsents>;
-    }
-
-    /**
-     * # Consent Configuration
-     *
-     * This object contains all relevant information for configuring consent. This is a very crucial part
-     * of our ad setup as the consent rate determines the overall performance of all partners.
-     *
-     * ## Personalized Ads Provider
-     *
-     * Configure the consent management for DFP.
-     *
-     *
-     * @see [[PersonalizedAdsProvider]] for DFP consent management
-     */
-    export interface ConsentConfig {
-
-      /**
-       * This property will be set by a registered CmpModule.
-       *
-       * If no CmpModule is registered no ads will be loaded.
-       */
-      cmp?: CmpModule;
-
-      /**
-       * Configure a timeout in ms for operations on the cmp module.
-       *
-       * If not configured we rely on the vendor behaviour. This can either be blocking or not.
-       * Make sure to check this.
-       *
-       * In order to force ad loading without any consent make sure to
-       *
-       * - configure a timeout greater than 0
-       * - allow prebid to proceed without consent
-       *
-       * default: none - meaning operations block until finished
-       */
-      timeout?: number;
-    }
-
   }
 
   export namespace pipeline {

@@ -1,8 +1,8 @@
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { tcfapi } from '@highfivve/ad-tag';
 import { IModule, LOW_PRIORITY, mkInitStep, mkPrepareRequestAdsStep, Moli } from '@highfivve/ad-tag';
-import { TCFApiWindow, responses } from './types/tcfapi';
 
-type SourcepointWindow = TCFApiWindow & {
+type SourcepointWindow = tcfapi.TCFApiWindow & {
   _sp_: {
     config: ISourcepointWindowConfig
   }
@@ -202,7 +202,7 @@ export default class SourcepointCmp implements IModule {
     this.spWindow = _window as unknown as SourcepointWindow;
 
     this.consentReady = new Promise<void>((resolve, reject) => {
-      const listener = (event: responses.TCData) => {
+      const listener = (event: tcfapi.responses.TCData) => {
         if (event.cmpStatus === 'error') {
           reject(event);
         } else if (event.eventStatus === 'useractioncomplete' || event.eventStatus === 'tcloaded') {
@@ -225,10 +225,6 @@ export default class SourcepointCmp implements IModule {
   init(config: Moli.MoliConfig): void {
     const log = getLogger(config, this._window);
     this.logger = log;
-    if (config.consent.cmp) {
-      log.error('Generic CMP', `There is already another cmp module registered: ${config.consent.cmp.name}`);
-      return;
-    }
 
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -261,7 +257,7 @@ export default class SourcepointCmp implements IModule {
   }
 
 
-  private getTcData = (log: Moli.MoliLogger): Promise<responses.TCData> => new Promise(resolve => {
+  private getTcData = (log: Moli.MoliLogger): Promise<tcfapi.responses.TCData> => new Promise(resolve => {
     this.spWindow.__tcfapi('getTCData', 2, (tcData, success: boolean) => {
       log.debug(this.name, 'getTCData returned', success, tcData);
       resolve(tcData);

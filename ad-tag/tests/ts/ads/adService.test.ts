@@ -126,21 +126,6 @@ describe('AdService', () => {
       });
     });
 
-    it('should not add the gpt-personalized-ads step if a cmp module is not available', () => {
-      const config: Moli.MoliConfig = { ...emptyConfig, consent: {} };
-      return initialize(config).then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).not.to.contain('gpt-personalized-ads');
-      });
-    });
-
-    it('should add the gpt-personalized-ads step if a cmp module is available', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-personalized-ads');
-      });
-    });
-
     it('should add the slot-event-service-configure step', () => {
       return initialize().then(pipeline => {
         const stepNames = pipeline.configure.map(step => step.name);

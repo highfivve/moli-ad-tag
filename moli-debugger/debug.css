@@ -6,6 +6,7 @@
   --MoliDebug-yellow: #ffe152;
   --MoliDebug-blue: #76949f;
   --MoliDebug-blue--light: #edf6fc;
+  --MoliDebug-grey--light: #e9ecef;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
   --MoliDebug-buttons-padding: 5px;
@@ -237,6 +238,10 @@
 
     &--blue {
       background: var(--MoliDebug-blue);
+    }
+
+    &--grey {
+      background: var(--MoliDebug-grey--light);
     }
 
     &&--mediumSpacing {

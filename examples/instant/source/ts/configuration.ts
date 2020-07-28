@@ -206,7 +206,6 @@ export const adConfiguration: Moli.MoliConfig = {
       }
     }
   },
-  consent: {  },
   yieldOptimization: {
     provider: 'none',
   },

@@ -7,7 +7,7 @@ import { createMoliTag } from '../../../source/ts/ads/moli';
 import { initAdTag } from '../../../source/ts/ads/moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { consentConfig, emptyConfig, newEmptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, newEmptyConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
@@ -433,7 +433,7 @@ describe('moli', () => {
       const adTag = createMoliTag(dom.window);
       adTag.setTargeting('pre', 'configure1');
       adTag.configure({
-        slots: defaultSlots, consent: consentConfig, targeting: {
+        slots: defaultSlots, targeting: {
           keyValues: {
             pre: 'dismiss',
             post: 'dismiss'
@@ -498,7 +498,7 @@ describe('moli', () => {
       adTag.enableSinglePageApp();
       adTag.setTargeting('dynamicKeyValuePre', 'value');
       adTag.configure({
-        slots: defaultSlots, consent: consentConfig, logger: noopLogger, targeting: {
+        slots: defaultSlots, logger: noopLogger, targeting: {
           keyValues: { keyFromAdConfig: 'value' },
           labels: []
         },
@@ -519,7 +519,6 @@ describe('moli', () => {
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
         expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
-        expect(googletagPubAdsSetTargetingSpy).calledWithMatch('consent', Sinon.match.in([ 'full', 'none' ]));
         googletagPubAdsSetTargetingSpy.resetHistory();
         dom.reconfigure({
           url: 'https://localhost/2'
@@ -574,7 +573,7 @@ describe('moli', () => {
       const adTag = createMoliTag(dom.window);
       adTag.addLabel('pre');
       adTag.configure({
-        slots: defaultSlots, consent: consentConfig, targeting: {
+        slots: defaultSlots, targeting: {
           keyValues: {},
           labels: [ 'pre-existing' ]
         },
@@ -598,7 +597,7 @@ describe('moli', () => {
       adTag.enableSinglePageApp();
       adTag.addLabel('dynamicLabelPre');
       adTag.configure({
-        slots: defaultSlots, consent: consentConfig, logger: noopLogger, targeting: {
+        slots: defaultSlots, logger: noopLogger, targeting: {
           keyValues: {},
           labels: [ 'a9' ]
         },
@@ -897,7 +896,7 @@ describe('moli', () => {
       adTag.setTargeting('pre', 'configure1');
       adTag.addLabel('pre');
       adTag.configure({
-        slots: defaultSlots, consent: consentConfig, targeting: {
+        slots: defaultSlots, targeting: {
           keyValues: {
             pre: 'dismiss',
             post: 'dismiss',

@@ -67,7 +67,6 @@ describe('Skin Module', () => {
 
       const config: Moli.MoliConfig = {
         slots: slots,
-        consent: {},
         logger: noopLogger,
         prebid: { config: pbjsTestConfig },
         yieldOptimization: { provider: 'none' }
@@ -103,7 +102,6 @@ describe('Skin Module', () => {
 
       const config: Moli.MoliConfig = {
         slots: slots,
-        consent: { },
         logger: noopLogger,
         prebid: { config: pbjsTestConfig },
         yieldOptimization: { provider: 'none' }

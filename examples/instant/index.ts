@@ -15,7 +15,7 @@ import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';
-import Faktor from '@highfivve/module-cmp-faktor';
+import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 
 prebid.processQueue();
 
@@ -33,9 +33,7 @@ moli.registerModule(new PrebidGoogleAnalytics({
   }
 }, window));
 
-moli.registerModule(new Faktor({
-  autoOptIn: true
-}, window));
+moli.registerModule(new SourcepointCmp(window));
 
 moli.configure(adConfiguration);
 moli.requestAds();

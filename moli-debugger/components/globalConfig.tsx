@@ -310,7 +310,7 @@ export class GlobalConfig extends preact.Component<IGlobalConfigProps, IGlobalCo
               </h4>
 
             {this.state.expandSection.consent && <div>
-                <ConsentConfig consent={config.consent}/>
+                <ConsentConfig />
             </div>}
           </div>
 

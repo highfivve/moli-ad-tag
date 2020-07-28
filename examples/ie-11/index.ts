@@ -16,16 +16,14 @@ import 'prebid.js/modules/unrulyBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import Faktor from '@highfivve/module-cmp-faktor';
+import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 
 prebid.processQueue();
 
 // init moli
 const moli = initAdTag(window);
 
-moli.registerModule(new Faktor({
-  autoOptIn: true
-}, window));
+moli.registerModule(new SourcepointCmp(window));
 
 moli.configure(adConfiguration);
 moli.requestAds();

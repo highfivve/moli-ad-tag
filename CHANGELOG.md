@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.0.0
+
+[GD-2083](https://jira.gutefrage.net/browse/GD-2083). Remove all TCF 1 related code.
+
+This is a major breaking change as liveramp / faktor.io is removed, the moli debugger works differently, the
+CMP Module is gone and the `consent` configuration scope as well.
+
 ## 2.6.5
 
 Set prebid config

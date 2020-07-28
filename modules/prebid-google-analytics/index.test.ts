@@ -3,7 +3,7 @@ import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import PrebidGoogleAnalytics from './index';
 import { Moli } from '@highfivve/ad-tag';
-import { consentConfig, newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
+import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
@@ -17,7 +17,6 @@ describe('Prebid Google Analytics Module', () => {
 
   const config: Moli.MoliConfig = {
     slots: [],
-    consent: consentConfig,
     logger: newNoopLogger(),
     prebid: { config: pbjsTestConfig },
     yieldOptimization: { provider: 'none' }

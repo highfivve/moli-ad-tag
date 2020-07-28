@@ -33,7 +33,6 @@ import { a9Configure, a9Init, a9RequestBids } from './a9';
 import { isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
-import { consentConfigureGpt } from './consent';
 import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
 import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
@@ -134,10 +133,6 @@ export class AdService {
 
     if (isSinglePageApp) {
       configure.push(gptDestroyAdSlots(), gptResetTargeting());
-    }
-
-    if (config.consent.cmp) {
-      configure.push(consentConfigureGpt(config.consent.cmp, reportingService));
     }
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
