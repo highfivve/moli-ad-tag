@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.0.1
+
+Add debug message in Sourcepoint CMP module for `setNonPersonalizedAds()`
+
 ## 3.0.0
 
 [GD-2083](https://jira.gutefrage.net/browse/GD-2083). Remove all TCF 1 related code.
