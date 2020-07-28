@@ -180,7 +180,7 @@ export default class SourcepointCmp implements IModule {
   public readonly moduleType = 'cmp';
 
   /**
-   * Indicates if the faktor.io bundle has been loaded
+   * Indicates if the sourcepoint bundle has been loaded
    */
   private readonly consentReady: Promise<void>;
 
@@ -248,6 +248,8 @@ export default class SourcepointCmp implements IModule {
       const hasNecessaryPurposeIds = this.googlePurposes.personalizedAds
         .every(purposeId => purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === purposeId));
       this._window.googletag.pubads().setRequestNonPersonalizedAds(hasNecessaryPurposeIds ? 0 : 1);
+
+      log.debug(this.name, `gpt setNonPersonalizedAds(${hasNecessaryPurposeIds ? '0' : '1'})`);
 
       if (!purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === this.googlePurposes.nonPersonalizedAds)) {
         log.error(this.name, 'No consents for purpose 1. Ad delivery prohibited by Google');
