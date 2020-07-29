@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.0.3
+
+Fix id5 userSync module name.
+
 ## 3.0.2
 
 Add `auctionDelay` parameter in [the userSync config](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing).
