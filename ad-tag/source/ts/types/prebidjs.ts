@@ -330,6 +330,15 @@ export namespace prebidjs {
       readonly syncDelay?: number;
 
       /**
+       * Delay in milliseconds of the auction to retrieve user ids via the userId module before the auction starts.
+       * Continues auction once all IDs are retrieved or delay times out. Does not apply to bid adapter user sync pixels.
+       *
+       * Default: 0.
+       * @see http://prebid.org/dev-docs/modules/userId.html
+       */
+      readonly auctionDelay?: number;
+
+      /**
        * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
        */
       readonly syncsPerBidder?: number;
@@ -476,6 +485,9 @@ export namespace prebidjs {
       readonly callback?: ((result: any) => void);
     }
 
+    /**
+     * @see https://console.id5.io/docs/public/prebid
+     */
     export interface IDigitTrustProvider extends IUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {
     }
 
@@ -485,6 +497,14 @@ export namespace prebidjs {
        * @example 173
        */
       readonly partner: number;
+
+      /**
+       * The pd field (short for Publisher Data) is an optional, base64 encoded string that contains any deterministic
+       * user data the publisher has access to. The data will be used strictly to provide better linking of ID5 IDs
+       * across domains for improved user identification. If the user has not provided ID5 with a legal basis to process
+       * data, the information sent to ID5 will be ignored and neither used nor saved for future requests.
+       */
+      readonly pd?: string;
     }
 
     /**
