@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.0.2
+
+Add `auctionDelay` parameter in [the userSync config](http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing).
+Add `pb` parameter for id5.
+
 ## 3.0.1
 
 Add debug message in Sourcepoint CMP module for `setNonPersonalizedAds()`
