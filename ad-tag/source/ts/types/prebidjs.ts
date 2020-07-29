@@ -515,7 +515,7 @@ export namespace prebidjs {
      *
      * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
      */
-    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5'> {
+    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5Id'> {
     }
 
     /**
