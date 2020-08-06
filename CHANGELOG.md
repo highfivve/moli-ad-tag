@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.1.0
+
+[GD-2153](https://jira.gutefrage.net/browse/GD-2153) Add try-catch for non-personalized ads step
+
 ## 3.0.3
 
 Fix id5 userSync module name.
