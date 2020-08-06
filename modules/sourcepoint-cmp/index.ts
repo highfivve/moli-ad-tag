@@ -242,17 +242,21 @@ export default class SourcepointCmp implements IModule {
     config.pipeline.prepareRequestAdsSteps.push(mkPrepareRequestAdsStep('cmp-gpt-personalized-ads', LOW_PRIORITY, () => this.getTcData(log).then(tcData => {
       log.debug(this.name, 'gpt setting consent data', tcData, tcData.purpose);
 
-      const purposeIdsConsented: number[] = Object.entries(tcData.purpose.consents)
-        .filter(([ _, consent ]) => consent)
-        .map(([ purposeId, _ ]) => parseInt(purposeId, 10));
-      const hasNecessaryPurposeIds = this.googlePurposes.personalizedAds
-        .every(purposeId => purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === purposeId));
-      this._window.googletag.pubads().setRequestNonPersonalizedAds(hasNecessaryPurposeIds ? 0 : 1);
+      try {
+        const purposeIdsConsented: number[] = Object.entries(tcData.purpose.consents)
+          .filter(([ _, consent ]) => consent)
+          .map(([ purposeId, _ ]) => parseInt(purposeId, 10));
+        const hasNecessaryPurposeIds = this.googlePurposes.personalizedAds
+          .every(purposeId => purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === purposeId));
+        this._window.googletag.pubads().setRequestNonPersonalizedAds(hasNecessaryPurposeIds ? 0 : 1);
 
-      log.debug(this.name, `gpt setNonPersonalizedAds(${hasNecessaryPurposeIds ? '0' : '1'})`);
+        log.debug(this.name, `gpt setNonPersonalizedAds(${hasNecessaryPurposeIds ? '0' : '1'})`);
 
-      if (!purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === this.googlePurposes.nonPersonalizedAds)) {
-        log.error(this.name, 'No consents for purpose 1. Ad delivery prohibited by Google');
+        if (!purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === this.googlePurposes.nonPersonalizedAds)) {
+          log.error(this.name, 'No consents for purpose 1. Ad delivery prohibited by Google');
+        }
+      } catch (error) {
+        log.error(this.name, `failed to setNonPersonalizeAds\n${JSON.stringify(tcData)}`, error);
       }
 
     })));
