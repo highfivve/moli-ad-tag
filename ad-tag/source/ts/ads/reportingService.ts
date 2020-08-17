@@ -361,6 +361,17 @@ export class ReportingService implements IReportingService {
     this.window.googletag.pubads().addEventListener('slotOnload', onloadEvent => {
       const adUnitName = this.minimalAdUnitName(onloadEvent.slot.getAdUnitPath());
       this.performanceService.mark(`${adUnitName}_content_loaded`);
+      // measure: rendering
+      this.performanceService.measure(
+        `${adUnitName}_render_content_loaded`,
+        `${adUnitName}_rendered`,
+        `${adUnitName}_content_loaded`);
+
+      // measure: loaded
+      this.performanceService.measure(
+        `${adUnitName}_content_loaded_total`,
+        `dfp_load_start`,
+        `${adUnitName}_content_loaded`);
 
       // report metric
       const renderEndedEvent = this.slotRenderEndedEvent[onloadEvent.slot.getSlotElementId()];
@@ -376,18 +387,6 @@ export class ReportingService implements IReportingService {
 
       // remove event from internal storage
       delete this.slotRenderEndedEvent[onloadEvent.slot.getSlotElementId()];
-
-      // measure: rendering
-      this.performanceService.measure(
-        `${adUnitName}_render_content_loaded`,
-        `${adUnitName}_rendered`,
-        `${adUnitName}_content_loaded`);
-
-      // measure: loaded
-      this.performanceService.measure(
-        `${adUnitName}_content_loaded_total`,
-        `dfp_load_start`,
-        `${adUnitName}_content_loaded`);
 
       const adSlotMetric: Moli.reporting.AdSlotMetric = {
         type: 'adSlot',
