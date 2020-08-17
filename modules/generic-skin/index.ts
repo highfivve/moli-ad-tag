@@ -111,10 +111,10 @@ export default class Skin implements IModule {
    * @param slotDefinitions all available slots
    * @return function that destroys a given adSlot by domId
    */
-  destroyAdSlot = (slotDefinitions: Moli.SlotDefinition<Moli.AdSlot>[]) => (adSlotDomId: string): void => {
-    const adSlot = slotDefinitions.map(slot => slot.adSlot)
+  destroyAdSlot = (slotDefinitions: Moli.SlotDefinition[]) => (adSlotDomId: string): void => {
+    const adSlots = slotDefinitions.map(slot => slot.adSlot)
       .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
-    this.window.googletag.destroySlots(adSlot);
+    this.window.googletag.destroySlots(adSlots);
   };
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
