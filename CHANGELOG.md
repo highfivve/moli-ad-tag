@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.2.0
+
+[GD-2216](https://jira.gutefrage.net/browse/GD-2216) Make ad slot metrics independent from awaitAllSlotsRendered.
+
 ## 3.1.0
 
 [GD-2153](https://jira.gutefrage.net/browse/GD-2153) Add try-catch for non-personalized ads step
