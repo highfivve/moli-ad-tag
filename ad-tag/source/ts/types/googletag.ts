@@ -36,6 +36,22 @@ export namespace googletag {
     addEventListener(eventType: 'slotOnload', listener: (event: events.ISlotOnloadEvent) => void): T;
 
     /**
+     * This event is fired when an ad has been requested for a particular slot.
+     *
+     * @param eventType
+     * @param listener
+     */
+    addEventListener(eventType: 'slotRequested', listener: (event: events.ISlotRequestedEvent) => void): T;
+
+    /**
+     * This event is fired when an ad response has been received for a particular slot.
+     *
+     * @param eventType
+     * @param listener
+     */
+    addEventListener(eventType: 'slotResponseReceived', listener: (event: events.ISlotResponseReceived) => void): T;
+
+    /**
      * This event is fired whenever the on-screen percentage of an ad slot's area changes.
      * The event is throttled and will not fire more often than once every 200ms.
      * @param eventType
@@ -174,6 +190,16 @@ export namespace googletag {
 
   export namespace events {
     export interface IImpressionViewableEvent extends Event {
+      serviceName: string;
+      slot: IAdSlot;
+    }
+
+    export interface ISlotRequestedEvent extends Event {
+      serviceName: string;
+      slot: IAdSlot;
+    }
+
+    export interface ISlotResponseReceived extends Event {
       serviceName: string;
       slot: IAdSlot;
     }

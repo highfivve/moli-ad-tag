@@ -95,6 +95,8 @@ export class ReportingService implements IReportingService {
    */
   private readonly isSample: boolean;
 
+  private readonly slotRenderEndedEvent: { [domId: string]: googletag.events.ISlotRenderEndedEvent | undefined } = {};
+
   /**
    * get the performance measure name for
    * @param type
@@ -144,11 +146,10 @@ export class ReportingService implements IReportingService {
     this.performanceService.mark('dfp_load_start');
     this.measureAndReportFirstAdRenderTime();
     this.measureAndReportFirstAdLoadTime();
+    this.initAdSlotMetrics();
+
     this.slotEventService.awaitAllAdSlotsRendered(adSlots)
       .then(renderedEvents => this.reportAdSlotsMetric(renderedEvents))
-      .then((resolvedEvents: googletag.events.ISlotRenderEndedEvent[]) => Promise.all(
-        resolvedEvents.map(renderEvent => this.awaitAdSlotContentLoaded(renderEvent).then((onLoadEvent) => this.reportAdSlotMetric(renderEvent, onLoadEvent))
-        )))
       .then(() => this.measureAndReportDfpLoadTime());
   }
 
@@ -345,67 +346,63 @@ export class ReportingService implements IReportingService {
     }
   }
 
-  /**
-   * Creates measurements for a given ad slot.
-   * Must be called after awaitAdSlotContentLoaded.
-   *
-   * @param renderEndedEvent the received slot render event
-   * @param onloadEvent fired when the slot has been loaded
-   */
-  private reportAdSlotMetric(renderEndedEvent: googletag.events.ISlotRenderEndedEvent, onloadEvent: googletag.events.ISlotOnloadEvent): void {
-    if (onloadEvent.slot.getAdUnitPath() !== renderEndedEvent.slot.getAdUnitPath()) {
-      this.logger.warn(
-        `Invalid AdSlot measure. SlotRenderEvent and SlotOnLoadEvent don't match: ${onloadEvent.slot.getAdUnitPath()} !== ${renderEndedEvent.slot.getAdUnitPath()}`
-      );
-      return;
-    }
+  private initAdSlotMetrics(): void {
+    this.window.googletag.pubads().addEventListener('slotRenderEnded', renderEndedEvent => {
+      const adUnitName = this.minimalAdUnitName(renderEndedEvent.slot.getAdUnitPath());
+      this.performanceService.measure(
+        `${adUnitName}_rendered`,
+        `dfp_load_start`,
+        `${adUnitName}_rendered`);
 
-    const adUnitName = this.minimalAdUnitName(renderEndedEvent.slot.getAdUnitPath());
-    this.performanceService.mark(`${adUnitName}_content_loaded`);
+      this.slotRenderEndedEvent[renderEndedEvent.slot.getSlotElementId()] = renderEndedEvent;
+    });
 
-    // measure: rendered
-    this.performanceService.measure(
-      `${adUnitName}_rendered`,
-      `dfp_load_start`,
-      `${adUnitName}_rendered`);
+    // slot on load
+    this.window.googletag.pubads().addEventListener('slotOnload', onloadEvent => {
+      const adUnitName = this.minimalAdUnitName(onloadEvent.slot.getAdUnitPath());
+      this.performanceService.mark(`${adUnitName}_content_loaded`);
+      // measure: rendering
+      this.performanceService.measure(
+        `${adUnitName}_render_content_loaded`,
+        `${adUnitName}_rendered`,
+        `${adUnitName}_content_loaded`);
 
-    // measure: rendering
-    this.performanceService.measure(
-      `${adUnitName}_render_content_loaded`,
-      `${adUnitName}_rendered`,
-      `${adUnitName}_content_loaded`);
+      // measure: loaded
+      this.performanceService.measure(
+        `${adUnitName}_content_loaded_total`,
+        `dfp_load_start`,
+        `${adUnitName}_content_loaded`);
 
-    // measure: loaded
-    this.performanceService.measure(
-      `${adUnitName}_content_loaded_total`,
-      `dfp_load_start`,
-      `${adUnitName}_content_loaded`);
+      // report metric
+      const renderEndedEvent = this.slotRenderEndedEvent[onloadEvent.slot.getSlotElementId()];
+      const renderedMeasure = this.performanceService.getMeasure(`${adUnitName}_rendered`);
+      const renderingMeasure = this.performanceService.getMeasure(`${adUnitName}_render_content_loaded`);
+      const contentMeasure = this.performanceService.getMeasure(`${adUnitName}_content_loaded_total`);
+      const refreshedMark = this.performanceService.getMark(`${adUnitName}_refreshed`);
 
+      // bail out if any of the requested values cannot be accessed
+      if (!contentMeasure || !renderingMeasure || !renderedMeasure || !refreshedMark || !renderEndedEvent) {
+        return;
+      }
 
-    const renderedMeasure = this.performanceService.getMeasure(`${adUnitName}_rendered`);
-    const renderingMeasure = this.performanceService.getMeasure(`${adUnitName}_render_content_loaded`);
-    const contentMeasure = this.performanceService.getMeasure(`${adUnitName}_content_loaded_total`);
-    const refreshedMark = this.performanceService.getMark(`${adUnitName}_refreshed`);
+      // remove event from internal storage
+      delete this.slotRenderEndedEvent[onloadEvent.slot.getSlotElementId()];
 
-    // bail out if any of the requested values cannot be accessed
-    if (!contentMeasure || !renderingMeasure || !renderedMeasure || !refreshedMark) {
-      return;
-    }
+      const adSlotMetric: Moli.reporting.AdSlotMetric = {
+        type: 'adSlot',
+        pageRequestId: this.pageRequestId,
+        adUnitName: adUnitName,
+        advertiserId: renderEndedEvent.advertiserId,
+        campaignId: renderEndedEvent.campaignId,
+        lineItemId: renderEndedEvent.lineItemId || renderEndedEvent.sourceAgnosticLineItemId,
+        refresh: refreshedMark,
+        rendered: renderedMeasure,
+        rendering: renderingMeasure,
+        loaded: contentMeasure
+      };
 
-    const adSlotMetric: Moli.reporting.AdSlotMetric = {
-      type: 'adSlot',
-      pageRequestId: this.pageRequestId,
-      adUnitName: adUnitName,
-      advertiserId: renderEndedEvent.advertiserId,
-      campaignId: renderEndedEvent.campaignId,
-      lineItemId: renderEndedEvent.lineItemId || renderEndedEvent.sourceAgnosticLineItemId,
-      refresh: refreshedMark,
-      rendered: renderedMeasure,
-      rendering: renderingMeasure,
-      loaded: contentMeasure
-    };
-
-    this.report(adSlotMetric);
+      this.report(adSlotMetric);
+    });
   }
 
 
