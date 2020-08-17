@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.2.1
+## 3.2.0
 
 [GD-2216](https://jira.gutefrage.net/browse/GD-2216) Make ad slot metrics independent from awaitAllSlotsRendered.
 
