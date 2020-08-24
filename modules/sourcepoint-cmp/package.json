@@ -12,7 +12,7 @@
     "test": "mocha --require ts-node/register index.test.ts",
     "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
     "validate": "yarn compile && yarn lint",
-    "validate:jenkins": "yarn compile && yarn lint"
+    "validate:jenkins": "yarn compile && yarn lint && yarn test:junit"
   },
   "repository": {
     "type": "git",
