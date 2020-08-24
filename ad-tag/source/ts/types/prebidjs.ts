@@ -366,16 +366,11 @@ export namespace prebidjs {
       | IID5Provider
       | IPubCommonIdProvider;
 
-    interface IUserIdProvider<P, N extends string> {
+    interface IUserIdProvider<N extends string> {
       /**
        * the provider name
        */
       readonly name: N;
-
-      /**
-       * provider specific params
-       */
-      readonly params: P;
 
       /**
        * The publisher can specify some kind of local storage in which to store the results of the call to get
@@ -383,6 +378,17 @@ export namespace prebidjs {
        * the ID system is managing its own storage
        */
       readonly storage?: IUserIdStorage;
+    }
+
+    /**
+     * A UserId provider hat requires additional parameters configuration
+     */
+    interface IParameterizedUserIdProvider<P, N extends string> extends IUserIdProvider<N> {
+      /**
+       * provider specific params
+       */
+      readonly params: P;
+
     }
 
     export interface IUserIdStorage {
@@ -464,13 +470,13 @@ export namespace prebidjs {
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#unified-id
      */
-    export interface IUnifiedIdProvider extends IUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {
+    export interface IUnifiedIdProvider extends IParameterizedUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {
     }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#criteo-id-for-exchanges
      */
-    export interface ICriteoProvider extends IUserIdProvider<undefined, 'criteo'> {
+    export interface ICriteoProvider extends IUserIdProvider<'criteo'> {
     }
 
     /**
@@ -488,7 +494,7 @@ export namespace prebidjs {
     /**
      * @see https://console.id5.io/docs/public/prebid
      */
-    export interface IDigitTrustProvider extends IUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {
+    export interface IDigitTrustProvider extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {
     }
 
     export interface IID5ProviderParams {
@@ -515,13 +521,13 @@ export namespace prebidjs {
      *
      * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
      */
-    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5Id'> {
+    export interface IID5Provider extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> {
     }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
      */
-    export interface IPubCommonIdProvider extends IUserIdProvider<undefined, 'pubCommonId'> {
+    export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {
     }
 
 
