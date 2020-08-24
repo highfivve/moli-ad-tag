@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.2.2
+
+[GD-2226](https://jira.gutefrage.net/browse/GD-2226). Add configuration option to allow ad pipeline rejection if no purpose one consent is given
+
 ## 3.2.0
 
 [GD-2216](https://jira.gutefrage.net/browse/GD-2216) Make ad slot metrics independent from awaitAllSlotsRendered.
