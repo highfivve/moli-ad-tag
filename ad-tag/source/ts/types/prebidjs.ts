@@ -193,9 +193,12 @@ export namespace prebidjs {
 
     export interface IGdprConfigRule {
       /**
-       * The only currently supported value is “storage”, corresponding to TCF Purpose 1.
+       * Supported values:
+       * - "storage" (Purpose 1)
+       * - "basicAds" (Purpose 2)
+       * - "measurement" (Purpose 7)
        */
-      readonly purpose: 'storage';
+      readonly purpose: 'storage' | 'basicAds' | 'measurement';
 
       /**
        * Determines whether to enforce the purpose consent or not. The default in Prebid.js 3.x is not to enforce
