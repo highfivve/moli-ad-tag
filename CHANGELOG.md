@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.2.3
+
+[GD-2044] (https://jira.gutefrage.net/browse/GD-2044) Add `basicAds` and `measurement` as allowed purpose values.
+
 ## 3.2.2
 
 [GD-2226](https://jira.gutefrage.net/browse/GD-2226). Add configuration option to allow ad pipeline rejection if no purpose one consent is given
