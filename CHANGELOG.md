@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.2.4
+
+[GD-2259](https://jira.gutefrage.net/browse/GD-2259) Add pubstack.io types to prebid types
+
 # 3.2.3
 
 [GD-2044] (https://jira.gutefrage.net/browse/GD-2044) Add `basicAds` and `measurement` as allowed purpose values.

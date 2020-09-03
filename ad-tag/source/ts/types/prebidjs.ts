@@ -1094,6 +1094,41 @@ export namespace prebidjs {
      * The renderer associated to the ad-unit. Only for mediaType = video.
      */
     readonly renderer?: IRenderer;
+
+    /**
+     * This is an optional configuration for publishers that have a pubstack.io integration.
+     *
+     * @see https://pubstack.io/
+     * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965600-how-to-implement-google-adx-
+     * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965702-how-to-custom-ad-unit-name-
+     */
+    readonly pubstack?: {
+
+      /**
+       * By default, the integration uses the adUnitCode defined in the Ad Unit.
+       * If you want Pubstack to use another name, you just have to provide the desired value through
+       * the `pubstack.adUnitName` property.
+       *
+       * This feature is very useful when a site implements a lazy-loading or a refresh strategy.
+       * The following example shows you how to set a custom name, whatever the ad unit code is.
+       *
+       * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965702-how-to-custom-ad-unit-name-
+       */
+      readonly adUnitName?: string;
+
+      /**
+       * This is required for Google Ad Manager integration.
+       *
+       * Within the Prebid configuration (client-side), every prebid adUnit must be matched with a GAM adUnit,
+       * so that we can display the corresponding AdX revenue in Pubstack. In order to do that, you need to
+       * add the field "pubstack"."adUnitPath" to all ad units. This adUnitPath must be constructed* as such:
+       *
+       *   `/networkId/top_level1/level2/level3` (same as the DFP adUnitPath)
+       *
+       * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965600-how-to-implement-google-adx-
+       */
+      readonly adUnitPath?: string;
+    };
   }
 
   // Supported SSPs
