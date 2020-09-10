@@ -1,22 +1,11 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "sourceMap": true,
-    "lib": [
-      "dom",
-      "es6",
-      "scripthost"
-    ],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "ES6",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "./lib"
   },
   "files": [
     "index.ts",
     "index.test.ts"
-  ],
-  "include": [
-    "../ad-tag/source/**/*"
   ]
 }

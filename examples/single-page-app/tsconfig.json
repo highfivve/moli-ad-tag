@@ -14,8 +14,6 @@
     "skipLibCheck": true
   },
   "include": [
-    "../../ad-tag/index.ts",
-    "../../ad-tag/source/**/*",
-    "../../modules/**/*"
+    "index.ts"
   ]
 }

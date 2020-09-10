@@ -1,5 +1,4 @@
 {
-  "version": "3.2.1",
   "private": true,
   "workspaces": [
     "ad-tag",
@@ -13,6 +12,8 @@
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
-    "prebid.js": "3.16.0"
+    "lerna": "^3.22.1",
+    "prebid.js": "3.16.0",
+    "typescript": "^4.0.2"
   }
 }

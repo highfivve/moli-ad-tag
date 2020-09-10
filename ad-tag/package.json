@@ -1,10 +1,19 @@
 {
   "name": "@highfivve/ad-tag",
-  "version": "1.20.1",
-  "license": "UNLICENSED",
+  "version": "4.0.0",
+  "license": "Apache-2.0",
   "description": "An ad tag implementation called moli",
-  "main": "index.ts",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "directories": {
+    "lib": "lib",
+    "test": "tests"
+  },
   "scripts": {
+    "tsc": "tsc",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
@@ -20,7 +29,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git",
+    "directory": "ad-tag"
   },
   "engines": {
     "node": ">=8.0"

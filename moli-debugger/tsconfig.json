@@ -15,13 +15,16 @@
     "typeRoots": [
       "node_modules/@types",
       "types"
-    ]
+    ],
+    "outDir": "./lib"
   },
   "files": [
     "debug.tsx"
   ],
   "include": [
-    "components/*",
-    "../ad-tag/source/**/*"
+    "components/*"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

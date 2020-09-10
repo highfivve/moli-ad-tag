@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 4.0.0
+
+[GD-1363](https://jira.gutefrage.net/browse/GD-1363) Publish Moli Ad Tag library to GitHub NPM registry
+
 ## 3.2.0
 
 [GD-2216](https://jira.gutefrage.net/browse/GD-2216) Make ad slot metrics independent from awaitAllSlotsRendered.

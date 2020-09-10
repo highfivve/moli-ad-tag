@@ -1,0 +1,10 @@
+{
+  "packages": [
+    "ad-tag",
+    "moli-debugger",
+    "modules/*"
+  ],
+  "version": "4.0.0",
+  "npmClient": "yarn",
+  "useWorkspaces": true
+}

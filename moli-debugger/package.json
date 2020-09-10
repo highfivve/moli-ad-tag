@@ -1,9 +1,14 @@
 {
   "name": "@highfivve/moli-debugger",
-  "version": "1.20.0",
+  "version": "4.0.0",
   "description": "Moli debugging tools",
-  "main": "dist/debug.js",
+  "main": "./lib/debug.js",
+  "typings": "./lib/debug.d.ts",
+  "files": [
+    "lib"
+  ],
   "scripts": {
+    "tsc": "tsc",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
     "start": "yarn watch",
@@ -17,12 +22,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.gutefrage.net:7999/gd/publisher-tags.git"
+    "url": "ssh://git@git.gutefrage.net:7999/gd/publisher-tags.git",
+    "directory": "moli-debugger"
   },
   "keywords": [
     "debugging"
   ],
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "browserslist": [
     "> 1%",
     "last 2 versions"
@@ -51,6 +57,7 @@
     "webpack-cli": "^3.1.2"
   },
   "dependencies": {
+    "@highfivve/ad-tag": "^4.0.0",
     "@iabtcf/core": "^1.1.0-1",
     "core-js": "^2.6.0",
     "preact": "^8.3.1"

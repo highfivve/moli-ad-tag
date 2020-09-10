@@ -1,10 +1,15 @@
 {
   "name": "@highfivve/module-prebid-google-analytics",
-  "version": "1.20.1",
-  "license": "UNLICENSED",
+  "version": "4.0.0",
+  "license": "Apache-2.0",
   "description": "Blocks ad slots when a wallpaper is being delivered",
-  "main": "index.ts",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "scripts": {
+    "tsc": "tsc",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json",
@@ -16,7 +21,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git",
+    "directory": "modules/prebid-google-analytics"
   },
   "engines": {
     "node": ">=8.0"
@@ -42,5 +48,7 @@
     "typedoc": "^0.14.2",
     "typescript": "^3.9.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@highfivve/ad-tag": "^4.0.0"
+  }
 }

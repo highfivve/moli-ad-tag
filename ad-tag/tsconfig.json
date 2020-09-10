@@ -1,24 +1,18 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "sourceMap": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "ES6",
-    "lib": [ "dom", "es6", "scripthost" ],
     "baseUrl": ".",
     "paths": {
       "browser-env": [ "source/ts/types/browserEnv" ]
     },
-    // we need this for importing the cmpFaktorStub.js file
-    "allowJs": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "./lib"
   },
+  "files": [
+    "index.ts"
+  ],
   "include": [
     "source/**/*",
     "tests/**/*"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }

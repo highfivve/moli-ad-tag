@@ -1,6 +1,4 @@
-import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
-import { tcfapi } from '@highfivve/ad-tag';
-import { IModule, LOW_PRIORITY, mkInitStep, mkPrepareRequestAdsStep, Moli } from '@highfivve/ad-tag';
+import { tcfapi, getLogger, IModule, LOW_PRIORITY, mkInitStep, mkPrepareRequestAdsStep, Moli } from '@highfivve/ad-tag';
 
 type SourcepointWindow = tcfapi.TCFApiWindow & {
   _sp_: {

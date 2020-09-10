@@ -1,10 +1,15 @@
 {
   "name": "@highfivve/module-sovrn-ad-reload",
-  "version": "1.20.1",
-  "license": "UNLICENSED",
+  "version": "4.0.0",
+  "license": "Apache-2.0",
   "description": "Ad Reload",
-  "main": "index.ts",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "scripts": {
+    "tsc": "tsc",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json",
@@ -16,7 +21,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git",
+    "directory": "modules/sovrn-ad-reload"
   },
   "engines": {
     "node": ">=8.0"
@@ -41,6 +47,6 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "*"
+    "@highfivve/ad-tag": "^4.0.0"
   }
 }

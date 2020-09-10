@@ -2,11 +2,10 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import JustPremium from './index';
-import { Moli } from '@highfivve/ad-tag';
-import { createMoliTag } from '@highfivve/ad-tag/source/ts/ads/moli';
-import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
-import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { Moli, createMoliTag } from '@highfivve/ad-tag';
+import { newNoopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
+import { pbjsTestConfig } from '@highfivve/ad-tag/lib/tests/ts/stubs/prebidjsStubs';
+import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
 
 
 // setup sinon-chai

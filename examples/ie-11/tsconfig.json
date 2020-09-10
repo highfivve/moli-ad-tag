@@ -8,9 +8,7 @@
         "target": "ES5",
         "skipLibCheck": true
     },
-    "include": [
-        "../../ad-tag/index.ts",
-        "../../ad-tag/source/**/*",
-        "../../modules/**/*"
+    "files": [
+        "index.ts"
     ]
 }
