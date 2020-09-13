@@ -9,7 +9,7 @@ export const initStub = (_window: any, pubstackGlobal: string, tagId: string): v
         cmd: function (): void {
           let a = arguments;
           k.q.push([ 'cmd', a ]);
-          (k.p || []).forEach(function (c: any) {
+          (k.p || []).forEach(function (c: any): void {
             c([ 'cmd', a ]);
           });
         }
