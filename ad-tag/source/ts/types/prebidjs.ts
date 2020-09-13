@@ -101,6 +101,30 @@ export namespace prebidjs {
      */
     enableAnalytics(adapters: analytics.AnalyticsAdapter[]): void;
 
+    /**
+     * NOTE: this is a very rough typing. As prebid doesn't help you a lot with what is defined and what not,
+     *       you have to try your own luck :(
+     *
+     *
+     * @param event name of the event
+     * @param handler callback handling the events
+     * @param id The optional id parameter provides more finely-grained event callback registration.
+     *        This makes it possible to register callback events for a specific item in the event context
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
+     */
+    onEvent(event: event.EventName, handler: Function, id?: any): void;
+
+    /**
+     * Deregister
+     *
+     * @param event name of the event
+     * @param handler callback handling the events
+     * @param id The optional id parameter provides more finely-grained event callback registration.
+     *        This makes it possible to register callback events for a specific item in the event context
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
+     */
+    offEvent(event: event.EventName, handler: Function, id?: any): void;
+
   }
 
   /**
@@ -563,6 +587,28 @@ export namespace prebidjs {
 
       readonly filter: 'include' | 'exclude';
     }
+
+  }
+
+  export namespace event {
+
+    export type EventName =
+      'auctionInit'
+      | 'auctionEnd'
+      | 'beforeRequestBids'
+      | 'bidRequested'
+      | 'bidResponse'
+      | 'bidAdjustment'
+      | 'bidWon'
+      | 'noBid'
+      | 'bidTimeout'
+      | 'setTargeting'
+      | 'requestBids'
+      | 'addAdUnits'
+      | 'adRenderFailed'
+      | 'auctionDebug'
+      | 'bidderDone'
+      | 'tcf2Enforcement';
 
   }
 

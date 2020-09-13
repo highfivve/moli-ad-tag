@@ -21,7 +21,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => { return; },
     setTargetingForGPTAsync: (_adUnits: string[]): void => { return; },
     triggerUserSyncs(): void { return; },
-    enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void { return; }
+    enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void { return; },
+    onEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void { return; },
+    offEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void { return; }
   };
 };
 
