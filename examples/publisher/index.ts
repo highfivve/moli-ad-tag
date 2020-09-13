@@ -22,6 +22,7 @@ import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 import Confiant from '@highfivve/module-confiant';
+import Pubstack from '@highfivve/module-pubstack';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
 
@@ -50,6 +51,8 @@ moli.registerModule(new BlocklistedUrls({
     }
   }
 }, window));
+
+moli.registerModule(new Pubstack({ tagId: 'xxxx'}, window));
 
 // init moli
 moli.configure(adConfiguration);

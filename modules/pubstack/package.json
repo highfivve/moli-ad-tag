@@ -1,0 +1,43 @@
+{
+  "name": "@highfivve/module-pubstack",
+  "version": "1.20.1",
+  "license": "UNLICENSED",
+  "description": "Ad fraud detection and protection",
+  "main": "index.ts",
+  "scripts": {
+    "compile": "tsc --noEmit",
+    "lint": "yarn lint:ts",
+    "lint:ts": "tslint --project tsconfig.json",
+    "lint:ts:fix": "tslint --project ../tsconfig.json --fix",
+    "validate": "yarn compile && yarn lint",
+    "validate:jenkins": "yarn validate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+  },
+  "engines": {
+    "node": ">=8.0"
+  },
+  "devDependencies": {
+    "@types/chai": "4.2.0",
+    "@types/jsdom": "12.2.4",
+    "@types/mocha": "5.2.7",
+    "@types/sinon": "7.0.13",
+    "@types/sinon-chai": "3.2.3",
+    "chai": "4.2.0",
+    "mocha": "6.2.0",
+    "mocha-junit-reporter": "^1.18.0",
+    "sinon": "7.4.2",
+    "sinon-chai": "3.3.0",
+    "ts-loader": "^5.2.2",
+    "ts-node": "8.10.1",
+    "tslint": "^5.11.0",
+    "tslint-loader": "^3.5.3",
+    "typedoc": "^0.14.2",
+    "typescript": "^3.9.2"
+  },
+  "dependencies": {
+    "@highfivve/ad-tag": "*"
+  }
+}
