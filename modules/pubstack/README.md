@@ -1,6 +1,6 @@
 # Pubstack [pubstack.io](https://pubstack.io/)
 
-Pubstack is an Ad Analytics provider, which focues on Prebid and Google AdExchange.
+Pubstack is an Ad Analytics provider, which focuses on Prebid and Google AdExchange.
 
 ## Integration
 
