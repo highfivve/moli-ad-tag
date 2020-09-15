@@ -17,10 +17,11 @@ type PubstackWindow = {
 };
 
 /**
- * == Confiant Ad Fraud Protection ==
+ * == Pubstack Analytics ==
  *
- * Confiant blocks malicious ads.
+ * Provides analytics for prebid, adx and hopefully more.
  *
+ * @see https://pubstack.io
  */
 export default class Pubstack implements IModule {
 
