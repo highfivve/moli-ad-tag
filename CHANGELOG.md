@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+# 3.3.1
+
+[GD-2283](https://jira.gutefrage.net/browse/GD-2283) Don't loose pubstack configuration while filtering prebid
+
+# 3.3.0
+
 # 3.2.4
 
 [GD-2259](https://jira.gutefrage.net/browse/GD-2259) Add pubstack.io types to prebid types
