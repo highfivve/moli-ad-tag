@@ -122,6 +122,10 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareReq
             native: { ...mediaTypeNative }
           } : undefined;
 
+          const pubstack = prebidAdSlotConfig.adUnit.pubstack ? {
+            pubstack: prebidAdSlotConfig.adUnit.pubstack
+          } : {};
+
           return {
             code: moliSlot.domId,
             mediaTypes: {
@@ -129,7 +133,8 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep => mkPrepareReq
               ...banner,
               ...native
             },
-            bids: bids
+            bids: bids,
+            ...pubstack
           } as prebidjs.IAdUnit;
         }).filter(adUnit => {
           return adUnit.bids.length > 0 &&
