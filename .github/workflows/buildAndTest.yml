@@ -1,0 +1,40 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ GD-1363-github-npm-registry ]
+  pull_request:
+    branches: [ GD-1363-github-npm-registry ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # TODO cache dependencies
+      # @see https://docs.github.com/en/actions/guides/caching-dependencies-to-speed-up-workflows
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Lint
+        run: yarn workspace @highfivve/ad-tag lint
+
+      - name: Compile
+        run: yarn workspace @highfivve/ad-tag compile
+
+      - name: Test
+        run: yarn workspace @highfivve/ad-tag test:junit
