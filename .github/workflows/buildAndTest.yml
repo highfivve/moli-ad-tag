@@ -14,7 +14,8 @@ jobs:
     strategy:
       matrix:
         module: [
-            ad-tag
+            ad-tag,
+            module-blocklist-url
         ]
 
     steps:
