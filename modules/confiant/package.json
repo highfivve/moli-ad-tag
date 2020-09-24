@@ -22,6 +22,9 @@
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
     "directory": "modules/confiant"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "engines": {
     "node": ">=8.0"
   },

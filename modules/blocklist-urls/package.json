@@ -24,6 +24,9 @@
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
     "directory": "modules/blocklist-urls"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "engines": {
     "node": ">=8.0"
   },

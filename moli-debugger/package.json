@@ -25,6 +25,9 @@
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
     "directory": "moli-debugger"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "keywords": [
     "debugging"
   ],

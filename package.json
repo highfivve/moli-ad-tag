@@ -3,8 +3,7 @@
   "workspaces": [
     "ad-tag",
     "moli-debugger",
-    "modules/*",
-    "examples/*"
+    "modules/*"
   ],
   "scripts": {
     "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts",

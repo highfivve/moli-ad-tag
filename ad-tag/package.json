@@ -32,6 +32,9 @@
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
     "directory": "ad-tag"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "engines": {
     "node": ">=8.0"
   },
