@@ -14,11 +14,12 @@
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
-    "compile:ts": "webpack",
+    "compile:ts": "tsc --noEmit",
     "compile:ts:watch": "yarn compile:ts --watch",
     "lint": "tslint --project tsconfig.json",
     "clean": "rm -rf dist/",
-    "validate": "yarn compile"
+    "validate": "yarn compile",
+    "validate:github": "yarn compile && yarn lint"
   },
   "repository": {
     "type": "git",

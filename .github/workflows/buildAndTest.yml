@@ -13,16 +13,26 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x]
+        module: [
+            ad-tag,
+            module-blocklist-url,
+            module-confiant,
+            module-cmp-sourcepoint,
+            module-generic-skin,
+            module-justpremium-skin,
+            module-prebid-google-analytics,
+            module-sovrn-ad-reload,
+            moli-debugger
+        ]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 12.x
 
       # TODO cache dependencies
       # @see https://docs.github.com/en/actions/guides/caching-dependencies-to-speed-up-workflows
@@ -30,11 +40,5 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - name: Lint
-        run: yarn workspace @highfivve/ad-tag lint
-
-      - name: Compile
-        run: yarn workspace @highfivve/ad-tag compile
-
-      - name: Test
-        run: yarn workspace @highfivve/ad-tag test:junit
+      - name: Validate
+        run: yarn workspace @highfivve/${{ matrix.module }} validate:github
