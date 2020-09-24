@@ -28,7 +28,7 @@ jobs:
           node-version: 12.x
 
       - name: Setup Node Private Registry
-        uses: actions/setup.node@v1
+        uses: actions/setup-node@v1
         with:
           always-auth: true
           node-version: 12.x
