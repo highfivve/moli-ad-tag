@@ -27,11 +27,21 @@ jobs:
         with:
           node-version: 12.x
 
+      - name: Setup Node Private Registry
+        uses: actions/setup.node@v1
+        with:
+          always-auth: true
+          node-version: 12.x
+          registry-url: 'https://npm.pkg.github.com/'
+          scope: '@highfivve'
+
       # TODO cache dependencies
       # @see https://docs.github.com/en/actions/guides/caching-dependencies-to-speed-up-workflows
 
       - name: Install dependencies
         run: yarn
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Validate
         run: yarn workspace @highfivve/${{ matrix.module }} validate:github
