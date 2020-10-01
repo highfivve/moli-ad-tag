@@ -11,9 +11,11 @@
     "compile": "yarn compile:ts",
     "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
-    "lint": "tslint --project tsconfig.json",
+    "lint": "tslint --project tsconfig.json && yarn prettier",
     "clean": "rm -rf dist/",
-    "validate": "yarn compile"
+    "validate": "yarn prettier && yarn compile",
+    "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",
+    "prettier:fix": "yarn prettier --write"
   },
   "repository": {
     "type": "git",
