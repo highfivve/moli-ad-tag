@@ -6,6 +6,7 @@ import { Moli, prebidjs, createAssetLoaderService } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import IBidResponsesMap = prebidjs.IBidResponsesMap;
 
 // setup sinon-chai
 use(sinonChai);
@@ -354,12 +355,12 @@ describe('Skin Module', () => {
         const config: ISkinConfig = {
           formatFilter: [{ bidder: prebidjs.JustPremium, format: prebidjs.JustPremiumWallpaper }],
           skinAdSlotDomId: 'wp-slot',
-          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
+          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
           hideSkinAdSlot: false,
           hideBlockedSlots: false
         };
 
-        const bidResponses = {
+        const bidResponses: IBidResponsesMap = {
           'wp-slot': {
             bids: [{ ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 }, bidWithCpmOf(1)]
           },
@@ -368,7 +369,8 @@ describe('Skin Module', () => {
           },
           'sky-slot-2': {
             bids: [bidWithCpmOf(0.01), bidWithCpmOf(0)]
-          }
+          },
+          'sky-slot-3': undefined
         };
 
         const hasWallpaper = configuredModule.shouldConfigApply(config, bidResponses);

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+# 3.4.1
+
+[GD-2333](https://jira.gutefrage.net/browse/GD-2333) IE11 compatibility (not using Array.includes), filtering undefined
+bid objects
+
 # 3.4.0
 
 [GD-2333](https://jira.gutefrage.net/browse/GD-2333) Compare skin cpm to combined cpms of to-be-removed slots,

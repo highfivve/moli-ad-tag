@@ -7,7 +7,7 @@ import {
   getLogger,
   IAssetLoaderService
 } from '@highfivve/ad-tag';
-import { flatten } from '@highfivve/ad-tag/source/ts/util/arrayUtils';
+import { flatten, isNotNull } from '@highfivve/ad-tag/source/ts/util/arrayUtils';
 
 interface ISkinModuleConfig {
   /**
@@ -121,9 +121,11 @@ export default class Skin implements IModule {
         // collect all bid responses for these ad slot dom ids
         .map(domId => ({ adSlotId: domId, ...bidResponses[domId] }))
         // filter out all dom ids that aren't affected by this skin
-        .filter(bidObject =>
-          [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].includes(bidObject.adSlotId)
+        .filter(
+          bidObject =>
+            [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(bidObject.adSlotId) > -1
         )
+        .filter(bidObject => isNotNull(bidObject.bids))
         .map(bidObject =>
           bidObject.bids
             // filter out skin bid to not include it in the non-skin cpm sum
