@@ -10,7 +10,6 @@ import { SlotEventService } from './slotEventService';
  *
  */
 export interface IAdRefreshListener {
-
   /**
    * addAdRefreshListener:
    *
@@ -40,7 +39,12 @@ export interface IAdRefreshListener {
  * @param window
  * @throws an error if the trigger.source is invalid
  */
-const createEventRefreshListener = (trigger: EventTrigger, throttled: number | undefined, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
+const createEventRefreshListener = (
+  trigger: EventTrigger,
+  throttled: number | undefined,
+  slotEventService: SlotEventService,
+  window: Window
+): IAdRefreshListener => {
   return {
     addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
       slotEventService.getOrCreateEventSource(trigger, throttled, window).setCallback(callback);
@@ -56,7 +60,12 @@ const createEventRefreshListener = (trigger: EventTrigger, throttled: number | u
  * @param window
  * @returns an IAdRefreshListener if possible otherwise null
  */
-export const createRefreshListener = (trigger: Trigger, throttled: number | undefined, slotEventService: SlotEventService, window: Window): IAdRefreshListener => {
+export const createRefreshListener = (
+  trigger: Trigger,
+  throttled: number | undefined,
+  slotEventService: SlotEventService,
+  window: Window
+): IAdRefreshListener => {
   switch (trigger.name) {
     case 'event':
       return createEventRefreshListener(trigger, throttled, slotEventService, window);

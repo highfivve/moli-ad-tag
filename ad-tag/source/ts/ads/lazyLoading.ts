@@ -10,24 +10,26 @@ import { SlotEventService } from './slotEventService';
  *
  */
 export interface ILazyLoader {
-
   /**
    * @returns {Promise<void>} a promise that resolves when the lazy loaded content should be triggered
    */
   onLoad(): Promise<void>;
 }
 
-const createEventLazyLoader = (trigger: EventTrigger, slotEventService: SlotEventService, window: Window): ILazyLoader => {
+const createEventLazyLoader = (
+  trigger: EventTrigger,
+  slotEventService: SlotEventService,
+  window: Window
+): ILazyLoader => {
   return {
     onLoad: () => {
       return new Promise<void>((resolve, reject) => {
         try {
-          slotEventService.getOrCreateEventSource(trigger, undefined, window)
-            .setCallback(() => {
-              resolve();
-              // remove the eventSource once this
-              slotEventService.removeEventSource(trigger, window);
-            });
+          slotEventService.getOrCreateEventSource(trigger, undefined, window).setCallback(() => {
+            resolve();
+            // remove the eventSource once this
+            slotEventService.removeEventSource(trigger, window);
+          });
         } catch (e) {
           reject(e);
         }
@@ -36,7 +38,11 @@ const createEventLazyLoader = (trigger: EventTrigger, slotEventService: SlotEven
   };
 };
 
-export const createLazyLoader = (trigger: Trigger, slotEventService: SlotEventService, window: Window): ILazyLoader => {
+export const createLazyLoader = (
+  trigger: Trigger,
+  slotEventService: SlotEventService,
+  window: Window
+): ILazyLoader => {
   switch (trigger.name) {
     case 'event':
       return createEventLazyLoader(trigger, slotEventService, window);

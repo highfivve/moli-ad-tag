@@ -8,7 +8,6 @@ import SizeConfigEntry = Moli.SizeConfigEntry;
  * Filter sizes of an ad slot depending on media queries.
  */
 export interface ISizedSlot {
-
   /**
    * The supported sizes by this slot.
    *
@@ -18,7 +17,6 @@ export interface ISizedSlot {
    *
    */
   readonly sizes?: DfpSlotSize[];
-
 }
 
 /**
@@ -35,24 +33,23 @@ export class SizeConfigService {
    */
   private readonly isValid: boolean;
 
-
-  public static isFixedSize(size: Moli.DfpSlotSize): size is [ number, number ] {
+  public static isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 
   constructor(private readonly sizeConfig: SizeConfigEntry[], private readonly window: Window) {
     // Matches the given slot sizes against the window's dimensions.
-    const supportedSizeConfigs = sizeConfig.length !== 0 ?
-      sizeConfig.filter(conf => window.matchMedia(conf.mediaQuery).matches) : [];
+    const supportedSizeConfigs =
+      sizeConfig.length !== 0
+        ? sizeConfig.filter(conf => window.matchMedia(conf.mediaQuery).matches)
+        : [];
 
-    this.isValid = (sizeConfig.length === 0 || !(sizeConfig.length > 0 && supportedSizeConfigs.length === 0));
+    this.isValid =
+      sizeConfig.length === 0 || !(sizeConfig.length > 0 && supportedSizeConfigs.length === 0);
 
     // To filter out duplicate slot sizes, the slot size tuples are converted to strings that can be easily compared
     // using indexOf(), and back to tuples after the filtering took place.
-    this.supportedSizes = flatten(
-      supportedSizeConfigs
-        .map(conf => conf.sizesSupported)
-    )
+    this.supportedSizes = flatten(supportedSizeConfigs.map(conf => conf.sizesSupported))
       .map(size => JSON.stringify(size))
       .filter(uniquePrimitiveFilter)
       .map(sizeAsString => JSON.parse(sizeAsString));
@@ -65,12 +62,13 @@ export class SizeConfigService {
    * @returns {boolean} is this slot supported (sizes)?
    */
   public filterSlot(slot: ISizedSlot): boolean {
-
     // for
     //  - out-of-page slots
     //  - prebid slots
     // no sizes are provided. Therefore, we need to bypass slot size filtering for these slots.
-    return (!slot.sizes || slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0);
+    return (
+      !slot.sizes || slot.sizes.length === 0 || this.filterSupportedSizes(slot.sizes).length > 0
+    );
   }
 
   /**
@@ -86,19 +84,18 @@ export class SizeConfigService {
     if (!this.isValid) {
       return [];
     }
-    return this.supportedSizes.length === 0 ? givenSizes : this.supportedSizes.filter(
-      configuredSize => givenSizes.some(
-        givenSize => {
-          if (configuredSize === 'fluid') {
-            return givenSize === 'fluid';
-          } else if (givenSize === 'fluid') {
-            return false;
-          } else {
-            return givenSize[0] === configuredSize[0] && givenSize[1] === configuredSize[1];
-          }
-        }
-      )
-    );
-  }
-
+    return this.supportedSizes.length === 0
+      ? givenSizes
+      : this.supportedSizes.filter(configuredSize =>
+          givenSizes.some(givenSize => {
+            if (configuredSize === 'fluid') {
+              return givenSize === 'fluid';
+            } else if (givenSize === 'fluid') {
+              return false;
+            } else {
+              return givenSize[0] === configuredSize[0] && givenSize[1] === configuredSize[1];
+            }
+          })
+        );
+  };
 }

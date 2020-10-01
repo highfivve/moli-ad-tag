@@ -60,7 +60,9 @@ function getLogStageLabelStyle(logStage: 'debug' | 'info' | 'warn' | 'error'): s
  *
  * @param source
  */
-function getSourceLabelStyle(source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor CMP' | 'MoliGlobal' | 'SlotEventService'): string {
+function getSourceLabelStyle(
+  source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor CMP' | 'MoliGlobal' | 'SlotEventService'
+): string {
   switch (source) {
     case 'AdPipeline':
       return getLabelStyle('#74ABC6');
@@ -85,16 +87,40 @@ function getSourceLabelStyle(source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor C
 export function getDefaultLogger(): Moli.MoliLogger {
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
-      console.debug(`%c[DEBUG]%c${source}%c${message}`, getLogStageLabelStyle('debug'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.debug(
+        `%c[DEBUG]%c${source}%c${message}`,
+        getLogStageLabelStyle('debug'),
+        getSourceLabelStyle(source),
+        '',
+        ...optionalParams
+      );
     },
     info(source?: any, message?: any, ...optionalParams: any[]): void {
-      console.info(`%c[INFO]%c${source}%c${message}`, getLogStageLabelStyle('info'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.info(
+        `%c[INFO]%c${source}%c${message}`,
+        getLogStageLabelStyle('info'),
+        getSourceLabelStyle(source),
+        '',
+        ...optionalParams
+      );
     },
     warn(source?: any, message?: any, ...optionalParams: any[]): void {
-      console.warn(`%c[WARN]%c${source}%c${message}`, getLogStageLabelStyle('warn'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.warn(
+        `%c[WARN]%c${source}%c${message}`,
+        getLogStageLabelStyle('warn'),
+        getSourceLabelStyle(source),
+        '',
+        ...optionalParams
+      );
     },
     error(source?: any, message?: any, ...optionalParams: any[]): void {
-      console.error(`%c[ERROR]%c${source}%c${message}`, getLogStageLabelStyle('error'), getSourceLabelStyle(source), '', ...optionalParams);
+      console.error(
+        `%c[ERROR]%c${source}%c${message}`,
+        getLogStageLabelStyle('error'),
+        getSourceLabelStyle(source),
+        '',
+        ...optionalParams
+      );
     }
   };
 }
@@ -110,7 +136,6 @@ export function getDefaultLogger(): Moli.MoliLogger {
  * @param window the global window object
  */
 export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.MoliLogger {
-
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
   } else if (config?.logger) {
@@ -124,13 +149,11 @@ export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.
  * Allows to change the underlying logging during runtime.
  */
 export class ProxyLogger implements Moli.MoliLogger {
-
-  constructor(private logger: Moli.MoliLogger) {
-  }
+  constructor(private logger: Moli.MoliLogger) {}
 
   setLogger = (newLogger: Moli.MoliLogger): void => {
     this.logger = newLogger;
-  }
+  };
 
   debug(message?: any, ...optionalParams: any[]): void {
     this.logger.debug(message, ...optionalParams);

@@ -15,27 +15,35 @@ type ISizeConfigState = {};
 
 export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeConfigState> {
   render(props: ISizeConfigProps, state: ISizeConfigState): JSX.Element {
-    return <div>
-      {props.sizeConfig.map((sizeConfigEntry, idx) => {
+    return (
+      <div>
+        {props.sizeConfig.map((sizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
-          return <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
-            Entry <strong>#{idx + 1}</strong>
-            <div class="MoliDebug-tagContainer">
-              <span class="MoliDebug-tagLabel">Media query</span>
-              <div
-                class={classList('MoliDebug-tag', [ mediaQueryMatches, 'MoliDebug-tag--green' ], [ !mediaQueryMatches, 'MoliDebug-tag--red' ])}
-                title={`Media query ${mediaQueryMatches ? 'matches' : 'doesn\'t match'}`}>
-                {sizeConfigEntry.mediaQuery}
+          return (
+            <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
+              Entry <strong>#{idx + 1}</strong>
+              <div class="MoliDebug-tagContainer">
+                <span class="MoliDebug-tagLabel">Media query</span>
+                <div
+                  class={classList(
+                    'MoliDebug-tag',
+                    [mediaQueryMatches, 'MoliDebug-tag--green'],
+                    [!mediaQueryMatches, 'MoliDebug-tag--red']
+                  )}
+                  title={`Media query ${mediaQueryMatches ? 'matches' : "doesn't match"}`}
+                >
+                  {sizeConfigEntry.mediaQuery}
+                </div>
+              </div>
+              <div class="MoliDebug-tagContainer">
+                <span class="MoliDebug-tagLabel">Supported slot sizes</span>
+                {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}
               </div>
             </div>
-            <div class="MoliDebug-tagContainer">
-              <span class="MoliDebug-tagLabel">Supported slot sizes</span>
-              {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}
-            </div>
-          </div>;
-        }
-      )}
-    </div>;
+          );
+        })}
+      </div>
+    );
   }
 
   private tagFromSlotSize = (slotSize: DfpSlotSize): JSX.Element => {

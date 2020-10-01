@@ -1,15 +1,19 @@
 import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 import { tcfapi } from '@highfivve/ad-tag';
-import { IModule, LOW_PRIORITY, mkInitStep, mkPrepareRequestAdsStep, Moli } from '@highfivve/ad-tag';
+import {
+  IModule,
+  LOW_PRIORITY,
+  mkInitStep,
+  mkPrepareRequestAdsStep,
+  Moli
+} from '@highfivve/ad-tag';
 
 interface ISourcepointConfig {
-
   /**
    * If true the ad pipeline will be rejected, instead of just logging, as google doesn't provide a cookieless
    * ad manager yet.
    */
   readonly rejectOnMissingPurposeOne: boolean;
-
 }
 
 /**
@@ -21,7 +25,6 @@ interface ISourcepointConfig {
  *
  */
 export default class SourcepointCmp implements IModule {
-
   public readonly name: string = 'sourcepoint-cmp';
   public readonly description: string = 'IAB compliant CMP';
   public readonly moduleType = 'cmp';
@@ -39,14 +42,14 @@ export default class SourcepointCmp implements IModule {
    * @see https://support.google.com/admanager/answer/9805023
    */
   private readonly googlePurposes = {
-    personalizedAds: [ 1, 3, 4 ],
+    personalizedAds: [1, 3, 4],
     nonPersonalizedAds: 1
   };
 
   private logger?: Moli.MoliLogger;
 
   constructor(private readonly spConfig: ISourcepointConfig, private readonly _window: Window) {
-    this.spWindow = _window as unknown as tcfapi.TCFApiWindow;
+    this.spWindow = (_window as unknown) as tcfapi.TCFApiWindow;
 
     this.consentReady = new Promise<void>((resolve, reject) => {
       const listener = (event: tcfapi.responses.TCData) => {
@@ -55,9 +58,14 @@ export default class SourcepointCmp implements IModule {
         } else if (event.eventStatus === 'useractioncomplete' || event.eventStatus === 'tcloaded') {
           resolve();
           if (event.listenerId) {
-            this.spWindow.__tcfapi('removeEventListener', 2, () => {
-              return;
-            }, event.listenerId);
+            this.spWindow.__tcfapi(
+              'removeEventListener',
+              2,
+              () => {
+                return;
+              },
+              event.listenerId
+            );
           }
         }
       };
@@ -81,44 +89,59 @@ export default class SourcepointCmp implements IModule {
     };
 
     // initialize the cmp stub
-    config.pipeline.initSteps.push(mkInitStep(
-      'cmp-consent-ready',
-      () => this.consentReady
-    ));
+    config.pipeline.initSteps.push(mkInitStep('cmp-consent-ready', () => this.consentReady));
 
-    config.pipeline.prepareRequestAdsSteps.push(mkPrepareRequestAdsStep('cmp-gpt-personalized-ads', LOW_PRIORITY, () => this.getTcData(log).then(tcData => {
-      log.debug(this.name, 'gpt setting consent data', tcData, tcData.purpose);
+    config.pipeline.prepareRequestAdsSteps.push(
+      mkPrepareRequestAdsStep('cmp-gpt-personalized-ads', LOW_PRIORITY, () =>
+        this.getTcData(log).then(tcData => {
+          log.debug(this.name, 'gpt setting consent data', tcData, tcData.purpose);
 
-      try {
-        const purposeIdsConsented: number[] = Object.entries(tcData.purpose.consents)
-          .filter(([ _, consent ]) => consent)
-          .map(([ purposeId, _ ]) => parseInt(purposeId, 10));
-        const hasNecessaryPurposeIds = this.googlePurposes.personalizedAds
-          .every(purposeId => purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === purposeId));
-        this._window.googletag.pubads().setRequestNonPersonalizedAds(hasNecessaryPurposeIds ? 0 : 1);
+          try {
+            const purposeIdsConsented: number[] = Object.entries(tcData.purpose.consents)
+              .filter(([_, consent]) => consent)
+              .map(([purposeId, _]) => parseInt(purposeId, 10));
+            const hasNecessaryPurposeIds = this.googlePurposes.personalizedAds.every(purposeId =>
+              purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === purposeId)
+            );
+            this._window.googletag
+              .pubads()
+              .setRequestNonPersonalizedAds(hasNecessaryPurposeIds ? 0 : 1);
 
-        log.debug(this.name, `gpt setNonPersonalizedAds(${hasNecessaryPurposeIds ? '0' : '1'})`);
+            log.debug(
+              this.name,
+              `gpt setNonPersonalizedAds(${hasNecessaryPurposeIds ? '0' : '1'})`
+            );
 
-        if (!purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === this.googlePurposes.nonPersonalizedAds)) {
-          log.error(this.name, 'No consents for purpose 1. Ad delivery prohibited by Google');
-          if (this.spConfig.rejectOnMissingPurposeOne) {
-            return Promise.reject('No consents for purpose 1. Ad delivery prohibited by Google');
+            if (
+              !purposeIdsConsented.some(
+                purposeIdWithConsent =>
+                  purposeIdWithConsent === this.googlePurposes.nonPersonalizedAds
+              )
+            ) {
+              log.error(this.name, 'No consents for purpose 1. Ad delivery prohibited by Google');
+              if (this.spConfig.rejectOnMissingPurposeOne) {
+                return Promise.reject(
+                  'No consents for purpose 1. Ad delivery prohibited by Google'
+                );
+              }
+            }
+          } catch (error) {
+            log.error(
+              this.name,
+              `failed to setNonPersonalizeAds\n${JSON.stringify(tcData)}`,
+              error
+            );
           }
-        }
-      } catch (error) {
-        log.error(this.name, `failed to setNonPersonalizeAds\n${JSON.stringify(tcData)}`, error);
-      }
-
-    })));
+        })
+      )
+    );
   }
 
-
-  private getTcData = (log: Moli.MoliLogger): Promise<tcfapi.responses.TCData> => new Promise(resolve => {
-    this.spWindow.__tcfapi('getTCData', 2, (tcData, success: boolean) => {
-      log.debug(this.name, 'getTCData returned', success, tcData);
-      resolve(tcData);
+  private getTcData = (log: Moli.MoliLogger): Promise<tcfapi.responses.TCData> =>
+    new Promise(resolve => {
+      this.spWindow.__tcfapi('getTCData', 2, (tcData, success: boolean) => {
+        log.debug(this.name, 'getTCData returned', success, tcData);
+        resolve(tcData);
+      });
     });
-  });
-
-
 }

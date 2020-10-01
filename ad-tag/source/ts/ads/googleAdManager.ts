@@ -3,7 +3,8 @@ import {
   ConfigureStep,
   DefineSlotsStep,
   InitStep,
-  mkConfigureStep, mkConfigureStepOncePerRequestAdsCycle,
+  mkConfigureStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   RequestAdsStep
 } from './adPipeline';
@@ -13,7 +14,11 @@ import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 
-const configureTargeting = (window: Window, targeting: Moli.Targeting | undefined, env: Moli.Environment): void => {
+const configureTargeting = (
+  window: Window,
+  targeting: Moli.Targeting | undefined,
+  env: Moli.Environment
+): void => {
   if (env === 'production') {
     const keyValueMap = targeting ? targeting.keyValues : {};
     Object.keys(keyValueMap).forEach(key => {
@@ -45,12 +50,16 @@ export const gptInit = (): InitStep => {
  * This step is run once per request ads cycle. An alternative implementation could delete google slots y for the ad
  * slots provided in the slot array. However this keeps old slots lingering around, which we surely don't want.
  */
-export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-destroy-ad-slots', (context: AdPipelineContext) => new Promise<void>(resolve => {
-  context.logger.debug('GAM', 'destroy all ad slots');
-  context.window.googletag.destroySlots();
-  resolve();
-}));
-
+export const gptDestroyAdSlots = (): ConfigureStep =>
+  mkConfigureStepOncePerRequestAdsCycle(
+    'gpt-destroy-ad-slots',
+    (context: AdPipelineContext) =>
+      new Promise<void>(resolve => {
+        context.logger.debug('GAM', 'destroy all ad slots');
+        context.window.googletag.destroySlots();
+        resolve();
+      })
+  );
 
 /**
  * Reset the gpt targeting configuration (key-values) and uses the targeting information from
@@ -61,15 +70,20 @@ export const gptDestroyAdSlots = (): ConfigureStep => mkConfigureStepOncePerRequ
  *
  * @param config
  */
-export const gptResetTargeting = (): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-reset-targeting', (context: AdPipelineContext) => new Promise<void>(resolve => {
-  if (context.env === 'production') {
-    context.logger.debug('GAM', 'reset top level targeting');
-    context.window.googletag.pubads().clearTargeting();
-    configureTargeting(context.window, context.config.targeting, context.env);
-  }
+export const gptResetTargeting = (): ConfigureStep =>
+  mkConfigureStepOncePerRequestAdsCycle(
+    'gpt-reset-targeting',
+    (context: AdPipelineContext) =>
+      new Promise<void>(resolve => {
+        if (context.env === 'production') {
+          context.logger.debug('GAM', 'reset top level targeting');
+          context.window.googletag.pubads().clearTargeting();
+          configureTargeting(context.window, context.config.targeting, context.env);
+        }
 
-  resolve();
-}));
+        resolve();
+      })
+  );
 
 export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
   let result: Promise<void>;
@@ -110,42 +124,59 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
  * The `LabelConfigService` is used to fetch the supported labels.
  *
  */
-export const gptLDeviceLabelKeyValue = (): ConfigureStep => mkConfigureStepOncePerRequestAdsCycle('gpt-device-label-keyValue', (ctx) => new Promise<void>(resolve => {
-  const whitelist = [ 'mobile', 'tablet', 'desktop' ];
-  const deviceLabels = ctx.labelConfigService.getSupportedLabels()
-    .filter(label => whitelist.some(deviceLabel => deviceLabel === label));
+export const gptLDeviceLabelKeyValue = (): ConfigureStep =>
+  mkConfigureStepOncePerRequestAdsCycle(
+    'gpt-device-label-keyValue',
+    ctx =>
+      new Promise<void>(resolve => {
+        const whitelist = ['mobile', 'tablet', 'desktop'];
+        const deviceLabels = ctx.labelConfigService
+          .getSupportedLabels()
+          .filter(label => whitelist.some(deviceLabel => deviceLabel === label));
 
-  if (deviceLabels.length === 1) {
-    ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabels);
-    ctx.window.googletag.pubads().setTargeting('device_label', deviceLabels);
-  } else {
-    ctx.logger.warn('GAM', `Expected one device label, but found ${deviceLabels.length}`, deviceLabels);
-  }
+        if (deviceLabels.length === 1) {
+          ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabels);
+          ctx.window.googletag.pubads().setTargeting('device_label', deviceLabels);
+        } else {
+          ctx.logger.warn(
+            'GAM',
+            `Expected one device label, but found ${deviceLabels.length}`,
+            deviceLabels
+          );
+        }
 
-  resolve();
-}));
+        resolve();
+      })
+  );
 
-export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
+export const gptDefineSlots = (): DefineSlotsStep => (
+  context: AdPipelineContext,
+  slots: Moli.AdSlot[]
+) => {
   const slotDefinitions = slots.map(moliSlot => {
     const sizeConfigService = new SizeConfigService(moliSlot.sizeConfig, context.window);
     const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
 
     // filter slots that shouldn't be displayed
-    if (!(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))) {
+    if (
+      !(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))
+    ) {
       return Promise.resolve(null);
     }
 
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
     // lookup existing slots and use those if already present. This makes defineSlots idempotent
-    const allSlots = context.env === 'production'
-      ? context.window.googletag.pubads().getSlots()
-      : context.window.googletag.content().getSlots();
+    const allSlots =
+      context.env === 'production'
+        ? context.window.googletag.pubads().getSlots()
+        : context.window.googletag.content().getSlots();
     const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
-    const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : (moliSlot.position === 'in-page' ?
-        context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId) :
-        context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId)
-    );
+    const adSlot: googletag.IAdSlot | null = existingSlot
+      ? existingSlot
+      : moliSlot.position === 'in-page'
+      ? context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId)
+      : context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId);
 
     if (adSlot) {
       adSlot.setCollapseEmptyDiv(true);
@@ -155,7 +186,10 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
       switch (context.env) {
         case 'production':
           adSlot.addService(context.window.googletag.pubads());
-          context.logger.debug('GAM', `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
+          context.logger.debug(
+            'GAM',
+            `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
+          );
           return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         case 'test':
           context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
@@ -169,46 +203,51 @@ export const gptDefineSlots = (): DefineSlotsStep => (context: AdPipelineContext
       context.logger.error('GAM', error);
       return Promise.reject(new Error(error));
     }
-
   });
 
   return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
 };
 
-export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition[]) => new Promise<void>(resolve => {
-  context.logger.debug('GAM', 'requestAds');
-  switch (context.env) {
-    case 'test':
-      slots.forEach(({ adSlot, moliSlot, filterSupportedSizes }) => {
-        const containerId = `${moliSlot.domId}__container`;
-        const containerWidthId = `${moliSlot.domId}__container_width`;
-        const containerHeightId = `${moliSlot.domId}__container_height`;
+export const gptRequestAds = (): RequestAdsStep => (
+  context: AdPipelineContext,
+  slots: SlotDefinition[]
+) =>
+  new Promise<void>(resolve => {
+    context.logger.debug('GAM', 'requestAds');
+    switch (context.env) {
+      case 'test':
+        slots.forEach(({ adSlot, moliSlot, filterSupportedSizes }) => {
+          const containerId = `${moliSlot.domId}__container`;
+          const containerWidthId = `${moliSlot.domId}__container_width`;
+          const containerHeightId = `${moliSlot.domId}__container_height`;
 
-        // pick a random, fixed sizes
-        const sizes = filterSupportedSizes(moliSlot.sizes)
-          // no fluid sizes
-          .filter(SizeConfigService.isFixedSize)
-          // no 1x1 sizes
-          .filter(([ width, height ]) => width > 1 && height > 1);
-        const rnd = Math.floor(Math.random() * 20) + 1;
-        const index = (sizes.length - 1) % rnd;
+          // pick a random, fixed sizes
+          const sizes = filterSupportedSizes(moliSlot.sizes)
+            // no fluid sizes
+            .filter(SizeConfigService.isFixedSize)
+            // no 1x1 sizes
+            .filter(([width, height]) => width > 1 && height > 1);
+          const rnd = Math.floor(Math.random() * 20) + 1;
+          const index = (sizes.length - 1) % rnd;
 
-        // there is room for improvement. We should differentiate between only fluid, only 1x1
-        const [ width, height ] = sizes.length === 0 ? [ 300, 250 ] : sizes[index];
+          // there is room for improvement. We should differentiate between only fluid, only 1x1
+          const [width, height] = sizes.length === 0 ? [300, 250] : sizes[index];
 
-        const buttons = sizes.map(([ width, height ]) => {
-          const resize = `(function(){
+          const buttons = sizes
+            .map(([width, height]) => {
+              const resize = `(function(){
               var container = document.getElementById('${containerId}');
               container.style.width = '${width}px';
               container.style.height = '${height}px';
               document.getElementById('${containerWidthId}').textContent = ${width};;
               document.getElementById('${containerHeightId}').textContent = ${height};;
             })()`;
-          return `<button onclick="${resize}" style="font-size: 10px; background: #00a4a6; color: white; border: 1px dotted white;">${width}x${height}</button>`;
-        }).join('\n');
+              return `<button onclick="${resize}" style="font-size: 10px; background: #00a4a6; color: white; border: 1px dotted white;">${width}x${height}</button>`;
+            })
+            .join('\n');
 
-        // CSS Pattern from https://leaverou.github.io/css3patterns/#lined-paper
-        const html = `<div id="${containerId}"
+          // CSS Pattern from https://leaverou.github.io/css3patterns/#lined-paper
+          const html = `<div id="${containerId}"
                              style="position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
                              width: ${width}px; height: ${height}px; padding: 6px; border: 2px dotted gray;
                              background-color: #fff;
@@ -221,19 +260,25 @@ export const gptRequestAds = (): RequestAdsStep => (context: AdPipelineContext, 
 <div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>
 </div>`;
 
-        context.window.googletag.content().setContent(adSlot, html);
-        context.logger.debug('GAM', `Set content for slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`);
-      });
-      break;
-    case 'production':
-      // clear targetings for each slot before refreshing
-      context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
-      slots.forEach(slot => {
-        context.logger.debug('GAM', `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`);
-        context.reportingService.markRefreshed(slot.moliSlot);
-      });
-      break;
-  }
+          context.window.googletag.content().setContent(adSlot, html);
+          context.logger.debug(
+            'GAM',
+            `Set content for slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
+          );
+        });
+        break;
+      case 'production':
+        // clear targetings for each slot before refreshing
+        context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
+        slots.forEach(slot => {
+          context.logger.debug(
+            'GAM',
+            `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`
+          );
+          context.reportingService.markRefreshed(slot.moliSlot);
+        });
+        break;
+    }
 
-  resolve();
-});
+    resolve();
+  });

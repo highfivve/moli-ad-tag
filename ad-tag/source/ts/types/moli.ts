@@ -6,8 +6,7 @@ import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipelin
 
 /* tslint:disable:interface-name */
 export namespace Moli {
-
-  export type DfpSlotSize = [ number, number ] | 'fluid';
+  export type DfpSlotSize = [number, number] | 'fluid';
 
   /**
    * KeyValue map. Last insert wins.
@@ -65,7 +64,6 @@ export namespace Moli {
    *
    */
   export interface MoliTag {
-
     /**
      * Queue for async loading and processing
      */
@@ -77,7 +75,6 @@ export namespace Moli {
        */
       push(cmd: MoliCommand): void;
     };
-
 
     /**
      * Set a key value. Can be used in DFP or prebid bids configuration.
@@ -181,14 +178,15 @@ export namespace Moli {
      */
     enableSinglePageApp(): void;
 
-
     /**
      * Start requesting ads as soon as the tag has been configured.
      *
      * The behaviour differs if `enableSinglePageApp()` has been called.
      * @see [[enableSinglePageApp]]
      */
-    requestAds(): Promise<state.IConfigurable | state.ISinglePageApp | state.IFinished | state.IError>;
+    requestAds(): Promise<
+      state.IConfigurable | state.ISinglePageApp | state.IFinished | state.IError
+    >;
 
     /**
      * Refresh the given ad slot as soon as possible.
@@ -225,7 +223,6 @@ export namespace Moli {
      * Request the debug bundle and start the debug mode.
      */
     openConsole(path?: string): void;
-
 
     /**
      * @return the asset loader service that is used to fetch additional assets / resources
@@ -388,9 +385,8 @@ export namespace Moli {
    *
    */
   export namespace state {
-
     export type States =
-      'configurable'
+      | 'configurable'
       | 'configured'
       | 'spa-finished'
       | 'spa-requestAds'
@@ -407,7 +403,6 @@ export namespace Moli {
 
     export interface IConfigurable extends IState {
       readonly state: 'configurable';
-
 
       // changeable configuration options
 
@@ -472,7 +467,6 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
-
     }
 
     /**
@@ -524,7 +518,6 @@ export namespace Moli {
        * Configuration is now immutable
        */
       readonly config: Moli.MoliConfig;
-
     }
 
     /**
@@ -602,7 +595,6 @@ export namespace Moli {
        * once per page.
        */
       readonly href: string;
-
     }
 
     /**
@@ -637,9 +629,18 @@ export namespace Moli {
     /**
      * All valid states
      */
-    export type IStateMachine = IConfigurable | IConfigured | ISinglePageApp | IRequestAds | IFinished | IError;
+    export type IStateMachine =
+      | IConfigurable
+      | IConfigured
+      | ISinglePageApp
+      | IRequestAds
+      | IFinished
+      | IError;
 
-    export type AfterRequestAdsStates = Extract<state.States, 'finished' | 'error' | 'spa-finished'>;
+    export type AfterRequestAdsStates = Extract<
+      state.States,
+      'finished' | 'error' | 'spa-finished'
+    >;
 
     export interface IHooks {
       /**
@@ -683,12 +684,10 @@ export namespace Moli {
        *
        */
       afterRequestAds?: (state: AfterRequestAdsStates) => void;
-
     }
   }
 
   export interface MoliConfig {
-
     /**
      * Configure the environment the ad tag should use.
      *
@@ -738,7 +737,6 @@ export namespace Moli {
 
     /** configurable logger */
     logger?: MoliLogger;
-
   }
 
   /**
@@ -752,7 +750,6 @@ export namespace Moli {
     /** additional labels. Added in addition to the ones created by the sizeConfig. */
     readonly labels?: string[];
   }
-
 
   /**
    * ## SizeConfig entry
@@ -946,7 +943,13 @@ export namespace Moli {
    * Used for discriminating unions to make type safe assumptions about the existence
    * or type of individual properties.
    */
-  export type AdSlot = EagerAdSlot | ManualAdSlot | LazyAdSlot | RefreshableAdSlot | PrebidAdSlot | A9AdSlot;
+  export type AdSlot =
+    | EagerAdSlot
+    | ManualAdSlot
+    | LazyAdSlot
+    | RefreshableAdSlot
+    | PrebidAdSlot
+    | A9AdSlot;
 
   export type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -978,7 +981,6 @@ export namespace Moli {
 
   /** slot behaviour namespace */
   export namespace behaviour {
-
     /**
      * ## Slot Loading
      *
@@ -1080,7 +1082,6 @@ export namespace Moli {
       readonly throttle?: number;
     }
 
-
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;
 
@@ -1101,12 +1102,10 @@ export namespace Moli {
        */
       readonly source: Window | Document | string;
     }
-
   }
 
   /** header bidding types */
   export namespace headerbidding {
-
     /**
      * A `PrebidAdSlotConfig` can either be created
      *
@@ -1118,7 +1117,7 @@ export namespace Moli {
      * configuration hacks, e.g. for the xaxis prebid integration.
      */
     export type PrebidAdSlotConfigProvider =
-      PrebidAdSlotConfig
+      | PrebidAdSlotConfig
       | PrebidAdSlotConfig[]
       | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig)
       | ((context: PrebidAdSlotContext) => PrebidAdSlotConfig[]);
@@ -1133,7 +1132,6 @@ export namespace Moli {
      *
      */
     export interface PrebidAdSlotContext {
-
       /**
        * Access key-values
        */
@@ -1152,7 +1150,7 @@ export namespace Moli {
      * - from a function which takes a `PrebidListenerContext`
      */
     export type PrebidListenerProvider =
-      PrebidListener
+      | PrebidListener
       | ((context: PrebidListenerContext) => PrebidListener);
 
     /**
@@ -1193,9 +1191,12 @@ export namespace Moli {
      * ```
      */
     export interface PrebidListener {
-
       /** called in the `bidsBackHandler` before the dfp key-values are being set */
-      readonly preSetTargetingForGPTAsync?: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean, slotDefinitions: SlotDefinition<AdSlot>[]) => void;
+      readonly preSetTargetingForGPTAsync?: (
+        bidResponses: prebidjs.IBidResponsesMap,
+        timedOut: boolean,
+        slotDefinitions: SlotDefinition<AdSlot>[]
+      ) => void;
     }
 
     /**
@@ -1302,7 +1303,6 @@ export namespace Moli {
   }
 
   export namespace pipeline {
-
     /**
      * ## Pipeline Config
      *
@@ -1311,7 +1311,6 @@ export namespace Moli {
      *
      */
     export interface PipelineConfig {
-
       /**
        * Additional initSteps that should be executed in every AdPipeline run.
        */
@@ -1326,9 +1325,7 @@ export namespace Moli {
        *  Additional prepareRequestAdsSteps that should be executed in every AdPipeline run.
        */
       readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
-
     }
-
   }
 
   /**
@@ -1374,12 +1371,10 @@ export namespace Moli {
    *
    */
   export namespace reporting {
-
     /**
      * Reporting configuration
      */
     export interface ReportingConfig {
-
       /**
        * a value between 0 and 1 to define the percentage of page requests that should be used
        * to report metrics.
@@ -1406,7 +1401,6 @@ export namespace Moli {
        *
        */
       readonly adUnitRegex?: string | RegExp;
-
     }
 
     /**
@@ -1481,11 +1475,18 @@ export namespace Moli {
      */
     export type Reporter = (metric: Metric) => void;
 
-
     /**
      * Union type for all provided metric types.
      */
-    export type MetricType = 'cmpLoad' | 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr' | 'adSlot' | 'adSlots';
+    export type MetricType =
+      | 'cmpLoad'
+      | 'dfpLoad'
+      | 'prebidLoad'
+      | 'a9Load'
+      | 'ttfa'
+      | 'ttfr'
+      | 'adSlot'
+      | 'adSlots';
 
     /**
      * Base interface for all provided metrics.
@@ -1509,7 +1510,6 @@ export namespace Moli {
      * The boolean metrics represent all metrics with a boolean value
      */
     export interface BooleanMetric {
-
       /**
        * All metrics that provide only a boolean value.
        */
@@ -1525,7 +1525,6 @@ export namespace Moli {
      * The single measure metric represents all metrics with only one measure.
      */
     export interface SingleMeasurementMetric extends IMetric {
-
       /**
        * All metrics that provide only a single measurement point.
        */
@@ -1541,7 +1540,6 @@ export namespace Moli {
      * The ad slots metric represents aggregated metrics for all ad slots on the site.
      */
     export interface AdSlotsMetric {
-
       readonly type: 'adSlots';
 
       /**
@@ -1553,7 +1551,6 @@ export namespace Moli {
        * The number of ad slots that weren't rendered, because no creative was delivered.
        */
       readonly numberEmptyAdSlots: number;
-
     }
 
     /**
@@ -1576,9 +1573,7 @@ export namespace Moli {
      *
      */
     export interface AdSlotMetric extends IMetric {
-
       readonly type: 'adSlot';
-
 
       /**
        * The adslot ad unit name/path.
@@ -1627,9 +1622,7 @@ export namespace Moli {
        * represents the time the creative needed to be fully visible.
        */
       readonly rendering: PerformanceMeasure;
-
     }
-
   }
 
   /**
@@ -1642,14 +1635,13 @@ export namespace Moli {
    * @see https://support.google.com/admanager/answer/9298008?hl=en
    */
   export namespace yield_optimization {
-
     export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
     /**
      * Available options to configure yield optimization
      */
     export type YieldOptimizationConfig =
-      NoYieldOptimizationConfig
+      | NoYieldOptimizationConfig
       | StaticYieldOptimizationConfig
       | DynamicYieldOptimizationConfig;
 
@@ -1683,7 +1675,6 @@ export namespace Moli {
        * URL to a json config file that contains a list of AdUnitPriceRules.
        */
       readonly configEndpoint: string;
-
     }
 
     export interface AdUnitPriceRules {
@@ -1729,7 +1720,6 @@ export namespace Moli {
        */
       readonly rules: ReadonlyArray<AdUnitPriceRules>;
     }
-
   }
 
   /**
@@ -1781,7 +1771,6 @@ export namespace Moli {
    *
    */
   export interface MoliLogger {
-
     /**
      * Log a debug message
      *
@@ -1813,7 +1802,6 @@ export namespace Moli {
      * @param optionalParams - effect depends on the implementation
      */
     error(message?: any, ...optionalParams: any[]): void;
-
   }
 
   export type MoliWindow = Window & {
@@ -1822,7 +1810,6 @@ export namespace Moli {
      */
     moli: Moli.MoliTag;
   };
-
 }
 
 /* tslint:enable:interface-name */

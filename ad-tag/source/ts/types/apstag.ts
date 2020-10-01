@@ -1,7 +1,5 @@
 export namespace apstag {
-
   export interface IApsTag {
-
     /**
      * Command queue on the 'apstag' window object
      */
@@ -94,7 +92,7 @@ export namespace apstag {
      *   comma-separated key-values as: `"gender=male,section=homepage"`.
      */
     params?: {
-      [ key: string ]: string | string[];
+      [key: string]: string | string[];
     };
   }
 
@@ -141,12 +139,10 @@ export namespace apstag {
 
 /* tslint:disable:interface-name */
 declare global {
-
   /**
    * Add the ApsTag (Amazon A9) API to the global Window instance
    */
   interface Window {
-
     /**
      * global apstag object
      */

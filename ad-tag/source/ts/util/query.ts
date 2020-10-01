@@ -32,7 +32,12 @@ export const parseQueryString = (search: string): Map<string, string> => {
   const query = search.startsWith('?') ? search.slice(1) : search;
   if (query.length > 0) {
     // Split into parameters and parse all non-empty ones
-    return new Map(query.split('&').filter(s => s.length > 0).map(parseQueryParameter));
+    return new Map(
+      query
+        .split('&')
+        .filter(s => s.length > 0)
+        .map(parseQueryParameter)
+    );
   } else {
     return new Map();
   }

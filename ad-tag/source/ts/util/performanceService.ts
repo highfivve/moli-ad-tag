@@ -1,5 +1,4 @@
 export interface IPerformanceMeasurementService {
-
   /**
    * Create a performance mark with the given name
    *
@@ -23,14 +22,12 @@ export interface IPerformanceMeasurementService {
    */
   getMeasure(name: string): PerformanceMeasure | undefined;
 
-
   /**
    * @param name the name of the mark
    * @returns the first mark taken or undefined
    */
   getMark(name: string): PerformanceMark | undefined;
 }
-
 
 /**
  * == Performance Measurement Service ==
@@ -39,7 +36,6 @@ export interface IPerformanceMeasurementService {
  *
  */
 class PerformanceMeasurementService implements IPerformanceMeasurementService {
-
   public mark(name: string): void {
     performance.mark(name);
   }
@@ -65,14 +61,12 @@ class PerformanceMeasurementService implements IPerformanceMeasurementService {
     const entries = performance.getEntriesByName(name, 'mark');
     return entries[0];
   }
-
 }
 
 /**
  * If the browser doesn't support the Web Performance API, we simply do nothing.
  */
 class NullPerformanceMeasurementService implements IPerformanceMeasurementService {
-
   public mark(_name: string): void {
     // empty
   }
@@ -80,7 +74,6 @@ class NullPerformanceMeasurementService implements IPerformanceMeasurementServic
   public measure(_name: string, _startMarkName: string, _endMarkName?: string): void {
     // empty
   }
-
 
   public getMeasure(_name: string): PerformanceMeasure | undefined {
     return;
@@ -93,7 +86,13 @@ class NullPerformanceMeasurementService implements IPerformanceMeasurementServic
 
 export const createPerformanceService = (window: Window): IPerformanceMeasurementService => {
   // ensure that all methods we use exists in window.performance
-  if (window && 'performance' in window && 'mark' in window.performance && 'measure' in window.performance && 'getEntriesByName' in window.performance) {
+  if (
+    window &&
+    'performance' in window &&
+    'mark' in window.performance &&
+    'measure' in window.performance &&
+    'getEntriesByName' in window.performance
+  ) {
     return new PerformanceMeasurementService();
   } else {
     return new NullPerformanceMeasurementService();

@@ -12,7 +12,6 @@ use(sinonChai);
 
 // tslint:disable: no-unused-expression
 describe('Passback Service', () => {
-
   // create a fresh DOM for each test
   let dom = createDom();
   const gpt = createGoogletagStub();
@@ -38,8 +37,6 @@ describe('Passback Service', () => {
       };
       dom.window.addEventListener('message', finishListener);
     });
-
-
   };
 
   beforeEach(() => {
@@ -71,7 +68,10 @@ describe('Passback Service', () => {
       } as any);
 
       expect(addEventListenerSpy).to.have.been.calledOnce;
-      expect(addEventListenerSpy).to.have.been.calledOnceWith(Sinon.match.same('message'), Sinon.match.func);
+      expect(addEventListenerSpy).to.have.been.calledOnceWith(
+        Sinon.match.same('message'),
+        Sinon.match.func
+      );
     });
 
     it('should not refresh a slot when the domId does not match', () => {
@@ -87,11 +87,16 @@ describe('Passback Service', () => {
 
       passbackService.addAdSlot(adSlotDefinition);
 
-      return postMessage(JSON.stringify({ type: 'passback', domId: 'another-slot', passbackOrigin: 'outstream-partner-1' }))
-        .then(() => {
-          expect(pubadsRefreshSpy).to.have.not.been.called;
-          expect(googleAdSlotSetTargetingSpy).to.have.not.been.called;
-        });
+      return postMessage(
+        JSON.stringify({
+          type: 'passback',
+          domId: 'another-slot',
+          passbackOrigin: 'outstream-partner-1'
+        })
+      ).then(() => {
+        expect(pubadsRefreshSpy).to.have.not.been.called;
+        expect(googleAdSlotSetTargetingSpy).to.have.not.been.called;
+      });
     });
 
     it('should refresh a slot when the proper event is fired', () => {
@@ -107,21 +112,24 @@ describe('Passback Service', () => {
 
       passbackService.addAdSlot(adSlotDefinition);
 
-      return postMessage(JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' }))
-        .then(() => {
-          expect(pubadsRefreshSpy).to.have.be.calledOnce;
-          expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
-            Sinon.match.array.and(Sinon.match((adSlots) => {
+      return postMessage(
+        JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' })
+      ).then(() => {
+        expect(pubadsRefreshSpy).to.have.be.calledOnce;
+        expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
+          Sinon.match.array.and(
+            Sinon.match(adSlots => {
               return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
-            }, 'more or less than 1 ad slot used OR wrong slot'))
-          );
+            }, 'more or less than 1 ad slot used OR wrong slot')
+          )
+        );
 
-          expect(googleAdSlotSetTargetingSpy).to.have.been.calledTwice;
-          expect(googleAdSlotSetTargetingSpy.firstCall.args[0]).to.be.equals('passback');
-          expect(googleAdSlotSetTargetingSpy.firstCall.args[1]).to.be.equals('true');
-          expect(googleAdSlotSetTargetingSpy.secondCall.args[0]).to.be.equals('passbackOrigin');
-          expect(googleAdSlotSetTargetingSpy.secondCall.args[1]).to.be.equals('outstream-partner-1');
-        });
+        expect(googleAdSlotSetTargetingSpy).to.have.been.calledTwice;
+        expect(googleAdSlotSetTargetingSpy.firstCall.args[0]).to.be.equals('passback');
+        expect(googleAdSlotSetTargetingSpy.firstCall.args[1]).to.be.equals('true');
+        expect(googleAdSlotSetTargetingSpy.secondCall.args[0]).to.be.equals('passbackOrigin');
+        expect(googleAdSlotSetTargetingSpy.secondCall.args[1]).to.be.equals('outstream-partner-1');
+      });
     });
 
     it('should allow passbacks only once', () => {
@@ -137,14 +145,20 @@ describe('Passback Service', () => {
       passbackService.addAdSlot(adSlotDefinition);
 
       return Promise.all([
-        postMessage(JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' })),
-        postMessage(JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' }))
+        postMessage(
+          JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' })
+        ),
+        postMessage(
+          JSON.stringify({ type: 'passback', domId: 'foo', passbackOrigin: 'outstream-partner-1' })
+        )
       ]).then(() => {
         expect(pubadsRefreshSpy).to.have.be.calledOnce;
         expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
-          Sinon.match.array.and(Sinon.match((adSlots) => {
-            return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
-          }, 'more or less than 1 ad slot used OR wrong slot'))
+          Sinon.match.array.and(
+            Sinon.match(adSlots => {
+              return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
+            }, 'more or less than 1 ad slot used OR wrong slot')
+          )
         );
       });
     });
@@ -170,7 +184,10 @@ describe('Passback Service', () => {
       } as any);
 
       expect(addEventListenerSpy).to.have.been.calledOnce;
-      expect(addEventListenerSpy).to.have.been.calledOnceWith(Sinon.match.same('message'), Sinon.match.func);
+      expect(addEventListenerSpy).to.have.been.calledOnceWith(
+        Sinon.match.same('message'),
+        Sinon.match.func
+      );
     });
 
     it('should not refresh a slot when the adUnitPath does not match', () => {
@@ -186,11 +203,16 @@ describe('Passback Service', () => {
 
       passbackService.addAdSlot(adSlotDefinition);
 
-      return postMessage(JSON.stringify({ type: 'passback', adUnitPath: '/1/another-slot', passbackOrigin: 'outstream-partner-1' }))
-        .then(() => {
-          expect(pubadsRefreshSpy).to.have.not.been.called;
-          expect(googleAdSlotSetTargetingSpy).to.have.not.been.called;
-        });
+      return postMessage(
+        JSON.stringify({
+          type: 'passback',
+          adUnitPath: '/1/another-slot',
+          passbackOrigin: 'outstream-partner-1'
+        })
+      ).then(() => {
+        expect(pubadsRefreshSpy).to.have.not.been.called;
+        expect(googleAdSlotSetTargetingSpy).to.have.not.been.called;
+      });
     });
 
     it('should refresh a slot when the proper event is fired', () => {
@@ -206,21 +228,28 @@ describe('Passback Service', () => {
 
       passbackService.addAdSlot(adSlotDefinition);
 
-      return postMessage(JSON.stringify({ type: 'passback', adUnitPath: '/1/foo', passbackOrigin: 'outstream-partner-1' }))
-        .then(() => {
-          expect(pubadsRefreshSpy).to.have.be.calledOnce;
-          expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
-            Sinon.match.array.and(Sinon.match((adSlots) => {
+      return postMessage(
+        JSON.stringify({
+          type: 'passback',
+          adUnitPath: '/1/foo',
+          passbackOrigin: 'outstream-partner-1'
+        })
+      ).then(() => {
+        expect(pubadsRefreshSpy).to.have.be.calledOnce;
+        expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
+          Sinon.match.array.and(
+            Sinon.match(adSlots => {
               return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
-            }, 'more or less than 1 ad slot used OR wrong slot'))
-          );
+            }, 'more or less than 1 ad slot used OR wrong slot')
+          )
+        );
 
-          expect(googleAdSlotSetTargetingSpy).to.have.been.calledTwice;
-          expect(googleAdSlotSetTargetingSpy.firstCall.args[0]).to.be.equals('passback');
-          expect(googleAdSlotSetTargetingSpy.firstCall.args[1]).to.be.equals('true');
-          expect(googleAdSlotSetTargetingSpy.secondCall.args[0]).to.be.equals('passbackOrigin');
-          expect(googleAdSlotSetTargetingSpy.secondCall.args[1]).to.be.equals('outstream-partner-1');
-        });
+        expect(googleAdSlotSetTargetingSpy).to.have.been.calledTwice;
+        expect(googleAdSlotSetTargetingSpy.firstCall.args[0]).to.be.equals('passback');
+        expect(googleAdSlotSetTargetingSpy.firstCall.args[1]).to.be.equals('true');
+        expect(googleAdSlotSetTargetingSpy.secondCall.args[0]).to.be.equals('passbackOrigin');
+        expect(googleAdSlotSetTargetingSpy.secondCall.args[1]).to.be.equals('outstream-partner-1');
+      });
     });
 
     it('should allow passbacks only once', () => {
@@ -236,17 +265,30 @@ describe('Passback Service', () => {
       passbackService.addAdSlot(adSlotDefinition);
 
       return Promise.all([
-        postMessage(JSON.stringify({ type: 'passback', adUnitPath: '/1/foo', passbackOrigin: 'outstream-partner-1' })),
-        postMessage(JSON.stringify({ type: 'passback', adUnitPath: '/1/foo', passbackOrigin: 'outstream-partner-1' }))
+        postMessage(
+          JSON.stringify({
+            type: 'passback',
+            adUnitPath: '/1/foo',
+            passbackOrigin: 'outstream-partner-1'
+          })
+        ),
+        postMessage(
+          JSON.stringify({
+            type: 'passback',
+            adUnitPath: '/1/foo',
+            passbackOrigin: 'outstream-partner-1'
+          })
+        )
       ]).then(() => {
         expect(pubadsRefreshSpy).to.have.be.calledOnce;
         expect(pubadsRefreshSpy).to.have.be.calledOnceWithExactly(
-          Sinon.match.array.and(Sinon.match((adSlots) => {
-            return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
-          }, 'more or less than 1 ad slot used OR wrong slot'))
+          Sinon.match.array.and(
+            Sinon.match(adSlots => {
+              return adSlots.length === 1 && adSlots[0].getSlotElementId() === 'foo';
+            }, 'more or less than 1 ad slot used OR wrong slot')
+          )
         );
       });
     });
   });
-
 });

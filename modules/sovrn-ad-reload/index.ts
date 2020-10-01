@@ -5,7 +5,6 @@ import {
 import { Moli, IModule, ModuleType } from '@highfivve/ad-tag';
 
 export interface ISovrnConfig {
-
   /**
    * Points to the sovrn script.
    *
@@ -13,7 +12,6 @@ export interface ISovrnConfig {
    */
   readonly assetUrl: string;
 }
-
 
 /**
  * We use sovrn to reload ads every 20 seconds,
@@ -30,12 +28,11 @@ export interface ISovrnConfig {
  * @see The sovrn documentation is here @link {https://www.sovrn.com/support/frequently-asked-questions-for-signal/}
  */
 export default class SovrnAdReload implements IModule {
-
   public readonly name: string = 'sovrn-ad-reload';
   public readonly description: string = 'ad reload';
   public readonly moduleType: ModuleType = 'ad-reload';
 
-  constructor(private readonly sovrnConfig: ISovrnConfig, private readonly window: Window) {  }
+  constructor(private readonly sovrnConfig: ISovrnConfig, private readonly window: Window) {}
 
   config(): Object | null {
     return this.sovrnConfig;

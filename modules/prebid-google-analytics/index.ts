@@ -14,7 +14,6 @@ export interface IPrebidGoogleAnalyticsConfig {
    * configuration for the prebid google analytics adapter
    */
   readonly options: prebidjs.analytics.IGoogleAnalyticsAdapterOptions;
-
 }
 
 export default class PrebidGoogleAnalytics implements IModule {
@@ -22,8 +21,10 @@ export default class PrebidGoogleAnalytics implements IModule {
   readonly moduleType = 'prebid';
   readonly description: string = 'Configure and enable the prebid google analytics adapter';
 
-  constructor(private readonly pgaConfig: IPrebidGoogleAnalyticsConfig, private readonly window: Window) {
-  }
+  constructor(
+    private readonly pgaConfig: IPrebidGoogleAnalyticsConfig,
+    private readonly window: Window
+  ) {}
 
   config(): Object | null {
     return this.pgaConfig;
@@ -34,7 +35,7 @@ export default class PrebidGoogleAnalytics implements IModule {
 
     // only makes sense when prebid is enabled
     if (!config.prebid) {
-      log.error(this.name, 'Prebid isn\'t configured!');
+      log.error(this.name, "Prebid isn't configured!");
       return;
     }
 
@@ -47,11 +48,13 @@ export default class PrebidGoogleAnalytics implements IModule {
     const _window = this.window as any;
 
     // https://developers.google.com/analytics/devguides/collection/analyticsjs/
-    _window[gaGlobal] = _window[gaGlobal] || function init(): void {
-      _window[gaGlobal].q = _window[gaGlobal].q || [];
-      _window[gaGlobal].q.push(arguments);
-    };
-    _window[gaGlobal].l = +new Date;
+    _window[gaGlobal] =
+      _window[gaGlobal] ||
+      function init(): void {
+        _window[gaGlobal].q = _window[gaGlobal].q || [];
+        _window[gaGlobal].q.push(arguments);
+      };
+    _window[gaGlobal].l = +new Date();
 
     // https://developers.google.com/analytics/devguides/collection/analyticsjs/creating-trackers
     _window[gaGlobal]('create', this.pgaConfig.trackingId, 'auto', trackerName);
@@ -61,11 +64,12 @@ export default class PrebidGoogleAnalytics implements IModule {
     _window.pbjs.que.push(() => {
       log.debug(this.name, 'enabling the prebid google analytics adapter');
       // add the google analytics adapter
-      _window.pbjs.enableAnalytics([ {
-        provider: 'ga',
-        options: this.pgaConfig.options
-      } ]);
+      _window.pbjs.enableAnalytics([
+        {
+          provider: 'ga',
+          options: this.pgaConfig.options
+        }
+      ]);
     });
   }
-
 }

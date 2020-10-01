@@ -25,7 +25,6 @@ export type AdPipelineContext = {
    */
   readonly requestAdsCalls: number;
 
-
   readonly logger: Moli.MoliLogger;
 
   /**
@@ -91,7 +90,10 @@ export type ConfigureStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) =
  * - filter sizes
  *
  */
-export type DefineSlotsStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<SlotDefinition[]>;
+export type DefineSlotsStep = (
+  context: AdPipelineContext,
+  slots: Moli.AdSlot[]
+) => Promise<SlotDefinition[]>;
 
 /**
  * ## Prepare RequestAds
@@ -124,7 +126,10 @@ export type PrepareRequestAdsStep = {
  * - prebid requestBids / setGptTargeting
  * - a9 fetchBids
  */
-export type RequestBidsStep = (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<void>;
+export type RequestBidsStep = (
+  context: AdPipelineContext,
+  slots: SlotDefinition[]
+) => Promise<void>;
 
 /**
  * ## RequestAds
@@ -134,7 +139,6 @@ export type RequestBidsStep = (context: AdPipelineContext, slots: SlotDefinition
 export type RequestAdsStep = (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<void>;
 
 export interface IAdPipelineConfiguration {
-
   readonly init: InitStep[];
   readonly configure: ConfigureStep[];
   readonly defineSlots: DefineSlotsStep;
@@ -146,12 +150,18 @@ export interface IAdPipelineConfiguration {
 export const HIGH_PRIORITY = 100;
 export const LOW_PRIORITY = 10;
 
-export const mkInitStep = (name: string, fn: (context: AdPipelineContext) => Promise<void>): InitStep => {
+export const mkInitStep = (
+  name: string,
+  fn: (context: AdPipelineContext) => Promise<void>
+): InitStep => {
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
 };
 
-export const mkConfigureStep = (name: string, fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>): ConfigureStep => {
+export const mkConfigureStep = (
+  name: string,
+  fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>
+): ConfigureStep => {
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
 };
@@ -163,7 +173,10 @@ export const mkConfigureStep = (name: string, fn: (context: AdPipelineContext, s
  * @param name
  * @param fn
  */
-export const mkConfigureStepOncePerRequestAdsCycle = (name: string, fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>): ConfigureStep => {
+export const mkConfigureStepOncePerRequestAdsCycle = (
+  name: string,
+  fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>
+): ConfigureStep => {
   Object.defineProperty(fn, 'name', { value: name });
   let currentRequestAdsCalls = 0;
 
@@ -180,19 +193,22 @@ export const mkConfigureStepOncePerRequestAdsCycle = (name: string, fn: (context
 export const mkPrepareRequestAdsStep = (
   name: string,
   priority: number,
-  fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<unknown>): PrepareRequestAdsStep => {
+  fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<unknown>
+): PrepareRequestAdsStep => {
   const step = Object.assign(fn, { priority: priority });
   Object.defineProperty(fn, 'name', { value: name });
   return step;
 };
 
-export const mkRequestBidsStep = (name: string, fn: (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => Promise<void>): RequestBidsStep => {
+export const mkRequestBidsStep = (
+  name: string,
+  fn: (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => Promise<void>
+): RequestBidsStep => {
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
 };
 
 export class AdPipeline {
-
   /**
    * the init process should only be called once and we store the result here.
    */
@@ -214,8 +230,7 @@ export class AdPipeline {
     private readonly window: Window,
     private readonly reportingService: IReportingService,
     private readonly slotEventService: SlotEventService
-  ) {
-  }
+  ) {}
 
   /**
    * run the pipeline
@@ -225,7 +240,11 @@ export class AdPipeline {
       return Promise.resolve();
     }
     const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
-    const labelConfigService = new LabelConfigService(config.labelSizeConfig || [], extraLabels, this.window);
+    const labelConfigService = new LabelConfigService(
+      config.labelSizeConfig || [],
+      extraLabels,
+      this.window
+    );
 
     // increase the prebid request count
     this.requestId = this.requestId + 1;
@@ -242,47 +261,77 @@ export class AdPipeline {
       slotEventService: this.slotEventService,
       window: this.window
     };
-    this.logger.debug('AdPipeline', `starting run with requestId ${currentRequestId} on ${requestAdsCalls}. call`, slots);
-    this.init = this.init ? this.init : this.logStage('init', currentRequestId).then(() => Promise.all(this.config.init.map(step => step(context))));
+    this.logger.debug(
+      'AdPipeline',
+      `starting run with requestId ${currentRequestId} on ${requestAdsCalls}. call`,
+      slots
+    );
+    this.init = this.init
+      ? this.init
+      : this.logStage('init', currentRequestId).then(() =>
+          Promise.all(this.config.init.map(step => step(context)))
+        );
     return this.init
-      .then(() => this.logStage('configure', currentRequestId).then(() => Promise.all(this.config.configure.map(step => step(context, slots)))))
-      .then(() => this.logStage('defineSlots', currentRequestId).then(() => this.config.defineSlots(context, slots)))
-      .then((definedSlots) => {
-        return this.logStage('prepareRequestAds', currentRequestId)
-          .then(() => this.runPrepareRequestAds(context, definedSlots))
-          .then(() => this.logStage('requestBids', currentRequestId))
-          // TODO add a general timeout for the requestBids call
-          // TODO add a catch call to not break the request chain
-          .then(() => Promise.all(this.config.requestBids.map(step => step(context, definedSlots))))
-          .then(() => this.logStage('requestAds', currentRequestId))
-          .then(() => this.config.requestAds(context, definedSlots));
-      }).catch(error => {
+      .then(() =>
+        this.logStage('configure', currentRequestId).then(() =>
+          Promise.all(this.config.configure.map(step => step(context, slots)))
+        )
+      )
+      .then(() =>
+        this.logStage('defineSlots', currentRequestId).then(() =>
+          this.config.defineSlots(context, slots)
+        )
+      )
+      .then(definedSlots => {
+        return (
+          this.logStage('prepareRequestAds', currentRequestId)
+            .then(() => this.runPrepareRequestAds(context, definedSlots))
+            .then(() => this.logStage('requestBids', currentRequestId))
+            // TODO add a general timeout for the requestBids call
+            // TODO add a catch call to not break the request chain
+            .then(() =>
+              Promise.all(this.config.requestBids.map(step => step(context, definedSlots)))
+            )
+            .then(() => this.logStage('requestAds', currentRequestId))
+            .then(() => this.config.requestAds(context, definedSlots))
+        );
+      })
+      .catch(error => {
         this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
         return Promise.reject(error);
       });
   }
 
-  private runPrepareRequestAds = (context: AdPipelineContext, definedSlots: Moli.SlotDefinition[]) => {
+  private runPrepareRequestAds = (
+    context: AdPipelineContext,
+    definedSlots: Moli.SlotDefinition[]
+  ) => {
     const byPriority = new Map<number, PrepareRequestAdsStep[]>();
     this.config.prepareRequestAds.forEach(step => {
       const steps = byPriority.get(step.priority);
       if (steps) {
         steps.push(step);
       } else {
-        byPriority.set(step.priority, [ step ]);
+        byPriority.set(step.priority, [step]);
       }
     });
 
-    return Array.from(byPriority.entries())
-      // order by priority. Higher priorities first
-      .sort(([ prio1 ], [ prio2 ]) => prio1 > prio2 ? -1 : 1)
-      // reduce to a single promise by chaining in order of priority
-      .reduce((prevSteps, [ priority, steps ]) => {
-        return prevSteps.then(() => {
-          context.logger.debug('AdPipeline', context.requestId, `run prepareRequestAds with priority ${priority}`);
-          return Promise.all(steps.map(step => step(context, definedSlots)));
-        });
-      }, Promise.resolve<unknown>(undefined));
+    return (
+      Array.from(byPriority.entries())
+        // order by priority. Higher priorities first
+        .sort(([prio1], [prio2]) => (prio1 > prio2 ? -1 : 1))
+        // reduce to a single promise by chaining in order of priority
+        .reduce((prevSteps, [priority, steps]) => {
+          return prevSteps.then(() => {
+            context.logger.debug(
+              'AdPipeline',
+              context.requestId,
+              `run prepareRequestAds with priority ${priority}`
+            );
+            return Promise.all(steps.map(step => step(context, definedSlots)));
+          });
+        }, Promise.resolve<unknown>(undefined))
+    );
   };
 
   private logStage(stageName: string, requestId: number): Promise<void> {
@@ -291,5 +340,4 @@ export class AdPipeline {
       resolve();
     });
   }
-
 }

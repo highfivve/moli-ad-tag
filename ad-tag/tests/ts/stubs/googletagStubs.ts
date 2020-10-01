@@ -29,7 +29,10 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
     getSlots: (): googletag.IAdSlot[] => {
       return [];
     },
-    addEventListener: (_eventType: string, _listener: (event: any) => void): googletag.IPubAdsService => {
+    addEventListener: (
+      _eventType: string,
+      _listener: (event: any) => void
+    ): googletag.IPubAdsService => {
       return stub;
     }
   };
@@ -41,7 +44,10 @@ export const contentServiceStub: googletag.IContentService = {
   getSlots: (): googletag.IAdSlot[] => {
     return [];
   },
-  addEventListener: (_eventType: string, _listener: (event: any) => void): googletag.IContentService => {
+  addEventListener: (
+    _eventType: string,
+    _listener: (event: any) => void
+  ): googletag.IContentService => {
     return contentServiceStub;
   },
   setContent(slot: googletag.IAdSlot, content: string): void {
@@ -50,7 +56,6 @@ export const contentServiceStub: googletag.IContentService = {
 };
 
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
-
   const stub: googletag.IAdSlot = {
     clearTargeting(_key?: string): void {
       return;
@@ -88,7 +93,11 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
         callback();
       }
     },
-    defineSlot: (adUnitPath: string, _size: googletag.Size[], slotId: string): googletag.IAdSlot => {
+    defineSlot: (
+      adUnitPath: string,
+      _size: googletag.Size[],
+      slotId: string
+    ): googletag.IAdSlot => {
       return googleAdSlotStub(adUnitPath, slotId);
     },
     defineOutOfPageSlot: (adUnitPath: string, slotId: string): googletag.IAdSlot => {

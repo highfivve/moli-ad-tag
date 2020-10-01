@@ -25,7 +25,6 @@ export const slotEventServiceConfigure = (slotService: SlotEventService): Config
  *
  */
 export interface ISlotEventSource {
-
   /**
    * Set a callback that is called when the underlying event is fired.
    * This will override any previous callback.
@@ -37,13 +36,13 @@ export interface ISlotEventSource {
 
 // internal datastructures to managed EventSources
 type IEventSourceDictionary = {
-  [key: string]: { eventSource: SlotEventSource, trigger: Moli.behaviour.EventTrigger } | undefined;
+  [key: string]: { eventSource: SlotEventSource; trigger: Moli.behaviour.EventTrigger } | undefined;
 };
 
 type IEventSources = {
-  window: IEventSourceDictionary,
-  document: IEventSourceDictionary,
-  element: IEventSourceDictionary
+  window: IEventSourceDictionary;
+  document: IEventSourceDictionary;
+  element: IEventSourceDictionary;
 };
 
 /**
@@ -57,14 +56,15 @@ type IEventSources = {
  *
  */
 export class SlotEventService {
-
   /**
    * Internal data structure to add responses for the SlotRenderEndedEvent. We require this
    * so we can remove responses that are finished (Promise resolved) and don't create a memory
    * leak for single page applications. This would not be necessary if the gpt tag would have
    * the ability to remove listeners.
    */
-  private readonly slotRenderEndedEventCallbacks: Set<(event: googletag.events.ISlotRenderEndedEvent) => void> = new Set();
+  private readonly slotRenderEndedEventCallbacks: Set<
+    (event: googletag.events.ISlotRenderEndedEvent) => void
+  > = new Set();
 
   private eventSources: IEventSources = {
     window: {},
@@ -72,9 +72,7 @@ export class SlotEventService {
     element: {}
   };
 
-  constructor(private readonly logger: Moli.MoliLogger) {
-  }
-
+  constructor(private readonly logger: Moli.MoliLogger) {}
 
   /**
    * Initialize the service once the gpt tag is loaded.
@@ -102,8 +100,9 @@ export class SlotEventService {
    * @param adSlots the ad slots that need to be rendered to resolve the Promise
    * @return {Promise<googletag.events.ISlotRenderEndedEvent[]>}
    */
-  public awaitAllAdSlotsRendered(adSlots: Moli.AdSlot[]): Promise<googletag.events.ISlotRenderEndedEvent[]> {
-
+  public awaitAllAdSlotsRendered(
+    adSlots: Moli.AdSlot[]
+  ): Promise<googletag.events.ISlotRenderEndedEvent[]> {
     return new Promise<googletag.events.ISlotRenderEndedEvent[]>(resolve => {
       const unrenderedSlots = new Set(adSlots.map(slot => slot.adUnitPath));
       const renderEvents: googletag.events.ISlotRenderEndedEvent[] = [];
@@ -129,7 +128,11 @@ export class SlotEventService {
    * @param throttled duration in seconds in which all events are discarded before the next event will be emitted
    * @param window global window object
    */
-  public getOrCreateEventSource(trigger: Moli.behaviour.EventTrigger, throttled: number | undefined, window: Window): ISlotEventSource {
+  public getOrCreateEventSource(
+    trigger: Moli.behaviour.EventTrigger,
+    throttled: number | undefined,
+    window: Window
+  ): ISlotEventSource {
     const dictionary = this.getEventSourceDictionary(trigger, window);
     const eventSource = dictionary[trigger.event] || {
       eventSource: this.createEventSource(trigger, throttled, window),
@@ -168,7 +171,6 @@ export class SlotEventService {
         window.document.removeEventListener(eventName, eventSource.eventSource);
       }
     }
-
   }
 
   /**
@@ -205,12 +207,14 @@ export class SlotEventService {
     this.eventSources = {
       window: {},
       document: {},
-      element: {},
+      element: {}
     };
-
   }
 
-  private getEventSourceDictionary(trigger: Moli.behaviour.EventTrigger, window: Window): IEventSourceDictionary {
+  private getEventSourceDictionary(
+    trigger: Moli.behaviour.EventTrigger,
+    window: Window
+  ): IEventSourceDictionary {
     const source = trigger.source;
     if (typeof source === 'string') {
       return this.eventSources.element;
@@ -221,7 +225,11 @@ export class SlotEventService {
     }
   }
 
-  private createEventSource(trigger: Moli.behaviour.EventTrigger, throttled: number | undefined, window: Window): SlotEventSource {
+  private createEventSource(
+    trigger: Moli.behaviour.EventTrigger,
+    throttled: number | undefined,
+    window: Window
+  ): SlotEventSource {
     this.logger.debug('SlotEventService', `create EventSource for trigger`, trigger);
     const eventSource = new SlotEventSource(throttled);
 
@@ -238,7 +246,6 @@ export class SlotEventService {
 
     return eventSource;
   }
-
 }
 
 /**
@@ -249,7 +256,6 @@ export class SlotEventService {
  *
  */
 class SlotEventSource implements ISlotEventSource, EventListenerObject {
-
   private currentCallback: EventListener;
 
   /**
@@ -287,6 +293,4 @@ class SlotEventSource implements ISlotEventSource, EventListenerObject {
   public setCallback(callback: EventListener): void {
     this.currentCallback = callback;
   }
-
-
 }

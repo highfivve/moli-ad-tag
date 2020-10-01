@@ -2,11 +2,7 @@ import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';
 import { IPerformanceMeasurementService } from './../util/performanceService';
 import { SlotEventService } from './slotEventService';
-import {
-  HIGH_PRIORITY,
-  mkPrepareRequestAdsStep,
-  PrepareRequestAdsStep
-} from './adPipeline';
+import { HIGH_PRIORITY, mkPrepareRequestAdsStep, PrepareRequestAdsStep } from './adPipeline';
 
 /**
  * Add event listeners on the slots that should be monitored.
@@ -14,16 +10,18 @@ import {
  *
  * @param reportingService
  */
-export const reportingPrepareRequestAds = (reportingService: IReportingService): PrepareRequestAdsStep => mkPrepareRequestAdsStep('reporting-enabled', HIGH_PRIORITY, (ctx, slots) => {
-  if (ctx.requestId === 1) {
-    ctx.logger.debug('Reporting', 'initialize reporting', slots);
-    reportingService.initialize(slots.map(slot => slot.moliSlot));
-  }
-  return Promise.resolve();
-});
+export const reportingPrepareRequestAds = (
+  reportingService: IReportingService
+): PrepareRequestAdsStep =>
+  mkPrepareRequestAdsStep('reporting-enabled', HIGH_PRIORITY, (ctx, slots) => {
+    if (ctx.requestId === 1) {
+      ctx.logger.debug('Reporting', 'initialize reporting', slots);
+      reportingService.initialize(slots.map(slot => slot.moliSlot));
+    }
+    return Promise.resolve();
+  });
 
 export interface IReportingService {
-
   /**
    * Adds all required listeners and starts gathering performance metrics.
    *
@@ -80,7 +78,6 @@ export interface IReportingService {
  *
  */
 export class ReportingService implements IReportingService {
-
   private readonly adUnitRegex: string | RegExp;
 
   /**
@@ -95,13 +92,17 @@ export class ReportingService implements IReportingService {
    */
   private readonly isSample: boolean;
 
-  private readonly slotRenderEndedEvent: { [domId: string]: googletag.events.ISlotRenderEndedEvent | undefined } = {};
+  private readonly slotRenderEndedEvent: {
+    [domId: string]: googletag.events.ISlotRenderEndedEvent | undefined;
+  } = {};
 
   /**
    * get the performance measure name for
    * @param type
    */
-  public static getSingleMeasurementMetricMeasureName(type: 'cmpLoad' | 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'): string {
+  public static getSingleMeasurementMetricMeasureName(
+    type: 'cmpLoad' | 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'
+  ): string {
     switch (type) {
       case 'cmpLoad':
         return 'cmp_load_time';
@@ -132,7 +133,10 @@ export class ReportingService implements IReportingService {
     try {
       this.pageRequestId = this.uuidv4();
       this.isSample = Math.random() <= config.sampleRate;
-      logger.debug(`AdPerformanceService`, `isSample ${this.isSample} (${config.sampleRate}) | pageRequestId ${this.pageRequestId}`);
+      logger.debug(
+        `AdPerformanceService`,
+        `isSample ${this.isSample} (${config.sampleRate}) | pageRequestId ${this.pageRequestId}`
+      );
     } catch (e) {
       // fallback if anything goes wrong
       this.pageRequestId = '00000000-0000-0000-0000-000000000000';
@@ -141,23 +145,21 @@ export class ReportingService implements IReportingService {
     }
   }
 
-
   public initialize(adSlots: Moli.AdSlot[]): void {
     this.performanceService.mark('dfp_load_start');
     this.measureAndReportFirstAdRenderTime();
     this.measureAndReportFirstAdLoadTime();
     this.initAdSlotMetrics();
 
-    this.slotEventService.awaitAllAdSlotsRendered(adSlots)
+    this.slotEventService
+      .awaitAllAdSlotsRendered(adSlots)
       .then(renderedEvents => this.reportAdSlotsMetric(renderedEvents))
       .then(() => this.measureAndReportDfpLoadTime());
   }
 
-
   public markRefreshed(adSlot: Moli.AdSlot): void {
     this.performanceService.mark(`${this.minimalAdUnitName(adSlot.adUnitPath)}_refreshed`);
   }
-
 
   public markPrebidSlotsRequested(callIndex: number): void {
     this.performanceService.mark(`prebid_requested_${callIndex}`);
@@ -197,13 +199,21 @@ export class ReportingService implements IReportingService {
 
   public measureAndReportA9BidsBack(callIndex: number): void {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName('a9Load');
-    this.performanceService.measure(`${measure}_${callIndex}`, `a9_requested_${callIndex}`, `a9_bids_back_${callIndex}`);
+    this.performanceService.measure(
+      `${measure}_${callIndex}`,
+      `a9_requested_${callIndex}`,
+      `a9_bids_back_${callIndex}`
+    );
 
     const a9 = this.performanceService.getMeasure(`${measure}_${callIndex}`);
 
     // For the first request also store it in a better accessible field
     if (callIndex === 1) {
-      this.performanceService.measure(measure, `a9_requested_${callIndex}`, `a9_bids_back_${callIndex}`);
+      this.performanceService.measure(
+        measure,
+        `a9_requested_${callIndex}`,
+        `a9_bids_back_${callIndex}`
+      );
     }
 
     if (a9) {
@@ -263,8 +273,11 @@ export class ReportingService implements IReportingService {
           });
         }).then(() => {
           const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfr');
-          this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_render_end');
-
+          this.performanceService.measure(
+            measure,
+            'dfp_load_start',
+            'dfp_time_to_first_render_end'
+          );
 
           const timeToFirstAd = this.performanceService.getMeasure(measure);
           if (timeToFirstAd) {
@@ -277,10 +290,12 @@ export class ReportingService implements IReportingService {
         });
         break;
       case 'test':
-        this.logger.warn('ReportingService', 'In test environment no time-to-first-render will be reported');
+        this.logger.warn(
+          'ReportingService',
+          'In test environment no time-to-first-render will be reported'
+        );
         break;
     }
-
   }
 
   /**
@@ -301,7 +316,6 @@ export class ReportingService implements IReportingService {
           const measure = ReportingService.getSingleMeasurementMetricMeasureName('ttfa');
           this.performanceService.measure(measure, 'dfp_load_start', 'dfp_time_to_first_ad_end');
 
-
           const timeToFirstAd = this.performanceService.getMeasure(measure);
           if (timeToFirstAd) {
             this.report({
@@ -318,14 +332,16 @@ export class ReportingService implements IReportingService {
     }
   }
 
-  private awaitAdSlotContentLoaded(event: googletag.events.ISlotRenderEndedEvent): Promise<googletag.events.ISlotOnloadEvent> {
+  private awaitAdSlotContentLoaded(
+    event: googletag.events.ISlotRenderEndedEvent
+  ): Promise<googletag.events.ISlotOnloadEvent> {
     // no ad on this slot this time. sad panda.
     if (event.isEmpty || !event.slot) {
       return Promise.resolve(event);
     }
 
     return new Promise<googletag.events.ISlotOnloadEvent>(resolve => {
-      this.window.googletag.pubads().addEventListener('slotOnload', (onLoadEvent) => {
+      this.window.googletag.pubads().addEventListener('slotOnload', onLoadEvent => {
         if (onLoadEvent.slot.getAdUnitPath() === event.slot.getAdUnitPath()) {
           resolve(onLoadEvent);
         }
@@ -352,7 +368,8 @@ export class ReportingService implements IReportingService {
       this.performanceService.measure(
         `${adUnitName}_rendered`,
         `dfp_load_start`,
-        `${adUnitName}_rendered`);
+        `${adUnitName}_rendered`
+      );
 
       this.slotRenderEndedEvent[renderEndedEvent.slot.getSlotElementId()] = renderEndedEvent;
     });
@@ -365,23 +382,35 @@ export class ReportingService implements IReportingService {
       this.performanceService.measure(
         `${adUnitName}_render_content_loaded`,
         `${adUnitName}_rendered`,
-        `${adUnitName}_content_loaded`);
+        `${adUnitName}_content_loaded`
+      );
 
       // measure: loaded
       this.performanceService.measure(
         `${adUnitName}_content_loaded_total`,
         `dfp_load_start`,
-        `${adUnitName}_content_loaded`);
+        `${adUnitName}_content_loaded`
+      );
 
       // report metric
       const renderEndedEvent = this.slotRenderEndedEvent[onloadEvent.slot.getSlotElementId()];
       const renderedMeasure = this.performanceService.getMeasure(`${adUnitName}_rendered`);
-      const renderingMeasure = this.performanceService.getMeasure(`${adUnitName}_render_content_loaded`);
-      const contentMeasure = this.performanceService.getMeasure(`${adUnitName}_content_loaded_total`);
+      const renderingMeasure = this.performanceService.getMeasure(
+        `${adUnitName}_render_content_loaded`
+      );
+      const contentMeasure = this.performanceService.getMeasure(
+        `${adUnitName}_content_loaded_total`
+      );
       const refreshedMark = this.performanceService.getMark(`${adUnitName}_refreshed`);
 
       // bail out if any of the requested values cannot be accessed
-      if (!contentMeasure || !renderingMeasure || !renderedMeasure || !refreshedMark || !renderEndedEvent) {
+      if (
+        !contentMeasure ||
+        !renderingMeasure ||
+        !renderedMeasure ||
+        !refreshedMark ||
+        !renderEndedEvent
+      ) {
         return;
       }
 
@@ -405,7 +434,6 @@ export class ReportingService implements IReportingService {
     });
   }
 
-
   /**
    * Used for performance logging to create more readable names
    * @param adUnit the full adUnit path
@@ -415,7 +443,9 @@ export class ReportingService implements IReportingService {
     return adUnit.replace(this.adUnitRegex, '');
   }
 
-  private reportAdSlotsMetric(renderedEvents: googletag.events.ISlotRenderEndedEvent[]): googletag.events.ISlotRenderEndedEvent[] {
+  private reportAdSlotsMetric(
+    renderedEvents: googletag.events.ISlotRenderEndedEvent[]
+  ): googletag.events.ISlotRenderEndedEvent[] {
     const adSlotsMetric: Moli.reporting.AdSlotsMetric = {
       type: 'adSlots',
       numberAdSlots: renderedEvents.length,
@@ -427,7 +457,6 @@ export class ReportingService implements IReportingService {
     return renderedEvents;
   }
 
-
   /**
    * minimalistic uuid generation.
    * @see https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
@@ -435,35 +464,29 @@ export class ReportingService implements IReportingService {
   private uuidv4(): string {
     /* tslint:disable */
     if ('crypto' in this.window && 'getRandomValues' in this.window.crypto) {
-      return (([ 1e7 ] as any) + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
-        (c ^ this.window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+      return (([1e7] as any) + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
+        (c ^ (this.window.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(
+          16
+        )
       );
     } else {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        var r = (Math.random() * 16) | 0,
+          v = c == 'x' ? r : (r & 0x3) | 0x8;
         return v.toString(16);
       });
     }
     /* tslint:enabled */
   }
-
 }
 
 export const noopReportingService: IReportingService = {
-  initialize: () => {
-  },
-  markRefreshed: () => {
-  },
-  markPrebidSlotsRequested: () => {
-  },
-  measureAndReportPrebidBidsBack: () => {
-  },
-  markA9fetchBids: () => {
-  },
-  measureAndReportA9BidsBack: () => {
-  },
-  markCmpInitialization: () => {
-  },
-  measureCmpLoadTime: () => {
-  }
+  initialize: () => {},
+  markRefreshed: () => {},
+  markPrebidSlotsRequested: () => {},
+  measureAndReportPrebidBidsBack: () => {},
+  markA9fetchBids: () => {},
+  measureAndReportA9BidsBack: () => {},
+  markCmpInitialization: () => {},
+  measureCmpLoadTime: () => {}
 };

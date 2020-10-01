@@ -7,13 +7,11 @@ import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 import { Moli } from '../../../source/ts/types/moli';
 import EventTrigger = Moli.behaviour.EventTrigger;
 
-
 // setup sinon-chai
 use(sinonChai);
 
 // tslint:disable: no-unused-expression
 describe('EventService', () => {
-
   // create a fresh DOM for each test
   let dom = createDom();
 
@@ -34,14 +32,17 @@ describe('EventService', () => {
   });
 
   describe('getOrCreate EventSource', () => {
-
     it('should create an event source on window', () => {
       const eventService = new SlotEventService(noopLogger);
-      const eventSource = eventService.getOrCreateEventSource({
-        name: 'event',
-        event: 'ads',
-        source: dom.window
-      }, undefined, dom.window);
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: dom.window
+        },
+        undefined,
+        dom.window
+      );
 
       eventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window);
@@ -51,11 +52,15 @@ describe('EventService', () => {
     it('should create an event source on document', () => {
       const eventService = new SlotEventService(noopLogger);
 
-      const eventSource = eventService.getOrCreateEventSource({
-        name: 'event',
-        event: 'ads',
-        source: dom.window.document
-      }, undefined, dom.window);
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: dom.window.document
+        },
+        undefined,
+        dom.window
+      );
 
       eventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window.document);
@@ -69,11 +74,15 @@ describe('EventService', () => {
       div.id = 'myslot';
       dom.window.document.body.append(div);
 
-      const eventSource = eventService.getOrCreateEventSource({
-        name: 'event',
-        event: 'ads',
-        source: '#myslot'
-      }, undefined, dom.window);
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: '#myslot'
+        },
+        undefined,
+        dom.window
+      );
 
       eventSource.setCallback(callbackSpy);
       dispatchEvent('ads', div);
@@ -89,8 +98,16 @@ describe('EventService', () => {
         source: dom.window
       };
 
-      const eventSource1 = eventService.getOrCreateEventSource(windowTrigger, undefined, dom.window);
-      const eventSource2 = eventService.getOrCreateEventSource(windowTrigger, undefined, dom.window);
+      const eventSource1 = eventService.getOrCreateEventSource(
+        windowTrigger,
+        undefined,
+        dom.window
+      );
+      const eventSource2 = eventService.getOrCreateEventSource(
+        windowTrigger,
+        undefined,
+        dom.window
+      );
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
@@ -108,8 +125,16 @@ describe('EventService', () => {
         source: dom.window.document
       };
 
-      const eventSource1 = eventService.getOrCreateEventSource(documentWindow, undefined, dom.window);
-      const eventSource2 = eventService.getOrCreateEventSource(documentWindow, undefined, dom.window);
+      const eventSource1 = eventService.getOrCreateEventSource(
+        documentWindow,
+        undefined,
+        dom.window
+      );
+      const eventSource2 = eventService.getOrCreateEventSource(
+        documentWindow,
+        undefined,
+        dom.window
+      );
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
@@ -131,8 +156,16 @@ describe('EventService', () => {
         source: '#myslot'
       };
 
-      const eventSource1 = eventService.getOrCreateEventSource(elementTrigger, undefined, dom.window);
-      const eventSource2 = eventService.getOrCreateEventSource(elementTrigger, undefined, dom.window);
+      const eventSource1 = eventService.getOrCreateEventSource(
+        elementTrigger,
+        undefined,
+        dom.window
+      );
+      const eventSource2 = eventService.getOrCreateEventSource(
+        elementTrigger,
+        undefined,
+        dom.window
+      );
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
@@ -140,36 +173,47 @@ describe('EventService', () => {
       dispatchEvent('ads', div);
       expect(callbackSpy).to.be.calledOnce;
     });
-
   });
 
   describe('remove all event sources', () => {
     it('should remove all event listeners', () => {
       const eventService = new SlotEventService(noopLogger);
 
-      const windowEventSource = eventService.getOrCreateEventSource({
-        name: 'event',
-        event: 'ads',
-        source: dom.window
-      }, undefined, dom.window);
+      const windowEventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: dom.window
+        },
+        undefined,
+        dom.window
+      );
 
       windowEventSource.setCallback(callbackSpy);
-      const documentEventSource = eventService.getOrCreateEventSource({
-        name: 'event',
-        event: 'ads',
-        source: dom.window.document
-      }, undefined, dom.window);
+      const documentEventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: dom.window.document
+        },
+        undefined,
+        dom.window
+      );
 
       documentEventSource.setCallback(callbackSpy);
       const div = dom.window.document.createElement('div');
 
       div.id = 'myslot';
       dom.window.document.body.append(div);
-      const elementEventSource = eventService.getOrCreateEventSource({
-        name: 'event',
-        event: 'ads',
-        source: '#myslot'
-      }, undefined, dom.window);
+      const elementEventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: '#myslot'
+        },
+        undefined,
+        dom.window
+      );
 
       elementEventSource.setCallback(callbackSpy);
 
@@ -219,7 +263,11 @@ describe('EventService', () => {
         event: 'ads',
         source: dom.window.document
       };
-      const documentEventSource = eventService.getOrCreateEventSource(trigger, undefined, dom.window);
+      const documentEventSource = eventService.getOrCreateEventSource(
+        trigger,
+        undefined,
+        dom.window
+      );
 
       documentEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window.document);
@@ -244,7 +292,11 @@ describe('EventService', () => {
         event: 'ads',
         source: '#myslot'
       };
-      const elementEventSource = eventService.getOrCreateEventSource(trigger, undefined, dom.window);
+      const elementEventSource = eventService.getOrCreateEventSource(
+        trigger,
+        undefined,
+        dom.window
+      );
 
       elementEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', div);
@@ -259,11 +311,15 @@ describe('EventService', () => {
 
   it('should throttle events with 0s throttle duration', () => {
     const eventService = new SlotEventService(noopLogger);
-    const eventSource = eventService.getOrCreateEventSource({
-      name: 'event',
-      event: 'ads',
-      source: dom.window
-    }, 0, dom.window);
+    const eventSource = eventService.getOrCreateEventSource(
+      {
+        name: 'event',
+        event: 'ads',
+        source: dom.window
+      },
+      0,
+      dom.window
+    );
 
     eventSource.setCallback(callbackSpy);
     dispatchEvent('ads', dom.window);
@@ -273,11 +329,15 @@ describe('EventService', () => {
 
   it('should discard events with 1s throttle duration', () => {
     const eventService = new SlotEventService(noopLogger);
-    const eventSource = eventService.getOrCreateEventSource({
-      name: 'event',
-      event: 'ads',
-      source: dom.window
-    }, 1, dom.window);
+    const eventSource = eventService.getOrCreateEventSource(
+      {
+        name: 'event',
+        event: 'ads',
+        source: dom.window
+      },
+      1,
+      dom.window
+    );
 
     eventSource.setCallback(callbackSpy);
     dispatchEvent('ads', dom.window);
@@ -285,13 +345,17 @@ describe('EventService', () => {
     expect(callbackSpy).to.be.calledOnce;
   });
 
-  it('should throttle events with 0.01s throttle duration', (done) => {
+  it('should throttle events with 0.01s throttle duration', done => {
     const eventService = new SlotEventService(noopLogger);
-    const eventSource = eventService.getOrCreateEventSource({
-      name: 'event',
-      event: 'ads',
-      source: dom.window
-    }, 0.01, dom.window);
+    const eventSource = eventService.getOrCreateEventSource(
+      {
+        name: 'event',
+        event: 'ads',
+        source: dom.window
+      },
+      0.01,
+      dom.window
+    );
 
     eventSource.setCallback(callbackSpy);
     dispatchEvent('ads', dom.window);
@@ -303,8 +367,5 @@ describe('EventService', () => {
       expect(callbackSpy).to.be.calledTwice;
       done();
     }, 10);
-
   });
-
-
 });

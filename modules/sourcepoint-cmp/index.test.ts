@@ -11,22 +11,24 @@ import { noopReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingS
 import { SlotEventService } from '@highfivve/ad-tag/source/ts/ads/slotEventService';
 import { createGoogletagStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
 
-
 // setup sinon-chai
 use(sinonChai);
 use(chaiAsPromised);
 
 // tslint:disable: no-unused-expression
 describe('Sourcepoint CMP Module', () => {
-
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const cmpFunction = (returnValue: any) => (cmd: string, params: any, callback: Function): void => {
+  const cmpFunction = (returnValue: any) => (
+    cmd: string,
+    params: any,
+    callback: Function
+  ): void => {
     callback(returnValue);
   };
 
-  const tcfApiWindow: tcfapi.TCFApiWindow = dom.window as unknown as tcfapi.TCFApiWindow;
+  const tcfApiWindow: tcfapi.TCFApiWindow = (dom.window as unknown) as tcfapi.TCFApiWindow;
 
   const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
     return {
@@ -48,7 +50,6 @@ describe('Sourcepoint CMP Module', () => {
   });
 
   describe('init step', () => {
-
     it('should add the init step', () => {
       tcfApiWindow.__tcfapi = cmpFunction({ eventStatus: 'useractioncomplete' });
       const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
@@ -104,7 +105,6 @@ describe('Sourcepoint CMP Module', () => {
   });
 
   describe('prepareRequestAdsSteps', () => {
-
     const setRequestNonPersonalizedAdsSpy = () => {
       return sandbox.spy(dom.window.googletag.pubads(), 'setRequestNonPersonalizedAds');
     };
@@ -173,12 +173,10 @@ describe('Sourcepoint CMP Module', () => {
         purpose: { consents: { 1: false, 3: false, 4: false } }
       });
 
-      return expect(prepareRequestAdsStep(adPipelineContext(config), []))
-        .eventually.be.fulfilled;
+      return expect(prepareRequestAdsStep(adPipelineContext(config), [])).eventually.be.fulfilled;
     });
 
     it('should reject the promise if rejectOnMissingPurposeOne is set to true', () => {
-
       const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: true }, dom.window);
       const config = newEmptyConfig();
 
@@ -189,10 +187,9 @@ describe('Sourcepoint CMP Module', () => {
         purpose: { consents: { 1: false, 3: false, 4: false } }
       });
 
-      return expect(prepareRequestAdsStep(adPipelineContext(config), []))
-        .eventually.be.rejectedWith('No consents for purpose 1. Ad delivery prohibited by Google')
+      return expect(
+        prepareRequestAdsStep(adPipelineContext(config), [])
+      ).eventually.be.rejectedWith('No consents for purpose 1. Ad delivery prohibited by Google');
     });
-
   });
-
 });

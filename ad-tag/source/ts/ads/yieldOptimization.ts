@@ -1,4 +1,9 @@
-import { AdPipelineContext, HIGH_PRIORITY, mkPrepareRequestAdsStep, PrepareRequestAdsStep } from './adPipeline';
+import {
+  AdPipelineContext,
+  HIGH_PRIORITY,
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep
+} from './adPipeline';
 import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { YieldOptimizationService } from './yieldOptimizationService';
@@ -9,14 +14,19 @@ import { YieldOptimizationService } from './yieldOptimizationService';
  *
  * @param yieldOptimizationService
  */
-export const yieldOptimizationPrepareRequestAds = (yieldOptimizationService: YieldOptimizationService): PrepareRequestAdsStep => mkPrepareRequestAdsStep(
-  'yield-optimization',
-  HIGH_PRIORITY,
-  (context: AdPipelineContext, slots: SlotDefinition[]) => {
-    context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
-    const slotsWithPriceRule = slots.map(slot => {
-      return yieldOptimizationService.setTargeting(slot.adSlot).then(priceRule => slot.priceRule = priceRule);
-    });
-    return Promise.all(slotsWithPriceRule);
-  }
-);
+export const yieldOptimizationPrepareRequestAds = (
+  yieldOptimizationService: YieldOptimizationService
+): PrepareRequestAdsStep =>
+  mkPrepareRequestAdsStep(
+    'yield-optimization',
+    HIGH_PRIORITY,
+    (context: AdPipelineContext, slots: SlotDefinition[]) => {
+      context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
+      const slotsWithPriceRule = slots.map(slot => {
+        return yieldOptimizationService
+          .setTargeting(slot.adSlot)
+          .then(priceRule => (slot.priceRule = priceRule));
+      });
+      return Promise.all(slotsWithPriceRule);
+    }
+  );
