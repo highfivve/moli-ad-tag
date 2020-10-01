@@ -11,7 +11,7 @@ pipeline {
     }
 
     tools {
-        nodejs 'nodejs-10.10.0'
+        nodejs 'nodejs-12.18.4'
     }
 
     options {
@@ -26,7 +26,7 @@ pipeline {
         stage('Prepare environment') {
             steps {
                 echo "Setting up yarn and install dependencies"
-                sh "npm install yarn@1.19.2"
+                sh "npm install --no-save yarn@1.22.7"
                 // fresh install
                 sh "yarn install"
             }
