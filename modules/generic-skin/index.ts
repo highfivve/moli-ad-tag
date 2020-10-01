@@ -1,4 +1,5 @@
 import { googletag, IModule, ModuleType, Moli, prebidjs, getLogger, IAssetLoaderService } from '@highfivve/ad-tag';
+import { flatten } from '@highfivve/ad-tag/source/ts/util/arrayUtils';
 
 interface ISkinModuleConfig {
 
@@ -7,6 +8,22 @@ interface ISkinModuleConfig {
    * format filters will be used.
    */
   readonly configs: ISkinConfig[];
+
+  /**
+   * If the skin cpm comparison should be active, i.e. not only logging, but also preventing a skin render
+   * if the other slots have a higher combined cpm.
+   */
+  readonly enableCpmComparison: boolean;
+
+  /**
+   * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
+   * would be removed in its favour.
+   */
+  readonly trackSkinCpmLow?: (
+    cpms: { skin: number, combinedNonSkinSlots: number },
+    skinConfig: ISkinConfig,
+    allBids: prebidjs.IBidResponsesMap
+  ) => void;
 }
 
 interface IJustPremiumFormatFilter {
@@ -54,7 +71,7 @@ export interface ISkinConfig {
   readonly hideSkinAdSlot: boolean;
 
   /**
-   * if true, the blocked ad slots will be set to display none
+   * if true, the blocked ad slots will be set to display: none
    */
   readonly hideBlockedSlots: boolean;
 }
@@ -72,10 +89,10 @@ export default class Skin implements IModule {
     return this.skinModuleConfig;
   }
 
-  checkConfig = (config: ISkinConfig, bidResponses: prebidjs.IBidResponsesMap): boolean => {
+  shouldConfigApply = (config: ISkinConfig, bidResponses: prebidjs.IBidResponsesMap): boolean => {
+    const {trackSkinCpmLow, enableCpmComparison} = this.skinModuleConfig;
     const skinBidResponse = bidResponses[config.skinAdSlotDomId];
-
-    const skinBids = skinBidResponse ? skinBidResponse.bids.filter(bid => {
+    const isSkinBid = (bid: prebidjs.BidResponse) => {
       // go through all filters and check if one matches
       const oneFilterApplied = config.formatFilter.some(filter => {
         switch (filter.bidder) {
@@ -89,7 +106,34 @@ export default class Skin implements IModule {
       });
       // check cpm to make sure this is a valid bid
       return bid.cpm > 0 && oneFilterApplied;
-    }) : [];
+    };
+
+    // get all slot dom ids
+    const adSlotIds = Object.keys(bidResponses);
+    const nonSkinBids = flatten(adSlotIds
+      // collect all bid responses for these ad slot dom ids
+      .map(domId => ({adSlotId: domId, ...bidResponses[domId]}))
+      // filter out all dom ids that aren't affected by this skin
+      .filter(bidObject => [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].includes(bidObject.adSlotId))
+      .map(bidObject => bidObject.bids
+        // filter out skin bid to not include it in the non-skin cpm sum
+        .filter(bid => !isSkinBid(bid))
+        // highest cpm bid goes first
+        .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
+        // take(1)
+        .slice(0, 1)
+      ));
+
+    const combinedNonSkinCpm = nonSkinBids.reduce((prev, current) => prev + current.cpm, 0);
+    const skinBids = skinBidResponse ? skinBidResponse.bids.filter(isSkinBid) : [];
+
+    if (trackSkinCpmLow && skinBids.length > 0 && skinBids[0].cpm <= combinedNonSkinCpm) {
+      trackSkinCpmLow({skin: skinBids[0].cpm, combinedNonSkinSlots: combinedNonSkinCpm}, config, bidResponses);
+    }
+
+    if (enableCpmComparison) {
+      return skinBids.length !== 0 && skinBids[0].cpm > combinedNonSkinCpm;
+    }
 
     return skinBids.length !== 0;
   };
@@ -100,7 +144,7 @@ export default class Skin implements IModule {
    * @return the first skin config with matching filters. If no config matches, undefined is being returned
    */
   selectConfig = (bidResponses: prebidjs.IBidResponsesMap): ISkinConfig | undefined => {
-    return this.skinModuleConfig.configs.find(config => this.checkConfig(config, bidResponses));
+    return this.skinModuleConfig.configs.find(config => this.shouldConfigApply(config, bidResponses));
   };
 
   /**
@@ -125,7 +169,7 @@ export default class Skin implements IModule {
     }
 
     const domIds = this.skinModuleConfig.configs.reduce<string[]>((domIds, config) => {
-      return [ ...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds ];
+      return [...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds];
     }, [])
       .filter(domId => !config.slots.some(slot => slot.domId === domId));
 
