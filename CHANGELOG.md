@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+# 3.4.0
+
+[GD-2333](https://jira.gutefrage.net/browse/GD-2333) Compare skin cpm to combined cpms of to-be-removed slots,
+add optional logging for it, and optionally prevent skin delivery
+
 # 3.3.1
 
 [GD-2283](https://jira.gutefrage.net/browse/GD-2283) Don't loose pubstack configuration while filtering prebid
@@ -88,10 +93,10 @@ Depending on the loading state of the ad tag `refreshAdSlot` may do one of two t
    the ad slot to be loaded
 2. If `requestAds()` hasn't been called yet then the ad slot will be queued and requested along with all other ad slots
    when `requestAds()` has been invoked
-   
+
 Note that option 2 is the one that requires less requests. There are multiple ways to optimize for this behaviour.
 Either wait until the components have been mounted, delay the `requestAds` call by some amount of milliseconds or even
-wait for some user interaction. 
+wait for some user interaction.
 
 ## 2.3.3
 
@@ -173,7 +178,7 @@ moli.registerModule(new Faktor({
 
 ## 1.40.0
 
-[GD-1824](https://jira.gutefrage.net/browse/GD-1824). Add standard `consent` key value to dfp service for nonPersonalizedAds tracking (full, none). 
+[GD-1824](https://jira.gutefrage.net/browse/GD-1824). Add standard `consent` key value to dfp service for nonPersonalizedAds tracking (full, none).
 [GD-1816](https://jira.gutefrage.net/browse/GD-1816). Make generic-skin module configurable for just premium mobile format
 
 ## 1.38.1
@@ -267,8 +272,8 @@ BUGFIX: clearTargeting must not be called before refreshing as this removes all 
 
 [GD-1619](https://jira.gutefrage.net/browse/GD-1619) Add timeout for cmp operations.
 
-Configure a timeout in ms for operations on the cmp module. If not configures all operations will block 
-until they have finished. The default is none meaning operations block until finished. 
+Configure a timeout in ms for operations on the cmp module. If not configures all operations will block
+until they have finished. The default is none meaning operations block until finished.
 
 ## 1.29.0 - DO NOT USE
 
@@ -323,7 +328,7 @@ Both key-values serve a purpose
   a passback need to have a targeting setting that says `NOT passback=true`. Otherwise we get infinite passback loops
 - `passbackOrigin` - this key value contains the advertiser name how's creative triggered the passback. This allows us
   to get more detailed reports on how much each advertiser is responsible for passbacks
-  
+
 
 #### Impression tracking
 
@@ -333,7 +338,7 @@ that everything is still counted as a single page view, which is the correct way
 From the [gpt.js API documentation](https://developers.google.com/doubleclick-gpt/reference#refreshopt_slots,-opt_options)
 
 > Configuration options associated with this refresh call. changeCorrelator specifies whether or not a new correlator is
-> to be generated for fetching ads. Our ad servers maintain this correlator value briefly (currently for 30 seconds, but 
+> to be generated for fetching ads. Our ad servers maintain this correlator value briefly (currently for 30 seconds, but
 > subject to change), such that requests with the same correlator received close together will be considered a
 > single page view. By default a new correlator is generated for every refresh. Note that this option has no effect
 > on GPT's long-lived pageview, which automatically reflects the ads currently on the page and has no expiration time.
@@ -352,7 +357,7 @@ Refactor the consent feature into the module system. Faktor is now a CMP Module.
 Breaking changes to the ad configuration are
 
 - the `consent` property is now an empty object. A CMP module _should_ configure the `cmp` property there
-- you must add a cmp module in order to make the ad tag work. See [the faktor cmp module](modules/faktor-cmp/README.md) 
+- you must add a cmp module in order to make the ad tag work. See [the faktor cmp module](modules/faktor-cmp/README.md)
 
 ## 1.28.0
 
@@ -364,7 +369,7 @@ Breaking changes to the ad configuration are
 
 ## 1.26.1
 
-[GD-1577](https://jira.gutefrage.net/browse/GD-1577) Moli debugger and logger now show if there's no prebid instance when there is a prebid configuration 
+[GD-1577](https://jira.gutefrage.net/browse/GD-1577) Moli debugger and logger now show if there's no prebid instance when there is a prebid configuration
 
 ## 1.26.0
 
@@ -465,7 +470,7 @@ const adSlot = {
 const adSlot = {
     domId: 'foo',
     behaviour: {
-        loaded: 'eager' 
+        loaded: 'eager'
     }
 }
 ```
@@ -485,7 +490,7 @@ const lazyAdSlot = {
     domId: 'foo',
     behaviour: {
         loaded: 'lazy',
-        trigger: { ... } 
+        trigger: { ... }
     }
 }
 ```
@@ -506,7 +511,7 @@ const lazyAdSlot = {
     behaviour: {
         loaded: 'refreshable',
         lazy: true,
-        trigger: { ... } 
+        trigger: { ... }
     }
 }
 ```
@@ -596,14 +601,14 @@ discarded on the **second** `refreshAds()` call. We don't recommend doing this a
 ## v1.12.1
 
 [GD-1326](https://jira.gutefrage.net/browse/GD-1326). The ad tag now checks the `window.location.href` in
-single application mode if `requestAds()` can be triggered and throws an error otherwise. 
+single application mode if `requestAds()` can be triggered and throws an error otherwise.
 
 [GD-1325](https://jira.gutefrage.net/browse/GD-1325). This allows us to either force
 a production or test environment, which eases the integration for the publisher.
 
 - query parameter: `moliEnv`
 - allowed values: `test` | `production`
-                                                         
+
 Example:
 https://www.gutefrage.net/?moliEnv=test
 
