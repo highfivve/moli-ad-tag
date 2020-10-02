@@ -22,9 +22,9 @@ import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 import Confiant from '@highfivve/module-confiant';
-import Pubstack from '@highfivve/module-pubstack';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
+import Skin from '@highfivve/module-generic-skin';
 
 prebid.processQueue();
 
@@ -52,7 +52,30 @@ moli.registerModule(new BlocklistedUrls({
   }
 }, window));
 
-moli.registerModule(new Pubstack({ tagId: 'xxxx'}, window));
+
+moli.registerModule(new Skin(
+  {
+    enableCpmComparison: false,
+    trackSkinCpmLow: (cpms, skinConfig) => {
+      console.log('[SKIN]', cpms, skinConfig)
+    },
+    configs: [
+      {
+        formatFilter: [
+          { bidder: 'justpremium', format: 'wp' },
+          { bidder: 'dspx' },
+        ],
+        skinAdSlotDomId: 'prebid-adslot-2',
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false,
+        blockedAdSlotDomIds: [
+          'prebid-adslot',
+          'appnexus-native-example-1'
+        ]
+      },
+    ]
+  }, window
+));
 
 // init moli
 moli.configure(adConfiguration);

@@ -86,10 +86,13 @@ export default class Skin implements IModule {
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
 
+  private log?: Moli.MoliLogger;
+
   constructor(
     private readonly skinModuleConfig: ISkinModuleConfig,
     private readonly window: Window
-  ) {}
+  ) {
+  }
 
   config(): Object | null {
     return this.skinModuleConfig;
@@ -123,7 +126,7 @@ export default class Skin implements IModule {
         // filter out all dom ids that aren't affected by this skin
         .filter(
           bidObject =>
-            [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(bidObject.adSlotId) > -1
+            [ ...config.blockedAdSlotDomIds, config.skinAdSlotDomId ].indexOf(bidObject.adSlotId) > -1
         )
         .filter(bidObject => isNotNull(bidObject.bids))
         .map(bidObject =>
@@ -140,12 +143,20 @@ export default class Skin implements IModule {
     const combinedNonSkinCpm = nonSkinBids.reduce((prev, current) => prev + current.cpm, 0);
     const skinBids = skinBidResponse ? skinBidResponse.bids.filter(isSkinBid) : [];
 
+    if (this.log) {
+      this.log.debug(this.name, 'nonSkinBids', nonSkinBids);
+      this.log.debug(this.name, 'skinBids', skinBids);
+    }
+
     if (trackSkinCpmLow && skinBids.length > 0 && skinBids[0].cpm <= combinedNonSkinCpm) {
       trackSkinCpmLow(
         { skin: skinBids[0].cpm, combinedNonSkinSlots: combinedNonSkinCpm },
         config,
         bidResponses
       );
+      if (this.log) {
+        this.log.debug(this.name, 'trackSkinCpmLow', nonSkinBids);
+      }
     }
 
     if (enableCpmComparison) {
@@ -183,6 +194,7 @@ export default class Skin implements IModule {
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
+    this.log = log;
     if (!config.prebid) {
       log.error('SkinModule', "Prebid isn't configured!");
       return;
@@ -190,7 +202,7 @@ export default class Skin implements IModule {
 
     const domIds = this.skinModuleConfig.configs
       .reduce<string[]>((domIds, config) => {
-        return [...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds];
+        return [ ...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds ];
       }, [])
       .filter(domId => !config.slots.some(slot => slot.domId === domId));
 
