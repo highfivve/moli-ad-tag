@@ -91,8 +91,7 @@ export default class Skin implements IModule {
   constructor(
     private readonly skinModuleConfig: ISkinModuleConfig,
     private readonly window: Window
-  ) {
-  }
+  ) {}
 
   config(): Object | null {
     return this.skinModuleConfig;
@@ -126,7 +125,7 @@ export default class Skin implements IModule {
         // filter out all dom ids that aren't affected by this skin
         .filter(
           bidObject =>
-            [ ...config.blockedAdSlotDomIds, config.skinAdSlotDomId ].indexOf(bidObject.adSlotId) > -1
+            [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(bidObject.adSlotId) > -1
         )
         .filter(bidObject => isNotNull(bidObject.bids))
         .map(bidObject =>
@@ -202,7 +201,7 @@ export default class Skin implements IModule {
 
     const domIds = this.skinModuleConfig.configs
       .reduce<string[]>((domIds, config) => {
-        return [ ...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds ];
+        return [...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds];
       }, [])
       .filter(domId => !config.slots.some(slot => slot.domId === domId));
 
