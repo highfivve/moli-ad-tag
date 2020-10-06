@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+# 3.5.0
+
+[GD-2333](https://jira.gutefrage.net/browse/GD-2333) Move enableCpmComparison flag to SkinConfig (from SkinModuleConfig).
+Destroy skin slot via `window.googletag` if skin cpm is lower than the combined cpms of to-be-removed slots.
+
 # 3.4.1
 
 [GD-2333](https://jira.gutefrage.net/browse/GD-2333) IE11 compatibility (not using Array.includes), filtering undefined
