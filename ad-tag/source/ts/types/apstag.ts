@@ -49,6 +49,11 @@ export namespace apstag {
     adServer: 'googletag' | 'appnexus';
 
     /**
+     * Declare the video ad server that will be receiving key value targeting to load video items.
+     */
+    videoAdServer?: string;
+
+    /**
      * Default timeout for callback function on fetchBids callback
      */
     bidTimeout?: number;
@@ -109,7 +114,9 @@ export namespace apstag {
     bidTimeout?: number;
   }
 
-  export interface ISlot {
+  export type ISlot = IDisplySlot | IVideoSlot;
+
+  export interface IDisplySlot {
     /**
      * The div ID the slot will render into
      */
@@ -127,6 +134,18 @@ export namespace apstag {
      * The sizes to consider in the auction for this slot
      */
     sizes: [number, number][];
+  }
+
+  export interface IVideoSlot {
+    /**
+     * The div ID the slot will render into
+     */
+    slotID: string;
+
+    /**
+     * The mediaType of the slot. Only video as the display needs another configuration.
+     */
+    mediaType: 'video';
   }
 
   export type WindowA9 = {

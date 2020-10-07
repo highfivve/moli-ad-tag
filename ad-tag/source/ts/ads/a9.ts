@@ -71,6 +71,7 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
         context.window.apstag.init({
           pubID: config.pubID,
           adServer: 'googletag',
+          // videoAdServer: '', TODO: Add video ad server
           bidTimeout: config.timeout,
           gdpr: {
             cmpTimeout: config.cmpTimeout
@@ -86,11 +87,12 @@ export const a9RequestBids = (): RequestBidsStep =>
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
         const filteredSlots = slots.filter(isA9SlotDefinition).filter(slot => {
+          const isVideo = slot.moliSlot.a9.mediaType === 'video';
           const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
           const sizesNotEmpty =
             slot.filterSupportedSizes(slot.moliSlot.sizes).filter(SizeConfigService.isFixedSize)
               .length > 0;
-          return filterSlot && sizesNotEmpty;
+          return filterSlot && (isVideo || sizesNotEmpty);
         });
 
         context.logger.debug(
@@ -107,11 +109,20 @@ export const a9RequestBids = (): RequestBidsStep =>
           context.window.apstag.fetchBids(
             {
               slots: filteredSlots.map(({ moliSlot, filterSupportedSizes }) => {
-                return {
-                  slotID: moliSlot.domId,
-                  slotName: moliSlot.adUnitPath,
-                  sizes: filterSupportedSizes(moliSlot.sizes).filter(SizeConfigService.isFixedSize)
-                };
+                if (moliSlot.a9.mediaType === 'video') {
+                  return {
+                    slotID: moliSlot.domId,
+                    mediaType: 'video'
+                  };
+                } else {
+                  return {
+                    slotID: moliSlot.domId,
+                    slotName: moliSlot.adUnitPath,
+                    sizes: filterSupportedSizes(moliSlot.sizes).filter(
+                      SizeConfigService.isFixedSize
+                    )
+                  };
+                }
               })
             },
             (_bids: Object[]) => {

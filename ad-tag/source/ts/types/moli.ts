@@ -1299,6 +1299,8 @@ export namespace Moli {
       readonly labelAll?: string[];
       /** Filter ad slot based on the given labels */
       readonly labelAny?: string[];
+      /** Optional media type (default to display) */
+      readonly mediaType?: 'display' | 'video';
     }
   }
 
