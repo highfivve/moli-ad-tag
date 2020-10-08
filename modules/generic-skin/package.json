@@ -16,7 +16,7 @@
     "lint:ts:fix": "tslint --project tsconfig.json --fix && yarn prettier --write",
     "test": "export TS_NODE_TRANSPILE_ONLY=true && mocha --require ts-node/register index.test.ts",
     "test:junit": "export TS_NODE_TRANSPILE_ONLY=true && mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
-    "prettier": "prettier --config ../../.prettierrc --check \"**/*.ts*\"",
+    "prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"**/*.ts*\"",
     "validate": "yarn compile && yarn lint && yarn test",
     "validate:github": "yarn compile && yarn lint && yarn test:junit"
   },

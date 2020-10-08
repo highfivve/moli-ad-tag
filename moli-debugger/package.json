@@ -19,7 +19,7 @@
     "lint": "tslint --project tsconfig.json && yarn prettier",
     "clean": "rm -rf dist/",
     "validate": "yarn prettier && yarn compile",
-    "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",
+    "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"**/*.ts*\"",
     "prettier:fix": "yarn prettier --write",
     "validate:github": "yarn validate"
   },
