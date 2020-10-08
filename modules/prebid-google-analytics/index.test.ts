@@ -10,10 +10,8 @@ import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup'
 // setup sinon-chai
 use(sinonChai);
 
-
 // tslint:disable: no-unused-expression
 describe('Prebid Google Analytics Module', () => {
-
   const config: Moli.MoliConfig = {
     slots: [],
     logger: newNoopLogger(),
@@ -30,14 +28,17 @@ describe('Prebid Google Analytics Module', () => {
   });
 
   it('should initialize the global analytics object if not set', () => {
-    const module = new PrebidGoogleAnalytics({
-      trackingId: 'UA-123456-78',
-      options: {
-        trackerName: 'h5',
-        sampling: 1,
-        enableDistribution: true
-      }
-    }, dom.window);
+    const module = new PrebidGoogleAnalytics(
+      {
+        trackingId: 'UA-123456-78',
+        options: {
+          trackerName: 'h5',
+          sampling: 1,
+          enableDistribution: true
+        }
+      },
+      dom.window
+    );
     const _window = dom.window as any;
 
     expect(_window.ga).to.be.undefined;
@@ -46,15 +47,18 @@ describe('Prebid Google Analytics Module', () => {
   });
 
   it('should configure the global analytics object if it has another name', () => {
-    const module = new PrebidGoogleAnalytics({
-      trackingId: 'UA-123456-78',
-      options: {
-        global: 'myGlobalAnalytics',
-        trackerName: 'h5',
-        sampling: 1,
-        enableDistribution: true
-      }
-    }, dom.window);
+    const module = new PrebidGoogleAnalytics(
+      {
+        trackingId: 'UA-123456-78',
+        options: {
+          global: 'myGlobalAnalytics',
+          trackerName: 'h5',
+          sampling: 1,
+          enableDistribution: true
+        }
+      },
+      dom.window
+    );
     const _window = dom.window as any;
 
     expect(_window.myGlobalAnalytics).to.be.undefined;
@@ -67,14 +71,17 @@ describe('Prebid Google Analytics Module', () => {
     const gaSpy = sandbox.spy();
     _window.ga = gaSpy;
 
-    const module = new PrebidGoogleAnalytics({
-      trackingId: 'UA-123456-78',
-      options: {
-        trackerName: 'h5',
-        sampling: 1,
-        enableDistribution: true
-      }
-    }, dom.window);
+    const module = new PrebidGoogleAnalytics(
+      {
+        trackingId: 'UA-123456-78',
+        options: {
+          trackerName: 'h5',
+          sampling: 1,
+          enableDistribution: true
+        }
+      },
+      dom.window
+    );
 
     module.init(config, createAssetLoaderService(dom.window));
 
@@ -84,14 +91,17 @@ describe('Prebid Google Analytics Module', () => {
   });
 
   it('should initialize the global pbjs object if not set', () => {
-    const module = new PrebidGoogleAnalytics({
-      trackingId: 'UA-123456-78',
-      options: {
-        trackerName: 'h5',
-        sampling: 1,
-        enableDistribution: true
-      }
-    }, dom.window);
+    const module = new PrebidGoogleAnalytics(
+      {
+        trackingId: 'UA-123456-78',
+        options: {
+          trackerName: 'h5',
+          sampling: 1,
+          enableDistribution: true
+        }
+      },
+      dom.window
+    );
     const _window = dom.window as any;
 
     expect(_window.pbjs).to.be.undefined;
@@ -106,10 +116,13 @@ describe('Prebid Google Analytics Module', () => {
       sampling: 1,
       enableDistribution: true
     };
-    const module = new PrebidGoogleAnalytics({
-      trackingId: 'UA-123456-78',
-      options: options
-    }, dom.window);
+    const module = new PrebidGoogleAnalytics(
+      {
+        trackingId: 'UA-123456-78',
+        options: options
+      },
+      dom.window
+    );
     const _window = dom.window as any;
 
     expect(_window.pbjs).to.be.undefined;
@@ -120,11 +133,12 @@ describe('Prebid Google Analytics Module', () => {
     expect(_window.pbjs.que).to.be.have.lengthOf(1);
     _window.pbjs.que[0]();
 
-    expect(enableAnalyticsSpy).to.have.been.calledOnceWithExactly([{
-      provider: 'ga',
-      options: options
-    }]);
+    expect(enableAnalyticsSpy).to.have.been.calledOnceWithExactly([
+      {
+        provider: 'ga',
+        options: options
+      }
+    ]);
   });
-
 });
 // tslint:enable

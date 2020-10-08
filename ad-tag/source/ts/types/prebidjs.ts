@@ -4,11 +4,8 @@
  * @see https://prebid.org/dev-docs/publisher-api-reference.html
  */
 
-
 export namespace prebidjs {
-
   export interface IPrebidJs {
-
     /**
      * Command queue on the `pbjs` window object.
      * All functions will be executed once pbjs is loaded.
@@ -21,7 +18,6 @@ export namespace prebidjs {
      * Prebid version
      */
     readonly version: string;
-
 
     /**
      * The bidderSettings object provides a way to define some behaviors for the platform and specific adapters.
@@ -101,6 +97,29 @@ export namespace prebidjs {
      */
     enableAnalytics(adapters: analytics.AnalyticsAdapter[]): void;
 
+    /**
+     * NOTE: this is a very rough typing. As prebid doesn't help you a lot with what is defined and what not,
+     *       you have to try your own luck :(
+     *
+     *
+     * @param event name of the event
+     * @param handler callback handling the events
+     * @param id The optional id parameter provides more finely-grained event callback registration.
+     *        This makes it possible to register callback events for a specific item in the event context
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
+     */
+    onEvent(event: event.EventName, handler: Function, id?: any): void;
+
+    /**
+     * Deregister
+     *
+     * @param event name of the event
+     * @param handler callback handling the events
+     * @param id The optional id parameter provides more finely-grained event callback registration.
+     *        This makes it possible to register callback events for a specific item in the event context
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
+     */
+    offEvent(event: event.EventName, handler: Function, id?: any): void;
   }
 
   /**
@@ -110,12 +129,10 @@ export namespace prebidjs {
    *
    */
   interface IImproveDigitalConfig {
-
     /**
      * Global Improve Digital property
      */
     readonly improvedigital?: {
-
       /**
        * Enable the single request mode, which will send all bids in one request.
        *
@@ -136,9 +153,7 @@ export namespace prebidjs {
   }
 
   export namespace targetingcontrols {
-
     export interface ITargetingControls {
-
       /**
        * Specifies the maximum number of characters the system can add to ad server targeting.
        */
@@ -158,7 +173,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/modules/consentManagement.html
    */
   export namespace consent {
-
     export interface IConsentManagementConfig {
       /**
        * The ID for the CMP in use on the page. Default is 'iab'
@@ -193,9 +207,12 @@ export namespace prebidjs {
 
     export interface IGdprConfigRule {
       /**
-       * The only currently supported value is “storage”, corresponding to TCF Purpose 1.
+       * Supported values:
+       * - "storage" (Purpose 1)
+       * - "basicAds" (Purpose 2)
+       * - "measurement" (Purpose 7)
        */
-      readonly purpose: 'storage';
+      readonly purpose: 'storage' | 'basicAds' | 'measurement';
 
       /**
        * Determines whether to enforce the purpose consent or not. The default in Prebid.js 3.x is not to enforce
@@ -231,8 +248,13 @@ export namespace prebidjs {
    * @see http://prebid.org/dev-docs/publisher-api-reference.html#price-granularity
    */
   export namespace priceGranularity {
-
-    export type PriceGranularityConfig = 'low' | 'medium' | 'high' | 'auto' | 'dense' | ICustomPriceGranularityConfig;
+    export type PriceGranularityConfig =
+      | 'low'
+      | 'medium'
+      | 'high'
+      | 'auto'
+      | 'dense'
+      | ICustomPriceGranularityConfig;
 
     /**
      * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
@@ -293,7 +315,6 @@ export namespace prebidjs {
   }
 
   export namespace userSync {
-
     /**
      * ## Configure User Syncing
      *
@@ -318,7 +339,6 @@ export namespace prebidjs {
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
      */
     export interface IUserSyncConfig {
-
       /**
        * Enable/disable the user syncing feature. Default: true.
        */
@@ -360,22 +380,17 @@ export namespace prebidjs {
      * All supported id providers
      */
     export type UserIdProvider =
-      IUnifiedIdProvider
+      | IUnifiedIdProvider
       | IDigitTrustProvider
       | ICriteoProvider
       | IID5Provider
       | IPubCommonIdProvider;
 
-    interface IUserIdProvider<P, N extends string> {
+    interface IUserIdProvider<N extends string> {
       /**
        * the provider name
        */
       readonly name: N;
-
-      /**
-       * provider specific params
-       */
-      readonly params: P;
 
       /**
        * The publisher can specify some kind of local storage in which to store the results of the call to get
@@ -385,8 +400,17 @@ export namespace prebidjs {
       readonly storage?: IUserIdStorage;
     }
 
-    export interface IUserIdStorage {
+    /**
+     * A UserId provider hat requires additional parameters configuration
+     */
+    interface IParameterizedUserIdProvider<P, N extends string> extends IUserIdProvider<N> {
+      /**
+       * provider specific params
+       */
+      readonly params: P;
+    }
 
+    export interface IUserIdStorage {
       /**
        *  The publisher can specify some kind of local storage in which to store the results of the call to get the
        *  user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the
@@ -464,14 +488,13 @@ export namespace prebidjs {
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#unified-id
      */
-    export interface IUnifiedIdProvider extends IUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {
-    }
+    export interface IUnifiedIdProvider
+      extends IParameterizedUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#criteo-id-for-exchanges
      */
-    export interface ICriteoProvider extends IUserIdProvider<undefined, 'criteo'> {
-    }
+    export interface ICriteoProvider extends IUserIdProvider<'criteo'> {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#digitrust
@@ -482,14 +505,14 @@ export namespace prebidjs {
         readonly site: string;
       };
       /** Allows init error handling */
-      readonly callback?: ((result: any) => void);
+      readonly callback?: (result: any) => void;
     }
 
     /**
      * @see https://console.id5.io/docs/public/prebid
      */
-    export interface IDigitTrustProvider extends IUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {
-    }
+    export interface IDigitTrustProvider
+      extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {}
 
     export interface IID5ProviderParams {
       /***
@@ -515,15 +538,13 @@ export namespace prebidjs {
      *
      * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
      */
-    export interface IID5Provider extends IUserIdProvider<IID5ProviderParams, 'id5Id'> {
-    }
+    export interface IID5Provider
+      extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
      */
-    export interface IPubCommonIdProvider extends IUserIdProvider<undefined, 'pubCommonId'> {
-    }
-
+    export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {}
 
     export interface IFilterSettingsConfig {
       /**
@@ -554,13 +575,30 @@ export namespace prebidjs {
 
       readonly filter: 'include' | 'exclude';
     }
+  }
 
+  export namespace event {
+    export type EventName =
+      | 'auctionInit'
+      | 'auctionEnd'
+      | 'beforeRequestBids'
+      | 'bidRequested'
+      | 'bidResponse'
+      | 'bidAdjustment'
+      | 'bidWon'
+      | 'noBid'
+      | 'bidTimeout'
+      | 'setTargeting'
+      | 'requestBids'
+      | 'addAdUnits'
+      | 'adRenderFailed'
+      | 'auctionDebug'
+      | 'bidderDone'
+      | 'tcf2Enforcement';
   }
 
   export namespace currency {
-
     export interface ICurrencyConfig {
-
       /**
        * ISO 4217 3-letter currency code.
        * If this value is present, the currency conversion feature is activated.
@@ -582,12 +620,11 @@ export namespace prebidjs {
        *
        * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
        */
-      readonly defaultRates: { 'USD': { 'EUR': number } };
+      readonly defaultRates: { USD: { EUR: number } };
     }
   }
 
   export namespace analytics {
-
     export type AnalyticsAdapter = IGoogleAnalyticsAdapter;
     export type AnalyticsProviders = 'ga';
 
@@ -602,7 +639,6 @@ export namespace prebidjs {
      * @see [[https://github.com/prebid/Prebid.js/blob/2.33.0/modules/googleAnalyticsAdapter.js]]
      */
     export interface IGoogleAnalyticsAdapterOptions {
-
       /**
        * set the global google analytics object if not 'ga'
        * default: 'ga'
@@ -614,7 +650,6 @@ export namespace prebidjs {
        * default: 'h5'
        */
       readonly trackerName?: string;
-
 
       /**
        * enable tracking of distribution metrics (load time, win rate)
@@ -632,15 +667,13 @@ export namespace prebidjs {
        * default: 100%
        */
       readonly sampling?: number;
-
     }
 
-    export interface IGoogleAnalyticsAdapter extends IAnalyticsAdapter<IGoogleAnalyticsAdapterOptions> {
+    export interface IGoogleAnalyticsAdapter
+      extends IAnalyticsAdapter<IGoogleAnalyticsAdapterOptions> {
       readonly provider: 'ga';
     }
-
   }
-
 
   /**
    * ## Global Prebid Configuration
@@ -654,7 +687,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
    */
   export interface IPrebidJsConfig extends IImproveDigitalConfig {
-
     /**
      * Turn on debugging
      */
@@ -733,14 +765,13 @@ export namespace prebidjs {
      * All the sizes that this ad unit can accept.
      * Hint: Some SSPs handles only the first size, so keep that in mind.
      */
-    readonly sizes: [ number, number ][];
+    readonly sizes: [number, number][];
   }
 
   /**
    * For AdUnits with MediaType: video
    */
   export interface IMediaTypeVideo {
-
     /**
      * Context can be 'instream' or 'outstream'.
      * We only show outstream videos. Outstream video ads can be shown on any web page.
@@ -751,7 +782,7 @@ export namespace prebidjs {
     /**
      * Player size(s) that this ad unit can accept (width, height).
      */
-    readonly playerSize: [ number, number ][] | [ number, number ];
+    readonly playerSize: [number, number][] | [number, number];
   }
 
   interface IMediaTypeNativeRequirement {
@@ -819,8 +850,7 @@ export namespace prebidjs {
    * - Using `mediaTypes.native.image.aspect_ratios` (or `mediaTypes.native.icon.aspect_ratios` for icons)
    */
   interface IMediaTypeNativeRequirementImage extends IMediaTypeNativeRequirement {
-
-    readonly sizes?: [ number, number ];
+    readonly sizes?: [number, number];
 
     readonly aspect_ratios?: MediaTypeNativeAspectRatio[];
   }
@@ -829,7 +859,6 @@ export namespace prebidjs {
    * @see http://prebid.org/dev-docs/show-native-ads.html#native-ad-keys
    */
   export interface IMediaTypeNative {
-
     /**
      * Prebid.js defines “types” of native ad for you as a convenience. This way you have less code to maintain,
      * that is hopefully more descriptive of your intent.
@@ -853,7 +882,6 @@ export namespace prebidjs {
      * @see http://prebid.org/dev-docs/show-native-ads.html#pre-defined-native-types
      */
     readonly type?: 'image';
-
 
     /**
      * The title of the ad, usually a call to action or a brand name.
@@ -990,7 +1018,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#adUnit-multi-format
    */
   export interface IMediaTypes {
-
     /**
      * optional. If no other properties are specified, this is the default.
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#adUnit-banner
@@ -1085,6 +1112,40 @@ export namespace prebidjs {
      * The renderer associated to the ad-unit. Only for mediaType = video.
      */
     readonly renderer?: IRenderer;
+
+    /**
+     * This is an optional configuration for publishers that have a pubstack.io integration.
+     *
+     * @see https://pubstack.io/
+     * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965600-how-to-implement-google-adx-
+     * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965702-how-to-custom-ad-unit-name-
+     */
+    readonly pubstack?: {
+      /**
+       * By default, the integration uses the adUnitCode defined in the Ad Unit.
+       * If you want Pubstack to use another name, you just have to provide the desired value through
+       * the `pubstack.adUnitName` property.
+       *
+       * This feature is very useful when a site implements a lazy-loading or a refresh strategy.
+       * The following example shows you how to set a custom name, whatever the ad unit code is.
+       *
+       * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965702-how-to-custom-ad-unit-name-
+       */
+      readonly adUnitName?: string;
+
+      /**
+       * This is required for Google Ad Manager integration.
+       *
+       * Within the Prebid configuration (client-side), every prebid adUnit must be matched with a GAM adUnit,
+       * so that we can display the corresponding AdX revenue in Pubstack. In order to do that, you need to
+       * add the field "pubstack"."adUnitPath" to all ad units. This adUnitPath must be constructed* as such:
+       *
+       *   `/networkId/top_level1/level2/level3` (same as the DFP adUnitPath)
+       *
+       * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965600-how-to-implement-google-adx-
+       */
+      readonly adUnitPath?: string;
+    };
   }
 
   // Supported SSPs
@@ -1111,7 +1172,7 @@ export namespace prebidjs {
    * The bidder code is used to identify the different SSPs.
    */
   export type BidderCode =
-    typeof Criteo
+    | typeof Criteo
     | typeof AppNexusAst
     | typeof AppNexus
     | typeof ImproveDigital
@@ -1172,7 +1233,6 @@ export namespace prebidjs {
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/criteoBidAdapter.js
    */
   export interface ICriteoParams {
-
     /**
      * Included for legacy integrations that require a zone id.
      */
@@ -1189,8 +1249,7 @@ export namespace prebidjs {
     readonly publisherSubId?: string;
   }
 
-  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {
-  }
+  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
 
   export interface IAppNexusASTKeyword {
     [key: string]: string[];
@@ -1205,7 +1264,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/bidders.html#appnexusAst
    */
   export interface IAppNexusASTParams {
-
     /**
      * The placement ID from AppNexus. You may identify a placement using the `invCode`
      * and `member` instead of a placement ID.
@@ -1238,7 +1296,6 @@ export namespace prebidjs {
      * @see https://prebid.org/dev-docs/bidders.html#appnexus-video-object
      */
     readonly video?: {
-
       /**
        * Array of strings listing the content MIME types supported
        */
@@ -1270,7 +1327,13 @@ export namespace prebidjs {
       /**
        * playback_method  Array of strings listing playback methods supported by the publisher.
        */
-      readonly playback_method?: Array<'auto_play_sound_on' | 'auto_play_sound_off' | 'click_to_play' | 'mouseover' | 'auto_play_sound_unknown'>
+      readonly playback_method?: Array<
+        | 'auto_play_sound_on'
+        | 'auto_play_sound_off'
+        | 'click_to_play'
+        | 'mouseover'
+        | 'auto_play_sound_unknown'
+      >;
 
       /**
        *  Array of integers listing API frameworks supported by the publisher.
@@ -1284,14 +1347,13 @@ export namespace prebidjs {
        */
       readonly frameworks?: Array<0 | 1 | 2 | 3 | 4 | 5>;
     };
-
   }
 
   /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {
-  }
+  export interface IAppNexusASTBid
+    extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {}
 
   /**
    * ImproveDigital bid parameters.
@@ -1321,14 +1383,13 @@ export namespace prebidjs {
      * Bid floor price currency. Supported values: USD (default), EUR, GBP, AUD, DKK, SEK, CZK, CHF, NOK
      */
     readonly bidFloorCur?: 'EUR';
-
   }
 
   /**
    * ImproveDigital bid object.
    */
-  export interface IImproveDigitalBid extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {
-  }
+  export interface IImproveDigitalBid
+    extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {}
 
   /**
    * IndexExchange bid parameters.
@@ -1349,7 +1410,7 @@ export namespace prebidjs {
      *
      * Note that the ‘ix’ Prebid Server bid adapter ignores this parameter.
      */
-    readonly size: [ number, number ];
+    readonly size: [number, number];
 
     /**
      * Taken from source code:
@@ -1365,12 +1426,11 @@ export namespace prebidjs {
     readonly bidFloorCur?: 'EUR';
   }
 
-
   /**
    * IndexExchange bid object.
    */
-  export interface IIndexExchangeBid extends IBidObject<typeof IndexExchange, IIndexExchangeParams> {
-  }
+  export interface IIndexExchangeBid
+    extends IBidObject<typeof IndexExchange, IIndexExchangeParams> {}
 
   // ----- JustPremium ----- //
 
@@ -1393,21 +1453,21 @@ export namespace prebidjs {
    *            unique for each ad slot. Otherwise only one ad slot will be filled, while the others
    *            stay empty.
    */
-  export type JustPremiumFormat = typeof JustPremiumPushUpBillboard |
-    typeof JustPremiumPushDownBillboard |
-    typeof JustPremiumFloorAd |
-    typeof JustPremiumClassicFloorAd |
-    typeof JustPremiumSideAd |
-    typeof JustPremiumWallpaper |
-    typeof JustPremiumMobileScroller |
-    typeof JustPremiumMobileSkin |
-    typeof JustPremiumCascadeAd;
+  export type JustPremiumFormat =
+    | typeof JustPremiumPushUpBillboard
+    | typeof JustPremiumPushDownBillboard
+    | typeof JustPremiumFloorAd
+    | typeof JustPremiumClassicFloorAd
+    | typeof JustPremiumSideAd
+    | typeof JustPremiumWallpaper
+    | typeof JustPremiumMobileScroller
+    | typeof JustPremiumMobileSkin
+    | typeof JustPremiumCascadeAd;
 
   /**
    * JustPremium bid parameters
    */
   export interface IJustPremiumParams {
-
     /**
      * The zone ID provided by JustPremium.
      */
@@ -1424,11 +1484,9 @@ export namespace prebidjs {
     readonly exclude?: Array<JustPremiumFormat>;
   }
 
-  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {
-  }
+  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
 
   export interface IPubMaticParams {
-
     /**
      *
      */
@@ -1456,10 +1514,19 @@ export namespace prebidjs {
      * Values if present in subsequent adunits, will be ignored.
      */
     readonly currency?: 'EUR' | 'USD';
+
+    /**
+     * Oustream AdUnit described in Blue BillyWig UI. This field is mandatory if mimeType is described as video and
+     * context is outstream (i.e., for outstream videos).
+     *
+     * The code calls this 'rendererCode'.
+     *
+     * @example 'renderer_test_pubmatic'
+     */
+    readonly outstreamAU?: string;
   }
 
-  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {
-  }
+  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
 
   /**
    * NanoInteractive bid parameters.
@@ -1484,8 +1551,8 @@ export namespace prebidjs {
   /**
    * NanoInteractive bid object.
    */
-  export interface INanoInteractiveBid extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {
-  }
+  export interface INanoInteractiveBid
+    extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
 
   /**
    * OpenX bid parameters
@@ -1519,8 +1586,7 @@ export namespace prebidjs {
   /**
    * OpenX bid object
    */
-  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> {
-  }
+  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> {}
 
   /**
    * Smart bid parameters
@@ -1562,14 +1628,13 @@ export namespace prebidjs {
      * Bid floor for this placement in USD or in the currency specified by the currency parameter. (Default: 0.0)
      */
     readonly bidfloor?: number;
-
   }
 
   /**
    * Smart bid object
    */
-  export interface ISmartAdServerBid extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> {
-  }
+  export interface ISmartAdServerBid
+    extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> {}
 
   /**
    * Unruly bid parameters
@@ -1577,7 +1642,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/bidders#unruly
    */
   export interface IUnrulyParams {
-
     /**
      * The site ID from Unruly.
      */
@@ -1592,8 +1656,7 @@ export namespace prebidjs {
   /**
    * Unruly bid object
    */
-  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {
-  }
+  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
 
   /**
    * Teads bid parameters
@@ -1601,7 +1664,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/bidders#teads
    */
   export interface ITeadsParams {
-
     /**
      * Teads page id.
      */
@@ -1616,11 +1678,9 @@ export namespace prebidjs {
   /**
    * Teads bid object
    */
-  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {
-  }
+  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
 
   export interface IYieldlabParams {
-
     /**
      * Yieldlab Adslot ID
      */
@@ -1651,8 +1711,7 @@ export namespace prebidjs {
   /**
    * Yieldlab bid object
    */
-  export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> {
-  }
+  export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> {}
 
   /**
    * Spotx bid parameters.
@@ -1697,7 +1756,9 @@ export namespace prebidjs {
       /**
        * List of mimetypes to allow in ad.
        */
-      readonly mimes?: Array<'application/javascript' | 'video/mp4' | 'video/webm' | 'application/x-shockwave-flash'>
+      readonly mimes?: Array<
+        'application/javascript' | 'video/mp4' | 'video/webm' | 'application/x-shockwave-flash'
+      >;
 
       /**
        * Set to true to start the ad with the volume muted.
@@ -1720,7 +1781,6 @@ export namespace prebidjs {
        * @see [[https://developer.spotxchange.com/content/local/docs/sdkDocs/EASI/README.md#common-javascript-attributes]]
        */
       readonly custom_override?: {
-
         /**
          * Autoplay is the default behavior where 1=autoplay and 0=user or publisher initiated.
          */
@@ -1747,7 +1807,6 @@ export namespace prebidjs {
      */
     readonly ad_volume?: number;
 
-
     /**
      * Set to true to hide the spotx skin
      */
@@ -1764,8 +1823,7 @@ export namespace prebidjs {
   /**
    * SpotX bid object.
    */
-  export interface ISpotXBid extends IBidObject<typeof Spotx, ISpotxParams> {
-  }
+  export interface ISpotXBid extends IBidObject<typeof Spotx, ISpotxParams> {}
 
   export interface IShowHeroesParams {
     /**
@@ -1789,8 +1847,7 @@ export namespace prebidjs {
    *
    * @see [[http://prebid.org/dev-docs/bidders/showheroes.html]]
    */
-  export interface IShowHeroesBid extends IBidObject<typeof ShowHeroes, IShowHeroesParams> {
-  }
+  export interface IShowHeroesBid extends IBidObject<typeof ShowHeroes, IShowHeroesParams> {}
 
   export interface IXaxisParams {
     /**
@@ -1823,8 +1880,7 @@ export namespace prebidjs {
    *
    * @see [[http://prebid.org/dev-docs/bidders/xaxis.html]]
    */
-  export interface IXaxisBid extends IBidObject<typeof Xaxis, IXaxisParams> {
-  }
+  export interface IXaxisBid extends IBidObject<typeof Xaxis, IXaxisParams> {}
 
   export interface IDSPXParams {
     /**
@@ -1841,7 +1897,6 @@ export namespace prebidjs {
      * Selection filter
      */
     readonly pfilter?: {
-
       /**
        * floor price in EUR * 1.000.000
        */
@@ -1863,14 +1918,12 @@ export namespace prebidjs {
    *
    * @see [[https://prebid.org/dev-docs/bidders/dspx.html]]
    */
-  export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> {
-  }
+  export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> {}
 
   /**
    * @see http://prebid.org/dev-docs/bidders/rubicon.html
    */
   export interface IRubiconParams {
-
     /**
      * The publisher account ID
      * @example '4934'
@@ -1946,21 +1999,19 @@ export namespace prebidjs {
        * monetization for pre-, mid-, and post-roll video ads. Not applicable for interstitial and outstream.
        */
       readonly language?: string;
-
     };
   }
 
   /**
    * @see http://prebid.org/dev-docs/bidders/rubicon.html
    */
-  export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> {
-  }
+  export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> {}
 
   /**
    * Supported bid object types.
    */
   export type IBid =
-    ICriteoBid
+    | ICriteoBid
     | IAppNexusASTBid
     | IImproveDigitalBid
     | IIndexExchangeBid
@@ -1982,7 +2033,6 @@ export namespace prebidjs {
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
    */
   export interface IRequestObj {
-
     /**
      * adUnit codes to request. Use this or requestObj.adUnits
      */
@@ -2018,12 +2068,14 @@ export namespace prebidjs {
     /**
      * The adUnit code, e.g. 'ad-presenter-desktop'
      */
-    [adUnitCode: string]: {
-      /**
-       * The bids that were returned by prebid
-       */
-      bids: prebidjs.BidResponse[];
-    } | undefined;
+    [adUnitCode: string]:
+      | {
+          /**
+           * The bids that were returned by prebid
+           */
+          bids: prebidjs.BidResponse[];
+        }
+      | undefined;
   }
 
   /**
@@ -2083,7 +2135,6 @@ export namespace prebidjs {
   }
 
   export interface IGenericBidResponse extends IBidResponse {
-
     /**
      * The bidder code.
      *
@@ -2098,7 +2149,6 @@ export namespace prebidjs {
   }
 
   export interface IJustPremiumBidResponse extends IBidResponse {
-
     /**
      * narrow this bid response type to justpremium
      */
@@ -2127,7 +2177,6 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
    */
   export interface IBidderSettings {
-
     /** used as a fallback if the SSP has no custom bidder settings */
     readonly standard?: IBidderSetting;
 
@@ -2218,12 +2267,10 @@ export namespace prebidjs {
 
 /* tslint:disable:interface-name */
 declare global {
-
   /**
    * Add pbjs to the global Window instance
    */
   interface Window {
-
     /**
      * global prebid.js object
      */

@@ -10,10 +10,14 @@ export const createDom = (): jsdom.JSDOM => {
   // provide matchMedia
   dom.window.matchMedia = function (): any {
     return {
-      'matches': true,
-      'media': 'screen',
-      addListener: function (): void { /**/ },
-      removeListener: function (): void { /**/ }
+      matches: true,
+      media: 'screen',
+      addListener: function (): void {
+        /**/
+      },
+      removeListener: function (): void {
+        /**/
+      }
     };
   };
   return dom;

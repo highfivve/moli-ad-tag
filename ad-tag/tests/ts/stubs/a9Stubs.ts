@@ -9,10 +9,16 @@ export const a9ConfigStub: Moli.headerbidding.A9Config = {
 
 export const apstagStub: apstag.IApsTag = {
   _Q: [],
-  init: (_config: apstag.IInitConfig): void => { return ; },
-  fetchBids: (_config: apstag.IBidConfig, callback: (bids: Object[]) => void ): void => {
+  init: (_config: apstag.IInitConfig): void => {
+    return;
+  },
+  fetchBids: (_config: apstag.IBidConfig, callback: (bids: Object[]) => void): void => {
     callback([]);
   },
-  setDisplayBids: () => { return; },
-  targetingKeys: () => { return; }
+  setDisplayBids: () => {
+    return;
+  },
+  targetingKeys: () => {
+    return;
+  }
 };

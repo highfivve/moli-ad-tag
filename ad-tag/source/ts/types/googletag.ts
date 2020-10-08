@@ -1,14 +1,12 @@
 // type definitions for DFP googletag
 export namespace googletag {
-
-  export type Size = [ number, number ] | string;
+  export type Size = [number, number] | string;
 
   /**
    * Base service class that contains methods common for all services.
    * @template T type reference to return the proper service subclass
    */
   export interface IService<T extends IService<any>> {
-
     /**
      * This event is fired when a slot on the page has finished rendering.
      * The event is fired by the service that rendered the slot.
@@ -18,14 +16,20 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotRenderEnded', listener: (event: events.ISlotRenderEndedEvent) => void): T;
+    addEventListener(
+      eventType: 'slotRenderEnded',
+      listener: (event: events.ISlotRenderEndedEvent) => void
+    ): T;
 
     /**
      * This event is fired when an impression becomes viewable, according to the Active View criteria
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'impressionViewable', listener: (event: events.IImpressionViewableEvent) => void): T;
+    addEventListener(
+      eventType: 'impressionViewable',
+      listener: (event: events.IImpressionViewableEvent) => void
+    ): T;
 
     /**
      * This event is fired when the creative's iframe fires its load event. When rendering rich media ads in sync
@@ -33,7 +37,10 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotOnload', listener: (event: events.ISlotOnloadEvent) => void): T;
+    addEventListener(
+      eventType: 'slotOnload',
+      listener: (event: events.ISlotOnloadEvent) => void
+    ): T;
 
     /**
      * This event is fired when an ad has been requested for a particular slot.
@@ -41,7 +48,10 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotRequested', listener: (event: events.ISlotRequestedEvent) => void): T;
+    addEventListener(
+      eventType: 'slotRequested',
+      listener: (event: events.ISlotRequestedEvent) => void
+    ): T;
 
     /**
      * This event is fired when an ad response has been received for a particular slot.
@@ -49,7 +59,10 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotResponseReceived', listener: (event: events.ISlotResponseReceived) => void): T;
+    addEventListener(
+      eventType: 'slotResponseReceived',
+      listener: (event: events.ISlotResponseReceived) => void
+    ): T;
 
     /**
      * This event is fired whenever the on-screen percentage of an ad slot's area changes.
@@ -57,7 +70,10 @@ export namespace googletag {
      * @param eventType
      * @param listener
      */
-    addEventListener(eventType: 'slotVisibilityChanged', listener: (event: events.ISlotVisibilityChangedEvent) => void): T;
+    addEventListener(
+      eventType: 'slotVisibilityChanged',
+      listener: (event: events.ISlotVisibilityChangedEvent) => void
+    ): T;
 
     /**
      * Get the list of slots associated with this service.
@@ -73,7 +89,6 @@ export namespace googletag {
    * @see {@link https://developers.google.com/doubleclick-gpt/reference|API Reference}
    */
   export interface IPubAdsService extends IService<IPubAdsService> {
-
     /**
      * Enables single request mode for fetching multiple ads at the same time.
      *
@@ -84,7 +99,6 @@ export namespace googletag {
      *         to enable single request mode because the method was called after the service was enabled.
      */
     enableSingleRequest(): boolean;
-
 
     /**
      * Enables async rendering mode to enable non-blocking fetching and rendering of ads. Because the service uses
@@ -167,7 +181,6 @@ export namespace googletag {
    * @see {@link https://developers.google.com/doubleclick-gpt/reference#googletagcontentservice}
    */
   export interface IContentService extends IService<IContentService> {
-
     /**
      * Fills a slot with the given content. If services are not yet enabled,
      * stores the content and fills it in when services are enabled.
@@ -210,7 +223,6 @@ export namespace googletag {
     }
 
     export interface ISlotRenderEndedEvent extends Event {
-
       isEmpty: boolean;
 
       /**
@@ -257,12 +269,10 @@ export namespace googletag {
     }
   }
 
-
   /**
    * interface for googletag
    */
   export interface IGoogleTag {
-
     /**
      * Reference to the global command queue for asynchronous execution of GPT-related calls.
      *
@@ -357,7 +367,6 @@ export namespace googletag {
    * The API reference calls this `Slot`
    */
   export interface IAdSlot {
-
     /**
      * Sets whether the slot div should be hidden when there is no ad in the slot.
      * This overrides the service-level settings.
@@ -410,12 +419,10 @@ export namespace googletag {
      */
     clearTargeting(key?: string): void;
   }
-
 }
 
 /* tslint:disable:interface-name */
 declare global {
-
   /**
    * Add googletag to global window instance
    */

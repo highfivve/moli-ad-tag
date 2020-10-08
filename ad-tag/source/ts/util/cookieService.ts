@@ -36,9 +36,7 @@ export interface ICookieService {
 }
 
 export class CookieService implements ICookieService {
-
   public set(name: string, value: any, expiresInMinutes?: number): void {
-
     // Create expires string
     let expires;
     if (expiresInMinutes) {
@@ -50,7 +48,8 @@ export class CookieService implements ICookieService {
 
   public get(name: string): string | null {
     let cookieName = `${name}=`;
-    let cookie = window.document.cookie.split(/;\s*/)
+    let cookie = window.document.cookie
+      .split(/;\s*/)
       .filter(cookie => cookie.indexOf(cookieName) === 0);
 
     if (cookie.length !== 0) {
@@ -78,7 +77,7 @@ export class CookieService implements ICookieService {
    */
   private getExpireString(minutes: number): string {
     const d = new Date();
-    d.setTime(d.getTime() + (minutes * 60 * 1000));
+    d.setTime(d.getTime() + minutes * 60 * 1000);
     return minutes ? `expires=${d.toUTCString()};` : '';
   }
 }

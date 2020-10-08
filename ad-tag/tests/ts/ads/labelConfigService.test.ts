@@ -17,11 +17,11 @@ describe('LabelConfigConfigService', () => {
   const sandbox = Sinon.createSandbox();
   const labelConfigEntry1: LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
-    labelsSupported: [ 'desktop', 'video' ]
+    labelsSupported: ['desktop', 'video']
   };
   const labelConfigEntry2: LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
-    labelsSupported: [ 'mobile', 'video', 'bottom' ]
+    labelsSupported: ['mobile', 'video', 'bottom']
   };
   const labelConfigEntryWithoutLabels: LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
@@ -40,28 +40,28 @@ describe('LabelConfigConfigService', () => {
     domId: 'not-available-3',
     behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-3',
-    sizes: [ 'fluid', [ 985, 380 ] ],
+    sizes: ['fluid', [985, 380]],
     sizeConfig: [],
-    labelAny: [ 'video', 'visitor-uk' ]
+    labelAny: ['video', 'visitor-uk']
   };
   const adSlotWithLabelAll: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-4',
     behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-4',
-    sizes: [ 'fluid', [ 985, 380 ] ],
+    sizes: ['fluid', [985, 380]],
     sizeConfig: [],
-    labelAll: [ 'video', 'visitor-uk' ]
+    labelAll: ['video', 'visitor-uk']
   };
   const adSlotWithLabelAnyLabelAll: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
     behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-5',
-    sizes: [ 'fluid', [ 985, 380 ] ],
+    sizes: ['fluid', [985, 380]],
     sizeConfig: [],
-    labelAny: [ 'video', 'visitor-uk' ],
-    labelAll: [ 'video', 'visitor-uk' ]
+    labelAny: ['video', 'visitor-uk'],
+    labelAll: ['video', 'visitor-uk']
   };
 
   const adSlotWithDifferentLabelAnyLabelAll: Moli.AdSlot = {
@@ -69,13 +69,14 @@ describe('LabelConfigConfigService', () => {
     domId: 'not-available-5',
     behaviour: { loaded: 'eager' },
     adUnitPath: '/123/eager-5',
-    sizes: [ 'fluid', [ 985, 380 ] ],
+    sizes: ['fluid', [985, 380]],
     sizeConfig: [],
-    labelAny: [ 'video' ],
-    labelAll: [ 'desktop', 'bottom' ]
+    labelAny: ['video'],
+    labelAll: ['desktop', 'bottom']
   };
 
-  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[], extraLabels: string[] = []) => new LabelConfigService(labelConfig, extraLabels, dom.window);
+  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[], extraLabels: string[] = []) =>
+    new LabelConfigService(labelConfig, extraLabels, dom.window);
 
   afterEach(() => {
     sandbox.reset();
@@ -86,28 +87,34 @@ describe('LabelConfigConfigService', () => {
   });
 
   describe('slot label matching logic', () => {
-
-
     it('should let the given slot pass if label configuration is empty', () => {
-      const slotPassed = newLabelConfigService([ labelConfigEntryWithoutLabels ])
-        .filterSlot(adSlotWithLabelAll);
+      const slotPassed = newLabelConfigService([labelConfigEntryWithoutLabels]).filterSlot(
+        adSlotWithLabelAll
+      );
 
       expect(slotPassed).to.be.true;
     });
 
     it('should filter out duplicate labels from the label config', () => {
-      const labelConfigService = new LabelConfigService([ labelConfigEntry1, labelConfigEntry2 ], [], dom.window);
+      const labelConfigService = new LabelConfigService(
+        [labelConfigEntry1, labelConfigEntry2],
+        [],
+        dom.window
+      );
 
-      expect(
-        new Set(labelConfigService.getSupportedLabels())
-      ).to.deep.equal(
-        new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
+      expect(new Set(labelConfigService.getSupportedLabels())).to.deep.equal(
+        new Set(['desktop', 'mobile', 'video', 'bottom'])
       );
     });
 
     it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
-      const sizeConfigService = newLabelConfigService([ labelConfigEntry1, labelConfigEntry2 ]);
-      expect(sizeConfigService.getSupportedLabels()).to.deep.equal([ 'desktop', 'video', 'mobile', 'bottom' ]);
+      const sizeConfigService = newLabelConfigService([labelConfigEntry1, labelConfigEntry2]);
+      expect(sizeConfigService.getSupportedLabels()).to.deep.equal([
+        'desktop',
+        'video',
+        'mobile',
+        'bottom'
+      ]);
 
       // has labelAny "video" matching
       expect(sizeConfigService.filterSlot(adSlotWithLabelAny)).to.be.true;
@@ -123,17 +130,19 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should add the extra labels to the supported labels', () => {
-      const labelConfigService = new LabelConfigService([], [ 'desktop', 'mobile', 'video', 'bottom' ], dom.window);
-      expect(
-        new Set(labelConfigService.getSupportedLabels())
-      ).to.deep.equal(
-        new Set([ 'desktop', 'mobile', 'video', 'bottom' ])
+      const labelConfigService = new LabelConfigService(
+        [],
+        ['desktop', 'mobile', 'video', 'bottom'],
+        dom.window
+      );
+      expect(new Set(labelConfigService.getSupportedLabels())).to.deep.equal(
+        new Set(['desktop', 'mobile', 'video', 'bottom'])
       );
     });
 
     it('should allow slots with a single value in labelAny', () => {
-      const sizeConfigService = newLabelConfigService([], [ 'check' ]);
-      expect(sizeConfigService.filterSlot({ labelAny: [ 'check' ] })).to.be.true;
+      const sizeConfigService = newLabelConfigService([], ['check']);
+      expect(sizeConfigService.filterSlot({ labelAny: ['check'] })).to.be.true;
     });
   });
 });

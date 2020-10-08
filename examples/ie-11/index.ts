@@ -23,7 +23,7 @@ prebid.processQueue();
 // init moli
 const moli = initAdTag(window);
 
-moli.registerModule(new SourcepointCmp(window));
+moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 moli.configure(adConfiguration);
 moli.requestAds();

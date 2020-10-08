@@ -18,17 +18,35 @@ const moliConfig: MoliConfig | null = window.moli.getConfig();
 
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');
-  const extraLabels = moliConfig.targeting && moliConfig.targeting.labels || [];
-  const labelConfigService = new LabelConfigService(moliConfig.labelSizeConfig || [], extraLabels, window);
+  const extraLabels = (moliConfig.targeting && moliConfig.targeting.labels) || [];
+  const labelConfigService = new LabelConfigService(
+    moliConfig.labelSizeConfig || [],
+    extraLabels,
+    window
+  );
 
-  preact.render(<GlobalConfig config={moliConfig} labelConfigService={labelConfigService} windowResizeService={new WindowResizeService()}/>, globalConfigElement);
+  preact.render(
+    <GlobalConfig
+      config={moliConfig}
+      labelConfigService={labelConfigService}
+      windowResizeService={new WindowResizeService()}
+    />,
+    globalConfigElement
+  );
 
   document.body.appendChild(globalConfigElement);
 
   moliConfig.slots.forEach(slot => {
     const slotDomElement = document.getElementById(slot.domId);
     if (slotDomElement && labelConfigService.filterSlot(slot)) {
-      preact.render(<AdSlotConfig labelConfigService={labelConfigService} slot={slot} parentElement={slotDomElement}/>, slotDomElement);
+      preact.render(
+        <AdSlotConfig
+          labelConfigService={labelConfigService}
+          slot={slot}
+          parentElement={slotDomElement}
+        />,
+        slotDomElement
+      );
     }
   });
 } else {

@@ -23,19 +23,30 @@ export namespace tcfapi {
    * the global API
    */
   export interface TCFApi {
-
     (command: 'ping', version: TCFApiVersion, callback: (pingReturn: responses.Ping) => void): void;
 
-    (command: 'addEventListener', version: TCFApiVersion, callback: (tcData: responses.TCData, success: boolean) => void): void;
+    (
+      command: 'addEventListener',
+      version: TCFApiVersion,
+      callback: (tcData: responses.TCData, success: boolean) => void
+    ): void;
 
-    (command: 'removeEventListener', version: TCFApiVersion, callback: (success: boolean) => void, listenerId: number): void;
+    (
+      command: 'removeEventListener',
+      version: TCFApiVersion,
+      callback: (success: boolean) => void,
+      listenerId: number
+    ): void;
 
-    (command: 'getTCData', version: TCFApiVersion, callback: (tcData: responses.TCData, success: boolean) => void, vendorIds?: number[]): void;
-
+    (
+      command: 'getTCData',
+      version: TCFApiVersion,
+      callback: (tcData: responses.TCData, success: boolean) => void,
+      vendorIds?: number[]
+    ): void;
   }
 
   export namespace responses {
-
     export interface Response {
       readonly cmpId: number;
       readonly cmpVersion: number;
@@ -54,12 +65,10 @@ export namespace tcfapi {
     }
 
     export interface Ping extends Response {
-
       readonly displayStatus: status.DisplayStatus;
     }
 
     export interface TCData extends Response {
-
       readonly tcString: string;
       /**
        * If this TCData is sent to the callback of addEventListener: number,
@@ -104,7 +113,6 @@ export namespace tcfapi {
        */
       readonly purposeOneTreatment: boolean;
 
-
       readonly purpose: {
         readonly consents: BooleanVector;
 
@@ -113,24 +121,20 @@ export namespace tcfapi {
 
       readonly specialFeatureOptins: BooleanVector;
 
-      readonly  publisher: {
-
+      readonly publisher: {
         consents: BooleanVector;
         legitimateInterests: BooleanVector;
 
         customPurpose: {
-
           consents: BooleanVector;
           legitimateInterests: BooleanVector;
-
         };
 
         restrictions: {
           [purposeId: string]: {
             [vendorId: string]: RestrictionType;
-          }
+          };
         };
-
       };
     }
 
@@ -140,7 +144,6 @@ export namespace tcfapi {
      * change their legal basis for processing in the encoding.
      */
     export enum RestrictionType {
-
       /**
        * under no circumstances is this purpose allowed.
        */
@@ -154,14 +157,11 @@ export namespace tcfapi {
       /**
        * if the default declaration is consent then this flips the purpose to Legitimate Interest in the encoding.
        */
-      REQUIRE_LI = 2,
-
+      REQUIRE_LI = 2
     }
-
   }
 
   export namespace status {
-
     /**
      * An enum representing all the possible statuses for the displayStatus
      * returned through the CMP API
@@ -185,9 +185,8 @@ export namespace tcfapi {
        * User interface will not show (e.g. GDPR does not apply or TC data is current and does not need renewal)
        * @type {string}
        */
-      DISABLED = 'disabled',
+      DISABLED = 'disabled'
     }
-
 
     /**
      * An enum representing all the possible statuses for the cmpStatus returned
@@ -218,7 +217,7 @@ export namespace tcfapi {
        * A CMP may set this status if, for any reason, it is unable to perform the operations in compliance with the TCF.
        * @type {string}
        */
-      ERROR = 'error',
+      ERROR = 'error'
     }
 
     /**
@@ -241,8 +240,7 @@ export namespace tcfapi {
        * and a CMP is prepared to respond to any calling scripts with the corresponding TC String.
        * @type {string}
        */
-      USER_ACTION_COMPLETE = 'useractioncomplete',
+      USER_ACTION_COMPLETE = 'useractioncomplete'
     }
   }
-
 }

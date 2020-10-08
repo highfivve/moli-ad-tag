@@ -16,12 +16,10 @@ import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
  * - [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
  */
 export interface ILabelledSlot {
-
   /** at least one label must match */
   readonly labelAny?: string[];
   /** all labels must match */
   readonly labelAll?: string[];
-
 }
 
 /**
@@ -37,21 +35,23 @@ export class LabelConfigService {
    */
   private readonly isValid: boolean;
 
-  constructor(private readonly labelSizeConfig: LabelSizeConfigEntry[],
-              private readonly extraLabels: string[],
-              private readonly window: Window) {
+  constructor(
+    private readonly labelSizeConfig: LabelSizeConfigEntry[],
+    private readonly extraLabels: string[],
+    private readonly window: Window
+  ) {
     // Matches the given slot sizes against the window's dimensions.
-    const supportedLabelSizeConfigs = labelSizeConfig
-      .filter(conf => window.matchMedia(conf.mediaQuery).matches);
-
-    this.isValid = (labelSizeConfig.length === 0 || !(labelSizeConfig.length > 0 && supportedLabelSizeConfigs.length === 0));
-
-    const supportedLabels = flatten(
-      supportedLabelSizeConfigs.map(conf => conf.labelsSupported )
+    const supportedLabelSizeConfigs = labelSizeConfig.filter(
+      conf => window.matchMedia(conf.mediaQuery).matches
     );
 
-    this.supportedLabels = [ ...supportedLabels, ...extraLabels ]
-      .filter(uniquePrimitiveFilter);
+    this.isValid =
+      labelSizeConfig.length === 0 ||
+      !(labelSizeConfig.length > 0 && supportedLabelSizeConfigs.length === 0);
+
+    const supportedLabels = flatten(supportedLabelSizeConfigs.map(conf => conf.labelsSupported));
+
+    this.supportedLabels = [...supportedLabels, ...extraLabels].filter(uniquePrimitiveFilter);
   }
 
   /**
@@ -75,7 +75,11 @@ export class LabelConfigService {
     }
 
     // if labelAll was already evaluated, labelAny will be ignored.
-    if (this.supportedLabels.length > 0 && slot.labelAny && !(slot.labelAll && slot.labelAll.length > 0)) {
+    if (
+      this.supportedLabels.length > 0 &&
+      slot.labelAny &&
+      !(slot.labelAll && slot.labelAll.length > 0)
+    ) {
       labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
     }
 
@@ -88,5 +92,4 @@ export class LabelConfigService {
   public getSupportedLabels(): string[] {
     return this.supportedLabels;
   }
-
 }

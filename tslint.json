@@ -46,7 +46,7 @@
       "check-else",
       "check-whitespace"
     ],
-    "quotemark": [true, "single", "jsx-double"],
+    "quotemark": [true, "single", "avoid-escape", "jsx-double"],
     "radix": true,
     "semicolon": [true, "always", "ignore-bound-class-methods"],
     "triple-equals": [true, "allow-null-check"],

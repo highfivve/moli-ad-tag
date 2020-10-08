@@ -17,7 +17,6 @@ use(chaiAsPromised);
 
 // tslint:disable: no-unused-expression
 describe('AdService', () => {
-
   let dom = createDom();
 
   // single sandbox instance to create spies and stubs
@@ -48,10 +47,14 @@ describe('AdService', () => {
     }
   };
 
-
-  const initialize = (config: Moli.MoliConfig = emptyConfig, isSinglePageApp: boolean = false): Promise<IAdPipelineConfiguration> => {
+  const initialize = (
+    config: Moli.MoliConfig = emptyConfig,
+    isSinglePageApp: boolean = false
+  ): Promise<IAdPipelineConfiguration> => {
     const adService = new AdService(assetLoaderService, dom.window);
-    return adService.initialize(config, isSinglePageApp).then(() => adService.getAdPipeline().config);
+    return adService
+      .initialize(config, isSinglePageApp)
+      .then(() => adService.getAdPipeline().config);
   };
 
   after(() => {
@@ -68,7 +71,6 @@ describe('AdService', () => {
   });
 
   describe('initialize', () => {
-
     it('should add the await-dom-ready step', () => {
       return initialize().then(pipeline => {
         const stepNames = pipeline.init.map(step => step.name);
@@ -114,8 +116,6 @@ describe('AdService', () => {
         });
       });
     });
-
-
   });
 
   describe('configure', () => {
@@ -139,7 +139,6 @@ describe('AdService', () => {
         expect(stepNames).to.contain('gpt-destroy-ad-slots');
       });
     });
-
 
     it('should not add the gpt-destroy-ad-slots for none single page apps', () => {
       return initialize().then(pipeline => {
@@ -204,7 +203,6 @@ describe('AdService', () => {
           expect(stepNames).not.to.contain('prebid-remove-adunits');
         });
       });
-
     });
 
     describe('a9', () => {
@@ -222,7 +220,6 @@ describe('AdService', () => {
         });
       });
     });
-
   });
 
   describe('defineSlots', () => {
@@ -234,7 +231,6 @@ describe('AdService', () => {
   });
 
   describe('prepareRequestAds', () => {
-
     describe('prebid', () => {
       it('should add the prebid-prepare-adunits step if prebid is available', () => {
         return initialize(emptyConfigWithPrebid).then(pipeline => {
@@ -249,7 +245,6 @@ describe('AdService', () => {
           expect(stepNames).not.to.contain('prebid-prepare-adunits');
         });
       });
-
     });
 
     describe('yieldOptimization', () => {
@@ -315,7 +310,10 @@ describe('AdService', () => {
 
   describe('requestAds', () => {
     let domIdCounter: number = 0;
-    const requestAds = (slots: Moli.AdSlot[], refreshSlots: string[] = []): Promise<Moli.AdSlot[]> => {
+    const requestAds = (
+      slots: Moli.AdSlot[],
+      refreshSlots: string[] = []
+    ): Promise<Moli.AdSlot[]> => {
       const adPipelineConfiguration: IAdPipelineConfiguration = {
         init: [],
         configure: [],
@@ -348,7 +346,10 @@ describe('AdService', () => {
     };
 
     const refreshableAdSlot = (lazy: boolean): Moli.RefreshableAdSlot => {
-      return { ...eagerAdSlot(), behaviour: { loaded: 'refreshable', trigger: eventTrigger, lazy } };
+      return {
+        ...eagerAdSlot(),
+        behaviour: { loaded: 'refreshable', trigger: eventTrigger, lazy }
+      };
     };
 
     const lazyAdSlot = (): Moli.LazyAdSlot => {
@@ -372,61 +373,61 @@ describe('AdService', () => {
     });
 
     it('should filter out all slots that are not available in the DOM', () => {
-      return expect(requestAds([ eagerAdSlot() ])).to.eventually.be.deep.equals([]);
+      return expect(requestAds([eagerAdSlot()])).to.eventually.be.deep.equals([]);
     });
 
     it('should return all eagerly loaded slots that are available in the DOM', () => {
-      const slots = [ eagerAdSlot(), eagerAdSlot() ];
+      const slots = [eagerAdSlot(), eagerAdSlot()];
       addToDom(slots);
       return expect(requestAds(slots)).to.eventually.be.deep.equals(slots);
     });
 
     it('should return all refreshable non-lazy loaded slots that are available in the DOM', () => {
-      const slots = [ refreshableAdSlot(false), eagerAdSlot() ];
+      const slots = [refreshableAdSlot(false), eagerAdSlot()];
       addToDom(slots);
       return expect(requestAds(slots)).to.eventually.be.deep.equals(slots);
     });
 
     it('should filter all refreshable lazy slots that are available in the DOM', () => {
-      const filteredSlots = [ refreshableAdSlot(true) ];
-      const expectedSlots = [ eagerAdSlot() ];
-      const allSlots = [ ...expectedSlots, ...filteredSlots ];
+      const filteredSlots = [refreshableAdSlot(true)];
+      const expectedSlots = [eagerAdSlot()];
+      const allSlots = [...expectedSlots, ...filteredSlots];
       addToDom(allSlots);
       return expect(requestAds(allSlots)).to.eventually.be.deep.equals(expectedSlots);
     });
 
     it('should filter all lazy slots that are available in the DOM', () => {
-      const filteredSlots = [ lazyAdSlot() ];
-      const expectedSlots = [ eagerAdSlot() ];
-      const allSlots = [ ...expectedSlots, ...filteredSlots ];
+      const filteredSlots = [lazyAdSlot()];
+      const expectedSlots = [eagerAdSlot()];
+      const allSlots = [...expectedSlots, ...filteredSlots];
       addToDom(allSlots);
       return expect(requestAds(allSlots)).to.eventually.be.deep.equals(expectedSlots);
     });
 
     it('should only refresh manual slots that are defined in the refreshSlots array', () => {
       const adSlot = manualAdSlot();
-      const filteredSlots = [ lazyAdSlot(), manualAdSlot() ];
-      const expectedSlots = [ eagerAdSlot(), adSlot ];
-      const allSlots = [ ...expectedSlots, ...filteredSlots ];
+      const filteredSlots = [lazyAdSlot(), manualAdSlot()];
+      const expectedSlots = [eagerAdSlot(), adSlot];
+      const allSlots = [...expectedSlots, ...filteredSlots];
       addToDom(allSlots);
-      return expect(requestAds(allSlots, [ adSlot.domId ])).to.eventually.be.deep.equals(expectedSlots);
+      return expect(requestAds(allSlots, [adSlot.domId])).to.eventually.be.deep.equals(
+        expectedSlots
+      );
     });
 
     describe('lazy slots', () => {
-
       const createLazyLoaderSpy = sandbox.spy(lazyLoaderModule, 'createLazyLoader');
 
       it('should create a lazy loader for lazy slots', () => {
         const lazySlot = lazyAdSlot();
-        return requestAds([ lazySlot ])
-          .then(() => {
-            expect(createLazyLoaderSpy).to.have.been.calledOnce;
-            expect(createLazyLoaderSpy).to.have.been.calledOnceWith(
-              Sinon.match.same(lazySlot.behaviour.trigger),
-              Sinon.match.any,
-              Sinon.match.same(dom.window)
-            );
-          });
+        return requestAds([lazySlot]).then(() => {
+          expect(createLazyLoaderSpy).to.have.been.calledOnce;
+          expect(createLazyLoaderSpy).to.have.been.calledOnceWith(
+            Sinon.match.same(lazySlot.behaviour.trigger),
+            Sinon.match.any,
+            Sinon.match.same(dom.window)
+          );
+        });
       });
     });
 
@@ -435,18 +436,16 @@ describe('AdService', () => {
 
       it('should create a refreshable listener for refreshable slots', () => {
         const lazySlot = refreshableAdSlot(true);
-        return requestAds([ lazySlot ])
-          .then(() => {
-            expect(createRefreshListenerSpy).to.have.been.calledOnce;
-            expect(createRefreshListenerSpy).to.have.been.calledOnceWith(
-              Sinon.match.same(lazySlot.behaviour.trigger),
-              Sinon.match.same(undefined),
-              Sinon.match.any,
-              Sinon.match.same(dom.window)
-            );
-          });
+        return requestAds([lazySlot]).then(() => {
+          expect(createRefreshListenerSpy).to.have.been.calledOnce;
+          expect(createRefreshListenerSpy).to.have.been.calledOnceWith(
+            Sinon.match.same(lazySlot.behaviour.trigger),
+            Sinon.match.same(undefined),
+            Sinon.match.any,
+            Sinon.match.same(dom.window)
+          );
+        });
       });
     });
-
   });
 });

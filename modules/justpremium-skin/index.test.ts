@@ -7,14 +7,11 @@ import { newNoopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
 
-
 // setup sinon-chai
 use(sinonChai);
 
-
 // tslint:disable: no-unused-expression
 describe('JustPremium Module', () => {
-
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
 
@@ -46,13 +43,16 @@ describe('JustPremium Module', () => {
   it('should set the prebidResponse listener', () => {
     const moli = createMoliTag(dom.window);
     const noopLogger = newNoopLogger();
-    const module = new JustPremium({
-      wallpaperAdSlotDomId: 'wp-slot',
-      blockedAdSlotDomIds: [ 'sky-slot' ],
-      hideWallpaperAdSlot: false
-    }, dom.window);
+    const module = new JustPremium(
+      {
+        wallpaperAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: ['sky-slot'],
+        hideWallpaperAdSlot: false
+      },
+      dom.window
+    );
 
-    const slots = createAdSlots(dom.window, [ 'wp-slot', 'sky-slot' ]);
+    const slots = createAdSlots(dom.window, ['wp-slot', 'sky-slot']);
 
     const initSpy = sandbox.spy(module, 'init');
     const errorLogSpy = sandbox.spy(noopLogger, 'error');
@@ -75,13 +75,16 @@ describe('JustPremium Module', () => {
   it('should fail if not all slots are available in the config', () => {
     const moli = createMoliTag(dom.window);
     const noopLogger = newNoopLogger();
-    const module = new JustPremium({
-      wallpaperAdSlotDomId: 'wp-slot',
-      blockedAdSlotDomIds: [ 'sky-slot' ],
-      hideWallpaperAdSlot: false
-    }, dom.window);
+    const module = new JustPremium(
+      {
+        wallpaperAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: ['sky-slot'],
+        hideWallpaperAdSlot: false
+      },
+      dom.window
+    );
 
-    const slots = createAdSlots(dom.window, [ 'wp-slot' ]);
+    const slots = createAdSlots(dom.window, ['wp-slot']);
 
     const initSpy = sandbox.spy(module, 'init');
     const errorLogSpy = sandbox.spy(noopLogger, 'error');

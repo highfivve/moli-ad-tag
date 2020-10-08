@@ -10,14 +10,19 @@ import {
   RequestBidsStep
 } from './adPipeline';
 import { SlotEventService, slotEventServiceConfigure } from './slotEventService';
-import { noopReportingService, reportingPrepareRequestAds, ReportingService } from './reportingService';
+import {
+  noopReportingService,
+  reportingPrepareRequestAds,
+  ReportingService
+} from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import {
   gptConfigure,
   gptDefineSlots,
   gptDestroyAdSlots,
-  gptInit, gptLDeviceLabelKeyValue,
+  gptInit,
+  gptLDeviceLabelKeyValue,
   gptRequestAds,
   gptResetTargeting
 } from './googleAdManager';
@@ -25,7 +30,8 @@ import domready from '../util/domready';
 import {
   prebidConfigure,
   prebidInit,
-  prebidPrepareRequestAds, prebidRemoveAdUnits,
+  prebidPrepareRequestAds,
+  prebidRemoveAdUnits,
   prebidRemoveHbKeyValues,
   prebidRequestBids
 } from './prebid';
@@ -37,9 +43,7 @@ import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
 import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
 
-
 export class AdService {
-
   /**
    * Access to a logger
    */
@@ -60,15 +64,20 @@ export class AdService {
    *      this will allow us to configure arbitrary things via modules
    *      in the ad request lifecycle
    */
-  private adPipeline: AdPipeline = new AdPipeline({
-    init: [ () => Promise.reject('AdPipeline not initialized yet') ],
-    configure: [],
-    defineSlots: () => Promise.resolve([]),
-    prepareRequestAds: [],
-    requestBids: [],
-    requestAds: () => Promise.resolve()
-
-  }, this.logger, this.window, noopReportingService, this.slotEventService);
+  private adPipeline: AdPipeline = new AdPipeline(
+    {
+      init: [() => Promise.reject('AdPipeline not initialized yet')],
+      configure: [],
+      defineSlots: () => Promise.resolve([]),
+      prepareRequestAds: [],
+      requestBids: [],
+      requestAds: () => Promise.resolve()
+    },
+    this.logger,
+    this.window,
+    noopReportingService,
+    this.slotEventService
+  );
 
   /**
    *
@@ -77,14 +86,22 @@ export class AdService {
    * @param adPipelineConfig only for testing purpose at this point. This configuration will be overriden by
    *        a call to initialize. This should not be the API for extending the pipeline!
    */
-  constructor(private readonly assetService: IAssetLoaderService,
-              private readonly window: Window,
-              private readonly adPipelineConfig?: IAdPipelineConfiguration
-  ) {    // initialize the logger with a default one
+  constructor(
+    private readonly assetService: IAssetLoaderService,
+    private readonly window: Window,
+    private readonly adPipelineConfig?: IAdPipelineConfiguration
+  ) {
+    // initialize the logger with a default one
     this.logger = new ProxyLogger(getDefaultLogger());
     this.slotEventService = new SlotEventService(this.logger);
     if (adPipelineConfig) {
-      this.adPipeline = new AdPipeline(adPipelineConfig, this.logger, window, noopReportingService, this.slotEventService);
+      this.adPipeline = new AdPipeline(
+        adPipelineConfig,
+        this.logger,
+        window,
+        noopReportingService,
+        this.slotEventService
+      );
     }
   }
 
@@ -100,7 +117,10 @@ export class AdService {
    * @param config
    * @param isSinglePageApp
    */
-  public initialize = (config: Readonly<Moli.MoliConfig>, isSinglePageApp: boolean): Promise<Readonly<Moli.MoliConfig>> => {
+  public initialize = (
+    config: Readonly<Moli.MoliConfig>,
+    isSinglePageApp: boolean
+  ): Promise<Readonly<Moli.MoliConfig>> => {
     const env = this.getEnvironment(config);
     // 1. setup all services
     this.logger.setLogger(getLogger(config, this.window));
@@ -113,17 +133,15 @@ export class AdService {
     };
     const reportingService = new ReportingService(
       createPerformanceService(this.window),
-      this.slotEventService, reportingConfig,
+      this.slotEventService,
+      reportingConfig,
       this.logger,
       env,
       this.window
     );
 
     // 2. build the AdPipeline
-    const init: InitStep[] = [
-      this.awaitDomReady(),
-      gptInit()
-    ];
+    const init: InitStep[] = [this.awaitDomReady(), gptInit()];
 
     const configure: ConfigureStep[] = [
       gptConfigure(config),
@@ -138,7 +156,9 @@ export class AdService {
     const prepareRequestAds: PrepareRequestAdsStep[] = [
       reportingPrepareRequestAds(reportingService),
       passbackPrepareRequestAds(new PassbackService(this.logger, this.window)),
-      yieldOptimizationPrepareRequestAds(new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger))
+      yieldOptimizationPrepareRequestAds(
+        new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger)
+      )
     ];
 
     const requestBids: RequestBidsStep[] = [];
@@ -169,18 +189,23 @@ export class AdService {
       prepareRequestAds.push(...config.pipeline.prepareRequestAdsSteps);
     }
 
-    this.adPipeline = new AdPipeline({
-      init,
-      configure,
-      defineSlots: gptDefineSlots(),
-      prepareRequestAds,
-      requestBids,
-      requestAds: gptRequestAds()
-    }, this.logger, this.window, reportingService, this.slotEventService);
+    this.adPipeline = new AdPipeline(
+      {
+        init,
+        configure,
+        defineSlots: gptDefineSlots(),
+        prepareRequestAds,
+        requestBids,
+        requestAds: gptRequestAds()
+      },
+      this.logger,
+      this.window,
+      reportingService,
+      this.slotEventService
+    );
 
     return Promise.resolve(config);
   };
-
 
   /**
    *
@@ -188,7 +213,10 @@ export class AdService {
    * @param refreshSlots a list of ad slots that are already manually refreshed via the `moli.refreshAdSlot` API
    *         and can be part of the requestAds cycle
    */
-  public requestAds = (config: Readonly<Moli.MoliConfig>, refreshSlots: string[]): Promise<Moli.AdSlot[]> => {
+  public requestAds = (
+    config: Readonly<Moli.MoliConfig>,
+    refreshSlots: string[]
+  ): Promise<Moli.AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
     this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);
     try {
@@ -197,7 +225,8 @@ export class AdService {
           if (this.isLazySlot(slot)) {
             this.logger.debug('AdService', `create lazy loader for ${slot.domId}`, slot);
             // initialize lazy slot
-            createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window).onLoad()
+            createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window)
+              .onLoad()
               .then(() => {
                 if (this.isSlotAvailable(slot)) {
                   return Promise.resolve();
@@ -206,26 +235,32 @@ export class AdService {
                 this.logger.error('AdService', message);
                 return Promise.reject(message);
               })
-              .then(() => this.adPipeline.run([ slot ], config, this.requestAdsCalls));
+              .then(() => this.adPipeline.run([slot], config, this.requestAdsCalls));
             return null;
           } else if (this.isRefreshableAdSlot(slot)) {
             this.logger.debug('AdService', `create refresh listener for ${slot.domId}`, slot);
             // initialize lazy refreshable slot
-            createRefreshListener(slot.behaviour.trigger, slot.behaviour.throttle, this.slotEventService, this.window)
-              .addAdRefreshListener(() => this.adPipeline.run([ slot ], config, this.requestAdsCalls));
+            createRefreshListener(
+              slot.behaviour.trigger,
+              slot.behaviour.throttle,
+              this.slotEventService,
+              this.window
+            ).addAdRefreshListener(() => this.adPipeline.run([slot], config, this.requestAdsCalls));
 
             // if the slot should be lazy loaded don't return it
             return slot.behaviour.lazy ? null : slot;
           } else if (this.isManualSlot(slot)) {
             // only load the slot immediately if it's available in the refreshSlots array
-            return refreshSlots.some((domId) => domId === slot.domId) ? slot : null;
+            return refreshSlots.some(domId => domId === slot.domId) ? slot : null;
           } else {
             return slot;
           }
         })
         .filter(isNotNull)
         .filter(this.isSlotAvailable);
-      return this.adPipeline.run(immediatelyLoadedSlots, config, this.requestAdsCalls).then(() => immediatelyLoadedSlots);
+      return this.adPipeline
+        .run(immediatelyLoadedSlots, config, this.requestAdsCalls)
+        .then(() => immediatelyLoadedSlots);
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
       return Promise.reject(e);
@@ -240,8 +275,14 @@ export class AdService {
     const availableSlots = manualSlots.filter(slot => domIds.some(domId => domId === slot.domId));
 
     if (domIds.length !== availableSlots.length) {
-      const unavailableSlots = domIds.filter(domId => !manualSlots.some(slot => slot.domId === domId));
-      this.logger.warn('AdService', 'Trying to refresh slots that are not available', unavailableSlots);
+      const unavailableSlots = domIds.filter(
+        domId => !manualSlots.some(slot => slot.domId === domId)
+      );
+      this.logger.warn(
+        'AdService',
+        'Trying to refresh slots that are not available',
+        unavailableSlots
+      );
     }
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots);
@@ -253,38 +294,38 @@ export class AdService {
    */
   public getAdPipeline = (): AdPipeline => {
     return this.adPipeline;
-  }
+  };
 
   public setLogger = (logger: Moli.MoliLogger): void => {
     this.logger.setLogger(logger);
-  }
+  };
 
   private getEnvironment(config: Moli.MoliConfig): Moli.Environment {
     return config.environment || 'production';
   }
 
   private awaitDomReady = (): InitStep => {
-    const fn = () => new Promise<void>(resolve => {
-      domready(this.window, resolve);
-    }).then(() => this.logger.debug('DOM', 'dom ready'));
+    const fn = () =>
+      new Promise<void>(resolve => {
+        domready(this.window, resolve);
+      }).then(() => this.logger.debug('DOM', 'dom ready'));
     Object.defineProperty(fn, 'name', { value: 'await-dom-ready' });
     return fn;
   };
 
   private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {
     return slot.behaviour.loaded === 'lazy';
-  }
+  };
 
   private isRefreshableAdSlot = (slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot => {
     return slot.behaviour.loaded === 'refreshable';
-  }
+  };
 
   private isManualSlot = (slot: Moli.AdSlot): slot is Moli.ManualAdSlot => {
     return slot.behaviour.loaded === 'manual';
-  }
+  };
 
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
     return !!this.window.document.getElementById(slot.domId);
-  }
-
+  };
 }

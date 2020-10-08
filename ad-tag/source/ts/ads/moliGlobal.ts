@@ -1,8 +1,6 @@
 import { Moli } from '../types/moli';
 import { createMoliTag } from './moli';
 
-
-
 // =============================
 // ====== Initialization =======
 // =============================
@@ -17,7 +15,9 @@ import { createMoliTag } from './moli';
  */
 export const initAdTag = (window: Window): Moli.MoliTag => {
   const moliWindow = window as Moli.MoliWindow;
-  const queueCommands = moliWindow.moli ? [...moliWindow.moli.que as Moli.MoliCommand[]] || [] : [];
+  const queueCommands = moliWindow.moli
+    ? [...(moliWindow.moli.que as Moli.MoliCommand[])] || []
+    : [];
 
   const moli: Moli.MoliTag = createMoliTag(window);
   moliWindow.moli = moli;
@@ -26,4 +26,3 @@ export const initAdTag = (window: Window): Moli.MoliTag => {
 
   return moli;
 };
-

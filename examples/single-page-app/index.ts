@@ -16,7 +16,7 @@ prebid.processQueue();
 
 const moli = initAdTag(window);
 
-moli.registerModule(new SourcepointCmp(window));
+moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 moli.enableSinglePageApp();
 // init moli

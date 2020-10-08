@@ -20,36 +20,69 @@ import 'prebid.js/modules/rubiconBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import Cmp from '@highfivve/module-cmp-sourcepoint';
+import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 import Confiant from '@highfivve/module-confiant';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
+import Skin from '@highfivve/module-generic-skin';
 
 prebid.processQueue();
 
 const moli = initAdTag(window);
 
 // ad fraud protection
-moli.registerModule(new Confiant({
-  assetUrl: 'https://confiant-integrations.global.ssl.fastly.net/Fhkh8X7bib_CoPkwt4wiIcaO-vk/gpt_and_prebid/config.js'
-}, window));
+moli.registerModule(
+  new Confiant(
+    {
+      assetUrl:
+        'https://confiant-integrations.global.ssl.fastly.net/Fhkh8X7bib_CoPkwt4wiIcaO-vk/gpt_and_prebid/config.js'
+    },
+    window
+  )
+);
 
 // cmp
-moli.registerModule(new Cmp(window));
+moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 // blacklist urls
-moli.registerModule(new BlocklistedUrls({
-  mode: 'block',
-  blocklist: {
-    provider: 'static',
-    blocklist: {
-      urls: [
-        // { pattern: 'local\.h5v\.eu', matchType: 'regex' },
-        { pattern: 'invalid', matchType: 'contains' }
+moli.registerModule(
+  new BlocklistedUrls(
+    {
+      mode: 'block',
+      blocklist: {
+        provider: 'static',
+        blocklist: {
+          urls: [
+            // { pattern: 'local\.h5v\.eu', matchType: 'regex' },
+            { pattern: 'invalid', matchType: 'contains' }
+          ]
+        }
+      }
+    },
+    window
+  )
+);
+
+moli.registerModule(
+  new Skin(
+    {
+      trackSkinCpmLow: (cpms, skinConfig) => {
+        console.log('[SKIN]', cpms, skinConfig);
+      },
+      configs: [
+        {
+          formatFilter: [{ bidder: 'justpremium', format: 'wp' }, { bidder: 'dspx' }],
+          skinAdSlotDomId: 'prebid-adslot-2',
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: false,
+          blockedAdSlotDomIds: ['prebid-adslot', 'appnexus-native-example-1']
+        }
       ]
-    }
-  }
-}, window));
+    },
+    window
+  )
+);
 
 // init moli
 moli.configure(adConfiguration);

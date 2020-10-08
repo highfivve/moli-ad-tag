@@ -18,7 +18,6 @@ use(sinonChai);
 
 // tslint:disable: no-unused-expression
 describe('YieldOptimizationService', () => {
-
   const dom = createDom();
 
   // single sandbox instance to create spies and stubs
@@ -26,7 +25,10 @@ describe('YieldOptimizationService', () => {
   const assetLoaderService = createAssetLoaderService(dom.window);
   const assetLoaderLoadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');
 
-  const createService = (config: YieldOptimizationConfig, trafficShare?: () => number): YieldOptimizationService => {
+  const createService = (
+    config: YieldOptimizationConfig,
+    trafficShare?: () => number
+  ): YieldOptimizationService => {
     return new YieldOptimizationService(config, assetLoaderService, noopLogger, trafficShare);
   };
 
@@ -43,7 +45,6 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('provider: none', () => {
-
     const config: NoYieldOptimizationConfig = { provider: 'none' };
     const service = createService(config);
 
@@ -66,7 +67,6 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('provider: static', () => {
-
     describe('empty config', () => {
       const config: StaticYieldOptimizationConfig = { provider: 'static', config: { rules: [] } };
       const service = createService(config);
@@ -92,7 +92,8 @@ describe('YieldOptimizationService', () => {
     describe('non empty config', () => {
       const adUnit = 'ad_content_1';
       const config: StaticYieldOptimizationConfig = {
-        provider: 'static', config: {
+        provider: 'static',
+        config: {
           rules: [
             {
               adUnitName: adUnit,
@@ -118,7 +119,7 @@ describe('YieldOptimizationService', () => {
       });
 
       it('should return the main priceRuleId 3 for 80% of the traffic ', () => {
-        const assertions = buildTrafficShareArray(20, 99).map((trafficShare) => {
+        const assertions = buildTrafficShareArray(20, 99).map(trafficShare => {
           const service = createService(config, () => trafficShare);
           return service.getPriceRule(adUnit).then(rule => {
             expect(rule).to.be.ok;
@@ -133,7 +134,7 @@ describe('YieldOptimizationService', () => {
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-        const assertions = buildTrafficShareArray(20, 99).map((trafficShare) => {
+        const assertions = buildTrafficShareArray(20, 99).map(trafficShare => {
           const service = createService(config, () => trafficShare);
           return service.setTargeting(adSlot).then(_ => {
             expect(setTargetingSpy).to.have.been.calledWithExactly('upr_id', '3');
@@ -145,21 +146,24 @@ describe('YieldOptimizationService', () => {
 
       it('should return the price rules based on the traffic share and array index ', () => {
         const ruleExpectations = [
-          { priceRuleId: 1, shares: [ 0, 5, 10, 15 ] },
-          { priceRuleId: 2, shares: [ 1, 6, 11, 16 ] },
-          { priceRuleId: 4, shares: [ 2, 7, 12, 17 ] },
-          { priceRuleId: 5, shares: [ 3, 8, 13, 18 ] },
+          { priceRuleId: 1, shares: [0, 5, 10, 15] },
+          { priceRuleId: 2, shares: [1, 6, 11, 16] },
+          { priceRuleId: 4, shares: [2, 7, 12, 17] },
+          { priceRuleId: 5, shares: [3, 8, 13, 18] },
           // the main rule is appended to the end
-          { priceRuleId: 3, shares: [ 4, 9, 14, 19 ] }
+          { priceRuleId: 3, shares: [4, 9, 14, 19] }
         ];
 
         const assertions = ruleExpectations.map(({ priceRuleId, shares }) => {
-          const priceRuleAssertions = shares.map((trafficShare) => {
+          const priceRuleAssertions = shares.map(trafficShare => {
             const service = createService(config, () => trafficShare);
             return service.getPriceRule(adUnit).then(rule => {
               expect(rule).to.be.ok;
               expect(rule!.main).to.be.undefined;
-              expect(rule!.priceRuleId).to.be.eq(priceRuleId, `Wrong priceRuleId for trafficShare [${trafficShare}]`);
+              expect(rule!.priceRuleId).to.be.eq(
+                priceRuleId,
+                `Wrong priceRuleId for trafficShare [${trafficShare}]`
+              );
             });
           });
           return Promise.all(priceRuleAssertions);
@@ -172,19 +176,22 @@ describe('YieldOptimizationService', () => {
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
         const ruleExpectations = [
-          { priceRuleId: 1, shares: [ 0, 5, 10, 15 ] },
-          { priceRuleId: 2, shares: [ 1, 6, 11, 16 ] },
-          { priceRuleId: 4, shares: [ 2, 7, 12, 17 ] },
-          { priceRuleId: 5, shares: [ 3, 8, 13, 18 ] },
+          { priceRuleId: 1, shares: [0, 5, 10, 15] },
+          { priceRuleId: 2, shares: [1, 6, 11, 16] },
+          { priceRuleId: 4, shares: [2, 7, 12, 17] },
+          { priceRuleId: 5, shares: [3, 8, 13, 18] },
           // the main rule is appended to the end
-          { priceRuleId: 3, shares: [ 4, 9, 14, 19 ] }
+          { priceRuleId: 3, shares: [4, 9, 14, 19] }
         ];
 
         const assertions = ruleExpectations.map(({ priceRuleId, shares }) => {
-          const priceRuleAssertions = shares.map((trafficShare) => {
+          const priceRuleAssertions = shares.map(trafficShare => {
             const service = createService(config, () => trafficShare);
             return service.setTargeting(adSlot).then(_ => {
-              expect(setTargetingSpy).to.have.been.calledWithExactly('upr_id', priceRuleId.toFixed(0));
+              expect(setTargetingSpy).to.have.been.calledWithExactly(
+                'upr_id',
+                priceRuleId.toFixed(0)
+              );
             });
           });
           return Promise.all(priceRuleAssertions);
@@ -192,13 +199,10 @@ describe('YieldOptimizationService', () => {
 
         return Promise.all(assertions);
       });
-
-
     });
   });
 
   describe('provider: dynamic', () => {
-
     const adUnit = 'ad_content_1';
     const config: DynamicYieldOptimizationConfig = {
       provider: 'dynamic',
@@ -212,18 +216,12 @@ describe('YieldOptimizationService', () => {
           main: {
             priceRuleId: 3
           },
-          tests: [
-            { priceRuleId: 1 },
-            { priceRuleId: 2 },
-            { priceRuleId: 4 },
-            { priceRuleId: 5 }
-          ]
+          tests: [{ priceRuleId: 1 }, { priceRuleId: 2 }, { priceRuleId: 4 }, { priceRuleId: 5 }]
         }
       ]
     };
 
     describe('error handling', () => {
-
       it('should retry three times', () => {
         assetLoaderLoadJsonStub.onFirstCall().rejects('FetchRequestFailed');
         assetLoaderLoadJsonStub.onSecondCall().rejects('FetchRequestFailed');
@@ -259,7 +257,7 @@ describe('YieldOptimizationService', () => {
       it('should always return undefined if the config json has the wrong format', () => {
         assetLoaderLoadJsonStub.resolves({
           ok: true,
-          json: () => Promise.reject([ {}, {} ])
+          json: () => Promise.reject([{}, {}])
         });
         const service = createService(config);
 
@@ -268,7 +266,6 @@ describe('YieldOptimizationService', () => {
           expect(assetLoaderLoadJsonStub).to.have.been.called;
         });
       });
-
     });
 
     describe('non empty config', () => {
@@ -276,15 +273,15 @@ describe('YieldOptimizationService', () => {
         assetLoaderLoadJsonStub.resolves(publisherYieldConfiguration);
       });
 
-
       it('should call the configured endpoint only once', () => {
         const service = createService(config);
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
 
-        return Promise.all([ service.getPriceRule(adUnit), service.setTargeting(adSlot) ]).then(_ => {
+        return Promise.all([service.getPriceRule(adUnit), service.setTargeting(adSlot)]).then(_ => {
           expect(assetLoaderLoadJsonStub).to.have.been.calledOnce;
           expect(assetLoaderLoadJsonStub).to.have.been.calledOnceWithExactly(
-            'yield-config.json', config.configEndpoint
+            'yield-config.json',
+            config.configEndpoint
           );
         });
       });
@@ -297,7 +294,7 @@ describe('YieldOptimizationService', () => {
       });
 
       it('should return the main priceRuleId 3 for 80% of the traffic ', () => {
-        const assertions = buildTrafficShareArray(20, 99).map((trafficShare) => {
+        const assertions = buildTrafficShareArray(20, 99).map(trafficShare => {
           const service = createService(config, () => trafficShare);
           return service.getPriceRule(adUnit).then(rule => {
             expect(rule).to.be.ok;
@@ -312,7 +309,7 @@ describe('YieldOptimizationService', () => {
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-        const assertions = buildTrafficShareArray(20, 99).map((trafficShare) => {
+        const assertions = buildTrafficShareArray(20, 99).map(trafficShare => {
           const service = createService(config, () => trafficShare);
           return service.setTargeting(adSlot).then(_ => {
             expect(setTargetingSpy).to.have.been.calledWithExactly('upr_id', '3');
@@ -324,21 +321,24 @@ describe('YieldOptimizationService', () => {
 
       it('should return the price rules based on the traffic share and array index ', () => {
         const ruleExpectations = [
-          { priceRuleId: 1, shares: [ 0, 5, 10, 15 ] },
-          { priceRuleId: 2, shares: [ 1, 6, 11, 16 ] },
-          { priceRuleId: 4, shares: [ 2, 7, 12, 17 ] },
-          { priceRuleId: 5, shares: [ 3, 8, 13, 18 ] },
+          { priceRuleId: 1, shares: [0, 5, 10, 15] },
+          { priceRuleId: 2, shares: [1, 6, 11, 16] },
+          { priceRuleId: 4, shares: [2, 7, 12, 17] },
+          { priceRuleId: 5, shares: [3, 8, 13, 18] },
           // the main rule is appended to the end
-          { priceRuleId: 3, shares: [ 4, 9, 14, 19 ] }
+          { priceRuleId: 3, shares: [4, 9, 14, 19] }
         ];
 
         const assertions = ruleExpectations.map(({ priceRuleId, shares }) => {
-          const priceRuleAssertions = shares.map((trafficShare) => {
+          const priceRuleAssertions = shares.map(trafficShare => {
             const service = createService(config, () => trafficShare);
             return service.getPriceRule(adUnit).then(rule => {
               expect(rule).to.be.ok;
               expect(rule!.main).to.be.undefined;
-              expect(rule!.priceRuleId).to.be.eq(priceRuleId, `Wrong priceRuleId for trafficShare [${trafficShare}]`);
+              expect(rule!.priceRuleId).to.be.eq(
+                priceRuleId,
+                `Wrong priceRuleId for trafficShare [${trafficShare}]`
+              );
             });
           });
           return Promise.all(priceRuleAssertions);
@@ -351,19 +351,22 @@ describe('YieldOptimizationService', () => {
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
         const ruleExpectations = [
-          { priceRuleId: 1, shares: [ 0, 5, 10, 15 ] },
-          { priceRuleId: 2, shares: [ 1, 6, 11, 16 ] },
-          { priceRuleId: 4, shares: [ 2, 7, 12, 17 ] },
-          { priceRuleId: 5, shares: [ 3, 8, 13, 18 ] },
+          { priceRuleId: 1, shares: [0, 5, 10, 15] },
+          { priceRuleId: 2, shares: [1, 6, 11, 16] },
+          { priceRuleId: 4, shares: [2, 7, 12, 17] },
+          { priceRuleId: 5, shares: [3, 8, 13, 18] },
           // the main rule is appended to the end
-          { priceRuleId: 3, shares: [ 4, 9, 14, 19 ] }
+          { priceRuleId: 3, shares: [4, 9, 14, 19] }
         ];
 
         const assertions = ruleExpectations.map(({ priceRuleId, shares }) => {
-          const priceRuleAssertions = shares.map((trafficShare) => {
+          const priceRuleAssertions = shares.map(trafficShare => {
             const service = createService(config, () => trafficShare);
             return service.setTargeting(adSlot).then(_ => {
-              expect(setTargetingSpy).to.have.been.calledWithExactly('upr_id', priceRuleId.toFixed(0));
+              expect(setTargetingSpy).to.have.been.calledWithExactly(
+                'upr_id',
+                priceRuleId.toFixed(0)
+              );
             });
           });
           return Promise.all(priceRuleAssertions);
@@ -375,11 +378,11 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('price rule cpms', () => {
-
     it('resolve cpms for known price rule ids', () => {
       const adUnit = 'ad_content_1';
       const config: StaticYieldOptimizationConfig = {
-        provider: 'static', config: {
+        provider: 'static',
+        config: {
           rules: [
             {
               adUnitName: adUnit,
@@ -396,17 +399,20 @@ describe('YieldOptimizationService', () => {
           ]
         }
       };
-      return createService(config).getPriceRule(adUnit).then(priceRule => {
-        expect(priceRule).to.be.ok;
-        expect(priceRule?.cpm).to.be.ok;
-        expect(priceRule?.cpm).to.be.oneOf([ 0.15, 0.10, 0.30, 0.35 ]);
-      });
+      return createService(config)
+        .getPriceRule(adUnit)
+        .then(priceRule => {
+          expect(priceRule).to.be.ok;
+          expect(priceRule?.cpm).to.be.ok;
+          expect(priceRule?.cpm).to.be.oneOf([0.15, 0.1, 0.3, 0.35]);
+        });
     });
 
     it('leaves cpm undefined for unknown price rules ', () => {
       const adUnit = 'ad_content_1';
       const config: StaticYieldOptimizationConfig = {
-        provider: 'static', config: {
+        provider: 'static',
+        config: {
           rules: [
             {
               adUnitName: adUnit,
@@ -424,12 +430,13 @@ describe('YieldOptimizationService', () => {
         }
       };
 
-      return createService(config).getPriceRule(adUnit).then(priceRule => {
-        expect(priceRule).to.be.ok;
-        expect(priceRule?.cpm).to.be.undefined;
-      });
+      return createService(config)
+        .getPriceRule(adUnit)
+        .then(priceRule => {
+          expect(priceRule).to.be.ok;
+          expect(priceRule?.cpm).to.be.undefined;
+        });
     });
   });
-
 });
 // tslint:enable

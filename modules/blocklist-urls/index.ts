@@ -5,11 +5,11 @@ import {
   getLogger,
   IAssetLoaderService,
   mkPrepareRequestAdsStep,
-  HIGH_PRIORITY, mkConfigureStep
+  HIGH_PRIORITY,
+  mkConfigureStep
 } from '@highfivve/ad-tag';
 
 export interface IBlocklistEntry {
-
   /**
    * A regex pattern for the complete href of the page
    */
@@ -23,7 +23,6 @@ export interface IBlocklistEntry {
    * - `exact` - checks if the url exactly matches the given pattern string
    */
   readonly matchType: 'regex' | 'contains' | 'exact';
-
 }
 
 export interface IBlocklist {
@@ -53,9 +52,7 @@ export interface IDynamicBlocklistProvider {
 
 export type BlocklistProvider = IStaticBlocklistProvider | IDynamicBlocklistProvider;
 
-
 export interface IBlocklistUrlsBlockingConfig {
-
   /**
    * `block` - this mode blocks ad requests entirely
    * `key-value` - sets a specified key value
@@ -66,11 +63,9 @@ export interface IBlocklistUrlsBlockingConfig {
    * blocklist content
    */
   readonly blocklist: BlocklistProvider;
-
 }
 
 export interface IBlocklistUrlsKeyValueConfig {
-
   /**
    * `block` - this mode blocks ad requests entirely
    * `key-value` - sets a specified key value
@@ -90,24 +85,24 @@ export interface IBlocklistUrlsKeyValueConfig {
    * default is `true`
    */
   readonly isBlocklistedValue?: string;
-
 }
 
 export type BlocklistUrlsConfig = IBlocklistUrlsBlockingConfig | IBlocklistUrlsKeyValueConfig;
 
 export default class BlocklistedUrls implements IModule {
-
   public readonly name: string = 'Blocklist URLs';
-  public readonly description: string = 'Blocks ad requests entirely or adds key-values for blocklistd urls';
+  public readonly description: string =
+    'Blocks ad requests entirely or adds key-values for blocklistd urls';
   public readonly moduleType: ModuleType = 'policy';
 
-  constructor(private readonly blocklistUrlsConfig: BlocklistUrlsConfig, private readonly window: Window) {
-  }
+  constructor(
+    private readonly blocklistUrlsConfig: BlocklistUrlsConfig,
+    private readonly window: Window
+  ) {}
 
   config(): Object | null {
     return this.blocklistUrlsConfig;
   }
-
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
@@ -126,33 +121,38 @@ export default class BlocklistedUrls implements IModule {
       prepareRequestAdsSteps: []
     };
 
-
-    const fetchBlocklist = this.getBlocklist(this.blocklistUrlsConfig.blocklist, assetLoaderService, log);
+    const fetchBlocklist = this.getBlocklist(
+      this.blocklistUrlsConfig.blocklist,
+      assetLoaderService,
+      log
+    );
 
     switch (this.blocklistUrlsConfig.mode) {
       case 'key-value':
         const key = this.blocklistUrlsConfig.key;
         const value = this.blocklistUrlsConfig.isBlocklistedValue || 'true';
-        config.pipeline.prepareRequestAdsSteps.push(mkPrepareRequestAdsStep(
-          'blocklist-urls', HIGH_PRIORITY, () => {
+        config.pipeline.prepareRequestAdsSteps.push(
+          mkPrepareRequestAdsStep('blocklist-urls', HIGH_PRIORITY, () => {
             return fetchBlocklist().then(blocklist => {
               log.debug(this.name, 'using blocklist', blocklist);
               if (this.isBlocklisted(blocklist, this.window.location.href, log)) {
                 this.window.googletag.pubads().setTargeting(key, value);
               }
             });
-          }));
+          })
+        );
         return;
       case 'block':
-        config.pipeline.configureSteps.push(mkConfigureStep(
-          'blocklist-urls', () => {
+        config.pipeline.configureSteps.push(
+          mkConfigureStep('blocklist-urls', () => {
             return fetchBlocklist().then(blocklist => {
               log.debug(this.name, 'using blocklist', blocklist);
               if (this.isBlocklisted(blocklist, this.window.location.href, log)) {
                 return Promise.reject('blocklisted url found. Abort ad pipeline run');
               }
             });
-          }));
+          })
+        );
         return;
     }
   }
@@ -177,11 +177,14 @@ export default class BlocklistedUrls implements IModule {
             return false;
           }
       }
-
     });
-  }
+  };
 
-  private getBlocklist(blocklist: BlocklistProvider, assetLoaderService: IAssetLoaderService, log: Moli.MoliLogger): (() => Promise<IBlocklist>) {
+  private getBlocklist(
+    blocklist: BlocklistProvider,
+    assetLoaderService: IAssetLoaderService,
+    log: Moli.MoliLogger
+  ): () => Promise<IBlocklist> {
     switch (blocklist.provider) {
       case 'static':
         return () => Promise.resolve(blocklist.blocklist);
@@ -189,30 +192,37 @@ export default class BlocklistedUrls implements IModule {
         let cachedResult: Promise<IBlocklist>;
         return () => {
           if (!cachedResult) {
-            cachedResult = this
-              .loadConfigWithRetry(assetLoaderService, blocklist.endpoint, 3)
-              .catch((e) => {
-                log.error(this.name, 'Fetching blocklisted urls failed', e);
-                // fallback to no urls
-                return { urls: [] };
-              });
+            cachedResult = this.loadConfigWithRetry(
+              assetLoaderService,
+              blocklist.endpoint,
+              3
+            ).catch(e => {
+              log.error(this.name, 'Fetching blocklisted urls failed', e);
+              // fallback to no urls
+              return { urls: [] };
+            });
           }
           return cachedResult;
         };
     }
   }
 
-  private loadConfigWithRetry(assetLoaderService: IAssetLoaderService, endpoint: string, retriesLeft: number, lastError: any | null = null): Promise<IBlocklist> {
+  private loadConfigWithRetry(
+    assetLoaderService: IAssetLoaderService,
+    endpoint: string,
+    retriesLeft: number,
+    lastError: any | null = null
+  ): Promise<IBlocklist> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
 
-    return assetLoaderService.loadJson<IBlocklist>('blocklist-urls.json', endpoint)
-      .catch(error => {
-        // for 3 retries the backoff time will be 33ms / 50ms / 100ms
-        const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
-        return exponentialBackoff.then(() => this.loadConfigWithRetry(assetLoaderService, endpoint, retriesLeft - 1, error));
-      });
-
+    return assetLoaderService.loadJson<IBlocklist>('blocklist-urls.json', endpoint).catch(error => {
+      // for 3 retries the backoff time will be 33ms / 50ms / 100ms
+      const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
+      return exponentialBackoff.then(() =>
+        this.loadConfigWithRetry(assetLoaderService, endpoint, retriesLeft - 1, error)
+      );
+    });
   }
 }

@@ -164,6 +164,9 @@ export const adConfiguration: Moli.MoliConfig = {
         {
           adUnit: {
             code: 'prebid-adslot',
+            pubstack: {
+              adUnitPath: '/55155651/outstream_test'
+            },
             mediaTypes: {
               banner: {
                 sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]
@@ -187,6 +190,9 @@ export const adConfiguration: Moli.MoliConfig = {
         {
           adUnit: {
             code: 'prebid-adslot',
+            pubstack: {
+              adUnitPath: '/55155651/outstream_test'
+            },
             mediaTypes: {
               banner: {
                 sizes: [ [ 300, 50 ], [ 300, 250 ], [ 320, 50 ] ]

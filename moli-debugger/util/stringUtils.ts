@@ -29,5 +29,7 @@ export function classList(...classNames: (string | Conditional)[]): string {
 }
 
 export function firstUpper(target: string | undefined): string {
-  return target && target.length > 0 ? target[0].toUpperCase() + target.slice(1, target.length) : '';
+  return target && target.length > 0
+    ? target[0].toUpperCase() + target.slice(1, target.length)
+    : '';
 }

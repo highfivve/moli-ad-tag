@@ -6,7 +6,7 @@ import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
-import { AdPipelineContext, } from '../../../source/ts/ads/adPipeline';
+import { AdPipelineContext } from '../../../source/ts/ads/adPipeline';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
@@ -25,12 +25,15 @@ use(chaiAsPromised);
 
 // tslint:disable: no-unused-expression
 describe('google ad manager', () => {
-
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const adPipelineContext = (env: Moli.Environment = 'production', config: Moli.MoliConfig = emptyConfig, requestAdsCalls: number = 1): AdPipelineContext => {
+  const adPipelineContext = (
+    env: Moli.Environment = 'production',
+    config: Moli.MoliConfig = emptyConfig,
+    requestAdsCalls: number = 1
+  ): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: requestAdsCalls,
@@ -46,9 +49,10 @@ describe('google ad manager', () => {
 
   const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
 
-  const sleep = (timeInMs: number = 20) => new Promise(resolve => {
-    setTimeout(resolve, timeInMs);
-  });
+  const sleep = (timeInMs: number = 20) =>
+    new Promise(resolve => {
+      setTimeout(resolve, timeInMs);
+    });
 
   after(() => {
     // bring everything back to normal after tests
@@ -66,7 +70,6 @@ describe('google ad manager', () => {
   });
 
   describe('gptInit', () => {
-
     it('should set the window.google', () => {
       const step = gptInit();
       (dom.window as any).googletag = undefined;
@@ -97,7 +100,6 @@ describe('google ad manager', () => {
   });
 
   describe('gptDestroyAdSlots', () => {
-
     it('should call googletag.destroySlots', () => {
       const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
       const step = gptDestroyAdSlots();
@@ -116,16 +118,14 @@ describe('google ad manager', () => {
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 2), []),
-        step(adPipelineContext('production', emptyConfig, 2), []),
+        step(adPipelineContext('production', emptyConfig, 2), [])
       ]).then(() => {
         expect(destroySlotsSpy).to.have.been.calledTwice;
       });
     });
-
   });
 
   describe('gptResetTargeting', () => {
-
     it('should do nothing in test mode', () => {
       const step = gptResetTargeting();
       const pubadsSpy = sandbox.spy(dom.window.googletag, 'pubads');
@@ -141,7 +141,7 @@ describe('google ad manager', () => {
         targeting: {
           keyValues: {
             foo: 'bar',
-            tags: [ 'car', 'truck' ]
+            tags: ['car', 'truck']
           }
         }
       };
@@ -152,7 +152,7 @@ describe('google ad manager', () => {
         expect(clearTargetingSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.have.been.calledTwice;
         expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
-        expect(setTargetingSpy).to.have.been.calledWith('tags', [ 'car', 'truck' ]);
+        expect(setTargetingSpy).to.have.been.calledWith('tags', ['car', 'truck']);
       });
     });
 
@@ -164,18 +164,19 @@ describe('google ad manager', () => {
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 2), []),
-        step(adPipelineContext('production', emptyConfig, 2), []),
+        step(adPipelineContext('production', emptyConfig, 2), [])
       ]).then(() => {
         expect(clearTargetingSpy).to.have.been.calledTwice;
       });
     });
-
   });
 
   describe('gptLDeviceLabelKeyValue', () => {
-
     const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
-    const getSupportedLabelsStub = sandbox.stub(ctxWithLabelServiceStub.labelConfigService, 'getSupportedLabels');
+    const getSupportedLabelsStub = sandbox.stub(
+      ctxWithLabelServiceStub.labelConfigService,
+      'getSupportedLabels'
+    );
 
     it('should set no device label if no valid device labels are available', () => {
       const step = gptLDeviceLabelKeyValue();
@@ -190,7 +191,7 @@ describe('google ad manager', () => {
     it('should set no device label if more than one valid device labels are available', () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([ 'mobile', 'tablet' ]);
+      getSupportedLabelsStub.returns(['mobile', 'tablet']);
 
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.not.been.called;
@@ -200,67 +201,64 @@ describe('google ad manager', () => {
     it('should set mobile as a device label', () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([ 'mobile' ]);
+      getSupportedLabelsStub.returns(['mobile']);
 
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'mobile' ]);
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['mobile']);
       });
     });
 
     it('should set tablet as a device label', () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([ 'tablet' ]);
+      getSupportedLabelsStub.returns(['tablet']);
 
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'tablet' ]);
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['tablet']);
       });
     });
 
     it('should set desktop as a device label', () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([ 'desktop' ]);
+      getSupportedLabelsStub.returns(['desktop']);
 
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'desktop' ]);
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['desktop']);
       });
     });
 
     it('should filter out irrelevant labels', () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([ 'mobile', 'mobile-320', 'ix' ]);
+      getSupportedLabelsStub.returns(['mobile', 'mobile-320', 'ix']);
 
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', [ 'mobile' ]);
+        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['mobile']);
       });
     });
-
   });
 
   describe('gptDefineSlots', () => {
-
     const adSlot: Moli.AdSlot = {
       domId: 'dom-id',
       adUnitPath: '/123/dom-id',
       behaviour: { loaded: 'eager' },
       position: 'in-page',
-      sizes: [ [ 300, 250 ] ],
+      sizes: [[300, 250]],
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: [ [ 300, 250 ] ]
+          sizesSupported: [[300, 250]]
         }
       ]
     };
 
     describe('production mode', () => {
-
       it('should define in-page slots', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
@@ -268,12 +266,18 @@ describe('google ad manager', () => {
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
-        const defineSlotsStub = sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+        const defineSlotsStub = sandbox
+          .stub(dom.window.googletag, 'defineSlot')
+          .returns(adSlotStub);
         const displaySpy = sandbox.spy(dom.window.googletag, 'display');
 
-        return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+        return step(adPipelineContext(), [adSlot]).then(slotDefinitions => {
           expect(defineSlotsStub).to.have.been.calledOnce;
-          expect(defineSlotsStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, adSlot.sizes, adSlot.domId);
+          expect(defineSlotsStub).to.have.been.calledOnceWithExactly(
+            adSlot.adUnitPath,
+            adSlot.sizes,
+            adSlot.domId
+          );
           expect(addServiceSpy).to.have.been.calledOnce;
           expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
@@ -291,32 +295,30 @@ describe('google ad manager', () => {
 
         const defineSlotsSpy = sandbox.spy(dom.window.googletag, 'defineSlot');
         // slot is already defined
-        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([
-          googleAdSlotStub(adSlot.adUnitPath, adSlot.domId)
-        ]);
+        sandbox
+          .stub(dom.window.googletag.pubads(), 'getSlots')
+          .returns([googleAdSlotStub(adSlot.adUnitPath, adSlot.domId)]);
 
-        return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+        return step(adPipelineContext(), [adSlot]).then(slotDefinitions => {
           expect(defineSlotsSpy).to.have.not.been.called;
         });
       });
-
-
     });
 
     it('should filter slots if the size config matches', () => {
       const step = gptDefineSlots();
       matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-      return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+      return step(adPipelineContext(), [adSlot]).then(slotDefinitions => {
         expect(slotDefinitions).to.have.length(1);
       });
     });
 
-    it('should remove slots if the size config doesn\'t match', () => {
+    it("should remove slots if the size config doesn't match", () => {
       const step = gptDefineSlots();
       matchMediaStub.returns({ matches: false } as MediaQueryList);
 
-      return step(adPipelineContext(), [ adSlot ]).then(slotDefinitions => {
+      return step(adPipelineContext(), [adSlot]).then(slotDefinitions => {
         expect(slotDefinitions).to.have.length(0);
       });
     });
@@ -328,23 +330,21 @@ describe('google ad manager', () => {
       const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
       filterSlotStub.returns(true);
 
-      return step(context, [ adSlot ]).then(slotDefinitions => {
+      return step(context, [adSlot]).then(slotDefinitions => {
         expect(slotDefinitions).to.have.length(1);
       });
     });
 
-    it('should remove slots if the label configuration doesn\'t match', () => {
+    it("should remove slots if the label configuration doesn't match", () => {
       const step = gptDefineSlots();
       const context = adPipelineContext();
 
       const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
       filterSlotStub.returns(false);
 
-      return step(context, [ adSlot ]).then(slotDefinitions => {
+      return step(context, [adSlot]).then(slotDefinitions => {
         expect(slotDefinitions).to.have.length(0);
       });
     });
-
   });
 });
-

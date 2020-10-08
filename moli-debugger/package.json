@@ -16,10 +16,12 @@
     "compile": "yarn compile:ts",
     "compile:ts": "tsc --noEmit",
     "compile:ts:watch": "yarn compile:ts --watch",
-    "lint": "tslint --project tsconfig.json",
+    "lint": "tslint --project tsconfig.json && yarn prettier",
     "clean": "rm -rf dist/",
-    "validate": "yarn compile",
-    "validate:github": "yarn compile && yarn lint"
+    "validate": "yarn prettier && yarn compile",
+    "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",
+    "prettier:fix": "yarn prettier --write",
+    "validate:github": "yarn validate"
   },
   "repository": {
     "type": "git",

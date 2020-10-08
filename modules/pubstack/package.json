@@ -1,29 +1,26 @@
 {
-  "name": "@highfivve/module-generic-skin",
+  "name": "@highfivve/module-pubstack",
   "version": "4.0.0",
   "license": "Apache-2.0",
-  "description": "Blocks ad slots when a wallpaper is being delivered by a prebid partner",
+  "description": "Ad fraud detection and protection",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "files": [
     "lib"
   ],
   "scripts": {
-    "tsc": "tsc",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json && yarn prettier",
     "lint:ts:fix": "tslint --project tsconfig.json --fix && yarn prettier --write",
-    "test": "export TS_NODE_TRANSPILE_ONLY=true && mocha --require ts-node/register index.test.ts",
-    "test:junit": "export TS_NODE_TRANSPILE_ONLY=true && mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
     "prettier": "prettier --config ../../.prettierrc --check \"**/*.ts*\"",
-    "validate": "yarn compile && yarn lint && yarn test",
-    "validate:github": "yarn compile && yarn lint && yarn test:junit"
+    "validate": "yarn compile && yarn lint",
+    "validate:github": "yarn validate"
   },
   "repository": {
     "type": "git",
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
-    "directory": "modules/generic-skin"
+    "directory": "modules/pubstack"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
@@ -32,16 +29,14 @@
     "node": ">=8.0"
   },
   "devDependencies": {
-    "@highfivve/ad-tag": "*",
     "@types/chai": "4.2.0",
     "@types/jsdom": "12.2.4",
     "@types/mocha": "5.2.7",
     "@types/sinon": "7.0.13",
     "@types/sinon-chai": "3.2.3",
     "chai": "4.2.0",
-    "jsdom": "15.1.1",
     "mocha": "6.2.0",
-    "mocha-junit-reporter": "1.23.1",
+    "mocha-junit-reporter": "^1.18.0",
     "sinon": "7.4.2",
     "sinon-chai": "3.3.0",
     "ts-loader": "^5.2.2",

@@ -33,7 +33,7 @@ moli.registerModule(new PrebidGoogleAnalytics({
   }
 }, window));
 
-moli.registerModule(new SourcepointCmp(window));
+moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 moli.configure(adConfiguration);
 moli.requestAds();
