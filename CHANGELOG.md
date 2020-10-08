@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.5.1
+
+Add `outstreamAU` parameter to pubmatic bid configuration.
+
 # 3.5.0
 
 [GD-2333](https://jira.gutefrage.net/browse/GD-2333) Move enableCpmComparison flag to SkinConfig (from SkinModuleConfig).
