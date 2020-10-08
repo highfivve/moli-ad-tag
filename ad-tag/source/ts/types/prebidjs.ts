@@ -1514,6 +1514,16 @@ export namespace prebidjs {
      * Values if present in subsequent adunits, will be ignored.
      */
     readonly currency?: 'EUR' | 'USD';
+
+    /**
+     * Oustream AdUnit described in Blue BillyWig UI. This field is mandatory if mimeType is described as video and
+     * context is outstream (i.e., for outstream videos).
+     *
+     * The code calls this 'rendererCode'.
+     *
+     * @example 'renderer_test_pubmatic'
+     */
+    readonly outstreamAU?: string;
   }
 
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
