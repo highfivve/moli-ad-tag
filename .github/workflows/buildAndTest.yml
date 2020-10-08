@@ -15,7 +15,14 @@ jobs:
       matrix:
         module: [
             ad-tag,
-            module-blocklist-url
+            module-blocklist-url,
+            module-confiant,
+            module-cmp-sourcepoint,
+            module-generic-skin,
+            module-justpremium-skin,
+            module-prebid-google-analytics,
+            module-sovrn-ad-reload,
+            moli-debugger
         ]
 
     steps:
