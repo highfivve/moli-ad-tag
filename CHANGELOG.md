@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+# 3.5.2
+
+[GD-2354](https://jira.gutefrage.net/browse/GD-2354). Fix critical bug where ad slots could not have been rendered, because
+the DOM is not ready yet.
+
 # 3.5.1
 
 Add `outstreamAU` parameter to pubmatic bid configuration.
