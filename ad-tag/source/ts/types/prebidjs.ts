@@ -1645,12 +1645,14 @@ export namespace prebidjs {
     /**
      * The site ID from Unruly.
      */
-    siteId: number;
+    readonly siteId: number;
 
     /**
      * The targeting UUID from Unruly.
+     *
+     * @deprecated this field is still marked as required in the docs, but is never used nor provided by unruly
      */
-    targetingUUID: string;
+    readonly targetingUUID?: string;
   }
 
   /**

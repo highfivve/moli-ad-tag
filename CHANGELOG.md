@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.5.4
+
+[HPO-116](https://jira.gutefrage.net/browse/HPO-116). Mark `targetingUUID` for unruly as optional and deprecated.
+
 # 3.5.3
 
 [GD-2364](https://jira.gutefrage.net/browse/GD-2364). Add `injTagId` parameter for ScreenOnDemand (DSPX).
