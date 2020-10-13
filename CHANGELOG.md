@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.5.3
+
+[GD-2364](https://jira.gutefrage.net/browse/GD-2364). Add `injTagId` parameter for ScreenOnDemand (DSPX).
+
 # 3.5.2
 
 [GD-2354](https://jira.gutefrage.net/browse/GD-2354). Fix critical bug where ad slots could not have been rendered, because

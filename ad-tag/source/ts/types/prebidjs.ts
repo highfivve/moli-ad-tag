@@ -1906,6 +1906,11 @@ export namespace prebidjs {
        * Is private auction?  0  - no, 1 - yes
        */
       readonly private_auction?: 0 | 1;
+
+      /**
+       * configure the DOM ID of the ad slots where the creative should be injected
+       */
+      readonly injTagId?: string;
     };
   }
 
