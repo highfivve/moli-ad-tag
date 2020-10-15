@@ -121,7 +121,7 @@ export class AdService {
     config: Readonly<Moli.MoliConfig>,
     isSinglePageApp: boolean
   ): Promise<Readonly<Moli.MoliConfig>> => {
-    const env = this.getEnvironment(config);
+    const env = AdService.getEnvironment(config);
     // 1. setup all services
     this.logger.setLogger(getLogger(config, this.window));
     this.logger.debug('AdService', `Initializing with environment ${env}`);
@@ -305,7 +305,7 @@ export class AdService {
     this.logger.setLogger(logger);
   };
 
-  private getEnvironment(config: Moli.MoliConfig): Moli.Environment {
+  private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
     return config.environment || 'production';
   }
 

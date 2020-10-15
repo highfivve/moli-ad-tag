@@ -299,7 +299,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             `initialize ${module.moduleType} module ${module.name}`,
             module.config()
           );
-          module.init(config, assetLoaderService);
+          module.init(config, assetLoaderService, adService.getAdPipeline());
         });
 
         state = {

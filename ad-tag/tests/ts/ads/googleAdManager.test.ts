@@ -70,7 +70,7 @@ describe('google ad manager', () => {
   });
 
   describe('gptInit', () => {
-    it('should set the window.google', () => {
+    it('should set the window.googletag', () => {
       const step = gptInit();
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;

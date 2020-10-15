@@ -61,7 +61,15 @@ function getLogStageLabelStyle(logStage: 'debug' | 'info' | 'warn' | 'error'): s
  * @param source
  */
 function getSourceLabelStyle(
-  source: 'AdPipeline' | 'GAM' | 'Prebid' | 'Faktor CMP' | 'MoliGlobal' | 'SlotEventService'
+  source:
+    | 'AdPipeline'
+    | 'GAM'
+    | 'Prebid'
+    | 'Faktor CMP'
+    | 'MoliGlobal'
+    | 'SlotEventService'
+    | 'AdVisibilityService'
+    | 'UserActivityService'
 ): string {
   switch (source) {
     case 'AdPipeline':
@@ -76,6 +84,10 @@ function getSourceLabelStyle(
       return getLabelStyle('#4357AD');
     case 'Prebid':
       return getLabelStyle('#4357AD');
+    case 'AdVisibilityService':
+      return getLabelStyle('#d5ba3c');
+    case 'UserActivityService':
+      return getLabelStyle('#19ad0e');
     default:
       return getLabelStyle('#052E53');
   }

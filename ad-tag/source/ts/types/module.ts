@@ -1,5 +1,6 @@
 import { Moli } from './moli';
 import { IAssetLoaderService } from '../util/assetLoaderService';
+import { AdPipeline } from '../../..';
 
 export type ModuleType = 'cmp' | 'reporting' | 'ad-fraud' | 'prebid' | 'ad-reload' | 'policy';
 
@@ -19,9 +20,15 @@ export interface IModule {
    * - request external resources. The rest of the application won't wait until this is finished
    * - alter the config in place
    * - set values in global scope
+   * - use the ad pipeline to execute moli commands
    *
    * @param config
    * @param assetLoaderService
+   * @param adPipeline
    */
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void;
+  init(
+    config: Moli.MoliConfig,
+    assetLoaderService: IAssetLoaderService,
+    adPipeline: AdPipeline
+  ): void;
 }

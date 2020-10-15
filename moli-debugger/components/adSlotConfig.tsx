@@ -28,16 +28,18 @@ type IAdSlotConfigState = {
   showPrebid: boolean;
   showGeneral: boolean;
   showSizeConfig: boolean;
+  showTriggerConfig: boolean;
 };
 
 const defaultPanelState: Pick<
   IAdSlotConfigState,
-  'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig'
+  'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig' | 'showTriggerConfig'
 > = {
   showA9: false,
   showPrebid: false,
   showGeneral: false,
-  showSizeConfig: false
+  showSizeConfig: false,
+  showTriggerConfig: false
 };
 
 type ValidatedSlotSize = { valid: boolean; size: DfpSlotSize };
@@ -138,7 +140,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
                 [state.showSizeConfig, 'is-active']
               )}
               onClick={this.toggleSizeConfig}
-            ></button>
+            />
           )}
         </div>
         {state.showGeneral && (
@@ -282,7 +284,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           <div class="MoliDebug-tagContainer">
             <span class="MoliDebug-tagLabel">Sizes</span>
             {this.validateSlotSizes(
-              this.props.slot.sizes.filter(this.isFixedSize)
+              this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)
             ).map(validatedSlotSize =>
               this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
             )}
@@ -315,21 +317,14 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     );
   };
 
-  private toggleGeneral = (): void => {
-    this.setState({ ...defaultPanelState, showGeneral: !this.state.showGeneral });
-  };
+  private toggleGeneral = (): void => this.setState({ showGeneral: !this.state.showGeneral });
 
-  private toggleA9 = (): void => {
-    this.setState({ ...defaultPanelState, showA9: !this.state.showA9 });
-  };
+  private toggleA9 = (): void => this.setState({ showA9: !this.state.showA9 });
 
-  private togglePrebid = (): void => {
-    this.setState({ ...defaultPanelState, showPrebid: !this.state.showPrebid });
-  };
+  private togglePrebid = (): void => this.setState({ showPrebid: !this.state.showPrebid });
 
-  private toggleSizeConfig = (): void => {
-    this.setState({ ...defaultPanelState, showSizeConfig: !this.state.showSizeConfig });
-  };
+  private toggleSizeConfig = (): void =>
+    this.setState({ showSizeConfig: !this.state.showSizeConfig });
 
   private isVisiblePrebid = (): boolean => {
     const prebid = this.props.slot.prebid;
@@ -415,7 +410,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     );
   };
 
-  private isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
+  private static isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 

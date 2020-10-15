@@ -25,6 +25,7 @@ import Confiant from '@highfivve/module-confiant';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
 import Skin from '@highfivve/module-generic-skin';
+import AdReload from '../../modules/ad-reload';
 
 prebid.processQueue();
 
@@ -64,10 +65,19 @@ moli.registerModule(
 );
 
 moli.registerModule(
+  new AdReload({
+    refreshIntervalMs: 20000,
+    excludeAdSlotDomIds: [],
+    includeOrderIds: [],
+    includeAdvertiserIds: []
+  })
+);
+
+moli.registerModule(
   new Skin(
     {
-      trackSkinCpmLow: (cpms, skinConfig) => {
-        console.log('[SKIN]', cpms, skinConfig);
+      trackSkinCpmLow: (cpms, skinConfig, skinBid) => {
+        console.log('[SKIN]', cpms, skinConfig, skinBid);
       },
       configs: [
         {
