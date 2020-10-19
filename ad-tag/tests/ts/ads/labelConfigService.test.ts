@@ -27,14 +27,6 @@ describe('LabelConfigConfigService', () => {
     mediaQuery: 'min-width: 300px',
     labelsSupported: []
   };
-  const outOfPageSlot: Moli.AdSlot = {
-    position: 'out-of-page',
-    domId: 'not-available',
-    behaviour: { loaded: 'eager' },
-    adUnitPath: '/123/eager-oop',
-    sizes: [],
-    sizeConfig: []
-  };
   const adSlotWithLabelAny: Moli.AdSlot = {
     position: 'in-page',
     domId: 'not-available-3',
@@ -75,8 +67,10 @@ describe('LabelConfigConfigService', () => {
     labelAll: ['desktop', 'bottom']
   };
 
+  const jsDomWindow: Window = dom.window as any;
+
   const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[], extraLabels: string[] = []) =>
-    new LabelConfigService(labelConfig, extraLabels, dom.window);
+    new LabelConfigService(labelConfig, extraLabels, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();
@@ -99,7 +93,7 @@ describe('LabelConfigConfigService', () => {
       const labelConfigService = new LabelConfigService(
         [labelConfigEntry1, labelConfigEntry2],
         [],
-        dom.window
+        jsDomWindow
       );
 
       expect(new Set(labelConfigService.getSupportedLabels())).to.deep.equal(
@@ -133,7 +127,7 @@ describe('LabelConfigConfigService', () => {
       const labelConfigService = new LabelConfigService(
         [],
         ['desktop', 'mobile', 'video', 'bottom'],
-        dom.window
+        jsDomWindow
       );
       expect(new Set(labelConfigService.getSupportedLabels())).to.deep.equal(
         new Set(['desktop', 'mobile', 'video', 'bottom'])

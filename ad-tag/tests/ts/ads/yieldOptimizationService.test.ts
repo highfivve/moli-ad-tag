@@ -19,10 +19,11 @@ use(sinonChai);
 // tslint:disable: no-unused-expression
 describe('YieldOptimizationService', () => {
   const dom = createDom();
+  const domWindow: Window = dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
-  const assetLoaderService = createAssetLoaderService(dom.window);
+  const assetLoaderService = createAssetLoaderService(domWindow);
   const assetLoaderLoadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');
 
   const createService = (

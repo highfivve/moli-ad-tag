@@ -1,4 +1,6 @@
 import * as preact from 'preact';
+import { JSX } from 'preact';
+
 import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
 import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 
@@ -98,7 +100,7 @@ export class GlobalConfig
     return (
       <div>
         <button
-          class="MoliDebug-sidebar-closeHandle"
+          className="MoliDebug-sidebar-closeHandle"
           title={showHideMessage}
           onClick={this.toggleSidebar}
         >
@@ -107,7 +109,7 @@ export class GlobalConfig
           {showHideMessage}
         </button>
         {config && (
-          <div class={classes} data-ref={debugSidebarSelector}>
+          <div className={classes} data-ref={debugSidebarSelector}>
             <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--moli">
               <h4>
                 {this.collapseToggle('moli')}
@@ -127,7 +129,7 @@ export class GlobalConfig
               )}
             </div>
 
-            <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--slots">
+            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--slots">
               <h4>
                 {this.collapseToggle('slots')}
                 Slots
@@ -135,7 +137,7 @@ export class GlobalConfig
 
               {this.state.expandSection.slots && (
                 <div>
-                  <p class="MoliDebug-panel MoliDebug-panel--grey">
+                  <p className="MoliDebug-panel MoliDebug-panel--grey">
                     Slot sizes are annotated to show the origin of their validation state:
                     <ul>
                       <li>
@@ -149,8 +151,8 @@ export class GlobalConfig
                     </ul>
                   </p>
 
-                  <p class="MoliDebug-panel MoliDebug-panel--grey">
-                    <label class="MoliDebug-checkBox">
+                  <p className="MoliDebug-panel MoliDebug-panel--grey">
+                    <label className="MoliDebug-checkBox">
                       <input
                         type="checkbox"
                         onChange={e =>
@@ -226,7 +228,7 @@ export class GlobalConfig
             </div>
 
             {config.prebid && (
-              <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--prebid">
+              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--prebid">
                 <h4>
                   {this.collapseToggle('prebid')}
                   Prebid
@@ -234,8 +236,8 @@ export class GlobalConfig
 
                 {this.state.expandSection.prebid && (
                   <div>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">Version</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">Version</span>
                       {window.pbjs.version ? (
                         <Tag>{window.pbjs.version.toString()}</Tag>
                       ) : (
@@ -243,23 +245,23 @@ export class GlobalConfig
                       )}
                     </div>
 
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">Prebid debug</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">Prebid debug</span>
                       <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>
                         {config.prebid.config.debug ? 'enabled' : 'disabled'}
                       </Tag>
                     </div>
 
                     {config.prebid.config.enableSendAllBids !== undefined && (
-                      <div class="MoliDebug-tagContainer">
-                        <span class="MoliDebug-tagLabel">sendAllBids enabled</span>
+                      <div className="MoliDebug-tagContainer">
+                        <span className="MoliDebug-tagLabel">sendAllBids enabled</span>
                         <Tag>{config.prebid.config.enableSendAllBids.toString()}</Tag>
                       </div>
                     )}
 
                     {config.prebid.config.bidderTimeout && (
-                      <div class="MoliDebug-tagContainer">
-                        <span class="MoliDebug-tagLabel">Bidder timeout</span>
+                      <div className="MoliDebug-tagContainer">
+                        <span className="MoliDebug-tagLabel">Bidder timeout</span>
                         <Tag>{`${config.prebid.config.bidderTimeout.toString()}ms`}</Tag>
                       </div>
                     )}
@@ -267,21 +269,21 @@ export class GlobalConfig
                     {config.prebid.config.consentManagement && (
                       <div>
                         <h5>Consent management</h5>
-                        <div class="MoliDebug-tagContainer">
-                          <span class="MoliDebug-tagLabel">allowAuctionWithoutConsent</span>
+                        <div className="MoliDebug-tagContainer">
+                          <span className="MoliDebug-tagLabel">allowAuctionWithoutConsent</span>
                           <Tag>
                             {(!!config.prebid.config.consentManagement
                               .allowAuctionWithoutConsent).toString()}
                           </Tag>
                         </div>
                         {config.prebid.config.consentManagement.cmpApi && (
-                          <div class="MoliDebug-tagContainer">
-                            <span class="MoliDebug-tagLabel">CMP API</span>
+                          <div className="MoliDebug-tagContainer">
+                            <span className="MoliDebug-tagLabel">CMP API</span>
                             <Tag>{config.prebid.config.consentManagement.cmpApi}</Tag>
                           </div>
                         )}
-                        <div class="MoliDebug-tagContainer">
-                          <span class="MoliDebug-tagLabel">CMP timeout</span>
+                        <div className="MoliDebug-tagContainer">
+                          <span className="MoliDebug-tagLabel">CMP timeout</span>
                           <Tag>{`${config.prebid.config.consentManagement.timeout}ms`}</Tag>
                         </div>
                       </div>
@@ -290,29 +292,24 @@ export class GlobalConfig
                     {config.prebid.config.userSync && (
                       <div>
                         <h5>User sync</h5>
-                        <div class="MoliDebug-tagContainer">
-                          <span class="MoliDebug-tagLabel">Sync enabled</span>
-                          <Tag>
-                            {(config.prebid.config.userSync === undefined
-                              ? true
-                              : !!config.prebid.config.userSync.syncEnabled
-                            ).toString()}
-                          </Tag>
+                        <div className="MoliDebug-tagContainer">
+                          <span className="MoliDebug-tagLabel">Sync enabled</span>
+                          <Tag>{(!!config.prebid.config.userSync.syncEnabled).toString()}</Tag>
                         </div>
                         {config.prebid.config.userSync.syncDelay !== undefined && (
-                          <div class="MoliDebug-tagContainer">
-                            <span class="MoliDebug-tagLabel">Sync delay</span>
+                          <div className="MoliDebug-tagContainer">
+                            <span className="MoliDebug-tagLabel">Sync delay</span>
                             <Tag>{`${config.prebid.config.userSync.syncDelay}ms`}</Tag>
                           </div>
                         )}
                         {config.prebid.config.userSync.syncsPerBidder !== undefined && (
-                          <div class="MoliDebug-tagContainer">
-                            <span class="MoliDebug-tagLabel">Syncs per bidder</span>
+                          <div className="MoliDebug-tagContainer">
+                            <span className="MoliDebug-tagLabel">Syncs per bidder</span>
                             <Tag>{config.prebid.config.userSync.syncsPerBidder.toString()}</Tag>
                           </div>
                         )}
-                        <div class="MoliDebug-tagContainer">
-                          <span class="MoliDebug-tagLabel">User sync override enabled</span>
+                        <div className="MoliDebug-tagContainer">
+                          <span className="MoliDebug-tagLabel">User sync override enabled</span>
                           <Tag>{(!!config.prebid.config.userSync.enableOverride).toString()}</Tag>
                         </div>
                         {config.prebid.config.userSync.filterSettings && (
@@ -339,16 +336,16 @@ export class GlobalConfig
                     )}
 
                     <h5>Currency</h5>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">Ad server currency</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">Ad server currency</span>
                       <Tag>{config.prebid.config.currency.adServerCurrency}</Tag>
                     </div>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">Granularity multiplier</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">Granularity multiplier</span>
                       <Tag>{config.prebid.config.currency.granularityMultiplier.toString()}</Tag>
                     </div>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">Default Rates, USD → EUR</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">Default Rates, USD → EUR</span>
                       <Tag>{config.prebid.config.currency.defaultRates.USD.EUR.toString()}</Tag>
                     </div>
                   </div>
@@ -357,7 +354,7 @@ export class GlobalConfig
             )}
 
             {config.a9 && (
-              <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--a9">
+              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--a9">
                 <h4>
                   {this.collapseToggle('a9')}
                   A9
@@ -365,18 +362,18 @@ export class GlobalConfig
 
                 {this.state.expandSection.a9 && (
                   <div>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">PubID</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">PubID</span>
                       <Tag variant={config.a9.pubID ? 'blue' : 'red'}>{config.a9.pubID}</Tag>
                     </div>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">Timeout</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">Timeout</span>
                       <Tag variant={config.a9.timeout ? 'blue' : 'red'}>
                         {config.a9.timeout.toFixed(0)}ms
                       </Tag>
                     </div>
-                    <div class="MoliDebug-tagContainer">
-                      <span class="MoliDebug-tagLabel">CMP timeout</span>
+                    <div className="MoliDebug-tagContainer">
+                      <span className="MoliDebug-tagLabel">CMP timeout</span>
                       <Tag variant={config.a9.cmpTimeout ? 'blue' : 'red'}>
                         {config.a9.cmpTimeout.toFixed(0)}ms
                       </Tag>
@@ -422,7 +419,7 @@ export class GlobalConfig
             )}
 
             {
-              <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
+              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
                 <h4>
                   {this.collapseToggle('performance')}
                   Performance
@@ -440,11 +437,11 @@ export class GlobalConfig
               </div>
             }
 
-            <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
+            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
               <h4>Moli configuration issues and warnings</h4>
               {this.state.messages.map(message => (
                 <div
-                  class={classList(
+                  className={classList(
                     'MoliDebug-configMessage',
                     `MoliDebug-configMessage--${message.kind}`
                   )}
@@ -480,7 +477,7 @@ export class GlobalConfig
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (
-      <table class="MoliDebug-keyValueTable">
+      <table className="MoliDebug-keyValueTable">
         <thead>
           <tr>
             <th>Key</th>
@@ -511,7 +508,7 @@ export class GlobalConfig
 
   private labels = (labels: string[] | undefined): JSX.Element => {
     return (
-      <div class="MoliDebug-tagContainer">
+      <div className="MoliDebug-tagContainer">
         {labels &&
           labels.map(label => (
             <Tag variant="blue" spacing="medium">
@@ -530,14 +527,14 @@ export class GlobalConfig
     return (
       <div>
         <strong>{name}</strong>
-        <div class="MoliDebug-tagContainer">
-          <span class="MoliDebug-tagLabel">Bidders</span>
+        <div className="MoliDebug-tagContainer">
+          <span className="MoliDebug-tagLabel">Bidders</span>
           {filterSetting.bidders === '*'
             ? this.standardTagFromString('all')
             : filterSetting.bidders.map(this.standardTagFromString)}
         </div>
-        <div class="MoliDebug-tagContainer">
-          <span class="MoliDebug-tagLabel">Include/exclude</span>
+        <div className="MoliDebug-tagContainer">
+          <span className="MoliDebug-tagLabel">Include/exclude</span>
           {this.standardTagFromString(filterSetting.filter)}
         </div>
       </div>
@@ -608,7 +605,7 @@ export class GlobalConfig
     };
     return (
       <button
-        class="MoliDebug-adSlot-button"
+        className="MoliDebug-adSlot-button"
         title={`${this.state.expandSection[section] ? 'collapse' : 'expand'} ${section}`}
         onClick={() => toggleValue(section)}
       >
@@ -701,7 +698,7 @@ export class GlobalConfig
 
   private checkGlobalSizeConfigEntry = (messages: Message[]) => (
     entry: Moli.LabelSizeConfigEntry,
-    index: number
+    _: number
   ): void => {
     if (entry.labelsSupported.length === 0) {
       messages.push({

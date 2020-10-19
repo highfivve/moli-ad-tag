@@ -1,4 +1,5 @@
 import * as preact from 'preact';
+import { JSX } from 'preact';
 
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
@@ -19,12 +20,12 @@ export class LabelConfigDebug extends preact.Component<ISLabelConfigProps, ISize
         {props.labelSizeConfig.map((labelSizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(labelSizeConfigEntry.mediaQuery).matches;
           return (
-            <div class="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
+            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
               Entry <strong>#{idx + 1}</strong>
-              <div class="MoliDebug-tagContainer">
-                <span class="MoliDebug-tagLabel">Media query</span>
+              <div className="MoliDebug-tagContainer">
+                <span className="MoliDebug-tagLabel">Media query</span>
                 <div
-                  class={classList(
+                  className={classList(
                     'MoliDebug-tag',
                     [mediaQueryMatches, 'MoliDebug-tag--green'],
                     [!mediaQueryMatches, 'MoliDebug-tag--red']
@@ -34,8 +35,8 @@ export class LabelConfigDebug extends preact.Component<ISLabelConfigProps, ISize
                   {labelSizeConfigEntry.mediaQuery}
                 </div>
               </div>
-              <div class="MoliDebug-tagContainer">
-                <span class="MoliDebug-tagLabel">Supported labels</span>
+              <div className="MoliDebug-tagContainer">
+                <span className="MoliDebug-tagLabel">Supported labels</span>
                 {labelSizeConfigEntry.labelsSupported.map(label => (
                   <Tag>{label}</Tag>
                 ))}

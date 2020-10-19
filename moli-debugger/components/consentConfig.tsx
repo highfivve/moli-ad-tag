@@ -1,4 +1,5 @@
 import * as preact from 'preact';
+import { JSX } from 'preact';
 
 import { Tag } from './tag';
 
@@ -147,22 +148,21 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
     if (this.isCmpFunctionAvailable()) {
       return (
         <div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">vendor list version</span>
+          <div className="MoliDebug-tagContainer">
+            <span className="MoliDebug-tagLabel">vendor list version</span>
             <Tag>
               {this.state.tcModel ? this.state.tcModel.vendorListVersion.toString() : 'not found'}
             </Tag>
           </div>
-          <div class="MoliDebug-tagContainer">
-            <span class="MoliDebug-tagLabel">num vendors allowed</span>
+          <div className="MoliDebug-tagContainer">
+            <span className="MoliDebug-tagLabel">num vendors allowed</span>
             <Tag>
               {this.state.tcModel ? this.state.tcModel.vendorConsents.size.toString() : 'not found'}
             </Tag>
           </div>
-          <div class="MoliDebug-tagContainer">
+          <div className="MoliDebug-tagContainer">
             <span
               className="MoliDebug-tagLabelBtn"
-              type="button"
               data-toggle="collapse"
               data-target="#collapsePurposes"
               aria-expanded="false"
@@ -192,10 +192,9 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
             </div>
           </div>
 
-          <div class="MoliDebug-tagContainer">
+          <div className="MoliDebug-tagContainer">
             <span
-              class="MoliDebug-tagLabelBtn"
-              type="button"
+              className="MoliDebug-tagLabelBtn"
               data-toggle="collapse"
               data-target="#collapseConsentString"
               aria-expanded="false"
@@ -203,7 +202,7 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
             >
               consent string
             </span>
-            <div class="collapse" id="collapseConsentString">
+            <div className="collapse" id="collapseConsentString">
               <Tag>{this.state.tcString ? this.state.tcString : 'not found'}</Tag>
             </div>
           </div>

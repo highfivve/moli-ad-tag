@@ -17,10 +17,12 @@ describe('Lazy Loading', () => {
     });
 
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
   let slotEventService = new SlotEventService(noopLogger);
 
   beforeEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
     slotEventService = new SlotEventService(noopLogger);
   });
 
@@ -30,10 +32,10 @@ describe('Lazy Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onLoad = eventLoader.onLoad();
@@ -50,7 +52,7 @@ describe('Lazy Loading', () => {
           source: dom.window.document
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onLoad = eventLoader.onLoad();
@@ -67,7 +69,7 @@ describe('Lazy Loading', () => {
           source: '#lazy-trigger-element'
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const div = dom.window.document.createElement('div');
@@ -85,10 +87,10 @@ describe('Lazy Loading', () => {
         {
           name: 'event',
           event: 'dom.window-event',
-          source: dom.window
+          source: jsDomWindow
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
@@ -104,10 +106,10 @@ describe('Lazy Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
@@ -124,10 +126,10 @@ describe('Lazy Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onLoad: Promise<boolean> = eventLoader.onLoad().then(() => true);
@@ -144,10 +146,10 @@ describe('Lazy Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onLoad = eventLoader.onLoad();

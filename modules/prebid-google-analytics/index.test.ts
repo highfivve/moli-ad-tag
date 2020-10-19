@@ -22,9 +22,11 @@ describe('Prebid Google Analytics Module', () => {
 
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
 
   afterEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
     sandbox.reset();
   });
 
@@ -38,12 +40,12 @@ describe('Prebid Google Analytics Module', () => {
           enableDistribution: true
         }
       },
-      dom.window
+      jsDomWindow
     );
-    const _window = dom.window as any;
+    const _window = jsDomWindow as any;
 
     expect(_window.ga).to.be.undefined;
-    module.init(config, createAssetLoaderService(dom.window));
+    module.init(config, createAssetLoaderService(jsDomWindow));
     expect(_window.ga).to.be.ok;
   });
 
@@ -58,17 +60,17 @@ describe('Prebid Google Analytics Module', () => {
           enableDistribution: true
         }
       },
-      dom.window
+      jsDomWindow
     );
-    const _window = dom.window as any;
+    const _window = jsDomWindow as any;
 
     expect(_window.myGlobalAnalytics).to.be.undefined;
-    module.init(config, createAssetLoaderService(dom.window));
+    module.init(config, createAssetLoaderService(jsDomWindow));
     expect(_window.myGlobalAnalytics).to.be.ok;
   });
 
   it('should create a new tracker and track a pageview', () => {
-    const _window = dom.window as any;
+    const _window = jsDomWindow as any;
     const gaSpy = sandbox.spy();
     _window.ga = gaSpy;
 
@@ -81,10 +83,10 @@ describe('Prebid Google Analytics Module', () => {
           enableDistribution: true
         }
       },
-      dom.window
+      jsDomWindow
     );
 
-    module.init(config, createAssetLoaderService(dom.window));
+    module.init(config, createAssetLoaderService(jsDomWindow));
 
     expect(gaSpy).to.have.been.calledTwice;
     expect(gaSpy).to.have.been.calledWith('create', 'UA-123456-78', 'auto', 'h5');
@@ -101,12 +103,12 @@ describe('Prebid Google Analytics Module', () => {
           enableDistribution: true
         }
       },
-      dom.window
+      jsDomWindow
     );
-    const _window = dom.window as any;
+    const _window = jsDomWindow as any;
 
     expect(_window.pbjs).to.be.undefined;
-    module.init(config, createAssetLoaderService(dom.window));
+    module.init(config, createAssetLoaderService(jsDomWindow));
     expect(_window.pbjs).to.be.ok;
     expect(_window.pbjs.que).to.be.have.lengthOf(1);
   });
@@ -122,12 +124,12 @@ describe('Prebid Google Analytics Module', () => {
         trackingId: 'UA-123456-78',
         options: options
       },
-      dom.window
+      jsDomWindow
     );
-    const _window = dom.window as any;
+    const _window = jsDomWindow as any;
 
     expect(_window.pbjs).to.be.undefined;
-    module.init(config, createAssetLoaderService(dom.window));
+    module.init(config, createAssetLoaderService(jsDomWindow));
 
     const enableAnalyticsSpy = sandbox.spy();
     _window.pbjs.enableAnalytics = enableAnalyticsSpy;

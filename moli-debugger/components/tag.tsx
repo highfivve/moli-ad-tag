@@ -1,4 +1,5 @@
 import * as preact from 'preact';
+import { JSX } from 'preact';
 
 import { classList } from '../util/stringUtils';
 
@@ -13,7 +14,7 @@ export const Tag = (props: {
 }): JSX.Element => {
   return (
     <div
-      class={classList(
+      className={classList(
         'MoliDebug-tag',
         [!!props.variant, `MoliDebug-tag--${props.variant}`],
         [!!props.spacing, `MoliDebug-tag--${props.spacing}Spacing`]

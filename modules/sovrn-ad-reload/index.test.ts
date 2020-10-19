@@ -15,21 +15,23 @@ use(sinonChai);
 describe('Sovrn Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
 
   afterEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
     sandbox.reset();
   });
 
   it('should fetch the sovrn script', () => {
-    const assetLoader = createAssetLoaderService(dom.window);
+    const assetLoader = createAssetLoaderService(jsDomWindow);
     const loadScriptStub = sandbox.stub(assetLoader, 'loadScript').resolves();
 
     const module = new SovrnAdReload(
       {
         assetUrl: 'http://localhost/tag.js'
       },
-      dom.window
+      jsDomWindow
     );
 
     module.init({} as any, assetLoader);

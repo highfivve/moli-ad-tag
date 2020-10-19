@@ -41,6 +41,7 @@ describe('AdPipeline', () => {
   };
 
   const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
@@ -50,7 +51,7 @@ describe('AdPipeline', () => {
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(config, noopLogger, dom.window, reportingService, slotEventService);
+    return new AdPipeline(config, noopLogger, jsDomWindow, reportingService, slotEventService);
   };
 
   const getElementByIdStub = sandbox.stub(dom.window.document, 'getElementById');

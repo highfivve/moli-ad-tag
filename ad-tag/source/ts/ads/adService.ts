@@ -73,11 +73,15 @@ export class AdService {
       requestBids: [],
       requestAds: () => Promise.resolve()
     },
-    this.logger,
+    getDefaultLogger(),
     this.window,
     noopReportingService,
-    this.slotEventService
+    new SlotEventService(getDefaultLogger())
   );
+
+  private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
+    return config.environment || 'production';
+  }
 
   /**
    *
@@ -304,10 +308,6 @@ export class AdService {
   public setLogger = (logger: Moli.MoliLogger): void => {
     this.logger.setLogger(logger);
   };
-
-  private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
-    return config.environment || 'production';
-  }
 
   private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {
     return slot.behaviour.loaded === 'lazy';

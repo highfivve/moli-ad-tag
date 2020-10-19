@@ -26,8 +26,9 @@ use(chaiAsPromised);
 describe('BlocklistUrls Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
 
-  const assetLoaderService = createAssetLoaderService(dom.window);
+  const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');
 
   const googletagStub = createGoogletagStub();
@@ -67,7 +68,7 @@ describe('BlocklistUrls Module', () => {
       env: 'production',
       logger: noopLogger,
       config: config,
-      window: dom.window,
+      window: jsDomWindow,
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
@@ -90,7 +91,7 @@ describe('BlocklistUrls Module', () => {
         mode: 'block',
         blocklist: staticBlocklistProvider()
       },
-      dom.window
+      jsDomWindow
     );
 
     module.init(testConfig, assetLoaderService);
@@ -107,7 +108,7 @@ describe('BlocklistUrls Module', () => {
           mode: 'block',
           blocklist: staticBlocklistProvider(patterns)
         },
-        dom.window
+        jsDomWindow
       );
       module.init(config, assetLoaderService);
 
@@ -161,7 +162,7 @@ describe('BlocklistUrls Module', () => {
       const config = newEmptyConfig();
       const module = new BlocklistUrls(
         { mode: 'block', blocklist: dynamicBlocklistProvider },
-        dom.window
+        jsDomWindow
       );
       module.init(config, assetLoaderService);
 
@@ -242,7 +243,7 @@ describe('BlocklistUrls Module', () => {
           isBlocklistedValue,
           blocklist: staticBlocklistProvider(patterns)
         },
-        dom.window
+        jsDomWindow
       );
       module.init(config, assetLoaderService);
 
@@ -325,7 +326,7 @@ describe('BlocklistUrls Module', () => {
           isBlocklistedValue,
           blocklist: dynamicBlocklistProvider
         },
-        dom.window
+        jsDomWindow
       );
       module.init(config, assetLoaderService);
 
@@ -415,7 +416,7 @@ describe('BlocklistUrls Module', () => {
         mode: 'block',
         blocklist: staticBlocklistProvider()
       },
-      dom.window
+      jsDomWindow
     );
 
     describe('matchType: regex', () => {

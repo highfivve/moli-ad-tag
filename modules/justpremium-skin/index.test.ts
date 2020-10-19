@@ -15,9 +15,11 @@ use(sinonChai);
 describe('JustPremium Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
 
   afterEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
     sandbox.reset();
   });
 
@@ -42,7 +44,7 @@ describe('JustPremium Module', () => {
   };
 
   it('should set the prebidResponse listener', () => {
-    const moli = createMoliTag(dom.window);
+    const moli = createMoliTag(jsDomWindow);
     const noopLogger = newNoopLogger();
     const module = new JustPremium(
       {
@@ -50,10 +52,10 @@ describe('JustPremium Module', () => {
         blockedAdSlotDomIds: ['sky-slot'],
         hideWallpaperAdSlot: false
       },
-      dom.window
+      jsDomWindow
     );
 
-    const slots = createAdSlots(dom.window, ['wp-slot', 'sky-slot']);
+    const slots = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
 
     const initSpy = sandbox.spy(module, 'init');
     const errorLogSpy = sandbox.spy(noopLogger, 'error');
@@ -67,14 +69,15 @@ describe('JustPremium Module', () => {
     moli.registerModule(module);
     moli.configure(config);
 
-    expect(initSpy).to.have.been.calledOnceWithExactly(config, moli.getAssetLoaderService());
+    expect(initSpy).to.have.been.calledOnce;
+    expect(initSpy).to.have.been.calledWithMatch(config, moli.getAssetLoaderService());
     expect(errorLogSpy).to.have.not.been.called;
 
     expect(config.prebid!.listener).is.ok;
   });
 
   it('should fail if not all slots are available in the config', () => {
-    const moli = createMoliTag(dom.window);
+    const moli = createMoliTag(jsDomWindow);
     const noopLogger = newNoopLogger();
     const module = new JustPremium(
       {
@@ -82,10 +85,10 @@ describe('JustPremium Module', () => {
         blockedAdSlotDomIds: ['sky-slot'],
         hideWallpaperAdSlot: false
       },
-      dom.window
+      jsDomWindow
     );
 
-    const slots = createAdSlots(dom.window, ['wp-slot']);
+    const slots = createAdSlots(jsDomWindow, ['wp-slot']);
 
     const initSpy = sandbox.spy(module, 'init');
     const errorLogSpy = sandbox.spy(noopLogger, 'error');
@@ -99,7 +102,8 @@ describe('JustPremium Module', () => {
     moli.registerModule(module);
     moli.configure(config);
 
-    expect(initSpy).to.have.been.calledOnceWithExactly(config, moli.getAssetLoaderService());
+    expect(initSpy).to.have.been.calledOnce;
+    expect(initSpy).to.have.been.calledWithMatch(config, moli.getAssetLoaderService());
     expect(errorLogSpy).to.have.been.called;
 
     expect(config.prebid!.listener).is.undefined;

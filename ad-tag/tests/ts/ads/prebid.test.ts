@@ -25,6 +25,7 @@ describe('prebid', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -36,8 +37,8 @@ describe('prebid', () => {
       env: env,
       logger: noopLogger,
       config: config,
-      window: dom.window,
-      labelConfigService: new LabelConfigService([], [], dom.window),
+      window: jsDomWindow,
+      labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       slotEventService: new SlotEventService(noopLogger)
     };

@@ -58,8 +58,9 @@ describe('SizeConfigService', () => {
   };
 
   const emptySizeConfig: SizeConfigEntry[] = [];
+  const jsDomWindow: Window = dom.window as any;
   const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) =>
-    new SizeConfigService(sizeConfig, dom.window);
+    new SizeConfigService(sizeConfig, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();

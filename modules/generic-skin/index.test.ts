@@ -17,9 +17,11 @@ use(sinonChai);
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
 
   afterEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
     sandbox.reset();
   });
 
@@ -68,7 +70,7 @@ describe('Skin Module', () => {
   describe('init', () => {
     it('should set the prebidResponse listener', () => {
       const noopLogger = newNoopLogger();
-      const assetLoaderService = createAssetLoaderService(dom.window);
+      const assetLoaderService = createAssetLoaderService(jsDomWindow);
       const module = new Skin(
         {
           configs: [
@@ -82,10 +84,10 @@ describe('Skin Module', () => {
             }
           ]
         },
-        dom.window
+        jsDomWindow
       );
 
-      const slots = createAdSlots(dom.window, ['wp-slot', 'sky-slot']);
+      const slots = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
 
       const initSpy = sandbox.spy(module, 'init');
       const errorLogSpy = sandbox.spy(noopLogger, 'error');
@@ -107,7 +109,7 @@ describe('Skin Module', () => {
 
     it('should fail if not all slots are available in the config', () => {
       const noopLogger = newNoopLogger();
-      const assetLoaderService = createAssetLoaderService(dom.window);
+      const assetLoaderService = createAssetLoaderService(jsDomWindow);
       const module = new Skin(
         {
           configs: [
@@ -121,10 +123,10 @@ describe('Skin Module', () => {
             }
           ]
         },
-        dom.window
+        jsDomWindow
       );
 
-      const slots = createAdSlots(dom.window, ['wp-slot']);
+      const slots = createAdSlots(jsDomWindow, ['wp-slot']);
 
       const initSpy = sandbox.spy(module, 'init');
       const errorLogSpy = sandbox.spy(noopLogger, 'error');
@@ -150,7 +152,7 @@ describe('Skin Module', () => {
       {
         configs: []
       },
-      dom.window
+      jsDomWindow
     );
 
     const jpBidResponse = (
@@ -357,7 +359,7 @@ describe('Skin Module', () => {
             configs: [],
             trackSkinCpmLow
           },
-          dom.window
+          jsDomWindow
         );
 
         const config: ISkinConfig = {
@@ -400,7 +402,7 @@ describe('Skin Module', () => {
             configs: [],
             trackSkinCpmLow
           },
-          dom.window
+          jsDomWindow
         );
 
         const config: ISkinConfig = {
@@ -453,7 +455,7 @@ describe('Skin Module', () => {
           {
             configs: [wallpaperConfig, mobileSkinConfig]
           },
-          dom.window
+          jsDomWindow
         );
 
         // select desktop wallpaper
@@ -497,7 +499,7 @@ describe('Skin Module', () => {
             configs: [config],
             trackSkinCpmLow
           },
-          dom.window
+          jsDomWindow
         );
 
         // justpremium has 1.50 cpm

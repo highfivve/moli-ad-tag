@@ -2,17 +2,15 @@
   "compilerOptions": {
     "strict": true,
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "es6",
-      "scripthost"
-    ],
+    "lib": ["dom", "es6", "scripthost"],
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2015",
     "skipLibCheck": true
   },
   "include": [
+    "**/*.ts",
+    "../prebid/prebidjs.d.ts",
     "../../ad-tag/index.ts",
     "../../ad-tag/source/**/*",
     "../../modules/**/*"
