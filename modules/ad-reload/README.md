@@ -9,6 +9,7 @@ In your `index.ts` import confiant and register the module.
 
 ```js
 import AdReload from '@highfivve/modules/ad-reload';
+
 moli.registerModule(
   new AdReload({
     includeAdvertiserIds: [ ... ],

@@ -24,11 +24,11 @@ export interface IModule {
    *
    * @param config
    * @param assetLoaderService
-   * @param adPipeline
+   * @param getAdPipeline
    */
   init(
     config: Moli.MoliConfig,
     assetLoaderService: IAssetLoaderService,
-    adPipeline: AdPipeline
+    getAdPipeline: () => AdPipeline
   ): void;
 }

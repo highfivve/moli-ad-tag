@@ -80,13 +80,11 @@ describe('Moli Ad Reload Module', () => {
     });
   };
 
-  const initModule = (
-    module: AdReload,
-    configPipeline?: Moli.pipeline.PipelineConfig,
-    additionalMoliSlots?: Array<Moli.AdSlot>
-  ) => {
+  const initModule = (module: AdReload, configPipeline?: Moli.pipeline.PipelineConfig) => {
+    const moliSlot = { domId: 'foo' } as Moli.AdSlot;
+
     const moliConfig: Moli.MoliConfig = {
-      slots: [...(additionalMoliSlots ? additionalMoliSlots : [])],
+      slots: [moliSlot],
       yieldOptimization: { provider: 'none' },
       pipeline: configPipeline,
       logger: noopLogger
@@ -100,7 +98,7 @@ describe('Moli Ad Reload Module', () => {
       slotEventService
     );
 
-    module.init(moliConfig, assetLoaderService, adPipeline);
+    module.init(moliConfig, assetLoaderService, () => adPipeline);
 
     return { moliConfig, adPipeline };
   };
@@ -125,7 +123,7 @@ describe('Moli Ad Reload Module', () => {
     expect(moliConfig.pipeline?.configureSteps).to.have.lengthOf(1);
   });
 
-  it('should setup the pubads listener for the slots', async () => {
+  it('should setup the pubads slotRenderEnded listener for the slots (but only once)', async () => {
     const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
     const module = createAdReloadModule();
 
@@ -136,7 +134,14 @@ describe('Moli Ad Reload Module', () => {
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), []);
 
+    // one call is done by the ad-reload module, the other one by the AdVisibilityService
+    expect(listenerSpy).to.have.been.calledTwice;
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), []);
+
+    // no further call to pubads().addEventListener
+    expect(listenerSpy).to.have.been.calledTwice;
   });
 
   it('should call trackSlot on the AdVisibilityService', async () => {
@@ -201,7 +206,7 @@ describe('Moli Ad Reload Module', () => {
   it('should set googletag key/value sovrn-reload=true and run the ad pipeline when reloading a slot', async () => {
     const moliSlot = { domId: 'foo' } as Moli.AdSlot;
     const module = createAdReloadModule([1337], [4711]);
-    const { moliConfig, adPipeline } = initModule(module, undefined, [moliSlot]);
+    const { moliConfig, adPipeline } = initModule(module);
 
     const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
@@ -237,7 +242,7 @@ describe('Moli Ad Reload Module', () => {
   it('should remove visibility tracking if reloading is not allowed again', async () => {
     const moliSlot = { domId: 'foo' } as Moli.AdSlot;
     const module = createAdReloadModule([1337], [4711]);
-    const { moliConfig, adPipeline } = initModule(module, undefined, [moliSlot]);
+    const { moliConfig, adPipeline } = initModule(module);
 
     const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 

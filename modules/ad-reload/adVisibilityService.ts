@@ -30,10 +30,10 @@ export class AdVisibilityService {
   /**
    * Added delay for consecutive ad refreshes
    */
-  static readonly consecutiveDurationToRefresh = 3000;
+  static readonly consecutiveDurationToRefresh = 1500;
 
   private visibilityRecords: VisibilityRecord[];
-  private readonly intersectionObserver: IntersectionObserver | undefined;
+  private readonly intersectionObserver?: IntersectionObserver;
 
   /**
    * Timer updating the ad visibility every second while users show any activity.
@@ -112,10 +112,16 @@ export class AdVisibilityService {
     }
   }
 
-  removeSlotTracking = (slot: googletag.IAdSlot) =>
-    (this.visibilityRecords = this.visibilityRecords.filter(
+  removeSlotTracking = (slot: googletag.IAdSlot) => {
+    this.logger?.debug(
+      'AdVisibilityService',
+      `removing slot visibility tracking for ${slot.getSlotElementId()}`,
+      slot
+    );
+    this.visibilityRecords = this.visibilityRecords.filter(
       record => record.slot.getSlotElementId() === slot.getSlotElementId()
-    ));
+    );
+  };
 
   private setUpdateTimer(state: boolean): void {
     if (state) {
@@ -138,14 +144,17 @@ export class AdVisibilityService {
       if (record.latestStartVisible) {
         const now = performance.now();
 
-        const addedDuration = now - record.latestStartVisible;
-        this.logger?.debug(
-          'AdVisibilityService',
-          `added ${Math.round(addedDuration)}ms visibility to ${record.slot.getSlotElementId()}`
-        );
+        const addedDuration = Math.round(now - record.latestStartVisible);
 
         record.durationVisibleSum += addedDuration;
         record.latestStartVisible = now;
+
+        this.logger?.debug(
+          'AdVisibilityService',
+          `added ${addedDuration}ms visibility to ${record.slot.getSlotElementId()}, now totalling at ${
+            record.durationVisibleSum
+          }ms`
+        );
       }
     });
 
@@ -154,7 +163,9 @@ export class AdVisibilityService {
       .forEach(record => {
         this.logger?.debug(
           'AdVisibilityService',
-          `refreshing ad ${record.slot.getSlotElementId()}`
+          `refreshing ad ${record.slot.getSlotElementId()} after ${
+            record.durationVisibleSum
+          }ms visibility`
         );
 
         record.latestStartVisible = performance.now();
@@ -231,6 +242,7 @@ export class AdVisibilityService {
   private handleUserActivityChanged(userActivityState: boolean): void {
     // bump the start visible timer when the user is active again
     this.visibilityRecords.forEach(record => {
+      // if record.latestStartVisible is undefined, the slot is not visible.
       if (record.latestStartVisible) {
         record.latestStartVisible = performance.now();
       }

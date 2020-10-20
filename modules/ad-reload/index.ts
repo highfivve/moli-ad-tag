@@ -1,5 +1,7 @@
 import {
   AdPipeline,
+  AdPipelineContext,
+  getDefaultLogger,
   googletag,
   IAssetLoaderService,
   IModule,
@@ -34,8 +36,14 @@ export default class AdReload implements IModule {
    */
   private readonly refreshIntervalMs: number = 20000;
 
-  private adPipeline: AdPipeline | undefined;
+  private logger?: Moli.MoliLogger;
+  private getAdPipeline?: () => AdPipeline;
   private requestAdsCalls: number = 0;
+
+  /**
+   * Prevents multiple initialization, which would append multiple googletag event listeners.
+   */
+  private initialized: boolean = false;
 
   constructor(private readonly moduleConfig: AdReloadModuleConfig) {
     if (moduleConfig.refreshIntervalMs) {
@@ -47,10 +55,22 @@ export default class AdReload implements IModule {
     return this.moduleConfig;
   }
 
-  init(moliConfig: Moli.MoliConfig, _: IAssetLoaderService, adPipeline: AdPipeline): void {
-    this.adPipeline = adPipeline;
+  init(moliConfig: Moli.MoliConfig, _: IAssetLoaderService, getAdPipeline: () => AdPipeline): void {
+    this.getAdPipeline = getAdPipeline;
 
+    if (!moliConfig.logger) {
+      this.logger = getDefaultLogger();
+    } else {
+      this.logger = moliConfig.logger;
+    }
+
+    const slotsToMonitor = moliConfig.slots
+      // filter out slots excluded by dom id
+      .filter(slot => this.moduleConfig.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
+      .map(slot => slot.domId);
     const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = this.reloadAdSlot(moliConfig);
+
+    this.logger?.debug('AdReload', 'monitoring slots', slotsToMonitor);
 
     // init additional pipeline steps if not already defined
     moliConfig.pipeline = moliConfig.pipeline || {
@@ -59,29 +79,44 @@ export default class AdReload implements IModule {
       prepareRequestAdsSteps: []
     };
 
+    // before 'configure', googletag.pubads() is most likely not set. Therefore, we initialize this module as a
+    // configure step.
     moliConfig.pipeline.configureSteps.push(
-      mkConfigureStep(this.name, (context, moliSlots) => {
-        const slotsToMonitor = moliSlots
-          // filter out slots excluded by dom id
-          .filter(slot => this.moduleConfig.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
-          .map(slot => slot.domId);
-
-        this.setupAdVisibilityService(moliConfig, context.window);
-        this.setupSlotRenderListener(slotsToMonitor, reloadAdSlotCallback, context.window);
+      mkConfigureStep(this.name, context => {
+        this.initialize(moliConfig, context, slotsToMonitor, reloadAdSlotCallback);
 
         return Promise.resolve();
       })
     );
   }
 
-  private setupAdVisibilityService = (moliConfig: Moli.MoliConfig, window: Window) =>
-    (this.adVisibilityService = new AdVisibilityService(
+  private initialize = (
+    moliConfig: Moli.MoliConfig,
+    context: AdPipelineContext,
+    slotsToMonitor: Array<string>,
+    reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
+  ) => {
+    if (this.initialized) {
+      return;
+    }
+
+    this.logger?.debug('AdReload', 'initialize moli ad reload module');
+
+    this.setupAdVisibilityService(moliConfig, context.window);
+    this.setupSlotRenderListener(slotsToMonitor, reloadAdSlotCallback, context.window);
+
+    this.initialized = true;
+  };
+
+  private setupAdVisibilityService = (moliConfig: Moli.MoliConfig, window: Window): void => {
+    this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, moliConfig.logger),
       this.refreshIntervalMs,
       false,
       window,
       moliConfig.logger
-    ));
+    );
+  };
 
   private setupSlotRenderListener = (
     slotsToMonitor: Array<string>,
@@ -123,10 +158,12 @@ export default class AdReload implements IModule {
     const moliSlot = moliConfig.slots.find(
       moliSlot => moliSlot.domId === googleTagSlot.getSlotElementId()
     );
+    const adPipeline = this.getAdPipeline && this.getAdPipeline();
 
-    if (moliSlot) {
+    if (moliSlot && adPipeline) {
+      this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
       googleTagSlot.setTargeting('sovrn-reload', 'true');
-      this.adPipeline?.run([moliSlot], moliConfig, ++this.requestAdsCalls);
+      adPipeline.run([moliSlot], moliConfig, ++this.requestAdsCalls);
     }
   };
 }

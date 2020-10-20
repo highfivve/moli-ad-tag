@@ -25,7 +25,7 @@ import Confiant from '@highfivve/module-confiant';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
 import Skin from '@highfivve/module-generic-skin';
-import AdReload from '../../modules/ad-reload';
+import AdReload from '@highfivve/module-moli-ad-reload';
 
 prebid.processQueue();
 
@@ -66,10 +66,19 @@ moli.registerModule(
 
 moli.registerModule(
   new AdReload({
-    refreshIntervalMs: 20000,
-    excludeAdSlotDomIds: [],
+    refreshIntervalMs: 10000,
+    excludeAdSlotDomIds: [
+      'lazy-adslot',
+      'refreshable-adslot',
+      'manual-adslot',
+      'a9-adslot',
+      'prebid-adslot-2',
+      'prebid-adslot',
+      'eager-loading-adslot-not-in-dom',
+      'eager-loading-adslot'
+    ],
     includeOrderIds: [],
-    includeAdvertiserIds: []
+    includeAdvertiserIds: [4693931408 /* AppNexus */]
   })
 );
 
