@@ -4,6 +4,10 @@
 
 // polyfill promise for IE11
 import 'core-js/es/promise';
+import 'core-js/es/string';
+import 'core-js/es/object';
+import 'core-js/es/array';
+import 'whatwg-fetch';
 
 import prebid from 'prebid.js';
 import 'prebid.js/modules/consentManagement';
@@ -17,13 +21,32 @@ import 'prebid.js/modules/unrulyBidAdapter';
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
+import AdReload from '@highfivve/module-moli-ad-reload';
 
 prebid.processQueue();
 
 // init moli
 const moli = initAdTag(window);
 
+moli.registerModule(
+  new AdReload({
+    refreshIntervalMs: 10000,
+    excludeAdSlotDomIds: [
+      'lazy-adslot',
+      'refreshable-adslot',
+      'manual-adslot',
+      'a9-adslot',
+      'prebid-adslot-2',
+      'prebid-adslot',
+      'eager-loading-adslot-not-in-dom',
+      'eager-loading-adslot'
+    ],
+    includeOrderIds: [],
+    includeAdvertiserIds: [4693931408 /* AppNexus */]
+  })
+);
+
+// cmp
 moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 moli.configure(adConfiguration);
-moli.requestAds();

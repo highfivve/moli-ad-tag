@@ -22,7 +22,8 @@
     "typescript": "^4.0.3",
     "webpack": "^4.44.2",
     "webpack-cli": "^4.0.0",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.0",
+    "whatwg-fetch": "^3.4.1"
   },
   "dependencies": {
     "@highfivve/ad-tag": "*",

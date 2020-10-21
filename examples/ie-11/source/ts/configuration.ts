@@ -14,26 +14,34 @@ const logger: Moli.MoliLogger = {
   error(message?: any, ...optionalParams: any[]): void {
     window.console.error(`[ERROR] ${message}`, ...optionalParams);
   }
-
 };
 
 // small helper to create the desired shape for improve digital
 const asArray = (value: string | string[] | undefined, fallback: string[]): string[] => {
   if (value) {
-    return typeof value === 'string' ? [ value ] : value;
+    return typeof value === 'string' ? [value] : value;
   }
   return fallback;
 };
 
+const appNexusNative = (placementId: string): prebidjs.IAppNexusASTBid => {
+  return {
+    bidder: prebidjs.AppNexusAst,
+    params: {
+      placementId: placementId
+    },
+    labelAll: [prebidjs.AppNexusAst]
+  };
+};
+
 export const adConfiguration: Moli.MoliConfig = {
-  environment: 'test',
   slots: [
     {
       position: 'in-page',
       domId: 'eager-loading-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: []
     },
     {
@@ -48,7 +56,7 @@ export const adConfiguration: Moli.MoliConfig = {
         }
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: []
     },
     {
@@ -60,19 +68,19 @@ export const adConfiguration: Moli.MoliConfig = {
           name: 'event',
           event: 'timer.complete',
           source: window
-        },
+        }
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
-      sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
+      sizes: ['fluid', [300, 250], [1, 1]],
       sizeConfig: [],
       // example for a dynamic prebid configuration
-      prebid: (context) => {
+      prebid: context => {
         return {
           adUnit: {
             code: 'lazy-adslot',
             mediaTypes: {
               banner: {
-                sizes: [ [ 300, 250 ] ]
+                sizes: [[300, 250]]
               }
             },
             bids: [
@@ -82,7 +90,7 @@ export const adConfiguration: Moli.MoliConfig = {
                 params: {
                   placementId: 1160064,
                   keyValues: {
-                    category: asArray(context.keyValues.channel, [ '' ])
+                    category: asArray(context.keyValues.channel, [''])
                   }
                 }
               }
@@ -96,7 +104,7 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: [],
       prebid: {
         adUnit: {
@@ -104,7 +112,7 @@ export const adConfiguration: Moli.MoliConfig = {
           mediaTypes: {
             video: {
               context: 'outstream',
-              playerSize: [ 605, 340 ]
+              playerSize: [605, 340]
             }
           },
           bids: [
@@ -114,7 +122,7 @@ export const adConfiguration: Moli.MoliConfig = {
                 placementId: '13906537',
                 video: {
                   /** This must match the configuration in the app nexus ui */
-                  frameworks: [ 1, 2 ]
+                  frameworks: [1, 2]
                 }
               }
             },
@@ -124,7 +132,7 @@ export const adConfiguration: Moli.MoliConfig = {
                 placementId: '13970743',
                 video: {
                   /** This must match the configuration in the app nexus ui */
-                  frameworks: [ 1, 2 ]
+                  frameworks: [1, 2]
                 }
               }
             }
@@ -137,24 +145,96 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'a9-adslot',
       behaviour: {
         loaded: 'lazy',
-        trigger:
-          {
-            name: 'event',
-            event: '',
-            source: window
-          },
+        trigger: {
+          name: 'event',
+          event: '',
+          source: window
+        }
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: [],
       a9: {}
+    },
+    // -------------------------
+    // AppNexus Test Placements
+    // -------------------------
+
+    // native formats
+    {
+      position: 'in-page',
+      domId: 'appnexus-native-example-1',
+      behaviour: { loaded: 'eager' },
+      adUnitPath: '/55155651/prebid_native_1',
+      sizes: [[1, 1], 'fluid'],
+      prebid: {
+        adUnit: {
+          code: 'appnexus-native-example-1',
+          mediaTypes: {
+            native: {
+              title: { required: true },
+              image: { required: true },
+              clickUrl: { required: true },
+              sponsoredBy: { required: true }
+            }
+          },
+          bids: [appNexusNative('13232354')]
+        }
+      },
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[1, 1], 'fluid']
+        }
+      ]
+    },
+    {
+      position: 'in-page',
+      domId: 'appnexus-native-example-2',
+      behaviour: { loaded: 'eager' },
+      adUnitPath: '/55155651/prebid_native_2',
+      sizes: [[1, 1], 'fluid'],
+      prebid: {
+        adUnit: {
+          code: 'appnexus-native-example-2',
+          mediaTypes: {
+            native: {
+              title: { required: true },
+              body: { required: true },
+              clickUrl: { required: true },
+              image: { required: true },
+              sponsoredBy: { required: true },
+              icon: { required: false }
+            }
+          },
+          bids: [appNexusNative('13232354')]
+        }
+      },
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[1, 1], 'fluid']
+        }
+      ]
     }
   ],
   targeting: {
-    keyValues: {}
+    keyValues: {
+      static: 'from-config'
+    }
   },
-  labelSizeConfig: [],
+  labelSizeConfig: [
+    {
+      labelsSupported: ['mobile'],
+      mediaQuery: '(max-width: 767px)'
+    },
+    {
+      labelsSupported: ['desktop'],
+      mediaQuery: '(min-width: 768px)'
+    }
+  ],
   prebid: {
+    // bidderSettings: bidderSettings,
     config: {
       bidderTimeout: 1000,
       consentManagement: {
@@ -164,9 +244,8 @@ export const adConfiguration: Moli.MoliConfig = {
       userSync: {
         syncDelay: 6000,
         filterSettings: {
-          // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
           iframe: {
-            bidders: [ prebidjs.PubMatic, prebidjs.OpenX, prebidjs.SmartAdServer ],
+            bidders: [prebidjs.PubMatic, prebidjs.SmartAdServer],
             filter: 'include'
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.
@@ -174,15 +253,29 @@ export const adConfiguration: Moli.MoliConfig = {
             bidders: '*',
             filter: 'include'
           }
-        }
+        },
+        // user id systems
+        userIds: [
+          {
+            name: 'unifiedId',
+            params: {
+              partner: 'myTpId'
+            },
+            storage: {
+              type: 'cookie',
+              name: 'pbjs-unifiedid', // create a cookie with this name
+              expires: 60 // cookie can last for 60 days
+            }
+          }
+        ]
       },
       currency: {
         adServerCurrency: 'EUR',
         granularityMultiplier: 1,
         // taken from: https://currency.prebid.org/latest.json
         defaultRates: {
-          'USD': {
-            'EUR': 0.8695652174
+          USD: {
+            EUR: 0.8695652174
           }
         }
       },
@@ -193,16 +286,14 @@ export const adConfiguration: Moli.MoliConfig = {
     }
   },
   yieldOptimization: {
-    provider: 'none',
+    provider: 'dynamic',
+    configEndpoint: '//local.h5v.eu:9000/yield-config.json'
   },
-
   reporting: {
     // report everything
     sampleRate: 1,
     adUnitRegex: /\/\d*\/gf\//i,
-    reporters: [
-      consoleLogReporter
-    ]
+    reporters: [consoleLogReporter]
   },
-  logger: logger
+  logger
 };
