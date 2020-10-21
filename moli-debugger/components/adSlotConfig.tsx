@@ -29,18 +29,16 @@ type IAdSlotConfigState = {
   showPrebid: boolean;
   showGeneral: boolean;
   showSizeConfig: boolean;
-  showTriggerConfig: boolean;
 };
 
 const defaultPanelState: Pick<
   IAdSlotConfigState,
-  'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig' | 'showTriggerConfig'
+  'showA9' | 'showPrebid' | 'showGeneral' | 'showSizeConfig'
 > = {
   showA9: false,
   showPrebid: false,
   showGeneral: false,
-  showSizeConfig: false,
-  showTriggerConfig: false
+  showSizeConfig: false
 };
 
 type ValidatedSlotSize = { valid: boolean; size: DfpSlotSize };

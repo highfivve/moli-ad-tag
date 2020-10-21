@@ -5,7 +5,7 @@ specific ad slots.
 
 ## Integration
 
-In your `index.ts` import confiant and register the module.
+In your `index.ts`, import AdReload and register the module.
 
 ```js
 import AdReload from '@highfivve/modules/ad-reload';

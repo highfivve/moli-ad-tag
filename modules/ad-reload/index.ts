@@ -134,7 +134,8 @@ export default class AdReload implements IModule {
       const slotIsMonitored = slotsToMonitor.indexOf(slotDomId) > -1;
 
       // enable refreshing if
-      // - the slot is not yet tracked by the AdVisibilityService
+      // - the slot wasn't reported empty by pubads
+      // - the slot isn't excluded by dom id blocklist
       // - the campaign id (order id) of this slot is in the order id includes
       // - OR advertiser id is in advertiser id includes
       const trackingSlotAllowed =
