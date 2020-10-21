@@ -32,7 +32,7 @@ export class AdVisibilityService {
    */
   static readonly consecutiveDurationToRefresh = 1500;
 
-  private visibilityRecords: VisibilityRecord[];
+  private visibilityRecords: Map<string, VisibilityRecord>;
   private readonly intersectionObserver?: IntersectionObserver;
 
   /**
@@ -41,9 +41,9 @@ export class AdVisibilityService {
   private visibilityUpdateTimer: number | undefined;
 
   constructor(
-    private userActivityService: UserActivityService,
-    private refreshInterval: number,
-    useIntersectionObserver: boolean,
+    private readonly userActivityService: UserActivityService,
+    private readonly refreshInterval: number,
+    readonly useIntersectionObserver: boolean,
     private readonly window: Window,
     private readonly logger?: Moli.MoliLogger
   ) {
@@ -51,7 +51,7 @@ export class AdVisibilityService {
       this.logger = getDefaultLogger();
     }
 
-    this.visibilityRecords = [];
+    this.visibilityRecords = new Map<string, VisibilityRecord>();
 
     if (useIntersectionObserver && 'IntersectionObserver' in this.window) {
       this.intersectionObserver = new IntersectionObserver(
@@ -78,8 +78,7 @@ export class AdVisibilityService {
   /**
    * Determine if the adVisibilityService tracks a slot with the given dom id.
    */
-  isSlotTracked = (domId: string): boolean =>
-    this.visibilityRecords.some(record => record.slot.getSlotElementId() === domId);
+  isSlotTracked = (domId: string): boolean => this.visibilityRecords.has(domId);
 
   /**
    * Add a refreshable ad slot to this service.
@@ -98,12 +97,11 @@ export class AdVisibilityService {
         this.removeSlotTracking(slot);
       }
 
-      this.visibilityRecords.push({
+      this.visibilityRecords.set(slot.getSlotElementId(), {
         slot: slot,
         latestStartVisible: undefined,
         durationVisibleSum: 0,
-        refreshCallback: refreshCallback,
-        durationToRefresh: this.refreshInterval
+        refreshCallback: refreshCallback
       });
 
       if (this.intersectionObserver) {
@@ -118,9 +116,8 @@ export class AdVisibilityService {
       `removing slot visibility tracking for ${slot.getSlotElementId()}`,
       slot
     );
-    this.visibilityRecords = this.visibilityRecords.filter(
-      record => record.slot.getSlotElementId() === slot.getSlotElementId()
-    );
+
+    this.visibilityRecords.delete(slot.getSlotElementId());
   };
 
   private setUpdateTimer(state: boolean): void {
@@ -142,8 +139,7 @@ export class AdVisibilityService {
     // flush current visible time
     this.visibilityRecords.forEach(record => {
       if (record.latestStartVisible) {
-        const now = performance.now();
-
+        const now = this.window.performance.now();
         const addedDuration = Math.round(now - record.latestStartVisible);
 
         record.durationVisibleSum += addedDuration;
@@ -158,8 +154,8 @@ export class AdVisibilityService {
       }
     });
 
-    this.visibilityRecords
-      .filter(record => record.durationVisibleSum > record.durationToRefresh)
+    Array.from(this.visibilityRecords.values())
+      .filter(record => record.durationVisibleSum > this.refreshInterval)
       .forEach(record => {
         this.logger?.debug(
           'AdVisibilityService',
@@ -168,7 +164,7 @@ export class AdVisibilityService {
           }ms visibility`
         );
 
-        record.latestStartVisible = performance.now();
+        record.latestStartVisible = this.window.performance.now();
         // consecutive ad refreshes are delayed by a few seconds to factor in loading times
         record.durationVisibleSum = -AdVisibilityService.consecutiveDurationToRefresh;
         record.refreshCallback(record.slot);
@@ -214,7 +210,7 @@ export class AdVisibilityService {
     adVisibilityRatio: number
   ) => {
     if (visibilityRecord.latestStartVisible) {
-      const addedDuration = performance.now() - visibilityRecord.latestStartVisible;
+      const addedDuration = this.window.performance.now() - visibilityRecord.latestStartVisible;
       this.logger?.debug(
         'AdVisibilityService',
         `added ${Math.round(
@@ -225,7 +221,7 @@ export class AdVisibilityService {
     }
 
     if (adVisibilityRatio > AdVisibilityService.minimalAdVisibilityRatio) {
-      visibilityRecord.latestStartVisible = performance.now();
+      visibilityRecord.latestStartVisible = this.window.performance.now();
       this.logger?.debug(
         'AdVisibilityService',
         `ad ${visibilityRecord.slot.getSlotElementId()} visible`
@@ -244,7 +240,7 @@ export class AdVisibilityService {
     this.visibilityRecords.forEach(record => {
       // if record.latestStartVisible is undefined, the slot is not visible.
       if (record.latestStartVisible) {
-        record.latestStartVisible = performance.now();
+        record.latestStartVisible = this.window.performance.now();
       }
     });
 
@@ -252,17 +248,12 @@ export class AdVisibilityService {
   }
 
   private visibilityRecordForEntry(entry: IntersectionObserverEntry): VisibilityRecord | undefined {
-    return this.visibilityRecords.find(
-      record => record.slot.getSlotElementId() === entry.target.id
-    );
+    return this.visibilityRecords.get(entry.target.id);
   }
 
   private visibilityRecordForGoogletagEvent = (
     event: ISlotVisibilityChangedEvent
-  ): VisibilityRecord | undefined =>
-    this.visibilityRecords.find(
-      record => record.slot.getSlotElementId() === event.slot.getSlotElementId()
-    );
+  ): VisibilityRecord | undefined => this.visibilityRecords.get(event.slot.getSlotElementId());
 }
 
 /**
@@ -285,8 +276,4 @@ type VisibilityRecord = {
    * Callback called when durationVisibleSum reaches durationToRefresh.
    */
   refreshCallback: (slot: googletag.IAdSlot) => void;
-  /**
-   * Duration an ad has to be seen by the user before it can be refreshed (in ms).
-   */
-  durationToRefresh: number;
 };

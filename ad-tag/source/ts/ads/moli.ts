@@ -718,7 +718,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     const params = parseQueryString(window.location.search);
     const param = params.get(key);
 
-    switch (param && param.toLowerCase()) {
+    switch (param?.toLowerCase()) {
       case 'test':
         return { environment: 'test' };
       case 'production':
