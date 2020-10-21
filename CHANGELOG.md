@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.6.0
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355) Add native moli ad reload module
+
 # 3.5.4
 
 [HPO-116](https://jira.gutefrage.net/browse/HPO-116). Mark `targetingUUID` for unruly as optional and deprecated.
