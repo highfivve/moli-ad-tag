@@ -405,7 +405,7 @@ describe('YieldOptimizationService', () => {
         .then(priceRule => {
           expect(priceRule).to.be.ok;
           expect(priceRule?.cpm).to.be.ok;
-          expect(priceRule?.cpm).to.be.oneOf([0.15, 0.1, 0.3, 0.35]);
+          expect(priceRule?.cpm).to.be.oneOf([0.15, 0.1, 0.25, 0.3, 0.35]);
         });
     });
 
