@@ -17,6 +17,7 @@ type AdReloadModuleConfig = {
   excludeAdSlotDomIds: Array<string>;
   includeAdvertiserIds: Array<number>;
   includeOrderIds: Array<number>;
+  excludeOrderIds: Array<number>;
   refreshIntervalMs?: number;
 };
 
@@ -136,11 +137,13 @@ export default class AdReload implements IModule {
       // enable refreshing if
       // - the slot wasn't reported empty by pubads
       // - the slot isn't excluded by dom id blocklist
-      // - the campaign id (order id) of this slot is in the order id includes
+      // - the campaign id (order id) of this slot is NOT in the order id **excludes**
+      // - the campaign id (order id) of this slot is in the order id **includes**
       // - OR advertiser id is in advertiser id includes
       const trackingSlotAllowed =
         !slotIsEmpty &&
         slotIsMonitored &&
+        (!campaignId || this.moduleConfig.excludeOrderIds.indexOf(campaignId) === -1) &&
         ((campaignId && this.moduleConfig.includeOrderIds.indexOf(campaignId) > -1) ||
           (advertiserId && this.moduleConfig.includeAdvertiserIds.indexOf(advertiserId) > -1));
 

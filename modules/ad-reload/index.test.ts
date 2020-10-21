@@ -71,11 +71,13 @@ describe('Moli Ad Reload Module', () => {
   const createAdReloadModule = (
     includeAdvertiserIds: Array<number> = [],
     includeOrderIds: Array<number> = [],
+    excludeOrderIds: Array<number> = [],
     excludeAdSlotDomIds: Array<string> = []
   ): AdReload => {
     return new AdReload({
       includeAdvertiserIds,
       includeOrderIds,
+      excludeOrderIds,
       excludeAdSlotDomIds
     });
   };
@@ -192,6 +194,123 @@ describe('Moli Ad Reload Module', () => {
       advertiserId: 1337,
       campaignId: 42,
       isEmpty: true
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(trackSlotSpy).to.not.have.been.called;
+  });
+
+  it('should NOT call trackSlot if the order id is not in the includes', async () => {
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    const module = createAdReloadModule([], [43]);
+    const { moliConfig } = initModule(module);
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
+      { domId: 'foo' } as Moli.AdSlot
+    ]);
+
+    expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
+
+    const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'foo' } as googletag.IAdSlot,
+      advertiserId: 1337,
+      campaignId: 42
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(trackSlotSpy).to.not.have.been.called;
+  });
+
+  it('should NOT call trackSlot if the order id is in the excludes', async () => {
+    const excludedOrderId = 42;
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    const module = createAdReloadModule([1337], [], [excludedOrderId]);
+    const { moliConfig } = initModule(module);
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
+      { domId: 'foo' } as Moli.AdSlot
+    ]);
+
+    expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
+
+    const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'foo' } as googletag.IAdSlot,
+      advertiserId: 1337,
+      campaignId: excludedOrderId
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(trackSlotSpy).to.not.have.been.called;
+  });
+
+  it('should NOT call trackSlot if the advertiser id is NOT in the includes', async () => {
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    const module = createAdReloadModule([1338], []);
+    const { moliConfig } = initModule(module);
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
+      { domId: 'foo' } as Moli.AdSlot
+    ]);
+
+    expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
+
+    const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'foo' } as googletag.IAdSlot,
+      advertiserId: 1337,
+      campaignId: 42
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(trackSlotSpy).to.not.have.been.called;
+  });
+
+  it('should NOT call trackSlot if the DOM id is in the excludes', async () => {
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    const module = createAdReloadModule([1337], [42], [], ['foo']);
+    const { moliConfig } = initModule(module);
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
+      { domId: 'foo' } as Moli.AdSlot
+    ]);
+
+    expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
+
+    const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'foo' } as googletag.IAdSlot,
+      advertiserId: 1337,
+      campaignId: 42
     } as ISlotRenderEndedEvent;
 
     const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
