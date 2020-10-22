@@ -133,6 +133,12 @@ export default class AdReload implements IModule {
       } = renderEndedEvent;
       const slotDomId = googleTagSlot.getSlotElementId();
       const slotIsMonitored = slotsToMonitor.indexOf(slotDomId) > -1;
+      const orderIdNotExcluded =
+        !campaignId || this.moduleConfig.excludeOrderIds.indexOf(campaignId) === -1;
+      const orderIdIncluded =
+        !!campaignId && this.moduleConfig.includeOrderIds.indexOf(campaignId) > -1;
+      const advertiserIdIncluded =
+        !!advertiserId && this.moduleConfig.includeAdvertiserIds.indexOf(advertiserId) > -1;
 
       // enable refreshing if
       // - the slot wasn't reported empty by pubads
@@ -143,9 +149,24 @@ export default class AdReload implements IModule {
       const trackingSlotAllowed =
         !slotIsEmpty &&
         slotIsMonitored &&
-        (!campaignId || this.moduleConfig.excludeOrderIds.indexOf(campaignId) === -1) &&
-        ((campaignId && this.moduleConfig.includeOrderIds.indexOf(campaignId) > -1) ||
-          (advertiserId && this.moduleConfig.includeAdvertiserIds.indexOf(advertiserId) > -1));
+        orderIdNotExcluded &&
+        (orderIdIncluded || advertiserIdIncluded);
+
+      if (!trackingSlotAllowed) {
+        // log details why this slot can't be refreshed.
+        this.logTrackingDisallowedReason(
+          slotDomId,
+          {
+            slotIsEmpty,
+            slotIsMonitored,
+            orderIdNotExcluded,
+            orderIdIncluded,
+            advertiserIdIncluded
+          },
+          campaignId,
+          advertiserId
+        );
+      }
 
       // if we already tracked the slot before, then this slotRenderEnded event was probably the one from an ad reload.
       const slotAlreadyTracked = !!this.adVisibilityService?.isSlotTracked(slotDomId);
@@ -168,6 +189,48 @@ export default class AdReload implements IModule {
       this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
       googleTagSlot.setTargeting('sovrn-reload', 'true');
       adPipeline.run([moliSlot], moliConfig, ++this.requestAdsCalls);
+    }
+  };
+
+  private logTrackingDisallowedReason = (
+    slotDomId: string,
+    reasons: {
+      slotIsEmpty: boolean;
+      slotIsMonitored: boolean;
+      orderIdNotExcluded: boolean;
+      orderIdIncluded: boolean;
+      advertiserIdIncluded: boolean;
+    },
+    campaignId?: number,
+    advertiserId?: number
+  ): void => {
+    const {
+      slotIsEmpty,
+      slotIsMonitored,
+      orderIdNotExcluded,
+      orderIdIncluded,
+      advertiserIdIncluded
+    } = reasons;
+    if (slotIsEmpty) {
+      this.logger?.debug('AdReload', slotDomId, 'slot not tracked: reported empty');
+    }
+    if (!slotIsMonitored) {
+      this.logger?.debug('AdReload', slotDomId, 'slot not tracked: excluded by DOM id');
+    }
+    if (!orderIdNotExcluded) {
+      this.logger?.debug(
+        'AdReload',
+        slotDomId,
+        'slot not tracked: excluded by order id',
+        campaignId
+      );
+    }
+    if (!(orderIdIncluded || advertiserIdIncluded)) {
+      this.logger?.debug(
+        'AdReload',
+        slotDomId,
+        `slot not tracked: neither order id [${campaignId}] nor advertiser id ${advertiserId} included`
+      );
     }
   };
 }
