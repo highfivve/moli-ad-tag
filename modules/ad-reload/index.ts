@@ -229,7 +229,11 @@ export default class AdReload implements IModule {
       this.logger?.debug(
         'AdReload',
         slotDomId,
-        `slot not tracked: neither order id [${campaignId}] nor advertiser id ${advertiserId} included`
+        'slot not tracked: neither order id',
+        campaignId,
+        'nor advertiser id',
+        advertiserId,
+        'included'
       );
     }
   };
