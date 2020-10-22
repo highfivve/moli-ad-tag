@@ -173,17 +173,16 @@ export class AdVisibilityService {
 
   private handleGoogletagAdVisibilityChanged = (event: ISlotVisibilityChangedEvent): void => {
     const slot = event.slot;
-
-    this.logger?.debug(
-      'AdVisibilityService',
-      `Visibility of slot ${slot.getSlotElementId()} changed. Visible area: ${
-        event.inViewPercentage
-      }%`
-    );
-
     const visibilityRecord = this.visibilityRecordForGoogletagEvent(event);
 
     if (visibilityRecord) {
+      this.logger?.debug(
+        'AdVisibilityService',
+        `Visibility of slot ${slot.getSlotElementId()} changed. Visible area: ${
+          event.inViewPercentage
+        }%`
+      );
+
       this.updateVisibilityRecord(visibilityRecord, event.inViewPercentage / 100);
     }
   };

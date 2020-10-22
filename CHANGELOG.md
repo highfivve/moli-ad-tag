@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.6.3
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355) Don't log slot visibility if slot isn't monitored
+
 # 3.6.2
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Add logging on why a slot can't be monitored by ad reload
