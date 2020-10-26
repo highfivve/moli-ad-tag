@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.6.5
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355) Fix requestAdsCalls counter
+
 # 3.6.4
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Fix ugly logging

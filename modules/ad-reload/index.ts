@@ -84,6 +84,8 @@ export default class AdReload implements IModule {
     // configure step.
     moliConfig.pipeline.configureSteps.push(
       mkConfigureStep(this.name, context => {
+        this.requestAdsCalls = context.requestAdsCalls;
+
         this.initialize(moliConfig, context, slotsToMonitor, reloadAdSlotCallback);
 
         return Promise.resolve();
@@ -188,7 +190,7 @@ export default class AdReload implements IModule {
     if (moliSlot && adPipeline) {
       this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
       googleTagSlot.setTargeting('sovrn-reload', 'true');
-      adPipeline.run([moliSlot], moliConfig, ++this.requestAdsCalls);
+      adPipeline.run([moliSlot], moliConfig, this.requestAdsCalls);
     }
   };
 
