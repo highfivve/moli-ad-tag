@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.6.6
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355) Prevent ad reload debug logs in production
+
 # 3.6.5
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Fix requestAdsCalls counter

@@ -1,7 +1,7 @@
 import {
   AdPipeline,
   AdPipelineContext,
-  getDefaultLogger,
+  getLogger,
   googletag,
   IAssetLoaderService,
   IModule,
@@ -46,7 +46,10 @@ export default class AdReload implements IModule {
    */
   private initialized: boolean = false;
 
-  constructor(private readonly moduleConfig: AdReloadModuleConfig) {
+  constructor(
+    private readonly moduleConfig: AdReloadModuleConfig,
+    private readonly window: Window
+  ) {
     if (moduleConfig.refreshIntervalMs) {
       this.refreshIntervalMs = moduleConfig.refreshIntervalMs;
     }
@@ -59,11 +62,7 @@ export default class AdReload implements IModule {
   init(moliConfig: Moli.MoliConfig, _: IAssetLoaderService, getAdPipeline: () => AdPipeline): void {
     this.getAdPipeline = getAdPipeline;
 
-    if (!moliConfig.logger) {
-      this.logger = getDefaultLogger();
-    } else {
-      this.logger = moliConfig.logger;
-    }
+    this.logger = getLogger(moliConfig, this.window);
 
     const slotsToMonitor = moliConfig.slots
       // filter out slots excluded by dom id
@@ -71,7 +70,7 @@ export default class AdReload implements IModule {
       .map(slot => slot.domId);
     const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = this.reloadAdSlot(moliConfig);
 
-    this.logger?.debug('AdReload', 'monitoring slots', slotsToMonitor);
+    this.logger.debug('AdReload', 'monitoring slots', slotsToMonitor);
 
     // init additional pipeline steps if not already defined
     moliConfig.pipeline = moliConfig.pipeline || {
@@ -113,11 +112,11 @@ export default class AdReload implements IModule {
 
   private setupAdVisibilityService = (moliConfig: Moli.MoliConfig, window: Window): void => {
     this.adVisibilityService = new AdVisibilityService(
-      new UserActivityService(window, moliConfig.logger),
+      new UserActivityService(window, this.logger),
       this.refreshIntervalMs,
       false,
       window,
-      moliConfig.logger
+      this.logger
     );
   };
 

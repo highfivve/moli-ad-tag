@@ -1,5 +1,4 @@
 import { UserActivityService } from './userActivityService';
-import { getDefaultLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { googletag } from '@highfivve/ad-tag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
@@ -47,10 +46,6 @@ export class AdVisibilityService {
     private readonly window: Window,
     private readonly logger?: Moli.MoliLogger
   ) {
-    if (!logger) {
-      this.logger = getDefaultLogger();
-    }
-
     this.visibilityRecords = new Map<string, VisibilityRecord>();
 
     if (useIntersectionObserver && 'IntersectionObserver' in this.window) {

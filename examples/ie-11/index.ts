@@ -29,22 +29,25 @@ prebid.processQueue();
 const moli = initAdTag(window);
 
 moli.registerModule(
-  new AdReload({
-    refreshIntervalMs: 10000,
-    excludeAdSlotDomIds: [
-      'lazy-adslot',
-      'refreshable-adslot',
-      'manual-adslot',
-      'a9-adslot',
-      'prebid-adslot-2',
-      'prebid-adslot',
-      'eager-loading-adslot-not-in-dom',
-      'eager-loading-adslot'
-    ],
-    includeOrderIds: [],
-    excludeOrderIds: [],
-    includeAdvertiserIds: [4693931408 /* AppNexus */]
-  })
+  new AdReload(
+    {
+      refreshIntervalMs: 10000,
+      excludeAdSlotDomIds: [
+        'lazy-adslot',
+        'refreshable-adslot',
+        'manual-adslot',
+        'a9-adslot',
+        'prebid-adslot-2',
+        'prebid-adslot',
+        'eager-loading-adslot-not-in-dom',
+        'eager-loading-adslot'
+      ],
+      includeOrderIds: [],
+      excludeOrderIds: [],
+      includeAdvertiserIds: [4693931408 /* AppNexus */]
+    },
+    window
+  )
 );
 
 // cmp

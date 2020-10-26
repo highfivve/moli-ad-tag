@@ -72,14 +72,18 @@ describe('Moli Ad Reload Module', () => {
     includeAdvertiserIds: Array<number> = [],
     includeOrderIds: Array<number> = [],
     excludeOrderIds: Array<number> = [],
-    excludeAdSlotDomIds: Array<string> = []
+    excludeAdSlotDomIds: Array<string> = [],
+    window: Window = jsDomWindow
   ): AdReload => {
-    return new AdReload({
-      includeAdvertiserIds,
-      includeOrderIds,
-      excludeOrderIds,
-      excludeAdSlotDomIds
-    });
+    return new AdReload(
+      {
+        includeAdvertiserIds,
+        includeOrderIds,
+        excludeOrderIds,
+        excludeAdSlotDomIds
+      },
+      window
+    );
   };
 
   const initModule = (module: AdReload, configPipeline?: Moli.pipeline.PipelineConfig) => {

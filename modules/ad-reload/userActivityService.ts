@@ -1,5 +1,4 @@
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import { getDefaultLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 
 /**
  * Listener for user activity state changes.
@@ -42,10 +41,6 @@ export class UserActivityService {
   private listener: UserActivityListener[];
 
   constructor(private readonly window: Window, private readonly logger?: Moli.MoliLogger) {
-    if (!logger) {
-      this.logger = getDefaultLogger();
-    }
-
     this.listener = [];
     this.window.document.addEventListener('visibilitychange', this.handlePageVisibilityChanged);
 
