@@ -14,25 +14,16 @@ use(sinonChai);
 // tslint:disable: no-unused-expression
 describe('Sovrn Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom = createDom();
-  let jsDomWindow: Window = dom.window as any;
-
-  afterEach(() => {
-    dom = createDom();
-    jsDomWindow = dom.window as any;
-    sandbox.reset();
-  });
+  const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
 
   it('should fetch the sovrn script', () => {
     const assetLoader = createAssetLoaderService(jsDomWindow);
     const loadScriptStub = sandbox.stub(assetLoader, 'loadScript').resolves();
 
-    const module = new SovrnAdReload(
-      {
-        assetUrl: 'http://localhost/tag.js'
-      },
-      jsDomWindow
-    );
+    const module = new SovrnAdReload({
+      assetUrl: 'http://localhost/tag.js'
+    });
 
     module.init({} as any, assetLoader);
 

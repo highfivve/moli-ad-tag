@@ -32,7 +32,7 @@ export default class SovrnAdReload implements IModule {
   public readonly description: string = 'ad reload';
   public readonly moduleType: ModuleType = 'ad-reload';
 
-  constructor(private readonly sovrnConfig: ISovrnConfig, private readonly window: Window) {}
+  constructor(private readonly sovrnConfig: ISovrnConfig) {}
 
   config(): Object | null {
     return this.sovrnConfig;

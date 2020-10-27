@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.7.0
+
+[GD-2345](https://jira.gutefrage.net/browse/GD-2345): Integrate LiveRamp ATS IdentityLink solution
+
 # 3.6.6
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Prevent ad reload debug logs in production
