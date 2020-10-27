@@ -12,6 +12,11 @@ type IdentityLinkModuleConfig = {
   /**
    * Provided by LiveRamp to identify your instance of ATS.
    */
+  readonly pixelId: number;
+
+  /**
+   * Provided by LiveRamp to identify your instance of ATS.
+   */
   readonly placementId: number;
 
   /**
@@ -40,6 +45,7 @@ export default class IdentityLink implements IModule {
   ) {
     this.atsConfig = {
       placementID: moduleConfig.placementId,
+      pixelID: moduleConfig.pixelId,
       storageType: 'localStorage',
       emailHashes: moduleConfig.hashedEmailAddresses,
       logging: 'error'

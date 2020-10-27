@@ -34,7 +34,8 @@ describe('IdentityLink Module', () => {
       {
         assetUrl: 'http://localhost/ats.js',
         hashedEmailAddresses: ['somehashedaddress'],
-        placementId: 1337
+        placementId: 1337,
+        pixelId: 42
       },
       jsDomWindow
     );
@@ -51,6 +52,7 @@ describe('IdentityLink Module', () => {
 
     expect(atsStartStub).to.have.been.calledOnceWithExactly({
       placementID: 1337,
+      pixelID: 42,
       storageType: 'localStorage',
       emailHashes: ['somehashedaddress'],
       logging: 'error'

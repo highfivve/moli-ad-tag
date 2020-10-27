@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.7.1
+
+[GD-2345](https://jira.gutefrage.net/browse/GD-2345): Add pixelID parameter to LiveRamp module config
+
 # 3.7.0
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345): Integrate LiveRamp ATS IdentityLink solution
