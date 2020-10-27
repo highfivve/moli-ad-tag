@@ -384,6 +384,7 @@ export namespace prebidjs {
       | IDigitTrustProvider
       | ICriteoProvider
       | IID5Provider
+      | IIdentityLinkProvider
       | IPubCommonIdProvider;
 
     interface IUserIdProvider<N extends string> {
@@ -540,6 +541,23 @@ export namespace prebidjs {
      */
     export interface IID5Provider
       extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> {}
+
+    export interface IIdentityLinkProviderParams {
+      /**
+       * This is the placementId, value needed for obtaining user's IdentityLink envelope.
+       */
+      readonly pid: string;
+    }
+
+    /**
+     * IdentityLink, provided by LiveRamp is a single person-based identifier which allows marketers, platforms and
+     * publishers to perform personalized segmentation, targeting and measurement use cases that require a consistent,
+     * cross-channel view of the user in anonymous spaces.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#identitylink
+     */
+    export interface IIdentityLinkProvider
+      extends IParameterizedUserIdProvider<IIdentityLinkProviderParams, 'identityLink'> {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
