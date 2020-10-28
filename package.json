@@ -4,7 +4,6 @@
   "workspaces": [
     "ad-tag",
     "moli-debugger",
-    "moli-release",
     "modules/*",
     "examples/*"
   ],
