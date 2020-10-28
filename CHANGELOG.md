@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+# 3.7.3
+
+[GD-2345](https://jira.gutefrage.net/browse/GD-2345) Move IdentityLink types to module, explicitly cast `Window`
+to `ATS.Window` in constructor
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355) Update IE11 example docs
+
 # 3.7.2
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345): Add IIdentityLinkProvider to UserIdProvider union type

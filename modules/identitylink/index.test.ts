@@ -6,7 +6,7 @@ import {
   AssetLoadMethod,
   createAssetLoaderService
 } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import { ATS } from '@highfivve/ad-tag/source/ts/types/identitylink';
+import { ATS } from './types/identitylink';
 
 import IdentityLink from './index';
 

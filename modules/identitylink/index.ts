@@ -1,5 +1,5 @@
 import { AssetLoadMethod, IAssetLoaderService, IModule, ModuleType, Moli } from '@highfivve/ad-tag';
-import { ATS } from '@highfivve/ad-tag/source/ts/types/identitylink';
+import { ATS } from './types/identitylink';
 
 type IdentityLinkModuleConfig = {
   /**
@@ -38,11 +38,11 @@ export default class IdentityLink implements IModule {
   public readonly moduleType: ModuleType = 'identity';
 
   private readonly atsConfig: ATS.Config;
+  private readonly window: ATS.Window;
 
-  constructor(
-    private readonly moduleConfig: IdentityLinkModuleConfig,
-    private readonly window: ATS.Window
-  ) {
+  constructor(private readonly moduleConfig: IdentityLinkModuleConfig, window: Window) {
+    this.window = window as ATS.Window;
+
     this.atsConfig = {
       placementID: moduleConfig.placementId,
       pixelID: moduleConfig.pixelId,
