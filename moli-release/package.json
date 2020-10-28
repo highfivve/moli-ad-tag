@@ -2,7 +2,17 @@
   "name": "@highfivve/moli-release",
   "version": "1.0.0",
   "description": "Moli release tools",
-  "main": "dist/debug.js",
+  "scripts": {
+    "validate": "echo 'no validation for moli-release'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+  },
+  "keywords": [
+    "debugging"
+  ],
+  "license": "UNLICENSED",
   "bin": {
     "moli-release": "./index.js"
   }
