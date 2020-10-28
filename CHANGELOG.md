@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+# 3.8.0
+
+[GD-2412](https://jira.gutefrage.net/browse/GD-2412) Remove prebid labels in moli ad tag.
+This fixes Sovrn and all possible third party scripts that rely on the configured `pbjs.adunits`.
+
 # 3.7.6
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Fixed package.json resolving problem
