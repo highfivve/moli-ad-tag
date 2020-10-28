@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.7.6
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Fixed package.json resolving problem
+
 # 3.7.5
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) moli-release command is not in workspace anymore

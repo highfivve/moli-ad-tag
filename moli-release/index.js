@@ -7,6 +7,7 @@ const fs = require('fs');
 const { exec } = require('child_process');
 
 let releasesJson;
+let packageJson;
 
 try {
   releasesJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'releases.json')));
@@ -14,10 +15,8 @@ try {
   releasesJson = {}
 }
 
-let packageJson;
-
 try {
-  releasesJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json')));
+  packageJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json')));
 } catch (err) {
   console.error('package.json required to create moli ad tag release');
   throw err;
