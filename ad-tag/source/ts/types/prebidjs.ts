@@ -1229,6 +1229,8 @@ export namespace prebidjs {
      * Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html).
      * Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
      *
+     * Note: will be removed by the ad tag and thus hidden for prebid
+     *
      * @see https://prebid.org/dev-docs/conditional-ad-units.html
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
@@ -1237,6 +1239,8 @@ export namespace prebidjs {
     /**
      * Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html).
      * Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
+     *
+     * Note: will be removed by the ad tag and thus hidden for prebid
      *
      * @see https://prebid.org/dev-docs/conditional-ad-units.html
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
@@ -2076,7 +2080,7 @@ export namespace prebidjs {
     /**
      *  Defines labels that may be matched on ad unit targeting conditions.
      */
-    readonly labels: string[];
+    readonly labels?: string[];
 
     /**
      * Callback to execute when all the bid responses are back or the timeout hits.

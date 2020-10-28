@@ -134,6 +134,48 @@ describe('prebid', () => {
       });
     });
 
+    describe('labels', () => {
+      it('should remove labelAll', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
+      });
+
+      it('should remove labelAny', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
+      });
+    });
+
     describe('static ad slot config provider', () => {
       it('should add empty adunits array when the static prebid config provider is an empty array', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
