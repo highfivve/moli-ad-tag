@@ -13,7 +13,13 @@ Start a local webserver with
 $ yarn && yarn start
 ```
 
-- `core-js` promises need to be imported
+**Important**:
+- Polyfills you need:
+  + `core-js/es/promise`
+  + `core-js/es/string`
+  + `core-js/es/object`
+  + `core-js/es/array`
+  + `whatwg-fetch`
 - typescript target must be `ES5`
 
 See the [index.ts](index.ts) entrypoint and [tsconfig.json](tsconfig.json) for more implementation details.
@@ -27,7 +33,7 @@ See the [index.ts](index.ts) entrypoint and [tsconfig.json](tsconfig.json) for m
 3. In this folder run `yarn install`, which will automatically link
 
 Now you have linked the checked out repository with this one.
- 
+
 !! DON'T FORGET TO UNLINK AFTER YOU ARE FINISHED !!
 
 1. In the `moli-ad-tag` repository run `yarn unlink`
