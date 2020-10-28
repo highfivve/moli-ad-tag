@@ -1,0 +1,9 @@
+{
+  "name": "@highfivve/moli-release",
+  "version": "1.0.0",
+  "description": "Moli release tools",
+  "main": "dist/debug.js",
+  "bin": {
+    "moli-release": "./index.js"
+  }
+}
