@@ -97,6 +97,18 @@ pipeline {
         }
     }
     post {
+        success {
+            slackSend color: 'good',
+                    message: "built moli ad tag ${BUILD_NUMBER} (<${BUILD_URL}|jenkins build>)"
+        }
+        unstable {
+            slackSend color: 'warning',
+                    message: "build is unstable for moli ad tag ${BUILD_NUMBER} (<${BUILD_URL}|jenkins build>)"
+        }
+        failure {
+            slackSend color: 'danger',
+                    message: "build failed for moli ad tag ${BUILD_NUMBER} (<${BUILD_URL}|jenkins build>)"
+        }
         always {
             junit allowEmptyResults: false, testResults: '**/test-results.xml'
         }
