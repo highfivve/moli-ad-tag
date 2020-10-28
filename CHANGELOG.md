@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.7.4
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Added moli-release CLI
+
 # 3.7.3
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345) Move IdentityLink types to module, explicitly cast `Window`
