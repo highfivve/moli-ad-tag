@@ -16,5 +16,8 @@
   "devDependencies": {
     "prebid.js": "3.16.0",
     "prettier": "^2.1.2"
+  },
+  "bin": {
+    "moli-release": "moli-release/index.js"
   }
 }

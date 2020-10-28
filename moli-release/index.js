@@ -1,12 +1,27 @@
 #!/usr/bin/env node
 'use strict'
 
+const path = require('path');
 const readline = require('readline');
 const fs = require('fs');
 const { exec } = require('child_process');
 
-const releasesJson = require('./releases.json');
-const packageJson = require('./package.json');
+let releasesJson;
+
+try {
+  releasesJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'releases.json')));
+} catch (err) {
+  releasesJson = {}
+}
+
+let packageJson;
+
+try {
+  releasesJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json')));
+} catch (err) {
+  console.error('package.json required to create moli ad tag release');
+  throw err;
+}
 
 const packageJsonVersion = packageJson.version;
 const versions = releasesJson.versions ?? [];
