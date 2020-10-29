@@ -89,7 +89,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             ...state.config,
             targeting: {
               keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
-              labels: [ label ]
+              labels: [label]
             }
           };
         }
@@ -325,8 +325,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               sampleRate: state.reporting.sampleRate
                 ? state.reporting.sampleRate
                 : config.reporting && config.reporting.sampleRate
-                  ? config.reporting.sampleRate
-                  : 0,
+                ? config.reporting.sampleRate
+                : 0,
               reporters: [
                 ...(config.reporting ? config.reporting.reporters : []),
                 ...state.reporting.reporters
@@ -337,7 +337,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           hooks: state.hooks,
           isSinglePageApp: state.isSinglePageApp,
           // create a new array as we must not share this mutable data structure
-          refreshSlots: [ ...state.refreshSlots ]
+          refreshSlots: [...state.refreshSlots]
         };
 
         if (shouldInitialize) {
@@ -424,8 +424,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           state.hooks && state.hooks.afterRequestAds
             ? state.hooks.afterRequestAds
             : () => {
-              return;
-            };
+                return;
+              };
         const refreshSlots = state.refreshSlots;
         const isSinglePageApp = state.isSinglePageApp;
         // handle single page application case
@@ -526,8 +526,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           hooks && hooks.afterRequestAds
             ? hooks.afterRequestAds
             : () => {
-              return;
-            };
+                return;
+              };
 
         const currentState = state;
         const { initialized, refreshAds, href, keyValues, labels, configFromAdTag } = state;
@@ -623,7 +623,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   }
 
   function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
-    const domIds = typeof domId === 'string' ? [ domId ] : domId;
+    const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
       case 'configurable': {
         state.refreshSlots.push(...domIds);
