@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+# 3.8.1
+
+[GD-2415](https://jira.gutefrage.net/browse/GD-2415). `moli.refreshAdSlot` now takes a single domID string or an array of domID strings.
+
+```js
+// still works, but triggers 3 auctions
+moli.refreshAdSlot('content_x');
+moli.refreshAdSlot('content_3');
+moli.refreshAdSlot('content_4');
+
+// triggers a single auction
+moli.refreshAdSlot([ 'content_x', 'content_3', 'content_4' ]);
+```
+
 # 3.8.0
 
 [GD-2412](https://jira.gutefrage.net/browse/GD-2412) Remove prebid labels in moli ad tag.

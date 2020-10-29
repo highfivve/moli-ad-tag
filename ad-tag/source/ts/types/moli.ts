@@ -196,9 +196,9 @@ export namespace Moli {
      * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
-     * @param domId - identifies the ad slot
+     * @param domId - identifies the ad slot or ad slots
      */
-    refreshAdSlot(domId: string): Promise<'queued' | 'refreshed'>;
+    refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!

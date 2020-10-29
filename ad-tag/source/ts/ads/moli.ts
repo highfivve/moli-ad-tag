@@ -89,7 +89,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             ...state.config,
             targeting: {
               keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
-              labels: [label]
+              labels: [ label ]
             }
           };
         }
@@ -325,8 +325,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               sampleRate: state.reporting.sampleRate
                 ? state.reporting.sampleRate
                 : config.reporting && config.reporting.sampleRate
-                ? config.reporting.sampleRate
-                : 0,
+                  ? config.reporting.sampleRate
+                  : 0,
               reporters: [
                 ...(config.reporting ? config.reporting.reporters : []),
                 ...state.reporting.reporters
@@ -337,7 +337,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           hooks: state.hooks,
           isSinglePageApp: state.isSinglePageApp,
           // create a new array as we must not share this mutable data structure
-          refreshSlots: [...state.refreshSlots]
+          refreshSlots: [ ...state.refreshSlots ]
         };
 
         if (shouldInitialize) {
@@ -424,8 +424,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           state.hooks && state.hooks.afterRequestAds
             ? state.hooks.afterRequestAds
             : () => {
-                return;
-              };
+              return;
+            };
         const refreshSlots = state.refreshSlots;
         const isSinglePageApp = state.isSinglePageApp;
         // handle single page application case
@@ -526,8 +526,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           hooks && hooks.afterRequestAds
             ? hooks.afterRequestAds
             : () => {
-                return;
-              };
+              return;
+            };
 
         const currentState = state;
         const { initialized, refreshAds, href, keyValues, labels, configFromAdTag } = state;
@@ -622,37 +622,38 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshAdSlot(domId: string): Promise<'queued' | 'refreshed'> {
+  function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
+    const domIds = typeof domId === 'string' ? [ domId ] : domId;
     switch (state.state) {
       case 'configurable': {
-        state.refreshSlots.push(domId);
+        state.refreshSlots.push(...domIds);
         return Promise.resolve('queued');
       }
       case 'configured': {
-        state.refreshSlots.push(domId);
+        state.refreshSlots.push(...domIds);
         return Promise.resolve('queued');
       }
       // if requestAds is currently called we batch the refreshAdSlot calls until
       // we hit the 'spa-finished' state
       case 'spa-requestAds':
-        state.refreshSlots.push(domId);
+        state.refreshSlots.push(...domIds);
         return Promise.resolve('queued');
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
       // until the next requestAds() call arrives
       case 'spa-finished':
         if (state.href === window.location.href) {
           // user hasn't navigated yet so we directly refresh the slot
-          return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
+          return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.refreshSlots.push(domId);
+          state.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
         }
       // if the ad tag is currently requesting ads or already finished doesn't matter
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
+        return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
       }
       default: {
         getLogger(state.config, window).error(
