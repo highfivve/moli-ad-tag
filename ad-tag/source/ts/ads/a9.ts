@@ -81,6 +81,24 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
       })
   );
 
+export const a9ClearTargetingStep = (slotDomIds: Array<string>): ConfigureStep =>
+  mkConfigureStep(
+    'a9-clear-targeting',
+    (context: AdPipelineContext) =>
+      new Promise<void>(resolve => {
+        context.window.googletag
+          .pubads()
+          .getSlots()
+          .filter(slot => slotDomIds.indexOf(slot.getSlotElementId()) > -1)
+          .forEach(slot => {
+            slot.clearTargeting('amznp');
+            slot.clearTargeting('amznsz');
+            slot.clearTargeting('amznbid');
+          });
+        resolve();
+      })
+  );
+
 export const a9RequestBids = (): RequestBidsStep =>
   mkRequestBidsStep(
     'a9-fetch-bids',

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+# 3.8.2
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355)
+
+↪ [GD-2416](https://jira.gutefrage.net/browse/GD-2416) Clear A9 targeting (`amznp`, `amznsz`, `amznbid`) on googletag slot when triggering a native slot reload
+↪ [GD-2417](https://jira.gutefrage.net/browse/GD-2417) Set separate key/value `native-ad-reload` on googletag slot when reloading
+
 # 3.8.1
 
 [GD-2415](https://jira.gutefrage.net/browse/GD-2415). `moli.refreshAdSlot` now takes a single domID string or an array of domID strings.

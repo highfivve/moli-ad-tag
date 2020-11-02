@@ -12,6 +12,7 @@ import {
 
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
+import { a9ClearTargetingStep } from '@highfivve/ad-tag/source/ts/ads/a9';
 
 type AdReloadModuleConfig = {
   excludeAdSlotDomIds: Array<string>;
@@ -188,8 +189,24 @@ export default class AdReload implements IModule {
 
     if (moliSlot && adPipeline) {
       this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
+
+      const moliConfigForRefresh: Moli.MoliConfig = {
+        ...moliConfig,
+        pipeline: {
+          initSteps: moliConfig.pipeline?.initSteps || [],
+          configureSteps: [
+            ...(moliConfig.pipeline?.configureSteps || []),
+            // clear a9 targeting so they can set it again automagically if needed
+            a9ClearTargetingStep([moliSlot.domId])
+          ],
+          prepareRequestAdsSteps: moliConfig.pipeline?.prepareRequestAdsSteps || []
+        }
+      };
+
       googleTagSlot.setTargeting('sovrn-reload', 'true');
-      adPipeline.run([moliSlot], moliConfig, this.requestAdsCalls);
+      googleTagSlot.setTargeting('native-ad-reload', 'true');
+
+      adPipeline.run([moliSlot], moliConfigForRefresh, this.requestAdsCalls);
     }
   };
 
