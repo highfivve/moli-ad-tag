@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.8.3
+
+[GD-2417](https://jira.gutefrage.net/browse/GD-2417) Make reload key/value key configurable (default stays at `native-ad-reload`)
+
 # 3.8.2
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355)

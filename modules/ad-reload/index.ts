@@ -49,7 +49,8 @@ export default class AdReload implements IModule {
 
   constructor(
     private readonly moduleConfig: AdReloadModuleConfig,
-    private readonly window: Window
+    private readonly window: Window,
+    private readonly reloadKeyValue: string = 'native-ad-reload'
   ) {
     if (moduleConfig.refreshIntervalMs) {
       this.refreshIntervalMs = moduleConfig.refreshIntervalMs;
@@ -204,7 +205,7 @@ export default class AdReload implements IModule {
       };
 
       googleTagSlot.setTargeting('sovrn-reload', 'true');
-      googleTagSlot.setTargeting('native-ad-reload', 'true');
+      googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
       adPipeline.run([moliSlot], moliConfigForRefresh, this.requestAdsCalls);
     }
