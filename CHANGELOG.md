@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.9.0
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Re-built moli release CLI with framework
+
 # 3.8.4
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355)
