@@ -14,7 +14,11 @@
   },
   "devDependencies": {
     "prebid.js": "3.16.0",
-    "prettier": "^2.1.2"
+    "prettier": "^2.1.2",
+    "inquirer": "7.3.3",
+    "commander": "6.2.0",
+    "dir-compare": "2.3.0",
+    "fs-extra": "9.0.1"
   },
   "bin": {
     "moli-release": "moli-release/index.js"
