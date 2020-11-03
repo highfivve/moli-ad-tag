@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+# 3.8.4
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355)
+
+↪ [GD-2416](https://jira.gutefrage.net/browse/GD-2416) Use PrepareRequestAdsStep instead of ConfigureStep for clearing A9 targeting
+
 # 3.8.3
 
 [GD-2417](https://jira.gutefrage.net/browse/GD-2417) Make reload key/value key configurable (default stays at `native-ad-reload`)

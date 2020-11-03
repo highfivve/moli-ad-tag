@@ -92,6 +92,11 @@ export default class AdReload implements IModule {
         return Promise.resolve();
       })
     );
+
+    moliConfig.pipeline.prepareRequestAdsSteps.push(
+      // clear a9 targeting so they can set it again automagically if needed
+      a9ClearTargetingStep()
+    );
   }
 
   private initialize = (
@@ -191,23 +196,10 @@ export default class AdReload implements IModule {
     if (moliSlot && adPipeline) {
       this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
-      const moliConfigForRefresh: Moli.MoliConfig = {
-        ...moliConfig,
-        pipeline: {
-          initSteps: moliConfig.pipeline?.initSteps || [],
-          configureSteps: [
-            ...(moliConfig.pipeline?.configureSteps || []),
-            // clear a9 targeting so they can set it again automagically if needed
-            a9ClearTargetingStep([moliSlot.domId])
-          ],
-          prepareRequestAdsSteps: moliConfig.pipeline?.prepareRequestAdsSteps || []
-        }
-      };
-
       googleTagSlot.setTargeting('sovrn-reload', 'true');
       googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-      adPipeline.run([moliSlot], moliConfigForRefresh, this.requestAdsCalls);
+      adPipeline.run([moliSlot], moliConfig, this.requestAdsCalls);
     }
   };
 

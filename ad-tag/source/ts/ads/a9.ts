@@ -2,9 +2,12 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
+  LOW_PRIORITY,
   mkConfigureStep,
   mkInitStep,
+  mkPrepareRequestAdsStep,
   mkRequestBidsStep,
+  PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
 import { Moli } from '../types/moli';
@@ -81,15 +84,14 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
       })
   );
 
-export const a9ClearTargetingStep = (slotDomIds: Array<string>): ConfigureStep =>
-  mkConfigureStep(
+export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
+  mkPrepareRequestAdsStep(
     'a9-clear-targeting',
-    (context: AdPipelineContext) =>
+    LOW_PRIORITY,
+    (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) =>
       new Promise<void>(resolve => {
-        context.window.googletag
-          .pubads()
-          .getSlots()
-          .filter(slot => slotDomIds.indexOf(slot.getSlotElementId()) > -1)
+        slots
+          .map(moliSlot => moliSlot.adSlot)
           .forEach(slot => {
             slot.clearTargeting('amznp');
             slot.clearTargeting('amznsz');

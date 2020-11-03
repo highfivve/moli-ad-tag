@@ -120,15 +120,14 @@ describe('Moli Ad Reload Module', () => {
       prepareRequestAdsSteps: []
     };
 
-    expect(configPipeline).to.be.ok;
-    expect(configPipeline.initSteps).to.have.lengthOf(1);
-    expect(configPipeline.configureSteps).to.be.empty;
-
     const { moliConfig } = initModule(module, configPipeline);
 
     expect(moliConfig.pipeline).to.be.ok;
+
+    // initialization adds one configureStep and one prepareRequestAdsStep
     expect(moliConfig.pipeline?.initSteps).to.have.lengthOf(1);
     expect(moliConfig.pipeline?.configureSteps).to.have.lengthOf(1);
+    expect(moliConfig.pipeline?.prepareRequestAdsSteps).to.have.lengthOf(1);
   });
 
   it('should setup the pubads slotRenderEnded listener for the slots (but only once)', async () => {
@@ -341,10 +340,6 @@ describe('Moli Ad Reload Module', () => {
     const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
     const clearTargetingSpy = sandbox.spy(googleSlot, 'clearTargeting');
 
-    const getSlotsStub = sandbox
-      .stub(dom.window.googletag.pubads(), 'getSlots')
-      .returns([googleSlot]);
-
     const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
     const adPipelineRunSpy = sandbox.spy(adPipeline, 'run');
 
@@ -370,19 +365,16 @@ describe('Moli Ad Reload Module', () => {
     expect(setTargetingSpy).to.have.been.calledWithExactly('sovrn-reload', 'true');
     expect(setTargetingSpy).to.have.been.calledWithExactly('foo-reload', 'true');
 
-    const updatedMoliConfig = adPipelineRunSpy.args[0][1] as Moli.MoliConfig;
-
-    await updatedMoliConfig.pipeline?.configureSteps.find(
+    await moliConfig.pipeline?.prepareRequestAdsSteps.find(
       step => step.name === 'a9-clear-targeting'
-    )?.(adPipelineContext(updatedMoliConfig), [moliSlot]);
+    )?.(adPipelineContext(moliConfig), [{ adSlot: googleSlot } as Moli.SlotDefinition]);
 
-    expect(getSlotsStub).to.have.been.calledOnce;
     expect(clearTargetingSpy).to.have.been.calledThrice;
     expect(clearTargetingSpy).to.have.been.calledWithExactly('amznp');
     expect(clearTargetingSpy).to.have.been.calledWithExactly('amznsz');
     expect(clearTargetingSpy).to.have.been.calledWithExactly('amznbid');
 
-    expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly([moliSlot], updatedMoliConfig, 1);
+    expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly([moliSlot], moliConfig, 1);
   });
 
   it('should remove visibility tracking if reloading is not allowed again', async () => {
