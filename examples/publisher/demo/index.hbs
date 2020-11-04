@@ -110,7 +110,7 @@
     <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
     &lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
     &lt;!-- your ad tag --&gt;
-    &lt;script async="async"      {{domain}}    htmlWebpackPlugin.files.js[0] %>"&gt;&lt;/script&gt;
+    &lt;script async="async" src="[[domain]]{{currentFilename}}"&gt;&lt;/script&gt;
     &lt;!-- your faktor.io tag --&gt;
     &lt;script async="async" src="https://config-prod.choice.faktor.io/7512a9aa-3995-4ff7-94c0-c8a45d49c611/faktor.js"&gt;&lt;/script&gt;</code></pre>
 
@@ -135,7 +135,7 @@
     <a class="btn btn-secondary" href="?pbjs_debug=true">enable prebid console logs</a>
     <a class="btn btn-secondary" href="?moliEnv=test">enable test mode</a>
 
-    <p>Or if you are developer type this into the javascript console</p>
+    <p>Or if you are a developer, type this into the javascript console:</p>
     <pre><code class="html hljs xml">moli.openConsole()</code></pre>
 
     <h3>Outstream</h3>
@@ -219,7 +219,9 @@
 <!-- update the {{domain}} variable in the integration example -->
 <script>
   const code = document.getElementById('integration-code');
-  code.innerText = code.innerText.replace('{{domain}}', window.location.href);
+  if (code) {
+    code.innerText = code.innerText.replace('[[domain]]', location.protocol + '//' + location.host + location.pathname);
+  }
 </script>
 
 {{> partials/foot }}

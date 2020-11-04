@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.9.7
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add currentFilename to makeDocsPages function and handlebars data
+
 # 3.9.6
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add handlebars-related stuff (helpers, build utils, partials) to

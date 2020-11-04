@@ -5,6 +5,7 @@ const fs = require('fs');
 
 const { makeDocsPages } = require('@highfivve/moli-release/releases/webpack-helpers');
 
+const releasesJson = require('./releases.json');
 const publisherName = 'moli-publisher-example-publisher';
 
 module.exports = (_, argv) => {
@@ -55,6 +56,6 @@ module.exports = (_, argv) => {
       port: 9000,
       allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu']
     },
-    plugins: [...makeDocsPages(publisherName, __dirname)]
+    plugins: makeDocsPages(publisherName, releasesJson.currentFilename, __dirname)
   };
 };

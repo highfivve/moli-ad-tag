@@ -12,7 +12,7 @@ const additionalHandlebarsConfig = {
   partials: [path.join(__dirname, '..', 'partials', '*.hbs')]
 };
 
-const makeDocsPages = (publisherName, basePath) => [
+const makeDocsPages = (publisherName, currentFilename, basePath) => [
   new HtmlWebpackPlugin({
     template: path.join(basePath, 'demo', 'index.hbs'),
     filename: path.join(basePath, 'dist', 'demo.hbs'),
@@ -36,7 +36,8 @@ const makeDocsPages = (publisherName, basePath) => [
     entry: demoTemplatePath,
     output: path.join(process.cwd(), 'dist', 'index.html'),
     data: {
-      publisher: publisherName
+      publisher: publisherName,
+      currentFilename
     },
     ...additionalHandlebarsConfig,
     partials: [...additionalHandlebarsConfig.partials, 'html/*.hbs']
