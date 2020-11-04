@@ -6,20 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AdTag Overview - {{publisher}}</title>
 
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
-        integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-  <script async src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
-          integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
-          crossorigin="anonymous"></script>
+  {{> partials/head }}
 </head>
 
 <body>
 <div class="jumbotron">
   <h1 class="display-4">{{publisher}} Moli AdTag</h1>
   <div class="d-flex justify-content-center">
-    <a class="btn btn-info btn-lg mt-4" href="https://{{publisher}}.h5v.eu/{{releases.currentVersion}}">
+    <a class="btn btn-info btn-lg mt-4" href="https://{{publisher}}.h5v.eu/{{releases.currentVersion}}/">
       <i class="fa fa-rocket"></i>
       <span>Neueste Version</span>
     </a>
@@ -55,9 +49,9 @@
             <div class="card-footer text-center py-0 px-3">
               <div class="row">
                 <a class="col-6 d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
-                   href="https://{{../publisher}}.h5v.eu/{{version}}">Demo page</a>
+                   href="https://{{../publisher}}.h5v.eu/{{version}}/">Demo page</a>
                 <a class="col-6 border-left d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
-                   href="https://{{../publisher}}.h5v.eu/{{version}}">adtag.js</a>
+                   href="https://{{../publisher}}.h5v.eu/{{version}}/moli.min.js">moli.min.js</a>
               </div>
             </div>
           </div>
@@ -66,6 +60,8 @@
     </div>
   </div>
 </div>
+
+{{> partials/foot }}
 </body>
 
 </html>

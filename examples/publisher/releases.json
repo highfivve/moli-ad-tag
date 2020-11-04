@@ -1,0 +1,13 @@
+{
+  "currentVersion": 2,
+  "versions": [
+    {
+      "version": 2,
+      "changelog": ["1337 h4xx0r release"]
+    },
+    {
+      "version": 1,
+      "changelog": ["Initial release"]
+    }
+  ]
+}

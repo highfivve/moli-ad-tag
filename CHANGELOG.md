@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+# 3.9.6
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add handlebars-related stuff (helpers, build utils, partials) to
+moli-release (instead of inside publisher tag repository)
+
 # 3.9.5
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add auto-generated ad tag filename to releases.json when running moli-release
