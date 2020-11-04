@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import * as child from 'child_process';
+import * as crypto from 'crypto';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { Result } from 'dir-compare';
@@ -31,6 +32,7 @@ try {
 } catch (err) {
   releasesJson = {
     currentVersion: 0,
+    currentFilename: '',
     versions: []
   };
 }
@@ -116,15 +118,21 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
 
       version = answers.version;
 
+      // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
+      const hash = crypto.randomBytes(20).toString('hex');
+      const filename = `moli_${hash}.js`;
+
       const change: IAdTagRelease = {
         version: version,
+        filename: filename,
         changelog: answers.changes.split('\n')
       };
 
       versions.unshift(change);
 
-      const releasesJsonContent = {
+      const releasesJsonContent: IReleasesJson = {
         currentVersion: version,
+        currentFilename: filename,
         versions: versions
       };
 

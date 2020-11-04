@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.9.5
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add auto-generated ad tag filename to releases.json when running moli-release
+
 # 3.9.4
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Don't send sovrn-reload key/value anymore for native ad reload
