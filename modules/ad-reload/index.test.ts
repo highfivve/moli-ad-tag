@@ -327,7 +327,7 @@ describe('Moli Ad Reload Module', () => {
     expect(trackSlotSpy).to.not.have.been.called;
   });
 
-  it('should set googletag key/value sovrn-reload=true and run the ad pipeline when reloading a slot', async () => {
+  it('should set googletag key/value foo-reload=true and run the ad pipeline when reloading a slot', async () => {
     const moliSlot = { domId: 'foo' } as Moli.AdSlot;
     const module = createAdReloadModule('foo-reload', [1337], [4711]);
     const { moliConfig, adPipeline } = initModule(module);
@@ -361,9 +361,7 @@ describe('Moli Ad Reload Module', () => {
 
     reloadCallback(googleSlot);
 
-    expect(setTargetingSpy).to.have.been.calledTwice;
-    expect(setTargetingSpy).to.have.been.calledWithExactly('sovrn-reload', 'true');
-    expect(setTargetingSpy).to.have.been.calledWithExactly('foo-reload', 'true');
+    expect(setTargetingSpy).to.have.been.calledOnceWithExactly('foo-reload', 'true');
 
     await moliConfig.pipeline?.prepareRequestAdsSteps.find(
       step => step.name === 'a9-clear-targeting'

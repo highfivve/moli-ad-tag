@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.9.4
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355) Don't send sovrn-reload key/value anymore for native ad reload
+
 # 3.9.3
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Log errors from inquirer in moli-release script

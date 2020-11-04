@@ -196,7 +196,6 @@ export default class AdReload implements IModule {
     if (moliSlot && adPipeline) {
       this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
-      googleTagSlot.setTargeting('sovrn-reload', 'true');
       googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
       adPipeline.run([moliSlot], moliConfig, this.requestAdsCalls);
