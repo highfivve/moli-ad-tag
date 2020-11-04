@@ -4,6 +4,7 @@
   "workspaces": [
     "ad-tag",
     "moli-debugger",
+    "moli-release",
     "modules/*",
     "examples/*"
   ],
@@ -12,17 +13,11 @@
     "preversion": "yarn workspaces run validate",
     "postversion": "git push && git push --tags"
   },
-  "dependency": {
-    "commander": "6.2.0",
-    "dir-compare": "2.3.0",
-    "fs-extra": "9.0.1",
-    "inquirer": "7.3.3"
-  },
   "devDependencies": {
     "prebid.js": "3.16.0",
     "prettier": "^2.1.2"
   },
   "bin": {
-    "moli-release": "moli-release/index.js"
+    "moli-release": "moli-release/bin/moli-release"
   }
 }
