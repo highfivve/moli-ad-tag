@@ -147,6 +147,9 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
           }
         );
       }
+    })
+    .catch(error => {
+      console.error(error);
     });
 })();
 

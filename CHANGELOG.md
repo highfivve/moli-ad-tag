@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+# 3.9.3
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346) Log errors from inquirer in moli-release script
+
 # 3.9.0
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Re-built moli release CLI with framework
