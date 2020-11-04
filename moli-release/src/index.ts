@@ -138,7 +138,7 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
 
         child.exec(
           `git add package.json releases.json && git commit -m 'v${version}' && git tag -a v${version} -m v${version} ${pushString}`,
-          (err, stdout, stderr) => {
+          (err, _stdout, _stderr) => {
             if (err) {
               console.log(err);
             } else {
