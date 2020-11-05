@@ -2,11 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "es6",
-      "scripthost"
-    ],
+    "lib": ["dom", "es6", "scripthost"],
     "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",

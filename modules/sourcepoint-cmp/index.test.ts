@@ -20,6 +20,7 @@ describe('Sourcepoint CMP Module', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
   const cmpFunction = (returnValue: any) => (
     cmd: string,
     params: any,
@@ -28,7 +29,7 @@ describe('Sourcepoint CMP Module', () => {
     callback(returnValue);
   };
 
-  const tcfApiWindow: tcfapi.TCFApiWindow = (dom.window as unknown) as tcfapi.TCFApiWindow;
+  const tcfApiWindow: tcfapi.TCFApiWindow = (jsDomWindow as unknown) as tcfapi.TCFApiWindow;
 
   const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
     return {
@@ -37,8 +38,8 @@ describe('Sourcepoint CMP Module', () => {
       env: 'production',
       logger: noopLogger,
       config: config,
-      window: dom.window,
-      labelConfigService: new LabelConfigService([], [], dom.window),
+      window: jsDomWindow,
+      labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       slotEventService: new SlotEventService(noopLogger)
     };
@@ -52,7 +53,7 @@ describe('Sourcepoint CMP Module', () => {
   describe('init step', () => {
     it('should add the init step', () => {
       tcfApiWindow.__tcfapi = cmpFunction({ eventStatus: 'useractioncomplete' });
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -67,7 +68,7 @@ describe('Sourcepoint CMP Module', () => {
       tcfApiWindow.__tcfapi = cmpFunction({ eventStatus: 'useractioncomplete' });
       const cmpSpy = sandbox.spy(tcfApiWindow, '__tcfapi');
 
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -87,7 +88,7 @@ describe('Sourcepoint CMP Module', () => {
       tcfApiWindow.__tcfapi = cmpFunction({ eventStatus: 'tcloaded' });
       const cmpSpy = sandbox.spy(tcfApiWindow, '__tcfapi');
 
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -106,16 +107,16 @@ describe('Sourcepoint CMP Module', () => {
 
   describe('prepareRequestAdsSteps', () => {
     const setRequestNonPersonalizedAdsSpy = () => {
-      return sandbox.spy(dom.window.googletag.pubads(), 'setRequestNonPersonalizedAds');
+      return sandbox.spy(jsDomWindow.googletag.pubads(), 'setRequestNonPersonalizedAds');
     };
 
     beforeEach(() => {
       tcfApiWindow.__tcfapi = cmpFunction({ eventStatus: 'useractioncomplete' });
-      dom.window.googletag = createGoogletagStub();
+      jsDomWindow.googletag = createGoogletagStub();
     });
 
     it('should add the prepareRequestAdsSteps step', () => {
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -129,7 +130,7 @@ describe('Sourcepoint CMP Module', () => {
     it('should setRequestNonPersonalizedAds(0) === personalized ads if required purposes are set', () => {
       const npaSpy = setRequestNonPersonalizedAdsSpy();
 
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -147,7 +148,7 @@ describe('Sourcepoint CMP Module', () => {
     it('should setRequestNonPersonalizedAds(1) === personalized ads if purpose one is set', () => {
       const npaSpy = setRequestNonPersonalizedAdsSpy();
 
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -163,7 +164,7 @@ describe('Sourcepoint CMP Module', () => {
     });
 
     it('should resolve the promise if rejectOnMissingPurposeOne is set to false', () => {
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: false }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);
@@ -177,7 +178,7 @@ describe('Sourcepoint CMP Module', () => {
     });
 
     it('should reject the promise if rejectOnMissingPurposeOne is set to true', () => {
-      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: true }, dom.window);
+      const cmp = new SourcepointCmp({ rejectOnMissingPurposeOne: true }, jsDomWindow);
       const config = newEmptyConfig();
 
       cmp.init(config);

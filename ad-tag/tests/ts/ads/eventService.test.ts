@@ -14,6 +14,7 @@ use(sinonChai);
 describe('EventService', () => {
   // create a fresh DOM for each test
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
@@ -25,6 +26,7 @@ describe('EventService', () => {
 
   beforeEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
   });
 
   afterEach(() => {
@@ -38,14 +40,14 @@ describe('EventService', () => {
         {
           name: 'event',
           event: 'ads',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       eventSource.setCallback(callbackSpy);
-      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.be.calledOnce;
     });
 
@@ -59,7 +61,7 @@ describe('EventService', () => {
           source: dom.window.document
         },
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       eventSource.setCallback(callbackSpy);
@@ -81,7 +83,7 @@ describe('EventService', () => {
           source: '#myslot'
         },
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       eventSource.setCallback(callbackSpy);
@@ -95,24 +97,24 @@ describe('EventService', () => {
       const windowTrigger: EventTrigger = {
         name: 'event',
         event: 'ads',
-        source: dom.window
+        source: jsDomWindow
       };
 
       const eventSource1 = eventService.getOrCreateEventSource(
         windowTrigger,
         undefined,
-        dom.window
+        jsDomWindow
       );
       const eventSource2 = eventService.getOrCreateEventSource(
         windowTrigger,
         undefined,
-        dom.window
+        jsDomWindow
       );
       expect(eventSource1).to.be.equal(eventSource2);
 
       eventSource1.setCallback(callbackSpy);
       eventSource2.setCallback(callbackSpy);
-      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.be.calledOnce;
     });
 
@@ -128,12 +130,12 @@ describe('EventService', () => {
       const eventSource1 = eventService.getOrCreateEventSource(
         documentWindow,
         undefined,
-        dom.window
+        jsDomWindow
       );
       const eventSource2 = eventService.getOrCreateEventSource(
         documentWindow,
         undefined,
-        dom.window
+        jsDomWindow
       );
       expect(eventSource1).to.be.equal(eventSource2);
 
@@ -159,12 +161,12 @@ describe('EventService', () => {
       const eventSource1 = eventService.getOrCreateEventSource(
         elementTrigger,
         undefined,
-        dom.window
+        jsDomWindow
       );
       const eventSource2 = eventService.getOrCreateEventSource(
         elementTrigger,
         undefined,
-        dom.window
+        jsDomWindow
       );
       expect(eventSource1).to.be.equal(eventSource2);
 
@@ -183,10 +185,10 @@ describe('EventService', () => {
         {
           name: 'event',
           event: 'ads',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       windowEventSource.setCallback(callbackSpy);
@@ -197,7 +199,7 @@ describe('EventService', () => {
           source: dom.window.document
         },
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       documentEventSource.setCallback(callbackSpy);
@@ -212,22 +214,22 @@ describe('EventService', () => {
           source: '#myslot'
         },
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       elementEventSource.setCallback(callbackSpy);
 
       // dispatch first series of events
-      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', jsDomWindow);
       dispatchEvent('ads', dom.window.document);
       dispatchEvent('ads', div);
       expect(callbackSpy).to.have.been.calledThrice;
 
       // remove all event sources
-      eventService.removeAllEventSources(dom.window);
+      eventService.removeAllEventSources(jsDomWindow);
 
       // firing events should have no effect
-      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', jsDomWindow);
       dispatchEvent('ads', dom.window.document);
       dispatchEvent('ads', div);
       expect(callbackSpy).to.have.been.calledThrice;
@@ -241,17 +243,21 @@ describe('EventService', () => {
       const trigger: EventTrigger = {
         name: 'event',
         event: 'ads',
-        source: dom.window
+        source: jsDomWindow
       };
-      const windowEventSource = eventService.getOrCreateEventSource(trigger, undefined, dom.window);
+      const windowEventSource = eventService.getOrCreateEventSource(
+        trigger,
+        undefined,
+        jsDomWindow
+      );
 
       windowEventSource.setCallback(callbackSpy);
-      dispatchEvent('ads', dom.window);
-      eventService.removeEventSource(trigger, dom.window);
+      dispatchEvent('ads', jsDomWindow);
+      eventService.removeEventSource(trigger, jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
 
       // has no effect
-      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
     });
 
@@ -266,12 +272,12 @@ describe('EventService', () => {
       const documentEventSource = eventService.getOrCreateEventSource(
         trigger,
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       documentEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', dom.window.document);
-      eventService.removeEventSource(trigger, dom.window);
+      eventService.removeEventSource(trigger, jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
 
       // has no effect
@@ -295,12 +301,12 @@ describe('EventService', () => {
       const elementEventSource = eventService.getOrCreateEventSource(
         trigger,
         undefined,
-        dom.window
+        jsDomWindow
       );
 
       elementEventSource.setCallback(callbackSpy);
       dispatchEvent('ads', div);
-      eventService.removeEventSource(trigger, dom.window);
+      eventService.removeEventSource(trigger, jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
 
       // has no effect
@@ -315,15 +321,15 @@ describe('EventService', () => {
       {
         name: 'event',
         event: 'ads',
-        source: dom.window
+        source: jsDomWindow
       },
       0,
-      dom.window
+      jsDomWindow
     );
 
     eventSource.setCallback(callbackSpy);
-    dispatchEvent('ads', dom.window);
-    dispatchEvent('ads', dom.window);
+    dispatchEvent('ads', jsDomWindow);
+    dispatchEvent('ads', jsDomWindow);
     expect(callbackSpy).to.be.calledTwice;
   });
 
@@ -333,15 +339,15 @@ describe('EventService', () => {
       {
         name: 'event',
         event: 'ads',
-        source: dom.window
+        source: jsDomWindow
       },
       1,
-      dom.window
+      jsDomWindow
     );
 
     eventSource.setCallback(callbackSpy);
-    dispatchEvent('ads', dom.window);
-    dispatchEvent('ads', dom.window);
+    dispatchEvent('ads', jsDomWindow);
+    dispatchEvent('ads', jsDomWindow);
     expect(callbackSpy).to.be.calledOnce;
   });
 
@@ -351,19 +357,19 @@ describe('EventService', () => {
       {
         name: 'event',
         event: 'ads',
-        source: dom.window
+        source: jsDomWindow
       },
       0.01,
-      dom.window
+      jsDomWindow
     );
 
     eventSource.setCallback(callbackSpy);
-    dispatchEvent('ads', dom.window);
-    dispatchEvent('ads', dom.window);
+    dispatchEvent('ads', jsDomWindow);
+    dispatchEvent('ads', jsDomWindow);
     expect(callbackSpy).to.be.calledOnce;
 
     setTimeout(() => {
-      dispatchEvent('ads', dom.window);
+      dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.be.calledTwice;
       done();
     }, 10);

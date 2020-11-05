@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AdTag Overview - {{publisher}}</title>
+
+  {{> partials/head }}
+</head>
+
+<body>
+<div class="jumbotron">
+  <h1 class="display-4">{{publisher}} Moli AdTag</h1>
+  <div class="d-flex justify-content-center">
+    <a class="btn btn-info btn-lg mt-4" href="https://{{publisher}}.h5v.eu/{{releases.currentVersion}}/">
+      <i class="fa fa-rocket"></i>
+      <span>Neueste Version</span>
+    </a>
+  </div>
+</div>
+<div class="container-fluid">
+  <div style="">
+    <h3>Ältere Versionen:</h3>
+    <div class="row">
+      {{#each releases.versions}}
+        {{var "isCurrentVersion" (equals version ../releases.currentVersion)}}
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="card mb-4{{#if isCurrentVersion}} text-white bg-info{{/if}}">
+            <strong class="card-header d-flex align-items-center">
+              Version {{version}}
+              {{#if isCurrentVersion}}<span class="badge badge-pill badge-warning ml-2">Neueste Version</span>{{/if}}
+            </strong>
+            <div class="card-body">
+              <h5 class="card-title mb-2">Änderungen</h5>
+              <div class="card-text">
+                {{#if (empty changelog)}}
+                  <em class="text-muted">Keine Änderungen angegeben</em>
+                {{else}}
+                  <ol>
+                    {{#each changelog}}
+                      <li>{{this}}</li>
+                    {{/each}}
+                  </ol>
+                {{/if}}
+              </div>
+
+            </div>
+            <div class="card-footer text-center py-0 px-3">
+              <div class="row">
+                <a class="col-6 d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
+                   href="https://{{../publisher}}.h5v.eu/{{version}}/">Demo page</a>
+                <a class="col-6 border-left d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
+                   href="https://{{../publisher}}.h5v.eu/{{version}}/{{filename}}">moli.min.js</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</div>
+
+{{> partials/foot }}
+</body>
+
+</html>

@@ -1,14 +1,8 @@
 {
   "rules": {
-    "ban": [true,
-      ["_", "extend"],
-      ["_", "isNull"],
-      ["_", "isDefined"]
-    ],
+    "ban": [true, ["_", "extend"], ["_", "isNull"], ["_", "isDefined"]],
     "class-name": true,
-    "comment-format": [true,
-      "check-space"
-    ],
+    "comment-format": [true, "check-space"],
     "curly": true,
     "eofline": true,
     "forin": true,
@@ -17,18 +11,53 @@
     "jsdoc-format": true,
     "label-position": true,
     "max-line-length": false,
-    "member-ordering": [true,
-      "public-before-private",
-      "static-before-instance",
-      "variables-before-functions"
+    "member-ordering": [
+      true,
+      {
+        "order": [
+          {
+            "name": "public static field",
+            "kinds": ["public-static-field", "protected-static-field"]
+          },
+          {
+            "name": "private static field",
+            "kinds": ["private-static-field"]
+          },
+          {
+            "name": "public instance field",
+            "kinds": ["public-instance-field", "protected-instance-field"]
+          },
+          {
+            "name": "private instance field",
+            "kinds": ["private-instance-field"]
+          },
+          {
+            "name": "public static method",
+            "kinds": ["public-static-method", "protected-static-method"]
+          },
+          {
+            "name": "private static method",
+            "kinds": ["private-static-method"]
+          },
+          {
+            "name": "public instance method",
+            "kinds": [
+              "public-constructor",
+              "protected-constructor",
+              "public-instance-method",
+              "protected-instance-method"
+            ]
+          },
+          {
+            "name": "private instance method",
+            "kinds": ["private-constructor", "private-instance-method"]
+          }
+        ]
+      }
     ],
     "no-arg": true,
     "no-bitwise": true,
-    "no-console": [true,
-      "time",
-      "timeEnd",
-      "trace"
-    ],
+    "no-console": [true, "time", "timeEnd", "trace"],
     "no-construct": true,
     "no-parameter-properties": false,
     "no-debugger": true,
@@ -40,28 +69,22 @@
     "trailing-comma": true,
     "no-unused-expression": [true, "allow-new"],
     "no-var-requires": true,
-    "one-line": [true,
-      "check-open-brace",
-      "check-catch",
-      "check-else",
-      "check-whitespace"
-    ],
+    "one-line": [true, "check-open-brace", "check-catch", "check-else", "check-whitespace"],
     "quotemark": [true, "single", "avoid-escape", "jsx-double"],
     "radix": true,
     "semicolon": [true, "always", "ignore-bound-class-methods"],
     "triple-equals": [true, "allow-null-check"],
-    "typedef": [true,
+    "typedef": [
+      true,
       "call-signature",
       /* "arrow-call-signature", */
       "parameter",
       "property-declaration"
     ],
-    "typedef-whitespace": [true,
-      { "call-signature": "nospace" },
-      { "index-signature": "space" }
-    ],
+    "typedef-whitespace": [true, { "call-signature": "nospace" }, { "index-signature": "space" }],
     "variable-name": false,
-    "whitespace": [true,
+    "whitespace": [
+      true,
       "check-branch",
       "check-decl",
       "check-operator",

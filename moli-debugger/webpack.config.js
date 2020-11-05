@@ -16,7 +16,7 @@ module.exports = (env, argv) => ({
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        options: { 'allowTsInNodeModules': true }
+        options: { allowTsInNodeModules: true }
       },
       {
         test: /\.css$/,
@@ -24,22 +24,25 @@ module.exports = (env, argv) => ({
           {
             loader: 'style-loader',
             options: {
-              attrs: { id: 'moli-debug-styles' }
+              attributes: { id: 'moli-debug-styles' }
             }
           },
-          postCssLoader(env),
+          'css-loader',
+          postCssLoader(env)
         ]
       }
     ]
   },
   resolve: {
-    extensions: [ '.tsx', '.ts', '.js', '.css' ]
+    extensions: ['.tsx', '.ts', '.js', '.css']
   },
   optimization: {
-    minimizer: [new UglifyJsPlugin({
-      sourceMap: false,
-      test: /\.min.js$/,
-      parallel: true
-    })],
+    minimizer: [
+      new UglifyJsPlugin({
+        sourceMap: false,
+        test: /\.min.js$/,
+        parallel: true
+      })
+    ]
   }
 });

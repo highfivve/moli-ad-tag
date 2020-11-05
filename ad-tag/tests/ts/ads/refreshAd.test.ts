@@ -17,6 +17,7 @@ describe('Refreshable Loading', () => {
     });
 
   const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
   const slotEventService = new SlotEventService(noopLogger);
 
   describe('Event refreshable listener', () => {
@@ -25,11 +26,11 @@ describe('Refreshable Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onRefresh = new Promise(resolve => {
@@ -51,7 +52,7 @@ describe('Refreshable Loading', () => {
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onRefresh = new Promise(resolve => {
@@ -73,7 +74,7 @@ describe('Refreshable Loading', () => {
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const div = dom.window.document.createElement('div');
@@ -95,11 +96,11 @@ describe('Refreshable Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
@@ -123,11 +124,11 @@ describe('Refreshable Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
@@ -147,11 +148,11 @@ describe('Refreshable Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {
@@ -172,11 +173,11 @@ describe('Refreshable Loading', () => {
         {
           name: 'event',
           event: 'trigger-event',
-          source: dom.window
+          source: jsDomWindow
         },
         undefined,
         slotEventService,
-        dom.window
+        jsDomWindow
       );
 
       const onRefresh: Promise<boolean> = new Promise(resolve => {

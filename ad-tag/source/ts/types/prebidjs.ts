@@ -384,6 +384,7 @@ export namespace prebidjs {
       | IDigitTrustProvider
       | ICriteoProvider
       | IID5Provider
+      | IIdentityLinkProvider
       | IPubCommonIdProvider;
 
     interface IUserIdProvider<N extends string> {
@@ -540,6 +541,23 @@ export namespace prebidjs {
      */
     export interface IID5Provider
       extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> {}
+
+    export interface IIdentityLinkProviderParams {
+      /**
+       * This is the placementId, value needed for obtaining user's IdentityLink envelope.
+       */
+      readonly pid: string;
+    }
+
+    /**
+     * IdentityLink, provided by LiveRamp is a single person-based identifier which allows marketers, platforms and
+     * publishers to perform personalized segmentation, targeting and measurement use cases that require a consistent,
+     * cross-channel view of the user in anonymous spaces.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#identitylink
+     */
+    export interface IIdentityLinkProvider
+      extends IParameterizedUserIdProvider<IIdentityLinkProviderParams, 'identityLink'> {}
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
@@ -1211,6 +1229,8 @@ export namespace prebidjs {
      * Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html).
      * Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
      *
+     * Note: will be removed by the ad tag and thus hidden for prebid
+     *
      * @see https://prebid.org/dev-docs/conditional-ad-units.html
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
@@ -1219,6 +1239,8 @@ export namespace prebidjs {
     /**
      * Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html).
      * Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).
+     *
+     * Note: will be removed by the ad tag and thus hidden for prebid
      *
      * @see https://prebid.org/dev-docs/conditional-ad-units.html
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
@@ -1645,12 +1667,14 @@ export namespace prebidjs {
     /**
      * The site ID from Unruly.
      */
-    siteId: number;
+    readonly siteId: number;
 
     /**
      * The targeting UUID from Unruly.
+     *
+     * @deprecated this field is still marked as required in the docs, but is never used nor provided by unruly
      */
-    targetingUUID: string;
+    readonly targetingUUID?: string;
   }
 
   /**
@@ -1906,6 +1930,11 @@ export namespace prebidjs {
        * Is private auction?  0  - no, 1 - yes
        */
       readonly private_auction?: 0 | 1;
+
+      /**
+       * configure the DOM ID of the ad slots where the creative should be injected
+       */
+      readonly injTagId?: string;
     };
   }
 
@@ -2051,7 +2080,7 @@ export namespace prebidjs {
     /**
      *  Defines labels that may be matched on ad unit targeting conditions.
      */
-    readonly labels: string[];
+    readonly labels?: string[];
 
     /**
      * Callback to execute when all the bid responses are back or the timeout hits.

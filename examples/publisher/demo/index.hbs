@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{publisher}}: Demo Page</title>
+
+  <link rel="preconnect" href="https://securepubads.g.doubleclick.net" crossorigin="anonymous">
+  <script async="async" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+
+  {{> partials/head }}
+
+  <!-- sourcepoint stub -->
+  <script type="text/javascript">
+    //@formatter:off
+    !function () { var e = function () { var e, t = "__tcfapiLocator", a = [], n = window; for (; n;) { try { if (n.frames[t]) { e = n; break } } catch (e) { } if (n === window.top) break; n = n.parent } e || (!function e() { var a = n.document, r = !!n.frames[t]; if (!r) if (a.body) { var i = a.createElement("iframe"); i.style.cssText = "display:none", i.name = t, a.body.appendChild(i) } else setTimeout(e, 5); return !r }(), n.__tcfapi = function () { for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)n[r] = arguments[r]; if (!n.length) return a; if ("setGdprApplies" === n[0]) n.length > 3 && 2 === parseInt(n[1], 10) && "boolean" == typeof n[3] && (e = n[3], "function" == typeof n[2] && n[2]("set", !0)); else if ("ping" === n[0]) { var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: "stub" }; "function" == typeof n[2] && n[2](i) } else a.push(n) }, n.addEventListener("message", (function (e) { var t = "string" == typeof e.data, a = {}; try { a = t ? JSON.parse(e.data) : e.data } catch (e) { } var n = a.__tcfapiCall; n && window.__tcfapi(n.command, n.version, (function (a, r) { var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } }; t && (i = JSON.stringify(i)), e.source.postMessage(i, "*") }), n.parameter) }), !1)) }; "undefined" != typeof module ? module.exports = e : e() }();
+    //@formatter:on
+  </script>
+  <script>
+    window._sp_ = {
+      config: {
+        accountId: 270,
+        baseEndpoint: 'https://cdn.privacy-mgmt.com',
+        propertyHref: 'https://local.h5v.eu'
+      }
+    }
+  </script>
+  <script async src="https://cdn.privacy-mgmt.com/wrapperMessagingWithoutDetection.js"></script>
+
+  <style>
+    body {
+      display: flex;
+    }
+
+    .u-mtm {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+
+
+<!-- ------------------- -->
+<!-- MOLI PUBLISHER CODE -->
+<!-- ------------------- -->
+
+<script>
+  const vertical = 'gutefrage';
+  const iabChannel = 'Automotive';
+
+  // que setup
+  window.moli = window.moli || {que: []};
+
+  // push commands
+
+  // labels
+  window.moli.que.push(function (moliAdTag) {
+
+    moliAdTag.addLabel(vertical);
+    moliAdTag.addLabel(iabChannel);
+
+    // parse query params to activate certain outstream partners
+    // this only works in modern browsers
+    const params = new URLSearchParams(window.location.search);
+
+    params.getAll('label').forEach(label => moliAdTag.addLabel(label));
+
+  });
+  // targeting
+  window.moli.que.push(function (moliAdTag) {
+
+    // array of normalized tags
+    moliAdTag.setTargeting('tags', ['auto', 'waschmaschine']);
+    // allows targeting for verticals
+    moliAdTag.setTargeting('vertical', vertical);
+    // marketing channel
+    moliAdTag.setTargeting('channel', iabChannel);
+
+    // allows targeting adult content
+    moliAdTag.setTargeting('isAdultContent', 'false');
+    // allows targeting for user agents
+    moliAdTag.setTargeting('supportedUserAgent', 'true');
+  });
+
+  // hooks
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.beforeRequestAds((config) => {
+      console.log('before request ads hook', config);
+    });
+
+    moliAdTag.afterRequestAds((state) => {
+      console.log('after request ads hook. State:', state);
+    });
+  });
+
+  // request ads
+  window.moli.que.push(function (moliAdTag) {
+    moliAdTag.requestAds();
+  });
+
+</script>
+
+<body>
+<div class="container-fluid">
+  <div class="jumbotron">
+    <h1 class="display-4">Publisher Mode Demo: {{publisher}}</h1>
+    <p class="lead">This page contains the complete ad configuration</p>
+    <hr class="my-4">
+    <h3>Integration</h3>
+    <p>This code should be placed in the head of your page</p>
+    <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
+    &lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
+    &lt;!-- your ad tag --&gt;
+    &lt;script async="async" src="[[domain]]{{currentFilename}}"&gt;&lt;/script&gt;
+    &lt;!-- your faktor.io tag --&gt;
+    &lt;script async="async" src="https://config-prod.choice.faktor.io/7512a9aa-3995-4ff7-94c0-c8a45d49c611/faktor.js"&gt;&lt;/script&gt;</code></pre>
+
+    <p>In publisher mode the publisher site needs to trigger the <code>requestAds()</code> method. This test pages
+      executes this additional javascript</p>
+    <pre><code class="javascript">window.moli = window.moli || {que: []};
+    window.moli.que.push(function (moliAdTag) {
+
+    // trigger ads
+    moliAdTag.requestAds();
+    });</code></pre>
+
+    <h3>Consent Management</h3>
+    <button class="btn btn-secondary" onclick="window._sp_.loadPrivacyManagerModal(167759)">Sourcepoint privacy
+      manager
+    </button>
+
+    <h3>Moli Console</h3>
+    <p>You can get more details by opening the moli console.</p>
+    <button class="btn btn-success" onclick="window.moli.openConsole()">Open Moli Console</button>
+    <a class="btn btn-secondary" href="?moliDebug=true">enable ad tag console logs</a>
+    <a class="btn btn-secondary" href="?pbjs_debug=true">enable prebid console logs</a>
+    <a class="btn btn-secondary" href="?moliEnv=test">enable test mode</a>
+
+    <p>Or if you are a developer, type this into the javascript console:</p>
+    <pre><code class="html hljs xml">moli.openConsole()</code></pre>
+
+    <h3>Outstream</h3>
+    <p>Activate one or more outstream partners by adding them to a <code>label</code> query parameter. Examples</p>
+
+    <div class="list-group">
+      <a href="?label=appnexusAst&moliDebug=true" class="list-group-item list-group-item-action">Activate AppNexus</a>
+      <a href="?label=spotx&moliDebug=true" class="list-group-item list-group-item-action">Activate Spotx</a>
+      <a href="?label=teads&moliDebug=true" class="list-group-item list-group-item-action">Activate Teads</a>
+      <a href="?label=unruly&moliDebug=true" class="list-group-item list-group-item-action">Activate Unruly</a>
+      <a href="?label=dspx&moliDebug=true" class="list-group-item list-group-item-action">Activate DSPX</a>
+      <a href="?label=showheroesBs&moliDebug=true" class="list-group-item list-group-item-action">Activate
+        ShowHeroes</a>
+      <a href="?label=a9&moliDebug=true" class="list-group-item list-group-item-action">Activate A9</a>
+      <a href="?label=rubicon&moliDebug=true" class="list-group-item list-group-item-action">Activate Rubicon</a>
+    </div>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md">
+      <h1>Native Example 1</h1>
+      <div id="appnexus-native-example-1"></div>
+    </div>
+    <div class="col-md">
+      <h1>Native Example 2</h1>
+      <div id="appnexus-native-example-2"></div>
+    </div>
+    <div class="col-md">
+      <h1>Prebid AdSlot with outstream</h1>
+      <div id="prebid-adslot" style="max-height: 340px; max-width: 605px;"></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-md">
+      <h1>Eager Loading AdSlot</h1>
+      <div id="eager-loading-adslot"></div>
+    </div>
+    <div class="col-md">
+      <h1>Prebid AdSlot Banner only</h1>
+      <div id="prebid-adslot-2"></div>
+    </div>
+    <div class="col-md">
+      <h1>Amazon A9 AdSlot</h1>
+      <div id="a9-adslot"></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-md">
+      <h1>Lazy AdSlot</h1>
+      <p>
+        <button class="btn btn-primary" onclick="window.dispatchEvent(new Event('ads.lazy-adslot'))">Load</button>
+      </p>
+      <div id="lazy-adslot"></div>
+    </div>
+    <div class="col-md">
+      <h1>Refreshable AdSlot</h1>
+      <p>
+        <button class="btn btn-primary" onclick="window.dispatchEvent(new Event('ads.refreshable-adslot'))">Refresh
+        </button>
+      </p>
+      <div id="refreshable-adslot"></div>
+    </div>
+    <div class="col-md">
+      <h1>Manual AdSlot</h1>
+      <p>
+        <button class="btn btn-primary" onclick="moli.refreshAdSlot('manual-adslot')">Refresh</button>
+      </p>
+      <div id="manual-adslot"></div>
+    </div>
+  </div>
+
+
+</div>
+<!-- update the {{domain}} variable in the integration example -->
+<script>
+  const code = document.getElementById('integration-code');
+  if (code) {
+    code.innerText = code.innerText.replace('[[domain]]', location.protocol + '//' + location.host + location.pathname);
+  }
+</script>
+
+{{> partials/foot }}
+
+</body>
+</html>

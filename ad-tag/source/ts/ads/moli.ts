@@ -299,7 +299,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             `initialize ${module.moduleType} module ${module.name}`,
             module.config()
           );
-          module.init(config, assetLoaderService);
+          module.init(config, assetLoaderService, adService.getAdPipeline);
         });
 
         state = {
@@ -622,37 +622,38 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshAdSlot(domId: string): Promise<'queued' | 'refreshed'> {
+  function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
+    const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
       case 'configurable': {
-        state.refreshSlots.push(domId);
+        state.refreshSlots.push(...domIds);
         return Promise.resolve('queued');
       }
       case 'configured': {
-        state.refreshSlots.push(domId);
+        state.refreshSlots.push(...domIds);
         return Promise.resolve('queued');
       }
       // if requestAds is currently called we batch the refreshAdSlot calls until
       // we hit the 'spa-finished' state
       case 'spa-requestAds':
-        state.refreshSlots.push(domId);
+        state.refreshSlots.push(...domIds);
         return Promise.resolve('queued');
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
       // until the next requestAds() call arrives
       case 'spa-finished':
         if (state.href === window.location.href) {
           // user hasn't navigated yet so we directly refresh the slot
-          return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
+          return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.refreshSlots.push(domId);
+          state.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
         }
       // if the ad tag is currently requesting ads or already finished doesn't matter
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
+        return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
       }
       default: {
         getLogger(state.config, window).error(
@@ -718,7 +719,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     const params = parseQueryString(window.location.search);
     const param = params.get(key);
 
-    switch (param && param.toLowerCase()) {
+    switch (param?.toLowerCase()) {
       case 'test':
         return { environment: 'test' };
       case 'production':

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "sourceMap": true,
+    "lib": ["dom", "es6", "scripthost"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES6",
+    "skipLibCheck": true
+  },
+  "files": ["index.ts", "index.test.ts"],
+  "include": ["../ad-tag/source/**/*"]
+}

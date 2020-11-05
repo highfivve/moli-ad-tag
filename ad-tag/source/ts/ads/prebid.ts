@@ -145,9 +145,12 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                   : [];
 
                 // filter bids ourselves and don't rely on prebid to have a stable API
-                const bids = prebidAdSlotConfig.adUnit.bids.filter((bid: prebidjs.IBid) =>
-                  context.labelConfigService.filterSlot(bid)
-                );
+                // we also remove the bid labels so prebid doesn't require them
+                const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
+                  .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
+                  .map(bid => {
+                    return { bidder: bid.bidder, params: bid.params } as prebidjs.IBid;
+                  });
 
                 const video =
                   mediaTypeVideo && videoSizes.length > 0
@@ -238,7 +241,6 @@ export const prebidRequestBids = (
 
         context.window.pbjs.requestBids({
           adUnitCodes: adUnitCodes,
-          labels: context.labelConfigService.getSupportedLabels(),
           bidsBackHandler: (bidResponses?: prebidjs.IBidResponsesMap, timedOut?: boolean) => {
             // the bids back handler seems to run on a different thread
             // in consequence, we need to catch errors here to propagate them to top levels

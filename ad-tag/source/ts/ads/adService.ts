@@ -73,11 +73,15 @@ export class AdService {
       requestBids: [],
       requestAds: () => Promise.resolve()
     },
-    this.logger,
+    getDefaultLogger(),
     this.window,
     noopReportingService,
-    this.slotEventService
+    new SlotEventService(getDefaultLogger())
   );
+
+  private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
+    return config.environment || 'production';
+  }
 
   /**
    *
@@ -121,7 +125,7 @@ export class AdService {
     config: Readonly<Moli.MoliConfig>,
     isSinglePageApp: boolean
   ): Promise<Readonly<Moli.MoliConfig>> => {
-    const env = this.getEnvironment(config);
+    const env = AdService.getEnvironment(config);
     // 1. setup all services
     this.logger.setLogger(getLogger(config, this.window));
     this.logger.debug('AdService', `Initializing with environment ${env}`);
@@ -141,7 +145,7 @@ export class AdService {
     );
 
     // 2. build the AdPipeline
-    const init: InitStep[] = [this.awaitDomReady(), gptInit()];
+    const init: InitStep[] = [gptInit()];
 
     const configure: ConfigureStep[] = [
       gptConfigure(config),
@@ -204,7 +208,12 @@ export class AdService {
       this.slotEventService
     );
 
-    return Promise.resolve(config);
+    return new Promise<Readonly<Moli.MoliConfig>>(resolve => {
+      domready(this.window, () => {
+        this.logger.debug('DOM', 'dom ready');
+        resolve(config);
+      });
+    });
   };
 
   /**
@@ -298,19 +307,6 @@ export class AdService {
 
   public setLogger = (logger: Moli.MoliLogger): void => {
     this.logger.setLogger(logger);
-  };
-
-  private getEnvironment(config: Moli.MoliConfig): Moli.Environment {
-    return config.environment || 'production';
-  }
-
-  private awaitDomReady = (): InitStep => {
-    const fn = () =>
-      new Promise<void>(resolve => {
-        domready(this.window, resolve);
-      }).then(() => this.logger.debug('DOM', 'dom ready'));
-    Object.defineProperty(fn, 'name', { value: 'await-dom-ready' });
-    return fn;
   };
 
   private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {

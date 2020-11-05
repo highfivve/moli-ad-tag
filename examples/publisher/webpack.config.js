@@ -2,7 +2,11 @@
 
 const path = require('path');
 const fs = require('fs');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const { makeDocsPages } = require('@highfivve/moli-release/releases/webpack-helpers');
+
+const releasesJson = require('./releases.json');
+const publisherName = 'moli-publisher-example-publisher';
 
 module.exports = (_, argv) => {
   return {
@@ -16,7 +20,7 @@ module.exports = (_, argv) => {
         {
           test: /\.ts$/,
           loader: 'ts-loader',
-          options: {'allowTsInNodeModules': true}
+          options: { allowTsInNodeModules: true }
         },
         // this separate rule is required to make sure that the Prebid.js files are babel-ified.  this rule will
         // override the regular exclusion from above (for being inside node_modules).
@@ -50,17 +54,8 @@ module.exports = (_, argv) => {
       ],
       compress: true,
       port: 9000,
-      allowedHosts: [
-        'localhost',
-        '.gutefrage.net',
-        '.h5v.eu'
-      ]
+      allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu']
     },
-    plugins: [
-      new HtmlWebpackPlugin({
-        title: 'Publisher mode - Publisher Demo Page',
-        template: 'demo/index.html'
-      })
-    ]
-  }
+    plugins: makeDocsPages(publisherName, releasesJson.currentFilename, __dirname)
+  };
 };

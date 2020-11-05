@@ -2,9 +2,12 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
+  LOW_PRIORITY,
   mkConfigureStep,
   mkInitStep,
+  mkPrepareRequestAdsStep,
   mkRequestBidsStep,
+  PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
 import { Moli } from '../types/moli';
@@ -77,6 +80,23 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
             cmpTimeout: config.cmpTimeout
           }
         });
+        resolve();
+      })
+  );
+
+export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
+  mkPrepareRequestAdsStep(
+    'a9-clear-targeting',
+    LOW_PRIORITY,
+    (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) =>
+      new Promise<void>(resolve => {
+        slots
+          .map(moliSlot => moliSlot.adSlot)
+          .forEach(slot => {
+            slot.clearTargeting('amznp');
+            slot.clearTargeting('amznsz');
+            slot.clearTargeting('amznbid');
+          });
         resolve();
       })
   );

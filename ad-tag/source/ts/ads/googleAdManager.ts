@@ -35,6 +35,11 @@ export const gptInit = (): InitStep => {
   return mkInitStep('gpt-init', (context: AdPipelineContext) => {
     if (!result) {
       result = new Promise<void>(resolve => {
+        if (context.window.googletag && context.window.googletag.pubadsReady) {
+          resolve();
+          return;
+        }
+
         context.logger.debug('GAM', 'init googletag stub');
         context.window.googletag = context.window.googletag || { cmd: [] };
         context.window.googletag.cmd.push(resolve);
@@ -256,7 +261,7 @@ export const gptRequestAds = (): RequestAdsStep => (
                              linear-gradient(#eee .1em, transparent .1em);
                              background-size: 100% 1.2em;
                              ">
-<div style="position: absolute; top: 5px; left: 5px">${buttons}</div>        
+<div style="position: absolute; top: 5px; left: 5px">${buttons}</div>
 <div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>
 </div>`;
 

@@ -25,6 +25,7 @@ describe('prebid', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
+  const jsDomWindow: Window = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -36,8 +37,8 @@ describe('prebid', () => {
       env: env,
       logger: noopLogger,
       config: config,
-      window: dom.window,
-      labelConfigService: new LabelConfigService([], [], dom.window),
+      window: jsDomWindow,
+      labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       slotEventService: new SlotEventService(noopLogger)
     };
@@ -130,6 +131,48 @@ describe('prebid', () => {
       return step(adPipelineContext(), []).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
+      });
+    });
+
+    describe('labels', () => {
+      it('should remove labelAll', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
+      });
+
+      it('should remove labelAny', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
       });
     });
 

@@ -14,6 +14,7 @@ use(sinonChai);
 describe('Passback Service', () => {
   // create a fresh DOM for each test
   let dom = createDom();
+  let jsDomWindow: Window = dom.window as any;
   const gpt = createGoogletagStub();
   const pubads = gpt.pubads();
   dom.window.googletag = gpt;
@@ -41,6 +42,7 @@ describe('Passback Service', () => {
 
   beforeEach(() => {
     dom = createDom();
+    jsDomWindow = dom.window as any;
     dom.window.googletag = gpt;
   });
 
@@ -51,13 +53,13 @@ describe('Passback Service', () => {
   describe('passback message with domId', () => {
     it('should not initialize the event listener if no ad slot is added', () => {
       const addEventListenerSpy = sandbox.spy(dom.window, 'addEventListener');
-      new PassbackService(noopLogger, dom.window);
+      new PassbackService(noopLogger, jsDomWindow);
       expect(addEventListenerSpy).to.have.not.been.called;
     });
 
     it('should initialize the message listener only once', () => {
       const addEventListenerSpy = sandbox.spy(dom.window, 'addEventListener');
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
 
       passbackService.addAdSlot({
         moliSlot: { domId: 'foo' }
@@ -75,7 +77,7 @@ describe('Passback Service', () => {
     });
 
     it('should not refresh a slot when the domId does not match', () => {
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
@@ -100,7 +102,7 @@ describe('Passback Service', () => {
     });
 
     it('should refresh a slot when the proper event is fired', () => {
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
@@ -133,7 +135,7 @@ describe('Passback Service', () => {
     });
 
     it('should allow passbacks only once', () => {
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const adSlotDefinition: Moli.SlotDefinition<any> = {
@@ -167,13 +169,13 @@ describe('Passback Service', () => {
   describe('passback message with adUnitPath', () => {
     it('should not initialize the event listener if no ad slot is added', () => {
       const addEventListenerSpy = sandbox.spy(dom.window, 'addEventListener');
-      new PassbackService(noopLogger, dom.window);
+      new PassbackService(noopLogger, jsDomWindow);
       expect(addEventListenerSpy).to.have.not.been.called;
     });
 
     it('should initialize the message listener only once', () => {
       const addEventListenerSpy = sandbox.spy(dom.window, 'addEventListener');
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
 
       passbackService.addAdSlot({
         moliSlot: { domId: 'foo', adUnitPath: '/1/foo' }
@@ -191,7 +193,7 @@ describe('Passback Service', () => {
     });
 
     it('should not refresh a slot when the adUnitPath does not match', () => {
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
@@ -216,7 +218,7 @@ describe('Passback Service', () => {
     });
 
     it('should refresh a slot when the proper event is fired', () => {
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
@@ -253,7 +255,7 @@ describe('Passback Service', () => {
     });
 
     it('should allow passbacks only once', () => {
-      const passbackService = new PassbackService(noopLogger, dom.window);
+      const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const adSlotDefinition: Moli.SlotDefinition<any> = {

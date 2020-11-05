@@ -23,15 +23,16 @@ describe('moli', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  dom.window.pbjs = pbjsStub;
+  const jsDomWindow: Window = dom.window as any;
+  jsDomWindow.pbjs = pbjsStub;
 
   let domIdCounter: number = 0;
   const mkAdSlotInDOM = (): Moli.AdSlot => {
     domIdCounter = domIdCounter + 1;
     const domId = `dom-id-${domIdCounter}`;
-    const adDiv = dom.window.document.createElement('div');
+    const adDiv = jsDomWindow.document.createElement('div');
     adDiv.id = domId;
-    dom.window.document.body.appendChild(adDiv);
+    jsDomWindow.document.body.appendChild(adDiv);
     return {
       domId: domId,
       adUnitPath: `/123/ad-unit-${domIdCounter}`,
@@ -49,7 +50,7 @@ describe('moli', () => {
   };
 
   beforeEach(() => {
-    dom.window.googletag = createGoogletagStub();
+    jsDomWindow.googletag = createGoogletagStub();
   });
 
   after(() => {
@@ -63,14 +64,14 @@ describe('moli', () => {
 
   describe('init ad tag', () => {
     it('should initialize the global moli variable', () => {
-      const moliWindow = (dom.window as unknown) as Moli.MoliWindow;
+      const moliWindow = (jsDomWindow as unknown) as Moli.MoliWindow;
       expect(moliWindow.moli).to.be.undefined;
       const moli = initAdTag(moliWindow);
       expect(moliWindow.moli).to.be.equal(moli);
     });
 
     it('should process the global command queue', () => {
-      const moliWindow = (dom.window as unknown) as Moli.MoliWindow;
+      const moliWindow = (jsDomWindow as unknown) as Moli.MoliWindow;
       const cmd1Spy = sandbox.spy();
       const cmd2Spy = sandbox.spy();
       moliWindow.moli = { que: [cmd1Spy, cmd2Spy] } as any;
@@ -82,31 +83,31 @@ describe('moli', () => {
 
   describe('state machine', () => {
     it('should start in configurable state', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       expect(adTag.getState()).to.be.eq('configurable');
     });
 
     it('should stay in configurable state after setTargeting()', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.setTargeting('key', 'value');
       expect(adTag.getState()).to.be.eq('configurable');
     });
 
     it('should transition into configured state after configure()', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
     });
 
     it('should stay in configured state after setTargeting()', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.configure(defaultConfig);
       adTag.setTargeting('key', 'value');
       expect(adTag.getState()).to.be.eq('configured');
     });
 
     it('should transition into requestAds state after requestAds()', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.configure(defaultConfig);
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('requestAds');
@@ -116,7 +117,7 @@ describe('moli', () => {
     });
 
     it('should stay in configurable state after requestAds() and set initialize to true', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('configurable');
       return finished.then(state => {
@@ -130,7 +131,7 @@ describe('moli', () => {
       dom.reconfigure({
         url: 'https://localhost/page-one'
       });
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.enableSinglePageApp();
       adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
@@ -156,7 +157,7 @@ describe('moli', () => {
       dom.reconfigure({
         url: 'https://localhost/page-one'
       });
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.enableSinglePageApp();
       adTag.configure(defaultConfig);
       expect(adTag.getState()).to.be.eq('configured');
@@ -197,17 +198,18 @@ describe('moli', () => {
     const initSpy = sandbox.spy(fakeModule, 'init');
 
     it('should init modules in the configure call', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
 
       adTag.registerModule(fakeModule);
       adTag.configure(config);
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config, adTag.getAssetLoaderService());
+      expect(initSpy).to.have.been.calledOnce;
+      expect(initSpy).to.have.been.calledWithMatch(config, adTag.getAssetLoaderService());
     });
 
     it('should init modules and use the changed config', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
       const targeting = {
         keyValues: { foo: 'bar' },
@@ -224,7 +226,8 @@ describe('moli', () => {
       adTag.registerModule(configChangingModule);
       adTag.configure(config);
 
-      expect(configChangingInitSpy).to.have.been.calledOnceWithExactly(
+      expect(configChangingInitSpy).to.have.been.calledOnce;
+      expect(configChangingInitSpy).to.have.been.calledWithMatch(
         config,
         adTag.getAssetLoaderService()
       );
@@ -236,7 +239,7 @@ describe('moli', () => {
     });
 
     it('should never register modules if the state is not configurable', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
       const logger = config.logger!;
 
@@ -261,9 +264,9 @@ describe('moli', () => {
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
 
-        const adTag = createMoliTag(dom.window);
+        const adTag = createMoliTag(jsDomWindow);
 
-        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.refreshAdSlot(slots[0].domId);
         adTag.configure({ ...defaultConfig, slots: slots });
@@ -286,9 +289,9 @@ describe('moli', () => {
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
 
-        const adTag = createMoliTag(dom.window);
+        const adTag = createMoliTag(jsDomWindow);
 
-        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.refreshAdSlot(slots[0].domId);
         adTag.configure({ ...defaultConfig, slots: slots });
@@ -327,9 +330,9 @@ describe('moli', () => {
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
 
-        const adTag = createMoliTag(dom.window);
+        const adTag = createMoliTag(jsDomWindow);
 
-        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.refreshAdSlot(slots[0].domId);
         adTag.enableSinglePageApp();
@@ -357,9 +360,9 @@ describe('moli', () => {
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
 
-        const adTag = createMoliTag(dom.window);
+        const adTag = createMoliTag(jsDomWindow);
 
-        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.enableSinglePageApp();
         adTag.configure({ ...defaultConfig, slots: slots });
@@ -392,8 +395,8 @@ describe('moli', () => {
         // create all slots
         const slots: Moli.AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
 
-        const adTag = createMoliTag(dom.window);
-        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const adTag = createMoliTag(jsDomWindow);
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.enableSinglePageApp();
         adTag.configure({ ...defaultConfig, slots: slots });
@@ -429,7 +432,7 @@ describe('moli', () => {
 
   describe('setTargeting()', () => {
     it('should add key-values to the config', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.setTargeting('pre', 'configure1');
       adTag.configure(defaultConfig);
       adTag.setTargeting('post', 'configure2');
@@ -444,7 +447,7 @@ describe('moli', () => {
     });
 
     it('should override preexisting values', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.setTargeting('pre', 'configure1');
       adTag.configure({
         slots: defaultSlots,
@@ -470,7 +473,7 @@ describe('moli', () => {
     });
 
     it('should add ABtest key-value between 1 and 100 in configurable state calling requestAds() ', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('configurable');
       return finished.then(state => {
@@ -486,7 +489,7 @@ describe('moli', () => {
     });
 
     it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.configure(defaultConfig);
 
       expect(adTag.getState()).to.be.eq('configured');
@@ -506,13 +509,13 @@ describe('moli', () => {
 
     it('should persists the initial key-values in spa mode for all requestAd() calls', () => {
       const googletagPubAdsSetTargetingSpy = sandbox.spy(
-        dom.window.googletag.pubads(),
+        jsDomWindow.googletag.pubads(),
         'setTargeting'
       );
       dom.reconfigure({
         url: 'https://localhost/1'
       });
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.enableSinglePageApp();
       adTag.setTargeting('dynamicKeyValuePre', 'value');
       adTag.configure({
@@ -579,7 +582,7 @@ describe('moli', () => {
 
   describe('addLabel()', () => {
     it('should add label to the config', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.addLabel('pre');
       adTag.configure(defaultConfig);
       adTag.addLabel('post');
@@ -591,7 +594,7 @@ describe('moli', () => {
     });
 
     it('should append to preexisting values', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.addLabel('pre');
       adTag.configure({
         slots: defaultSlots,
@@ -615,7 +618,7 @@ describe('moli', () => {
       dom.reconfigure({
         url: 'https://localhost/1'
       });
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.enableSinglePageApp();
       adTag.addLabel('dynamicLabelPre');
       adTag.configure({
@@ -671,7 +674,7 @@ describe('moli', () => {
 
   describe('setLogger()', () => {
     it('should set the given logger instance', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       const customLogger: Moli.MoliLogger = {
         debug: () => {
           return;
@@ -698,7 +701,7 @@ describe('moli', () => {
 
   describe('setSampleRate()', () => {
     it('should set the given sample rate instance before configure() is called', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       adTag.setSampleRate(0.23);
       adTag.configure(defaultConfig);
@@ -710,7 +713,7 @@ describe('moli', () => {
     });
 
     it('should set the given sample rate instance after configure() is called', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       adTag.configure(defaultConfig);
       adTag.setSampleRate(0.23);
@@ -722,7 +725,7 @@ describe('moli', () => {
     });
 
     it('should set the reporters array to an empty array', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       adTag.configure(defaultConfig);
       adTag.setSampleRate(0.23);
@@ -736,7 +739,7 @@ describe('moli', () => {
 
   describe('addReporter()', () => {
     it('should add the given reporter instances', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       const voidReporter: Moli.reporting.Reporter = () => {
         return;
@@ -753,7 +756,7 @@ describe('moli', () => {
     });
 
     it('should set the default sampleRate to 0', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       const voidReporter: Moli.reporting.Reporter = () => {
         return;
@@ -770,7 +773,7 @@ describe('moli', () => {
 
   describe('hooks', () => {
     it('should add the beforeRequestAds hook and call it', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
         return;
@@ -786,7 +789,7 @@ describe('moli', () => {
     });
 
     it('should add the afterRequestAds hook if requestAds() was successful', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
         return;
@@ -803,7 +806,7 @@ describe('moli', () => {
     });
 
     it('should add the afterRequestAds hook with spa state if requestAds() was successful', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
         return;
@@ -821,7 +824,7 @@ describe('moli', () => {
     });
 
     it('should call the afterRequestAds hook with finished state on each requestAds() call', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       dom.reconfigure({
         url: 'https://localhost/'
       });
@@ -852,15 +855,16 @@ describe('moli', () => {
     });
 
     it('should add the afterRequestAds hook with error state if requestAds() failed', () => {
-      dom.window.googletag = {
+      jsDomWindow.googletag = {
         ...createGoogletagStub(),
+        pubadsReady: undefined,
         cmd: {
           push(_: Function): void {
             throw Error('trigger an error!');
           }
         }
       };
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
         return;
@@ -879,7 +883,7 @@ describe('moli', () => {
 
   describe('environment override', () => {
     it('should override the environment with test', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       dom.reconfigure({
         url: 'https://localhost?moliEnv=test'
@@ -894,7 +898,7 @@ describe('moli', () => {
     });
 
     it('should override the environment with production', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       dom.reconfigure({
         url: 'https://localhost?moliEnv=production'
@@ -909,7 +913,7 @@ describe('moli', () => {
     });
 
     it('should not change the environment if query parameter is invalid', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
 
       dom.reconfigure({
         url: 'https://localhost?moliEnv=wrong'
@@ -926,7 +930,7 @@ describe('moli', () => {
 
   describe('multiple configurations', () => {
     it('should not miss any configuration', () => {
-      const adTag = createMoliTag(dom.window);
+      const adTag = createMoliTag(jsDomWindow);
       adTag.setTargeting('pre', 'configure1');
       adTag.addLabel('pre');
       adTag.configure({

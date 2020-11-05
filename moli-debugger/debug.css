@@ -24,7 +24,6 @@
 }
 
 .MoliDebug {
-
   &-sidebar {
     background: var(--MoliDebug-sidebar-bg);
     box-shadow: var(--MoliDebug-sidebar-box-shadow);
@@ -97,15 +96,15 @@
       }
 
       &--targeting {
-        border-left-color: #998FC7;
+        border-left-color: #998fc7;
       }
 
       &--moli {
-        border-left-color: #998FC7;
+        border-left-color: #998fc7;
       }
 
       &--sizeConfig {
-        border-left-color: #D4C2FC;
+        border-left-color: #d4c2fc;
       }
 
       &--prebid {
@@ -113,11 +112,11 @@
       }
 
       &--consent {
-        border-left-color: #D9F4C7;
+        border-left-color: #d9f4c7;
       }
 
       &--linting {
-        border-left-color: #F4EF88;
+        border-left-color: #f4ef88;
       }
     }
   }
@@ -180,7 +179,7 @@
       }
 
       &--sizeConfig::before {
-        content: "\01F4D0";
+        content: '\01F4D0';
       }
     }
   }
@@ -203,14 +202,14 @@
     }
 
     &--collapsible {
-      box-shadow: 3px 2px 2px 0px var(--MoliDebug-blue);
+      box-shadow: 3px 2px 2px 0 var(--MoliDebug-blue);
       margin-bottom: 20px;
     }
   }
 
   &-tag {
     color: white;
-    background: #76949F;
+    background: #76949f;
     border-radius: var(--MoliDebug-border-radius);
     display: inline-block;
     margin-right: 5px;
@@ -255,16 +254,16 @@
     }
 
     &LabelBtn {
-       display: inline-block;
-       min-width: 135px;
-       padding-right: 5px;
-       padding-left: 5px;
-       background: lightgray;
-       border: 1px solid lightgray;
-       border-radius: var(--MoliDebug-border-radius);
-       cursor: pointer;
-       margin-right: 5px;
-       margin-bottom: 5px;
+      display: inline-block;
+      min-width: 135px;
+      padding-right: 5px;
+      padding-left: 5px;
+      background: lightgray;
+      border: 1px solid lightgray;
+      border-radius: var(--MoliDebug-border-radius);
+      cursor: pointer;
+      margin-right: 5px;
+      margin-bottom: 5px;
     }
 
     &Container {
