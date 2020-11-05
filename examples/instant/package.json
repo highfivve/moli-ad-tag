@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-instant-mode",
-  "version": "4.0.0",
+  "version": "3.9.7",
   "description": "Demonstrating the instant mode",
   "main": "index.ts",
   "scripts": {

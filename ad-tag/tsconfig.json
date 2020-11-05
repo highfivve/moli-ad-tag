@@ -14,5 +14,8 @@
   "include": [
     "source/**/*",
     "tests/**/*"
+  ],
+  "exclude": [
+    "**/lib"
   ]
 }

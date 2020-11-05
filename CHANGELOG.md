@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 4.0.0
+## 3.9.8
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363) Publish Moli Ad Tag library to GitHub NPM registry
 

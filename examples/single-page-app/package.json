@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-single-page-app",
-  "version": "4.0.0",
+  "version": "3.9.7",
   "description": "Publisher bootstrap template",
   "main": "index.ts",
   "scripts": {
@@ -30,7 +30,7 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^4.0.0",
+    "@highfivve/ad-tag": "*",
     "@highfivve/module-cmp-sourcepoint": "^4.0.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",

@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-debugger",
-  "version": "4.0.0",
+  "version": "3.9.7",
   "description": "Moli debugging tools",
   "main": "./lib/debug.js",
   "typings": "./lib/debug.d.ts",
@@ -65,7 +65,7 @@
     "webpack-cli": "^4.0.0"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^4.0.0",
+    "@highfivve/ad-tag": "*",
     "@iabtcf/core": "^1.1.4",
     "core-js": "^3.6.5",
     "preact": "^10.5.4"

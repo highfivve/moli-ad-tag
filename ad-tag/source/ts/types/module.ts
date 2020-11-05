@@ -1,6 +1,6 @@
 import { Moli } from './moli';
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { AdPipeline } from '../../..';
+import {AdPipeline} from '../ads/adPipeline';
 
 export type ModuleType =
   | 'cmp'

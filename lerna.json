@@ -2,9 +2,10 @@
   "packages": [
     "ad-tag",
     "moli-debugger",
+    "moli-release",
     "modules/*"
   ],
-  "version": "4.0.0",
+  "version": "3.9.7",
   "npmClient": "yarn",
   "useWorkspaces": true
 }

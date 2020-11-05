@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-publisher-mode",
-  "version": "4.0.0",
+  "version": "3.9.7",
   "description": "Demonstrating the publisher mode",
   "main": "index.ts",
   "scripts": {
@@ -26,7 +26,7 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^4.0.0",
+    "@highfivve/ad-tag": "*",
     "@highfivve/module-cmp-sourcepoint": "^4.0.0",
     "@highfivve/module-confiant": "^4.0.0",
     "@highfivve/module-blocklist-url": "^4.0.0"

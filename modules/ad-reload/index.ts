@@ -12,7 +12,7 @@ import {
 
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
-import { a9ClearTargetingStep } from '@highfivve/ad-tag/source/ts/ads/a9';
+import { a9ClearTargetingStep } from '@highfivve/ad-tag/lib/source/ts/ads/a9';
 
 type AdReloadModuleConfig = {
   excludeAdSlotDomIds: Array<string>;

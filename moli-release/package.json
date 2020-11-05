@@ -1,8 +1,14 @@
 {
   "name": "@highfivve/moli-release",
-  "version": "1.0.0",
+  "version": "3.9.7",
+  "license": "Apache-2.0",
   "description": "Moli release tools",
+  "main": "./lib/index.js",
+  "files": [
+    "lib"
+  ],
   "scripts": {
+    "tsc": "tsc",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
     "start": "yarn watch",
@@ -14,16 +20,20 @@
     "clean": "rm -rf lib/**",
     "validate": "yarn prettier && yarn compile",
     "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",
-    "prettier:fix": "yarn prettier --write"
+    "prettier:fix": "yarn prettier --write",
+    "validate:github": "yarn validate"
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
+    "directory": "moli-release"
   },
   "keywords": [
     "release"
   ],
-  "license": "UNLICENSED",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "dependencies": {
     "commander": "^6.2.0",
     "crypto": "^1.0.1",
