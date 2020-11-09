@@ -1,4 +1,5 @@
 {
+  "version": "3.9.7",
   "private": true,
   "workspaces": [
     "ad-tag",
@@ -19,6 +20,5 @@
   },
   "bin": {
     "moli-release": "moli-release/bin/moli-release"
-  },
-  "version": "0.0.1"
+  }
 }
