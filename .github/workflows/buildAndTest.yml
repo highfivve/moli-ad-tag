@@ -2,9 +2,9 @@ name: Build and Test
 
 on:
   push:
-    branches: [ GD-1363-github-npm-registry ]
+    branches: [ master ]
   pull_request:
-    branches: [ GD-1363-github-npm-registry ]
+    branches: [ master ]
 
 jobs:
   build:
