@@ -12,12 +12,13 @@
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
+    "lerna": "^3.22.1",
     "prebid.js": "3.16.0",
     "prettier": "^2.1.2",
-    "lerna": "^3.22.1",
     "typescript": "^4.0.2"
   },
   "bin": {
     "moli-release": "moli-release/bin/moli-release"
-  }
+  },
+  "version": "0.0.1"
 }
