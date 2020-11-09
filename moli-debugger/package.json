@@ -14,14 +14,14 @@
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
-    "compile:ts": "tsc --noEmit",
+    "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
     "lint": "tslint --project tsconfig.json && yarn prettier",
     "clean": "rm -rf dist/",
     "validate": "yarn prettier && yarn compile",
     "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"**/*.ts*\"",
     "prettier:fix": "yarn prettier --write",
-    "validate:github": "yarn validate",
+    "validate:github": "yarn prettier && tsc --noEmit",
     "validate:jenkins": "yarn validate"
   },
   "repository": {
