@@ -29,6 +29,8 @@ pipeline {
                 sh "npm install yarn@1.22.7"
                 // fresh install
                 sh "yarn install"
+                // create output files
+                sh "lerna run tsc"
             }
         }
         stage('Lint') {
