@@ -1,0 +1,58 @@
+fetchHttpServer = Process(
+    name = 'fetch executable from hdfs and directory setup',
+    cmdline = """
+                mkdir -p bin web
+                httpfs copyToLocal /mesos/ops/gf_algernon/algernon bin/
+                chmod 755 bin/algernon
+            """
+)
+
+fetchDist = Process(
+    name='fetch dist from HDFS',
+    cmdline="""
+        cd web
+        /usr/local/bin/httpfs copyToLocal {{hdfsPath}}/{{distFile}} .
+        tar -xf {{distFile}} --strip-components=1
+        rm {{distFile}}
+    """
+)
+
+runHttpServer = Process(
+    name = 'run executable',
+    cmdline = """
+        bin/algernon \
+          --addr=:{{thermos.ports[http]}} \
+          --dir=web \
+          --httponly \
+          --nodb \
+          --server \
+          --cache=prod \
+          --cachesize=134217728 \
+          --nolimit \
+          --stricter \
+          --statcache \
+    """
+)
+
+task = SequentialTask(
+    name = 'moli-debug',
+    processes = [fetchHttpServer, fetchDist, runHttpServer],
+    resources=Resources(cpu=0.3, ram=320 * MB, disk=32 * MB)
+)
+
+healthcheckconfig = HealthCheckConfig(
+    health_checker = HealthCheckerConfig(
+        http = HttpHealthChecker(endpoint = '/moli-debug.min.js', expected_response_code = 200, expected_response = '')
+    ),
+    initial_interval_secs=20,
+    interval_secs=10,
+    timeout_secs=5
+)
+updateconfig = UpdateConfig(batch_size=1)
+announce = Announcer(primary_port='http', portmap={ 'health': 'http' })
+
+jobs = [
+    Service(announce = announce, task = task, update_config = updateconfig, health_check_config = healthcheckconfig,
+            cluster = 'gfaurora', role = 'frontend', environment = 'prod', name = 'moli-debug',
+            instances = 1, constraints = { 'host': 'limit:1', 'dedicated' : 'frontend'})
+]

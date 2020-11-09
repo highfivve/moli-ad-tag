@@ -21,7 +21,8 @@
     "validate": "yarn prettier && yarn compile",
     "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"**/*.ts*\"",
     "prettier:fix": "yarn prettier --write",
-    "validate:github": "yarn validate"
+    "validate:github": "yarn validate",
+    "validate:jenkins": "yarn validate"
   },
   "repository": {
     "type": "git",

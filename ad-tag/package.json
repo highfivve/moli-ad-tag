@@ -27,7 +27,8 @@
     "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"(source|tests)/**/*.ts*\"",
     "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/",
     "validate": "yarn compile && yarn lint && yarn test && yarn docs",
-    "validate:github": "yarn compile && yarn lint && yarn test:junit"
+    "validate:github": "yarn compile && yarn lint && yarn test:junit",
+    "validate:jenkins": "yarn compile && yarn lint && yarn test:junit"
   },
   "repository": {
     "type": "git",

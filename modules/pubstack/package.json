@@ -15,7 +15,8 @@
     "lint:ts:fix": "tslint --project tsconfig.json --fix && yarn prettier --write",
     "prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"**/*.ts*\"",
     "validate": "yarn compile && yarn lint",
-    "validate:github": "yarn validate"
+    "validate:github": "yarn validate",
+    "validate:jenkins": "yarn validate"
   },
   "repository": {
     "type": "git",
