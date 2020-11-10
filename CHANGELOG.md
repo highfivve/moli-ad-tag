@@ -6,6 +6,56 @@
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363) Publish Moli Ad Tag library to GitHub NPM registry
 
+## Authentication
+[See](https://docs.github.com/en/free-pro-team@latest/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)
+
+Add the .npmrc file to publisher project, so that we can install the package from the github npm registry.
+As long as we have a private github repository we need to add the authToken (currently personal token).
+
+```
+@highfivve:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken={TOKEN}
+always-auth=true
+registry=https://registry.npmjs.org
+```
+
+
+### Publish moli packages
+
+Using lerna for managing multi-package repository. [Lerna on Github](https://github.com/lerna/lerna)
+
+Add a dependency to a package
+```
+lerna add <package>
+```
+
+Link local packages together and install remaining package dependencies
+```
+lerna bootstrap
+```
+
+Run an npm script in each package that contains that script
+```
+lerna run <script>
+// e.g.
+lerna run tsc
+```
+
+Bump version of packages changed since the last release
+```
+lerna version
+```
+
+Publish packages in the current project
+```
+lerna publish from-package --registry https://npm.pkg.github.com/
+```
+### Installing moli packages
+
+```
+yarn add @highfivve/ad-tag
+```
+
 # 3.9.7
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add currentFilename to makeDocsPages function and handlebars data
