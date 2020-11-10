@@ -6,7 +6,7 @@
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363) Publish Moli Ad Tag library to GitHub NPM registry
 
-## Authentication
+### Authentication
 [See](https://docs.github.com/en/free-pro-team@latest/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)
 
 Add the .npmrc file to publisher project, so that we can install the package from the github npm registry.
@@ -60,45 +60,45 @@ yarn add @highfivve/ad-tag
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add currentFilename to makeDocsPages function and handlebars data
 
-# 3.9.6
+## 3.9.6
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add handlebars-related stuff (helpers, build utils, partials) to
 moli-release (instead of inside publisher tag repository)
 
-# 3.9.5
+## 3.9.5
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Add auto-generated ad tag filename to releases.json when running moli-release
 
-# 3.9.4
+## 3.9.4
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Don't send sovrn-reload key/value anymore for native ad reload
 
-# 3.9.3
+## 3.9.3
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Log errors from inquirer in moli-release script
 
-# 3.9.0
+## 3.9.0
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Re-built moli release CLI with framework
 
-# 3.8.4
+## 3.8.4
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355)
 
 ↪ [GD-2416](https://jira.gutefrage.net/browse/GD-2416) Use PrepareRequestAdsStep instead of ConfigureStep for clearing A9 targeting
 
-# 3.8.3
+## 3.8.3
 
 [GD-2417](https://jira.gutefrage.net/browse/GD-2417) Make reload key/value key configurable (default stays at `native-ad-reload`)
 
-# 3.8.2
+## 3.8.2
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355)
 
 ↪ [GD-2416](https://jira.gutefrage.net/browse/GD-2416) Clear A9 targeting (`amznp`, `amznsz`, `amznbid`) on googletag slot when triggering a native slot reload
 ↪ [GD-2417](https://jira.gutefrage.net/browse/GD-2417) Set separate key/value `native-ad-reload` on googletag slot when reloading
 
-# 3.8.1
+## 3.8.1
 
 [GD-2415](https://jira.gutefrage.net/browse/GD-2415). `moli.refreshAdSlot` now takes a single domID string or an array of domID strings.
 
@@ -112,113 +112,113 @@ moli.refreshAdSlot('content_4');
 moli.refreshAdSlot([ 'content_x', 'content_3', 'content_4' ]);
 ```
 
-# 3.8.0
+## 3.8.0
 
 [GD-2412](https://jira.gutefrage.net/browse/GD-2412) Remove prebid labels in moli ad tag.
 This fixes Sovrn and all possible third party scripts that rely on the configured `pbjs.adunits`.
 
-# 3.7.6
+## 3.7.6
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Fixed package.json resolving problem
 
-# 3.7.5
+## 3.7.5
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) moli-release command is not in workspace anymore
 
-# 3.7.4
+## 3.7.4
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346) Added moli-release CLI
 
-# 3.7.3
+## 3.7.3
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345) Move IdentityLink types to module, explicitly cast `Window`
 to `ATS.Window` in constructor
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Update IE11 example docs
 
-# 3.7.2
+## 3.7.2
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345): Add IIdentityLinkProvider to UserIdProvider union type
 
-# 3.7.1
+## 3.7.1
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345): Add pixelID parameter to LiveRamp module config
 
-# 3.7.0
+## 3.7.0
 
 [GD-2345](https://jira.gutefrage.net/browse/GD-2345): Integrate LiveRamp ATS IdentityLink solution
 
-# 3.6.6
+## 3.6.6
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Prevent ad reload debug logs in production
 
-# 3.6.5
+## 3.6.5
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Fix requestAdsCalls counter
 
-# 3.6.4
+## 3.6.4
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Fix ugly logging
 
-# 3.6.3
+## 3.6.3
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Don't log slot visibility if slot isn't monitored
 
-# 3.6.2
+## 3.6.2
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Add logging on why a slot can't be monitored by ad reload
 
-# 3.6.1
+## 3.6.1
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Add order id exclude list to native ad reload module
 
-# 3.6.0
+## 3.6.0
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355) Add native moli ad reload module
 
-# 3.5.4
+## 3.5.4
 
 [HPO-116](https://jira.gutefrage.net/browse/HPO-116). Mark `targetingUUID` for unruly as optional and deprecated.
 
-# 3.5.3
+## 3.5.3
 
 [GD-2364](https://jira.gutefrage.net/browse/GD-2364). Add `injTagId` parameter for ScreenOnDemand (DSPX).
 
-# 3.5.2
+## 3.5.2
 
 [GD-2354](https://jira.gutefrage.net/browse/GD-2354). Fix critical bug where ad slots could not have been rendered, because
 the DOM is not ready yet.
 
-# 3.5.1
+## 3.5.1
 
 Add `outstreamAU` parameter to pubmatic bid configuration.
 
-# 3.5.0
+## 3.5.0
 
 [GD-2333](https://jira.gutefrage.net/browse/GD-2333) Move enableCpmComparison flag to SkinConfig (from SkinModuleConfig).
 Destroy skin slot via `window.googletag` if skin cpm is lower than the combined cpms of to-be-removed slots.
 
-# 3.4.1
+## 3.4.1
 
 [GD-2333](https://jira.gutefrage.net/browse/GD-2333) IE11 compatibility (not using Array.includes), filtering undefined
 bid objects
 
-# 3.4.0
+## 3.4.0
 
 [GD-2333](https://jira.gutefrage.net/browse/GD-2333) Compare skin cpm to combined cpms of to-be-removed slots,
 add optional logging for it, and optionally prevent skin delivery
 
-# 3.3.1
+## 3.3.1
 
 [GD-2283](https://jira.gutefrage.net/browse/GD-2283) Don't loose pubstack configuration while filtering prebid
 
-# 3.3.0
+## 3.3.0
 
-# 3.2.4
+## 3.2.4
 
 [GD-2259](https://jira.gutefrage.net/browse/GD-2259) Add pubstack.io types to prebid types
 
-# 3.2.3
+## 3.2.3
 
 [GD-2044] (https://jira.gutefrage.net/browse/GD-2044) Add `basicAds` and `measurement` as allowed purpose values.
 
