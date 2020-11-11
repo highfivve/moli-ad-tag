@@ -616,12 +616,16 @@ export namespace prebidjs {
   }
 
   export namespace currency {
+    export type IBidderCurrencyDefault = {
+      [bidder in BidderCode]: 'EUR' | 'USD' | 'GBP';
+    };
+
     export interface ICurrencyConfig {
       /**
        * ISO 4217 3-letter currency code.
        * If this value is present, the currency conversion feature is activated.
        */
-      readonly adServerCurrency: 'EUR';
+      readonly adServerCurrency: 'EUR' | 'USD' | 'GBP';
 
       /**
        * How much to scale the price granularity calculations. Defaults to 1.
@@ -639,6 +643,15 @@ export namespace prebidjs {
        * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
        */
       readonly defaultRates: { USD: { EUR: number } };
+
+      /**
+       * configure bidder specific currencies.
+       *
+       * SSPs that make use of this feature
+       * - Visx
+       * - ...
+       */
+      readonly bidderCurrencyDefault?: IBidderCurrencyDefault;
     }
   }
 
@@ -1185,6 +1198,7 @@ export namespace prebidjs {
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
   export const Rubicon = 'rubicon';
+  export const Visx = 'visx';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -1207,7 +1221,8 @@ export namespace prebidjs {
     | typeof ShowHeroes
     | typeof Xaxis
     | typeof DSPX
-    | typeof Rubicon;
+    | typeof Rubicon
+    | typeof Visx;
 
   /**
    * A bid object.
@@ -2037,6 +2052,22 @@ export namespace prebidjs {
   export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   */
+  export interface IVisxParams {
+    /**
+     * The publisher’s ad unit ID in VIS.X
+     * @example `'903536'`
+     */
+    readonly uid: number;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   */
+  export interface IVisxBid extends IBidObject<typeof Visx, IVisxParams> {}
+
+  /**
    * Supported bid object types.
    */
   export type IBid =
@@ -2056,7 +2087,8 @@ export namespace prebidjs {
     | IShowHeroesBid
     | IXaxisBid
     | IDSPXBid
-    | IRubiconBid;
+    | IRubiconBid
+    | IVisxBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
