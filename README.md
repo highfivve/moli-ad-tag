@@ -31,6 +31,18 @@ registry=https://registry.npmjs.org
 
 # Developing
 
+You require `yarn` for developing.
+
+```bash
+$ yarn setup
+```
+
+If you have already checkout this repository you may want to clean things before:
+
+```bash
+$ yarn clean && yarn setup
+```
+
 ## Publish moli packages
 
 Using lerna for managing multi-package repository. [Lerna on Github](https://github.com/lerna/lerna)
