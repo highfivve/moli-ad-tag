@@ -2205,55 +2205,12 @@ export namespace prebidjs {
    *
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
    */
-  export interface IBidderSettings {
-    /** used as a fallback if the SSP has no custom bidder settings */
-    readonly standard?: IBidderSetting;
-
-    /** criteo bidder settings */
-    readonly criteo?: IBidderSetting;
-
-    /** appNexus bidder settings */
-    readonly appnexusAst?: IBidderSetting;
-
-    /** improveDigital bidder settings */
-    readonly improvedigital?: IBidderSetting;
-
-    /** indexExchange bidder settings */
-    readonly ix?: IBidderSetting;
-
-    /** nano interactive bidder settings */
-    readonly nanoInteractive?: IBidderSetting;
-
-    /** just premium bidder settings */
-    readonly justpremium?: IBidderSetting;
-
-    /** PubMatic bidder settings */
-    readonly pubmatic?: IBidderSetting;
-
-    /** OpenX bidder settings */
-    readonly openx?: IBidderSetting;
-
-    /** Smart AdServer bidder settings */
-    readonly smartadserver?: IBidderSetting;
-
-    /** unruly bidder settings */
-    readonly unruly?: IBidderSetting;
-
-    /** teads bidder settings */
-    readonly teads?: IBidderSetting;
-
-    /** yieldlab bidder settings */
-    readonly yieldlab?: IBidderSetting;
-
-    /** spotx bidder settings */
-    readonly spotx?: IBidderSetting;
-
-    /** xaxis xhb bidder settings */
-    readonly xhb?: IBidderSetting;
-
-    /** dspx bidder settings */
-    readonly dpsx?: IBidderSetting;
-  }
+  export type IBidderSettings = {
+    /**
+     * `standard` is used as a fallback if the SSP has no custom bidder settings
+     */
+    [bidder in BidderCode | 'standard']?: IBidderSetting;
+  };
 
   /**
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.bidderSettings
