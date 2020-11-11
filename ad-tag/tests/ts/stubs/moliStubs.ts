@@ -24,8 +24,7 @@ export const noopLogger: Moli.MoliLogger = newNoopLogger();
 export const newEmptyConfig = (slots: Moli.AdSlot[] = []): Moli.MoliConfig => {
   return {
     slots: slots,
-    logger: newNoopLogger(),
-    yieldOptimization: { provider: 'none' }
+    logger: newNoopLogger()
   };
 };
 

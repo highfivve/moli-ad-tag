@@ -398,28 +398,6 @@ export class GlobalConfig
               )}
             </div>
 
-            {config.yieldOptimization && (
-              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--yieldOptimization">
-                <h4>
-                  {this.collapseToggle('yieldOptimization')}
-                  Yield
-                </h4>
-
-                {this.state.expandSection.yieldOptimization && (
-                  <div>
-                    <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Provider</span>
-                      <Tag
-                        variant={config.yieldOptimization.provider === 'dynamic' ? 'green' : 'blue'}
-                      >
-                        {config.yieldOptimization.provider}
-                      </Tag>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {
               <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
                 <h4>
@@ -585,7 +563,6 @@ export class GlobalConfig
       | 'labelSizeConfig'
       | 'performance'
       | 'consent'
-      | 'yieldOptimization'
     >
   ): JSX.Element => {
     const toggleValue = (
@@ -599,7 +576,6 @@ export class GlobalConfig
         | 'labelSizeConfig'
         | 'performance'
         | 'consent'
-        | 'yieldOptimization'
       >
     ) => {
       const oldVal = this.state.expandSection[section];

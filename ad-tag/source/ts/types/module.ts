@@ -9,7 +9,8 @@ export type ModuleType =
   | 'prebid'
   | 'ad-reload'
   | 'policy'
-  | 'identity';
+  | 'identity'
+  | 'yield';
 
 export interface IModule {
   readonly name: string;

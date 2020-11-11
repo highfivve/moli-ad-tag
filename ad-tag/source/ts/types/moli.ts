@@ -721,11 +721,6 @@ export namespace Moli {
     readonly a9?: headerbidding.A9Config;
 
     /**
-     * Yield optimization configuration
-     */
-    readonly yieldOptimization: yield_optimization.YieldOptimizationConfig;
-
-    /**
      * Reporting configuration
      */
     reporting?: reporting.ReportingConfig;
@@ -1637,67 +1632,9 @@ export namespace Moli {
    * should be applied can be fetched from an external system to allow dynamic floor price optimizations.
    *
    * @see https://support.google.com/admanager/answer/9298008?hl=en
+   * @see yield optimization module
    */
   export namespace yield_optimization {
-    export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
-
-    /**
-     * Available options to configure yield optimization
-     */
-    export type YieldOptimizationConfig =
-      | NoYieldOptimizationConfig
-      | StaticYieldOptimizationConfig
-      | DynamicYieldOptimizationConfig;
-
-    export interface IYieldOptimizationConfig {
-      readonly provider: YieldOptimizationConfigProvider;
-    }
-
-    /**
-     * No key values will be applied. The system is inactive.
-     */
-    export interface NoYieldOptimizationConfig extends IYieldOptimizationConfig {
-      readonly provider: 'none';
-    }
-
-    /**
-     * A static configuration for all ad units is being used
-     */
-    export interface StaticYieldOptimizationConfig extends IYieldOptimizationConfig {
-      readonly provider: 'static';
-
-      readonly config: PublisherYieldConfiguration;
-    }
-
-    /**
-     * A dynamic configuration
-     */
-    export interface DynamicYieldOptimizationConfig extends IYieldOptimizationConfig {
-      readonly provider: 'dynamic';
-
-      /**
-       * URL to a json config file that contains a list of AdUnitPriceRules.
-       */
-      readonly configEndpoint: string;
-    }
-
-    export interface AdUnitPriceRules {
-      /**
-       * The ad unit that is being configured
-       */
-      readonly adUnitName: string;
-
-      /**
-       * The main price rule which is applied to the main traffic share (usually 80%).
-       */
-      readonly main: PriceRule;
-
-      /**
-       * A list of pricing rules that are evenly distributed over the test traffic share (usually 20%).
-       */
-      readonly tests: ReadonlyArray<PriceRule>;
-    }
-
     export interface PriceRule {
       /**
        * Unique identifier for a pricing rule. This is will be sent as a key_value `upr_id` per ad unit
@@ -1708,21 +1645,14 @@ export namespace Moli {
       /**
        * The floor price CPM in EUR if available.
        */
-      readonly cpm?: number;
-    }
+      readonly floorprice: number;
 
-    /**
-     * == Publisher Yield Configuration ==
-     *
-     * This configuration defines the yield optimization. It contains all necessary information to
-     * decide which pricing rule key value should be set for a slot.
-     *
-     */
-    export interface PublisherYieldConfiguration {
       /**
-       * ad unit price rules that should be applied
+       * `true` if this is the main group, which shouldn't be selected for testing.
+       *
+       * If `false` as key-value can be applied to only select the test cohorts.
        */
-      readonly rules: ReadonlyArray<AdUnitPriceRules>;
+      readonly main: boolean;
     }
   }
 

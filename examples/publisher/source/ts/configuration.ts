@@ -515,10 +515,6 @@ export const adConfiguration: Moli.MoliConfig = {
     cmpTimeout: 500,
     pubID: 'test'
   },
-  yieldOptimization: {
-    provider: 'dynamic',
-    configEndpoint: '//local.h5v.eu:9000/yield-config.json'
-  },
   reporting: {
     // report everything
     sampleRate: 1,

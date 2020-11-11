@@ -54,7 +54,20 @@ module.exports = (_, argv) => {
       ],
       compress: true,
       port: 9000,
-      allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu']
+      allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu'],
+      // configure a mock yield config server
+      before: (app) => {
+        // parse the req body as json
+        const bodyParser = require('body-parser');
+        app.use(bodyParser.json());
+
+        // yield config endpoint
+        app.post('/yield-config.json', (req, res) => {
+          res.sendFile(`yield-config.${req.body.device}.json`, {
+            root: path.join(__dirname, 'yield-config')
+          });
+        });
+      }
     },
     plugins: makeDocsPages(publisherName, releasesJson.currentFilename, __dirname)
   };
