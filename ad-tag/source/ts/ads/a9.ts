@@ -90,13 +90,11 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
     LOW_PRIORITY,
     (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) =>
       new Promise<void>(resolve => {
-        slots
-          .map(moliSlot => moliSlot.adSlot)
-          .forEach(slot => {
-            slot.clearTargeting('amznp');
-            slot.clearTargeting('amznsz');
-            slot.clearTargeting('amznbid');
-          });
+        slots.forEach(({ adSlot }) => {
+          adSlot.clearTargeting('amznp');
+          adSlot.clearTargeting('amznsz');
+          adSlot.clearTargeting('amznbid');
+        });
         resolve();
       })
   );
