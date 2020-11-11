@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "@highfivve/ad-tag": "*",
-    "@highfivve/module-cmp-sourcepoint": "^4.0.0",
     "core-js": "^3.6.5"
   }
 }

@@ -26,8 +26,6 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "*",
-    "@highfivve/module-cmp-sourcepoint": "^4.0.0",
-    "@highfivve/module-prebid-google-analytics": "^4.0.0"
+    "@highfivve/ad-tag": "*"
   }
 }

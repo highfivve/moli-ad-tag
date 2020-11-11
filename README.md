@@ -61,3 +61,20 @@ Publish packages in the current project
 ```
 lerna publish from-package --registry https://npm.pkg.github.com/
 ```
+
+# Examples
+
+In order to run the examples you need to build the ad tag and all modules first.
+
+```bash
+$ yarn workspaces run tsc
+```
+
+# TODOs for Open Source migration
+
+- The examples currently depend on the the ad-tag through yarn workspaces.
+  This is the ideal way to work with an ad tag and to develope some features or reproduce bugs.
+  Hopefully we can keep it that way.
+- The examples are listed as yarn workspaces, but not configured in the the [lerna.sjon](lerna.json).
+  Ideally this prevents these packages from being published as NPM modules
+

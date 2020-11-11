@@ -7,9 +7,11 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es6",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "./dist"
   },
   "include": [
-    "index.ts"
+    "index.ts",
+    "../prebid/prebidjs.d.ts"
   ]
 }
