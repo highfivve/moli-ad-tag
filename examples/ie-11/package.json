@@ -27,7 +27,7 @@
     "whatwg-fetch": "^3.4.1"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.9.9-alpha.0",
+    "@highfivve/ad-tag": "^3.9.9-alpha.1",
     "core-js": "^3.6.5"
   }
 }
