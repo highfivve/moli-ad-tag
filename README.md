@@ -29,6 +29,8 @@ always-auth=true
 registry=https://registry.npmjs.org
 ```
 
+I recommend putting this under `~/.npmrc` as described in the [npmrc documentation](https://docs.npmjs.com/cli/v6/configuring-npm/npmrc)
+
 # Developing
 
 You require `yarn` for developing.
