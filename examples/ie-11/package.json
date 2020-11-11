@@ -3,6 +3,7 @@
   "version": "3.9.9-alpha.0",
   "description": "Demonstrating IE11 support",
   "main": "index.ts",
+  "private": true,
   "scripts": {
     "build": "webpack --mode=production",
     "start": "webpack serve",
