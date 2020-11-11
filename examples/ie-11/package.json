@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-ie11",
-  "version": "3.9.7",
+  "version": "3.9.8",
   "description": "Demonstrating IE11 support",
   "main": "index.ts",
   "scripts": {

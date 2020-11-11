@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-blocklist-url",
-  "version": "3.9.7",
+  "version": "3.9.8",
   "license": "Apache-2.0",
   "description": "Handles blocklisted urls",
   "main": "./lib/index.js",

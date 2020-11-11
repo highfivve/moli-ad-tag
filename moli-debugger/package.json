@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-debugger",
-  "version": "3.9.7",
+  "version": "3.9.8",
   "description": "Moli debugging tools",
   "main": "./lib/debug.js",
   "typings": "./lib/debug.d.ts",

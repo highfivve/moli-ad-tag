@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-confiant",
-  "version": "3.9.7",
+  "version": "3.9.8",
   "license": "Apache-2.0",
   "description": "Ad fraud detection and protection",
   "main": "./lib/index.js",
