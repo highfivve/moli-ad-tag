@@ -5,7 +5,7 @@
     "moli-release",
     "modules/*"
   ],
-  "version": "3.9.9-alpha.0",
+  "version": "3.9.9-alpha.1",
   "npmClient": "yarn",
   "useWorkspaces": true
 }

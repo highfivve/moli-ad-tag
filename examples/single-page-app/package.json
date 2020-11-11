@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-single-page-app",
-  "version": "3.9.9-alpha.0",
+  "version": "3.9.9-alpha.1",
   "description": "Publisher bootstrap template",
   "main": "index.ts",
   "private": true,
