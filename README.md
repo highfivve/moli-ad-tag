@@ -73,6 +73,8 @@ Bump version of packages changed since the last release
 $ yarn lerna version
 ```
 
+See [version command documentation](https://github.com/lerna/lerna/tree/main/commands/version)
+
 Publish packages in the current project
 ```bash
 $ yarn github:publish
@@ -93,4 +95,4 @@ $ yarn workspaces run tsc
   Hopefully we can keep it that way.
 - The examples are listed as yarn workspaces, but not configured in the the [lerna.sjon](lerna.json).
   Ideally this prevents these packages from being published as NPM modules
-
+- Build a github release with lerna (see `--create-release` flag in the `lerna version` command)
