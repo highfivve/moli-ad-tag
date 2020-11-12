@@ -12,7 +12,6 @@ import {
 
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
-import { a9ClearTargetingStep } from '@highfivve/ad-tag/lib/source/ts/ads/a9';
 
 type AdReloadModuleConfig = {
   excludeAdSlotDomIds: Array<string>;
@@ -91,11 +90,6 @@ export default class AdReload implements IModule {
 
         return Promise.resolve();
       })
-    );
-
-    moliConfig.pipeline.prepareRequestAdsSteps.push(
-      // clear a9 targeting so they can set it again automagically if needed
-      a9ClearTargetingStep()
     );
   }
 

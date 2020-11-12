@@ -88,15 +88,21 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
   mkPrepareRequestAdsStep(
     'a9-clear-targeting',
     LOW_PRIORITY,
-    (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) =>
-      new Promise<void>(resolve => {
+    (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) => {
+      if (context.requestId === 0) {
+        context.logger.debug('A9', 'skip ad slot clearing for first pipeline run');
+        return Promise.resolve();
+      }
+      return new Promise<void>(resolve => {
+        context.logger.debug('A9', 'clear a9 targetings');
         slots.forEach(({ adSlot }) => {
           adSlot.clearTargeting('amznp');
           adSlot.clearTargeting('amznsz');
           adSlot.clearTargeting('amznbid');
         });
         resolve();
-      })
+      });
+    }
   );
 
 export const a9RequestBids = (): RequestBidsStep =>

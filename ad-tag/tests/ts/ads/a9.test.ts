@@ -12,7 +12,7 @@ import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
-import { a9Configure, a9RequestBids } from '../../../source/ts/ads/a9';
+import { a9ClearTargetingStep, a9Configure, a9RequestBids } from '../../../source/ts/ads/a9';
 
 // setup sinon-chai
 use(sinonChai);
@@ -90,8 +90,8 @@ describe('a9', () => {
     sandbox.restore();
   });
 
-  describe('prebid configure step', () => {
-    it('should set the prebid config', () => {
+  describe('a9 configure step', () => {
+    it('should set the a9 config', () => {
       const step = a9Configure(a9ConfigStub);
       const setConfigSpy = sandbox.spy(dom.window.apstag, 'init');
 
@@ -109,7 +109,7 @@ describe('a9', () => {
     });
   });
 
-  describe('prebid prepare request ads', () => {
+  describe('a9 request bids step', () => {
     it('should add empty adunits array when the slots array is empty', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids();
@@ -199,6 +199,33 @@ describe('a9', () => {
           Sinon.match.func
         );
       });
+    });
+  });
+
+  describe('a9 clear targeting', () => {
+    it('should not run on the second pipeline run', async () => {
+      const step = a9ClearTargetingStep();
+      const slot = createSlotDefinitions(getDomId(), {});
+
+      const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 0 };
+
+      await step(ctx, [slot]);
+      expect(clearTargetingSpy).to.have.not.been.called;
+    });
+
+    it('should run on the second pipeline run', async () => {
+      const step = a9ClearTargetingStep();
+      const slot = createSlotDefinitions(getDomId(), {});
+
+      const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 1 };
+
+      await step(ctx, [slot]);
+      expect(clearTargetingSpy).to.have.been.calledThrice;
+      expect(clearTargetingSpy).to.have.been.calledWith('amznp');
+      expect(clearTargetingSpy).to.have.been.calledWith('amznsz');
+      expect(clearTargetingSpy).to.have.been.calledWith('amznbid');
     });
   });
 });

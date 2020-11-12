@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.9.11
+
+[GD-2416](https://jira.gutefrage.net/browse/GD-2416) Move a9 clear targeting to ad tag core
+
 ## 3.9.10
 
 [GD-2424](https://jira.gutefrage.net/browse/GD-2424) Add Visx types

@@ -107,17 +107,24 @@ describe('AdService', () => {
     });
 
     describe('a9', () => {
-      it('should add the a9-init step if prebid is available', () => {
+      it('should add the a9-init step if a9 is available', () => {
         return initialize(emptyConfigWithA9).then(pipeline => {
           const stepNames = pipeline.init.map(step => step.name);
           expect(stepNames).to.contain('a9-init');
         });
       });
 
-      it('should not add the a9-init step if prebid is not available', () => {
+      it('should not add the a9-init step if a9 is not available', () => {
         return initialize().then(pipeline => {
           const stepNames = pipeline.init.map(step => step.name);
           expect(stepNames).not.to.contain('a9-init');
+        });
+      });
+
+      it('should add the a9-clear-targeting-step step if a9 is available', () => {
+        return initialize(emptyConfigWithA9).then(pipeline => {
+          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+          expect(stepNames).to.contain('a9-clear-targeting');
         });
       });
     });
