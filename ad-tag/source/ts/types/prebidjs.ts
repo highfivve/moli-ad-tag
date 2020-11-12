@@ -2059,7 +2059,7 @@ export namespace prebidjs {
      * The publisher’s ad unit ID in VIS.X
      * @example `'903536'`
      */
-    readonly uid: number;
+    readonly uid: string;
   }
 
   /**
