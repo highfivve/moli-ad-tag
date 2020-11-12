@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 3.9.10
+
+[GD-2424](https://jira.gutefrage.net/browse/GD-2424) Add Visx types
+
+`bidderSettings` are also more generic.
+
 ## 3.9.8
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363) Publish Moli Ad Tag library to GitHub NPM registry
