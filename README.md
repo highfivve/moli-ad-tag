@@ -50,30 +50,30 @@ $ yarn clean && yarn setup
 Using lerna for managing multi-package repository. [Lerna on Github](https://github.com/lerna/lerna)
 
 Add a dependency to a package
-```
-lerna add <package>
+```bash
+$ yarn lerna add <package>
 ```
 
 Link local packages together and install remaining package dependencies
-```
-lerna bootstrap
+```bash
+$ yarn lerna bootstrap
 ```
 
 Run an npm script in each package that contains that script
-```
-lerna run <script>
+```bash
+$ yarn lerna run <script>
 // e.g.
-lerna run tsc
+$ yarn lerna run tsc
 ```
 
 Bump version of packages changed since the last release
-```
-lerna version
+```bash
+$ yarn lerna version
 ```
 
 Publish packages in the current project
-```
-lerna publish from-package --registry https://npm.pkg.github.com/
+```bash
+$ yarn github:publish
 ```
 
 # Examples

@@ -15,7 +15,8 @@
     "postversion": "git push && git push --tags",
     "clean:node_modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "clean:lib": "find . -name 'lib' -type d -prune -exec rm -rf '{}' +",
-    "clean": "yarn clean:node_modules && yarn clean:lib"
+    "clean": "yarn clean:node_modules && yarn clean:lib",
+    "github:publish": "yarn lerna publish from-package --registry https://npm.pkg.github.com/"
   },
   "devDependencies": {
     "lerna": "^3.22.1",
