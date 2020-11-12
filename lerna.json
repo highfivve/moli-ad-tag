@@ -3,7 +3,8 @@
     "ad-tag",
     "moli-debugger",
     "moli-release",
-    "modules/*"
+    "modules/*",
+    "examples/*"
   ],
   "version": "3.9.9-alpha.1",
   "npmClient": "yarn",
