@@ -45,7 +45,7 @@ If you have already checkout this repository you may want to clean things before
 $ yarn clean && yarn setup
 ```
 
-## Publish moli packages
+## Using lerna
 
 Using lerna for managing multi-package repository. [Lerna on Github](https://github.com/lerna/lerna)
 
@@ -65,6 +65,8 @@ $ yarn lerna run <script>
 // e.g.
 $ yarn lerna run tsc
 ```
+
+## Publishing a package
 
 Bump version of packages changed since the last release
 ```bash
