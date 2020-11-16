@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.9.12
+
+[GD-2468](https://jira.gutefrage.net/browse/GD-2468) Add recognified types
+
 ## 3.9.11
 
 [GD-2416](https://jira.gutefrage.net/browse/GD-2416) Move a9 clear targeting to ad tag core
