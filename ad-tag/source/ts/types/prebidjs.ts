@@ -1198,6 +1198,7 @@ export namespace prebidjs {
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
   export const Rubicon = 'rubicon';
+  export const Recognified = 'rads';
   export const Visx = 'visx';
 
   /**
@@ -1222,6 +1223,7 @@ export namespace prebidjs {
     | typeof Xaxis
     | typeof DSPX
     | typeof Rubicon
+    | typeof Recognified
     | typeof Visx;
 
   /**
@@ -2068,6 +2070,22 @@ export namespace prebidjs {
   export interface IVisxBid extends IBidObject<typeof Visx, IVisxParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   */
+  export interface IRecognifiedParams {
+    /**
+     * Placement ID from Rads.
+     * @example `'101'`
+     */
+    readonly placement: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   */
+  export interface IRecognifiedBid extends IBidObject<typeof Recognified, IRecognifiedParams> {}
+
+  /**
    * Supported bid object types.
    */
   export type IBid =
@@ -2088,6 +2106,7 @@ export namespace prebidjs {
     | IXaxisBid
     | IDSPXBid
     | IRubiconBid
+    | IRecognifiedBid
     | IVisxBid;
 
   /**
