@@ -182,6 +182,27 @@ export namespace googletag {
      * @param {0 | 1} nonPersonalizedAds - 0 for personalized ads, 1 for non-personalized ads.
      */
     setRequestNonPersonalizedAds(nonPersonalizedAds: 0 | 1): IPubAdsService;
+
+    /**
+     * Allows configuration of all privacy settings from a single API using a config object
+     * @param privacySettings
+     * @see https://developers.google.com/publisher-tag/reference#googletag.PubAdsService_setPrivacySettings
+     */
+    setPrivacySettings(privacySettings: IPrivacySettingsConfig): IPubAdsService;
+
+    /**
+     * Sets options for ignoring Google Ad Manager cookies on the current page.
+     *
+     * The cookie options to set. Possible values are:
+     *   0: Enables Google Ad Manager cookies on ad requests on the page. This option is set by default.
+     *   1: Ignores Google Ad Manager cookies on subsequent ad requests and prevents cookies from being created on the
+     *      page. Note that cookies will not be ignored on certain pingbacks and that this option will disable features
+     *      that rely on cookies, such as dynamic allocation.
+     *
+     * @param options
+     * @see https://developers.google.com/publisher-tag/reference#googletag.PubAdsService_setCookieOptions
+     */
+    setCookieOptions(options: 0 | 1): IPubAdsService;
   }
 
   /**
@@ -456,5 +477,40 @@ export namespace googletag {
      * @see https://developers.google.com/doubleclick-gpt/reference#googletag.Slot_clearTargeting
      */
     clearTargeting(key?: string): void;
+  }
+
+  /**
+   * Configuration object for privacy settings.
+   * @see https://developers.google.com/publisher-tag/reference#googletag.PrivacySettingsConfig
+   */
+  export interface IPrivacySettingsConfig {
+    /**
+     * childDirectedTreatment configuration indicates whether the page should be treated as child-directed.
+     * Set to null to clear the configuration.
+     */
+    readonly childDirectedTreatment?: boolean;
+
+    /**
+     * limitedAds configuration enables serving to run in limited ads mode to aid in publisher regulatory compliance needs.
+     *
+     * When enabled, GPT should also be requested from the limited ads URL.
+     *
+     * Standard: https://securepubads.g.doubleclick.net/tag/js/gpt.js
+     * Limited Ads: https://pagead2.googlesyndication.com/tag/js/gpt.js
+     *
+     * @see https://developers.google.com/publisher-tag/guides/general-best-practices
+     */
+    readonly limitedAds?: boolean;
+
+    /**
+     * restrictDataProcessing configuration enables serving to run in restricted processing mode to aid in publisher
+     * regulatory compliance needs.
+     */
+    readonly restrictDataProcessing?: boolean;
+
+    /**
+     * underAgeOfConsent configuration indicates whether to mark ad requests as coming from users under the age of consent. Set to null to clear the configuration.
+     */
+    readonly underAgeOfConsent?: boolean;
   }
 }

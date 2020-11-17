@@ -34,6 +34,12 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
       _listener: (event: any) => void
     ): googletag.IPubAdsService => {
       return stub;
+    },
+    setPrivacySettings: (_options: googletag.IPrivacySettingsConfig): googletag.IPubAdsService => {
+      return stub;
+    },
+    setCookieOptions: (): googletag.IPubAdsService => {
+      return stub;
     }
   };
 
