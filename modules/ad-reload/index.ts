@@ -11,7 +11,7 @@ import {
 } from '@highfivve/ad-tag';
 
 import { AdVisibilityService } from './adVisibilityService';
-import { UserActivityService } from './userActivityService';
+import { UserActivityLevelControl, UserActivityService } from './userActivityService';
 
 type AdReloadModuleConfig = {
   excludeAdSlotDomIds: Array<string>;
@@ -19,6 +19,7 @@ type AdReloadModuleConfig = {
   includeOrderIds: Array<number>;
   excludeOrderIds: Array<number>;
   refreshIntervalMs?: number;
+  userActivityLevelControl?: UserActivityLevelControl;
 };
 
 /**
@@ -113,7 +114,7 @@ export default class AdReload implements IModule {
 
   private setupAdVisibilityService = (moliConfig: Moli.MoliConfig, window: Window): void => {
     this.adVisibilityService = new AdVisibilityService(
-      new UserActivityService(window, this.logger),
+      new UserActivityService(window, this.moduleConfig.userActivityLevelControl, this.logger),
       this.refreshIntervalMs,
       false,
       window,

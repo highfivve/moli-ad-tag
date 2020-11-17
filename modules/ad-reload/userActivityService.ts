@@ -1,6 +1,47 @@
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 /**
+ * Used to configure the strictness of user activity checks.
+ */
+export type UserActivityLevelControl =
+  | { level: 'strict' }
+  | { level: 'moderate' }
+  | { level: 'lax' }
+  | {
+      level: 'custom';
+      readonly userActivityDuration: number;
+      readonly userBecomingInactiveDuration: number;
+    };
+
+export type UserActivityParameters = {
+  /**
+   * The duration the page is considered to be "actively used" after the last user action. Changes to page visibility
+   * always directly set the state to inactive.
+   */
+  readonly userActivityDuration: number;
+
+  /**
+   * The duration after that we start listening for new user actions to keep the "active" state. This was introduced
+   * such that we don't keep up expensive listeners on all user actions all the time.
+   *
+   * Must be smaller than userActivityDuration.
+   */
+  readonly userBecomingInactiveDuration: number;
+};
+
+/**
+ * Predefined timings when to check for user activity. Can be fully configured in "custom" mode only.
+ */
+export const userActivityParametersForLevel = new Map<
+  Exclude<UserActivityLevelControl['level'], 'custom'>,
+  UserActivityParameters
+>([
+  ['strict', { userActivityDuration: 10 * 1000, userBecomingInactiveDuration: 5 * 1000 }],
+  ['moderate', { userActivityDuration: 12 * 1000, userBecomingInactiveDuration: 8 * 1000 }],
+  ['lax', { userActivityDuration: 15 * 1000, userBecomingInactiveDuration: 12 * 1000 }]
+]);
+
+/**
  * Listener for user activity state changes.
  *
  * This is called for every transition from true to false and vice versa exactly once.
@@ -13,7 +54,7 @@ export type UserActivityListener = (userActivity: boolean) => void;
  * User activities are: mouse, touch, scroll, keyboard press. The lack of one of these events causes the user to enter
  * an inactive state. Hiding the browser/switching the tab also causes the user to instantly become inactive.
  */
-export class UserActivityService {
+export class UserActivityService implements UserActivityParameters {
   /**
    * Events that are tracked to determine user activity.
    */
@@ -23,7 +64,7 @@ export class UserActivityService {
    * The duration the page is considered to be "actively used" after the last user action. Changes to page visibility
    * always directly set the state to inactive.
    */
-  static readonly userActivityDuration = 10 * 1000;
+  readonly userActivityDuration: number;
 
   /**
    * The duration after that we start listening for new user actions to keep the "active" state. This was introduced
@@ -31,7 +72,7 @@ export class UserActivityService {
    *
    * Must be smaller than userActivityDuration.
    */
-  static readonly userBecomingInactiveDuration = 5 * 1000;
+  readonly userBecomingInactiveDuration: number;
 
   private isActive: boolean = true;
 
@@ -40,11 +81,31 @@ export class UserActivityService {
 
   private listener: UserActivityListener[];
 
-  constructor(private readonly window: Window, private readonly logger?: Moli.MoliLogger) {
+  constructor(
+    private readonly window: Window,
+    private readonly userActivityLevelControl: UserActivityLevelControl = { level: 'strict' },
+    private readonly logger?: Moli.MoliLogger
+  ) {
     this.listener = [];
     this.window.document.addEventListener('visibilitychange', this.handlePageVisibilityChanged);
 
     this.logger?.debug('UserActivityService', 'initialized');
+
+    switch (userActivityLevelControl.level) {
+      case 'custom':
+        this.userActivityDuration = userActivityLevelControl.userActivityDuration;
+        this.userBecomingInactiveDuration = userActivityLevelControl.userBecomingInactiveDuration;
+        break;
+
+      default:
+        const {
+          userActivityDuration,
+          userBecomingInactiveDuration
+        } = userActivityParametersForLevel.get(userActivityLevelControl.level)!;
+
+        this.userActivityDuration = userActivityDuration;
+        this.userBecomingInactiveDuration = userBecomingInactiveDuration;
+    }
 
     // set the initial value to "active"
     this.userActive();
@@ -80,13 +141,10 @@ export class UserActivityService {
       this.window.clearTimeout(this.userBecomingIdleTimer);
     }
 
-    this.userInactiveTimer = this.window.setTimeout(
-      this.handleUserIdle,
-      UserActivityService.userActivityDuration
-    );
+    this.userInactiveTimer = this.window.setTimeout(this.handleUserIdle, this.userActivityDuration);
     this.userBecomingIdleTimer = this.window.setTimeout(
       this.handleUserBecomingIdle,
-      UserActivityService.userBecomingInactiveDuration
+      this.userBecomingInactiveDuration
     );
   }
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.9.13
+
+[GD-1355](https://jira.gutefrage.net/browse/GD-1355)
+
+↪ [GD-2486](https://jira.gutefrage.net/browse/GD-2486) Implement user activity control modes for ad reload module
+(strict, moderate, lax, custom)
+
 ## 3.9.12
 
 [GD-2468](https://jira.gutefrage.net/browse/GD-2468) Add recognified types

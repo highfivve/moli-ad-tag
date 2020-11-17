@@ -16,7 +16,8 @@ moli.registerModule(
     includeAdvertiserIds: [ ... ],
     includeOrderIds: [ ... ],
     excludeOrderIds: [ ... ],
-    refreshIntervalMs: 20000
+    refreshIntervalMs: 20000,
+    userActivityLevelControl: { level: 'moderate' }
   })
 );
 ```
@@ -28,5 +29,18 @@ Configure the module with:
 * the advertiser ids ("company ids" in Google's terminology) you want to **include** for reloading
 * the order ids ("campaign ids" in Google's terminology) you want to **exclude** for reloading; this option
   **overrides the includes**!
-* the refresh interval that the reload module should wait before reloading a slot. The interval
+* **[optional]** the refresh interval that the reload module should wait before reloading a slot. The interval
   specifies the minimum time in which the ad has to be visible before refreshing it.
+* **[optional]** the strictness of checking user activity. The strictness levels are defined like this:
+  * strict:
+    * userActivityDuration: 10 seconds
+    * userBecomingInactiveDuration: 5 seconds
+  * moderate:
+    * userActivityDuration: 12 seconds
+    * userBecomingInactiveDuration: 8 seconds
+  * lax:
+    * userActivityDuration: 15 seconds
+    * userBecomingInactiveDuration: 12 seconds
+  * custom:
+    * userActivityDuration: configurable
+    * userBecomingInactiveDuration: configurable

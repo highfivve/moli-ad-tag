@@ -36,7 +36,7 @@ describe('AdVisibilityService', () => {
   const adRefreshInterval = 20000;
   const tickInterval = 1000;
   const createAdVisibilityService = (): AdVisibilityService => {
-    const userActivityService = new UserActivityService(jsDomWindow, logger);
+    const userActivityService = new UserActivityService(jsDomWindow, { level: 'strict' }, logger);
 
     // decouple logic from actual userActivityService
     sandbox.stub(userActivityService);
