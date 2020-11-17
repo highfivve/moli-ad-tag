@@ -2070,7 +2070,7 @@ export namespace prebidjs {
   export interface IVisxBid extends IBidObject<typeof Visx, IVisxParams> {}
 
   /**
-   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   * @see https://docs.prebid.org/dev-docs/bidders/rads.html
    */
   export interface IRecognifiedParams {
     /**
@@ -2081,7 +2081,7 @@ export namespace prebidjs {
   }
 
   /**
-   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   * @see https://docs.prebid.org/dev-docs/bidders/rads.html
    */
   export interface IRecognifiedBid extends IBidObject<typeof Recognified, IRecognifiedParams> {}
 
