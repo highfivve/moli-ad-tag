@@ -18,6 +18,8 @@ import {
 } from '../../../source/ts/ads/googleAdManager';
 import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
+import { createAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
+import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 
@@ -34,6 +36,10 @@ describe('google ad manager', () => {
   const jsDomWindow: Window &
     googletag.IGoogleTagWindow &
     prebidjs.IPrebidjsWindow = dom.window as any;
+
+  const assetLoaderService = createAssetLoaderService(jsDomWindow);
+  const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
+
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -48,7 +54,8 @@ describe('google ad manager', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger)
+      slotEventService: new SlotEventService(noopLogger),
+      tcData: tcData
     };
   };
 
@@ -67,7 +74,9 @@ describe('google ad manager', () => {
   beforeEach(() => {
     // reset the before each test
     dom.window.googletag = createGoogletagStub();
+    dom.window.__tcfapi = tcfapiFunction(tcData);
     matchMediaStub.returns({ matches: true } as MediaQueryList);
+    loadScriptStub.resolves();
   });
 
   afterEach(() => {
@@ -76,7 +85,7 @@ describe('google ad manager', () => {
 
   describe('gptInit', () => {
     it('should set the window.googletag', () => {
-      const step = gptInit();
+      const step = gptInit(assetLoaderService);
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;
 
@@ -90,7 +99,7 @@ describe('google ad manager', () => {
     });
 
     it('should set the window.google only once', () => {
-      const step = gptInit();
+      const step = gptInit(assetLoaderService);
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;
 

@@ -4,6 +4,8 @@ import { LabelConfigService } from './labelConfigService';
 import { IReportingService } from './reportingService';
 import { SlotEventService } from './slotEventService';
 import { apstag } from '../types/apstag';
+import { tcfapi } from '../types/tcfapi';
+import { consentReady } from './consent';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 
@@ -57,7 +59,16 @@ export type AdPipelineContext = {
   /**
    * access to the global window. Never access the global window object
    */
-  readonly window: Window & apstag.WindowA9 & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
+  readonly window: Window &
+    apstag.WindowA9 &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    tcfapi.TCFApiWindow;
+
+  /**
+   * consent data
+   */
+  readonly tcData: tcfapi.responses.TCData;
 };
 
 /**
@@ -216,6 +227,8 @@ export class AdPipeline {
    */
   private init: Promise<void[]> | null = null;
 
+  private tcData: Promise<tcfapi.responses.TCData> | null = null;
+
   private requestId: number = 0;
 
   /**
@@ -252,56 +265,66 @@ export class AdPipeline {
     this.requestId = this.requestId + 1;
     const currentRequestId = this.requestId;
 
-    const context: AdPipelineContext = {
-      requestId: currentRequestId,
-      requestAdsCalls: requestAdsCalls,
-      logger: this.logger,
-      env: config.environment || 'production',
-      config: config,
-      labelConfigService: labelConfigService,
-      reportingService: this.reportingService,
-      slotEventService: this.slotEventService,
-      window: this.window
-    };
     this.logger.debug(
       'AdPipeline',
       `starting run with requestId ${currentRequestId} on ${requestAdsCalls}. call`,
       slots
     );
-    this.init = this.init
-      ? this.init
-      : this.logStage('init', currentRequestId).then(() =>
-          Promise.all(this.config.init.map(step => step(context)))
-        );
-    return this.init
-      .then(() =>
-        this.logStage('configure', currentRequestId).then(() =>
-          Promise.all(this.config.configure.map(step => step(context, slots)))
+
+    // fetch the consent data when ready
+    this.tcData = this.tcData ? this.tcData : consentReady(this.window, this.logger);
+
+    return this.tcData.then(consentData => {
+      // the context is based on the consent data
+      const context: AdPipelineContext = {
+        requestId: currentRequestId,
+        requestAdsCalls: requestAdsCalls,
+        logger: this.logger,
+        env: config.environment || 'production',
+        config: config,
+        labelConfigService: labelConfigService,
+        reportingService: this.reportingService,
+        slotEventService: this.slotEventService,
+        window: this.window,
+        tcData: consentData
+      };
+
+      this.init = this.init
+        ? this.init
+        : this.logStage('init', currentRequestId).then(() =>
+            Promise.all(this.config.init.map(step => step(context)))
+          );
+
+      return this.init
+        .then(() =>
+          this.logStage('configure', currentRequestId).then(() =>
+            Promise.all(this.config.configure.map(step => step(context, slots)))
+          )
         )
-      )
-      .then(() =>
-        this.logStage('defineSlots', currentRequestId).then(() =>
-          this.config.defineSlots(context, slots)
+        .then(() =>
+          this.logStage('defineSlots', currentRequestId).then(() =>
+            this.config.defineSlots(context, slots)
+          )
         )
-      )
-      .then(definedSlots => {
-        return (
-          this.logStage('prepareRequestAds', currentRequestId)
-            .then(() => this.runPrepareRequestAds(context, definedSlots))
-            .then(() => this.logStage('requestBids', currentRequestId))
-            // TODO add a general timeout for the requestBids call
-            // TODO add a catch call to not break the request chain
-            .then(() =>
-              Promise.all(this.config.requestBids.map(step => step(context, definedSlots)))
-            )
-            .then(() => this.logStage('requestAds', currentRequestId))
-            .then(() => this.config.requestAds(context, definedSlots))
-        );
-      })
-      .catch(error => {
-        this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
-        return Promise.reject(error);
-      });
+        .then(definedSlots => {
+          return (
+            this.logStage('prepareRequestAds', currentRequestId)
+              .then(() => this.runPrepareRequestAds(context, definedSlots))
+              .then(() => this.logStage('requestBids', currentRequestId))
+              // TODO add a general timeout for the requestBids call
+              // TODO add a catch call to not break the request chain
+              .then(() =>
+                Promise.all(this.config.requestBids.map(step => step(context, definedSlots)))
+              )
+              .then(() => this.logStage('requestAds', currentRequestId))
+              .then(() => this.config.requestAds(context, definedSlots))
+          );
+        })
+        .catch(error => {
+          this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
+          return Promise.reject(error);
+        });
+    });
   }
 
   private runPrepareRequestAds = (

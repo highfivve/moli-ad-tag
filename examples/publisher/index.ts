@@ -20,7 +20,6 @@ import 'prebid.js/modules/rubiconBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 import Confiant from '@highfivve/module-confiant';
 
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
@@ -42,9 +41,6 @@ moli.registerModule(
     window
   )
 );
-
-// cmp
-moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 // blacklist urls
 moli.registerModule(

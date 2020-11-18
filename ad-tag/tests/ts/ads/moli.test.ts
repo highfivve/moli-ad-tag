@@ -13,6 +13,7 @@ import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
 import { IModule } from '../../../source/ts/types/module';
 import { IAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
+import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 
@@ -54,7 +55,8 @@ describe('moli', () => {
   };
 
   beforeEach(() => {
-    jsDomWindow.googletag = createGoogletagStub();
+    dom.window.googletag = createGoogletagStub();
+    dom.window.__tcfapi = tcfapiFunction(tcData);
   });
 
   after(() => {

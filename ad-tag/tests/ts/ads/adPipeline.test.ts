@@ -15,6 +15,7 @@ import {
 } from '../../../source/ts/ads/adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
+import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 
@@ -73,6 +74,7 @@ describe('AdPipeline', () => {
   beforeEach(() => {
     // by default all DOM elements exist
     getElementByIdStub.returns({} as HTMLElement);
+    dom.window.__tcfapi = tcfapiFunction(tcData);
   });
 
   afterEach(() => {

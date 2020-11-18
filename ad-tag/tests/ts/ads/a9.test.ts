@@ -13,6 +13,7 @@ import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
 import { a9ClearTargetingStep, a9Configure, a9RequestBids } from '../../../source/ts/ads/a9';
+import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 
@@ -43,7 +44,8 @@ describe('a9', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger)
+      slotEventService: new SlotEventService(noopLogger),
+      tcData: tcData
     };
   };
 

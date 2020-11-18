@@ -145,7 +145,7 @@ export class AdService {
     );
 
     // 2. build the AdPipeline
-    const init: InitStep[] = [gptInit()];
+    const init: InitStep[] = [gptInit(this.assetService)];
 
     const configure: ConfigureStep[] = [
       gptConfigure(config),

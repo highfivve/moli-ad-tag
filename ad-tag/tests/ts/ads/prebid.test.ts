@@ -14,6 +14,7 @@ import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
+import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
@@ -43,7 +44,8 @@ describe('prebid', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger)
+      slotEventService: new SlotEventService(noopLogger),
+      tcData: tcData
     };
   };
 

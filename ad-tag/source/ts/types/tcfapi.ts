@@ -6,7 +6,7 @@ export namespace tcfapi {
    * @see https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20CMP%20API%20v2.md
    */
   export interface TCFApiWindow {
-    __tcfapi: TCFApi;
+    __tcfapi?: TCFApi;
   }
 
   export type TCFApiVersion = 2 | undefined | null;
@@ -52,7 +52,6 @@ export namespace tcfapi {
       readonly cmpVersion: number;
 
       readonly cmpStatus: status.CmpStatus;
-      readonly cmpLoaded: boolean;
 
       /**
        * true - GDPR Applies
@@ -66,6 +65,15 @@ export namespace tcfapi {
 
     export interface Ping extends Response {
       readonly displayStatus: status.DisplayStatus;
+
+      /**
+       * Note: cmpLoaded must be set to true if the main script is loaded and the stub interface is replaced,
+       *       regardless of whether or not the user will see the UI or interact with it
+       *
+       * true - CMP main script is loaded
+       * false - still running stub
+       */
+      readonly cmpLoaded: boolean;
     }
 
     export interface TCData extends Response {
@@ -76,7 +84,7 @@ export namespace tcfapi {
        * via addEventListener.
        * Others: undefined.
        */
-      readonly listenerId: number | undefined;
+      readonly listenerId: number | undefined | null;
 
       /**
        * see addEventListener command
@@ -116,6 +124,11 @@ export namespace tcfapi {
       readonly purpose: {
         readonly consents: BooleanVector;
 
+        readonly legitimateInterests: BooleanVector;
+      };
+
+      readonly vendor: {
+        readonly consents: BooleanVector;
         readonly legitimateInterests: BooleanVector;
       };
 

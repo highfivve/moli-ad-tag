@@ -10,6 +10,7 @@ import { AdService } from '../../../source/ts/ads/adService';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import * as lazyLoaderModule from '../../../source/ts/ads/lazyLoading';
 import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
+import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -66,6 +67,7 @@ describe('AdService', () => {
   beforeEach(() => {
     dom = createDom();
     jsDomWindow = dom.window as any;
+    dom.window.__tcfapi = tcfapiFunction(tcData);
   });
 
   afterEach(() => {

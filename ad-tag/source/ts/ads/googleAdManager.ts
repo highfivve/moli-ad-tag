@@ -9,10 +9,12 @@ import {
   RequestAdsStep
 } from './adPipeline';
 import { Moli } from '../types/moli';
-import SlotDefinition = Moli.SlotDefinition;
 import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
+import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
+import SlotDefinition = Moli.SlotDefinition;
+import { tcfapi } from '../types/tcfapi';
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -30,19 +32,37 @@ const configureTargeting = (
   }
 };
 
-export const gptInit = (): InitStep => {
+/**
+ * This is a temporary workaround until gpt.js understands the tcfapi
+ * @see https://support.google.com/admanager/answer/9805023
+ */
+const useStandardGpt = (tcData: tcfapi.responses.TCData): boolean => {
+  return (
+    tcData.vendor.consents[755] &&
+    tcData.purpose.consents[1] &&
+    [2, 7, 9, 10].every(
+      purposeId =>
+        tcData.purpose.consents[purposeId] || tcData.purpose.legitimateInterests[purposeId]
+    )
+  );
+};
+
+export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
   let result: Promise<void>;
   return mkInitStep('gpt-init', (context: AdPipelineContext) => {
     if (!result) {
       result = new Promise<void>(resolve => {
-        if (context.window.googletag && context.window.googletag.pubadsReady) {
-          resolve();
-          return;
-        }
-
         context.logger.debug('GAM', 'init googletag stub');
         context.window.googletag = context.window.googletag || { cmd: [] };
         context.window.googletag.cmd.push(resolve);
+
+        assetLoader.loadScript({
+          name: 'gpt',
+          loadMethod: AssetLoadMethod.TAG,
+          assetUrl: useStandardGpt(context.tcData)
+            ? 'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
+            : 'https://pagead2.googlesyndication.com/tag/js/gpt.js'
+        });
       });
     }
     return result;
@@ -104,6 +124,14 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
             context.window.googletag.pubads().enableSingleRequest();
+
+            const limitedAds = !useStandardGpt(context.tcData);
+            context.logger.debug('GAM', `use limited ads`, limitedAds);
+
+            context.window.googletag.pubads().setPrivacySettings({
+              limitedAds
+              // TODO what about restrict data processing?
+            });
 
             context.window.googletag.enableServices();
             resolve();
