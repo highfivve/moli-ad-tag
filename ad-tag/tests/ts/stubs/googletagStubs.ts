@@ -93,6 +93,14 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
         callback();
       }
     },
+    enums: {
+      OutOfPageFormat: {
+        TOP_ANCHOR: 2,
+        BOTTOM_ANCHOR: 3,
+        REWARDED: 4,
+        INTERSTITIAL: 5
+      }
+    },
     defineSlot: (
       adUnitPath: string,
       _size: googletag.Size[],

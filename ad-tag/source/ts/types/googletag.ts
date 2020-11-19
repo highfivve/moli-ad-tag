@@ -295,6 +295,18 @@ export namespace googletag {
      */
     pubadsReady: boolean | undefined;
 
+    enums: {
+      /**
+       * @see https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat
+       */
+      OutOfPageFormat: {
+        TOP_ANCHOR: enums.OutOfPageFormat.TOP_ANCHOR;
+        BOTTOM_ANCHOR: enums.OutOfPageFormat.BOTTOM_ANCHOR;
+        REWARDED: enums.OutOfPageFormat.REWARDED;
+        INTERSTITIAL: enums.OutOfPageFormat.INTERSTITIAL;
+      };
+    };
+
     /**
      * @returns a reference to the pubads service.
      */
@@ -337,10 +349,13 @@ export namespace googletag {
      * `slotId` is the ID of the div element that will contain the ad.
      *
      * @param adUnitPath - Full path of the ad unit with the network code and ad unit code.
-     * @param slotId - ID of the div that will contain this ad unit.
+     * @param slotIdOrFormat - ID of the div that will contain this ad unit or an out of page format
      * @return the defined slot or `null` if the slot already has been defined
      */
-    defineOutOfPageSlot(adUnitPath: string, slotId: string): IAdSlot | null;
+    defineOutOfPageSlot(
+      adUnitPath: string,
+      slotIdOrFormat: string | enums.OutOfPageFormat
+    ): IAdSlot | null;
 
     /**
      * Enables all GPT services that have been defined for ad slots on the page.
@@ -360,6 +375,18 @@ export namespace googletag {
      * @param id
      */
     display(id: string): void;
+  }
+
+  export namespace enums {
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat
+     */
+    export enum OutOfPageFormat {
+      TOP_ANCHOR = 2,
+      BOTTOM_ANCHOR = 3,
+      REWARDED = 4,
+      INTERSTITIAL = 5
+    }
   }
 
   /**
