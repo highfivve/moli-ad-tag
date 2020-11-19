@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-release",
-  "version": "3.9.14",
+  "version": "3.9.15",
   "license": "Apache-2.0",
   "description": "Moli release tools",
   "main": "./lib/index.js",
