@@ -63,7 +63,7 @@ Run an npm script in each package that contains that script
 ```bash
 $ yarn lerna run <script>
 // e.g.
-$ yarn lerna run tsc
+$ yarn lerna run make:nodemodule
 ```
 
 ## Publishing a package
@@ -85,7 +85,7 @@ $ yarn github:publish
 In order to run the examples you need to build the ad tag and all modules first.
 
 ```bash
-$ yarn workspaces run tsc
+$ yarn workspaces run make:nodeule
 ```
 
 # TODOs for Open Source migration

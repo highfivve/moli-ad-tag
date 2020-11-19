@@ -30,7 +30,7 @@ pipeline {
                 // fresh install
                 sh "yarn install"
                 // create output files
-                sh "lerna run tsc"
+                sh "lerna run make:nodemodule"
             }
         }
         stage('Lint') {
