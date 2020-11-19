@@ -59,7 +59,7 @@ Run an npm script in each package that contains that script
 ```
 lerna run <script>
 // e.g.
-lerna run tsc
+lerna run make:nodemodule
 ```
 
 Bump version of packages changed since the last release
