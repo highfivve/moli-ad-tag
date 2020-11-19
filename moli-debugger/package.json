@@ -8,7 +8,7 @@
     "lib"
   ],
   "scripts": {
-    "make:nodemodule": "tsc",
+    "make:nodemodule": "webpack",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
     "start": "yarn watch",

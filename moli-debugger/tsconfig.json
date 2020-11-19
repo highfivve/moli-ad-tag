@@ -16,7 +16,7 @@
       "node_modules/@types",
       "types"
     ],
-    "outDir": "./lib"
+    "outDir": "./dist"
   },
   "files": [
     "debug.tsx"
