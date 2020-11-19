@@ -12,7 +12,9 @@ dist/
 docs/
 ad-tag/lib
 moli-debugger/lib
+moli-release/lib
 modules/*/lib
+modules/*/temp
 
 # Runtime data
 pids

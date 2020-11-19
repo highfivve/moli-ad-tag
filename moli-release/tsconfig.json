@@ -4,7 +4,6 @@
     "module": "commonjs",
     "lib": ["ES6", "ES2015", "ESNext"],
     "outDir": "lib",
-    "rootDir": "src",
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -14,6 +13,10 @@
   },
   "files": [
     "src/index.ts"
+  ],
+  "include": [
+    "src/*",
+    "releases/*"
   ],
   "exclude": [
     "node_modules"
