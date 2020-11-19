@@ -1,12 +1,11 @@
 {
-  "packages": [
-    "ad-tag",
-    "moli-debugger",
-    "moli-release",
-    "modules/*",
-    "examples/*"
-  ],
+  "packages": ["ad-tag", "moli-debugger", "moli-release", "modules/*", "examples/*"],
   "version": "3.9.13",
   "npmClient": "yarn",
-  "useWorkspaces": true
+  "useWorkspaces": true,
+  "command": {
+    "version": {
+      "forcePublish": true
+    }
+  }
 }
