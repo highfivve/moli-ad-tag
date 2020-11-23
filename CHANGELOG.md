@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## 3.10.0
+
+[GD-2460](https://jira.gutefrage.net/browse/GD-2460). Added a new `position` `out-of-page-interstitial`.
+See [google ad manager traffic web interstitials](https://support.google.com/admanager/answer/9840201) for more information.
+
+A web interstitial requires very little configuration:
+
+```javascript
+const slot = {
+  // domId is irrelevant (better typings may make this optional)
+  domId: 'unused',
+  position: 'out-of-page-interstitial',
+  // should always be loaded eagerly
+  behaviour: {
+    loaded: 'eager'
+  },
+  // google test ad unit
+  adUnitPath: '/6355419/Travel/Europe/France/Paris',
+  // neither size nor sizeConfig is needed.
+  sizes: [],
+  sizeConfig: []
+};
+```
+
 ## 3.9.13
 
 [GD-1355](https://jira.gutefrage.net/browse/GD-1355)
