@@ -177,11 +177,23 @@ export const gptDefineSlots = (): DefineSlotsStep => (
         ? context.window.googletag.pubads().getSlots()
         : context.window.googletag.content().getSlots();
     const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
-    const adSlot: googletag.IAdSlot | null = existingSlot
-      ? existingSlot
-      : moliSlot.position === 'in-page'
-      ? context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId)
-      : context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId);
+
+    const defineAdSlot = (): googletag.IAdSlot | null => {
+      switch (moliSlot.position) {
+        case 'in-page':
+          return context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId);
+        case 'out-of-page':
+          return context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId);
+        case 'out-of-page-interstitial':
+          context.logger.debug('GAM', `defined web interstitial for ${moliSlot.adUnitPath}`);
+          return context.window.googletag.defineOutOfPageSlot(
+            moliSlot.adUnitPath,
+            context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
+          );
+      }
+    };
+
+    const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : defineAdSlot();
 
     if (adSlot) {
       adSlot.setCollapseEmptyDiv(true);
@@ -203,6 +215,9 @@ export const gptDefineSlots = (): DefineSlotsStep => (
         default:
           return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
+    } else if (moliSlot.position === 'out-of-page-interstitial') {
+      context.logger.warn('GAM', 'web interstitial is not supported');
+      return Promise.resolve(null);
     } else {
       const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
       context.logger.error('GAM', error);

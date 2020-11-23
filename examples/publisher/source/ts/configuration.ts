@@ -423,6 +423,18 @@ export const adConfiguration: Moli.MoliConfig = {
           sizesSupported: [[300, 250]]
         }
       ]
+    },
+
+    // web interstitial
+    {
+      domId: 'unused',
+      position: 'out-of-page-interstitial',
+      behaviour: {
+        loaded: 'eager'
+      },
+      adUnitPath: '/6355419/Travel/Europe/France/Paris',
+      sizes: [],
+      sizeConfig: []
     }
   ],
   // -----------------------------

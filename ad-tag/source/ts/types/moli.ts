@@ -810,6 +810,8 @@ export namespace Moli {
     readonly labelsSupported: string[];
   }
 
+  export type IPosition = 'in-page' | 'out-of-page' | 'out-of-page-interstitial';
+
   export interface IAdSlot {
     /** id for the ad slot element */
     readonly domId: string;
@@ -821,7 +823,7 @@ export namespace Moli {
     readonly sizes: DfpSlotSize[];
 
     /** is this a dfp out-of-page (interstitial) slot or not */
-    readonly position: 'in-page' | 'out-of-page';
+    readonly position: IPosition;
 
     /** configure how and when the slot should be loaded */
     readonly behaviour: behaviour.ISlotLoading;

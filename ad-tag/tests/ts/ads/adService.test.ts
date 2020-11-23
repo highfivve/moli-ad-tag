@@ -388,6 +388,15 @@ describe('AdService', () => {
       return expect(requestAds([eagerAdSlot()])).to.eventually.be.deep.equals([]);
     });
 
+    it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
+      const outOfPageInterstitial: Moli.EagerAdSlot = {
+        ...eagerAdSlot(),
+        position: 'out-of-page-interstitial'
+      };
+      const slots = [outOfPageInterstitial];
+      return expect(requestAds(slots)).to.eventually.be.deep.equals(slots);
+    });
+
     it('should return all eagerly loaded slots that are available in the DOM', () => {
       const slots = [eagerAdSlot(), eagerAdSlot()];
       addToDom(slots);

@@ -291,6 +291,92 @@ describe('google ad manager', () => {
         });
       });
 
+      it('should define out-of-page slots', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(
+            adSlot.adUnitPath,
+            adSlot.domId
+          );
+          expect(addServiceSpy).to.have.been.calledOnce;
+          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+          expect(displaySpy).to.have.been.calledOnce;
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlot.domId);
+          expect(slotDefinitions).to.have.length(1);
+          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+        });
+      });
+
+      it('should define out-of-page-interstitial slots', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page-interstitial'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 5);
+          expect(addServiceSpy).to.have.been.calledOnce;
+          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+          expect(displaySpy).to.have.been.calledOnce;
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlot.domId);
+          expect(slotDefinitions).to.have.length(1);
+          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+        });
+      });
+
+      it('should resolve if out-of-page-interstitial slot can not be defined', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page-interstitial'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(null);
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 5);
+          expect(slotDefinitions).to.have.length(0);
+        });
+      });
+
       it('should define a slot only once', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
