@@ -31,7 +31,9 @@ try {
     fs.readFileSync(path.resolve(process.cwd(), 'releases.json')).toString()
   );
 } catch (err) {
-  console.error(`Failed to read releases.json. If the file doesn't exist yet, you can ignore this message.`);
+  console.error(
+    `Failed to read releases.json. If the file doesn't exist yet, you can ignore this message.`
+  );
 
   releasesJson = {
     currentVersion: 0,
@@ -65,16 +67,19 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
 
   // If more than 10 commit messages were found and no tag was assigned to one of these, we ask the user how many commits he wants to check.
   if (commitMessages.length >= 10) {
-    await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'commit',
-        message: 'How many commit messages do you want to check until the last tag? (There were at least 10 commits and no tag was found)',
-        default: 10
-      }
-    ]).then(async (answers: { commit: number }) => {
-      commitMessages = await getGitCommitMessages(answers.commit);
-    });
+    await inquirer
+      .prompt([
+        {
+          type: 'confirm',
+          name: 'commit',
+          message:
+            'How many commit messages do you want to check until the last tag? (There were at least 10 commits and no tag was found)',
+          default: 10
+        }
+      ])
+      .then(async (answers: { commit: number }) => {
+        commitMessages = await getGitCommitMessages(answers.commit);
+      });
   }
 
   let questions = [
@@ -171,7 +176,6 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
  * @param numberOfCommits The number of commits we check for to find the last tag.
  */
 async function getGitCommitMessages(numberOfCommits: number = 10): Promise<string[]> {
-
   return new Promise((resolve, reject) => {
     child.exec(
       `git log -n ${numberOfCommits} --pretty=format:'${JSON.stringify(gitLogFormat)},'`,

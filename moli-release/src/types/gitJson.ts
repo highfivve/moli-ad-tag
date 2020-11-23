@@ -5,13 +5,17 @@ const subject = '%s';
 const body = '%b';
 
 // If you change this, you will also have to change the json schema below.
-export const gitLogFormat = { refs, subject, body, author: { name: authorName, email: authorEmail } };
+export const gitLogFormat = {
+  refs,
+  subject,
+  body,
+  author: { name: authorName, email: authorEmail }
+};
 
 /**
  * Json schema for the output of the `git log` command.
  */
 export interface IGitJsonLog {
-
   /**
    * references for this commit.
    */
@@ -31,11 +35,9 @@ export interface IGitJsonLog {
    * The author of this commit.
    */
   author: IGitAuthor;
-
 }
 
 export interface IGitAuthor {
-
   /**
    * The name of the commit author.
    */
@@ -45,5 +47,4 @@ export interface IGitAuthor {
    * The email of the commit author.
    */
   email: string;
-
 }
