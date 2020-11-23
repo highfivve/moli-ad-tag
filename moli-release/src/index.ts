@@ -12,6 +12,7 @@ import * as crypto from 'crypto';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { Result } from 'dir-compare';
+import { gitLogFormat, IGitJsonLog } from './types/gitJson';
 
 program
   .version('1.0.0')
@@ -30,6 +31,8 @@ try {
     fs.readFileSync(path.resolve(process.cwd(), 'releases.json')).toString()
   );
 } catch (err) {
+  console.error(`Failed to read releases.json. If the file doesn't exist yet, you can ignore this message.`);
+
   releasesJson = {
     currentVersion: 0,
     currentFilename: '',
@@ -45,22 +48,10 @@ try {
 }
 
 // Workaround as coalescing operator doesn't properly work with yarn.
-let versions: IAdTagRelease[];
-if (releasesJson.versions) {
-  versions = releasesJson.versions;
-} else {
-  versions = [];
-}
+const versions: IAdTagRelease[] = releasesJson.versions ? releasesJson.versions : [];
 
 const packageJsonVersion: string = packageJson.version;
 let version = Number(packageJsonVersion.split('.')[0]) + 1;
-
-const refs = '%D';
-const authorName = '%an';
-const authorEmail = '%ae';
-const subject = '%s';
-const body = '%b';
-const defaultFormat = { refs, subject, body, author: { name: authorName, email: authorEmail } };
 
 const moliReleaseFolder: string = path.resolve(__dirname, '..', 'releases');
 const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
@@ -70,7 +61,21 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
     compareContent: true
   });
 
-  const commitMessages: string[] = await getGitCommitMessages();
+  let commitMessages: string[] = await getGitCommitMessages();
+
+  // If more than 10 commit messages were found and no tag was assigned to one of these, we ask the user how many commits he wants to check.
+  if (commitMessages.length >= 10) {
+    await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'commit',
+        message: 'How many commit messages do you want to check until the last tag? (There were at least 10 commits and no tag was found)',
+        default: 10
+      }
+    ]).then(async (answers: { commit: number }) => {
+      commitMessages = await getGitCommitMessages(answers.commit);
+    });
+  }
 
   let questions = [
     {
@@ -163,11 +168,13 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
 
 /**
  * Returns a list of max. 10 git commit messages until the last tag that was pushed.
+ * @param numberOfCommits The number of commits we check for to find the last tag.
  */
-async function getGitCommitMessages(): Promise<string[]> {
+async function getGitCommitMessages(numberOfCommits: number = 10): Promise<string[]> {
+
   return new Promise((resolve, reject) => {
     child.exec(
-      `git log -n 10 --pretty=format:'${JSON.stringify(defaultFormat)},'`,
+      `git log -n ${numberOfCommits} --pretty=format:'${JSON.stringify(gitLogFormat)},'`,
       (err, stdout, stderr) => {
         if (err) {
           reject(err);
@@ -185,17 +192,10 @@ async function getGitCommitMessages(): Promise<string[]> {
           consoleOutput.replace(new RegExp('(?<![[:{,])"(?![:},])', 'g'), '\\"')
         );
 
-        // Get all git commit messages until the next tag
-        let changes: string[] = [];
-
-        for (let i = 0; i < json.length; i++) {
-          const entry = json[i];
-          if (!entry.refs.includes('tag')) {
-            changes.push(entry.subject);
-          } else {
-            break;
-          }
-        }
+        // Get all git commit messages until the last tag
+        const changes: string[] = Array.from<IGitJsonLog>(json)
+          .filter(({ refs }) => !refs.includes('tag'))
+          .map(({ subject }) => subject);
 
         resolve(changes);
       }
