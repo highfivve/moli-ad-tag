@@ -985,7 +985,7 @@ export namespace prebidjs {
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
      */
-    readonly s2sConfig: server.S2SConfig | Readonly<server.S2SConfig>;
+    readonly s2sConfig?: server.S2SConfig | Readonly<server.S2SConfig>;
   }
 
   /**
