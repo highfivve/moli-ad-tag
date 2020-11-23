@@ -26,7 +26,7 @@ const prebidTimeout = (window: Window) =>
     );
   });
 
-const prebidInitAndReady = (window: Window) =>
+const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
   new Promise<void>(resolve => {
     window.pbjs = window.pbjs || { que: [] };
     window.pbjs.que.push(resolve);
@@ -38,7 +38,10 @@ const isPrebidSlotDefinition = (
   return !!slotDefinition.moliSlot.prebid;
 };
 
-const isAdUnitDefined = (adUnit: prebidjs.IAdUnit, window: Window): boolean => {
+const isAdUnitDefined = (
+  adUnit: prebidjs.IAdUnit,
+  window: Window & prebidjs.IPrebidjsWindow
+): boolean => {
   if (window.pbjs.adUnits) {
     return window.pbjs.adUnits.some(adUnit2 => adUnit.code === adUnit2.code);
   }
@@ -55,7 +58,7 @@ export const prebidRemoveAdUnits = (): ConfigureStep =>
     'prebid-remove-adunits',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        context.window.pbjs = window.pbjs || { que: [] };
+        context.window.pbjs = context.window.pbjs || { que: [] };
         const adUnits = context.window.pbjs.adUnits;
         if (adUnits) {
           context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);

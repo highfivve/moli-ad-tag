@@ -5,6 +5,7 @@ import { IReportingService } from './reportingService';
 import { SlotEventService } from './slotEventService';
 import { apstag } from '../types/apstag';
 import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 
 /**
  * Context passed to every pipeline step.
@@ -56,7 +57,7 @@ export type AdPipelineContext = {
   /**
    * access to the global window. Never access the global window object
    */
-  readonly window: Window & apstag.WindowA9 & googletag.IGoogleTagWindow;
+  readonly window: Window & apstag.WindowA9 & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
 };
 
 /**
@@ -228,7 +229,7 @@ export class AdPipeline {
   constructor(
     public readonly config: IAdPipelineConfiguration,
     private readonly logger: Moli.MoliLogger,
-    private readonly window: Window & googletag.IGoogleTagWindow,
+    private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
     private readonly reportingService: IReportingService,
     private readonly slotEventService: SlotEventService
   ) {}

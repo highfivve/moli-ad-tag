@@ -43,6 +43,7 @@ import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
 import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 
 export class AdService {
   /**
@@ -75,7 +76,7 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window & googletag.IGoogleTagWindow,
+    this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
     noopReportingService,
     new SlotEventService(getDefaultLogger())
   );
@@ -103,7 +104,7 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window & googletag.IGoogleTagWindow,
+        window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
         noopReportingService,
         this.slotEventService
       );
@@ -207,7 +208,7 @@ export class AdService {
         requestAds: gptRequestAds()
       },
       this.logger,
-      this.window as Window & googletag.IGoogleTagWindow,
+      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
       reportingService,
       this.slotEventService
     );

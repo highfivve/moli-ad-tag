@@ -19,6 +19,7 @@ import {
 import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import { googletag } from '../../../source/ts/types/googletag';
+import { prebidjs } from '../../../source/ts/types/prebidjs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -30,7 +31,9 @@ describe('google ad manager', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -365,7 +368,6 @@ describe('google ad manager', () => {
           position: 'out-of-page-interstitial'
         };
 
-        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const defineOutOfPageSlotStub = sandbox
           .stub(dom.window.googletag, 'defineOutOfPageSlot')
           .returns(null);

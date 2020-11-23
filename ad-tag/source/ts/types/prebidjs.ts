@@ -5,6 +5,13 @@
  */
 
 export namespace prebidjs {
+  export interface IPrebidjsWindow {
+    /**
+     * global prebid.js object
+     */
+    pbjs: prebidjs.IPrebidJs;
+  }
+
   export interface IPrebidJs {
     /**
      * Command queue on the `pbjs` window object.
@@ -2507,17 +2514,3 @@ export namespace prebidjs {
     val(bidResponse: IBidResponse): string | undefined;
   }
 }
-
-/* tslint:disable:interface-name */
-declare global {
-  /**
-   * Add pbjs to the global Window instance
-   */
-  interface Window {
-    /**
-     * global prebid.js object
-     */
-    pbjs: prebidjs.IPrebidJs;
-  }
-}
-/* tslint:enable:interface-name */
