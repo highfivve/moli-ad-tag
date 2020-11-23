@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, Moli, prebidjs } from '@highfivve/ad-tag';
+import { createAssetLoaderService, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
@@ -17,7 +17,7 @@ use(sinonChai);
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window = dom.window as any;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
 
   afterEach(() => {
     dom = createDom();

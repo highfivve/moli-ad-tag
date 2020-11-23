@@ -43,7 +43,7 @@ export class AdVisibilityService {
     private readonly userActivityService: UserActivityService,
     private readonly refreshInterval: number,
     readonly useIntersectionObserver: boolean,
-    private readonly window: Window,
+    private readonly window: Window & googletag.IGoogleTagWindow,
     private readonly logger?: Moli.MoliLogger
   ) {
     this.visibilityRecords = new Map<string, VisibilityRecord>();

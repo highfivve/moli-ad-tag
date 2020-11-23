@@ -112,7 +112,10 @@ export default class AdReload implements IModule {
     this.initialized = true;
   };
 
-  private setupAdVisibilityService = (moliConfig: Moli.MoliConfig, window: Window): void => {
+  private setupAdVisibilityService = (
+    moliConfig: Moli.MoliConfig,
+    window: Window & googletag.IGoogleTagWindow
+  ): void => {
     this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, this.moduleConfig.userActivityLevelControl, this.logger),
       this.refreshIntervalMs,
@@ -125,7 +128,7 @@ export default class AdReload implements IModule {
   private setupSlotRenderListener = (
     slotsToMonitor: Array<string>,
     reloadAdSlotCallback: (googleTagSlot: googletag.IAdSlot) => void,
-    window: Window
+    window: Window & googletag.IGoogleTagWindow
   ) =>
     window.googletag.pubads().addEventListener('slotRenderEnded', renderEndedEvent => {
       const {

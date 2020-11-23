@@ -1,4 +1,4 @@
-import { tcfapi, getLogger } from '@highfivve/ad-tag';
+import { tcfapi, getLogger, googletag } from '@highfivve/ad-tag';
 import {
   IModule,
   LOW_PRIORITY,
@@ -33,7 +33,7 @@ export default class SourcepointCmp implements IModule {
    */
   private readonly consentReady: Promise<void>;
 
-  private readonly spWindow: tcfapi.TCFApiWindow;
+  private readonly spWindow: Window & googletag.IGoogleTagWindow & tcfapi.TCFApiWindow;
 
   /**
    * This is a temporary workaround until gpt.js understands the tcfapi
@@ -48,7 +48,7 @@ export default class SourcepointCmp implements IModule {
   private logger?: Moli.MoliLogger;
 
   constructor(private readonly spConfig: ISourcepointConfig, private readonly _window: Window) {
-    this.spWindow = (_window as unknown) as tcfapi.TCFApiWindow;
+    this.spWindow = _window as Window & googletag.IGoogleTagWindow & tcfapi.TCFApiWindow;
 
     this.consentReady = new Promise<void>((resolve, reject) => {
       const listener = (event: tcfapi.responses.TCData) => {
@@ -102,7 +102,7 @@ export default class SourcepointCmp implements IModule {
             const hasNecessaryPurposeIds = this.googlePurposes.personalizedAds.every(purposeId =>
               purposeIdsConsented.some(purposeIdWithConsent => purposeIdWithConsent === purposeId)
             );
-            this._window.googletag
+            this.spWindow.googletag
               .pubads()
               .setRequestNonPersonalizedAds(hasNecessaryPurposeIds ? 0 : 1);
 

@@ -55,7 +55,7 @@ pipeline {
                     def modules = [:]
 
                     [
-                      'moli-ad-reload', 'confiant', 'justpremium-skin', 'generic-skin', 'identitylink',
+                      'moli-ad-reload', 'confiant', 'generic-skin', 'identitylink',
                       'prebid-google-analytics', 'sovrn-ad-reload', 'cmp-sourcepoint', 'blocklist-url'
                     ].each { module ->
                         modules[module] = {

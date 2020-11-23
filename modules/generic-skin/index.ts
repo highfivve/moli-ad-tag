@@ -219,7 +219,7 @@ export default class Skin implements IModule {
     const adSlots = slotDefinitions
       .map(slot => slot.adSlot)
       .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
-    this.window.googletag.destroySlots(adSlots);
+    (this.window as Window & googletag.IGoogleTagWindow).googletag.destroySlots(adSlots);
   };
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {

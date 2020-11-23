@@ -18,7 +18,7 @@ use(sinonChai);
 describe('AdVisibilityService', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window = dom.window as any;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
   (jsDomWindow as any).id = Math.random();
   const logger = noopLogger;
 

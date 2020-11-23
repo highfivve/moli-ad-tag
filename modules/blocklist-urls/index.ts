@@ -6,7 +6,8 @@ import {
   IAssetLoaderService,
   mkPrepareRequestAdsStep,
   HIGH_PRIORITY,
-  mkConfigureStep
+  mkConfigureStep,
+  googletag
 } from '@highfivve/ad-tag';
 
 export interface IBlocklistEntry {
@@ -136,7 +137,9 @@ export default class BlocklistedUrls implements IModule {
             return fetchBlocklist().then(blocklist => {
               log.debug(this.name, 'using blocklist', blocklist);
               if (this.isBlocklisted(blocklist, this.window.location.href, log)) {
-                this.window.googletag.pubads().setTargeting(key, value);
+                (this.window as Window & googletag.IGoogleTagWindow).googletag
+                  .pubads()
+                  .setTargeting(key, value);
               }
             });
           })
