@@ -21,7 +21,7 @@ export namespace prebidjs {
 
     /**
      * The bidderSettings object provides a way to define some behaviors for the platform and specific adapters.
-     * The basic structure is a ‘standard’ section with defaults for all adapters, and then one or more
+     * The basic structure is a 'standard' section with defaults for all adapters, and then one or more
      * adapter-specific sections that override behavior for that bidder.
      */
     bidderSettings: IBidderSettings;
@@ -141,7 +141,7 @@ export namespace prebidjs {
       readonly singleRequest: boolean;
 
       /**
-       * By default, the adapter doesn’t send Prebid ad unit sizes to Improve Digital’s ad server
+       * By default, the adapter doesn't send Prebid ad unit sizes to Improve Digital's ad server
        * and the sizes defined for each placement in the Polaris platform will be used.
        *
        * This configuration makes improve use the prebid sizes parameter.
@@ -161,7 +161,7 @@ export namespace prebidjs {
 
       /**
        * To make sure that deal bids are sent along with the winning bid in the `enableSendAllBids:false` scenario,
-       * use the alwaysIncludeDeals flag that’s part of targetingControls
+       * use the alwaysIncludeDeals flag that's part of targetingControls
        */
       readonly alwaysIncludeDeals?: boolean;
     }
@@ -230,7 +230,7 @@ export namespace prebidjs {
        * Defines a list of biddercodes or module names that are exempt from the enforcement of this Purpose.
        *
        * The vendorExceptions list is based on Prebid.js biddercodes instead of Global Vendor List (GVL) IDs,
-       * i.e. "rubicon" instead of "52". This was done to accomodate Prebid.js modules and adapters that don’t have
+       * i.e. "rubicon" instead of "52". This was done to accomodate Prebid.js modules and adapters that don't have
        * GVL IDs.
        *
        * @example
@@ -264,7 +264,7 @@ export namespace prebidjs {
     }
 
     /**
-     * The default Prebid price granularities cap out at $20, which isn’t always convenient for video ads, which
+     * The default Prebid price granularities cap out at $20, which isn't always convenient for video ads, which
      * can command more than $20. One solution is to just set up a custom price granularity as described above.
      * Another approach is mediaTypePriceGranularity config that may be set to define granularities for each of
      * five media types: banner, video, video-instream, video-outstream, and native.
@@ -320,19 +320,19 @@ export namespace prebidjs {
      *
      * The user sync configuration options described in this section give publishers control over how adapters behave
      * with respect to dropping pixels or scripts to cookie users with IDs. This practice is called “user syncing”
-     * because the aim is to let the bidders match IDs between their cookie space and the DSP’s cookie space. There’s a
+     * because the aim is to let the bidders match IDs between their cookie space and the DSP's cookie space. There's a
      * good reason for bidders to be doing this – DSPs are more likely to bid on impressions where they know something
      * about the history of the user. However, there are also good reasons why publishers may want to control the use of
      * these practices:
      *
      * - Page performance: Publishers may wish to move ad-related cookie work to much later in the page load after ads
      *                     and content have loaded.
-     * - User privacy:     Some publishers may want to opt out of these practices even though it limits their users’
+     * - User privacy:     Some publishers may want to opt out of these practices even though it limits their users'
      *                     values on the open market.
      * - Security:         Publishers may want to control which bidders are trusted to inject images and JavaScript into
      *                     their pages.
      *
-     * User syncing default behavior If you don’t tweak any of the settings described in this section, the default
+     * User syncing default behavior If you don't tweak any of the settings described in this section, the default
      * behavior of Prebid.js is to wait 3 seconds after the auction ends, and then allow every adapter to drop up to
      * 5 image-based user syncs.
      *
@@ -426,7 +426,7 @@ export namespace prebidjs {
       readonly name: string;
 
       /**
-       * How long (in **days**) the user ID information will be stored. If this parameter isn’t specified, session
+       * How long (in **days**) the user ID information will be stored. If this parameter isn't specified, session
        * cookies are used in cookie-mode, and local storage mode will create new IDs on every page.
        *
        * Note: This field is optional, but prebid strongly requires it so we make it mandatory.
@@ -638,7 +638,7 @@ export namespace prebidjs {
       /**
        * An optional parameter that defines a default rate that can be used
        * if the currency file cannot be loaded.
-       * This option isn’t used when the rates parameter is supplied.
+       * This option isn't used when the rates parameter is supplied.
        *
        * Prebid hosts a conversion file here: https://currency.prebid.org/latest.json
        */
@@ -653,6 +653,201 @@ export namespace prebidjs {
        */
       readonly bidderCurrencyDefault?: IBidderCurrencyDefault;
     }
+  }
+
+  export namespace server {
+    export type S2SConfig = IS2SConfig & IS2DTestingConfig;
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
+     */
+    export interface IS2SConfig {
+      /**
+       * Your Prebid Server account ID. This is obtained from whoever's hosting your Prebid Server.
+       */
+      readonly accountId: string;
+
+      /**
+       * Which bidders auctions should take place on the server side
+       */
+      readonly bidders: Readonly<BidderCode>;
+
+      /**
+       * Automatically includes all following options in the config with vendor's default values.
+       * Individual properties can be overridden by including them in the config along with this setting.
+       */
+      readonly defaultVendor?: BidderCode;
+
+      /**
+       * Enables this s2sConfig block - defaults to false
+       */
+      readonly enabled: boolean;
+
+      /**
+       * number of milliseconds allowed for the server-side auctions. This should be approximately 200ms-300ms less
+       * than your Prebid.js timeout to allow for all bids to be returned in a timely manner.
+       *
+       * See the Additional Notes below for more information.
+       */
+      readonly timeout: number;
+
+      /**
+       * Adapter to use to connect to Prebid Server.
+       *
+       * Defaults to 'prebidServer'
+       */
+      readonly adapter: 'prebidServer';
+
+      /**
+       *  Defines the auction endpoint for the Prebid Server cluster
+       */
+      readonly endpoint: string;
+
+      /**
+       * Defines the cookie_sync endpoint for the Prebid Server cluster
+       */
+      readonly syncEndpoint: string;
+
+      /**
+       * Max number of userSync URLs that can be executed by Prebid Server cookie_sync per request. If not defined,
+       * PBS will execute all userSync URLs included in the request.
+       */
+      readonly userSyncLimit?: number;
+
+      /**
+       * Configures the default TTL in the Prebid Server adapter to use when Prebid Server
+       * does not return a bid TTL - 60 if not set
+       */
+      readonly defaultTtl?: number;
+
+      /**
+       * Arguments will be added to resulting OpenRTB payload to Prebid Server in every impression
+       * object at `request.imp[].ext.BIDDER`.
+       */
+      readonly adapterOptions?: AdapterOptions;
+
+      /**
+       * Arguments will be added to resulting OpenRTB payload to Prebid Server in `request.ext.prebid`.
+       *
+       * @example
+       * ```javascript
+       * extPrebid: {
+       *   cache: {
+       *     vastxml: { returnCreative: false }
+       *   },
+       *   targeting: {
+       *     pricegranularity: {"ranges": [{"max":40.00,"increment":1.00}]}
+       *   }
+       * }
+       * ```
+       */
+      readonly extPrebid?: ExtPrebid;
+
+      /**
+       * Function to modify a bidder's sync url before the actual call to the sync endpoint.
+       * Bidder must be enabled for s2sConfig.
+       */
+      readonly syncUrlModifier: any;
+    }
+
+    /**
+     * Only available with the s2sTesting module
+     * @see https://docs.prebid.org/dev-docs/modules/s2sTesting.html
+     */
+    export interface IS2DTestingConfig {
+      /**
+       * This attribute is required to enable the bidderControl and bidSource features.
+       * This shouldn't be confused with the enabled: true flag which enables the entire server-to-server feature.
+       *
+       * Only available with the s2sTesting module
+       */
+      readonly testing?: boolean;
+
+      /**
+       * Using the `testServerOnly` flag means that all client requests will be suppressed
+       * (those requests will not be made) whenever any bid requests from the 'A/B test group' result in a 'server'
+       * bid request. The 'A/B test group' includes any requests whose source is controled by 's2sConfig.bidderControl'
+       * or 'bidSource' at the adUnit level. This may give a clearer picture of how s2s performs without interference
+       * from client bid requests.
+       *
+       * Only available with the s2sTesting module
+       */
+      readonly testServerOnly?: boolean;
+
+      readonly bidderControl: {
+        readonly [bidder in BidderCode]?: BidderControl;
+      };
+    }
+
+    /**
+     * Configure the A/B test between client and server
+     */
+    export type BidderControl = {
+      /**
+       * control the ratio between client and server.
+       * `client` and `server` must add up to `100`.
+       */
+      readonly bidSource: BidSource;
+
+      /**
+       * As a Publisher, I'd like to run tests on one part or my site per one of the other use cases above. I'll use
+       * the test KVP to confirm relative responses, so would like to have the hb_source test KVP coming in even on
+       * pages where the server test isn't running.
+       */
+      readonly includeSourceKvp: boolean;
+    };
+
+    /**
+     * control the ratio between client and server.
+     * `client` and `server` must add up to `100`.
+     */
+    export type BidSource = {
+      /**
+       * a number between 0 and 100
+       */
+      readonly client: number;
+
+      /**
+       * a number between 0 and 100
+       */
+      readonly server: number;
+    };
+
+    /**
+     * Arguments will be added to resulting OpenRTB payload to Prebid Server in every impression
+     * object at `request.imp[].ext.BIDDER`.
+     */
+    export type AdapterOptions = {
+      readonly [bidder in BidderCode]?: any;
+    };
+
+    export type ExtPrebid = {
+      readonly cache?: {
+        readonly vastxml?: {
+          readonly returnCreative: boolean;
+        };
+      };
+      readonly targeting?: {
+        readonly pricegranularity: {
+          readonly ranges: Readonly<priceGranularity.IPriceBucketConfig>;
+        };
+      };
+
+      /**
+       * Stored Requests are also allowed on the BidRequest. These work exactly the same way, but support storing
+       * properties like timeouts and price granularity.
+       *
+       * @see https://docs.prebid.org/prebid-server/features/pbs-storedreqs-go.html
+       */
+      readonly storedrequest?: StoredRequest;
+    };
+
+    /**
+     * @see https://docs.prebid.org/prebid-server/features/pbs-storedreqs-go.html
+     */
+    export type StoredRequest = {
+      readonly id: string;
+    };
   }
 
   export namespace analytics {
@@ -746,7 +941,7 @@ export namespace prebidjs {
     readonly enableSendAllBids?: boolean;
 
     /**
-     * Set the publisher’s domain where Prebid is running, for cross-domain iframe communication
+     * Set the publisher's domain where Prebid is running, for cross-domain iframe communication
      */
     readonly publisherDomain?: string;
 
@@ -756,13 +951,13 @@ export namespace prebidjs {
     readonly priceGranularity?: priceGranularity.PriceGranularityConfig;
 
     /**
-     * The default Prebid price granularities cap out at $20, which isn’t always convenient for video ads, which can
+     * The default Prebid price granularities cap out at $20, which isn't always convenient for video ads, which can
      * command more than $20. One solution is to just set up a custom price granularity as described above. Another approach is mediaTypePriceGranularity config that may be set to define granularities for each of five media types: banner, video, video-instream, video-outstream, and native. e.g.
      */
     readonly mediaTypePriceGranularity?: priceGranularity.IMediaTypePriceGranularityConfig;
 
     /**
-     * The `targetingControls` object passed to pbjs.setConfig provides some options to influence how an auction’s
+     * The `targetingControls` object passed to pbjs.setConfig provides some options to influence how an auction's
      * targeting keys are generated and managed.
      */
     readonly targetingControls?: targetingcontrols.ITargetingControls;
@@ -785,7 +980,12 @@ export namespace prebidjs {
      *
      * https://prebid.org/dev-docs/modules/currency.html
      */
-    readonly currency: currency.ICurrencyConfig;
+    readonly currency?: currency.ICurrencyConfig;
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
+     */
+    readonly s2sConfig: server.S2SConfig | Readonly<server.S2SConfig>;
   }
 
   /**
@@ -863,7 +1063,7 @@ export namespace prebidjs {
   }
 
   /**
-   * NOTE: If you’re using aspect_ratios in a native request sent to Prebid Server, the min_width and min_height
+   * NOTE: If you're using aspect_ratios in a native request sent to Prebid Server, the min_width and min_height
    * fields become required instead of optional. If these fields are not included, that native request will be rejected.
    */
   type MediaTypeNativeAspectRatio = {
@@ -950,7 +1150,7 @@ export namespace prebidjs {
     readonly icon?: IMediaTypeNativeRequirement;
 
     /**
-     * A picture that is associated with the brand, or grabs the user’s attention.
+     * A picture that is associated with the brand, or grabs the user's attention.
      *
      * ad server key-value: `hb_native_image`
      */
@@ -1112,7 +1312,7 @@ export namespace prebidjs {
    * - Allowed sizes
    * - Allowed media types (e.g., banner, native, and/or video)
    *
-   * It’s also where you will configure bidders, e.g.:
+   * It's also where you will configure bidders, e.g.:
    *
    * - Which bidders are allowed to bid for that ad slot
    * - What information is passed to those bidders via their parameters
@@ -1263,6 +1463,12 @@ export namespace prebidjs {
      * @see https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
      */
     readonly labelAll?: string[];
+
+    /**
+     * Only available with the s2sTesting module.
+     * Overrides the global bidSource configuration
+     */
+    readonly bidSource?: server.BidSource;
   }
 
   /**
@@ -1310,7 +1516,7 @@ export namespace prebidjs {
     readonly placementId: string;
 
     /**
-     * If true, ads smaller than the values in your ad unit’s sizes array will be allowed to serve.
+     * If true, ads smaller than the values in your ad unit's sizes array will be allowed to serve.
      * Defaults to false.
      */
     readonly allowSmallerSizes?: boolean;
@@ -1447,7 +1653,7 @@ export namespace prebidjs {
      * The single size associated with the site ID. It should be one of the sizes listed in the ad unit under
      * `adUnits[].sizes` or `adUnits[].mediaTypes.banner.sizes`.
      *
-     * Note that the ‘ix’ Prebid Server bid adapter ignores this parameter.
+     * Note that the 'ix' Prebid Server bid adapter ignores this parameter.
      */
     readonly size: [number, number];
 
@@ -1990,7 +2196,7 @@ export namespace prebidjs {
 
     /**
      * Array of Rubicon Project size IDs. If not specified, the system will try to
-     * convert from the AdUnit’s mediaTypes.banner.sizes.
+     * convert from the AdUnit's mediaTypes.banner.sizes.
      */
     readonly sizes?: number[];
 
@@ -2058,7 +2264,7 @@ export namespace prebidjs {
    */
   export interface IVisxParams {
     /**
-     * The publisher’s ad unit ID in VIS.X
+     * The publisher's ad unit ID in VIS.X
      * @example `'903536'`
      */
     readonly uid: string;
@@ -2244,11 +2450,11 @@ export namespace prebidjs {
 
   /**
    * The bidderSettings object provides a way to define some behaviors for the platform
-   * and specific adapters. The basic structure is a ‘standard’ section with defaults for
+   * and specific adapters. The basic structure is a 'standard' section with defaults for
    * all adapters, and then one or more adapter-specific sections that override behavior
    * for that bidder.
    *
-   * Defining bidderSettings is optional; the platform has default values for all of the options. Adapters may specify their own default settings, though this isn’t common. Some sample scenarios where publishers may wish to alter the default settings:
+   * Defining bidderSettings is optional; the platform has default values for all of the options. Adapters may specify their own default settings, though this isn't common. Some sample scenarios where publishers may wish to alter the default settings:
    *
    * - using bidder-specific ad server targeting instead of Prebid-standard targeting
    * - passing additional information to the ad server
@@ -2274,23 +2480,23 @@ export namespace prebidjs {
 
     /**
      * Some bidders return gross prices instead of the net prices (what the publisher will actually get paid).
-     * For example, a publisher’s net price might be 15% below the returned gross price. In this case, the publisher may
-     * want to adjust the bidder’s returned price to run a true header bidding auction.
-     * Otherwise, this bidder’s gross price will unfairly win over your other demand sources who report the real price.
+     * For example, a publisher's net price might be 15% below the returned gross price. In this case, the publisher may
+     * want to adjust the bidder's returned price to run a true header bidding auction.
+     * Otherwise, this bidder's gross price will unfairly win over your other demand sources who report the real price.
      */
     readonly bidCpmAdjustment?: (bidCpm: number, bid: IBidResponse) => number;
   }
 
   /**
-   * For each bidder’s bid, Prebid.js will set 4 keys (hb_bidder, hb_adid, hb_pb, hb_size) with their corresponding
-   * values. The key value pair targeting is applied to the bid’s corresponding ad unit. Your ad ops team will have the
-   * ad server’s line items target these keys.
+   * For each bidder's bid, Prebid.js will set 4 keys (hb_bidder, hb_adid, hb_pb, hb_size) with their corresponding
+   * values. The key value pair targeting is applied to the bid's corresponding ad unit. Your ad ops team will have the
+   * ad server's line items target these keys.
    *
-   *  If you’d like to customize the key value pairs, you can overwrite the settings as the below example shows.
+   *  If you'd like to customize the key value pairs, you can overwrite the settings as the below example shows.
    *  Note that once you updated the settings, let your ad ops team know about the change, so they can update the line
    *  item targeting accordingly. See the Ad Ops documentation for more information.
    *
-   *  There’s no need to include this code if you choose to use the below default setting.
+   *  There's no need to include this code if you choose to use the below default setting.
    */
   export interface IAdServerTargeting {
     readonly key: string;
