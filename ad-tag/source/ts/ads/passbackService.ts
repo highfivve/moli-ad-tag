@@ -46,7 +46,10 @@ export class PassbackService {
   private readonly passbackKeyValue: string = 'passback';
   private readonly passbackOriginKeyValue: string = 'passbackOrigin';
 
-  constructor(private readonly logger: Moli.MoliLogger, private readonly window: Window) {}
+  constructor(
+    private readonly logger: Moli.MoliLogger,
+    private readonly window: Window & googletag.IGoogleTagWindow
+  ) {}
 
   addAdSlot(adSlot: Moli.SlotDefinition): void {
     // initialize on the first add call

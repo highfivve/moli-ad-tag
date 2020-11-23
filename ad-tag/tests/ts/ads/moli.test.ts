@@ -13,6 +13,7 @@ import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
 import { IModule } from '../../../source/ts/types/module';
 import { IAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
+import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,7 +24,7 @@ describe('moli', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
   jsDomWindow.pbjs = pbjsStub;
 
   let domIdCounter: number = 0;

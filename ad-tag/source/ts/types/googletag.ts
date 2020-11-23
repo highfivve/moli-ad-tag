@@ -1,5 +1,16 @@
 // type definitions for DFP googletag
 export namespace googletag {
+  /**
+   * Add googletag to global window instance
+   */
+  export interface IGoogleTagWindow {
+    /**
+     * Google Publisher Tag (gpt.js)
+     * @see {@link https://developers.google.com/doubleclick-gpt/reference}
+     */
+    googletag: googletag.IGoogleTag;
+  }
+
   export type Size = [number, number] | string;
 
   /**
@@ -447,18 +458,3 @@ export namespace googletag {
     clearTargeting(key?: string): void;
   }
 }
-
-/* tslint:disable:interface-name */
-declare global {
-  /**
-   * Add googletag to global window instance
-   */
-  interface Window {
-    /**
-     * Google Publisher Tag (gpt.js)
-     * @see {@link https://developers.google.com/doubleclick-gpt/reference}
-     */
-    googletag: googletag.IGoogleTag;
-  }
-}
-/* tslint:enable:interface-name */

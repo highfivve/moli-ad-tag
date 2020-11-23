@@ -6,6 +6,7 @@ import * as sinonChai from 'sinon-chai';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 import { Moli } from '../../../source/ts/types/moli';
 import EventTrigger = Moli.behaviour.EventTrigger;
+import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -14,7 +15,7 @@ use(sinonChai);
 describe('EventService', () => {
   // create a fresh DOM for each test
   let dom = createDom();
-  let jsDomWindow: Window = dom.window as any;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();

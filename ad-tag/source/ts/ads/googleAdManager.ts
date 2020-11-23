@@ -15,7 +15,7 @@ import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 
 const configureTargeting = (
-  window: Window,
+  window: Window & googletag.IGoogleTagWindow,
   targeting: Moli.Targeting | undefined,
   env: Moli.Environment
 ): void => {

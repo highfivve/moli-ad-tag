@@ -14,6 +14,7 @@ import { noopReportingService } from '../../../source/ts/ads/reportingService';
 import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
+import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -25,7 +26,7 @@ describe('prebid', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,

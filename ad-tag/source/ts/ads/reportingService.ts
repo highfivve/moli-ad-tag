@@ -125,7 +125,7 @@ export class ReportingService implements IReportingService {
     private readonly config: Moli.reporting.ReportingConfig,
     private readonly logger: Moli.MoliLogger,
     private readonly env: Moli.Environment,
-    private readonly window: Window
+    private readonly window: Window & googletag.IGoogleTagWindow
   ) {
     // the default regex only removes the publisher id
     this.adUnitRegex = config.adUnitRegex || /\/\d*\//i;

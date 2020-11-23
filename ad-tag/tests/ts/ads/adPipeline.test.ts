@@ -15,6 +15,7 @@ import {
 } from '../../../source/ts/ads/adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
+import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -41,7 +42,7 @@ describe('AdPipeline', () => {
   };
 
   const dom = createDom();
-  const jsDomWindow: Window = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();

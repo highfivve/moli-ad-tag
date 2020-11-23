@@ -13,6 +13,7 @@ import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
 import { a9ClearTargetingStep, a9Configure, a9RequestBids } from '../../../source/ts/ads/a9';
+import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -24,7 +25,7 @@ describe('a9', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,

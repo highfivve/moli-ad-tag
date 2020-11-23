@@ -6,6 +6,7 @@ import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { PassbackService } from '../../../source/ts/ads/passbackService';
 import { Moli } from '../../../source/ts/types/moli';
+import { googletag } from '../../../source/ts/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -14,7 +15,7 @@ use(sinonChai);
 describe('Passback Service', () => {
   // create a fresh DOM for each test
   let dom = createDom();
-  let jsDomWindow: Window = dom.window as any;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
   const gpt = createGoogletagStub();
   const pubads = gpt.pubads();
   dom.window.googletag = gpt;

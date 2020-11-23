@@ -42,6 +42,7 @@ import { createRefreshListener } from './refreshAd';
 import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
 import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
+import { googletag } from '../types/googletag';
 
 export class AdService {
   /**
@@ -74,7 +75,7 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window,
+    this.window as Window & googletag.IGoogleTagWindow,
     noopReportingService,
     new SlotEventService(getDefaultLogger())
   );
@@ -102,7 +103,7 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window,
+        window as Window & googletag.IGoogleTagWindow,
         noopReportingService,
         this.slotEventService
       );
@@ -141,7 +142,7 @@ export class AdService {
       reportingConfig,
       this.logger,
       env,
-      this.window
+      this.window as Window & googletag.IGoogleTagWindow
     );
 
     // 2. build the AdPipeline
@@ -159,7 +160,9 @@ export class AdService {
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
       reportingPrepareRequestAds(reportingService),
-      passbackPrepareRequestAds(new PassbackService(this.logger, this.window)),
+      passbackPrepareRequestAds(
+        new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
+      ),
       yieldOptimizationPrepareRequestAds(
         new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger)
       )
@@ -204,7 +207,7 @@ export class AdService {
         requestAds: gptRequestAds()
       },
       this.logger,
-      this.window,
+      this.window as Window & googletag.IGoogleTagWindow,
       reportingService,
       this.slotEventService
     );
