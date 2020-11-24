@@ -159,7 +159,9 @@ export class AdService {
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [
       reportingPrepareRequestAds(reportingService),
-      passbackPrepareRequestAds(new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow))
+      passbackPrepareRequestAds(
+        new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
+      )
     ];
 
     const requestBids: RequestBidsStep[] = [];

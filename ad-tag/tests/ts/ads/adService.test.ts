@@ -259,15 +259,6 @@ describe('AdService', () => {
       });
     });
 
-    describe('yieldOptimization', () => {
-      it('should add the yield-optimization step', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('yield-optimization');
-        });
-      });
-    });
-
     describe('passback', () => {
       it('should configure passback slots', () => {
         return initialize(emptyConfigWithPrebid).then(pipeline => {
