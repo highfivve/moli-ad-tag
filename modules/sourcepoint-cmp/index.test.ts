@@ -3,7 +3,7 @@ import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import SourcepointCmp from './index';
-import { AdPipelineContext, googletag, Moli, tcfapi } from '@highfivve/ad-tag';
+import { AdPipelineContext, googletag, Moli, prebidjs, tcfapi } from '@highfivve/ad-tag';
 import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
 import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
 import { LabelConfigService } from '@highfivve/ad-tag/lib/source/ts/ads/labelConfigService';
@@ -20,7 +20,9 @@ describe('Sourcepoint CMP Module', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow = dom.window as any;
   const cmpFunction = (returnValue: any) => (
     cmd: string,
     params: any,
