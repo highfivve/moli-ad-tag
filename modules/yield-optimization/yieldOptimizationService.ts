@@ -35,7 +35,7 @@ export class YieldOptimizationService {
    * @param yieldConfig the yield optimization config
    * @param labels from the targeting property in the moli config
    * @param log logging
-   * @param fetch - to load yield configs
+   * @param window
    */
   constructor(
     private readonly yieldConfig: YieldOptimizationConfig,
@@ -43,7 +43,6 @@ export class YieldOptimizationService {
     private readonly log: MoliLogger,
     private readonly window: Window
   ) {
-
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
     this.device = labels.indexOf('desktop') > -1 ? 'desktop' : 'mobile';
@@ -63,7 +62,11 @@ export class YieldOptimizationService {
         this.isEnabled = true;
         this.adUnitPricingRules = this.loadConfigWithRetry(yieldConfig.configEndpoint, 3)
           .then(config => {
-            log.info('YieldOptimizationService', `loaded pricing rules for device ${this.device}`, config);
+            log.info(
+              'YieldOptimizationService',
+              `loaded pricing rules for device ${this.device}`,
+              config
+            );
             return config.rules;
           })
           .catch(error => {
@@ -103,9 +106,7 @@ export class YieldOptimizationService {
       if (rule) {
         this.log.debug(
           'YieldOptimizationService',
-          `set price rule id ${
-            rule.priceRuleId
-          } for ${adUnitDomId}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+          `set price rule id ${rule.priceRuleId} for ${adUnitDomId}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
         );
         adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
         if (rule.main) {
@@ -127,25 +128,27 @@ export class YieldOptimizationService {
       return Promise.reject(lastError);
     }
 
-    return this.window.fetch(configEndpoint, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      //
-      body: JSON.stringify({
-        device: this.device
+    return this.window
+      .fetch(configEndpoint, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        //
+        body: JSON.stringify({
+          device: this.device
+        })
       })
-    })
       .then(response => {
         return response.ok
           ? response.json()
           : response
-            .text()
-            .then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
-      }).then((response: unknown) => {
+              .text()
+              .then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
+      })
+      .then((response: unknown) => {
         if (typeof response !== 'object') {
           return Promise.reject('response is not an object');
         }
@@ -187,12 +190,13 @@ export class YieldOptimizationService {
 
     return Object.keys(rules).every(adUnit => {
       const rule: any = rules[adUnit];
-      return typeof rule === 'object' &&
+      return (
+        typeof rule === 'object' &&
         rule !== null &&
         typeof rule.main === 'boolean' &&
         typeof rule.floorprice === 'number' &&
-        typeof rule.priceRuleId === 'number';
+        typeof rule.priceRuleId === 'number'
+      );
     });
   }
-
 }
