@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.11.0
+
+[GD-2488](https://jira.gutefrage.net/browse/GD-2488). Adds typings for prebid s2s config.
+
 ## 3.10.0
 
 [GD-2460](https://jira.gutefrage.net/browse/GD-2460). Added a new `position` `out-of-page-interstitial`.
