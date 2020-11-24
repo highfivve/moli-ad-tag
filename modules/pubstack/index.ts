@@ -4,7 +4,9 @@ import {
   ModuleType,
   mkInitStep,
   AssetLoadMethod,
-  IAssetLoaderService
+  IAssetLoaderService,
+  prebidjs,
+  googletag
 } from '@highfivve/ad-tag';
 
 import { initStub } from './stub';
@@ -13,14 +15,16 @@ export interface IPubstackConfig {
   readonly tagId: string;
 }
 
-type PubstackWindow = {
-  /**
-   * pubstack que
-   */
-  readonly Pubstack: {
-    cmd(cmd: 'prebid', event: string, args: any): void;
+type PubstackWindow = Window &
+  prebidjs.IPrebidjsWindow &
+  googletag.IGoogleTagWindow & {
+    /**
+     * pubstack que
+     */
+    readonly Pubstack: {
+      cmd(cmd: 'prebid', event: string, args: any): void;
+    };
   };
-};
 
 /**
  * == Pubstack Analytics ==
@@ -34,11 +38,7 @@ export default class Pubstack implements IModule {
   public readonly description: string = 'prebid analytics integration';
   public readonly moduleType: ModuleType = 'reporting';
 
-  private readonly pubstackWindow: PubstackWindow;
-
-  constructor(private readonly pubstackConfig: IPubstackConfig, private readonly window: Window) {
-    this.pubstackWindow = (window as unknown) as PubstackWindow;
-  }
+  constructor(private readonly pubstackConfig: IPubstackConfig) {}
 
   config(): Object | null {
     return this.pubstackConfig;
@@ -56,11 +56,11 @@ export default class Pubstack implements IModule {
     config.pipeline.initSteps.push(
       mkInitStep('pubstack', ctx => {
         // initialize command que for pubstack
-        initStub(this.window, 'Pubstack', this.pubstackConfig.tagId);
+        initStub(ctx.window, 'Pubstack', this.pubstackConfig.tagId);
 
         // add prebid events
-        window.pbjs = window.pbjs || { que: [] };
-        window.pbjs.que.push(() => {
+        ctx.window.pbjs = ctx.window.pbjs || { que: [] };
+        ctx.window.pbjs.que.push(() => {
           ([
             'auctionInit',
             'auctionEnd',
@@ -70,8 +70,8 @@ export default class Pubstack implements IModule {
             'bidWon',
             'noBid'
           ] as const).forEach(event =>
-            window.pbjs.onEvent(event, (args: any) =>
-              this.pubstackWindow.Pubstack.cmd('prebid', event, args)
+            ctx.window.pbjs.onEvent(event, (args: any) =>
+              (ctx.window as PubstackWindow).Pubstack.cmd('prebid', event, args)
             )
           );
         });

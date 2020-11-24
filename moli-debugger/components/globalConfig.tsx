@@ -9,7 +9,7 @@ import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { googletag, Moli, prebidjs } from '@highfivve/ad-tag';
 
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
@@ -17,6 +17,8 @@ import { ConsentConfig } from './consentConfig';
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { LabelConfigDebug } from './labelConfigDebug';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
+
+declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
 type IGlobalConfigProps = {
   config?: MoliConfig;

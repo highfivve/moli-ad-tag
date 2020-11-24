@@ -13,7 +13,8 @@ import {
   AdPipelineContext,
   ConfigureStep,
   PrepareRequestAdsStep,
-  googletag
+  googletag,
+  prebidjs
 } from '@highfivve/ad-tag';
 import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
 import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
@@ -27,7 +28,9 @@ use(chaiAsPromised);
 describe('BlocklistUrls Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');

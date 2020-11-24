@@ -17,7 +17,8 @@ import {
   googletag,
   IAdPipelineConfiguration,
   mkInitStep,
-  Moli
+  Moli,
+  prebidjs
 } from '@highfivve/ad-tag';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
@@ -30,7 +31,9 @@ use(sinonChai);
 describe('Moli Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
