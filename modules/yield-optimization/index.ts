@@ -3,7 +3,11 @@ import {
   ModuleType,
   Moli,
   getLogger,
-  IAssetLoaderService, PrepareRequestAdsStep, mkPrepareRequestAdsStep, HIGH_PRIORITY, AdPipelineContext
+  IAssetLoaderService,
+  PrepareRequestAdsStep,
+  mkPrepareRequestAdsStep,
+  HIGH_PRIORITY,
+  AdPipelineContext
 } from '@highfivve/ad-tag';
 import { YieldOptimizationService } from './yieldOptimizationService';
 
@@ -53,7 +57,7 @@ export type PriceRules = {
   /**
    * The ad unit that is being configured along with a price that was selected from the server
    */
-  readonly [adUnitDomId: string]: Moli.yield_optimization.PriceRule
+  readonly [adUnitDomId: string]: Moli.yield_optimization.PriceRule;
 };
 
 /**
@@ -62,7 +66,6 @@ export type PriceRules = {
 export interface IAdunitPriceRulesResponse {
   readonly rules: PriceRules;
 }
-
 
 /**
  * == Yield Optimization ==
@@ -83,13 +86,11 @@ export default class YieldOptimization implements IModule {
   constructor(
     private readonly yieldModuleConfig: YieldOptimizationConfig,
     private readonly window: Window
-  ) {
-  }
+  ) {}
 
   config(): Object | null {
     return this.yieldModuleConfig;
   }
-
 
   init(moliConfig: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     this.log = getLogger(moliConfig, this.window);
@@ -103,11 +104,16 @@ export default class YieldOptimization implements IModule {
 
     const labels = moliConfig.targeting?.labels || [];
 
-    const yieldOptimizationService = new YieldOptimizationService(this.yieldModuleConfig, labels, this.log, this.window);
+    const yieldOptimizationService = new YieldOptimizationService(
+      this.yieldModuleConfig,
+      labels,
+      this.log,
+      this.window
+    );
 
-    moliConfig.pipeline.prepareRequestAdsSteps.push(this.yieldOptimizationPrepareRequestAds(yieldOptimizationService));
-
-
+    moliConfig.pipeline.prepareRequestAdsSteps.push(
+      this.yieldOptimizationPrepareRequestAds(yieldOptimizationService)
+    );
   }
 
   /**
@@ -116,7 +122,7 @@ export default class YieldOptimization implements IModule {
    *
    * @param yieldOptimizationService
    */
-  private yieldOptimizationPrepareRequestAds = (
+  yieldOptimizationPrepareRequestAds = (
     yieldOptimizationService: YieldOptimizationService
   ): PrepareRequestAdsStep =>
     mkPrepareRequestAdsStep(
@@ -132,5 +138,4 @@ export default class YieldOptimization implements IModule {
         return Promise.all(slotsWithPriceRule);
       }
     );
-
 }
