@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.11.6
+
+[GD-2488](https://jira.gutefrage.net/browse/GD-2488) Native `icon` property now has `sizes` and `aspect_ratios` as well.
+`sizes` is now a size `[number, number]` or and array of sizes `[number, number][]`.
+
 ## 3.11.5
 
 [GD-2488](https://jira.gutefrage.net/browse/GD-2488) Add len property to specify maximum number of characters for native ads. This is required for prebid native

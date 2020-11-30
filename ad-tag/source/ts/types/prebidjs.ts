@@ -1207,7 +1207,7 @@ export namespace prebidjs {
      *
      * ad server key-value: `hb_native_icon`
      */
-    readonly icon?: IMediaTypeNativeRequirement;
+    readonly icon?: IMediaTypeNativeRequirementImage;
 
     /**
      * A picture that is associated with the brand, or grabs the user's attention.
