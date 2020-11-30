@@ -813,17 +813,30 @@ export namespace prebidjs {
      * control the ratio between client and server.
      * `client` and `server` must add up to `100`.
      */
-    export type BidSource = {
-      /**
-       * a number between 0 and 100
-       */
-      readonly client: number;
+    export type BidSource =
+      | {
+          /**
+           * a number between 0 and 100
+           */
+          readonly client: number;
 
-      /**
-       * a number between 0 and 100
-       */
-      readonly server: number;
-    };
+          /**
+           * a number between 0 and 100
+           */
+          readonly server: number;
+        }
+      | {
+          /**
+           * if client should have 100% of the traffic, no server share is necessary
+           */
+          readonly client: 100;
+        }
+      | {
+          /**
+           * if server should have 100% of the traffic, no server share is necessary
+           */
+          readonly server: 100;
+        };
 
     /**
      * Arguments will be added to resulting OpenRTB payload to Prebid Server in every impression
