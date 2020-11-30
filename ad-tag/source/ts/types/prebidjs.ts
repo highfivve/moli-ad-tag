@@ -1102,9 +1102,25 @@ export namespace prebidjs {
    * fields become required instead of optional. If these fields are not included, that native request will be rejected.
    */
   type MediaTypeNativeAspectRatio = {
+    /**
+     * The minimum width required for an image to serve (in pixels).
+     */
     readonly min_width?: number;
+
+    /**
+     * The minimum height required for an image to serve (in pixels)
+     */
     readonly min_height?: number;
+
+    /**
+     * This, combined with `ratio_height`, determines the required aspect ratio for an image that can serve.
+     */
+
     readonly ratio_width: number;
+
+    /**
+     * This, combined with `ratio_width`, determines the required aspect ratio for an image that can serve.
+     */
     readonly ratio_height: number;
   };
 
@@ -1116,8 +1132,16 @@ export namespace prebidjs {
    * - Using `mediaTypes.native.image.aspect_ratios` (or `mediaTypes.native.icon.aspect_ratios` for icons)
    */
   interface IMediaTypeNativeRequirementImage extends IMediaTypeNativeRequirement {
-    readonly sizes?: [number, number];
+    /**
+     * All sizes this ad unit can accept.
+     * @example `[400, 600]`
+     * @example `[[300, 250], [300, 600]]`
+     */
+    readonly sizes?: [number, number] | [number, number][];
 
+    /**
+     * Alongside sizes, you can define allowed aspect ratios
+     */
     readonly aspect_ratios?: MediaTypeNativeAspectRatio[];
   }
 
