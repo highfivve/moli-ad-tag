@@ -754,7 +754,7 @@ export namespace prebidjs {
        * Function to modify a bidder's sync url before the actual call to the sync endpoint.
        * Bidder must be enabled for s2sConfig.
        */
-      readonly syncUrlModifier: any;
+      readonly syncUrlModifier?: any;
     }
 
     /**
@@ -781,7 +781,12 @@ export namespace prebidjs {
        */
       readonly testServerOnly?: boolean;
 
-      readonly bidderControl: {
+      /**
+       * Configure the client/server share for every bidder
+       *
+       * Only available with the s2sTesting module
+       */
+      readonly bidderControl?: {
         readonly [bidder in BidderCode]?: BidderControl;
       };
     }
