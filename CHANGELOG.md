@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.11.5
+
+[GD-2488](https://jira.gutefrage.net/browse/GD-2488) Add len property to specify maximum number of characters for native ads. This is required for prebid native
+
 ## 3.11.0 - 3.11.4
 
 [GD-2488](https://jira.gutefrage.net/browse/GD-2488). Adds typings for prebid s2s config.

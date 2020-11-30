@@ -1088,6 +1088,16 @@ export namespace prebidjs {
   }
 
   /**
+   * A few properties may have a `len` property that can be specified to allow the maximum length of text.
+   */
+  interface IMediaTypeNativeRequirementWithLength extends IMediaTypeNativeRequirement {
+    /**
+     * Maximum length of text, in characters.
+     */
+    readonly len?: number;
+  }
+
+  /**
    * NOTE: If you're using aspect_ratios in a native request sent to Prebid Server, the min_width and min_height
    * fields become required instead of optional. If these fields are not included, that native request will be rejected.
    */
@@ -1113,6 +1123,7 @@ export namespace prebidjs {
 
   /**
    * @see http://prebid.org/dev-docs/show-native-ads.html#native-ad-keys
+   * @see https://docs.prebid.org/dev-docs/adunit-reference.html#adunitmediatypesnative
    */
   export interface IMediaTypeNative {
     /**
@@ -1144,14 +1155,14 @@ export namespace prebidjs {
      *
      * ad server key-value: `hb_native_title`
      */
-    readonly title?: IMediaTypeNativeRequirement;
+    readonly title?: IMediaTypeNativeRequirementWithLength;
 
     /**
      * Text of the ad copy.
      *
      * ad server key-value: `hb_native_body`
      */
-    readonly body?: IMediaTypeNativeRequirement;
+    readonly body?: IMediaTypeNativeRequirementWithLength;
 
     /**
      * Additional Text of the ad copy.
