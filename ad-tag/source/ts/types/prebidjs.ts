@@ -677,7 +677,7 @@ export namespace prebidjs {
       /**
        * Which bidders auctions should take place on the server side
        */
-      readonly bidders: Readonly<BidderCode>;
+      readonly bidders: ReadonlyArray<BidderCode>;
 
       /**
        * Automatically includes all following options in the config with vendor's default values.
@@ -992,7 +992,7 @@ export namespace prebidjs {
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
      */
-    readonly s2sConfig?: server.S2SConfig | Readonly<server.S2SConfig>;
+    readonly s2sConfig?: server.S2SConfig | ReadonlyArray<server.S2SConfig>;
   }
 
   /**
