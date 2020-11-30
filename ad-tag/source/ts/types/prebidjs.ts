@@ -2290,9 +2290,13 @@ export namespace prebidjs {
   export interface IVisxParams {
     /**
      * The publisher's ad unit ID in VIS.X
-     * @example `'903536'`
+     *
+     * For prebid.js it should be string (number is probably fine too)
+     * For prebid server it must be number
+     *
+     * @example `'903536'` or `903536`
      */
-    readonly uid: string;
+    readonly uid: string | number;
   }
 
   /**
