@@ -171,13 +171,7 @@ export const gptDefineSlots = (): DefineSlotsStep => (
 
     const sizes = filterSupportedSizes(moliSlot.sizes);
 
-    // lookup existing slots and use those if already present. This makes defineSlots idempotent
-    const allSlots =
-      context.env === 'production'
-        ? context.window.googletag.pubads().getSlots()
-        : context.window.googletag.content().getSlots();
-    const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
-
+    // define an ad slot depending on the `position` parameter
     const defineAdSlot = (): googletag.IAdSlot | null => {
       switch (moliSlot.position) {
         case 'in-page':
@@ -193,13 +187,29 @@ export const gptDefineSlots = (): DefineSlotsStep => (
       }
     };
 
-    const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : defineAdSlot();
+    // ensures that an ad slot is only displayed once
+    const defineAndDisplayAdSlot = (): googletag.IAdSlot | null => {
+      const adSlot = defineAdSlot();
+      if (adSlot) {
+        // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
+        context.window.googletag.display(adSlot);
+      }
+      return adSlot;
+    };
+
+    // lookup existing slots and use those if already present. This makes defineSlots idempotent
+    const allSlots =
+      context.env === 'production'
+        ? context.window.googletag.pubads().getSlots()
+        : context.window.googletag.content().getSlots();
+    const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
+
+    // define and display ad slot if doesn't exist yet
+    const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : defineAndDisplayAdSlot();
 
     if (adSlot) {
       adSlot.setCollapseEmptyDiv(true);
 
-      // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
-      context.window.googletag.display(adSlot.getSlotElementId());
       switch (context.env) {
         case 'production':
           adSlot.addService(context.window.googletag.pubads());
@@ -288,15 +298,17 @@ export const gptRequestAds = (): RequestAdsStep => (
         });
         break;
       case 'production':
-        // clear targetings for each slot before refreshing
+        // load ads
         context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
-        slots.forEach(slot => {
-          context.logger.debug(
-            'GAM',
-            `Refresh slot: [DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`
-          );
-          context.reportingService.markRefreshed(slot.moliSlot);
-        });
+        // mark slots as refreshed
+        slots.forEach(({ moliSlot }) => context.reportingService.markRefreshed(moliSlot));
+
+        // debug logs
+        const debugMessage = slots
+          .map(({ moliSlot }) => `[DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`)
+          .join('\n');
+        context.logger.debug('GAM', `Refresh ${slots.length} slot(s):\n${debugMessage}`);
+
         break;
     }
 

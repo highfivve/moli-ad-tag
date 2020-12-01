@@ -385,7 +385,7 @@ export namespace googletag {
      *
      * @param id
      */
-    display(id: string): void;
+    display(id: string | Element | IAdSlot): void;
   }
 
   export namespace enums {

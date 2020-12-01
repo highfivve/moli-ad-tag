@@ -288,7 +288,7 @@ describe('google ad manager', () => {
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
           expect(displaySpy).to.have.been.calledOnce;
-          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlot.domId);
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
           expect(slotDefinitions).to.have.length(1);
           expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
         });
@@ -322,7 +322,7 @@ describe('google ad manager', () => {
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
           expect(displaySpy).to.have.been.calledOnce;
-          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlot.domId);
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
           expect(slotDefinitions).to.have.length(1);
           expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
         });
@@ -353,7 +353,7 @@ describe('google ad manager', () => {
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
           expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
           expect(displaySpy).to.have.been.calledOnce;
-          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlot.domId);
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
           expect(slotDefinitions).to.have.length(1);
           expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
         });
@@ -391,6 +391,21 @@ describe('google ad manager', () => {
 
         return step(adPipelineContext(), [adSlot]).then(_ => {
           expect(defineSlotsSpy).to.have.not.been.called;
+        });
+      });
+
+      it('should call display only once', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+        // slot is already defined
+        sandbox
+          .stub(dom.window.googletag.pubads(), 'getSlots')
+          .returns([googleAdSlotStub(adSlot.adUnitPath, adSlot.domId)]);
+
+        return step(adPipelineContext(), [adSlot]).then(_ => {
+          expect(displaySpy).to.have.not.been.called;
         });
       });
     });
