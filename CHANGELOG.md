@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.12.0
+
+[GD-2447](https://jira.gutefrage.net/browse/GD-2447) Zeotap module added, supporting their data collection and id
+provider functionality ([idplus](https://idplus.io/)).
+
 ## 3.11.6
 
 [GD-2488](https://jira.gutefrage.net/browse/GD-2488) Native `icon` property now has `sizes` and `aspect_ratios` as well.
