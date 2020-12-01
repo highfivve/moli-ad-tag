@@ -88,6 +88,19 @@ In order to run the examples you need to build the ad tag and all modules first.
 $ yarn workspaces run make:nodeule
 ```
 
+## Testing with examples
+
+If you want to test code changes within the examples you have to perform the current steps
+in order for changes to appear.
+
+```bash
+# rebuild the module you change, e.g. ad-tag
+$ yarn workspace @highfivve/ad-tag make:nodemodule
+
+# restart the example ad tag, e.g. the example-publisher-mode
+$ yarn workspace @highfivve/example-publisher-mode start
+```
+
 # TODOs for Open Source migration
 
 - The examples currently depend on the the ad-tag through yarn workspaces.

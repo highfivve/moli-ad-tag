@@ -185,7 +185,7 @@ export const adConfiguration: Moli.MoliConfig = {
                   [605, 340],
                   [536, 302],
                   [1, 1]
-                ] as [number, number][]
+                ]
               }
             },
             bids: [
@@ -219,7 +219,7 @@ export const adConfiguration: Moli.MoliConfig = {
                   [605, 340],
                   [536, 302],
                   [1, 1]
-                ] as [number, number][]
+                ]
               }
             },
             bids: [
