@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-2506](https://jira.gutefrage.net/browse/GD-2506) Ensure that display is only called once.
+
 ## 3.12.0
 
 [GD-2447](https://jira.gutefrage.net/browse/GD-2447) Zeotap module added, supporting their data collection and id
