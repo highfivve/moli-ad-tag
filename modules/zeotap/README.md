@@ -14,8 +14,16 @@ const zeotap = new Zeotap({
   countryCode: 'DEU',
   mode: 'default',
   hashedEmailAddress: 'somehashedaddress',
-  idpActive: true,
-})
+  dataKeyValues: [
+    { keyValueKey: 'channel', parameterKey: 'zcat' },
+    { keyValueKey: 'subChannel', parameterKey: 'zscat' },
+    { keyValueKey: 'tags', parameterKey: 'zcid' }
+  ],
+  exclusionKeyValues: [
+    { keyValueKey: 'channel', disableOnValue: 'MedicalHealth' },
+    { keyValueKey: 'subChannel', disableOnValue: 'Pornography' }
+  ]
+});
 
 moli.registerModule(zeotap);
 ```
@@ -23,18 +31,13 @@ moli.registerModule(zeotap);
 Configure the module with:
 
 - `assetUrl`: the zeotap `mapper.js` URL (can be protocol relative)
-- `countryCode`: your site's Alpha-ISO3 country code
-- `mode`: the mode you want to run the module in, depending on your site's structure. If you're running a single page
-  application, select `spa` mode. Else, select `default`.
-- `hashedEmailAddress`/`idpActive`: optionally, if you want to use Zeotap's id+ module, configure the module with a sha-256 hashed email address and set
-  `idpActive` to `true`.
-
-To enable data collection, call the module's `loadScript` function:
-
-```js
-zeotap.loadScript('Technology & Computing', 'Robotics', ['hardware', 'roboter']);
-```
-
-The first parameter should be your site's IAB Tier 1 channel.
-The second parameter should be your site's IAB Tier 2 channel.
-The third parameter should be your site's tags or keywords as an array of strings.
+- `mode`: the mode you want to run the module in, depending on your site's structure. If you're running a single
+  page application (SPA), select `spa` mode. Else, select `default`.
+- `dataKeyValues`: Specifies which keys to extract from moli's targeting (key/value pairs) and which key then to use to
+  transfer the extracted data in the Zeotap request URL.
+- `exclusionKeyValues`: Specifies which key/value pairs should prevent the Zeotap script from being loaded, e.g. to
+  prevent data collection in pages with sensitive topics such as medical/health content.
+- `countryCode` _(optional)_: your site's Alpha-ISO3 country code. If omitted, Zeotap will guess the country from the
+  sender's IP address.
+- `hashedEmailAddress` _(optional)_: if you want to use Zeotap's id+ module, configure the module with a sha-256 hashed
+  email address.
