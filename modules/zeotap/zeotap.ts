@@ -34,7 +34,7 @@ type DataKeyValue = {
  *
  * const excludeMedical: ExclusionKeyValue = {
  *   keyValueKey: 'contentType',
- *   parameterKey: 'MedicalTopic'
+ *   disableOnValue: 'MedicalTopic'
  * }
  */
 type ExclusionKeyValue = {
