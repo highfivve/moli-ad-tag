@@ -41,7 +41,6 @@
     "last 2 versions"
   ],
   "devDependencies": {
-    "@highfivve/ad-tag": "*",
     "@types/node": "^10.12.9",
     "css-loader": "^5.0.0",
     "cssnano": "^4.1.10",

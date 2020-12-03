@@ -33,7 +33,6 @@
     "node": ">=8.0"
   },
   "devDependencies": {
-    "@highfivve/ad-tag": "*",
     "@types/chai": "4.2.13",
     "@types/google.analytics": "^0.0.40",
     "@types/jsdom": "12.2.4",
