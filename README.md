@@ -85,7 +85,7 @@ $ yarn github:publish
 In order to run the examples you need to build the ad tag and all modules first.
 
 ```bash
-$ yarn workspaces run make:nodeule
+$ yarn workspaces run make:nodemodule
 ```
 
 ## Testing with examples
@@ -103,9 +103,9 @@ $ yarn workspace @highfivve/example-publisher-mode start
 
 # TODOs for Open Source migration
 
-- The examples currently depend on the the ad-tag through yarn workspaces.
-  This is the ideal way to work with an ad tag and to develope some features or reproduce bugs.
+- The examples currently depend on the ad-tag through yarn workspaces.
+  This is the ideal way to work with an ad tag and to develop some features or reproduce bugs.
   Hopefully we can keep it that way.
-- The examples are listed as yarn workspaces, but not configured in the the [lerna.sjon](lerna.json).
+- The examples are listed as yarn workspaces, but not configured in the the [lerna.json](lerna.json).
   Ideally this prevents these packages from being published as NPM modules
 - Build a github release with lerna (see `--create-release` flag in the `lerna version` command)

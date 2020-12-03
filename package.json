@@ -13,10 +13,11 @@
     "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts",
     "preversion": "yarn workspaces run validate",
     "postversion": "git push && git push --tags",
-    "clean:node_modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
-    "clean:lib": "find . -name 'lib' -type d -prune -exec rm -rf '{}' +",
+    "clean:node_modules": "rm -rf node_modules ad-tag/node_modules modules/**/node_modules moli-release/node_modules moli-debugger/node_modules",
+    "clean:lib": "rm -rf ad-tag/lib modules/**/lib moli-release/lib moli-debugger/lib",
     "clean": "yarn clean:node_modules && yarn clean:lib",
-    "github:publish": "yarn lerna publish from-package --registry https://npm.pkg.github.com/"
+    "github:publish": "yarn lerna run make:nodemodule && yarn lerna publish from-package --registry https://npm.pkg.github.com/",
+    "postpublish": "yarn clean:lib"
   },
   "devDependencies": {
     "lerna": "^3.22.1",
