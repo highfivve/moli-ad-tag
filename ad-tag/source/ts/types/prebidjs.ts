@@ -392,7 +392,8 @@ export namespace prebidjs {
       | ICriteoProvider
       | IID5Provider
       | IIdentityLinkProvider
-      | IPubCommonIdProvider;
+      | IPubCommonIdProvider
+      | IZeotapIdPlusIdProvider;
 
     interface IUserIdProvider<N extends string> {
       /**
@@ -570,6 +571,15 @@ export namespace prebidjs {
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
      */
     export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {}
+
+    /**
+     * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
+     * and a fast-changing regulatory landscape. ID+ is an open invitation to the entire industry to build the future
+     * of identity together.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#id
+     */
+    export interface IZeotapIdPlusIdProvider extends IUserIdProvider<'zeotapIdPlus'> {}
 
     export interface IFilterSettingsConfig {
       /**

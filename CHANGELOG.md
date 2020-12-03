@@ -4,6 +4,10 @@
 
 [GD-2506](https://jira.gutefrage.net/browse/GD-2506) Ensure that display is only called once.
 
+## 3.12.2
+
+[GD-2447](https://jira.gutefrage.net/browse/GD-2447) Add IZeotapIdPlusIdProvider to UserIdProviders
+
 ## 3.12.1
 
 [GD-2447](https://jira.gutefrage.net/browse/GD-2447) Add possibility to configure Zeotap script params with an include
