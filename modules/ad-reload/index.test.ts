@@ -2,13 +2,13 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
+import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import {
   createGoogletagStub,
   googleAdSlotStub
-} from '@highfivve/ad-tag/lib/tests/ts/stubs/googletagStubs';
-import { reportingServiceStub } from '@highfivve/ad-tag/lib/tests/ts/stubs/reportingServiceStub';
-import { noopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
+} from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
+import { reportingServiceStub } from '@highfivve/ad-tag/tests/ts/stubs/reportingServiceStub';
+import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 
 import {
   AdPipeline,
@@ -23,7 +23,7 @@ import {
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 import AdReload from './index';
-import { SlotEventService } from '@highfivve/ad-tag/lib/source/ts/ads/slotEventService';
+import { SlotEventService } from '@highfivve/ad-tag/source/ts/ads/slotEventService';
 
 use(sinonChai);
 

@@ -9,7 +9,7 @@
     "outDir": "./lib"
   },
   "files": [
-    "index.ts"
+    "./source/index.ts"
   ],
   "include": [
     "source/**/*",

@@ -206,7 +206,7 @@ export const mkConfigureStepOncePerRequestAdsCycle = (
 export const mkPrepareRequestAdsStep = (
   name: string,
   priority: number,
-  fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<unknown>
+  fn: (context: AdPipelineContext, slots: SlotDefinition[]) => Promise<void>
 ): PrepareRequestAdsStep => {
   const step = Object.assign(fn, { priority: priority });
   Object.defineProperty(fn, 'name', { value: name });

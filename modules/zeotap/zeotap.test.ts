@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
+import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import {
   AdPipelineContext,
   AssetLoadMethod,
@@ -13,7 +13,7 @@ import {
 } from '@highfivve/ad-tag';
 
 import Zeotap from './zeotap';
-import { noopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
+import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 
 // setup sinon-chai
 use(sinonChai);

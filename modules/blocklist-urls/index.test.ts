@@ -16,9 +16,9 @@ import {
   googletag,
   prebidjs
 } from '@highfivve/ad-tag';
-import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
-import { createDom } from '@highfivve/ad-tag/lib/tests/ts/stubs/browserEnvSetup';
-import { createGoogletagStub } from '@highfivve/ad-tag/lib/tests/ts/stubs/googletagStubs';
+import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
+import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createGoogletagStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
 
 // setup sinon-chai
 use(sinonChai);
