@@ -2,9 +2,9 @@
 
 ## Unreleased
 
+## 3.13.0
+
 [GD-2313](https://jira.gutefrage.net/browse/GD-2313) Yield Optimization is now a module and needs to be configured as such.
-
-
 
 ## 3.12.2
 
