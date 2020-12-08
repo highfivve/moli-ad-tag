@@ -1,0 +1,202 @@
+import { Moli, googletag } from '@highfivve/ad-tag';
+import MoliLogger = Moli.MoliLogger;
+import IAdSlot = googletag.IAdSlot;
+import { IAdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
+
+/**
+ * Extended representation which adds
+ *
+ * - a flag `main` indicating if the main traffic share price rule was selected
+ * - a cpm field
+ */
+type PriceRule = Moli.yield_optimization.PriceRule & {
+  /**
+   * True if this price rule is the main price rule
+   */
+  readonly main?: boolean;
+};
+
+export class YieldOptimizationService {
+  private readonly adUnitPricingRules: Promise<PriceRules>;
+
+  /**
+   * true if the yield optimization is enabled (provider is not `none`)
+   */
+  private readonly isEnabled: boolean;
+
+  /**
+   *
+   * @private
+   */
+  private readonly device: 'mobile' | 'desktop';
+
+  /**
+   *
+   * @param yieldConfig the yield optimization config
+   * @param labels from the targeting property in the moli config
+   * @param log logging
+   * @param window
+   */
+  constructor(
+    private readonly yieldConfig: YieldOptimizationConfig,
+    private readonly labels: string[],
+    private readonly log: MoliLogger,
+    private readonly window: Window
+  ) {
+    // if a desktop label is present, the yield optimization service will request desktop price rules
+    // otherwise mobile
+    this.device = labels.indexOf('desktop') > -1 ? 'desktop' : 'mobile';
+
+    switch (yieldConfig.provider) {
+      case 'none':
+        log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
+        this.isEnabled = false;
+        this.adUnitPricingRules = Promise.resolve({});
+        break;
+      case 'static':
+        log.warn('YieldOptimizationService', 'Yield optimization is static!');
+        this.isEnabled = true;
+        this.adUnitPricingRules = Promise.resolve(yieldConfig.config.rules);
+        break;
+      case 'dynamic':
+        this.isEnabled = true;
+        this.adUnitPricingRules = this.loadConfigWithRetry(yieldConfig.configEndpoint, 3)
+          .then(config => {
+            log.info(
+              'YieldOptimizationService',
+              `loaded pricing rules for device ${this.device}`,
+              config
+            );
+            return config.rules;
+          })
+          .catch(error => {
+            log.error('YieldOptimizationService', 'failed to initialize service', error);
+            return {};
+          });
+        break;
+      default:
+        this.isEnabled = false;
+        this.adUnitPricingRules = Promise.reject('Unknown config provider');
+    }
+  }
+
+  /**
+   * Return the price rule for the given ad slot domID if available.
+   *
+   * If the provider is `dynamic` this is an async operation as the configuration file might
+   * not be loaded yet.
+   *
+   * @param adUnitDomId
+   */
+  public getPriceRule(adUnitDomId: string): Promise<PriceRule | undefined> {
+    return this.adUnitPricingRules.then(rules => rules[adUnitDomId]);
+  }
+
+  /**
+   * Sets the targeting for the given googletag ad slot if a price rule is defined for it.
+   *
+   * If the provider is `dynamic` this is an async operation as the configuration file might
+   * not be loaded yet.
+   *
+   * @param adSlot
+   */
+  public setTargeting(adSlot: IAdSlot): Promise<PriceRule | undefined> {
+    const adUnitDomId = adSlot.getSlotElementId();
+    return this.getPriceRule(adUnitDomId).then(rule => {
+      if (rule) {
+        this.log.debug(
+          'YieldOptimizationService',
+          `set price rule id ${rule.priceRuleId} for ${adUnitDomId}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+        );
+        adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+        if (rule.main) {
+          adSlot.setTargeting('upr_main', 'true');
+        }
+      } else if (this.isEnabled) {
+        this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitDomId}`);
+      }
+      return rule;
+    });
+  }
+
+  private loadConfigWithRetry(
+    configEndpoint: string,
+    retriesLeft: number,
+    lastError: any | null = null
+  ): Promise<IAdunitPriceRulesResponse> {
+    if (retriesLeft <= 0) {
+      return Promise.reject(lastError);
+    }
+
+    return this.window
+      .fetch(configEndpoint, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        //
+        body: JSON.stringify({
+          device: this.device
+        })
+      })
+      .then(response => {
+        return response.ok
+          ? response.json()
+          : response
+              .text()
+              .then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
+      })
+      .then((response: unknown) => {
+        if (typeof response !== 'object') {
+          return Promise.reject('response is not an object');
+        }
+
+        if (response === null) {
+          return Promise.reject('response is null');
+        }
+        if (!this.isAdunitPricesRulesResponse(response)) {
+          return Promise.reject('response is missing rules property');
+        }
+
+        if (this.validateRules(response.rules)) {
+          return response;
+        } else {
+          return Promise.reject('At least one rule object was not valid');
+        }
+      })
+      .catch(error => {
+        // for 3 retries the backoff time will be 33ms / 50ms / 100ms
+        const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
+        return exponentialBackoff.then(() =>
+          this.loadConfigWithRetry(configEndpoint, retriesLeft - 1, error)
+        );
+      });
+  }
+
+  private isAdunitPricesRulesResponse(obj: Object): obj is IAdunitPriceRulesResponse {
+    return obj.hasOwnProperty('rules');
+  }
+
+  private isPriceRules(obj: unknown): obj is PriceRules {
+    return typeof obj === 'object' && obj !== null;
+  }
+
+  private validateRules(rules: unknown): rules is PriceRules {
+    if (!this.isPriceRules(rules)) {
+      return false;
+    }
+
+    return Object.keys(rules).every(adUnit => {
+      const rule: any = rules[adUnit];
+      return (
+        typeof rule === 'object' &&
+        rule !== null &&
+        typeof rule.main === 'boolean' &&
+        typeof rule.floorprice === 'number' &&
+        typeof rule.priceRuleId === 'number'
+      );
+    });
+  }
+}

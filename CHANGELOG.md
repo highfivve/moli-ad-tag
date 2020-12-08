@@ -108,7 +108,7 @@ Link local packages together and install remaining package dependencies
 lerna bootstrap
 ```
 
-Run an npm script in each package that contains that script
+Run a npm script in each package that contains that script
 ```
 lerna run <script>
 // e.g.

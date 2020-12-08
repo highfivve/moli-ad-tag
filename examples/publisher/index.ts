@@ -26,6 +26,7 @@ import Confiant from '@highfivve/module-confiant';
 import BlocklistedUrls from '@highfivve/module-blocklist-url';
 import Skin from '@highfivve/module-generic-skin';
 import AdReload from '@highfivve/module-moli-ad-reload';
+import YieldOptimization from '@highfivve/module-yield-optimization';
 
 prebid.processQueue();
 
@@ -106,6 +107,12 @@ moli.registerModule(
     window
   )
 );
+
+// configure yield optimization
+moli.registerModule(new YieldOptimization( {
+  provider: 'dynamic',
+  configEndpoint: '//local.h5v.eu:9000/yield-config.json'
+}, window));
 
 // init moli
 moli.configure(adConfiguration);

@@ -95,8 +95,7 @@ describe('Skin Module', () => {
       const config: Moli.MoliConfig = {
         slots: slots,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig },
-        yieldOptimization: { provider: 'none' }
+        prebid: { config: pbjsTestConfig }
       };
 
       module.init(config, assetLoaderService);
@@ -134,8 +133,7 @@ describe('Skin Module', () => {
       const config: Moli.MoliConfig = {
         slots: slots,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig },
-        yieldOptimization: { provider: 'none' }
+        prebid: { config: pbjsTestConfig }
       };
 
       module.init(config, assetLoaderService);

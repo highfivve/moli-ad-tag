@@ -117,7 +117,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
           .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
             const targeting = context.config.targeting;
             const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-            const floorPrice = priceRule ? priceRule.cpm : undefined;
+            const floorPrice = priceRule ? priceRule.floorprice : undefined;
             context.logger.debug(
               'Prebid',
               context.requestId,

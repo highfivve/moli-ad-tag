@@ -206,10 +206,6 @@ export const adConfiguration: Moli.MoliConfig = {
       }
     }
   },
-  yieldOptimization: {
-    provider: 'none',
-  },
-
   reporting: {
     // report everything
     sampleRate: 1,

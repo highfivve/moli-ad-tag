@@ -96,7 +96,6 @@ describe('Moli Ad Reload Module', () => {
 
     const moliConfig: Moli.MoliConfig = {
       slots: [moliSlot],
-      yieldOptimization: { provider: 'none' },
       pipeline: configPipeline,
       logger: noopLogger
     };

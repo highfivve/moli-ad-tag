@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./lib"
+  },
+  "files": [
+    "index.ts",
+    "index.test.ts"
+  ]
+}

@@ -16,7 +16,6 @@ import {
   ReportingService
 } from './reportingService';
 import { createPerformanceService } from '../util/performanceService';
-import { YieldOptimizationService } from './yieldOptimizationService';
 import {
   gptConfigure,
   gptDefineSlots,
@@ -39,7 +38,6 @@ import { a9Configure, a9Init, a9RequestBids, a9ClearTargetingStep } from './a9';
 import { isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
-import { yieldOptimizationPrepareRequestAds } from './yieldOptimization';
 import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
@@ -163,9 +161,6 @@ export class AdService {
       reportingPrepareRequestAds(reportingService),
       passbackPrepareRequestAds(
         new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
-      ),
-      yieldOptimizationPrepareRequestAds(
-        new YieldOptimizationService(config.yieldOptimization, this.assetService, this.logger)
       )
     ];
 

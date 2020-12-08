@@ -15,8 +15,7 @@ describe('Prebid Google Analytics Module', () => {
   const config: Moli.MoliConfig = {
     slots: [],
     logger: newNoopLogger(),
-    prebid: { config: pbjsTestConfig },
-    yieldOptimization: { provider: 'none' }
+    prebid: { config: pbjsTestConfig }
   };
 
   const sandbox = Sinon.createSandbox();

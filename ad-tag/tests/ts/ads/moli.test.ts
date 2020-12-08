@@ -460,9 +460,6 @@ describe('moli', () => {
             pre: 'dismiss',
             post: 'dismiss'
           }
-        },
-        yieldOptimization: {
-          provider: 'none'
         }
       });
       adTag.setTargeting('post', 'configure2');
@@ -528,9 +525,6 @@ describe('moli', () => {
         targeting: {
           keyValues: { keyFromAdConfig: 'value' },
           labels: []
-        },
-        yieldOptimization: {
-          provider: 'none'
         }
       });
       adTag.setTargeting('dynamicKeyValuePost', 'value');
@@ -605,9 +599,6 @@ describe('moli', () => {
         targeting: {
           keyValues: {},
           labels: ['pre-existing']
-        },
-        yieldOptimization: {
-          provider: 'none'
         }
       });
       adTag.addLabel('post');
@@ -631,9 +622,6 @@ describe('moli', () => {
         targeting: {
           keyValues: {},
           labels: ['a9']
-        },
-        yieldOptimization: {
-          provider: 'none'
         }
       });
       adTag.addLabel('dynamicLabelPost');
@@ -946,9 +934,6 @@ describe('moli', () => {
             persists: 'available'
           },
           labels: ['pre-existing']
-        },
-        yieldOptimization: {
-          provider: 'none'
         }
       });
       adTag.addLabel('post');
