@@ -17,52 +17,59 @@ type PriceRule = Moli.yield_optimization.PriceRule & {
 };
 
 export class YieldOptimizationService {
-  private readonly adUnitPricingRules: Promise<PriceRules>;
+  /**
+   * initialized with an resolved promise and no rules
+   */
+  private adUnitPricingRules: Promise<PriceRules> = Promise.resolve({});
 
   /**
-   * true if the yield optimization is enabled (provider is not `none`)
+   * true if the yield optimization is enabled (provider is not `none`) and init() was called.
    */
-  private readonly isEnabled: boolean;
+  private isEnabled: boolean = false;
 
   /**
    *
-   * @private
    */
-  private readonly device: 'mobile' | 'desktop';
+  private device: 'mobile' | 'desktop' = 'mobile';
 
   /**
    *
    * @param yieldConfig the yield optimization config
-   * @param labels from the targeting property in the moli config
    * @param log logging
    * @param window
    */
   constructor(
     private readonly yieldConfig: YieldOptimizationConfig,
-    private readonly labels: string[],
     private readonly log: MoliLogger,
     private readonly window: Window
-  ) {
+  ) {}
+
+  /**
+   *
+   * @param labels - all available labels from moli. This includes the targeting labels as well as
+   *         the `supportedLabels` from the LabelService.
+   */
+  public init(labels: string[]): Promise<void> {
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
     this.device = labels.indexOf('desktop') > -1 ? 'desktop' : 'mobile';
 
-    switch (yieldConfig.provider) {
+    switch (this.yieldConfig.provider) {
       case 'none':
-        log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
+        this.log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
         this.isEnabled = false;
         this.adUnitPricingRules = Promise.resolve({});
         break;
       case 'static':
-        log.warn('YieldOptimizationService', 'Yield optimization is static!');
+        this.log.warn('YieldOptimizationService', 'Yield optimization is static!');
         this.isEnabled = true;
-        this.adUnitPricingRules = Promise.resolve(yieldConfig.config.rules);
+        this.adUnitPricingRules = Promise.resolve(this.yieldConfig.config.rules);
         break;
       case 'dynamic':
         this.isEnabled = true;
-        this.adUnitPricingRules = this.loadConfigWithRetry(yieldConfig.configEndpoint, 3)
+        this.adUnitPricingRules = this.loadConfigWithRetry(this.yieldConfig.configEndpoint, 3)
           .then(config => {
-            log.info(
+            this.log.info(
               'YieldOptimizationService',
               `loaded pricing rules for device ${this.device}`,
               config
@@ -70,7 +77,7 @@ export class YieldOptimizationService {
             return config.rules;
           })
           .catch(error => {
-            log.error('YieldOptimizationService', 'failed to initialize service', error);
+            this.log.error('YieldOptimizationService', 'failed to initialize service', error);
             return {};
           });
         break;
@@ -78,6 +85,8 @@ export class YieldOptimizationService {
         this.isEnabled = false;
         this.adUnitPricingRules = Promise.reject('Unknown config provider');
     }
+
+    return Promise.resolve();
   }
 
   /**

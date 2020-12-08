@@ -6,7 +6,11 @@ import { createAssetLoaderService, googletag, Moli } from '@highfivve/ad-tag';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 
 import YieldOptimization, { IStaticYieldOptimizationConfig } from './index';
-import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
+import {
+  emptyConfig,
+  newEmptyConfig,
+  noopLogger
+} from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import { googleAdSlotStub } from '@highfivve/ad-tag/lib/tests/ts/stubs/googletagStubs';
 
@@ -42,6 +46,58 @@ describe('Yield Optimization module', () => {
     sandbox.reset();
   });
 
+  describe('init step', () => {
+    it('should add yield-optimization optimization step', async () => {
+      const module = new YieldOptimization(yieldConfig, jsDomWindow);
+      const config = newEmptyConfig();
+      await module.init(config, assetLoader);
+
+      expect(config.pipeline).to.be.ok;
+      expect(config.pipeline?.initSteps).to.be.ok;
+      expect(config.pipeline?.initSteps?.map(e => e.name)).to.include('yield-optimization-init');
+    });
+
+    it('should call init on the yield optimization service', async () => {
+      const module = new YieldOptimization(yieldConfig, jsDomWindow);
+      const yieldOptimizationService = new YieldOptimizationService(
+        yieldConfig,
+        noopLogger,
+        jsDomWindow
+      );
+
+      const labelConfigService: any = {
+        getSupportedLabels(): string[] {
+          return [];
+        }
+      };
+
+      const initSpy = sandbox.spy(yieldOptimizationService, 'init');
+
+      // label config service returns 'desktop' as supported labels
+      const getSupportedLabelsMock = sandbox
+        .stub(labelConfigService, 'getSupportedLabels')
+        .returns(['desktop']);
+
+      // a config with targeting labels set
+      const config: Moli.MoliConfig = {
+        ...emptyConfig,
+        targeting: {
+          keyValues: {},
+          labels: ['foo']
+        }
+      };
+
+      await module.yieldOptimizationInit(yieldOptimizationService)({
+        config: config,
+        logger: noopLogger,
+        labelConfigService: labelConfigService
+      } as any);
+      expect(getSupportedLabelsMock).to.have.been.calledOnce;
+      expect(initSpy).to.have.been.calledOnce;
+      expect(initSpy).to.have.been.calledOnceWithExactly(['foo', 'desktop']);
+    });
+  });
+
   describe('prepare request ads step', () => {
     it('should add yield-optimization optimization step', async () => {
       const module = new YieldOptimization(yieldConfig, jsDomWindow);
@@ -59,7 +115,6 @@ describe('Yield Optimization module', () => {
       const module = new YieldOptimization(yieldConfig, jsDomWindow);
       const yieldOptimizationService = new YieldOptimizationService(
         yieldConfig,
-        [],
         noopLogger,
         jsDomWindow
       );

@@ -7,7 +7,9 @@ import {
   PrepareRequestAdsStep,
   mkPrepareRequestAdsStep,
   HIGH_PRIORITY,
-  AdPipelineContext
+  AdPipelineContext,
+  InitStep,
+  mkInitStep
 } from '@highfivve/ad-tag';
 import { YieldOptimizationService } from './yieldOptimizationService';
 
@@ -95,6 +97,12 @@ export default class YieldOptimization implements IModule {
   init(moliConfig: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     this.log = getLogger(moliConfig, this.window);
 
+    const yieldOptimizationService = new YieldOptimizationService(
+      this.yieldModuleConfig,
+      this.log,
+      this.window
+    );
+
     // init additional pipeline steps if not already defined
     moliConfig.pipeline = moliConfig.pipeline || {
       initSteps: [],
@@ -102,19 +110,21 @@ export default class YieldOptimization implements IModule {
       prepareRequestAdsSteps: []
     };
 
-    const labels = moliConfig.targeting?.labels || [];
+    // initialize the yield optimization service
+    moliConfig.pipeline.initSteps.push(this.yieldOptimizationInit(yieldOptimizationService));
 
-    const yieldOptimizationService = new YieldOptimizationService(
-      this.yieldModuleConfig,
-      labels,
-      this.log,
-      this.window
-    );
-
+    // set floor price key values
     moliConfig.pipeline.prepareRequestAdsSteps.push(
       this.yieldOptimizationPrepareRequestAds(yieldOptimizationService)
     );
   }
+
+  yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
+    mkInitStep('yield-optimization-init', context => {
+      const targetingLabels = context.config.targeting?.labels || [];
+      const labels = [...targetingLabels, ...context.labelConfigService.getSupportedLabels()];
+      return yieldOptimizationService.init(labels);
+    });
 
   /**
    * This step adds a `priceRule` to the slot definition if possible. It does so by **mutating**
