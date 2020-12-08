@@ -58,7 +58,6 @@ describe('Zeotap Module', () => {
   ): Moli.MoliConfig => {
     const moliConfig: Moli.MoliConfig = {
       slots: [],
-      yieldOptimization: { provider: 'none' },
       pipeline: configPipeline,
       logger: noopLogger,
       targeting: {
