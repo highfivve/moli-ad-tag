@@ -1,5 +1,3 @@
-import 'core-js/es6/set';
-
 import { debounce } from './debounce';
 
 const RESIZE_LISTENER_INTERVAL: number = 200;
