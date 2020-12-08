@@ -2572,7 +2572,7 @@ JSONStream@^1.0.4, JSONStream@^1.2.1, JSONStream@^1.3.4, JSONStream@^1.3.5:
     jsonparse "^1.2.0"
     through ">=2.2.7 <3"
 
-abab@^2.0.0, abab@^2.0.2, abab@^2.0.3:
+abab@^2.0.0, abab@^2.0.3:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.5.tgz#c0b678fb32d60fc1219c784d6a826fe385aeb79a"
   integrity sha512-9IK9EadsbHo6jLWIpxpR6pL0sazTXV6+SQv25ZB+F7Bj9mJNaOc4nCRabwd5M/JwmUa8idz6Eci6eKfJryPs6Q==
@@ -4199,10 +4199,20 @@ core-js-compat@^3.6.2:
     browserslist "^4.8.5"
     semver "7.0.0"
 
-core-js@^2.4.0, core-js@^2.4.1:
+core-js-pure@^3.6.5:
+  version "3.8.1"
+  resolved "https://registry.yarnpkg.com/core-js-pure/-/core-js-pure-3.8.1.tgz#23f84048f366fdfcf52d3fd1c68fec349177d119"
+  integrity sha512-Se+LaxqXlVXGvmexKGPvnUIYC1jwXu1H6Pkyb3uBM5d8/NELMYCHs/4/roD7721NxrTLyv7e5nXd5/QLBO+10g==
+
+core-js@^2.4.0:
   version "2.6.11"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.11.tgz#38831469f9922bded8ee21c9dc46985e0399308c"
   integrity sha512-5wjnpaT/3dV+XB4borEsnAYQchn00XSgTAWKDkEqv+K8KevjbzmofK6hfJ9TZIlpj2N0xQpazy7PiRQiWHqzWg==
+
+core-js@^3.0.0:
+  version "3.8.1"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.8.1.tgz#f51523668ac8a294d1285c3b9db44025fda66d47"
+  integrity sha512-9Id2xHY1W7m8hCl8NkhQn5CufmF/WuR30BTRewvCXc1aZd3kMECwNZ69ndLbekKfakw9Rf2Xyc+QR6E7Gg+obg==
 
 core-js@^3.6.5:
   version "3.6.5"
@@ -5879,7 +5889,7 @@ fsevents@~2.1.2:
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.1.3.tgz#fb738703ae8d2f9fe900c33836ddebee8b97f23e"
   integrity sha512-Auw9a4AxqWpa9GUfj370BMPzzyncfBABW8Mab7BGWBYDj4Isgq+cDKtx0i6u9jcX9pQDnswsaaOTgTmA5pEjuQ==
 
-fun-hooks@^0.9.8:
+fun-hooks@^0.9.9:
   version "0.9.9"
   resolved "https://registry.yarnpkg.com/fun-hooks/-/fun-hooks-0.9.9.tgz#225481b58d8f805db0704e06f78cd76942ae1c45"
   integrity sha512-821UhoYfO9Sg01wAl/QsDRB088BW0aeOqzC1PXLxSlB+kaUVbK+Vp6wMDHU5huZZopYxmMmv5jDkEYqDpK3hqg==
@@ -7744,16 +7754,15 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
   integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
-live-connect-js@1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/live-connect-js/-/live-connect-js-1.1.1.tgz#f09e184f500a792645a15f451b17d0e8187f01f4"
-  integrity sha512-PsYiZ6R6ecBQgcg3BWvzGf2TNOqpNFK1lUyfYAUEZ+DPwPciKNRM3CQIDtytVvR9vsH7nhotMaU3bBgb7iuPfQ==
+live-connect-js@^1.1.23:
+  version "1.1.23"
+  resolved "https://registry.yarnpkg.com/live-connect-js/-/live-connect-js-1.1.23.tgz#1fdbf4459799c129714e19a6eb808df31807ef6d"
+  integrity sha512-alOXlYyDdMXt8zzCIs3+iCrdi6r/69c7YRN3sMETa3b2cCOxep3i9j2O0iepk2hxT5JxiR1MvqlqdWAL9d2Hcg==
   dependencies:
     "@kiosked/ulid" "^3.0.0"
-    abab "^2.0.2"
+    abab "^2.0.3"
     browser-cookies "^1.2.0"
     tiny-hashes "1.0.1"
-    tiny-uuid4 "^1.0.1"
 
 load-json-file@^1.0.0:
   version "1.1.0"
@@ -10241,23 +10250,23 @@ preact@^10.5.4:
   resolved "https://registry.yarnpkg.com/preact/-/preact-10.5.4.tgz#1e4d148f949fa54656df6c9bc9218bd4e12016e3"
   integrity sha512-u0LnVtL9WWF61RLzIbEsVFOdsahoTQkQqeRwyf4eWuLMFrxTH/C47tqcnizbUH54E4KG8UzuuZaMc9KarHmpqQ==
 
-prebid.js@3.16.0:
-  version "3.16.0"
-  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-3.16.0.tgz#5ad0185ebc4a5978476a1277e264de9ae28a4072"
-  integrity sha512-DLTQXgej6GXIHfC9Q0gYI+n3/30gKRuYrUsmO9QXOlhEYpI+lRjK/6Z8PLHPXezNCdpM9hHbtCWktaTOIo1UvA==
+prebid.js@4.18.0:
+  version "4.18.0"
+  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-4.18.0.tgz#1c31213bdd1c85f89edc944107cf38af9c2b0396"
+  integrity sha512-0DA7MCAtOSLE40IWczKWKUueY96HLeFrWJ0SfriJsvzM4CGT+rMiRkSDUZWkggGxqNp7cyb510NxgYSqpFe10Q==
   dependencies:
     babel-plugin-transform-object-assign "^6.22.0"
-    core-js "^2.4.1"
+    core-js "^3.0.0"
+    core-js-pure "^3.6.5"
     criteo-direct-rsa-validate "^1.1.0"
     crypto-js "^3.3.0"
-    deep-equal "^1.0.1"
     dlv "1.1.3"
     dset "2.0.1"
     express "^4.15.4"
-    fun-hooks "^0.9.8"
+    fun-hooks "^0.9.9"
     jsencrypt "^3.0.0-rc.1"
     just-clone "^1.0.2"
-    live-connect-js "1.1.1"
+    live-connect-js "^1.1.23"
 
 prelude-ls@~1.1.2:
   version "1.1.2"
@@ -12476,11 +12485,6 @@ tiny-invariant@^1.0.2:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.1.0.tgz#634c5f8efdc27714b7f386c35e6760991d230875"
   integrity sha512-ytxQvrb1cPc9WBEI/HSeYYoGD0kWnGEOR8RY6KomWLBVhqz0RgTwVO9dLrGz7dC+nN9llyI7OKAgRq8Vq4ZBSw==
-
-tiny-uuid4@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/tiny-uuid4/-/tiny-uuid4-1.0.1.tgz#bd44e9dd5f5fbd1768d6d1fbf3020c886a1b7766"
-  integrity sha1-vUTp3V9fvRdo1tH78wIMiGobd2Y=
 
 tiny-warning@^1.0.0, tiny-warning@^1.0.3:
   version "1.0.3"
