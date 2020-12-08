@@ -159,6 +159,26 @@ export namespace prebidjs {
     };
   }
 
+  /**
+   * ## Global Rubicon configuration
+   *
+   * This extends the [[IPrebidJsConfig]] with Rubicon specific configuration options.
+   *
+   */
+  interface IRubiconConfig {
+    /**
+     * Global Rubicon property
+     */
+    readonly rubicon?: {
+      /**
+       * Enable the single request mode, which will send all bids in one request.
+       *
+       * Available since prebid 1.12.0
+       */
+      readonly singleRequest: boolean;
+    };
+  }
+
   export namespace targetingcontrols {
     export interface ITargetingControls {
       /**
@@ -947,7 +967,7 @@ export namespace prebidjs {
    *
    * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
    */
-  export interface IPrebidJsConfig extends IImproveDigitalConfig {
+  export interface IPrebidJsConfig extends IImproveDigitalConfig, IRubiconConfig {
     /**
      * Turn on debugging
      */

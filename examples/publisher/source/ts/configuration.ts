@@ -507,6 +507,9 @@ export const adConfiguration: Moli.MoliConfig = {
       improvedigital: {
         singleRequest: true,
         usePrebidSizes: true
+      },
+      rubicon: {
+        singleRequest: true
       }
     }
   },
