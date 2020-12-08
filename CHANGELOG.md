@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-[GD-2506](https://jira.gutefrage.net/browse/GD-2506) Ensure that display is only called once.
+[GD-2313](https://jira.gutefrage.net/browse/GD-2313) Yield Optimization is now a module and needs to be configured as such.
+
+
 
 ## 3.12.2
 
@@ -17,6 +19,8 @@ list for key/values, and to prevent data collection using an exclude list.
 
 [GD-2447](https://jira.gutefrage.net/browse/GD-2447) Zeotap module added, supporting their data collection and id
 provider functionality ([idplus](https://idplus.io/)).
+
+[GD-2506](https://jira.gutefrage.net/browse/GD-2506) Ensure that display is only called once.
 
 ## 3.11.6
 
