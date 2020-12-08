@@ -9,6 +9,7 @@
     "lib"
   ],
   "scripts": {
+    "make:nodemodule": "tsc",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json && yarn prettier",

@@ -29,6 +29,8 @@ pipeline {
                 sh "npm install yarn@1.22.7"
                 // fresh install
                 sh "yarn install"
+                // create output files
+                sh "lerna run make:nodemodule"
             }
         }
         stage('Lint') {
@@ -53,7 +55,7 @@ pipeline {
                     def modules = [:]
 
                     [
-                      'moli-ad-reload', 'confiant', 'generic-skin', 'identitylink', 'zeotap',
+                      'moli-ad-reload', 'confiant', 'generic-skin', 'identitylink', 'zeotap', 'pubstack',
                       'prebid-google-analytics', 'sovrn-ad-reload', 'cmp-sourcepoint', 'blocklist-url'
                     ].each { module ->
                         modules[module] = {
