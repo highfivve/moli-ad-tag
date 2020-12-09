@@ -20,8 +20,12 @@ jobs:
             module-cmp-sourcepoint,
             module-generic-skin,
             module-justpremium-skin,
+            module-moli-ad-reload,
+            module-pubstack,
             module-prebid-google-analytics,
             module-sovrn-ad-reload,
+            module-yield-optimization,
+            module-zeotap,
             moli-debugger,
             moli-release
         ]
