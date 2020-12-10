@@ -269,8 +269,8 @@ export const gptRequestAds = (): RequestAdsStep => (
               var container = document.getElementById('${containerId}');
               container.style.width = '${width}px';
               container.style.height = '${height}px';
-              document.getElementById('${containerWidthId}').textContent = ${width};;
-              document.getElementById('${containerHeightId}').textContent = ${height};;
+              document.getElementById('${moliSlot.domId}${containerWidthId}').textContent = ${width};
+              document.getElementById('${moliSlot.domId}${containerHeightId}').textContent = ${height};
             })()`;
               return `<button onclick="${resize}" style="font-size: 10px; background: #00a4a6; color: white; border: 1px dotted white;">${width}x${height}</button>`;
             })
@@ -287,7 +287,9 @@ export const gptRequestAds = (): RequestAdsStep => (
                              background-size: 100% 1.2em;
                              ">
 <div style="position: absolute; top: 5px; left: 5px">${buttons}</div>
-<div><h4><strong id="${containerWidthId}">${width}</strong>x<strong id="${containerHeightId}">${height}</strong> pixel</h4></div>
+<div>
+<h4><strong>${moliSlot.domId}</strong> <span style="color: #656565;">(<span id="${moliSlot.domId}${containerWidthId}">${width}</span>x<span id="${moliSlot.domId}${containerHeightId}">${height}</span>)</span></h4>
+</div>
 </div>`;
 
           context.window.googletag.content().setContent(adSlot, html);

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.13.2
+
+[GD-2558](https://jira.gutefrage.net/browse/GD-2558). Add DOM id to test mode creative
+
 ## 3.13.1
 
 [GD-2313](https://jira.gutefrage.net/browse/GD-2313) Fix label configuration
