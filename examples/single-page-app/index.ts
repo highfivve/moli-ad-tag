@@ -10,15 +10,11 @@ import 'prebid.js/modules/appnexusBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 
 prebid.processQueue();
 
 const moli = initAdTag(window);
 
-moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
-
 moli.enableSinglePageApp();
 // init moli
 moli.configure(adConfiguration);
-

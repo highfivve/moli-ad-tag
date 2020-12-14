@@ -5,7 +5,7 @@
 
 import prebid from 'prebid.js';
 import 'prebid.js/modules/consentManagement';
-// import 'prebid.js/modules/currency';
+import 'prebid.js/modules/currency';
 import 'prebid.js/modules/appnexusBidAdapter';
 import 'prebid.js/modules/justpremiumBidAdapter';
 import 'prebid.js/modules/pubmaticBidAdapter';
@@ -105,10 +105,15 @@ moli.registerModule(
 );
 
 // configure yield optimization
-moli.registerModule(new YieldOptimization( {
-  provider: 'dynamic',
-  configEndpoint: '//local.h5v.eu:9000/yield-config.json'
-}, window));
+moli.registerModule(
+  new YieldOptimization(
+    {
+      provider: 'dynamic',
+      configEndpoint: '//local.h5v.eu:9000/yield-config.json'
+    },
+    window
+  )
+);
 
 // init moli
 moli.configure(adConfiguration);

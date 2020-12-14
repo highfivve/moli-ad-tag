@@ -20,7 +20,6 @@ import 'prebid.js/modules/unrulyBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import SourcepointCmp from '@highfivve/module-cmp-sourcepoint';
 import AdReload from '@highfivve/module-moli-ad-reload';
 
 prebid.processQueue();
@@ -49,8 +48,5 @@ moli.registerModule(
     window
   )
 );
-
-// cmp
-moli.registerModule(new SourcepointCmp({ rejectOnMissingPurposeOne: false }, window));
 
 moli.configure(adConfiguration);
