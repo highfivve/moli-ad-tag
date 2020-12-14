@@ -56,7 +56,7 @@ pipeline {
 
                     [
                       'moli-ad-reload', 'confiant', 'generic-skin', 'identitylink', 'zeotap', 'pubstack', 'yield-optimization',
-                      'prebid-google-analytics', 'sovrn-ad-reload', 'cmp-sourcepoint', 'blocklist-url'
+                      'prebid-google-analytics', 'sovrn-ad-reload', 'blocklist-url'
                     ].each { module ->
                         modules[module] = {
                             stage('validate') {
