@@ -111,7 +111,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
     'prebid-prepare-adunits',
     LOW_PRIORITY,
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
-      new Promise(resolve => {
+      new Promise<void>(resolve => {
         const prebidAdUnits = slots
           .filter(isPrebidSlotDefinition)
           .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
@@ -352,7 +352,7 @@ export const prebidRemoveHbKeyValues = (): PrepareRequestAdsStep =>
     'prebid-remove-hb-keyvalues',
     LOW_PRIORITY,
     (context: AdPipelineContext, slots) =>
-      new Promise(resolve => {
+      new Promise<void>(resolve => {
         // TODO check if prebid is taking care of this by itself in setGptTargetingAsync
         resolve();
       })

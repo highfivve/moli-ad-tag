@@ -13,7 +13,7 @@ export const passbackPrepareRequestAds = (
     'passback-prepare-slots',
     LOW_PRIORITY,
     (context: AdPipelineContext, slots) =>
-      new Promise(resolve => {
+      new Promise<void>(resolve => {
         slots
           .filter(slot => slot.moliSlot.passbackSupport)
           .forEach(slot => {

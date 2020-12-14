@@ -33,7 +33,7 @@ describe('Refreshable Loading', () => {
         jsDomWindow
       );
 
-      const onRefresh = new Promise(resolve => {
+      const onRefresh = new Promise<void>(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve();
         });
@@ -55,7 +55,7 @@ describe('Refreshable Loading', () => {
         jsDomWindow
       );
 
-      const onRefresh = new Promise(resolve => {
+      const onRefresh = new Promise<void>(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve();
         });
@@ -81,7 +81,7 @@ describe('Refreshable Loading', () => {
       div.id = 'refresh-trigger-element';
       dom.window.document.body.append(div);
 
-      const onRefresh = new Promise(resolve => {
+      const onRefresh = new Promise<void>(resolve => {
         refreshListener.addAdRefreshListener(() => {
           resolve();
         });
