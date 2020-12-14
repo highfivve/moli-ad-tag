@@ -57,7 +57,7 @@ export default class SourcepointCmp implements IModule {
         } else if (event.eventStatus === 'useractioncomplete' || event.eventStatus === 'tcloaded') {
           resolve();
           if (event.listenerId) {
-            this.spWindow!.__tcfapi(
+            this.spWindow.__tcfapi!(
               'removeEventListener',
               2,
               () => {
@@ -68,7 +68,7 @@ export default class SourcepointCmp implements IModule {
           }
         }
       };
-      this.spWindow!.__tcfapi('addEventListener', 2, listener);
+      this.spWindow.__tcfapi!('addEventListener', 2, listener);
     });
   }
 
@@ -138,7 +138,7 @@ export default class SourcepointCmp implements IModule {
 
   private getTcData = (log: Moli.MoliLogger): Promise<tcfapi.responses.TCData> =>
     new Promise(resolve => {
-      this.spWindow!.__tcfapi('getTCData', 2, (tcData, success: boolean) => {
+      this.spWindow.__tcfapi!('getTCData', 2, (tcData, success: boolean) => {
         log.debug(this.name, 'getTCData returned', success, tcData);
         resolve(tcData);
       });
