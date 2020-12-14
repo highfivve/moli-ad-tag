@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.14.0
+
+[GD-2010](https://jira.gutefrage.net/browse/GD-2010). Implement Google Ad Manager [Limited Ads](https://support.google.com/admanager/answer/9882911)
+variant. This change requires the following changes on the publisher side
+
+1. Remove the `gpt.js` in the `head` tag. Depending on the given consent the ad tag will decide, which `gpt.js` should be loaded.
+2. The `sourcepoint cmp` module is gone, and a TCF 2 spec compliant implementation is part of the ad tag
+
 ## 3.13.2
 
 [GD-2558](https://jira.gutefrage.net/browse/GD-2558). Add DOM id to test mode creative
