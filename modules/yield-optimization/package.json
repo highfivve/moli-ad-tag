@@ -3,8 +3,13 @@
   "version": "3.14.0",
   "license": "UNLICENSED",
   "description": "Blocks ad slots when a wallpaper is being delivered by a prebid partner",
-  "main": "index.ts",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "scripts": {
+    "make:nodemodule": "tsc",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json && yarn prettier",
@@ -13,11 +18,16 @@
     "test:junit": "export TS_NODE_TRANSPILE_ONLY=true && mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
     "prettier": "prettier --config ../../.prettierrc --check \"**/*.ts*\"",
     "validate": "yarn compile && yarn lint && yarn test",
+    "validate:github": "yarn compile && yarn lint && yarn test:junit",
     "validate:jenkins": "yarn compile && yarn lint && yarn test:junit"
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@git.gutefrage.net:7999/gd/moli-ad-tag.git"
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
+    "directory": "modules/yield-optimization"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "engines": {
     "node": ">=8.0"
