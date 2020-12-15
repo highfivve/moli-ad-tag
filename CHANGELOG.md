@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.14.0
+## 3.14.0, 3.14.1
 
 [GD-2010](https://jira.gutefrage.net/browse/GD-2010). Implement Google Ad Manager [Limited Ads](https://support.google.com/admanager/answer/9882911)
 variant. This change requires the following changes on the publisher side
