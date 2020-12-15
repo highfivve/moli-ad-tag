@@ -76,7 +76,8 @@ describe('BlocklistUrls Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
-      slotEventService: null as any
+      slotEventService: null as any,
+      tcData: null as any
     };
   };
 

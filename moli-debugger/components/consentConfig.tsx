@@ -123,25 +123,31 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
   };
 
   private initConsentData = (): void => {
-    // fetch initial TCData
-    window.__tcfapi('getTCData', 2, (data: tcfapi.responses.TCData) => {
-      const tcModel = TCString.decode(data.tcString);
-      this.setState({
-        cmpStatus: data.cmpStatus,
-        tcModel: tcModel,
-        tcString: data.tcString
+    if (window.__tcfapi) {
+      // fetch initial TCData
+      window.__tcfapi('getTCData', 2, (data: tcfapi.responses.TCData) => {
+        const tcModel = TCString.decode(data.tcString);
+        this.setState({
+          cmpStatus: data.cmpStatus,
+          tcModel: tcModel,
+          tcString: data.tcString
+        });
       });
-    });
 
-    // Update on changes
-    window.__tcfapi('addEventListener', 2, event => {
-      const tcModel = TCString.decode(event.tcString);
-      this.setState({
-        cmpStatus: event.cmpStatus,
-        tcModel: tcModel,
-        tcString: event.tcString
+      // Update on changes
+      window.__tcfapi('addEventListener', 2, event => {
+        const tcModel = TCString.decode(event.tcString);
+        this.setState({
+          cmpStatus: event.cmpStatus,
+          tcModel: tcModel,
+          tcString: event.tcString
+        });
       });
-    });
+    } else {
+      this.setState({
+        cmpStatus: tcfapi.status.CmpStatus.ERROR
+      });
+    }
   };
 
   private consentData = (): JSX.Element | undefined => {
