@@ -26,9 +26,9 @@ pipeline {
         stage('Prepare environment') {
             steps {
                 echo "Setting up yarn and install dependencies"
-                sh "npm install yarn@1.22.7"
+                sh "npm install --no-save yarn@1.22.7"
                 // fresh install
-                sh "yarn install && yarn install:all"
+                sh "yarn install && yarn setup:all"
             }
         }
         stage('Lint') {
