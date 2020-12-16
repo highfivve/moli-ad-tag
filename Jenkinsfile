@@ -28,9 +28,7 @@ pipeline {
                 echo "Setting up yarn and install dependencies"
                 sh "npm install yarn@1.22.7"
                 // fresh install
-                sh "yarn install"
-                // create output files
-                sh "lerna run make:nodemodule"
+                sh "yarn install && yarn install:all"
             }
         }
         stage('Lint') {

@@ -8,6 +8,7 @@
     "lib"
   ],
   "scripts": {
+    "setup": "yarn",
     "make:nodemodule": "yarn build && tsc && cp -r releases lib/releases",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",

@@ -9,6 +9,7 @@
     "lib"
   ],
   "scripts": {
+    "setup": "yarn",
     "make:nodemodule": "tsc",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",

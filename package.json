@@ -9,7 +9,8 @@
     "examples/*"
   ],
   "scripts": {
-    "setup": "yarn && yarn clean:lib  && lerna bootstrap && yarn workspace @highfivve/ad-tag make:nodemodule",
+    "install:all": "yarn workspaces run setup",
+    "setup": "yarn && yarn clean:lib && lerna bootstrap && yarn install:all && yarn workspace @highfivve/ad-tag make:nodemodule",
     "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts",
     "preversion": "yarn workspaces run validate",
     "postversion": "git push && git push --tags",

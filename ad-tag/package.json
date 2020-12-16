@@ -13,6 +13,7 @@
     "test": "tests"
   },
   "scripts": {
+    "setup": "yarn",
     "make:nodemodule": "tsc -p tsconfig-node-module.json",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",

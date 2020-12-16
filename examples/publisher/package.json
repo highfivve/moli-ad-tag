@@ -5,6 +5,7 @@
   "main": "index.ts",
   "private": true,
   "scripts": {
+    "setup": "yarn",
     "build": "webpack --mode=production",
     "start": "webpack serve",
     "validate": "yarn build"
