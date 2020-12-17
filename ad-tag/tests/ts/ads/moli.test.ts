@@ -782,6 +782,24 @@ describe('moli', () => {
       });
     });
 
+    [2, 3].forEach(callCounts => {
+      it(`should add ${callCounts} beforeRequestAds hooks and call all`, () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+          return;
+        };
+
+        const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+        [...Array(callCounts).keys()].forEach(_ => adTag.beforeRequestAds(hookSpy));
+        adTag.configure(defaultConfig);
+        return adTag.requestAds().then(() => {
+          expect(hookSpy).to.be.callCount(callCounts);
+        });
+      });
+    });
+
     it('should add the afterRequestAds hook if requestAds() was successful', () => {
       const adTag = createMoliTag(jsDomWindow);
 
@@ -796,6 +814,25 @@ describe('moli', () => {
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
         expect(hookSpy).to.be.calledOnceWithExactly('finished');
+      });
+    });
+
+    [2, 3].forEach(callCounts => {
+      it(`should add ${callCounts} afterRequestAds hooks and call all`, () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+          return;
+        };
+
+        const hookSpy = sandbox.spy(afterRequestAdsHook);
+
+        [...Array(callCounts).keys()].forEach(_ => adTag.afterRequestAds(hookSpy));
+        adTag.configure(defaultConfig);
+        return adTag.requestAds().then(() => {
+          expect(hookSpy).to.be.callCount(callCounts);
+          expect(hookSpy).to.be.calledWith('finished');
+        });
       });
     });
 

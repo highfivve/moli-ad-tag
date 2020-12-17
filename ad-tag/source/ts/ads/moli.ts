@@ -33,7 +33,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     reporting: {
       reporters: []
     },
-    refreshSlots: []
+    refreshSlots: [],
+    hooks: {
+      beforeRequestAds: [],
+      afterRequestAds: []
+    }
   };
 
   function setTargeting(key: string, value: string | string[]): void {
@@ -194,17 +198,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void {
     switch (state.state) {
       case 'configurable': {
-        state.hooks = {
-          ...state.hooks,
-          beforeRequestAds: callback
-        };
+        state.hooks.beforeRequestAds.push(callback);
         break;
       }
       case 'configured': {
-        state.hooks = {
-          ...state.hooks,
-          beforeRequestAds: callback
-        };
+        state.hooks.beforeRequestAds.push(callback);
         break;
       }
       default: {
@@ -221,17 +219,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function afterRequestAds(callback: (state: Moli.state.AfterRequestAdsStates) => void): void {
     switch (state.state) {
       case 'configurable': {
-        state.hooks = {
-          ...state.hooks,
-          afterRequestAds: callback
-        };
+        state.hooks.afterRequestAds.push(callback);
         break;
       }
       case 'configured': {
-        state.hooks = {
-          ...state.hooks,
-          afterRequestAds: callback
-        };
+        state.hooks.afterRequestAds.push(callback);
         break;
       }
       default: {
@@ -417,15 +409,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
         // call the configured hooks
         if (state.hooks && state.hooks.beforeRequestAds) {
-          state.hooks.beforeRequestAds(config);
+          state.hooks.beforeRequestAds.forEach(hook => hook(config));
         }
 
-        const afterRequestAds =
-          state.hooks && state.hooks.afterRequestAds
-            ? state.hooks.afterRequestAds
-            : () => {
-                return;
-              };
+        const afterRequestAds = state.hooks.afterRequestAds;
+
         const refreshSlots = state.refreshSlots;
         const isSinglePageApp = state.isSinglePageApp;
         // handle single page application case
@@ -458,7 +446,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               // if not the user has already navigated to another page and we discard everything here
               if (state.state === 'spa-requestAds' && state.href === window.location.href) {
                 adService.refreshAdSlots(state.refreshSlots, state.config);
-                afterRequestAds('spa-finished');
+                afterRequestAds.forEach(hook => hook('spa-finished'));
                 const finishedState: ISinglePageApp = {
                   ...state,
                   state: 'spa-finished',
@@ -492,7 +480,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                 state: 'finished',
                 config: config
               };
-              afterRequestAds(state.state);
+              afterRequestAds.forEach(hook => hook('finished'));
               return Promise.resolve(state);
             })
             .catch(error => {
@@ -502,7 +490,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                 config: config,
                 error: error
               };
-              afterRequestAds(state.state);
+              afterRequestAds.forEach(hook => hook('error'));
               return Promise.resolve(state);
             });
         }
@@ -522,12 +510,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         setABtestTargeting();
 
         const hooks = state.hooks;
-        const afterRequestAds =
-          hooks && hooks.afterRequestAds
-            ? hooks.afterRequestAds
-            : () => {
-                return;
-              };
+        const afterRequestAds = state.hooks.afterRequestAds;
 
         const currentState = state;
         const { initialized, refreshAds, href, keyValues, labels, configFromAdTag } = state;
@@ -593,7 +576,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               // reset refreshSlots
               refreshSlots: []
             };
-            afterRequestAds('spa-finished');
+            afterRequestAds.forEach(hook => hook('spa-finished'));
             return state;
           });
       }

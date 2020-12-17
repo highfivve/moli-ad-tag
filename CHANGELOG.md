@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.3
+
+[GD-2581](https://jira.gutefrage.net/browse/GD-2581). Allow multiple `beforeRequestAds` and `afterRequestAds` hooks.
+
 ## 3.14.2
 
 [GD-2578](https://jira.gutefrage.net/browse/GD-2578). Add `tags` property to pubstack type.

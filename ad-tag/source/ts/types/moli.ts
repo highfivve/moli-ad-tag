@@ -461,7 +461,7 @@ export namespace Moli {
       /**
        * Add hooks on specific state changes.
        */
-      hooks?: IHooks;
+      hooks: IHooks;
 
       /**
        * A list of ad slots that should be refreshed
@@ -491,7 +491,7 @@ export namespace Moli {
       /**
        * Add hooks on specific state changes.
        */
-      hooks?: IHooks;
+      hooks: IHooks;
 
       /**
        * If set to true the `requestAds()` call will keep the app in the [[ISinglePageApp]]
@@ -554,7 +554,7 @@ export namespace Moli {
       /**
        * Hooks configured by the user
        */
-      hooks?: IHooks;
+      hooks: IHooks;
 
       /**
        * A list of ad slots that should be refreshed
@@ -652,7 +652,7 @@ export namespace Moli {
        *
        * @param config - the final [[Moli.MoliConfig]]
        */
-      beforeRequestAds?: (config: Moli.MoliConfig) => void;
+      readonly beforeRequestAds: Array<(config: Moli.MoliConfig) => void>;
 
       /**
        * This function is triggered after `requestAds()` is being called and the ad tag
@@ -683,7 +683,7 @@ export namespace Moli {
        * ```
        *
        */
-      afterRequestAds?: (state: AfterRequestAdsStates) => void;
+      readonly afterRequestAds: Array<(state: AfterRequestAdsStates) => void>;
     }
   }
 
