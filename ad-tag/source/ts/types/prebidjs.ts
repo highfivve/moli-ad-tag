@@ -1466,6 +1466,12 @@ export namespace prebidjs {
        * @see https://pubstack.freshdesk.com/support/solutions/articles/48000965600-how-to-implement-google-adx-
        */
       readonly adUnitPath?: string;
+
+      /**
+       * Allows the publisher to push arbitrary dimensions to pubstack.
+       * Can only be used with coordination of pubstack so the data can actually be used.
+       */
+      readonly tags?: string[];
     };
   }
 
