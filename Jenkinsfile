@@ -90,7 +90,7 @@ pipeline {
                 stage('Moli debug') {
                     steps {
                         sh "yarn workspace @highfivve/moli-debugger build:prod"
-                        sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/dist ."
+                        sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/lib ."
                         echo "Publishing to ${HDFS_PATH_DEBUG}"
                         sh "/usr/local/bin/httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
                         sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug moli-debugger.aurora"
