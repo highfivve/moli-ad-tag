@@ -5,11 +5,12 @@
   "description": "Moli release tools",
   "main": "./lib/index.js",
   "files": [
+    "bin",
     "lib"
   ],
   "scripts": {
     "setup": "yarn",
-    "make:nodemodule": "yarn build && tsc && cp -r releases lib/releases",
+    "make:nodemodule": "yarn build:prod && cp -r releases lib/releases",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
     "start": "yarn watch",

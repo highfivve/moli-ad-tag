@@ -1,21 +1,4 @@
 {
   "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "browser-env": [ "source/ts/types/browserEnv" ]
-    },
-    "skipLibCheck": true,
-    "outDir": "./lib"
-  },
-  "files": [
-    "./source/index.ts"
-  ],
-  "include": [
-    "source/**/*",
-    "tests/**/*"
-  ],
-  "exclude": [
-    "**/lib"
-  ]
+  "exclude": ["lib"]
 }

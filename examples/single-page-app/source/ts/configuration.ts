@@ -1,4 +1,5 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 
 export const adConfiguration: Moli.MoliConfig = {
   environment: 'test',
@@ -8,19 +9,19 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+          sizesSupported: ['fluid', [605, 165], [605, 340], [1, 1]]
         }
       ]
     },
     {
       domId: 'ad-sidebar-1',
       adUnitPath: '/33559401/gf/fragen/Sidebar_1',
-      labelAll: [ 'desktop' ],
-      sizes: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ],
+      labelAll: ['desktop'],
+      sizes: ['fluid', [300, 250], [120, 600], [160, 600], [200, 600], [300, 600]],
       position: 'in-page',
       behaviour: {
         loaded: 'refreshable',
@@ -29,12 +30,12 @@ export const adConfiguration: Moli.MoliConfig = {
           name: 'event',
           event: 'ads.ad-sidebar-1',
           source: window
-        },
+        }
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ], [ 120, 600 ], [ 160, 600 ], [ 200, 600 ], [ 300, 600 ] ]
+          sizesSupported: ['fluid', [300, 250], [120, 600], [160, 600], [200, 600], [300, 600]]
         }
       ]
     },
@@ -47,20 +48,24 @@ export const adConfiguration: Moli.MoliConfig = {
           name: 'event',
           event: 'ads.spa-prebid-adslot',
           source: window
-        },
+        }
       },
       adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: [ 'fluid', [ 300, 250 ], [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [300, 250], [605, 165], [605, 340], [1, 1]],
       prebid: {
         adUnit: {
           code: 'prebid-adslot',
           mediaTypes: {
             banner: {
-              sizes: [ [ 300, 250 ] ]
+              sizes: [[300, 250]]
             },
             video: {
               context: 'outstream',
-              playerSize: [ [ 605, 340 ], [ 536, 302 ], [ 300, 169 ] ]
+              playerSize: [
+                [605, 340],
+                [536, 302],
+                [300, 169]
+              ]
             }
           },
           bids: [
@@ -82,11 +87,11 @@ export const adConfiguration: Moli.MoliConfig = {
       sizeConfig: [
         {
           mediaQuery: '(max-width: 767px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ]
+          sizesSupported: ['fluid', [300, 250], [1, 1]]
         },
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ], [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ]
+          sizesSupported: ['fluid', [300, 250], [605, 165], [605, 340], [1, 1]]
         }
       ]
     },
@@ -97,34 +102,34 @@ export const adConfiguration: Moli.MoliConfig = {
         loaded: 'manual'
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: [ 'fluid', [ 605, 165 ], [ 300, 250 ] ],
+      sizes: ['fluid', [605, 165], [300, 250]],
       a9: {
-        labelAll: [ 'a9', 'desktop' ]
+        labelAll: ['a9', 'desktop']
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: [ 'fluid', [ 605, 165 ] ]
+          sizesSupported: ['fluid', [605, 165]]
         },
         {
           mediaQuery: '(max-width: 767px)',
-          sizesSupported: [ 'fluid', [ 300, 250 ] ]
+          sizesSupported: ['fluid', [300, 250]]
         }
       ]
     }
   ],
   targeting: {
     keyValues: {
-      'static': 'from-config'
+      static: 'from-config'
     }
   },
   labelSizeConfig: [
     {
-      labelsSupported: [ 'mobile' ],
+      labelsSupported: ['mobile'],
       mediaQuery: '(max-width: 767px)'
     },
     {
-      labelsSupported: [ 'desktop' ],
+      labelsSupported: ['desktop'],
       mediaQuery: '(min-width: 768px)'
     }
   ],
@@ -140,7 +145,7 @@ export const adConfiguration: Moli.MoliConfig = {
         filterSettings: {
           // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
           iframe: {
-            bidders: [ prebidjs.PubMatic ],
+            bidders: [prebidjs.PubMatic],
             filter: 'include'
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.
@@ -155,8 +160,8 @@ export const adConfiguration: Moli.MoliConfig = {
         granularityMultiplier: 1,
         // taken from: https://currency.prebid.org/latest.json
         defaultRates: {
-          'USD': {
-            'EUR': 0.8695652174
+          USD: {
+            EUR: 0.8695652174
           }
         }
       },

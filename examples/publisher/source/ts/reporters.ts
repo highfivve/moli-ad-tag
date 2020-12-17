@@ -1,7 +1,6 @@
-import { Moli } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporting.Metric) => {
-
   switch (metric.type) {
     case 'dfpLoad': {
       console.groupCollapsed('DFP Load Time');
@@ -28,7 +27,10 @@ export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporti
     }
     case 'ttfa': {
       console.groupCollapsed('Time to first Ad');
-      console.log('visible at', Math.round(metric.measurement.startTime + metric.measurement.duration));
+      console.log(
+        'visible at',
+        Math.round(metric.measurement.startTime + metric.measurement.duration)
+      );
       console.log('startTime', Math.round(metric.measurement.startTime));
       console.log('duration', Math.round(metric.measurement.duration));
       console.groupEnd();
@@ -36,7 +38,10 @@ export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporti
     }
     case 'ttfr': {
       console.groupCollapsed('Time to first Render');
-      console.log('rendered at', Math.round(metric.measurement.startTime + metric.measurement.duration));
+      console.log(
+        'rendered at',
+        Math.round(metric.measurement.startTime + metric.measurement.duration)
+      );
       console.log('startTime', Math.round(metric.measurement.startTime));
       console.log('duration', Math.round(metric.measurement.duration));
       console.groupEnd();
@@ -61,5 +66,4 @@ export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporti
       break;
     }
   }
-
 };

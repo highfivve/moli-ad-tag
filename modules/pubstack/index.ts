@@ -1,15 +1,15 @@
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
+import { mkInitStep } from '@highfivve/ad-tag/source/ts/ads/adPipeline';
 import {
-  Moli,
-  IModule,
-  ModuleType,
-  mkInitStep,
   AssetLoadMethod,
-  IAssetLoaderService,
-  prebidjs,
-  googletag
-} from '@highfivve/ad-tag';
+  IAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 
 import { initStub } from './stub';
+import IPrebidJs = prebidjs.IPrebidJs;
 
 export interface IPubstackConfig {
   readonly tagId: string;
@@ -59,7 +59,7 @@ export default class Pubstack implements IModule {
         initStub(ctx.window, 'Pubstack', this.pubstackConfig.tagId);
 
         // add prebid events
-        ctx.window.pbjs = ctx.window.pbjs || { que: [] };
+        ctx.window.pbjs = ctx.window.pbjs || (({ que: [] } as unknown) as IPrebidJs);
         ctx.window.pbjs.que.push(() => {
           ([
             'auctionInit',

@@ -1,7 +1,7 @@
 import { dom } from '../stubs/browserEnvSetup';
 
 import { expect, use } from 'chai';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
 import { SizeConfigService } from '../../../source/ts/ads/sizeConfigService';

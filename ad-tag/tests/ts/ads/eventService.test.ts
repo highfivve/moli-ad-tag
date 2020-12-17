@@ -2,7 +2,7 @@ import { createDom } from '../stubs/browserEnvSetup';
 import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 import { Moli } from '../../../source/ts/types/moli';
 import EventTrigger = Moli.behaviour.EventTrigger;

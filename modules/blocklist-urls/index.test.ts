@@ -1,21 +1,23 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import BlocklistUrls, {
   IBlocklist,
   IDynamicBlocklistProvider,
   IStaticBlocklistProvider
 } from './index';
+
+import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import {
-  Moli,
-  createAssetLoaderService,
   AdPipelineContext,
   ConfigureStep,
-  PrepareRequestAdsStep,
-  googletag,
-  prebidjs
-} from '@highfivve/ad-tag';
+  PrepareRequestAdsStep
+} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+
 import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import { createGoogletagStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';

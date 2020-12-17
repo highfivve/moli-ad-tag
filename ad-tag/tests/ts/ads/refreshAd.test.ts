@@ -2,7 +2,7 @@ import { createDom } from '../stubs/browserEnvSetup';
 import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
 
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import { createRefreshListener } from '../../../source/ts/ads/refreshAd';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 

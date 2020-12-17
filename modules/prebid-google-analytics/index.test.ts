@@ -1,8 +1,9 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import PrebidGoogleAnalytics from './index';
-import { Moli, createAssetLoaderService } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';

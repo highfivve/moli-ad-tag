@@ -1,5 +1,14 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
+    "paths": {
+      "@highfivve/*": ["ad-tag/source/ts", "modules/*"]
+    },
+    "jsx": "react",
+    "jsxFactory": "preact.h",
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "strict": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -11,14 +20,7 @@
     "experimentalDecorators": true,
     "target": "es6",
     "sourceMap": true,
-    "lib": [
-      "dom",
-      "es6",
-      "scripthost"
-    ]
+    "lib": ["dom", "es6", "scripthost"]
   },
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts"
-  ]
+  "exclude": ["node_modules", "**/*.test.ts"]
 }

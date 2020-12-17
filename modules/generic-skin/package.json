@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "setup": "yarn",
-    "make:nodemodule": "tsc",
+    "make:nodemodule": "tsc -p tsconfig.build.json",
     "compile": "tsc --noEmit",
     "lint": "yarn lint:ts",
     "lint:ts": "tslint --project tsconfig.json && yarn prettier",

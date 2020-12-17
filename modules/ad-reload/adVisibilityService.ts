@@ -1,6 +1,6 @@
 import { UserActivityService } from './userActivityService';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import { googletag } from '@highfivve/ad-tag';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
 
 /**

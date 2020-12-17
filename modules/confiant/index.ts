@@ -1,4 +1,9 @@
-import { Moli, IModule, ModuleType, AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag';
+import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
+import {
+  AssetLoadMethod,
+  IAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 export interface IConfiantConfig {
   /**

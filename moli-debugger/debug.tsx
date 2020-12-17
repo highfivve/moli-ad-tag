@@ -3,7 +3,7 @@ import preact = require('preact');
 import { GlobalConfig } from './components/globalConfig';
 import { AdSlotConfig } from './components/adSlotConfig';
 
-import { Moli } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 import MoliConfig = Moli.MoliConfig;
 

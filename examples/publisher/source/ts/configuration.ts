@@ -1,4 +1,5 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { consoleLogReporter } from './reporters';
 
 const teadsVerticalBid = (

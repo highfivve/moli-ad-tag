@@ -1,17 +1,16 @@
-import {
-  IModule,
-  ModuleType,
-  Moli,
-  getLogger,
-  IAssetLoaderService,
-  PrepareRequestAdsStep,
-  mkPrepareRequestAdsStep,
-  HIGH_PRIORITY,
-  AdPipelineContext,
-  InitStep,
-  mkInitStep
-} from '@highfivve/ad-tag';
+import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { YieldOptimizationService } from './yieldOptimizationService';
+import {
+  AdPipelineContext,
+  HIGH_PRIORITY,
+  InitStep,
+  mkInitStep,
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep
+} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
 
 export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
@@ -145,7 +144,7 @@ export default class YieldOptimization implements IModule {
             .setTargeting(slot.adSlot)
             .then(priceRule => (slot.priceRule = priceRule));
         });
-        return Promise.all(slotsWithPriceRule);
+        return Promise.all(slotsWithPriceRule).then(/* no-op cast to void */);
       }
     );
 }

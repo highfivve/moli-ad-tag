@@ -89,7 +89,7 @@ pipeline {
 
                 stage('Moli debug') {
                     steps {
-                        sh "yarn workspace @highfivve/moli-debugger build"
+                        sh "yarn workspace @highfivve/moli-debugger build:prod"
                         sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/dist ."
                         echo "Publishing to ${HDFS_PATH_DEBUG}"
                         sh "/usr/local/bin/httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"

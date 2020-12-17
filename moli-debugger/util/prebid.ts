@@ -1,4 +1,4 @@
-import { Moli } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 export const extractPrebidAdSlotConfigs = (
   context: Moli.headerbidding.PrebidAdSlotContext,

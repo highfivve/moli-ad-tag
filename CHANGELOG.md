@@ -692,7 +692,8 @@ See [the readme for more info](modules/prebid-google-analytics/README.md).
 to better test global state on the `window` object. You need to change an ad tags code like this
 
 ```typescript
-import { initAdTag } from '@highfivve/ad-tag'; import { adConfiguration } from "./configuration";
+import { initAdTag } from '@highfivve/ad-tag/lib/ads/moliGlobal';
+import { adConfiguration } from "./configuration";
 
 const moli = initAdTag(window);
 
@@ -727,7 +728,7 @@ Then in the `index.ts` of your ad tag you can write imports like this
 
 ```
 // the ad tag
-import { moli } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 // modules
 import Confiant from '@highfivve/modules/confiant';

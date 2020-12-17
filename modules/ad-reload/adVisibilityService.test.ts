@@ -1,6 +1,6 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import {
   createGoogletagStub,
   googleAdSlotStub
@@ -9,7 +9,7 @@ import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
 import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
-import { googletag } from '@highfivve/ad-tag';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
 
 use(sinonChai);

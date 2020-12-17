@@ -15,6 +15,7 @@ import { isNotNull } from '../util/arrayUtils';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import SlotDefinition = Moli.SlotDefinition;
 import { tcfapi } from '../types/tcfapi';
+import IGoogleTag = googletag.IGoogleTag;
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -53,7 +54,8 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
     if (!result) {
       result = new Promise<void>(resolve => {
         context.logger.debug('GAM', 'init googletag stub');
-        context.window.googletag = context.window.googletag || { cmd: [] };
+        context.window.googletag =
+          context.window.googletag || (({ cmd: [] } as unknown) as IGoogleTag);
         context.window.googletag.cmd.push(resolve);
 
         assetLoader.loadScript({

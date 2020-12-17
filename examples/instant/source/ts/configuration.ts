@@ -1,4 +1,5 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { consoleLogReporter } from './reporters';
 
 const logger: Moli.MoliLogger = {
@@ -14,13 +15,12 @@ const logger: Moli.MoliLogger = {
   error(message?: any, ...optionalParams: any[]): void {
     window.console.error(`[ERROR] ${message}`, ...optionalParams);
   }
-
 };
 
 // small helper to create the desired shape for improve digital
 const asArray = (value: string | string[] | undefined, fallback: string[]): string[] => {
   if (value) {
-    return typeof value === 'string' ? [ value ] : value;
+    return typeof value === 'string' ? [value] : value;
   }
   return fallback;
 };
@@ -33,7 +33,7 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: []
     },
     {
@@ -45,10 +45,10 @@ export const adConfiguration: Moli.MoliConfig = {
           name: 'event',
           event: 'slot.refresh',
           source: window
-        },
+        }
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: []
     },
     {
@@ -63,16 +63,16 @@ export const adConfiguration: Moli.MoliConfig = {
         }
       },
       adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
-      sizes: [ 'fluid', [ 300, 250 ], [ 1, 1 ] ],
+      sizes: ['fluid', [300, 250], [1, 1]],
       sizeConfig: [],
       // example for a dynamic prebid configuration
-      prebid: (context) => {
+      prebid: context => {
         return {
           adUnit: {
             code: 'lazy-adslot',
             mediaTypes: {
               banner: {
-                sizes: [ [ 300, 250 ] ]
+                sizes: [[300, 250]]
               }
             },
             bids: [
@@ -82,7 +82,7 @@ export const adConfiguration: Moli.MoliConfig = {
                 params: {
                   placementId: 1160064,
                   keyValues: {
-                    category: asArray(context.keyValues.channel, [ '' ])
+                    category: asArray(context.keyValues.channel, [''])
                   }
                 }
               }
@@ -96,7 +96,7 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/pos2',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: [],
       prebid: {
         adUnit: {
@@ -104,7 +104,7 @@ export const adConfiguration: Moli.MoliConfig = {
           mediaTypes: {
             video: {
               context: 'outstream',
-              playerSize: [ 605, 340 ]
+              playerSize: [605, 340]
             }
           },
           bids: [
@@ -114,7 +114,7 @@ export const adConfiguration: Moli.MoliConfig = {
                 placementId: '13906537',
                 video: {
                   /** This must match the configuration in the app nexus ui */
-                  frameworks: [ 1, 2 ]
+                  frameworks: [1, 2]
                 }
               }
             },
@@ -124,7 +124,7 @@ export const adConfiguration: Moli.MoliConfig = {
                 placementId: '13970743',
                 video: {
                   /** This must match the configuration in the app nexus ui */
-                  frameworks: [ 1, 2 ]
+                  frameworks: [1, 2]
                 }
               }
             }
@@ -137,15 +137,14 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'a9-adslot',
       behaviour: {
         loaded: 'lazy',
-        trigger:
-          {
-            name: 'event',
-            event: '',
-            source: document
-          },
+        trigger: {
+          name: 'event',
+          event: '',
+          source: document
+        }
       },
       adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: [ 'fluid', [ 605, 165 ], [ 605, 340 ], [ 1, 1 ] ],
+      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
       sizeConfig: [],
       a9: {}
     }
@@ -153,19 +152,19 @@ export const adConfiguration: Moli.MoliConfig = {
   targeting: {
     keyValues: {
       isAdult: 'false',
-      tags: [ 'auto', 'waschanlage' ],
+      tags: ['auto', 'waschanlage'],
       vertical: 'frag-muki.de'
     },
-    labels: [ 'frag-muki.de', 'appnexusAst', 'ix' ]
+    labels: ['frag-muki.de', 'appnexusAst', 'ix']
   },
   labelSizeConfig: [
     {
       mediaQuery: '(max-width: 767px)',
-      labelsSupported: [ 'mobile' ]
+      labelsSupported: ['mobile']
     },
     {
       mediaQuery: '(min-width: 768px)',
-      labelsSupported: [ 'desktop' ],
+      labelsSupported: ['desktop']
     }
   ],
   prebid: {
@@ -180,7 +179,7 @@ export const adConfiguration: Moli.MoliConfig = {
         filterSettings: {
           // pubmatic wants to sync via an iframe, because they aren't able to put the relevant information into a single image call -.-
           iframe: {
-            bidders: [ prebidjs.PubMatic, prebidjs.OpenX, prebidjs.SmartAdServer ],
+            bidders: [prebidjs.PubMatic, prebidjs.OpenX, prebidjs.SmartAdServer],
             filter: 'include'
           },
           // by default, prebid enables the image sync for all SSPs. We make it explicit here.
@@ -195,8 +194,8 @@ export const adConfiguration: Moli.MoliConfig = {
         granularityMultiplier: 1,
         // taken from: https://currency.prebid.org/latest.json
         defaultRates: {
-          'USD': {
-            'EUR': 0.8695652174
+          USD: {
+            EUR: 0.8695652174
           }
         }
       },
@@ -210,9 +209,7 @@ export const adConfiguration: Moli.MoliConfig = {
     // report everything
     sampleRate: 1,
     adUnitRegex: /\/\d*\/gf\//i,
-    reporters: [
-      consoleLogReporter
-    ]
+    reporters: [consoleLogReporter]
   },
   logger: logger
 };

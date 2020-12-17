@@ -3,7 +3,7 @@ import { noopLogger } from '../stubs/moliStubs';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import { PassbackService } from '../../../source/ts/ads/passbackService';
 import { Moli } from '../../../source/ts/types/moli';
 import { googletag } from '../../../source/ts/types/googletag';

@@ -1,7 +1,9 @@
 'use strict';
 
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const path = require('path');
 
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const { postCssLoader } = require('./postcss.config');
 
 module.exports = (env, argv) => ({
@@ -9,6 +11,7 @@ module.exports = (env, argv) => ({
   devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
   entry: './debug.tsx',
   output: {
+    path: path.resolve(__dirname, 'lib'),
     filename: 'moli-debug.min.js'
   },
   module: {
@@ -34,7 +37,8 @@ module.exports = (env, argv) => ({
     ]
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.css']
+    extensions: ['.tsx', '.ts', '.js', '.css'],
+    plugins: [new TsconfigPathsPlugin()]
   },
   optimization: {
     minimizer: [

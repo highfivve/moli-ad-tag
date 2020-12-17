@@ -1,7 +1,8 @@
 import * as preact from 'preact';
 import { JSX } from 'preact';
 
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from '@highfivve/ad-tag/source/ts/ads/sizeConfigService';
 import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 

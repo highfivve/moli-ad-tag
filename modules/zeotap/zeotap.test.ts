@@ -1,16 +1,17 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+
+import { AdPipelineContext } from '@highfivve/ad-tag/source/ts/ads/adPipeline';
 import {
-  AdPipelineContext,
   AssetLoadMethod,
-  createAssetLoaderService,
-  googletag,
-  Moli,
-  prebidjs
-} from '@highfivve/ad-tag';
+  createAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 
 import Zeotap from './zeotap';
 import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';

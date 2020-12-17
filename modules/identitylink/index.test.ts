@@ -1,8 +1,11 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
-import { AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag';
+import {
+  AssetLoadMethod,
+  createAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { ATS } from './types/identitylink';
 
 import IdentityLink from './index';
@@ -14,7 +17,7 @@ use(sinonChai);
 describe('IdentityLink Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: ATS.Window = dom.window as any;
+  const jsDomWindow: ATS.ATSWindow = dom.window as any;
 
   it('should fetch the ats script and start window.ats', async () => {
     const assetLoader = createAssetLoaderService(jsDomWindow);

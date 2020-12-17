@@ -1,7 +1,7 @@
 import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 

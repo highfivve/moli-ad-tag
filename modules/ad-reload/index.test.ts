@@ -1,6 +1,6 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import {
@@ -10,16 +10,17 @@ import {
 import { reportingServiceStub } from '@highfivve/ad-tag/tests/ts/stubs/reportingServiceStub';
 import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import {
   AdPipeline,
   AdPipelineContext,
-  createAssetLoaderService,
-  googletag,
   IAdPipelineConfiguration,
-  mkInitStep,
-  Moli,
-  prebidjs
-} from '@highfivve/ad-tag';
+  mkInitStep
+} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 import AdReload from './index';

@@ -1,8 +1,11 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { newNoopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/tests/ts/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';

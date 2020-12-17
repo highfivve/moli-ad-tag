@@ -18,7 +18,7 @@ import 'prebid.js/modules/smartadserverBidAdapter';
 import 'prebid.js/modules/teadsBidAdapter';
 import 'prebid.js/modules/unrulyBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag';
+import { initAdTag } from '@highfivve/ad-tag/source/ts/ads/moliGlobal';
 import { adConfiguration } from './source/ts/configuration';
 import AdReload from '@highfivve/module-moli-ad-reload';
 

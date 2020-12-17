@@ -111,7 +111,7 @@ export namespace ATS {
    */
   export type Envelope = any;
 
-  export type Window = Window & {
+  export type ATSWindow = Window & {
     /**
      * LiveRamps  (authenticated traffic solution) implementation.
      *

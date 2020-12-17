@@ -1,4 +1,9 @@
-import { Moli, IModule, ModuleType, IAssetLoaderService, AssetLoadMethod } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
+import {
+  AssetLoadMethod,
+  IAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 export interface ISovrnConfig {
   /**

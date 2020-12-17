@@ -15,8 +15,7 @@
     "src/index.ts"
   ],
   "include": [
-    "src/*",
-    "releases/*"
+    "src/*"
   ],
   "exclude": [
     "node_modules"

@@ -1,9 +1,12 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import SovrnAdReload from './index';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
-import { AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag';
+import {
+  AssetLoadMethod,
+  createAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);

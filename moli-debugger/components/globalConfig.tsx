@@ -9,7 +9,9 @@ import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
-import { googletag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;

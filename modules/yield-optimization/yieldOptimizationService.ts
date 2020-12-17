@@ -1,4 +1,5 @@
-import { Moli, googletag } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import MoliLogger = Moli.MoliLogger;
 import IAdSlot = googletag.IAdSlot;
 import { IAdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';

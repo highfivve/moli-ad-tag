@@ -1,4 +1,8 @@
-import { getLogger, IModule, Moli, prebidjs, IAssetLoaderService } from '@highfivve/ad-tag';
+import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { IModule } from '@highfivve/ad-tag/source/ts/types/module';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 
 export interface IPrebidGoogleAnalyticsConfig {
   /**

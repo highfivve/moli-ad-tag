@@ -8,13 +8,9 @@
   "files": [
     "lib"
   ],
-  "directories": {
-    "lib": "lib",
-    "test": "tests"
-  },
   "scripts": {
-    "setup": "yarn && yarn make:nodemodule",
-    "make:nodemodule": "tsc -p tsconfig-node-module.json",
+    "setup": "yarn",
+    "make:nodemodule": "tsc -p tsconfig.build.json",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",

@@ -1,6 +1,6 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import {
   UserActivityLevelControl,
@@ -28,7 +28,7 @@ describe('UserActivityService', () => {
   });
 
   new Map<UserActivityLevelControl['level'], UserActivityParameters>([
-    ...userActivityParametersForLevel,
+    ...Array.from(userActivityParametersForLevel),
     ['custom', { userActivityDuration: 4000, userBecomingInactiveDuration: 2000 }]
   ]).forEach(({ userActivityDuration, userBecomingInactiveDuration }, mode) => {
     it(`should check user activity after ${

@@ -3,7 +3,7 @@ import { JSX } from 'preact';
 
 import { Tag } from './tag';
 
-import { tcfapi } from '@highfivve/ad-tag';
+import { tcfapi } from '@highfivve/ad-tag/source/ts/types/tcfapi';
 import { TCModel, TCString } from '@iabtcf/core';
 
 type CmpVendor = {

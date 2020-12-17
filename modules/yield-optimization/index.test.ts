@@ -1,8 +1,10 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, googletag, Moli } from '@highfivve/ad-tag';
+import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 
 import YieldOptimization, { IStaticYieldOptimizationConfig } from './index';
@@ -10,9 +12,9 @@ import {
   emptyConfig,
   newEmptyConfig,
   noopLogger
-} from '@highfivve/ad-tag/lib/tests/ts/stubs/moliStubs';
+} from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { googleAdSlotStub } from '@highfivve/ad-tag/lib/tests/ts/stubs/googletagStubs';
+import { googleAdSlotStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
 
 // setup sinon-chai
 use(sinonChai);

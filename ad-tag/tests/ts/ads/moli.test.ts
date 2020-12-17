@@ -1,6 +1,6 @@
 import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { Moli } from '../../../source/ts/types/moli';
 import { createMoliTag } from '../../../source/ts/ads/moli';

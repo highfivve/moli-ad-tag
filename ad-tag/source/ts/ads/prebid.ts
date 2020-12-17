@@ -13,6 +13,7 @@ import {
 import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
 import { SizeConfigService } from './sizeConfigService';
+import IPrebidJs = prebidjs.IPrebidJs;
 
 // if we forget to remove prebid from the configuration. The timeout is arbitrary
 const prebidTimeout = (window: Window) =>
@@ -28,7 +29,7 @@ const prebidTimeout = (window: Window) =>
 
 const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
   new Promise<void>(resolve => {
-    window.pbjs = window.pbjs || { que: [] };
+    window.pbjs = window.pbjs || (({ que: [] } as unknown) as IPrebidJs);
     window.pbjs.que.push(resolve);
   });
 
@@ -58,7 +59,7 @@ export const prebidRemoveAdUnits = (): ConfigureStep =>
     'prebid-remove-adunits',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        context.window.pbjs = context.window.pbjs || { que: [] };
+        context.window.pbjs = context.window.pbjs || (({ que: [] } as unknown) as IPrebidJs);
         const adUnits = context.window.pbjs.adUnits;
         if (adUnits) {
           context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);

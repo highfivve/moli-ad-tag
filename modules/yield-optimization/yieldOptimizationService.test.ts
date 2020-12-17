@@ -1,6 +1,6 @@
 import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 import { expect, use } from 'chai';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';

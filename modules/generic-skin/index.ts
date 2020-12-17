@@ -1,12 +1,9 @@
-import {
-  googletag,
-  IModule,
-  ModuleType,
-  Moli,
-  prebidjs,
-  getLogger,
-  IAssetLoaderService
-} from '@highfivve/ad-tag';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { flatten, isNotNull } from '@highfivve/ad-tag/source/ts/util/arrayUtils';
 
 interface ISkinModuleConfig {

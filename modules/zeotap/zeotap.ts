@@ -1,13 +1,11 @@
 import {
   AssetLoadMethod,
-  getLogger,
-  IAssetLoaderService,
-  IModule,
-  mkConfigureStep,
-  mkInitStep,
-  ModuleType,
-  Moli
-} from '@highfivve/ad-tag';
+  IAssetLoaderService
+} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
+import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
+import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
+import { mkConfigureStep, mkInitStep } from '@highfivve/ad-tag/source/ts/ads/adPipeline';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 
 /**
  * Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the
