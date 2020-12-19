@@ -800,6 +800,43 @@ describe('moli', () => {
       });
     });
 
+    it('should add the beforeRequestAds hook with spa state if requestAds() was successful', () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.enableSinglePageApp();
+      adTag.configure(defaultConfig);
+      return adTag.requestAds().then(() => {
+        expect(hookSpy).to.be.calledOnce;
+      });
+    });
+
+    it('should add the beforeRequestAds hooks and call them on each requestAds() cal', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        return;
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.enableSinglePageApp();
+      adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledTwice;
+    });
+
     it('should add the afterRequestAds hook if requestAds() was successful', () => {
       const adTag = createMoliTag(jsDomWindow);
 

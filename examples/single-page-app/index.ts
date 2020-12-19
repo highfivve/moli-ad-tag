@@ -15,6 +15,10 @@ prebid.processQueue();
 
 const moli = initAdTag(window);
 
+moli.beforeRequestAds(_ => {
+  console.log('BEFORE REQUEST ADS HOOK');
+});
+
 moli.enableSinglePageApp();
 // init moli
 moli.configure(adConfiguration);

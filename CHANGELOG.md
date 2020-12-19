@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.14.4
+
+[GD-2581](https://jira.gutefrage.net/browse/GD-2581). Run `beforeRequestAds` hooks in single page app mode for every
+`requestAds` call.
+
 ## 3.14.3
 
 [GD-2581](https://jira.gutefrage.net/browse/GD-2581). Allow multiple `beforeRequestAds` and `afterRequestAds` hooks.

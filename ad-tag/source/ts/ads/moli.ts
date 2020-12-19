@@ -511,6 +511,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
         const hooks = state.hooks;
         const afterRequestAds = state.hooks.afterRequestAds;
+        const beforeRequestAds = state.hooks.beforeRequestAds;
 
         const currentState = state;
         const { initialized, refreshAds, href, keyValues, labels, configFromAdTag } = state;
@@ -555,9 +556,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               }
             };
           })
-          .then(configWithTargeting =>
-            refreshAds(configWithTargeting, refreshSlots).then(() => configWithTargeting)
-          )
+          .then(configWithTargeting => {
+            // run hooks
+            beforeRequestAds.forEach(hook => hook(configWithTargeting));
+
+            return refreshAds(configWithTargeting, refreshSlots).then(() => configWithTargeting);
+          })
           .then(configWithTargeting => {
             if (state.state === 'spa-requestAds') {
               adService.refreshAdSlots(state.refreshSlots, state.config);
