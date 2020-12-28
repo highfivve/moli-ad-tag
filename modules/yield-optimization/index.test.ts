@@ -19,7 +19,6 @@ import { googleAdSlotStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStub
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Yield Optimization module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
@@ -145,4 +144,3 @@ describe('Yield Optimization module', () => {
     });
   });
 });
-// tslint:enable

@@ -18,7 +18,7 @@
     "compile": "yarn compile:ts",
     "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
-    "lint": "tslint --project tsconfig.json && yarn prettier",
+    "lint": "eslint ./src --ext .ts,.tsx && yarn prettier",
     "clean": "rm -rf lib/**",
     "validate": "yarn prettier && yarn compile",
     "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",

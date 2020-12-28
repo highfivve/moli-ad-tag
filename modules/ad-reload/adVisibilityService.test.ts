@@ -14,7 +14,6 @@ import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEven
 
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('AdVisibilityService', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();

@@ -9,7 +9,6 @@ import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Refreshable Loading', () => {
   const sleep = () =>
     new Promise(resolve => {
@@ -194,4 +193,3 @@ describe('Refreshable Loading', () => {
     });
   });
 });
-// tslint:enable

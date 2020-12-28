@@ -20,7 +20,6 @@ import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('Zeotap Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
@@ -258,5 +257,3 @@ describe('Zeotap Module', () => {
     expect(loadScriptStub).to.not.have.been.called;
   });
 });
-
-// tslint:enable

@@ -26,7 +26,6 @@ import { createGoogletagStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagS
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('BlocklistUrls Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
@@ -529,5 +528,3 @@ describe('BlocklistUrls Module', () => {
     });
   });
 });
-
-// tslint:enable

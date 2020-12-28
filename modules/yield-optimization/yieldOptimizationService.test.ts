@@ -16,7 +16,6 @@ import {
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('YieldOptimizationService', () => {
   const dom = createDom();
   const domWindow: Window = dom.window as any;
@@ -275,4 +274,3 @@ describe('YieldOptimizationService', () => {
     });
   });
 });
-// tslint:enable

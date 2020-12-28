@@ -1,4 +1,5 @@
 type Callback = () => void;
+// eslint-disable-next-line
 /*!
  * domready (c) Dustin Diaz 2014 - License MIT
  * @see {@link https://github.com/ded/domready}

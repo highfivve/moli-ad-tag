@@ -13,7 +13,6 @@ import IdentityLink from './index';
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('IdentityLink Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
@@ -59,5 +58,3 @@ describe('IdentityLink Module', () => {
     });
   });
 });
-
-// tslint:enable

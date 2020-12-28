@@ -4,7 +4,6 @@ import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 
-/* tslint:disable:interface-name */
 export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
 
@@ -1745,5 +1744,3 @@ export namespace Moli {
     moli: Moli.MoliTag;
   };
 }
-
-/* tslint:enable:interface-name */

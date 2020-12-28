@@ -11,7 +11,6 @@ import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Prebid Google Analytics Module', () => {
   const config: Moli.MoliConfig = {
     slots: [],
@@ -143,4 +142,3 @@ describe('Prebid Google Analytics Module', () => {
     ]);
   });
 });
-// tslint:enable

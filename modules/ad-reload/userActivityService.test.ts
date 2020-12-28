@@ -12,7 +12,6 @@ import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
 
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('UserActivityService', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();

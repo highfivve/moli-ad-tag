@@ -21,7 +21,6 @@ import { googletag } from '../../../source/ts/types/googletag';
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('prebid', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();

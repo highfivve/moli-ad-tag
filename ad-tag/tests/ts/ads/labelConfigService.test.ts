@@ -12,7 +12,6 @@ import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('LabelConfigConfigService', () => {
   const sandbox = Sinon.createSandbox();
   const labelConfigEntry1: LabelSizeConfigEntry = {
@@ -140,5 +139,3 @@ describe('LabelConfigConfigService', () => {
     });
   });
 });
-
-// tslint:enable

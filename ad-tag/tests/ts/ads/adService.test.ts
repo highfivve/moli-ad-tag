@@ -16,7 +16,6 @@ import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('AdService', () => {
   let dom = createDom();
   let jsDomWindow: Window = dom.window as any;

@@ -20,7 +20,6 @@ import { prebidjs } from '../../../source/ts/types/prebidjs';
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('moli', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
@@ -1026,4 +1025,3 @@ describe('moli', () => {
     });
   });
 });
-// tslint:enable

@@ -16,7 +16,6 @@ import IBidResponsesMap = prebidjs.IBidResponsesMap;
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
@@ -531,5 +530,3 @@ describe('Skin Module', () => {
     });
   });
 });
-
-// tslint:enable

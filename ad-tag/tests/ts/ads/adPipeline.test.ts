@@ -23,7 +23,6 @@ import { prebidjs } from '../../../source/ts/types/prebidjs';
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('AdPipeline', () => {
   const emptyPipelineConfig: IAdPipelineConfiguration = {
     init: [],

@@ -11,7 +11,6 @@ import {
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Sovrn Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
@@ -34,5 +33,3 @@ describe('Sovrn Ad Reload Module', () => {
     });
   });
 });
-
-// tslint:enable

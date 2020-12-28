@@ -156,7 +156,6 @@ export namespace apstag {
   };
 }
 
-/* tslint:disable:interface-name */
 declare global {
   /**
    * Add the ApsTag (Amazon A9) API to the global Window instance
@@ -168,4 +167,3 @@ declare global {
     apstag: apstag.IApsTag;
   }
 }
-/* tslint:enable:interface-name */

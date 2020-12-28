@@ -3,7 +3,6 @@
  * ad tag once we are sure this is something we want.
  */
 declare module 'prebid.js' {
-  // tslint:disable
   export interface PrebidJs {
     processQueue(): void;
   }

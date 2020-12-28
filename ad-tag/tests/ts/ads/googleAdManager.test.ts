@@ -27,7 +27,6 @@ import { prebidjs } from '../../../source/ts/types/prebidjs';
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('google ad manager', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();

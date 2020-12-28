@@ -28,7 +28,6 @@ import { SlotEventService } from '@highfivve/ad-tag/source/ts/ads/slotEventServi
 
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Moli Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();

@@ -1,5 +1,4 @@
 export namespace tcfapi {
-  /* tslint:disable:interface-name */
   /**
    * @see https://iabtcf.com/api/core/
    * @see https://github.com/InteractiveAdvertisingBureau/iabtcf-es/tree/master/modules/cmpapi

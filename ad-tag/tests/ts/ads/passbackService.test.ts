@@ -11,7 +11,6 @@ import { googletag } from '../../../source/ts/types/googletag';
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Passback Service', () => {
   // create a fresh DOM for each test
   let dom = createDom();

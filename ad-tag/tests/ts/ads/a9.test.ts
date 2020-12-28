@@ -21,7 +21,6 @@ import { prebidjs } from '../../../source/ts/types/prebidjs';
 use(sinonChai);
 use(chaiAsPromised);
 
-// tslint:disable: no-unused-expression
 describe('a9', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();

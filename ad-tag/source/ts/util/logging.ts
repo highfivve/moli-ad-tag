@@ -99,6 +99,7 @@ function getSourceLabelStyle(
 export function getDefaultLogger(): Moli.MoliLogger {
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
+      // eslint-disable-next-line
       console.debug(
         `%c[DEBUG]%c${source}%c${message}`,
         getLogStageLabelStyle('debug'),
@@ -108,6 +109,7 @@ export function getDefaultLogger(): Moli.MoliLogger {
       );
     },
     info(source?: any, message?: any, ...optionalParams: any[]): void {
+      // eslint-disable-next-line
       console.info(
         `%c[INFO]%c${source}%c${message}`,
         getLogStageLabelStyle('info'),

@@ -13,7 +13,6 @@ import DfpSlotSize = Moli.DfpSlotSize;
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('SizeConfigService', () => {
   const sandbox = Sinon.createSandbox();
   const sizeConfigEntry1: SizeConfigEntry = {
@@ -157,5 +156,3 @@ describe('SizeConfigService', () => {
     });
   });
 });
-
-// tslint:enable

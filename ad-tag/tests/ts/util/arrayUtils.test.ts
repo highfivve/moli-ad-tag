@@ -1,7 +1,6 @@
 import { flatten, uniquePrimitiveFilter } from '../../../source/ts/util/arrayUtils';
 import { expect } from 'chai';
 
-// tslint:disable: no-unused-expression
 describe('flatten', () => {
   it('should flatten a 2-dimensional number array', () => {
     const flatArray = flatten([[200, 50], [300], [70]]);
@@ -72,4 +71,3 @@ describe('uniquePrimitiveFilter', () => {
     ]);
   });
 });
-// tslint:enable

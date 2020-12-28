@@ -499,6 +499,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // requestAds is being called while the previous requestAds() hasn't finished yet
       case 'spa-requestAds':
       // in the single page application state we first need to destroy the current setup
+      // eslint-disable-next-line no-fallthrough
       case 'spa-finished': {
         if (state.state === 'spa-requestAds') {
           getLogger(state.config, window).debug(

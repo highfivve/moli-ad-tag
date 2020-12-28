@@ -9,7 +9,6 @@ import { SlotEventService } from '../../../source/ts/ads/slotEventService';
 // setup sinon-chai
 use(sinonChai);
 
-// tslint:disable: no-unused-expression
 describe('Lazy Loading', () => {
   const sleep = () =>
     new Promise(resolve => {
@@ -160,4 +159,3 @@ describe('Lazy Loading', () => {
     });
   });
 });
-// tslint:enable

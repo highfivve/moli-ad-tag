@@ -544,7 +544,7 @@ export namespace prebidjs {
       extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {}
 
     export interface IID5ProviderParams {
-      /***
+      /**
        * This is the ID5 Partner Number obtained from registering with ID5.
        * @example 173
        */
