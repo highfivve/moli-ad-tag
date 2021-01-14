@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.7
+
+[GD-1363](https://jira.gutefrage.net/browse/GD-1363). Add missing bash env line to make moli-release bin executable.
+
 ## 3.14.6
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363). Remove extra moli-release binary file.

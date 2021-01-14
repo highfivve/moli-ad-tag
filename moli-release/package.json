@@ -12,9 +12,10 @@
   ],
   "scripts": {
     "setup": "yarn",
-    "make:nodemodule": "yarn build:prod && cp -r releases lib/releases",
+    "make:nodemodule": "yarn build:prod && yarn build:prependbashenv && cp -r releases lib/releases",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
+    "build:prependbashenv": "echo '#!/usr/bin/env node\n' | cat - lib/moli-release.js > temp && mv temp lib/moli-release.js",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
