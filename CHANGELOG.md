@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.8
+
+[GD-1363](https://jira.gutefrage.net/browse/GD-1363). Pack releases/ folder into moli-release module.
+
 ## 3.14.7
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363). Add missing bash env line to make moli-release bin executable.
