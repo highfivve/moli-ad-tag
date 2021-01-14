@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.14.5
+
+[GD-1363](https://jira.gutefrage.net/browse/GD-1363). Small improvements for published node modules:
+
+* Correct paths for moli-ad-tag module
+* Include "bin" property in moli-release module
+
 ## 3.14.4
 
 [GD-2581](https://jira.gutefrage.net/browse/GD-2581). Run `beforeRequestAds` hooks in single page app mode for every
