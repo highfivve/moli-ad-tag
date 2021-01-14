@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.14.9
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346). Remove `overview.hbs` check from moli-release as it now ships this
+file by default.
+
 ## 3.14.8
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363). Pack releases/ folder into moli-release module.

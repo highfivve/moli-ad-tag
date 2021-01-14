@@ -2,16 +2,13 @@
 
 import program = require('commander');
 
-import * as dircompare from 'dir-compare';
 import inquirer from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as fse from 'fs-extra';
 import * as child from 'child_process';
 import * as crypto from 'crypto';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
-import { Result } from 'dir-compare';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
 
 program
@@ -55,14 +52,7 @@ const versions: IAdTagRelease[] = releasesJson.versions ? releasesJson.versions 
 const packageJsonVersion: string = packageJson.version;
 let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
-const moliReleaseFolder: string = path.resolve(__dirname, '..', 'releases');
-const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
-
 (async () => {
-  const res: Result = dircompare.compareSync(moliReleaseFolder, projectReleaseFolder, {
-    compareContent: true
-  });
-
   let commitMessages: string[] = await getGitCommitMessages();
 
   // If more than 10 commit messages were found and no tag was assigned to one of these, we ask the user how many commits he wants to check.
@@ -70,7 +60,7 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
     await inquirer
       .prompt([
         {
-          type: 'confirm',
+          type: 'number',
           name: 'commit',
           message:
             'How many commit messages do you want to check until the last tag? (There were at least 10 commits and no tag was found)',
@@ -110,22 +100,9 @@ const projectReleaseFolder: string = path.resolve(process.cwd(), 'releases');
     }
   ];
 
-  if (!res.same) {
-    questions.unshift({
-      type: 'confirm',
-      name: 'updateOverview',
-      message: 'New version found for overview.hbs. Do you want to update?',
-      default: true
-    });
-  }
-
   await inquirer
     .prompt(questions)
-    .then((answers: { updateOverview: any; version: number; changes: string; push: any }) => {
-      if (answers.updateOverview && !dryRun) {
-        fse.copySync(moliReleaseFolder, projectReleaseFolder);
-      }
-
+    .then((answers: { version: number; changes: string; push: any }) => {
       version = answers.version;
 
       // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
