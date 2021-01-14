@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/ad-tag",
-  "version": "3.14.4",
+  "version": "3.14.5",
   "license": "Apache-2.0",
   "description": "An ad tag implementation called moli",
   "main": "./lib/ads/moli.js",
@@ -55,8 +55,8 @@
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.16.0",
     "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-preact": "^0.1.0",
     "eslint-plugin-jsdoc": "^30.7.9",
+    "eslint-plugin-preact": "^0.1.0",
     "jsdom": "16.4.0",
     "mocha": "8.2.0",
     "mocha-junit-reporter": "2.0.0",
@@ -64,7 +64,7 @@
     "sinon-chai": "3.5.0",
     "ts-loader": "^8.0.5",
     "ts-node": "9.0.0",
-    "typedoc": "^0.19.2",
+    "typedoc": "^0.20.14",
     "typescript": "^4.0.3",
     "webpack": "^4.44.2",
     "webpack-cli": "^4.0.0"
