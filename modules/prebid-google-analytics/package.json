@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-prebid-google-analytics",
-  "version": "3.14.8",
+  "version": "3.14.9",
   "license": "Apache-2.0",
   "description": "Blocks ad slots when a wallpaper is being delivered",
   "main": "./lib/index.js",
@@ -52,6 +52,6 @@
     "typescript": "^4.0.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.14.8"
+    "@highfivve/ad-tag": "^3.14.9"
   }
 }
