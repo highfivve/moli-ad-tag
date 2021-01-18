@@ -174,9 +174,17 @@ async function getGitCommitMessages(numberOfCommits: number = 10): Promise<strin
         );
 
         // Get all git commit messages until the last tag
-        const changes: string[] = Array.from<IGitJsonLog>(json)
-          .filter(({ refs }) => !refs.includes('tag'))
-          .map(({ subject }) => subject);
+        const commits = Array.from<IGitJsonLog>(json);
+        const changes: string[] = [];
+
+        // This is basically a takeWhile functionality since we break the for-loop when the first tag appears.
+        for (let { refs, subject } of commits) {
+          if (!refs.includes('tag')) {
+            changes.push(subject);
+          } else {
+            break;
+          }
+        }
 
         resolve(changes);
       }

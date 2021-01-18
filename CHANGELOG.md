@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.10
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346). The default commit messages now only include only the ones until the last tag.
+
 ## 3.14.9
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346). Remove `overview.hbs` check from moli-release as it now ships this
