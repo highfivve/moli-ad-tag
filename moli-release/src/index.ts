@@ -35,6 +35,7 @@ try {
   releasesJson = {
     currentVersion: 0,
     currentFilename: '',
+    publisherName: '',
     versions: []
   };
 }
@@ -69,6 +70,24 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       ])
       .then(async (answers: { commit: number }) => {
         commitMessages = await getGitCommitMessages(answers.commit);
+      });
+  }
+
+  // If the publisherName in the releases.json isn't defined yet, we'll ask the user here.
+  if (releasesJson.publisherName === '' || !releasesJson.publisherName) {
+    await inquirer
+      .prompt([
+        {
+          type: 'input',
+          name: 'publisher',
+          message: 'What is the name of the publisher in this project?'
+        }
+      ])
+      .then((answers: { publisher: string }) => {
+        releasesJson = {
+          ...releasesJson,
+          publisherName: answers.publisher
+        };
       });
   }
 
@@ -112,7 +131,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       const change: IAdTagRelease = {
         version: version,
         filename: filename,
-        changelog: answers.changes.split('\n')
+        changelog: answers.changes.split('\n').filter(element => element != '')
       };
 
       versions.unshift(change);
@@ -120,6 +139,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       const releasesJsonContent: IReleasesJson = {
         currentVersion: version,
         currentFilename: filename,
+        publisherName: releasesJson.publisherName,
         versions: versions
       };
 
@@ -131,8 +151,11 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
         const pushString: string = answers.push ? `&& git push && git push origin v${version}` : '';
 
+        // The tagName for the commit including the name of the publisher and the version.
+        const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
+
         child.exec(
-          `git add package.json releases.json && git commit -m 'v${version}' && git tag -a v${version} -m v${version} ${pushString}`,
+          `git add package.json releases.json && git commit -m 'v${version}' && git tag -a ${tagName} -m v${version} ${pushString}`,
           (err, _stdout, _stderr) => {
             if (err) {
               console.log(err);

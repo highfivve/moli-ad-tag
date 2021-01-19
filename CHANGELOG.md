@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.11
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346). Added publisher name to releases.json in moli-release to have unique git tags.
+
 ## 3.14.10
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346). The default commit messages now only include only the ones until the last tag.
