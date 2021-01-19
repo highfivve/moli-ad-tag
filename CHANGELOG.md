@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.13
+
+[GD-2346](https://jira.gutefrage.net/browse/GD-2346). Fixed pushing tags in moli-release.
+
 ## 3.14.11
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346). Added publisher name to releases.json in moli-release to have unique git tags.

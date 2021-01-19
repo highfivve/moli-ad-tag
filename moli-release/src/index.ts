@@ -149,13 +149,13 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
         fs.writeFileSync('releases.json', JSON.stringify(releasesJsonContent, null, 2));
 
-        const pushString: string = answers.push ? `&& git push && git push origin v${version}` : '';
-
         // The tagName for the commit including the name of the publisher and the version.
         const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
 
+        const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
+
         child.exec(
-          `git add package.json releases.json && git commit -m 'v${version}' && git tag -a ${tagName} -m v${version} ${pushString}`,
+          `git add package.json releases.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
           (err, _stdout, _stderr) => {
             if (err) {
               console.log(err);
