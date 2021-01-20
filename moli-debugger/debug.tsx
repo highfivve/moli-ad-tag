@@ -3,18 +3,21 @@ import preact = require('preact');
 import { GlobalConfig } from './components/globalConfig';
 import { AdSlotConfig } from './components/adSlotConfig';
 
+import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
+
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { ModuleMeta } from '@highfivve/ad-tag/source/ts/types/module';
 
 import MoliConfig = Moli.MoliConfig;
 
 import './debug.css';
 
 import { WindowResizeService } from './util/windowResizeService';
-import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 
 declare const window: Moli.MoliWindow;
 
 const moliConfig: MoliConfig | null = window.moli.getConfig();
+const modulesMeta: Array<ModuleMeta> = window.moli.getModuleMeta();
 
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');
@@ -28,6 +31,7 @@ if (moliConfig) {
   preact.render(
     <GlobalConfig
       config={moliConfig}
+      modules={modulesMeta}
       labelConfigService={labelConfigService}
       windowResizeService={new WindowResizeService()}
     />,

@@ -24,6 +24,26 @@
 }
 
 .MoliDebug {
+
+  &-module {
+
+    &::before {
+      align-items: center;
+      background: var(--MoliDebug-green);
+      border-radius: var(--MoliDebug-border-radius);
+      color: white;
+      content: '-- ' attr(data-module-key) ' --';
+      display: flex;
+      font-size: 12px;
+      font-weight: bold;
+      height: 16px;
+      justify-content: center;
+      margin: 8px 0;
+      padding: 0 4px;
+      width: 42px;
+    }
+  }
+
   &-sidebar {
     background: var(--MoliDebug-sidebar-bg);
     box-shadow: var(--MoliDebug-sidebar-box-shadow);
@@ -243,6 +263,11 @@
       background: var(--MoliDebug-grey--light);
     }
 
+    &--transparent {
+      background: transparent;
+      color: black;
+    }
+
     &&--mediumSpacing {
       margin-bottom: 5px;
     }
@@ -268,6 +293,16 @@
 
     &Container {
       margin-top: 5px;
+
+      &&--subEntry {
+        margin-left: 10px;
+
+        &::before {
+          content: '\21B3';
+          display: inline;
+          margin-right: 5px;
+        }
+      }
     }
   }
 

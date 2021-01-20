@@ -3,7 +3,7 @@ import { JSX } from 'preact';
 
 import { classList } from '../util/stringUtils';
 
-type TagVariant = 'green' | 'red' | 'yellow' | 'blue' | 'grey';
+type TagVariant = 'green' | 'red' | 'yellow' | 'blue' | 'grey' | 'transparent';
 type TagSpacing = 'medium';
 
 export const Tag = (props: {
@@ -11,17 +11,19 @@ export const Tag = (props: {
   variant?: TagVariant;
   title?: string;
   spacing?: TagSpacing;
-}): JSX.Element => {
-  return (
-    <div
-      className={classList(
-        'MoliDebug-tag',
-        [!!props.variant, `MoliDebug-tag--${props.variant}`],
-        [!!props.spacing, `MoliDebug-tag--${props.spacing}Spacing`]
-      )}
-      title={props.title}
-    >
-      {props.children}
-    </div>
-  );
-};
+}): JSX.Element => (
+  <div
+    className={classList(
+      'MoliDebug-tag',
+      [!!props.variant, `MoliDebug-tag--${props.variant}`],
+      [!!props.spacing, `MoliDebug-tag--${props.spacing}Spacing`]
+    )}
+    title={props.title}
+  >
+    {props.children}
+  </div>
+);
+
+export const TagLabel = (props: { children: JSX.Element | string | string[] }): JSX.Element => (
+  <span className="MoliDebug-tagLabel">{props.children}</span>
+);

@@ -50,13 +50,13 @@ module.exports = (_, argv) => {
         path.join(__dirname, 'dist'),
         path.join(__dirname, 'yield-config'),
         // always use the latest moli-debugger
-        '../../moli-debugger/dist'
+        '../../moli-debugger/lib'
       ],
       compress: true,
       port: 9000,
       allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu'],
       // configure a mock yield config server
-      before: (app) => {
+      before: app => {
         // parse the req body as json
         const bodyParser = require('body-parser');
         app.use(bodyParser.json());

@@ -1,6 +1,6 @@
 import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
-import { IModule } from './module';
+import { IModule, ModuleMeta } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 
@@ -216,6 +216,11 @@ export namespace Moli {
     getState(): state.States;
 
     /**
+     * @returns meta information about the active moli modules
+     */
+    getModuleMeta(): Array<ModuleMeta>;
+
+    /**
      * Open the moli debug console.
      *
      * @param path [optional] full path to the moli debug script.
@@ -398,6 +403,10 @@ export namespace Moli {
      */
     export interface IState {
       readonly state: States;
+      /**
+       * Contains stripped-down meta information about all added modules.
+       */
+      readonly moduleMeta: Array<ModuleMeta>;
     }
 
     export interface IConfigurable extends IState {

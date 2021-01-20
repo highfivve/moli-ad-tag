@@ -1,22 +1,23 @@
 import * as preact from 'preact';
-import { JSX } from 'preact';
+import { Fragment, JSX } from 'preact';
 
 import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
+import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 
 import { AdSlotConfig } from './adSlotConfig';
-import { Tag } from './tag';
+import { Tag, TagLabel } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { ModuleMeta } from '@highfivve/ad-tag/source/ts/types/module';
 
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
 import { ConsentConfig } from './consentConfig';
-import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { LabelConfigDebug } from './labelConfigDebug';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 
@@ -24,6 +25,7 @@ declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWi
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
+  modules: Array<ModuleMeta>;
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
 };
@@ -98,7 +100,7 @@ export class GlobalConfig
 
   render(props: IGlobalConfigProps, state: IGlobalConfigState): JSX.Element {
     const classes = classList('MoliDebug-sidebar', [this.state.sidebarHidden, 'is-hidden']);
-    const config = props.config;
+    const { config, modules } = props;
     const showHideMessage = `${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
 
     return (
@@ -122,13 +124,46 @@ export class GlobalConfig
               {this.state.expandSection.moli && (
                 <div>
                   <div className="MoliDebug-tagContainer">
-                    <span className="MoliDebug-tagLabel">Mode</span>
+                    <TagLabel>Mode</TagLabel>
                     {config.environment === 'test' ? (
                       <Tag variant="yellow">Test</Tag>
                     ) : (
                       <Tag variant="green">Production</Tag>
                     )}
                   </div>
+                  {modules.length > 0 && (
+                    <Fragment>
+                      <h5>Moli Modules</h5>
+                      {modules.map((module, index) => {
+                        const moduleConfig = module.config;
+
+                        return (
+                          <Fragment>
+                            <div
+                              className="MoliDebug-tagContainer MoliDebug-module"
+                              data-module-key={index + 1}
+                            >
+                              <Tag>{module.name}</Tag>
+                            </div>
+                            <div className="MoliDebug-tagContainer">
+                              <TagLabel>Module Description</TagLabel>
+                              <Tag variant="transparent">{module.description}</Tag>
+                            </div>
+                            <div className="MoliDebug-tagContainer">
+                              <TagLabel>Module Type</TagLabel>
+                              <Tag variant="blue">{module.moduleType}</Tag>
+                            </div>
+                            {moduleConfig && (
+                              <Fragment>
+                                <h6>Module Config</h6>
+                                {this.unwrapConfig(moduleConfig)}
+                              </Fragment>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </Fragment>
+                  )}
                 </div>
               )}
             </div>
@@ -241,7 +276,7 @@ export class GlobalConfig
                 {this.state.expandSection.prebid && (
                   <div>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Version</span>
+                      <TagLabel>Version</TagLabel>
                       {window.pbjs.version ? (
                         <Tag>{window.pbjs.version.toString()}</Tag>
                       ) : (
@@ -250,7 +285,7 @@ export class GlobalConfig
                     </div>
 
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Prebid debug</span>
+                      <TagLabel>Prebid debug</TagLabel>
                       <Tag variant={config.prebid.config.debug ? 'yellow' : undefined}>
                         {config.prebid.config.debug ? 'enabled' : 'disabled'}
                       </Tag>
@@ -258,14 +293,14 @@ export class GlobalConfig
 
                     {config.prebid.config.enableSendAllBids !== undefined && (
                       <div className="MoliDebug-tagContainer">
-                        <span className="MoliDebug-tagLabel">sendAllBids enabled</span>
+                        <TagLabel>sendAllBids enabled</TagLabel>
                         <Tag>{config.prebid.config.enableSendAllBids.toString()}</Tag>
                       </div>
                     )}
 
                     {config.prebid.config.bidderTimeout && (
                       <div className="MoliDebug-tagContainer">
-                        <span className="MoliDebug-tagLabel">Bidder timeout</span>
+                        <TagLabel>Bidder timeout</TagLabel>
                         <Tag>{`${config.prebid.config.bidderTimeout.toString()}ms`}</Tag>
                       </div>
                     )}
@@ -274,7 +309,7 @@ export class GlobalConfig
                       <div>
                         <h5>Consent management</h5>
                         <div className="MoliDebug-tagContainer">
-                          <span className="MoliDebug-tagLabel">allowAuctionWithoutConsent</span>
+                          <TagLabel>allowAuctionWithoutConsent</TagLabel>
                           <Tag>
                             {(!!config.prebid.config.consentManagement
                               .allowAuctionWithoutConsent).toString()}
@@ -282,12 +317,12 @@ export class GlobalConfig
                         </div>
                         {config.prebid.config.consentManagement.cmpApi && (
                           <div className="MoliDebug-tagContainer">
-                            <span className="MoliDebug-tagLabel">CMP API</span>
+                            <TagLabel>CMP API</TagLabel>
                             <Tag>{config.prebid.config.consentManagement.cmpApi}</Tag>
                           </div>
                         )}
                         <div className="MoliDebug-tagContainer">
-                          <span className="MoliDebug-tagLabel">CMP timeout</span>
+                          <TagLabel>CMP timeout</TagLabel>
                           <Tag>{`${config.prebid.config.consentManagement.timeout}ms`}</Tag>
                         </div>
                       </div>
@@ -297,23 +332,23 @@ export class GlobalConfig
                       <div>
                         <h5>User sync</h5>
                         <div className="MoliDebug-tagContainer">
-                          <span className="MoliDebug-tagLabel">Sync enabled</span>
+                          <TagLabel>Sync enabled</TagLabel>
                           <Tag>{(!!config.prebid.config.userSync.syncEnabled).toString()}</Tag>
                         </div>
                         {config.prebid.config.userSync.syncDelay !== undefined && (
                           <div className="MoliDebug-tagContainer">
-                            <span className="MoliDebug-tagLabel">Sync delay</span>
+                            <TagLabel>Sync delay</TagLabel>
                             <Tag>{`${config.prebid.config.userSync.syncDelay}ms`}</Tag>
                           </div>
                         )}
                         {config.prebid.config.userSync.syncsPerBidder !== undefined && (
                           <div className="MoliDebug-tagContainer">
-                            <span className="MoliDebug-tagLabel">Syncs per bidder</span>
+                            <TagLabel>Syncs per bidder</TagLabel>
                             <Tag>{config.prebid.config.userSync.syncsPerBidder.toString()}</Tag>
                           </div>
                         )}
                         <div className="MoliDebug-tagContainer">
-                          <span className="MoliDebug-tagLabel">User sync override enabled</span>
+                          <TagLabel>User sync override enabled</TagLabel>
                           <Tag>{(!!config.prebid.config.userSync.enableOverride).toString()}</Tag>
                         </div>
                         {config.prebid.config.userSync.filterSettings && (
@@ -341,15 +376,15 @@ export class GlobalConfig
 
                     <h5>Currency</h5>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Ad server currency</span>
+                      <TagLabel>Ad server currency</TagLabel>
                       <Tag>{config.prebid.config.currency.adServerCurrency}</Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Granularity multiplier</span>
+                      <TagLabel>Granularity multiplier</TagLabel>
                       <Tag>{config.prebid.config.currency.granularityMultiplier.toString()}</Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Default Rates, USD → EUR</span>
+                      <TagLabel>Default Rates, USD → EUR</TagLabel>
                       <Tag>{config.prebid.config.currency.defaultRates.USD.EUR.toString()}</Tag>
                     </div>
                   </div>
@@ -367,17 +402,17 @@ export class GlobalConfig
                 {this.state.expandSection.a9 && (
                   <div>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">PubID</span>
+                      <TagLabel>PubID</TagLabel>
                       <Tag variant={config.a9.pubID ? 'blue' : 'red'}>{config.a9.pubID}</Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">Timeout</span>
+                      <TagLabel>Timeout</TagLabel>
                       <Tag variant={config.a9.timeout ? 'blue' : 'red'}>
                         {config.a9.timeout.toFixed(0)}ms
                       </Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
-                      <span className="MoliDebug-tagLabel">CMP timeout</span>
+                      <TagLabel>CMP timeout</TagLabel>
                       <Tag variant={config.a9.cmpTimeout ? 'blue' : 'red'}>
                         {config.a9.cmpTimeout.toFixed(0)}ms
                       </Tag>
@@ -455,6 +490,48 @@ export class GlobalConfig
     this.props.windowResizeService.unregister(this);
   };
 
+  private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): JSX.Element => {
+    console.log(Object.keys(moduleConfig));
+    return (
+      <Fragment>
+        {Object.keys(moduleConfig).map(key => {
+          const configValue = moduleConfig[key];
+          const configValueType: 'other' | 'object' | 'array' =
+            typeof configValue === 'object'
+              ? Array.isArray(configValue)
+                ? 'array'
+                : 'object'
+              : 'other';
+
+          return (
+            <div
+              className={classList('MoliDebug-tagContainer', [
+                subEntry,
+                'MoliDebug-tagContainer--subEntry'
+              ])}
+            >
+              <TagLabel>{key}</TagLabel>
+              {configValueType === 'array' &&
+                (configValue.length === 0 ? (
+                  <i>No values</i>
+                ) : (
+                  configValue.map((value: unknown) =>
+                    typeof value === 'object' ? (
+                      this.unwrapConfig(value as Object, true)
+                    ) : (
+                      <Tag variant="green">{(value as any).toString()}</Tag>
+                    )
+                  )
+                ))}
+              {configValueType === 'object' && this.unwrapConfig(configValue, true)}
+              {configValueType === 'other' && <Tag variant="green">{configValue.toString()}</Tag>}
+            </div>
+          );
+        })}
+      </Fragment>
+    );
+  };
+
   private keyValues = (keyValues: Moli.DfpKeyValueMap): JSX.Element => {
     const properties = Object.keys(keyValues);
 
@@ -510,13 +587,13 @@ export class GlobalConfig
       <div>
         <strong>{name}</strong>
         <div className="MoliDebug-tagContainer">
-          <span className="MoliDebug-tagLabel">Bidders</span>
+          <TagLabel>Bidders</TagLabel>
           {filterSetting.bidders === '*'
             ? this.standardTagFromString('all')
             : filterSetting.bidders.map(this.standardTagFromString)}
         </div>
         <div className="MoliDebug-tagContainer">
-          <span className="MoliDebug-tagLabel">Include/exclude</span>
+          <TagLabel>Include/exclude</TagLabel>
           {this.standardTagFromString(filterSetting.filter)}
         </div>
       </div>
@@ -541,14 +618,14 @@ export class GlobalConfig
         entry.duration > 5000 ? 'red' : entry.duration > 2000 ? 'yellow' : 'green';
       return (
         <div className="MoliDebug-tagContainer">
-          <span className="MoliDebug-tagLabel">{name}</span>
+          <TagLabel>{name}</TagLabel>
           <Tag variant={color}>{entry.duration.toFixed(0)} ms</Tag>
         </div>
       );
     }
     return (
       <div className="MoliDebug-tagContainer">
-        <span className="MoliDebug-tagLabel">{name}</span>
+        <TagLabel>{name}</TagLabel>
         <Tag variant="blue">no entry</Tag>
       </div>
     );

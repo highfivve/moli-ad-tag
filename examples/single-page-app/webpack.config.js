@@ -19,7 +19,7 @@ module.exports = (_, argv) => {
         {
           test: /\.ts(x?)$/,
           loader: 'ts-loader',
-          options: {'allowTsInNodeModules': true}
+          options: { allowTsInNodeModules: true }
         },
         // this separate rule is required to make sure that the Prebid.js files are babel-ified.  this rule will
         // override the regular exclusion from above (for being inside node_modules).
@@ -48,14 +48,11 @@ module.exports = (_, argv) => {
       contentBase: [
         path.join(__dirname, 'dist'),
         // always use the latest moli-debugger
-        '../../moli-debugger/dist'
+        '../../moli-debugger/lib'
       ],
       compress: true,
       port: 9000,
-      allowedHosts: [
-        'localhost',
-        '.h5v.eu'
-      ]
+      allowedHosts: ['localhost', '.h5v.eu']
     },
     plugins: [
       new HtmlWebpackPlugin({
@@ -64,5 +61,5 @@ module.exports = (_, argv) => {
         template: 'demo/index.html'
       })
     ]
-  }
+  };
 };

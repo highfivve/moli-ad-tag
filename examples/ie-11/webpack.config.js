@@ -46,7 +46,7 @@ module.exports = (_, argv) => {
         path.join(__dirname, 'dist'),
         path.join(__dirname, 'yield-config'),
         // always use the latest moli-debugger
-        '../../moli-debugger/dist'
+        '../../moli-debugger/lib'
       ],
       compress: true,
       port: 9000,

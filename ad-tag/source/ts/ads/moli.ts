@@ -11,7 +11,7 @@ import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
-import { IModule } from '../types/module';
+import { IModule, metaFromModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
@@ -30,6 +30,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     keyValues: {},
     labels: [],
     modules: [],
+    moduleMeta: [],
     reporting: {
       reporters: []
     },
@@ -265,6 +266,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     switch (state.state) {
       case 'configurable': {
         state.modules.push(module);
+        state.moduleMeta.push(metaFromModule(module));
         return;
       }
       default: {
@@ -326,6 +328,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             },
             logger: state.logger || config.logger
           },
+          moduleMeta: modules.map(metaFromModule),
           hooks: state.hooks,
           isSinglePageApp: state.isSinglePageApp,
           // create a new array as we must not share this mutable data structure
@@ -414,8 +417,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
         const afterRequestAds = state.hooks.afterRequestAds;
 
-        const refreshSlots = state.refreshSlots;
-        const isSinglePageApp = state.isSinglePageApp;
+        const { moduleMeta, isSinglePageApp, refreshSlots } = state;
         // handle single page application case
         if (isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
@@ -435,7 +437,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             keyValues: {},
             hooks: state.hooks,
             // reset refresh slots array
-            refreshSlots: []
+            refreshSlots: [],
+            moduleMeta
           };
           state = spaRequestAdsState;
 
@@ -470,7 +473,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         } else {
           state = {
             state: 'requestAds',
-            config: config
+            config: config,
+            moduleMeta
           };
           return adService
             .initialize(config, isSinglePageApp)
@@ -478,7 +482,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             .then(() => {
               state = {
                 state: 'finished',
-                config: config
+                config: config,
+                moduleMeta
               };
               afterRequestAds.forEach(hook => hook('finished'));
               return Promise.resolve(state);
@@ -488,7 +493,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               state = {
                 state: 'error',
                 config: config,
-                error: error
+                error: error,
+                moduleMeta
               };
               afterRequestAds.forEach(hook => hook('error'));
               return Promise.resolve(state);
@@ -510,7 +516,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // create new ABTest values
         setABtestTargeting();
 
-        const hooks = state.hooks;
+        const { hooks, moduleMeta } = state;
         const afterRequestAds = state.hooks.afterRequestAds;
         const beforeRequestAds = state.hooks.beforeRequestAds;
 
@@ -569,17 +575,18 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             }
             state = {
               state: 'spa-finished',
-              refreshAds: refreshAds,
-              configFromAdTag: configFromAdTag,
+              refreshAds,
+              configFromAdTag,
               config: configWithTargeting,
-              initialized: initialized,
+              initialized,
               href: window.location.href,
-              hooks: hooks,
+              hooks,
               // reset targeting after successful refreshAds()
               labels: [],
               keyValues: {},
               // reset refreshSlots
-              refreshSlots: []
+              refreshSlots: [],
+              moduleMeta
             };
             afterRequestAds.forEach(hook => hook('spa-finished'));
             return state;
@@ -656,6 +663,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   function getState(): Moli.state.States {
     return state.state;
+  }
+
+  function getModuleMeta(): Array<ModuleMeta> {
+    return state.moduleMeta;
   }
 
   function openConsole(path?: string): void {
@@ -742,6 +753,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     enableSinglePageApp: enableSinglePageApp,
     requestAds: requestAds,
     refreshAdSlot: refreshAdSlot,
+    getModuleMeta: getModuleMeta,
     getState: getState,
     openConsole: openConsole,
     getAssetLoaderService: getAssetLoaderService

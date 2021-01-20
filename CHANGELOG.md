@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.14.14
+
+[GD-2548](https://jira.gutefrage.net/browse/GD-2548). Show configured modules of the ad tag in moli debugger.
+
 ## 3.14.13
 
 [GD-2346](https://jira.gutefrage.net/browse/GD-2346). Fixed pushing tags in moli-release.
