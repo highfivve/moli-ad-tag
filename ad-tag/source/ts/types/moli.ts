@@ -1028,6 +1028,21 @@ export namespace Moli {
      */
     export interface ISlotLoading {
       readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual';
+
+      /**
+       * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
+       * slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners
+       * that bid poorly if too many placements are requested at once.
+       *
+       * Even though this property is available on all loading behaviours only `eager` and `refreshable` with
+       * `lazy: false` have an effect as these are loaded immediately.
+       *
+       * All lazy slots are loaded in a separate auction anyway.
+       *
+       * For slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper
+       * buckets.
+       */
+      readonly bucket?: string;
     }
 
     /**

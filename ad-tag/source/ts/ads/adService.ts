@@ -267,6 +267,22 @@ export class AdService {
         })
         .filter(isNotNull)
         .filter(this.isSlotAvailable);
+
+      // create buckets
+      const buckets = new Map<string, Moli.AdSlot[]>();
+      immediatelyLoadedSlots.forEach(slot => {
+        const bucket = slot.behaviour.bucket || 'default';
+        const slots = buckets.get(bucket);
+        if (slots) {
+          slots.push(slot);
+        } else {
+          buckets.set(bucket, [slot]);
+        }
+      });
+
+      // TODO run foreach bucket and Promise.all
+      // TODO debug log for bucket
+
       return this.adPipeline
         .run(immediatelyLoadedSlots, config, this.requestAdsCalls)
         .then(() => immediatelyLoadedSlots);
