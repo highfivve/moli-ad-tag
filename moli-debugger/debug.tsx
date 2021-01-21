@@ -17,7 +17,8 @@ import { WindowResizeService } from './util/windowResizeService';
 declare const window: Moli.MoliWindow;
 
 const moliConfig: MoliConfig | null = window.moli.getConfig();
-const modulesMeta: Array<ModuleMeta> = window.moli.getModuleMeta();
+const modulesMeta: Array<ModuleMeta> =
+  'getModuleMeta' in window.moli ? window.moli.getModuleMeta() : [];
 
 if (moliConfig) {
   const globalConfigElement = document.createElement('div');

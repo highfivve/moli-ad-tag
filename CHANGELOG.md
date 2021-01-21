@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.14.15
+
+[GD-2548](https://jira.gutefrage.net/browse/GD-2548). Add check for `getModuleMeta` function to moli debugger. This
+ensures compatibility with old moli API versions.
+
 ## 3.14.14
 
 [GD-2548](https://jira.gutefrage.net/browse/GD-2548). Show configured modules of the ad tag in moli debugger.
