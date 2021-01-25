@@ -15,7 +15,7 @@ import {
 } from '../../../source/ts/ads/adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from '../../../source/ts/ads/slotEventService';
-import { tcData, tcfapiFunction } from '../stubs/consentStubs';
+import { fullConsent, tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 
@@ -170,6 +170,39 @@ describe('AdPipeline', () => {
         .then(() => {
           expect(requestId).to.be.equals(2);
         });
+    });
+  });
+
+  describe('LabelService', () => {
+    it('should contain purpose-1 label if consent for purpose 1 is given', async () => {
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], emptyConfig, 1);
+
+      expect(supportedLabels).to.contain('purpose-1');
+    });
+
+    it('should not contain purpose-1 label if no consent for purpose 1 is given', async () => {
+      const noPurpose1 = fullConsent();
+      noPurpose1.purpose.consents['1'] = false;
+      dom.window.__tcfapi = tcfapiFunction(noPurpose1);
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], emptyConfig, 1);
+
+      expect(supportedLabels).to.not.contain('purpose-1');
     });
   });
 });

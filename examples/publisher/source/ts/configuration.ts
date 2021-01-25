@@ -13,7 +13,7 @@ const teadsVerticalBid = (
       placementId: placementId,
       pageId: pageId
     },
-    labelAll: [prebidjs.Teads, ...labelAll]
+    labelAll: [prebidjs.Teads, 'purpose-1', ...labelAll]
   };
 };
 
@@ -24,7 +24,7 @@ const unrulyBid = (siteId: number, targetingUUID: string): prebidjs.IUnrulyBid =
       siteId,
       targetingUUID
     },
-    labelAll: [prebidjs.Unruly]
+    labelAll: [prebidjs.Unruly, 'purpose-1']
   };
 };
 
@@ -50,7 +50,7 @@ const dspxBid = (placement: string): prebidjs.IDSPXBid => {
       placement,
       devMode: true
     },
-    labelAll: [prebidjs.DSPX]
+    labelAll: [prebidjs.DSPX, 'purpose-1']
   };
 };
 
@@ -61,7 +61,7 @@ const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
       placementId: placementId,
       video: { playback_method: ['auto_play_sound_off'] }
     },
-    labelAll: [prebidjs.AppNexusAst]
+    labelAll: [prebidjs.AppNexusAst, 'purpose-1']
   };
 };
 
@@ -71,7 +71,7 @@ const appNexusNative = (placementId: string): prebidjs.IAppNexusASTBid => {
     params: {
       placementId: placementId
     },
-    labelAll: [prebidjs.AppNexusAst]
+    labelAll: [prebidjs.AppNexusAst, 'purpose-1']
   };
 };
 

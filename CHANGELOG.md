@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 3.16.0
+
+[GD-2608](https://jira.gutefrage.net/browse/GD-2608). Add `purpose-1` label to the supported labels if consent for
+purpose 1 is given. This allows filtering prebid partners if they don't obey the user consent choices.
+
+Usage:
+
+```typescript
+const dspxBid = (placement: string): prebidjs.IDSPXBid => {
+  return {
+    bidder: prebidjs.DSPX,
+    params: { placement },
+    labelAll: [prebidjs.DSPX, 'purpose-1']
+  };
+};
+```
+
 ## 3.14.15
 
 [GD-2548](https://jira.gutefrage.net/browse/GD-2548). Add check for `getModuleMeta` function to moli debugger. This

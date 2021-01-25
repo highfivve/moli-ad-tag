@@ -254,12 +254,6 @@ export class AdPipeline {
     if (slots.length === 0) {
       return Promise.resolve();
     }
-    const extraLabels = config.targeting && config.targeting.labels ? config.targeting.labels : [];
-    const labelConfigService = new LabelConfigService(
-      config.labelSizeConfig || [],
-      extraLabels,
-      this.window
-    );
 
     // increase the prebid request count
     this.requestId = this.requestId + 1;
@@ -275,6 +269,19 @@ export class AdPipeline {
     this.tcData = this.tcData ? this.tcData : consentReady(this.window, this.logger);
 
     return this.tcData.then(consentData => {
+      const extraLabels = [...(config.targeting?.labels || [])];
+
+      // purpose 1: storing information on the user device (cookie, localstorage, etc)
+      // this labels main purpose is to be able to only enable prebid partners that treat this correctly
+      if (consentData.purpose.consents['1']) {
+        extraLabels.push('purpose-1');
+      }
+
+      const labelConfigService = new LabelConfigService(
+        config.labelSizeConfig || [],
+        extraLabels,
+        this.window
+      );
       // the context is based on the consent data
       const context: AdPipelineContext = {
         requestId: currentRequestId,
