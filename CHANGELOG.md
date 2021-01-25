@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.16.0
+## 3.15.0
 
 [GD-2608](https://jira.gutefrage.net/browse/GD-2608). Add `purpose-1` label to the supported labels if consent for
 purpose 1 is given. This allows filtering prebid partners if they don't obey the user consent choices.
