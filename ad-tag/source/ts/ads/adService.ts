@@ -35,7 +35,7 @@ import {
   prebidRequestBids
 } from './prebid';
 import { a9Configure, a9Init, a9RequestBids, a9ClearTargetingStep } from './a9';
-import { isNotNull } from '../util/arrayUtils';
+import { flatten, isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
 import { passbackPrepareRequestAds } from './passback';
@@ -280,12 +280,14 @@ export class AdService {
         }
       });
 
-      // TODO run foreach bucket and Promise.all
-      // TODO debug log for bucket
-
-      return this.adPipeline
-        .run(immediatelyLoadedSlots, config, this.requestAdsCalls)
-        .then(() => immediatelyLoadedSlots);
+      return Promise.all(
+        Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
+          this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
+          return this.adPipeline
+            .run(bucketSlots, config, this.requestAdsCalls)
+            .then(() => bucketSlots);
+        })
+      ).then(flatten);
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
       return Promise.reject(e);

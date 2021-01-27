@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.16.0
+
+[GD-2502](https://jira.gutefrage.net/browse/GD-2502). Implement loading eager slots in buckets.
+
+Some prebid bidders are a bit sensitive when it comes to loading many placements at once.
+Therefore, it is recommended to partition the loading of eager slots into buckets of 4 or 5.
+
 ## 3.15.0
 
 [GD-2608](https://jira.gutefrage.net/browse/GD-2608). Add `purpose-1` label to the supported labels if consent for

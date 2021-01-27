@@ -1,4 +1,4 @@
-import { createDom, dom } from '../stubs/browserEnvSetup';
+import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -11,6 +11,7 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import * as lazyLoaderModule from '../../../source/ts/ads/lazyLoading';
 import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
+import MoliLogger = Moli.MoliLogger;
 
 // setup sinon-chai
 use(sinonChai);
@@ -316,7 +317,8 @@ describe('AdService', () => {
     let domIdCounter: number = 0;
     const requestAds = (
       slots: Moli.AdSlot[],
-      refreshSlots: string[] = []
+      refreshSlots: string[] = [],
+      logger: MoliLogger = noopLogger
     ): Promise<Moli.AdSlot[]> => {
       const adPipelineConfiguration: IAdPipelineConfiguration = {
         init: [],
@@ -327,7 +329,7 @@ describe('AdService', () => {
         requestAds: () => Promise.resolve()
       };
       const adService = new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
-      adService.setLogger(noopLogger);
+      adService.setLogger(logger);
       return adService.requestAds({ ...emptyConfig, slots: slots }, refreshSlots);
     };
 
@@ -426,6 +428,50 @@ describe('AdService', () => {
       return expect(requestAds(allSlots, [adSlot.domId])).to.eventually.be.deep.equals(
         expectedSlots
       );
+    });
+
+    describe('slot buckets', () => {
+      it('should load ad slots in specified buckets', () => {
+        const debugStub = sandbox.stub();
+
+        const eagerAdSlot1: Moli.EagerAdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager', bucket: 'bucket1' }
+        };
+        const eagerAdSlot2: Moli.EagerAdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager', bucket: 'bucket2' }
+        };
+        const eagerAdSlot3: Moli.EagerAdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager' }
+        };
+
+        const allSlots = [eagerAdSlot1, eagerAdSlot2, eagerAdSlot3];
+
+        addToDom(allSlots);
+
+        return requestAds(allSlots, undefined, {
+          ...noopLogger,
+          debug: debugStub
+        }).then(() => {
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket bucket1, slots:`,
+            [eagerAdSlot1]
+          );
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket bucket2, slots:`,
+            [eagerAdSlot2]
+          );
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket default, slots:`,
+            [eagerAdSlot3]
+          );
+        });
+      });
     });
 
     describe('lazy slots', () => {
