@@ -173,6 +173,7 @@ describe('Zeotap Module', () => {
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), []);
 
+    // id+ should be active on first call
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
       name: module.name,
       loadMethod: AssetLoadMethod.TAG,
@@ -194,11 +195,12 @@ describe('Zeotap Module', () => {
     );
 
     expect(loadScriptStub).to.have.been.calledTwice;
-    expect(loadScriptStub).to.have.been.calledWithExactly({
+    // id+ should be deactivated on second call
+    expect(loadScriptStub.secondCall).to.have.been.calledWithExactly({
       name: module.name,
       loadMethod: AssetLoadMethod.TAG,
       assetUrl:
-        '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337&idp=1&zcat=TechnologyAndComputing&zcid=hardware%2Croboter&ctry=DEU&z_e_sha2_l=somehashedaddress'
+        '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337&idp=0&zcat=TechnologyAndComputing&zcid=hardware%2Croboter&ctry=DEU&z_e_sha2_l=somehashedaddress'
     });
   });
 

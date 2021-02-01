@@ -172,9 +172,13 @@ export default class Zeotap implements IModule {
       .map(kv => this.parameterFromKeyValue(kv, keyValuesMap))
       .join('&');
 
+    // load id+ only on the first call and if a hashed email is available
+    const loadIdPlus: boolean =
+      !!this.moduleConfig.hashedEmailAddress && this.loadScriptCount === 0;
+
     const url =
       assetUrl +
-      `&idp=${!!this.moduleConfig.hashedEmailAddress ? 1 : 0}` +
+      `&idp=${loadIdPlus ? 1 : 0}` +
       (customData.length > 0 ? `&${customData}` : '') +
       (countryCode ? `&ctry=${countryCode}` : '') +
       (hashedEmailAddress ? `&z_e_sha2_l=${hashedEmailAddress}` : '');
