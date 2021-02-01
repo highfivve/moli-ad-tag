@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.16.1
+
+[GD-2447](https://jira.gutefrage.net/browse/GD-2447) Only load Zeotap ID+ on first call in SPA mode.
+
 ## 3.16.0
 
 [GD-2502](https://jira.gutefrage.net/browse/GD-2502). Implement loading eager slots in buckets.
