@@ -315,11 +315,8 @@ describe('AdService', () => {
 
   describe('requestAds', () => {
     let domIdCounter: number = 0;
-    const requestAds = (
-      slots: Moli.AdSlot[],
-      refreshSlots: string[] = [],
-      logger: MoliLogger = noopLogger
-    ): Promise<Moli.AdSlot[]> => {
+
+    const makeAdService = (): AdService => {
       const adPipelineConfiguration: IAdPipelineConfiguration = {
         init: [],
         configure: [],
@@ -328,7 +325,15 @@ describe('AdService', () => {
         requestBids: [],
         requestAds: () => Promise.resolve()
       };
-      const adService = new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+      return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+    };
+
+    const requestAds = (
+      slots: Moli.AdSlot[],
+      refreshSlots: string[] = [],
+      logger: MoliLogger = noopLogger
+    ): Promise<Moli.AdSlot[]> => {
+      const adService = makeAdService();
       adService.setLogger(logger);
       return adService.requestAds({ ...emptyConfig, slots: slots }, refreshSlots);
     };
@@ -431,46 +436,77 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
-      it('should load ad slots in specified buckets', () => {
+      it('should load ad slots in specified buckets', async () => {
+        const adService = makeAdService();
+        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
         const debugStub = sandbox.stub();
+        const logger: Moli.MoliLogger = { ...noopLogger, debug: debugStub };
+        adService.setLogger(logger);
 
         const eagerAdSlot1: Moli.EagerAdSlot = {
           ...eagerAdSlot(),
           behaviour: { loaded: 'eager', bucket: 'bucket1' }
         };
-        const eagerAdSlot2: Moli.EagerAdSlot = {
-          ...eagerAdSlot(),
-          behaviour: { loaded: 'eager', bucket: 'bucket2' }
+        const refreshableAdSlot2: Moli.RefreshableAdSlot = {
+          ...refreshableAdSlot(false),
+          behaviour: {
+            loaded: 'refreshable',
+            lazy: false,
+            trigger: eventTrigger,
+            bucket: 'bucket2'
+          }
         };
         const eagerAdSlot3: Moli.EagerAdSlot = {
           ...eagerAdSlot(),
           behaviour: { loaded: 'eager' }
         };
 
-        const allSlots = [eagerAdSlot1, eagerAdSlot2, eagerAdSlot3];
+        const allSlots = [eagerAdSlot1, refreshableAdSlot2, eagerAdSlot3];
 
         addToDom(allSlots);
 
-        return requestAds(allSlots, undefined, {
-          ...noopLogger,
-          debug: debugStub
-        }).then(() => {
-          expect(debugStub).to.have.been.calledWithExactly(
-            'AdPipeline',
-            `running bucket bucket1, slots:`,
-            [eagerAdSlot1]
-          );
-          expect(debugStub).to.have.been.calledWithExactly(
-            'AdPipeline',
-            `running bucket bucket2, slots:`,
-            [eagerAdSlot2]
-          );
-          expect(debugStub).to.have.been.calledWithExactly(
-            'AdPipeline',
-            `running bucket default, slots:`,
-            [eagerAdSlot3]
-          );
-        });
+        await adService.requestAds(
+          {
+            ...emptyConfig,
+            slots: allSlots
+          },
+          []
+        );
+
+        expect(runSpy).to.have.been.calledThrice;
+        expect(runSpy.firstCall).to.have.been.calledWith(
+          Sinon.match.array.deepEquals([eagerAdSlot1]),
+          Sinon.match.any,
+          Sinon.match.number
+        );
+
+        expect(runSpy.secondCall).to.have.been.calledWith(
+          Sinon.match.array.deepEquals([refreshableAdSlot2]),
+          Sinon.match.any,
+          Sinon.match.number
+        );
+
+        expect(runSpy.thirdCall).to.have.been.calledWith(
+          Sinon.match.array.deepEquals([eagerAdSlot3]),
+          Sinon.match.any,
+          Sinon.match.number
+        );
+
+        expect(debugStub).to.have.been.calledWithExactly(
+          'AdPipeline',
+          `running bucket bucket1, slots:`,
+          [eagerAdSlot1]
+        );
+        expect(debugStub).to.have.been.calledWithExactly(
+          'AdPipeline',
+          `running bucket bucket2, slots:`,
+          [refreshableAdSlot2]
+        );
+        expect(debugStub).to.have.been.calledWithExactly(
+          'AdPipeline',
+          `running bucket default, slots:`,
+          [eagerAdSlot3]
+        );
       });
     });
 
