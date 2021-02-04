@@ -1,13 +1,13 @@
 import { Moli } from '../types/moli';
-import { BrowserStorageKeys } from './browser-storage-keys';
+import { BrowserStorageKeys } from './browserStorageKeys';
 import {
   getBrowserStorageValue,
   removeBrowserStorageValue,
   setBrowserStorageValue
-} from './local-storage';
+} from './localStorage';
 import { nonNullElement } from './nonNullElement';
 import { parseQueryString, updateQueryString } from './query';
-import { QueryParameters } from './query-parameters';
+import { QueryParameters } from './queryParameters';
 
 export type EnvironmentOverride = {
   source: 'queryParam' | 'localStorage' | 'sessionStorage';

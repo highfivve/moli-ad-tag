@@ -16,7 +16,7 @@ import { IAssetLoaderService } from '../../../source/ts/util/assetLoaderService'
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
-import { BrowserStorageKeys } from '../../../source/ts/util/browser-storage-keys';
+import { BrowserStorageKeys } from '../../../source/ts/util/browserStorageKeys';
 
 // setup sinon-chai
 use(sinonChai);

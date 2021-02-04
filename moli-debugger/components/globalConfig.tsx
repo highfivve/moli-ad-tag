@@ -8,7 +8,7 @@ import {
   getActiveEnvironmentOverride,
   resetEnvironmentOverrides,
   setEnvironmentOverrideInStorage
-} from '@highfivve/ad-tag/source/ts/util/environment-override';
+} from '@highfivve/ad-tag/source/ts/util/environmentOverride';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { Tag, TagLabel } from './tag';

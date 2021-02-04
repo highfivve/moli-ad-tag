@@ -16,9 +16,7 @@ import { AdService } from './adService';
 import {
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
-} from '../util/environment-override';
-import { BrowserStorageKeys } from '../util/browser-storage-keys';
-import { setBrowserStorageValue } from '../util/local-storage';
+} from '../util/environmentOverride';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
