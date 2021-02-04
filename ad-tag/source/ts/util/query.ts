@@ -42,3 +42,33 @@ export const parseQueryString = (search: string): Map<string, string> => {
     return new Map();
   }
 };
+
+/**
+ * Updates an URL parameter of the current url.
+ * Can also remove a specific parameter.
+ * Returns the new URL.
+ * @param key The key of the URL parameter.
+ * @param value The new parameter value. Set to undefined to remove the parameter.
+ * @param baseUrl Optionally pass a base URL including the protocol. When empty, window.location will be used.
+ * @param search Optionally pass a search string. When empty, window.location.search will be used.
+ */
+export const updateQueryString = (
+  key: string,
+  value?: string,
+  baseUrl?: string,
+  search?: string
+) => {
+  baseUrl = baseUrl || [location.protocol, '//', location.host, location.pathname].join('');
+  search = search || window.location.search;
+
+  const newSearch = Array.from(
+    parseQueryString(search)
+      .set(key, value || '')
+      .entries()
+  )
+    .filter(v => v[1] !== '')
+    .map(([key, value]: [string, string]) => `${key}=${value}`)
+    .join('&');
+
+  return [baseUrl, newSearch ? '?' : '', newSearch].join('');
+};

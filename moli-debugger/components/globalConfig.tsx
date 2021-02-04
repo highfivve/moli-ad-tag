@@ -4,6 +4,11 @@ import { Fragment, JSX } from 'preact';
 import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
+import {
+  getActiveEnvironmentOverride,
+  resetEnvironmentOverrides,
+  setEnvironmentOverrideInStorage
+} from '@highfivve/ad-tag/source/ts/util/environment-override';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { Tag, TagLabel } from './tag';
@@ -102,6 +107,7 @@ export class GlobalConfig
     const classes = classList('MoliDebug-sidebar', [this.state.sidebarHidden, 'is-hidden']);
     const { config, modules } = props;
     const showHideMessage = `${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
+    const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
 
     return (
       <div>
@@ -129,6 +135,11 @@ export class GlobalConfig
                       <Tag variant="yellow">Test</Tag>
                     ) : (
                       <Tag variant="green">Production</Tag>
+                    )}
+                    {isEnvironmentOverriden ? (
+                      <button onClick={this.resetEnvironmentOverrides}>Reset override</button>
+                    ) : (
+                      <button onClick={this.overrideEnvironmentToTest}>Override to test</button>
                     )}
                   </div>
                   {modules.length > 0 && (
@@ -488,6 +499,15 @@ export class GlobalConfig
 
   public componentWillUnmount = (): void => {
     this.props.windowResizeService.unregister(this);
+  };
+
+  private resetEnvironmentOverrides = () => {
+    resetEnvironmentOverrides(window);
+  };
+
+  private overrideEnvironmentToTest = () => {
+    setEnvironmentOverrideInStorage('test', localStorage);
+    window.location.reload();
   };
 
   private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): JSX.Element => {

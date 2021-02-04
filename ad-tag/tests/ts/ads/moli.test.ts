@@ -16,6 +16,7 @@ import { IAssetLoaderService } from '../../../source/ts/util/assetLoaderService'
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
+import { BrowserStorageKeys } from '../../../source/ts/util/browser-storage-keys';
 
 // setup sinon-chai
 use(sinonChai);
@@ -65,6 +66,8 @@ describe('moli', () => {
 
   afterEach(() => {
     sandbox.reset();
+    jsDomWindow.sessionStorage.clear();
+    jsDomWindow.localStorage.clear();
   });
 
   describe('init ad tag', () => {
@@ -949,49 +952,122 @@ describe('moli', () => {
   });
 
   describe('environment override', () => {
-    it('should override the environment with test', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      dom.reconfigure({
-        url: 'https://localhost?moliEnv=test'
-      });
-
-      adTag.configure(defaultConfig);
-
+    const expectEnvironment = (adTag: Moli.MoliTag, environment: Moli.Environment | undefined) => {
       const config = adTag.getConfig();
       expect(config).to.be.ok;
       expect(config!.reporting).to.be.ok;
-      expect(config!.environment).to.be.equal('test');
+      expect(config!.environment).to.be.equal(environment);
+    };
+
+    describe('with query parameter', () => {
+      it('should override the environment with test', () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        dom.reconfigure({
+          url: 'https://localhost?moliEnv=test'
+        });
+
+        adTag.configure(defaultConfig);
+
+        expectEnvironment(adTag, 'test');
+      });
+
+      it('should override the environment with production', () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        dom.reconfigure({
+          url: 'https://localhost?moliEnv=production'
+        });
+
+        adTag.configure(defaultConfig);
+
+        expectEnvironment(adTag, 'production');
+      });
+
+      it('should not change the environment if query parameter is invalid', () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        dom.reconfigure({
+          url: 'https://localhost?moliEnv=wrong'
+        });
+
+        adTag.configure(defaultConfig);
+
+        expectEnvironment(adTag, undefined);
+      });
     });
 
-    it('should override the environment with production', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      dom.reconfigure({
-        url: 'https://localhost?moliEnv=production'
+    describe('with session storage', () => {
+      it('should override the environment with test', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        jsDomWindow.sessionStorage.setItem(BrowserStorageKeys.moliEnv, 'test');
+        adTag.configure(defaultConfig);
+        expectEnvironment(adTag, 'test');
       });
 
-      adTag.configure(defaultConfig);
+      it('should override the environment with production', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        jsDomWindow.sessionStorage.setItem(BrowserStorageKeys.moliEnv, 'production');
+        adTag.configure(defaultConfig);
+        expectEnvironment(adTag, 'production');
+      });
 
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.environment).to.be.equal('production');
+      it('should not change the environment if the value is invalid', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        jsDomWindow.sessionStorage.setItem(BrowserStorageKeys.moliEnv, 'wrong');
+        adTag.configure(defaultConfig);
+        expectEnvironment(adTag, undefined);
+      });
     });
 
-    it('should not change the environment if query parameter is invalid', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      dom.reconfigure({
-        url: 'https://localhost?moliEnv=wrong'
+    describe('with local storage', () => {
+      it('should override the environment with test', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        jsDomWindow.localStorage.setItem(BrowserStorageKeys.moliEnv, 'test');
+        adTag.configure(defaultConfig);
+        expectEnvironment(adTag, 'test');
       });
 
-      adTag.configure(defaultConfig);
+      it('should override the environment with production', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        jsDomWindow.localStorage.setItem(BrowserStorageKeys.moliEnv, 'production');
+        adTag.configure(defaultConfig);
+        expectEnvironment(adTag, 'production');
+      });
 
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.environment).to.be.undefined;
+      it('should not change the environment if the value is invalid', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        jsDomWindow.localStorage.setItem(BrowserStorageKeys.moliEnv, 'wrong');
+        adTag.configure(defaultConfig);
+        expectEnvironment(adTag, undefined);
+      });
+    });
+
+    describe('precedences', () => {
+      it('query parameter has the highest precedence', () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        dom.reconfigure({
+          url: 'https://localhost?moliEnv=test'
+        });
+        jsDomWindow.sessionStorage.setItem(BrowserStorageKeys.moliEnv, 'production');
+        jsDomWindow.localStorage.setItem(BrowserStorageKeys.moliEnv, 'production');
+
+        adTag.configure(defaultConfig);
+
+        expectEnvironment(adTag, 'test');
+      });
+
+      it('session storage has a higher precedence than local storage', () => {
+        const adTag = createMoliTag(jsDomWindow);
+
+        jsDomWindow.sessionStorage.setItem(BrowserStorageKeys.moliEnv, 'test');
+        jsDomWindow.localStorage.setItem(BrowserStorageKeys.moliEnv, 'production');
+
+        adTag.configure(defaultConfig);
+
+        expectEnvironment(adTag, 'test');
+      });
     });
   });
 

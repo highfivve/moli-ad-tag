@@ -13,6 +13,12 @@ import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
 import { IModule, metaFromModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
+import {
+  getActiveEnvironmentOverride,
+  setEnvironmentOverrideInStorage
+} from '../util/environment-override';
+import { BrowserStorageKeys } from '../util/browser-storage-keys';
+import { setBrowserStorageValue } from '../util/local-storage';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -281,8 +287,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     switch (state.state) {
       case 'configurable': {
         const shouldInitialize = state.initialize;
-        const envOverride = getEnvironmentOverride();
+        const envOverride = getActiveEnvironmentOverride(window);
         const modules = state.modules;
+
+        // If the query params contain an environment override, save it in the session storage,
+        // so that the override remains even if the query param is gone. This is helpful on SPAs or
+        // if the site filters out query params.
+        if (envOverride?.source === 'queryParam') {
+          setEnvironmentOverrideInStorage(envOverride.environment, window.sessionStorage);
+        }
 
         // initialize modules with the config from the ad tag. There is no external configuration support for modules.
         // the config will be altered by this call
@@ -301,7 +314,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           configFromAdTag: config,
           config: {
             ...config,
-            ...envOverride,
+            ...(envOverride && { environment: envOverride.environment }),
             targeting: {
               keyValues: {
                 ...(config.targeting && config.targeting.keyValues
@@ -700,32 +713,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1;
 
     setTargeting(key, abTest.toString());
-  }
-
-  /**
-   * Overrides the environment configuration. This allows us to either force
-   * a production or test environment, which eases the integration for the publisher.
-   *
-   * query parameter: moliEnv
-   * allowed values: test | production
-   *
-   * Example:
-   * {@link https://local.h5v.eu:9000/?moliEnv=test}
-   *
-   */
-  function getEnvironmentOverride(): Pick<Moli.MoliConfig, 'environment'> {
-    const key = 'moliEnv';
-    const params = parseQueryString(window.location.search);
-    const param = params.get(key);
-
-    switch (param?.toLowerCase()) {
-      case 'test':
-        return { environment: 'test' };
-      case 'production':
-        return { environment: 'production' };
-      default:
-        return {};
-    }
   }
 
   function getAssetLoaderService(): IAssetLoaderService {
