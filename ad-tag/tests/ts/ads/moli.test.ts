@@ -960,28 +960,34 @@ describe('moli', () => {
     };
 
     describe('with query parameter', () => {
-      it('should override the environment with test', () => {
+      it('should override the environment with test and save that in session storage', () => {
         const adTag = createMoliTag(jsDomWindow);
 
         dom.reconfigure({
           url: 'https://localhost?moliEnv=test'
         });
 
+        expect(jsDomWindow.sessionStorage.getItem(BrowserStorageKeys.moliEnv)).to.be.null;
+
         adTag.configure(defaultConfig);
 
         expectEnvironment(adTag, 'test');
+        expect(jsDomWindow.sessionStorage.getItem(BrowserStorageKeys.moliEnv)).to.be.equal('test');
       });
 
-      it('should override the environment with production', () => {
+      it('should override the environment with production and save that in session storage', () => {
         const adTag = createMoliTag(jsDomWindow);
 
         dom.reconfigure({
           url: 'https://localhost?moliEnv=production'
         });
 
+        expect(jsDomWindow.sessionStorage.getItem(BrowserStorageKeys.moliEnv)).to.be.null;
+
         adTag.configure(defaultConfig);
 
         expectEnvironment(adTag, 'production');
+        expect(jsDomWindow.sessionStorage.getItem(BrowserStorageKeys.moliEnv)).to.be.equal('production');
       });
 
       it('should not change the environment if query parameter is invalid', () => {
