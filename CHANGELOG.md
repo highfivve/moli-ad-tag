@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.17.0
+
+[GD-2615](https://jira.gutefrage.net/browse/GD-2615) Environment override is configurable from local storage and
+session storage. Also the override can be toggled in the moli debugger.
+
 ## 3.16.1
 
 [GD-2447](https://jira.gutefrage.net/browse/GD-2447) Only load Zeotap ID+ on first call in SPA mode.
