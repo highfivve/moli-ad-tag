@@ -987,7 +987,9 @@ describe('moli', () => {
         adTag.configure(defaultConfig);
 
         expectEnvironment(adTag, 'production');
-        expect(jsDomWindow.sessionStorage.getItem(BrowserStorageKeys.moliEnv)).to.be.equal('production');
+        expect(jsDomWindow.sessionStorage.getItem(BrowserStorageKeys.moliEnv)).to.be.equal(
+          'production'
+        );
       });
 
       it('should not change the environment if query parameter is invalid', () => {
