@@ -801,6 +801,9 @@ export namespace Moli {
     /** media query that must match if the sizes are applicable */
     readonly mediaQuery: string;
 
+    /** optional array of labels. All labels must be present if the sizes should be applied */
+    readonly labelAll?: string[];
+
     /** static sizes that are support if the media query matches */
     readonly sizesSupported: DfpSlotSize[];
   }

@@ -58,8 +58,8 @@ describe('SizeConfigService', () => {
 
   const emptySizeConfig: SizeConfigEntry[] = [];
   const jsDomWindow: Window = dom.window as any;
-  const newSizeConfigService = (sizeConfig: SizeConfigEntry[]) =>
-    new SizeConfigService(sizeConfig, jsDomWindow);
+  const newSizeConfigService = (sizeConfig: SizeConfigEntry[], supportedLabels: string[] = []) =>
+    new SizeConfigService(sizeConfig, supportedLabels, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();
@@ -153,6 +153,51 @@ describe('SizeConfigService', () => {
 
       expect(sizeConfigService.filterSlot(adSlot605x165)).to.be.false;
       expect(sizeConfigService.filterSlot(adSlotFluid985x380)).to.be.true;
+    });
+  });
+
+  describe('additional label filtering', () => {
+    const sizes: DfpSlotSize[] = [[300, 250], 'fluid'];
+    const newSizeConfigEntry = (labelAll?: string[]): SizeConfigEntry => {
+      return {
+        sizesSupported: sizes,
+        mediaQuery: 'min-width: 300px',
+        labelAll: labelAll
+      };
+    };
+
+    it('should accept supported sizes if all labels is undefined', () => {
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry()]);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
+    it('should accept supported sizes if all labels is empty', () => {
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry([])]);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
+    it('should accept supported sizes if all labels are included in the supported labels', () => {
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels)], labels);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
+    it('should filter supported sizes if not all labels are included in the supported labels', () => {
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels)], []);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
+    });
+
+    it('should filter supported sizes if all labels are included in the supported labels, but the media query does not match', () => {
+      const matchMediaStub = sandbox
+        .stub(dom.window, 'matchMedia')
+        .returns({ matches: false } as MediaQueryList);
+
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels)], labels);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
+
+      matchMediaStub.restore();
     });
   });
 });

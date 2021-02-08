@@ -8,16 +8,15 @@ export interface IAdProps {
 }
 
 type Moli = {
-  readonly que: MoliCommand[]
+  readonly que: MoliCommand[];
 
   refreshAdSlot(domId: string): void;
 };
 type MoliCommand = (moli: Moli) => void;
 
 declare const window: Window & {
-  moli: { que: MoliCommand[] }
+  moli: { que: MoliCommand[] };
 };
-
 
 /**
  * # Ad Component
@@ -26,7 +25,6 @@ declare const window: Window & {
  * corresponding event to trigger the ad.
  */
 export class Ad extends React.Component<IAdProps, {}> {
-
   static contextType = RequestAdsContext;
   context!: React.ContextType<typeof RequestAdsContext>;
 
@@ -47,8 +45,6 @@ export class Ad extends React.Component<IAdProps, {}> {
    * and `componentDidUpdate` may not be triggered.
    */
   componentDidMount(): void {
-    console.log('componentDidMount', this.props.domId);
-
     if (this.props.trigger === 'manual') {
       // refreshAds based ad reload
       window.moli = window.moli || { que: [] };

@@ -37,11 +37,24 @@ export class SizeConfigService {
     return size !== 'fluid';
   }
 
-  constructor(private readonly sizeConfig: SizeConfigEntry[], private readonly window: Window) {
+  constructor(
+    private readonly sizeConfig: SizeConfigEntry[],
+    private readonly supportedLabels: string[],
+    private readonly window: Window
+  ) {
     // Matches the given slot sizes against the window's dimensions.
     const supportedSizeConfigs =
       sizeConfig.length !== 0
-        ? sizeConfig.filter(conf => window.matchMedia(conf.mediaQuery).matches)
+        ? sizeConfig.filter(
+            conf =>
+              // media query must match
+              window.matchMedia(conf.mediaQuery).matches &&
+              // if labelAll is defined, all labels must be part of the supportedLabels array
+              (!conf.labelAll ||
+                conf.labelAll.every(
+                  label => !!supportedLabels.find(supportedLabel => supportedLabel === label)
+                ))
+          )
         : [];
 
     this.isValid =

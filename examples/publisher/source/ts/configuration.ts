@@ -163,6 +163,7 @@ export const adConfiguration: Moli.MoliConfig = {
       sizes: [
         [605, 165],
         [605, 340],
+        [640, 480],
         [1, 1]
       ],
       prebid: [
@@ -239,6 +240,11 @@ export const adConfiguration: Moli.MoliConfig = {
             [605, 340],
             [1, 1]
           ]
+        },
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [[640, 480]],
+          labelAll: [prebidjs.AppNexusAst]
         },
         {
           mediaQuery: '(max-width: 767px)',

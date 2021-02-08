@@ -10,6 +10,7 @@ import DfpSlotSize = Moli.DfpSlotSize;
 
 type ISizeConfigProps = {
   sizeConfig: Array<SizeConfigEntry>;
+  supportedLabels: Array<string>;
 };
 
 type ISizeConfigState = {};
@@ -20,6 +21,10 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
       <div>
         {props.sizeConfig.map((sizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
+          const labelsMatch =
+            !sizeConfigEntry.labelAll ||
+            sizeConfigEntry.labelAll.every(l => props.supportedLabels.includes(l));
+
           return (
             <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
               Entry <strong>#{idx + 1}</strong>
@@ -36,6 +41,26 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
                   {sizeConfigEntry.mediaQuery}
                 </div>
               </div>
+              {sizeConfigEntry.labelAll && (
+                <div className="MoliDebug-tagContainer">
+                  <span className="MoliDebug-tagLabel">Label All</span>
+                  {sizeConfigEntry.labelAll.map(label => {
+                    const labelMatches = props.supportedLabels.includes(label);
+                    return (
+                      <div
+                        className={classList(
+                          'MoliDebug-tag',
+                          [labelMatches, 'MoliDebug-tag--green'],
+                          [!labelMatches, 'MoliDebug-tag--red']
+                        )}
+                        title={`Labels ${labelsMatch ? 'match' : "don't match"}`}
+                      >
+                        {label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="MoliDebug-tagContainer">
                 <span className="MoliDebug-tagLabel">Supported slot sizes</span>
                 {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}

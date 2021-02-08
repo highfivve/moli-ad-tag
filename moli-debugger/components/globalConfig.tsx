@@ -511,7 +511,6 @@ export class GlobalConfig
   };
 
   private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): JSX.Element => {
-    console.log(Object.keys(moduleConfig));
     return (
       <Fragment>
         {Object.keys(moduleConfig).map(key => {

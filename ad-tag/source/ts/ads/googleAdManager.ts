@@ -189,7 +189,11 @@ export const gptDefineSlots = (): DefineSlotsStep => (
   slots: Moli.AdSlot[]
 ) => {
   const slotDefinitions = slots.map(moliSlot => {
-    const sizeConfigService = new SizeConfigService(moliSlot.sizeConfig, context.window);
+    const sizeConfigService = new SizeConfigService(
+      moliSlot.sizeConfig,
+      context.labelConfigService.getSupportedLabels(),
+      context.window
+    );
     const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
 
     // filter slots that shouldn't be displayed

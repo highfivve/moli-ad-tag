@@ -198,7 +198,10 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
         )}
         {state.showSizeConfig && props.slot.sizeConfig && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            <SizeConfigDebug sizeConfig={props.slot.sizeConfig} />
+            <SizeConfigDebug
+              sizeConfig={props.slot.sizeConfig}
+              supportedLabels={this.props.labelConfigService.getSupportedLabels()}
+            />
           </div>
         )}
       </div>
@@ -388,7 +391,11 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
   private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
-    const sizeConfigService = new SizeConfigService(slotSizeConfig, window);
+    const sizeConfigService = new SizeConfigService(
+      slotSizeConfig,
+      this.props.labelConfigService.getSupportedLabels(),
+      window
+    );
 
     return sizes.map(size => ({
       valid: sizeConfigService.filterSupportedSizes([size]).length > 0,
