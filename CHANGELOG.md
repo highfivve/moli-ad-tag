@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 3.18.0
+
+[GD-2641](https://jira.gutefrage.net/browse/GD-2641). Add the ability to filter size configs via labels.
+
+```javascript
+sizeConfig: [
+  {
+    mediaQuery: '(min-width: 768px)',
+    sizesSupported: [ [728, 90], [800, 250] ]
+  },
+  {
+    mediaQuery: '(min-width: 768px)',
+    sizesSupported: [ [970, 250] ],
+    labelAll: [ 'home' ]
+  }
+]
+```
+
 ## 3.17.0
 
 [GD-2615](https://jira.gutefrage.net/browse/GD-2615) Environment override is configurable from local storage and
