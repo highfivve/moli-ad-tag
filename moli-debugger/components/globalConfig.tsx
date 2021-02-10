@@ -25,6 +25,10 @@ import AdSlot = Moli.AdSlot;
 import { ConsentConfig } from './consentConfig';
 import { LabelConfigDebug } from './labelConfigDebug';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
+import {
+  getDebugDelayFromLocalStorage,
+  setDebugDelayToLocalStorage
+} from 'ad-tag/source/ts/util/debugDelay';
 
 declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
@@ -108,6 +112,7 @@ export class GlobalConfig
     const { config, modules } = props;
     const showHideMessage = `${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
+    const debugDelay = getDebugDelayFromLocalStorage(window);
 
     return (
       <div>
@@ -141,6 +146,25 @@ export class GlobalConfig
                     ) : (
                       <button onClick={this.overrideEnvironmentToTest}>Override to test</button>
                     )}
+                  </div>
+                  <div className="MoliDebug-tagContainer">
+                    <TagLabel>Delay loading ads (only in test environment)</TagLabel>
+                    <input
+                      type="number"
+                      placeholder="in milliseconds"
+                      value={debugDelay}
+                      list="debug-delay-suggestions"
+                      disabled={config.environment !== 'test'}
+                      onChange={e =>
+                        setDebugDelayToLocalStorage(window, e.currentTarget.valueAsNumber)
+                      }
+                    />
+                    <datalist id="debug-delay-suggestions">
+                      <option value={500} />
+                      <option value={1000} />
+                      <option value={2000} />
+                      <option value={3000} />
+                    </datalist>
                   </div>
                   {modules.length > 0 && (
                     <Fragment>

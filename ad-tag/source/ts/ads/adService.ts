@@ -42,6 +42,7 @@ import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
+import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 
 export class AdService {
   /**
@@ -191,6 +192,14 @@ export class AdService {
       init.push(...config.pipeline.initSteps);
       configure.push(...config.pipeline.configureSteps);
       prepareRequestAds.push(...config.pipeline.prepareRequestAdsSteps);
+    }
+
+    // delay ad requests for debugging
+    if (env === 'test') {
+      const debugDelay = getDebugDelayFromLocalStorage(this.window);
+      if (debugDelay) {
+        configure.push(() => executeDebugDelay(debugDelay));
+      }
     }
 
     this.adPipeline = new AdPipeline(
