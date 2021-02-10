@@ -1,3 +1,4 @@
 export const BrowserStorageKeys = {
-  moliEnv: 'moliEnv'
+  moliEnv: 'moliEnv',
+  testSlotSize: (id: string) => `moli-test-slot-size-${id}`
 };

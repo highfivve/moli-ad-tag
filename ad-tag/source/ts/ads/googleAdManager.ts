@@ -16,6 +16,7 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
 import SlotDefinition = Moli.SlotDefinition;
 import { tcfapi } from '../types/tcfapi';
 import IGoogleTag = googletag.IGoogleTag;
+import { createBlankTestSlots, fillTestSlots } from '../util/test-slots';
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -280,58 +281,7 @@ export const gptRequestAds = (): RequestAdsStep => (
     context.logger.debug('GAM', 'requestAds');
     switch (context.env) {
       case 'test':
-        slots.forEach(({ adSlot, moliSlot, filterSupportedSizes }) => {
-          const containerId = `${moliSlot.domId}__container`;
-          const containerWidthId = `${moliSlot.domId}__container_width`;
-          const containerHeightId = `${moliSlot.domId}__container_height`;
-
-          // pick a random, fixed sizes
-          const sizes = filterSupportedSizes(moliSlot.sizes)
-            // no fluid sizes
-            .filter(SizeConfigService.isFixedSize)
-            // no 1x1 sizes
-            .filter(([width, height]) => width > 1 && height > 1);
-          const rnd = Math.floor(Math.random() * 20) + 1;
-          const index = (sizes.length - 1) % rnd;
-
-          // there is room for improvement. We should differentiate between only fluid, only 1x1
-          const [width, height] = sizes.length === 0 ? [300, 250] : sizes[index];
-
-          const buttons = sizes
-            .map(([width, height]) => {
-              const resize = `(function(){
-              var container = document.getElementById('${containerId}');
-              container.style.width = '${width}px';
-              container.style.height = '${height}px';
-              document.getElementById('${moliSlot.domId}${containerWidthId}').textContent = ${width};
-              document.getElementById('${moliSlot.domId}${containerHeightId}').textContent = ${height};
-            })()`;
-              return `<button onclick="${resize}" style="font-size: 10px; background: #00a4a6; color: white; border: 1px dotted white;">${width}x${height}</button>`;
-            })
-            .join('\n');
-
-          // CSS Pattern from https://leaverou.github.io/css3patterns/#lined-paper
-          const html = `<div id="${containerId}"
-                             style="position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-                             width: ${width}px; height: ${height}px; padding: 6px; border: 2px dotted gray;
-                             background-color: #fff;
-                             background-image:
-                             linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
-                             linear-gradient(#eee .1em, transparent .1em);
-                             background-size: 100% 1.2em;
-                             ">
-<div style="position: absolute; top: 5px; left: 5px">${buttons}</div>
-<div>
-<h4><strong>${moliSlot.domId}</strong> <span style="color: #656565;">(<span id="${moliSlot.domId}${containerWidthId}">${width}</span>x<span id="${moliSlot.domId}${containerHeightId}">${height}</span>)</span></h4>
-</div>
-</div>`;
-
-          context.window.googletag.content().setContent(adSlot, html);
-          context.logger.debug(
-            'GAM',
-            `Set content for slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
-          );
-        });
+        fillTestSlots(createBlankTestSlots(context, slots));
         break;
       case 'production':
         // load ads
