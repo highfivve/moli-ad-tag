@@ -5,11 +5,25 @@ import { isNotNull } from './arrayUtils';
 import { BrowserStorageKeys } from './browserStorageKeys';
 import { getBrowserStorageValue, setBrowserStorageValue } from './localStorage';
 
+/**
+ * When starting in test environment, all ads are replaced by fake "test slots". These contain debugging functionality.
+ *
+ * - The available ad sizes are listed inside the slot and can be previewed by clicking on them.
+ * - The last manually selected ad size is stored in local storage and applied on future page loads.
+ * - A slot can be hidden with a "hide" button.
+ */
+
 export type TestSlot = {
   slot: Moli.SlotDefinition;
+  /**
+   * The visual representation of the test slot.
+   */
   container: HTMLElement;
 };
 
+/**
+ * width, height. Compatible with Moli.DfpSlotSize.
+ */
 type Size = [number, number];
 
 /**
@@ -24,7 +38,7 @@ const isSize = (size: any): size is Size =>
 const testSlotContainerId = (moliSlotDomId: string) => `${moliSlotDomId}__container`;
 
 /**
- * Sets a div as the content of every given slot, which can be manipulated for debugging.
+ * Sets a blank div as the content of every given slot, which can later be altered.
  * @returns the created DOM elements along with their respective slots.
  */
 export const createBlankTestSlots = (
@@ -65,7 +79,8 @@ export const queryTestSlots = (slots: Moli.SlotDefinition[]): TestSlot[] =>
 export const fillTestSlots = (slots: TestSlot[]): void => {
   slots.forEach(({ slot, container }) => {
     const sizes = getTestSlotSizes(slot);
-    const [width, height] = pickTestSlotSize(slot, sizes);
+    const activeSize = pickTestSlotSize(slot, sizes);
+    const [width, height] = activeSize;
 
     container.style.cssText = `
       position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
@@ -94,7 +109,7 @@ export const fillTestSlots = (slots: TestSlot[]): void => {
     buttonContainer.style.cssText = `position: absolute; top: 5px; left: 5px`;
     container.appendChild(buttonContainer);
 
-    const updateSize = (size: Size | 'hidden') => {
+    const updateSize = (size: Size | 'hidden', button: HTMLButtonElement) => {
       if (size === 'hidden') {
         container.style.display = 'none';
       } else {
@@ -102,27 +117,42 @@ export const fillTestSlots = (slots: TestSlot[]): void => {
         container.style.width = `${width}px`;
         container.style.height = `${height}px`;
         updateSizeDescription(size);
+        markButtonAsActive(button);
         saveSizeInLocalStorage(slot, size);
       }
     };
 
+    const defaultButtonBorder = '1px dotted white';
+    const activeButtonBorder = '1px solid black';
+
     const hideButton = document.createElement('button');
     hideButton.innerText = 'hide';
-    hideButton.style.cssText = `font-size: 10px; background: #656565; color: white; border: 1px dotted white;`;
-    hideButton.addEventListener('click', () => updateSize('hidden'));
+    hideButton.style.cssText = `font-size: 10px; background: #656565; color: white; border: ${defaultButtonBorder};`;
+    hideButton.addEventListener('click', () => updateSize('hidden', hideButton));
 
     const buttons = [
-      ...sizes.map(([width, height]) => {
+      ...sizes.map(buttonSize => {
+        const [width, height] = buttonSize;
+        const isActiveSize = equalsSize(activeSize, buttonSize);
         const button = document.createElement('button');
+
         button.innerText = `${width}x${height}`;
-        button.style.cssText = `font-size: 10px; background: #00a4a6; color: white; border: 1px dotted white;`;
-        button.addEventListener('click', () => updateSize([width, height]));
+        button.style.cssText = `font-size: 10px; background: #00a4a6; color: white; border: ${
+          isActiveSize ? activeButtonBorder : defaultButtonBorder
+        };`;
+        button.addEventListener('click', () => updateSize(buttonSize, button));
+
         return button;
       }),
       hideButton
     ];
 
     buttons.forEach(button => buttonContainer.appendChild(button));
+
+    const markButtonAsActive = (button: HTMLButtonElement) => {
+      buttons.forEach(button => (button.style.border = defaultButtonBorder)); // reset other buttons
+      button.style.border = activeButtonBorder;
+    };
   });
 };
 
@@ -180,10 +210,16 @@ const getSizeFromLocalStorage = (slot: Moli.SlotDefinition): Size | undefined =>
 };
 
 /**
+ * Whether two sizes are equal.
+ */
+const equalsSize = (a: Size, b: Size) => {
+  const [widthA, heightA] = a;
+  const [widthB, heightB] = b;
+  return widthA === widthB && heightA === heightB;
+};
+
+/**
  * Needed to check whether a size from local storage still matches one of the available slot sizes.
  */
 const includesSize = (validSizes: Size[], size: Size): boolean =>
-  validSizes.some(([validWidth, validHeight]) => {
-    const [width, height] = size;
-    return validWidth === width && validHeight === height;
-  });
+  validSizes.some(validSize => equalsSize(validSize, size));
