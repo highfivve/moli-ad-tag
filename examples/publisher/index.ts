@@ -18,7 +18,7 @@ import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag/source/ts/ads/moliGlobal';
+import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import Confiant from '@highfivve/module-confiant';
 

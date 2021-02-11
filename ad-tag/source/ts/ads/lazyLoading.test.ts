@@ -3,8 +3,8 @@ import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
 
 import sinonChai from 'sinon-chai';
-import { createLazyLoader } from '../../../source/ts/ads/lazyLoading';
-import { SlotEventService } from '../../../source/ts/ads/slotEventService';
+import { createLazyLoader } from './lazyLoading';
+import { SlotEventService } from './slotEventService';
 
 // setup sinon-chai
 use(sinonChai);

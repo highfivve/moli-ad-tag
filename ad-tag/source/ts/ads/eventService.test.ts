@@ -3,10 +3,10 @@ import { noopLogger } from '../stubs/moliStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { SlotEventService } from '../../../source/ts/ads/slotEventService';
-import { Moli } from '../../../source/ts/types/moli';
+import { SlotEventService } from './slotEventService';
+import { Moli } from '../types/moli';
 import EventTrigger = Moli.behaviour.EventTrigger;
-import { googletag } from '../../../source/ts/types/googletag';
+import { googletag } from '../types/googletag';
 
 // setup sinon-chai
 use(sinonChai);

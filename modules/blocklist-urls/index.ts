@@ -1,13 +1,14 @@
-import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import {
+  IModule,
+  ModuleType,
+  googletag,
+  IAssetLoaderService,
   HIGH_PRIORITY,
   mkConfigureStep,
-  mkPrepareRequestAdsStep
-} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
-import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+  mkPrepareRequestAdsStep,
+  getLogger,
+  Moli
+} from '@highfivve/ad-tag';
 
 export interface IBlocklistEntry {
   /**

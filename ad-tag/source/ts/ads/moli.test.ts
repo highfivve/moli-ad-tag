@@ -2,21 +2,21 @@ import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { Moli } from '../../../source/ts/types/moli';
-import { createMoliTag } from '../../../source/ts/ads/moli';
-import { initAdTag } from '../../../source/ts/ads/moliGlobal';
+import { Moli } from '../types/moli';
+import { createMoliTag } from './moli';
+import { initAdTag } from './moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
 import { emptyConfig, newEmptyConfig, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = Moli.state.IConfigurable;
 import IFinished = Moli.state.IFinished;
 import ISinglePageApp = Moli.state.ISinglePageApp;
-import { IModule } from '../../../source/ts/types/module';
-import { IAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
+import { IModule } from '../types/module';
+import { IAssetLoaderService } from '../util/assetLoaderService';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
-import { googletag } from '../../../source/ts/types/googletag';
-import { prebidjs } from '../../../source/ts/types/prebidjs';
-import { BrowserStorageKeys } from '../../../source/ts/util/browserStorageKeys';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
+import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
 
 // setup sinon-chai
@@ -798,7 +798,7 @@ describe('moli', () => {
 
         const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
-        [...Array(callCounts).keys()].forEach(_ => adTag.beforeRequestAds(hookSpy));
+        [...Array.from(new Array(callCounts).keys())].forEach(_ => adTag.beforeRequestAds(hookSpy));
         adTag.configure(defaultConfig);
         return adTag.requestAds().then(() => {
           expect(hookSpy).to.be.callCount(callCounts);
@@ -870,7 +870,7 @@ describe('moli', () => {
 
         const hookSpy = sandbox.spy(afterRequestAdsHook);
 
-        [...Array(callCounts).keys()].forEach(_ => adTag.afterRequestAds(hookSpy));
+        [...Array.from(new Array(callCounts).keys())].forEach(_ => adTag.afterRequestAds(hookSpy));
         adTag.configure(defaultConfig);
         return adTag.requestAds().then(() => {
           expect(hookSpy).to.be.callCount(callCounts);

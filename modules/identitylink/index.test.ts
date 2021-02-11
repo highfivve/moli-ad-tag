@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import {
   AssetLoadMethod,
   createAssetLoaderService

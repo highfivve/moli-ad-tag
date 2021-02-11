@@ -1,14 +1,14 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import {
   UserActivityLevelControl,
   UserActivityParameters,
   userActivityParametersForLevel,
   UserActivityService
 } from './userActivityService';
-import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
+import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 
 use(sinonChai);
 

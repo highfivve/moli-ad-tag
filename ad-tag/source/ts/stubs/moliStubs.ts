@@ -1,4 +1,4 @@
-import { Moli } from '../../../source/ts/types/moli';
+import { Moli } from '../types/moli';
 
 export const newNoopLogger = (withErrorLogs?: boolean): Moli.MoliLogger => {
   return {

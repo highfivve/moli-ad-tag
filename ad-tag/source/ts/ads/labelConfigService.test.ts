@@ -4,9 +4,9 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
-import { Moli } from '../../../source/ts/types/moli';
+import { Moli } from '../types/moli';
 
-import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
+import { LabelConfigService } from './labelConfigService';
 import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
 
 // setup sinon-chai

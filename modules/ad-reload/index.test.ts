@@ -2,29 +2,25 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
+import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
+import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
+import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
-  createGoogletagStub,
-  googleAdSlotStub
-} from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
-import { reportingServiceStub } from '@highfivve/ad-tag/tests/ts/stubs/reportingServiceStub';
-import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
-
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import {
+  googletag,
+  prebidjs,
+  Moli,
   AdPipeline,
   AdPipelineContext,
   IAdPipelineConfiguration,
-  mkInitStep
-} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
-import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+  mkInitStep,
+  createAssetLoaderService,
+  SlotEventService
+} from '@highfivve/ad-tag';
 
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 import AdReload from './index';
-import { SlotEventService } from '@highfivve/ad-tag/source/ts/ads/slotEventService';
 
 use(sinonChai);
 

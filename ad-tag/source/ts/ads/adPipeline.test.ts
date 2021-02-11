@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../../../source/ts/types/moli';
+import { Moli } from '../types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import {
@@ -12,12 +12,12 @@ import {
   IAdPipelineConfiguration,
   InitStep,
   mkPrepareRequestAdsStep
-} from '../../../source/ts/ads/adPipeline';
+} from './adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
-import { SlotEventService } from '../../../source/ts/ads/slotEventService';
+import { SlotEventService } from './slotEventService';
 import { fullConsent, tcData, tcfapiFunction } from '../stubs/consentStubs';
-import { googletag } from '../../../source/ts/types/googletag';
-import { prebidjs } from '../../../source/ts/types/prebidjs';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 
 // setup sinon-chai
 use(sinonChai);

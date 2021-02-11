@@ -1,4 +1,4 @@
-import { googletag } from '../../../source/ts/types/googletag';
+import { googletag } from '../types/googletag';
 
 const createPubAdsServiceStub = (): googletag.IPubAdsService => {
   const stub = {

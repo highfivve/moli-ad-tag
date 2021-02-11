@@ -8,19 +8,19 @@ import BlocklistUrls, {
   IStaticBlocklistProvider
 } from './index';
 
-import { createAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import {
+  createAssetLoaderService,
+  googletag,
+  prebidjs,
   AdPipelineContext,
   ConfigureStep,
-  PrepareRequestAdsStep
-} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+  PrepareRequestAdsStep,
+  Moli
+} from '@highfivve/ad-tag';
 
-import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
-import { createGoogletagStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
+import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
+import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 
 // setup sinon-chai
 use(sinonChai);

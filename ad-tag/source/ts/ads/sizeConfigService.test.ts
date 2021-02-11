@@ -4,8 +4,8 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
-import { SizeConfigService } from '../../../source/ts/ads/sizeConfigService';
-import { Moli } from '../../../source/ts/types/moli';
+import { SizeConfigService } from './sizeConfigService';
+import { Moli } from '../types/moli';
 
 import SizeConfigEntry = Moli.SizeConfigEntry;
 import DfpSlotSize = Moli.DfpSlotSize;

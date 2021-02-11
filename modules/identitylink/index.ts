@@ -1,9 +1,4 @@
-import {
-  AssetLoadMethod,
-  IAssetLoaderService
-} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { AssetLoadMethod, IAssetLoaderService, IModule, ModuleType, Moli } from '@highfivve/ad-tag';
 import { ATS } from './types/identitylink';
 
 type IdentityLinkModuleConfig = {

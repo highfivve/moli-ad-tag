@@ -1,5 +1,5 @@
-import { Moli } from '../../../source/ts/types/moli';
-import { googletag } from '../../../source/ts/types/googletag';
+import { Moli } from '../types/moli';
+import { googletag } from '../types/googletag';
 import { AdPipelineContext, ConfigureStep, mkConfigureStep } from './adPipeline';
 
 export const slotEventServiceConfigure = (slotService: SlotEventService): ConfigureStep => {

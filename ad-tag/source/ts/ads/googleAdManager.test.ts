@@ -3,11 +3,11 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../../../source/ts/types/moli';
+import { Moli } from '../types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
-import { AdPipelineContext } from '../../../source/ts/ads/adPipeline';
-import { SlotEventService } from '../../../source/ts/ads/slotEventService';
+import { AdPipelineContext } from './adPipeline';
+import { SlotEventService } from './slotEventService';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
   gptDefineSlots,
@@ -15,13 +15,13 @@ import {
   gptInit,
   gptLDeviceLabelKeyValue,
   gptResetTargeting
-} from '../../../source/ts/ads/googleAdManager';
-import { noopReportingService } from '../../../source/ts/ads/reportingService';
-import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
-import { createAssetLoaderService } from '../../../source/ts/util/assetLoaderService';
+} from './googleAdManager';
+import { noopReportingService } from './reportingService';
+import { LabelConfigService } from './labelConfigService';
+import { createAssetLoaderService } from '../util/assetLoaderService';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
-import { googletag } from '../../../source/ts/types/googletag';
-import { prebidjs } from '../../../source/ts/types/prebidjs';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 
 // setup sinon-chai
 use(sinonChai);

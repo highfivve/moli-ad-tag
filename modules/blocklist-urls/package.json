@@ -15,8 +15,8 @@
     "lint": "yarn lint:ts",
     "lint:ts": "eslint ./ --ext .ts,.tsx && yarn prettier",
     "lint:ts:fix": "eslint ./ --ext .ts,.tsx --fix && yarn prettier --write",
-    "test": "export TS_NODE_TRANSPILE_ONLYrue && mocha --require ts-node/register index.test.ts",
-    "test:junit": "export TS_NODE_TRANSPILE_ONLY=true && mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
+    "test": "mocha --require ts-node/register index.test.ts",
+    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
     "prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"**/*.ts*\"",
     "validate": "yarn compile && yarn lint && yarn test",
     "validate:github": "yarn compile && yarn lint && yarn test:junit",
@@ -48,7 +48,7 @@
     "ts-loader": "^8.0.5",
     "ts-node": "9.0.0",
     "typedoc": "^0.19.2",
-    "typescript": "^4.0.3"
+    "typescript": "^4.1.5"
   },
   "dependencies": {
     "@highfivve/ad-tag": "^3.20.0"

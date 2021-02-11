@@ -1,6 +1,6 @@
-import { Moli } from '../../../source/ts/types/moli';
-import { googletag } from '../../../source/ts/types/googletag';
-import { IPerformanceMeasurementService } from './../util/performanceService';
+import { Moli } from '../types/moli';
+import { googletag } from '../types/googletag';
+import { IPerformanceMeasurementService } from '../util/performanceService';
 import { SlotEventService } from './slotEventService';
 import { HIGH_PRIORITY, mkPrepareRequestAdsStep, PrepareRequestAdsStep } from './adPipeline';
 

@@ -1,13 +1,14 @@
-import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
 import {
+  IModule,
+  ModuleType,
+  Moli,
+  googletag,
+  IAssetLoaderService,
+  getLogger,
   AdPipeline,
   AdPipelineContext,
   mkConfigureStep
-} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
+} from '@highfivve/ad-tag';
 
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityLevelControl, UserActivityService } from './userActivityService';

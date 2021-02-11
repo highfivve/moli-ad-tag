@@ -1,4 +1,4 @@
-import { IReportingService } from '../../../source/ts/ads/reportingService';
+import { IReportingService } from '../ads/reportingService';
 
 export const reportingServiceStub: () => IReportingService = () => {
   return {

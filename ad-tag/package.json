@@ -3,8 +3,8 @@
   "version": "3.20.0",
   "license": "Apache-2.0",
   "description": "An ad tag implementation called moli",
-  "main": "./lib/ads/moli.js",
-  "typings": "./lib/types/moli.d.ts",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
   "files": [
     "lib"
   ],
@@ -17,11 +17,11 @@
     "compile:ts": "tsc --noEmit",
     "compile:ts:watch": "tsc --noEmit --watch",
     "lint": "yarn lint:ts",
-    "lint:ts": "eslint ./source ./tests --ext .ts,.tsx && yarn prettier",
-    "lint:ts:fix": "eslint ./source ./tests --ext .ts,.tsx --fix && yarn prettier --write",
-    "test": "mocha --require ts-node/register tests/**/*.test.ts",
-    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register tests/**/*.test.ts",
-    "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"(source|tests)/**/*.ts*\"",
+    "lint:ts": "eslint ./source --ext .ts,.tsx && yarn prettier",
+    "lint:ts:fix": "eslint ./source --ext .ts,.tsx --fix && yarn prettier --write",
+    "test": "mocha --require ts-node/register source/**/*.test.ts",
+    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register source/**/*.test.ts",
+    "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"source/**/*.ts*\"",
     "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/",
     "validate": "yarn compile && yarn lint && yarn test && yarn docs",
     "validate:github": "yarn compile && yarn lint && yarn test:junit",
@@ -65,7 +65,7 @@
     "ts-loader": "^8.0.5",
     "ts-node": "9.0.0",
     "typedoc": "^0.20.14",
-    "typescript": "^4.0.3",
+    "typescript": "^4.1.5",
     "webpack": "^4.44.2",
     "webpack-cli": "^4.0.0"
   }

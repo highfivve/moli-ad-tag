@@ -1,10 +1,10 @@
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
-import { googleAdSlotStub } from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
+import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import {
   IAdunitPriceRulesResponse,
   IDynamicYieldOptimizationConfig,

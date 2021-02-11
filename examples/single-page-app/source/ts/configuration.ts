@@ -1,5 +1,4 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { Moli, prebidjs } from '@highfivve/ad-tag';
 
 export const adConfiguration: Moli.MoliConfig = {
   environment: 'test',

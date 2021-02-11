@@ -1,9 +1,14 @@
 {
   "extends": "./tsconfig.build.json",
+  "references": [
+//    { "path": "./ad-tag" },
+//    { "path": "./modules/blocklist-urls" }
+  ],
   "compilerOptions": {
-    "paths": {
-      "@highfivve/*": ["ad-tag/source/ts", "modules/*"]
-    },
+    "composite": true,
+//    "paths": {
+//      "@highfivve/*": ["ad-tag/source/ts", "modules/*"]
+//    },
     "jsx": "react",
     "jsxFactory": "preact.h",
     "baseUrl": ".",

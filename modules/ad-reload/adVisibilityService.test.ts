@@ -1,15 +1,12 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {
-  createGoogletagStub,
-  googleAdSlotStub
-} from '@highfivve/ad-tag/tests/ts/stubs/googletagStubs';
-import { createDom } from '@highfivve/ad-tag/tests/ts/stubs/browserEnvSetup';
+import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
+import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
-import { noopLogger } from '@highfivve/ad-tag/tests/ts/stubs/moliStubs';
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { googletag } from '@highfivve/ad-tag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
 
 use(sinonChai);

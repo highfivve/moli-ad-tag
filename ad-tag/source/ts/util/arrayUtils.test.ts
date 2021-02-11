@@ -1,4 +1,4 @@
-import { flatten, uniquePrimitiveFilter } from '../../../source/ts/util/arrayUtils';
+import { flatten, uniquePrimitiveFilter } from './arrayUtils';
 import { expect } from 'chai';
 
 describe('flatten', () => {

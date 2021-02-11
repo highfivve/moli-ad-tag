@@ -8,7 +8,7 @@ import 'prebid.js/modules/consentManagement';
 import 'prebid.js/modules/currency';
 import 'prebid.js/modules/appnexusBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag/source/ts/ads/moliGlobal';
+import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 prebid.processQueue();

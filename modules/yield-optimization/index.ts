@@ -1,16 +1,17 @@
-import { IModule, ModuleType } from '@highfivve/ad-tag/source/ts/types/module';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import { getLogger } from '@highfivve/ad-tag/source/ts/util/logging';
-import { IAssetLoaderService } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import { YieldOptimizationService } from './yieldOptimizationService';
 import {
+  IModule,
+  ModuleType,
+  Moli,
+  getLogger,
+  IAssetLoaderService,
   AdPipelineContext,
   HIGH_PRIORITY,
   InitStep,
   mkInitStep,
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
-} from '@highfivve/ad-tag/source/ts/ads/adPipeline';
+} from '@highfivve/ad-tag';
+import { YieldOptimizationService } from './yieldOptimizationService';
 
 export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 

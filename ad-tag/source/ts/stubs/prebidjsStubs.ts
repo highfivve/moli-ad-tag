@@ -1,4 +1,4 @@
-import { prebidjs } from '../../../source/ts/types/prebidjs';
+import { prebidjs } from '../types/prebidjs';
 
 export const createPbjsStub = (): prebidjs.IPrebidJs => {
   return {

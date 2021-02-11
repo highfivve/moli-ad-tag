@@ -1,5 +1,5 @@
-import { Moli } from '../../../source/ts/types/moli';
-import { apstag } from '../../../source/ts/types/apstag';
+import { Moli } from '../types/moli';
+import { apstag } from '../types/apstag';
 
 export const a9ConfigStub: Moli.headerbidding.A9Config = {
   pubID: '123',

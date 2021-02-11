@@ -1,4 +1,4 @@
-import { tcfapi } from '../../../source/ts/types/tcfapi';
+import { tcfapi } from '../types/tcfapi';
 
 /**
  *

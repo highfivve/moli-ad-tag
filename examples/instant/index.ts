@@ -11,7 +11,7 @@ import 'prebid.js/modules/smartadserverBidAdapter';
 import 'prebid.js/modules/teadsBidAdapter';
 import 'prebid.js/modules/unrulyBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag/source/ts/ads/moliGlobal';
+import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';

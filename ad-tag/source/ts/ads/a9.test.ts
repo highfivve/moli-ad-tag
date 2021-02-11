@@ -3,19 +3,19 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../../../source/ts/types/moli';
+import { Moli } from '../types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
-import { AdPipelineContext } from '../../../source/ts/ads/adPipeline';
-import { SlotEventService } from '../../../source/ts/ads/slotEventService';
-import { noopReportingService } from '../../../source/ts/ads/reportingService';
-import { LabelConfigService } from '../../../source/ts/ads/labelConfigService';
+import { AdPipelineContext } from './adPipeline';
+import { SlotEventService } from './slotEventService';
+import { noopReportingService } from './reportingService';
+import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
-import { a9ClearTargetingStep, a9Configure, a9RequestBids } from '../../../source/ts/ads/a9';
+import { a9ClearTargetingStep, a9Configure, a9RequestBids } from './a9';
 import { tcData } from '../stubs/consentStubs';
-import { googletag } from '../../../source/ts/types/googletag';
-import { prebidjs } from '../../../source/ts/types/prebidjs';
+import { googletag } from '../types/googletag';
+import { prebidjs } from '../types/prebidjs';
 
 // setup sinon-chai
 use(sinonChai);
