@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 3.20.0
+
+[GD-2502](https://jira.gutefrage.net/browse/GD-2502). Add option to disable ad slot bucketing. In the moli config add
+
+```javascript
+buckets: {
+  enabled: false
+}
+```
+
+By default `buckets` are disabled.
+
 ## 3.19.0
 
 [GD-2518](https://jira.gutefrage.net/browse/GD-2518) Improvements to ad slot debugging
