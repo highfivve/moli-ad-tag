@@ -16,7 +16,8 @@ const makeDocsPages = (publisherName, currentFilename, basePath) => [
   new HtmlWebpackPlugin({
     template: path.join(basePath, 'demo', 'index.hbs'),
     filename: path.join(basePath, 'dist', 'demo.hbs'),
-    scriptLoading: 'defer'
+    scriptLoading: 'defer',
+    minify: false
   }),
   new HandlebarsPlugin({
     entry: overviewTemplatePath,
