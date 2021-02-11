@@ -51,8 +51,8 @@ export class SizeConfigService {
               window.matchMedia(conf.mediaQuery).matches &&
               // if labelAll is defined, all labels must be part of the supportedLabels array
               (!conf.labelAll ||
-                conf.labelAll.every(
-                  label => !!supportedLabels.find(supportedLabel => supportedLabel === label)
+                conf.labelAll.every(label =>
+                  supportedLabels.some(supportedLabel => supportedLabel === label)
                 ))
           )
         : [];
