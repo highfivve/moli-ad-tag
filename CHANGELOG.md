@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 3.19.0
+
+[GD-2518](https://jira.gutefrage.net/browse/GD-2518) Improvements to ad slot debugging
+
+- Refactored fake ad slots in test environment.
+- The last manually selected size of a fake ad slot is saved in local storage and applied automatically.
+- Fake ad slots can be hidden via their "hide" button.
+- Added the ability to delay ad slots in the test environment.
+
 ## 3.18.0
 
 [GD-2641](https://jira.gutefrage.net/browse/GD-2641). Add the ability to filter size configs via labels.
