@@ -738,6 +738,11 @@ export namespace Moli {
      */
     pipeline?: pipeline.PipelineConfig;
 
+    /**
+     * Configure bucketing behaviour
+     */
+    buckets?: bucket.BucketConfig;
+
     /** configurable logger */
     logger?: MoliLogger;
   }
@@ -1647,6 +1652,39 @@ export namespace Moli {
        * represents the time the creative needed to be fully visible.
        */
       readonly rendering: PerformanceMeasure;
+    }
+  }
+
+  export namespace bucket {
+    /**
+     * ## Bucket config
+     *
+     * General settings for ad slot loading in buckets.
+     *
+     * ## Bucket use cases
+     *
+     * There are several use cases
+     *
+     * ### Bidder performance
+     *
+     * There are bidders (e.g. IndexExchange, Yieldlab) that have a better performance if a single request contains
+     * only a small amount of placement ids. Buckets allow the publisher to group ad slots together and run in a
+     * separate auction.
+     *
+     * ### Above and below the fold
+     *
+     * It possible to bucket ad slots with higher priority.
+     * NOTE: there's no feature for delay or prioritization yet!
+     *
+     */
+    export interface BucketConfig {
+      /**
+       * if set to true, ad slots will be loaded in buckets as specified in the
+       * ad slot configuration.
+       *
+       * Default: false
+       */
+      readonly enabled: boolean;
     }
   }
 

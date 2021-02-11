@@ -436,6 +436,26 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
+      const eagerAdSlot1: Moli.EagerAdSlot = {
+        ...eagerAdSlot(),
+        behaviour: { loaded: 'eager', bucket: 'bucket1' }
+      };
+      const refreshableAdSlot2: Moli.RefreshableAdSlot = {
+        ...refreshableAdSlot(false),
+        behaviour: {
+          loaded: 'refreshable',
+          lazy: false,
+          trigger: eventTrigger,
+          bucket: 'bucket2'
+        }
+      };
+      const eagerAdSlot3: Moli.EagerAdSlot = {
+        ...eagerAdSlot(),
+        behaviour: { loaded: 'eager' }
+      };
+
+      const allSlots = [eagerAdSlot1, refreshableAdSlot2, eagerAdSlot3];
+
       it('should load ad slots in specified buckets', async () => {
         const adService = makeAdService();
         const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
@@ -443,31 +463,12 @@ describe('AdService', () => {
         const logger: Moli.MoliLogger = { ...noopLogger, debug: debugStub };
         adService.setLogger(logger);
 
-        const eagerAdSlot1: Moli.EagerAdSlot = {
-          ...eagerAdSlot(),
-          behaviour: { loaded: 'eager', bucket: 'bucket1' }
-        };
-        const refreshableAdSlot2: Moli.RefreshableAdSlot = {
-          ...refreshableAdSlot(false),
-          behaviour: {
-            loaded: 'refreshable',
-            lazy: false,
-            trigger: eventTrigger,
-            bucket: 'bucket2'
-          }
-        };
-        const eagerAdSlot3: Moli.EagerAdSlot = {
-          ...eagerAdSlot(),
-          behaviour: { loaded: 'eager' }
-        };
-
-        const allSlots = [eagerAdSlot1, refreshableAdSlot2, eagerAdSlot3];
-
         addToDom(allSlots);
 
         await adService.requestAds(
           {
             ...emptyConfig,
+            buckets: { enabled: true },
             slots: allSlots
           },
           []
@@ -506,6 +507,53 @@ describe('AdService', () => {
           'AdPipeline',
           `running bucket default, slots:`,
           [eagerAdSlot3]
+        );
+      });
+
+      it('should not load ad slots in specified buckets if disabled', async () => {
+        const adService = makeAdService();
+        adService.setLogger(noopLogger);
+        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+
+        addToDom(allSlots);
+
+        await adService.requestAds(
+          {
+            ...emptyConfig,
+            buckets: { enabled: false },
+            slots: allSlots
+          },
+          []
+        );
+
+        expect(runSpy).to.have.been.calledOnce;
+        expect(runSpy.firstCall).to.have.been.calledWith(
+          Sinon.match.array.deepEquals(allSlots),
+          Sinon.match.any,
+          Sinon.match.number
+        );
+      });
+
+      it('should not load ad slots in specified buckets if no bucket config is provided', async () => {
+        const adService = makeAdService();
+        adService.setLogger(noopLogger);
+        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+
+        addToDom(allSlots);
+
+        await adService.requestAds(
+          {
+            ...emptyConfig,
+            slots: allSlots
+          },
+          []
+        );
+
+        expect(runSpy).to.have.been.calledOnce;
+        expect(runSpy.firstCall).to.have.been.calledWith(
+          Sinon.match.array.deepEquals(allSlots),
+          Sinon.match.any,
+          Sinon.match.number
         );
       });
     });

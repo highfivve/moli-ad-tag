@@ -277,26 +277,32 @@ export class AdService {
         .filter(isNotNull)
         .filter(this.isSlotAvailable);
 
-      // create buckets
-      const buckets = new Map<string, Moli.AdSlot[]>();
-      immediatelyLoadedSlots.forEach(slot => {
-        const bucket = slot.behaviour.bucket || 'default';
-        const slots = buckets.get(bucket);
-        if (slots) {
-          slots.push(slot);
-        } else {
-          buckets.set(bucket, [slot]);
-        }
-      });
+      if (config.buckets?.enabled) {
+        // create buckets
+        const buckets = new Map<string, Moli.AdSlot[]>();
+        immediatelyLoadedSlots.forEach(slot => {
+          const bucket = slot.behaviour.bucket || 'default';
+          const slots = buckets.get(bucket);
+          if (slots) {
+            slots.push(slot);
+          } else {
+            buckets.set(bucket, [slot]);
+          }
+        });
 
-      return Promise.all(
-        Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
-          this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
-          return this.adPipeline
-            .run(bucketSlots, config, this.requestAdsCalls)
-            .then(() => bucketSlots);
-        })
-      ).then(flatten);
+        return Promise.all(
+          Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
+            this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
+            return this.adPipeline
+              .run(bucketSlots, config, this.requestAdsCalls)
+              .then(() => bucketSlots);
+          })
+        ).then(flatten);
+      } else {
+        return this.adPipeline
+          .run(immediatelyLoadedSlots, config, this.requestAdsCalls)
+          .then(() => immediatelyLoadedSlots);
+      }
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
       return Promise.reject(e);
