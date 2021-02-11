@@ -10,7 +10,6 @@ import {
 } from '@highfivve/ad-tag';
 
 import { initStub } from './stub';
-import IPrebidJs = prebidjs.IPrebidJs;
 
 export interface IPubstackConfig {
   readonly tagId: string;

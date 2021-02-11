@@ -15,6 +15,7 @@ moli-debugger/lib
 moli-release/lib
 modules/*/lib
 modules/*/temp
+tsconfig.tsbuildinfo
 
 # Runtime data
 pids
