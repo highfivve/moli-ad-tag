@@ -21,9 +21,6 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
       <div>
         {props.sizeConfig.map((sizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
-          const labelsMatch =
-            !sizeConfigEntry.labelAll ||
-            sizeConfigEntry.labelAll.every(l => props.supportedLabels.includes(l));
 
           return (
             <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
@@ -53,7 +50,7 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
                           [labelMatches, 'MoliDebug-tag--green'],
                           [!labelMatches, 'MoliDebug-tag--red']
                         )}
-                        title={`Labels ${labelsMatch ? 'match' : "don't match"}`}
+                        title={`Labels ${labelMatches ? 'match' : "don't match"}`}
                       >
                         {label}
                       </div>
