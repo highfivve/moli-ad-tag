@@ -9,7 +9,7 @@ import {
  * While using the testing environment, the delay of requesting ads may be simulated.
  * The exact delay can specified in the moli debugger and is stored in the local storage.
  */
-export const executeDebugDelay = (delay: number): Promise<void> =>
+export const executeDebugDelay = (window: Window, delay: number): Promise<void> =>
   delay ? new Promise(resolve => window.setTimeout(resolve, delay)) : Promise.resolve();
 
 export const getDebugDelayFromLocalStorage = (window: Window) =>

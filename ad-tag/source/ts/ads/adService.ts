@@ -198,7 +198,7 @@ export class AdService {
     if (env === 'test') {
       const debugDelay = getDebugDelayFromLocalStorage(this.window);
       if (debugDelay) {
-        configure.push(() => executeDebugDelay(debugDelay));
+        configure.push(() => executeDebugDelay(this.window, debugDelay));
       }
     }
 
