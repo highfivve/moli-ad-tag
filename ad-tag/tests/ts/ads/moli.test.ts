@@ -17,6 +17,7 @@ import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../../../source/ts/types/googletag';
 import { prebidjs } from '../../../source/ts/types/prebidjs';
 import { BrowserStorageKeys } from '../../../source/ts/util/browserStorageKeys';
+import { JSDOM } from 'jsdom';
 
 // setup sinon-chai
 use(sinonChai);
@@ -25,36 +26,41 @@ describe('moli', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow = dom.window as any;
-  jsDomWindow.pbjs = pbjsStub;
-
-  let domIdCounter: number = 0;
-  const mkAdSlotInDOM = (): Moli.AdSlot => {
-    domIdCounter = domIdCounter + 1;
-    const domId = `dom-id-${domIdCounter}`;
-    const adDiv = jsDomWindow.document.createElement('div');
-    adDiv.id = domId;
-    jsDomWindow.document.body.appendChild(adDiv);
-    return {
-      domId: domId,
-      adUnitPath: `/123/ad-unit-${domIdCounter}`,
-      sizes: [],
-      position: 'in-page',
-      sizeConfig: [],
-      behaviour: { loaded: 'eager' }
-    };
-  };
-
-  const defaultSlots: Moli.AdSlot[] = [mkAdSlotInDOM()];
-  const defaultConfig: Moli.MoliConfig = {
-    ...emptyConfig,
-    slots: defaultSlots
-  };
+  let dom: JSDOM;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
+  let domIdCounter: number;
+  let mkAdSlotInDOM: () => Moli.AdSlot;
+  let defaultSlots: Moli.AdSlot[];
+  let defaultConfig: Moli.MoliConfig;
 
   beforeEach(() => {
+    dom = createDom();
+    jsDomWindow = dom.window as any;
+    jsDomWindow.pbjs = pbjsStub;
+    domIdCounter = 0;
+
+    mkAdSlotInDOM = () => {
+      domIdCounter = domIdCounter + 1;
+      const domId = `dom-id-${domIdCounter}`;
+      const adDiv = jsDomWindow.document.createElement('div');
+      adDiv.id = domId;
+      jsDomWindow.document.body.appendChild(adDiv);
+      return {
+        domId: domId,
+        adUnitPath: `/123/ad-unit-${domIdCounter}`,
+        sizes: [],
+        position: 'in-page',
+        sizeConfig: [],
+        behaviour: { loaded: 'eager' }
+      };
+    };
+
+    defaultSlots = [mkAdSlotInDOM()];
+    defaultConfig = {
+      ...emptyConfig,
+      slots: defaultSlots
+    };
+
     dom.window.googletag = createGoogletagStub();
     dom.window.__tcfapi = tcfapiFunction(tcData);
   });
@@ -66,8 +72,6 @@ describe('moli', () => {
 
   afterEach(() => {
     sandbox.reset();
-    jsDomWindow.sessionStorage.clear();
-    jsDomWindow.localStorage.clear();
   });
 
   describe('init ad tag', () => {
@@ -955,7 +959,6 @@ describe('moli', () => {
     const expectEnvironment = (adTag: Moli.MoliTag, environment: Moli.Environment | undefined) => {
       const config = adTag.getConfig();
       expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
       expect(config!.environment).to.be.equal(environment);
     };
 

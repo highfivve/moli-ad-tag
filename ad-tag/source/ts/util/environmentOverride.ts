@@ -1,11 +1,11 @@
 import { Moli } from '../types/moli';
+import { isNotNull } from './arrayUtils';
 import { BrowserStorageKeys } from './browserStorageKeys';
 import {
   getBrowserStorageValue,
   removeBrowserStorageValue,
   setBrowserStorageValue
 } from './localStorage';
-import { nonNullElement } from './nonNullElement';
 import { parseQueryString, updateQueryString } from './query';
 import { QueryParameters } from './queryParameters';
 
@@ -53,7 +53,7 @@ export const getAllEnvironmentOverrides = (window: Window): EnvironmentOverride[
     .map(({ source, environment }) =>
       !!environment && isEnvironmentString(environment) ? { source, environment } : undefined
     )
-    .filter(nonNullElement);
+    .filter(isNotNull);
 };
 
 /**
