@@ -46,6 +46,11 @@ pipeline {
                 sh "yarn workspace @highfivve/ad-tag test:junit"
             }
         }
+        stage('make:nodemodule') {
+          steps {
+            sh "yarn workspace @highfivve/ad-tag make:nodemodule"
+          }
+        }
         stage('Modules') {
             steps {
                 script {
