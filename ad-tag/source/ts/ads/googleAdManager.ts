@@ -243,7 +243,7 @@ export const gptDefineSlots = (): DefineSlotsStep => (
     const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : defineAndDisplayAdSlot();
 
     if (adSlot) {
-      adSlot.setCollapseEmptyDiv(true);
+      adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
 
       switch (context.env) {
         case 'production':

@@ -860,6 +860,12 @@ export namespace Moli {
      */
     readonly sizeConfig: SizeConfigEntry[];
 
+    /**
+     * Supplementary gpt configuration.
+     * Gpt is always configured, regardless of the existence of this configuration.
+     */
+    readonly gpt?: gpt.GptAdSlotConfig;
+
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
     readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
 
@@ -1129,6 +1135,22 @@ export namespace Moli {
        * - or a query selector for a DOM Node
        */
       readonly source: Window | Document | string;
+    }
+  }
+
+  /** gpt types */
+  export namespace gpt {
+    /**
+     * ## Gpt ad slot configuration
+     */
+    export interface GptAdSlotConfig {
+      /**
+       * Sets whether the slot div should be hidden when there is no ad in the slot.
+       * Defaults to true.
+       *
+       * Correlates directly to googletag.IAdSlot.setCollapseEmptyDiv().
+       */
+      collapseEmptyDiv?: boolean;
     }
   }
 

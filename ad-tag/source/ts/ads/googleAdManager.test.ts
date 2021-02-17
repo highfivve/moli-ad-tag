@@ -459,5 +459,45 @@ describe('google ad manager', () => {
         expect(slotDefinitions).to.have.length(0);
       });
     });
+
+    describe('collapseEmptyDiv configuration', () => {
+      let adSlotStub: googletag.IAdSlot;
+      let setCollapseEmptyDivSpy: Sinon.SinonSpy;
+
+      beforeEach(() => {
+        adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+      });
+
+      const defineSlots = (collapseEmptyDiv?: boolean) => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+
+        const step = gptDefineSlots();
+        const context = adPipelineContext();
+        const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+        filterSlotStub.returns(true);
+
+        return step(context, [{ ...adSlot, gpt: { collapseEmptyDiv } }]);
+      };
+
+      it('should set to true if undefined', () => {
+        return defineSlots(undefined).then(() => {
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        });
+      });
+
+      it('should set to true if true', () => {
+        return defineSlots(true).then(() => {
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        });
+      });
+
+      it('should set to false if false', () => {
+        return defineSlots(false).then(() => {
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(false);
+        });
+      });
+    });
   });
 });

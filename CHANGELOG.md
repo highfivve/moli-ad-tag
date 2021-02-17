@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 3.21.0
+
+[GD-2664](https://jira.gutefrage.net/browse/GD-2664) Make collapseEmptyDiv configurable in the ad slot configuration.
+
+```javascript
+{
+  gpt: {
+    collapseEmptyDiv: false
+  }
+}
+```
+
 ## 3.20.0
 
 [GD-2502](https://jira.gutefrage.net/browse/GD-2502). Add option to disable ad slot bucketing. In the moli config add
