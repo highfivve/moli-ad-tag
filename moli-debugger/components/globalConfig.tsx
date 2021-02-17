@@ -29,6 +29,7 @@ import {
   getDebugDelayFromLocalStorage,
   setDebugDelayToLocalStorage
 } from 'ad-tag/source/ts/util/debugDelay';
+import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
 
 declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
@@ -165,6 +166,18 @@ export class GlobalConfig
                       <option value={2000} />
                       <option value={3000} />
                     </datalist>
+                  </div>
+                  <div className="MoliDebug-tagContainer">
+                    <button
+                      onClick={() => {
+                        config.slots.forEach(removeTestSlotSizeFromLocalStorage);
+                        window.location.reload();
+                      }}
+                    >
+                      Reset all test slot sizes
+                    </button>
+                    <br />
+                    <br />
                   </div>
                   {modules.length > 0 && (
                     <Fragment>

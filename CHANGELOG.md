@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.22.0
+
+[GD-2616](https://jira.gutefrage.net/browse/GD-2616) While being in the test environment, hiding test slots is persisted in lcoal storage.
+
 ## 3.21.0
 
 [GD-2664](https://jira.gutefrage.net/browse/GD-2664) Make collapseEmptyDiv configurable in the ad slot configuration.

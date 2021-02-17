@@ -16,7 +16,7 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
 import SlotDefinition = Moli.SlotDefinition;
 import { tcfapi } from '../types/tcfapi';
 import IGoogleTag = googletag.IGoogleTag;
-import { createBlankTestSlots, fillTestSlots } from '../util/test-slots';
+import { createTestSlots } from '../util/test-slots';
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -281,7 +281,7 @@ export const gptRequestAds = (): RequestAdsStep => (
     context.logger.debug('GAM', 'requestAds');
     switch (context.env) {
       case 'test':
-        fillTestSlots(createBlankTestSlots(context, slots));
+        createTestSlots(context, slots);
         break;
       case 'production':
         // load ads
