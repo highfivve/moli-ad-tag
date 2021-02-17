@@ -13,7 +13,7 @@
 <div class="jumbotron">
   <h1 class="display-4">{{publisher}} Moli AdTag</h1>
   <div class="d-flex justify-content-center">
-    <a class="btn btn-info btn-lg mt-4" href="https://{{publisher}}.h5v.eu/{{releases.currentVersion}}/">
+    <a class="btn btn-info btn-lg mt-4" href="{{releases.currentVersion}}/">
       <i class="fa fa-rocket"></i>
       <span>Neueste Version</span>
     </a>
@@ -49,9 +49,9 @@
             <div class="card-footer text-center py-0 px-3">
               <div class="row">
                 <a class="col-6 d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
-                   href="https://{{../publisher}}.h5v.eu/{{version}}/">Demo page</a>
+                   href="{{version}}/">Demo page</a>
                 <a class="col-6 border-left d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
-                   href="https://{{../publisher}}.h5v.eu/{{version}}/{{filename}}">moli.min.js</a>
+                   href="{{filename}}">moli.min.js</a>
               </div>
             </div>
           </div>
