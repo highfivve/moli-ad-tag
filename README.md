@@ -68,6 +68,13 @@ $ yarn lerna run make:nodemodule
 
 ## Publishing a package
 
+While everything is still a bit shaky, this is the "it will definitely work command"
+
+```bash
+yarn && yarn clean:lib && yarn setup && yarn workspace @highfivve/ad-tag make:nodemodule && yarn lerna version && yarn github:publish
+```
+
+
 Bump version of packages changed since the last release
 ```bash
 $ yarn lerna version
