@@ -42,10 +42,10 @@ export const a9Init = (
         context.window.apstag = context.window.apstag || {
           _Q: [],
           init: function (): void {
-            context.window.apstag._Q.push(['i', arguments]);
+            context.window.apstag._Q.push([ 'i', arguments ]);
           },
           fetchBids: function (): void {
-            context.window.apstag._Q.push(['f', arguments]);
+            context.window.apstag._Q.push([ 'f', arguments ]);
           },
           setDisplayBids: function (): void {
             return;
@@ -55,12 +55,17 @@ export const a9Init = (
           }
         };
 
-        // async fetch as everything is already initialized
-        assetService.loadScript({
-          name: 'A9',
-          loadMethod: AssetLoadMethod.TAG,
-          assetUrl: config.scriptUrl ? config.scriptUrl : '//c.amazon-adsystem.com/aax2/apstag.js'
-        });
+
+        // only load a9 if consent is given for all purposes and Amazon Advertising (793)
+        if (context.tcData.vendor.consents['793'] &&
+          [ '1', '2', '3', '4', '7', '9', '10' ].every(purpose => context.tcData.purpose.consents[purpose])) {
+          // async fetch as everything is already initialized
+          assetService.loadScript({
+            name: 'A9',
+            loadMethod: AssetLoadMethod.TAG,
+            assetUrl: config.scriptUrl ? config.scriptUrl : '//c.amazon-adsystem.com/aax2/apstag.js'
+          });
+        }
 
         resolve();
       })

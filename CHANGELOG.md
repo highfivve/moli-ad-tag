@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.22.1
+
+[GD-2671](https://jira.gutefrage.net/browse/GD-2671) Load apstag.js (Amazon A9) only if consent is given for the purposes defined by Amazon.
+
 ## 3.22.0
 
 [GD-2616](https://jira.gutefrage.net/browse/GD-2616) While being in the test environment, hiding test slots is persisted in lcoal storage.

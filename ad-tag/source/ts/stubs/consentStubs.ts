@@ -13,7 +13,7 @@ export const tcfapiFunction = (returnValue: any) => (
   callback(returnValue, true);
 };
 
-export const fullConsent = (): tcfapi.responses.TCData => {
+export const fullConsent = (vendorConsents: tcfapi.BooleanVector = {}): tcfapi.responses.TCData => {
   return {
     cmpId: 6,
     cmpVersion: 1,
@@ -55,7 +55,7 @@ export const fullConsent = (): tcfapi.responses.TCData => {
       }
     },
     vendor: {
-      consents: {},
+      consents: vendorConsents,
       legitimateInterests: {}
     },
     specialFeatureOptins: {},
