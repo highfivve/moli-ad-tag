@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.22.1
+## 3.22.3
 
 [GD-2671](https://jira.gutefrage.net/browse/GD-2671) Load apstag.js (Amazon A9) only if consent is given for the purposes defined by Amazon.
 
