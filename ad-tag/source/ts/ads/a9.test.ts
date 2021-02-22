@@ -16,7 +16,7 @@ import { a9ClearTargetingStep, a9Configure, a9Init, a9RequestBids } from './a9';
 import { tcData, fullConsent } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
-import { createAssetLoaderService } from "../util/assetLoaderService";
+import { createAssetLoaderService } from '../util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -50,7 +50,7 @@ describe('a9', () => {
   };
 
   let domIdCounter: number = 0;
-  const mediumRec: [ number, number ][] = [ [ 300, 250 ] ];
+  const mediumRec: [number, number][] = [[300, 250]];
 
   const getDomId = (): string => {
     domIdCounter = domIdCounter + 1;
@@ -97,7 +97,6 @@ describe('a9', () => {
   });
 
   describe('a9 init step', () => {
-
     let assetLoaderService = createAssetLoaderService(jsDomWindow);
     let assetLoaderStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
 
@@ -105,7 +104,6 @@ describe('a9', () => {
       assetLoaderService = createAssetLoaderService(jsDomWindow);
       assetLoaderStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
     });
-
 
     it('should load the a9 script if consent is given', async () => {
       const step = a9Init(a9ConfigStub, assetLoaderService);
@@ -120,7 +118,7 @@ describe('a9', () => {
       const tcData = fullConsent({ '793': false });
 
       await step({ ...adPipelineContext(), tcData });
-      console.log(assetLoaderStub.firstCall)
+      console.log(assetLoaderStub.firstCall);
       expect(assetLoaderStub).not.have.been.called;
     });
 
@@ -131,7 +129,7 @@ describe('a9', () => {
       expect(assetLoaderStub).not.have.been.called;
     });
 
-    [ '1', '2', '3', '4', '7', '9', '10' ].forEach(purpose => {
+    ['1', '2', '3', '4', '7', '9', '10'].forEach(purpose => {
       it(`should not load the a9 script if purpose ${purpose} is missing`, async () => {
         const step = a9Init(a9ConfigStub, assetLoaderService);
         const tcData = fullConsent({ '793': true });
@@ -141,7 +139,6 @@ describe('a9', () => {
         expect(assetLoaderStub).not.have.been.called;
       });
     });
-
   });
 
   describe('a9 configure step', () => {
@@ -180,7 +177,7 @@ describe('a9', () => {
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
 
-      return step(adPipelineContext(), [ singleSlot ]).then(() => {
+      return step(adPipelineContext(), [singleSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -206,7 +203,7 @@ describe('a9', () => {
         mediaType: 'video'
       });
 
-      return step(adPipelineContext(), [ singleSlot ]).then(() => {
+      return step(adPipelineContext(), [singleSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -234,7 +231,7 @@ describe('a9', () => {
         mediaType: 'video'
       });
 
-      return step(adPipelineContext(), [ displaySlot, videoSlot ]).then(() => {
+      return step(adPipelineContext(), [displaySlot, videoSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -264,7 +261,7 @@ describe('a9', () => {
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 0 };
 
-      await step(ctx, [ slot ]);
+      await step(ctx, [slot]);
       expect(clearTargetingSpy).to.have.not.been.called;
     });
 
@@ -275,7 +272,7 @@ describe('a9', () => {
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 1 };
 
-      await step(ctx, [ slot ]);
+      await step(ctx, [slot]);
       expect(clearTargetingSpy).to.have.been.calledThrice;
       expect(clearTargetingSpy).to.have.been.calledWith('amznp');
       expect(clearTargetingSpy).to.have.been.calledWith('amznsz');
