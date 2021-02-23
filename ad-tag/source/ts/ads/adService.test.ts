@@ -175,13 +175,6 @@ describe('AdService', () => {
       });
     });
 
-    it('should add the gpt-device-label-keyValue step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-device-label-keyValue');
-      });
-    });
-
     describe('prebid', () => {
       it('should add pbjs if available in the config', () => {
         return initialize(emptyConfigWithPrebid).then(pipeline => {
@@ -245,6 +238,22 @@ describe('AdService', () => {
   });
 
   describe('prepareRequestAds', () => {
+    describe('gpt', () => {
+      it('should add the gpt-device-label-keyValue step', () => {
+        return initialize().then(pipeline => {
+          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+          expect(stepNames).to.contain('gpt-device-label-keyValue');
+        });
+      });
+
+      it('should add the gpt-consent-keyValue step', () => {
+        return initialize().then(pipeline => {
+          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+          expect(stepNames).to.contain('gpt-consent-keyValue');
+        });
+      });
+    });
+
     describe('prebid', () => {
       it('should add the prebid-prepare-adunits step if prebid is available', () => {
         return initialize(emptyConfigWithPrebid).then(pipeline => {
