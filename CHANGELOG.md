@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-## 3.23.0
+## 3.23.2
+
+[GD-2703](https://jira.gutefrage.net/browse/GD-2703) Clear a9 key values only if present. This removes warnings in the googletag console.
+
+## 3.23.1
 
 [GD-2696](https://jira.gutefrage.net/browse/GD-2696) Set `consent` key-value if at least one purpose consent is missing.
 This allows a simple targeting in the ad server if no full consent is available.
