@@ -3,9 +3,12 @@ import {
   ConfigureStep,
   DefineSlotsStep,
   InitStep,
+  LOW_PRIORITY,
   mkConfigureStep,
   mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep,
   RequestAdsStep
 } from './adPipeline';
 import { Moli } from '../types/moli';
@@ -21,17 +24,15 @@ import { createTestSlots } from '../util/test-slots';
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
   targeting: Moli.Targeting | undefined,
-  env: Moli.Environment
+  tcData: tcfapi.responses.TCData
 ): void => {
-  if (env === 'production') {
-    const keyValueMap = targeting ? targeting.keyValues : {};
-    Object.keys(keyValueMap).forEach(key => {
-      const value = keyValueMap[key];
-      if (value) {
-        window.googletag.pubads().setTargeting(key, value);
-      }
-    });
-  }
+  const keyValueMap = targeting ? targeting.keyValues : {};
+  Object.keys(keyValueMap).forEach(key => {
+    const value = keyValueMap[key];
+    if (value) {
+      window.googletag.pubads().setTargeting(key, value);
+    }
+  });
 };
 
 /**
@@ -96,7 +97,6 @@ export const gptDestroyAdSlots = (): ConfigureStep =>
  * This method is required for the single-page-application mode to make sure we don't send
  * stale key-values
  *
- * @param config
  */
 export const gptResetTargeting = (): ConfigureStep =>
   mkConfigureStepOncePerRequestAdsCycle(
@@ -106,7 +106,7 @@ export const gptResetTargeting = (): ConfigureStep =>
         if (context.env === 'production') {
           context.logger.debug('GAM', 'reset top level targeting');
           context.window.googletag.pubads().clearTargeting();
-          configureTargeting(context.window, context.config.targeting, context.env);
+          configureTargeting(context.window, context.config.targeting, context.tcData);
         }
 
         resolve();
@@ -122,7 +122,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
         context.logger.debug('GAM', 'configure googletag');
         switch (env) {
           case 'production':
-            configureTargeting(context.window, config.targeting, env);
+            configureTargeting(context.window, config.targeting, context.tcData);
 
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
@@ -158,17 +158,17 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
  * A valid device label is `mobile`, `tablet` and `desktop`.
  *
  * The `LabelConfigService` is used to fetch the supported labels.
- *
  */
-export const gptLDeviceLabelKeyValue = (): ConfigureStep =>
-  mkConfigureStepOncePerRequestAdsCycle(
+export const gptLDeviceLabelKeyValue = (): PrepareRequestAdsStep =>
+  mkPrepareRequestAdsStep(
     'gpt-device-label-keyValue',
+    LOW_PRIORITY,
     ctx =>
       new Promise<void>(resolve => {
-        const whitelist = ['mobile', 'tablet', 'desktop'];
+        const allowList = ['mobile', 'tablet', 'desktop'];
         const deviceLabels = ctx.labelConfigService
           .getSupportedLabels()
-          .filter(label => whitelist.some(deviceLabel => deviceLabel === label));
+          .filter(label => allowList.some(deviceLabel => deviceLabel === label));
 
         if (deviceLabels.length === 1) {
           ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabels);
@@ -181,6 +181,27 @@ export const gptLDeviceLabelKeyValue = (): ConfigureStep =>
           );
         }
 
+        resolve();
+      })
+  );
+
+/**
+ * Sets a `consent` key value depending on the user consent
+ *
+ * - if all purposes are accepted `full`
+ * - if any purposes is rejected `none`
+ */
+export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
+  mkPrepareRequestAdsStep(
+    'gpt-consent-keyValue',
+    LOW_PRIORITY,
+    ctx =>
+      new Promise(resolve => {
+        // set consent key value
+        const fullConsent = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].every(
+          purpose => ctx.tcData.purpose.consents[purpose]
+        );
+        ctx.window.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
         resolve();
       })
   );

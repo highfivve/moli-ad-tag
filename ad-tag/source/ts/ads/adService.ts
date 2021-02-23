@@ -18,6 +18,7 @@ import {
 import { createPerformanceService } from '../util/performanceService';
 import {
   gptConfigure,
+  gptConsentKeyValue,
   gptDefineSlots,
   gptDestroyAdSlots,
   gptInit,
@@ -150,8 +151,7 @@ export class AdService {
 
     const configure: ConfigureStep[] = [
       gptConfigure(config),
-      slotEventServiceConfigure(this.slotEventService),
-      gptLDeviceLabelKeyValue()
+      slotEventServiceConfigure(this.slotEventService)
     ];
 
     if (isSinglePageApp) {
@@ -162,7 +162,9 @@ export class AdService {
       reportingPrepareRequestAds(reportingService),
       passbackPrepareRequestAds(
         new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
-      )
+      ),
+      gptLDeviceLabelKeyValue(),
+      gptConsentKeyValue()
     ];
 
     const requestBids: RequestBidsStep[] = [];

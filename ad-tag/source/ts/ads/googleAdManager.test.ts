@@ -10,6 +10,7 @@ import { AdPipelineContext } from './adPipeline';
 import { SlotEventService } from './slotEventService';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
+  gptConsentKeyValue,
   gptDefineSlots,
   gptDestroyAdSlots,
   gptInit,
@@ -252,6 +253,27 @@ describe('google ad manager', () => {
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.have.been.calledWith('device_label', ['mobile']);
+      });
+    });
+  });
+
+  describe('gptConsentKeyValue', () => {
+    it('should set full if consent is available for all purposes', async () => {
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const step = gptConsentKeyValue();
+      await step(adPipelineContext(), []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'full');
+    });
+
+    ['1', '2', '3', '4', '7', '9', '10'].forEach(purpose => {
+      it(`should set none if consent is missing for purpose ${purpose}`, async () => {
+        const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+        const step = gptConsentKeyValue();
+        const context = adPipelineContext();
+        context.tcData.purpose.consents[purpose] = false;
+        await step(context, []);
+        expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'none');
       });
     });
   });
