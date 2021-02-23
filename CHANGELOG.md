@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.23.0
+
+[GD-2696](https://jira.gutefrage.net/browse/GD-2696) Set `consent` key-value if at least one purpose consent is missing.
+This allows a simple targeting in the ad server if no full consent is available.
+
+This remains until google has a more standardized and working way than the [ad technology providers](https://support.google.com/admanager/answer/9835267?hl=en).
+
 ## 3.22.3
 
 [GD-2671](https://jira.gutefrage.net/browse/GD-2671) Load apstag.js (Amazon A9) only if consent is given for the purposes defined by Amazon.
