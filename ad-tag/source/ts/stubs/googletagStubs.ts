@@ -72,6 +72,9 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     getTargeting: (_key: string): string[] => {
       return [];
     },
+    getTargetingKeys(): string[] {
+      return [];
+    },
     setCollapseEmptyDiv: (_doCollapse: boolean, _collapseBeforeAdFetch: boolean): void => {
       return;
     },

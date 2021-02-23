@@ -254,15 +254,24 @@ describe('a9', () => {
   });
 
   describe('a9 clear targeting', () => {
-    it('should not run on the second pipeline run', async () => {
+    const makeGetTargetingKeysStub = (
+      slot: googletag.IAdSlot,
+      keys: string[] = ['amznp', 'amznsz', 'amznbid']
+    ): Sinon.SinonStub<[], string[]> => {
+      return sandbox.stub(slot, 'getTargetingKeys').returns(keys);
+    };
+
+    it('should not run on the first pipeline run', async () => {
       const step = a9ClearTargetingStep();
       const slot = createSlotDefinitions(getDomId(), {});
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
       const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 0 };
 
       await step(ctx, [slot]);
       expect(clearTargetingSpy).to.have.not.been.called;
+      expect(getTargetingKeysStub).to.have.not.been.called;
     });
 
     it('should run on the second pipeline run', async () => {
@@ -270,13 +279,29 @@ describe('a9', () => {
       const slot = createSlotDefinitions(getDomId(), {});
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
       const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 1 };
 
       await step(ctx, [slot]);
+      expect(getTargetingKeysStub).to.have.been.calledOnce;
       expect(clearTargetingSpy).to.have.been.calledThrice;
       expect(clearTargetingSpy).to.have.been.calledWith('amznp');
       expect(clearTargetingSpy).to.have.been.calledWith('amznsz');
       expect(clearTargetingSpy).to.have.been.calledWith('amznbid');
+    });
+
+    it('should clear targeting only for the available keys', async () => {
+      const step = a9ClearTargetingStep();
+      const slot = createSlotDefinitions(getDomId(), {});
+
+      const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
+      const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot, ['amznp', 'foo']);
+      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 1 };
+
+      await step(ctx, [slot]);
+      expect(getTargetingKeysStub).to.have.been.calledOnce;
+      expect(clearTargetingSpy).to.have.been.calledOnce;
+      expect(clearTargetingSpy).to.have.been.calledWith('amznp');
     });
   });
 });

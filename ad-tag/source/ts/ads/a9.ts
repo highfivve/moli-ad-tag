@@ -104,9 +104,10 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
       return new Promise<void>(resolve => {
         context.logger.debug('A9', 'clear a9 targetings');
         slots.forEach(({ adSlot }) => {
-          adSlot.clearTargeting('amznp');
-          adSlot.clearTargeting('amznsz');
-          adSlot.clearTargeting('amznbid');
+          adSlot
+            .getTargetingKeys()
+            .filter(key => key === 'amznp' || key === 'amznsz' || key === 'amznbid')
+            .forEach(key => adSlot.clearTargeting(key));
         });
         resolve();
       });

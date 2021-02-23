@@ -459,17 +459,24 @@ export namespace googletag {
      *
      * These keys are defined in your DFP account.
      *
-     * @param {string} key
+     * @param {string} key The targeting key to look for.
      * @param {string | string[]} value
      */
     setTargeting(key: string, value: string | string[]): IAdSlot;
 
     /**
+     * Returns a specific custom targeting parameter set on this slot. Service-level targeting parameters are not included.
+     *
      * @param {string} key
-     * @returns {string[]} a specific custom targeting parameter set on this slot.
-     *                     Service-level targeting parameters are not included.
+     * @returns {string[]} The values associated with this key, or an empty array if there is no such key.
      */
     getTargeting(key: string): string[];
+
+    /**
+     * Returns the list of all custom targeting keys set on this slot. Service-level targeting keys are not included.
+     * @returns {string[]} Array of targeting keys. Ordering is undefined.
+     */
+    getTargetingKeys(): string[];
 
     /**
      * Clears specific or all custom slot-level targeting parameters for this slot.
