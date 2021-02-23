@@ -4,7 +4,7 @@
 
 ## 3.23.2
 
-[GD-2703](https://jira.gutefrage.net/browse/GD-2703) Clear a9 key values only if present. This removes warnings in the googletag console.
+[GD-2693](https://jira.gutefrage.net/browse/GD-2693) Clear a9 key values only if present. This removes warnings in the googletag console.
 
 ## 3.23.1
 
