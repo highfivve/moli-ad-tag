@@ -2043,7 +2043,7 @@ export namespace prebidjs {
      *
      *  @example 970x250
      */
-    readonly adSize: string;
+    readonly adSize?: string;
 
     /**
      * A simple key-value map
