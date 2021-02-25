@@ -130,11 +130,11 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       child.execSync('yarn build');
 
       // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
-      const manifesfPath = path.join(process.cwd(), 'dist', 'manifest.json');
-      if (fs.existsSync(manifesfPath)) {
-        return Promise.reject(`${manifesfPath} file does not exist!`);
+      const manifestPath = path.join(process.cwd(), 'dist', 'manifest.json');
+      if (!fs.existsSync(manifestPath)) {
+        return Promise.reject(`${manifestPath} file does not exist!`);
       }
-      const manifestFile = fs.readFileSync(manifesfPath);
+      const manifestFile = fs.readFileSync(manifestPath);
       const manifestJson = JSON.parse(manifestFile as any); // yes, we can
       const filename = manifestJson.moli; // moli is the ad tag name by convention
 
