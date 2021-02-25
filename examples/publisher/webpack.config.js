@@ -3,7 +3,10 @@
 const path = require('path');
 const fs = require('fs');
 
-const { makeDocsPages } = require('@highfivve/moli-release/releases/webpack-helpers');
+const {
+  makeDocsPages,
+  manifestPlugin
+} = require('@highfivve/moli-release/releases/webpack-helpers');
 
 const releasesJson = require('./releases.json');
 const publisherName = 'moli-publisher-example-publisher';
@@ -69,6 +72,9 @@ module.exports = (_, argv) => {
         });
       }
     },
-    plugins: makeDocsPages(publisherName, releasesJson.currentFilename, __dirname)
+    plugins: [
+      ...makeDocsPages(publisherName, releasesJson.currentFilename, __dirname),
+      manifestPlugin()
+    ]
   };
 };

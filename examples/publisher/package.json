@@ -19,6 +19,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
+    "webpack-manifest-plugin": "^3.0.0",
     "handlebars-webpack-plugin": "^2.2.1",
     "html-webpack-plugin": "^4.5.0",
     "ts-loader": "^8.0.8",
