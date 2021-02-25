@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.23.3
+
+Make yieldlab `adSize` parameter optional.
+
 ## 3.23.2
 
 [GD-2693](https://jira.gutefrage.net/browse/GD-2693) Clear a9 key values only if present. This removes warnings in the googletag console.
