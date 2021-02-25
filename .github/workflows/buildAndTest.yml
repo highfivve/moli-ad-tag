@@ -18,7 +18,7 @@ jobs:
             module-blocklist-url,
             module-confiant,
             module-generic-skin,
-            module-justpremium-skin,
+            module-identitylink,
             module-moli-ad-reload,
             module-pubstack,
             module-prebid-google-analytics,
@@ -36,13 +36,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 12.x
+          node-version: 14.x
 
       - name: Setup Node Private Registry
         uses: actions/setup-node@v1
         with:
           always-auth: true
-          node-version: 12.x
+          node-version: 14.x
           registry-url: 'https://npm.pkg.github.com/'
           scope: '@highfivve'
 
@@ -61,12 +61,15 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn
+        run: yarn && yarn setup
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Build
-        run: yarn lerna run make:nodemodule
+      - name: Build Ad Tag
+        run: yarn workspace @highfivve/ad-tag make:nodemodule
 
-      - name: Validate
+      - name: Build ${{ matrix.module }}
+        run: yarn workspace @highfivve/${{ matrix.module }} make:nodemodule
+
+      - name: Validate ${{ matrix.module }}
         run: yarn workspace @highfivve/${{ matrix.module }} validate:github
