@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "commander": "^6.2.0",
-    "crypto": "^1.0.1",
     "inquirer": "^7.3.3"
   },
   "devDependencies": {

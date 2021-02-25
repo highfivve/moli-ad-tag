@@ -6,7 +6,6 @@ import inquirer from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as child from 'child_process';
-import * as crypto from 'crypto';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
@@ -124,9 +123,19 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
     .then((answers: { version: number; changes: string; push: any }) => {
       version = answers.version;
 
+      // run lint before releasing
+      child.execSync('yarn lint');
+
+      // run build to generate manifest.json and check if build works
+      child.execSync('yarn build');
+
       // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
-      const hash = crypto.randomBytes(20).toString('hex');
-      const filename = `moli_${hash}.js`;
+      if (fs.existsSync('dist/manifest.json')) {
+        return Promise.reject('dist/manifest.json file does not exist!');
+      }
+      const manifestFile = fs.readFileSync('dist/manifest.json');
+      const manifestJson = JSON.parse(manifestFile as any); // yes, we can
+      const filename = manifestJson.moli; // moli is the ad tag name by convention
 
       const change: IAdTagRelease = {
         version: version,
