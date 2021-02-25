@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-publisher-mode",
-  "version": "3.23.3",
+  "version": "3.23.4",
   "description": "Demonstrating the publisher mode",
   "main": "index.ts",
   "private": true,
@@ -19,16 +19,16 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "webpack-manifest-plugin": "^3.0.0",
     "handlebars-webpack-plugin": "^2.2.1",
     "html-webpack-plugin": "^4.5.0",
     "ts-loader": "^8.0.8",
     "typescript": "^4.1.5",
     "webpack": "^4.44.2",
     "webpack-cli": "^4.1.0",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.0",
+    "webpack-manifest-plugin": "^3.0.0"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.23.3"
+    "@highfivve/ad-tag": "^3.23.4"
   }
 }
