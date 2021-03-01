@@ -131,7 +131,7 @@ export default class Zeotap implements IModule {
     } else {
       config.pipeline.configureSteps.push(
         mkConfigureStep(this.name, context => {
-          this.loadScript(context.config);
+          this.loadScript(context.config).catch(error => context.logger.error(this.name, error));
 
           return Promise.resolve();
         })
