@@ -12,5 +12,10 @@
   "include": [
     "index.ts",
     "../prebid/prebidjs.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../../ad-tag"
+    }
   ]
 }

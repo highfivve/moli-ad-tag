@@ -14,16 +14,18 @@ const publisherName = 'moli-publisher-example-publisher';
 module.exports = (_, argv) => {
   return {
     devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
-    entry: './index.ts',
+    entry: {
+      moli: './index.ts'
+    },
     output: {
-      filename: 'publisher_[chunkHash].js'
+      filename: argv.mode === 'production' ? '[name]_[chunkHash].js' : '[name].js'
     },
     module: {
       rules: [
         {
           test: /\.ts$/,
           loader: 'ts-loader',
-          options: { allowTsInNodeModules: true }
+          options: { allowTsInNodeModules: false, projectReferences: true }
         },
         // this separate rule is required to make sure that the Prebid.js files are babel-ified.  this rule will
         // override the regular exclusion from above (for being inside node_modules).
