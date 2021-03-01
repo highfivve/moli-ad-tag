@@ -1972,10 +1972,52 @@ export namespace prebidjs {
   }
 
   /**
+   * @see https://help.smartadserver.com/s/article/Prebid-Server-setup
+   */
+  export interface ISmartAdServerPrebidServerParams {
+    /**
+     * The network ID.
+     */
+    readonly networkId: number;
+
+    /**
+     * The placement site ID
+     * Optional, but must be filled along with pageId and formatId.
+     *
+     * @example 1234
+     */
+    readonly siteId?: number;
+
+    /**
+     * The placement page ID
+     * Optional, but must be filled along with pageId and formatId.
+     *
+     * @examples 1234
+     */
+    readonly pageId?: number;
+
+    /**
+     *  The placement format ID
+     *  Optional, but must be filled along with pageId and formatId.
+     *  @example 1234
+     */
+    readonly formatId?: number;
+
+    /**
+     * Keyword targeting.
+     * @example sport=tennis
+     */
+    readonly target?: string;
+  }
+
+  /**
    * Smart bid object
    */
   export interface ISmartAdServerBid
-    extends IBidObject<typeof SmartAdServer, ISmartAdServerParams> {}
+    extends IBidObject<
+      typeof SmartAdServer,
+      ISmartAdServerParams | ISmartAdServerPrebidServerParams
+    > {}
 
   /**
    * Unruly bid parameters
