@@ -187,7 +187,7 @@ export default class Zeotap implements IModule {
 
     this.loadScriptCount++;
 
-    return this.assetLoaderService?.loadScript({
+    return this.assetLoaderService.loadScript({
       name: this.name,
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: url

@@ -28,7 +28,7 @@ describe('Zeotap Module', () => {
     prebidjs.IPrebidjsWindow = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
-  const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
+  const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
   const emptyConfigPipeline = (): Moli.pipeline.PipelineConfig => ({
     initSteps: [],
@@ -72,7 +72,11 @@ describe('Zeotap Module', () => {
   };
 
   beforeEach(() => {
-    loadScriptStub.reset();
+    loadScriptStub.resolves();
+  });
+
+  afterEach(() => {
+    sandbox.reset();
   });
 
   it('should fetch the zeotap script and encode parameters into the URL', async () => {
