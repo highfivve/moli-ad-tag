@@ -130,7 +130,7 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       position: 'in-page',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '//55155651/test-ad-unit',
+      adUnitPath: '/55155651/test-ad-unit',
       sizes: ['fluid', [300, 250], [1, 1]],
       passbackSupport: true,
       sizeConfig: [
@@ -156,7 +156,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'prebid-adslot',
-      behaviour: { loaded: 'eager' },
+      behaviour: { loaded: 'eager', bucket: 'ONE' },
       adUnitPath: '/55155651/outstream_test',
       passbackSupport: true,
       sizes: [
@@ -256,7 +256,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'prebid-adslot-2',
-      behaviour: { loaded: 'eager' },
+      behaviour: { loaded: 'eager', bucket: 'TWO' },
       adUnitPath: '/55155651/prebid_test',
       passbackSupport: true,
       sizes: [[300, 250]],
@@ -289,8 +289,8 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       domId: 'a9-adslot',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: ['fluid', [605, 165], [300, 250]],
+      adUnitPath: '/55155651/amazon-tam',
+      sizes: ['fluid', [300, 250]],
       a9: {
         labelAll: ['a9', 'desktop']
       },
@@ -313,7 +313,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'appnexus-native-example-1',
-      behaviour: { loaded: 'eager' },
+      behaviour: { loaded: 'eager', bucket: 'ONE' },
       // adUnitPath: '/19968336/prebid_native_example_1',
       adUnitPath: '/55155651/prebid_native_1',
       sizes: [[1, 1], 'fluid'],
@@ -341,7 +341,7 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'appnexus-native-example-2',
-      behaviour: { loaded: 'eager' },
+      behaviour: { loaded: 'eager', bucket: 'ONE' },
       // adUnitPath: '/19968336/prebid_native_example_2',
       adUnitPath: '/55155651/prebid_native_2',
       sizes: [[1, 1], 'fluid'],
@@ -464,6 +464,9 @@ export const adConfiguration: Moli.MoliConfig = {
       mediaQuery: '(min-width: 768px)'
     }
   ],
+  buckets: {
+    enabled: true
+  },
   prebid: {
     // bidderSettings: bidderSettings,
     config: {

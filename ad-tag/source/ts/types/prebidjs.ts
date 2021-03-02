@@ -51,9 +51,9 @@ export namespace prebidjs {
     /**
      * Remove adUnit from the pbjs configuration
      *
-     * @param adUnitCode - the adUnitCode to remove
+     * @param adUnitCode(s) - the adUnitCode(s) to remove, if empty it removes all
      */
-    removeAdUnit(adUnitCode: string): void;
+    removeAdUnit(adUnitCode?: string | string[]): void;
 
     /**
      * Set query string targeting on all GPT ad units. The logic for deciding query strings is described
@@ -2485,8 +2485,21 @@ export namespace prebidjs {
      * Callback to execute when all the bid responses are back or the timeout hits.
      * @param bidResponses contains all valid SSP responses
      * @param timedOut - true if the handler was called due to hitting the timeout. false others
+     * @param auctionId - bids back for auction
      */
-    readonly bidsBackHandler?: (bidResponses?: IBidResponsesMap, timedOut?: boolean) => void;
+    readonly bidsBackHandler?: (
+      bidResponses: IBidResponsesMap | undefined,
+      timedOut: boolean,
+      auctionId: string
+    ) => void;
+
+    /**
+     * Defines an auction ID to be used rather than having the system generate one.
+     *
+     * This can be useful if there are multiple wrappers on a page and a single auction ID
+     * is desired to tie them together in analytics.
+     */
+    readonly auctionId?: string;
   }
 
   /**

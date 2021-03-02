@@ -32,7 +32,6 @@ import {
   prebidInit,
   prebidPrepareRequestAds,
   prebidRemoveAdUnits,
-  prebidRemoveHbKeyValues,
   prebidRequestBids
 } from './prebid';
 import { a9Configure, a9Init, a9RequestBids, a9ClearTargetingStep } from './a9';
@@ -177,7 +176,7 @@ export class AdService {
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits());
       }
-      prepareRequestAds.push(prebidRemoveHbKeyValues(), prebidPrepareRequestAds());
+      prepareRequestAds.push(prebidPrepareRequestAds());
       requestBids.push(prebidRequestBids(config.prebid, config.targeting));
     }
 

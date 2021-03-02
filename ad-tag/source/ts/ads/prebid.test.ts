@@ -9,7 +9,7 @@ import { prebidjs } from '../types/prebidjs';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import { SlotEventService } from './slotEventService';
-import { prebidConfigure, prebidPrepareRequestAds } from './prebid';
+import { prebidConfigure, prebidPrepareRequestAds, prebidRequestBids } from './prebid';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
@@ -68,6 +68,18 @@ describe('prebid', () => {
       position: 'in-page',
       sizeConfig: [],
       prebid: provider,
+      behaviour: { loaded: 'eager' }
+    };
+  };
+
+  const createAdSlot = (domId: string): Moli.AdSlot => {
+    domIdCounter = domIdCounter + 1;
+    return {
+      domId: domId,
+      adUnitPath: `/123/${domId}`,
+      sizes: mediumRec,
+      position: 'in-page',
+      sizeConfig: [],
       behaviour: { loaded: 'eager' }
     };
   };
@@ -364,6 +376,55 @@ describe('prebid', () => {
           expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
         });
       });
+    });
+  });
+
+  describe('prebid request bids', () => {
+    const prebidConfig: Moli.headerbidding.PrebidConfig = {
+      config: pbjsTestConfig
+    };
+
+    it('should not call requestBids if slots are empty', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(prebidConfig, undefined);
+
+      await step(adPipelineContext(), []);
+      expect(requestBidsSpy).to.have.not.been.called;
+    });
+
+    it('should not call requestBids if all slots are filtered', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(prebidConfig, undefined);
+      const slot = createAdSlot('none-prebid');
+
+      await step(adPipelineContext(), [
+        {
+          moliSlot: slot,
+          adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
+          filterSupportedSizes: sizes => sizes
+        }
+      ]);
+      expect(requestBidsSpy).to.have.not.been.called;
+    });
+
+    it('should call requestBids with the ad unit code', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(prebidConfig, undefined);
+
+      const domId = 'prebid-slot';
+      const adUnit = prebidAdUnit(domId, [
+        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+      ]);
+      const slotDef = createSlotDefinitions(domId, { adUnit });
+
+      await step(adPipelineContext(), [slotDef]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId]))
+      );
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('bidsBackHandler', Sinon.match.func)
+      );
     });
   });
 });

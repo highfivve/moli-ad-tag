@@ -23,7 +23,7 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     requestBids: (requestParam?: prebidjs.IRequestObj): void => {
       // invoke bidsBackHandler immediately
       if (requestParam && requestParam.bidsBackHandler) {
-        requestParam.bidsBackHandler({}, false);
+        requestParam.bidsBackHandler({}, false, requestParam.auctionId || 'auction-id');
       }
     },
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {

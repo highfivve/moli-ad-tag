@@ -229,12 +229,22 @@ export const prebidRequestBids = (
     'prebid-request-bids',
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise(resolve => {
+        const adUnitCodes = slots.filter(isPrebidSlotDefinition).map(slot => slot.moliSlot.domId);
+
+        // resolve immediately if no ad unit codes should be requested
+        if (adUnitCodes.length === 0) {
+          context.logger.debug(
+            'Prebid',
+            'skip request bids. All slots were filtered.',
+            slots.map(s => s.moliSlot)
+          );
+          return resolve();
+        }
+
         // It seems that the bidBackHandler can be triggered more than once. The reason might be that
         // when a timeout for the prebid request occurs, the callback is executed. When the request finishes
         // afterwards anyway the bidsBackHandler is called a second time.
         let adserverRequestSent = false;
-
-        const adUnitCodes = slots.filter(isPrebidSlotDefinition).map(slot => slot.moliSlot.domId);
 
         context.logger.debug(
           'Prebid',
@@ -245,11 +255,27 @@ export const prebidRequestBids = (
 
         context.window.pbjs.requestBids({
           adUnitCodes: adUnitCodes,
-          bidsBackHandler: (bidResponses?: prebidjs.IBidResponsesMap, timedOut?: boolean) => {
+          bidsBackHandler: (
+            bidResponses: prebidjs.IBidResponsesMap | undefined,
+            timedOut: boolean,
+            auctionId: string
+          ) => {
+            context.logger.info(
+              'Prebid',
+              auctionId,
+              bidResponses,
+              slots.map(s => s.moliSlot.domId)
+            );
             // the bids back handler seems to run on a different thread
             // in consequence, we need to catch errors here to propagate them to top levels
             try {
               if (adserverRequestSent) {
+                context.logger.warn(
+                  'Prebid',
+                  `ad server request already sent [${context.requestId}]`,
+                  auctionId,
+                  slots.map(s => s.moliSlot)
+                );
                 return;
               }
 
@@ -273,11 +299,7 @@ export const prebidRequestBids = (
                     : prebidConfig.listener;
                 if (prebidListener.preSetTargetingForGPTAsync) {
                   try {
-                    prebidListener.preSetTargetingForGPTAsync(
-                      bidResponses,
-                      timedOut || false,
-                      slots
-                    );
+                    prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut, slots);
                   } catch (e) {
                     context.logger.error(
                       'Prebid',
@@ -295,6 +317,7 @@ export const prebidRequestBids = (
                 bidResponse
                   ? context.logger.debug(
                       'Prebid',
+                      auctionId,
                       `Prebid bid response: [DomID]: ${adUnitPath} \n\t\t\t${bidResponse.bids.map(
                         bid =>
                           `[bidder] ${bid.bidder} [width] ${bid.width} [height] ${bid.height} [cpm] ${bid.cpm}`
@@ -302,6 +325,7 @@ export const prebidRequestBids = (
                     )
                   : context.logger.debug(
                       'Prebid',
+                      auctionId,
                       `Prebid bid response: [DomID] ${adUnitPath} ---> no bid response`
                     );
               });
@@ -344,17 +368,3 @@ const filterVideoPlayerSizes = (
     SizeConfigService.isFixedSize
   );
 };
-
-/**
- * If a slot is being refreshed or reloaded.
- */
-export const prebidRemoveHbKeyValues = (): PrepareRequestAdsStep =>
-  mkPrepareRequestAdsStep(
-    'prebid-remove-hb-keyvalues',
-    LOW_PRIORITY,
-    (context: AdPipelineContext, slots) =>
-      new Promise<void>(resolve => {
-        // TODO check if prebid is taking care of this by itself in setGptTargetingAsync
-        resolve();
-      })
-  );
