@@ -2,6 +2,39 @@
 
 ## Unreleased
 
+## 3.24.0
+
+[GD-2716](https://jira.gutefrage.net/browse/GD-2716). Don't call prebid `requestBids` if all slots are filtered,
+otherwise key values may be discarded that should actually be sent to the ad server. [resetPresetTargeting](https://github.com/prebid/Prebid.js/blob/fdd646b379e475a861f847cb51adf34b951b7dba/src/prebid.js#L313)
+seems to treat `undefined` as "all ad units".
+
+## 3.23.5
+
+Ad tags now require the `webpack-manifest-plugin` plugin.
+
+```bash
+yarn add --dev webpack-manifest-plugin
+```
+
+Add this to the `webpack.config.js`
+
+```javascript
+const {
+  makeDocsPages,
+  manifestPlugin
+} = require('@highfivve/moli-release/releases/webpack-helpers');
+```
+
+and add the `manifestPlugin` to your plugins
+
+```javascript
+plugins: [
+  ...makeDocsPages(publisherName, releasesJson.currentFilename, __dirname),
+  manifestPlugin(),
+  // ...
+]
+```
+
 ## 3.23.3
 
 Make yieldlab `adSize` parameter optional.
