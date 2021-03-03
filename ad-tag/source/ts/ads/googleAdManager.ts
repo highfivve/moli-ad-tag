@@ -41,12 +41,13 @@ const configureTargeting = (
  */
 const useStandardGpt = (tcData: tcfapi.responses.TCData): boolean => {
   return (
-    tcData.vendor.consents[755] &&
-    tcData.purpose.consents[1] &&
-    [2, 7, 9, 10].every(
-      purposeId =>
-        tcData.purpose.consents[purposeId] || tcData.purpose.legitimateInterests[purposeId]
-    )
+    !tcData.gdprApplies ||
+    (tcData.vendor.consents[755] &&
+      tcData.purpose.consents[1] &&
+      [2, 7, 9, 10].every(
+        purposeId =>
+          tcData.purpose.consents[purposeId] || tcData.purpose.legitimateInterests[purposeId]
+      ))
   );
 };
 
@@ -197,10 +198,13 @@ export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
     LOW_PRIORITY,
     ctx =>
       new Promise(resolve => {
+        const tcData = ctx.tcData;
         // set consent key value
-        const fullConsent = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].every(
-          purpose => ctx.tcData.purpose.consents[purpose]
-        );
+        const fullConsent =
+          !tcData.gdprApplies ||
+          ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].every(
+            purpose => tcData.purpose.consents[purpose]
+          );
         ctx.window.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
         resolve();
       })

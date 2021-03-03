@@ -13,7 +13,9 @@ export const tcfapiFunction = (returnValue: any) => (
   callback(returnValue, true);
 };
 
-export const fullConsent = (vendorConsents: tcfapi.BooleanVector = {}): tcfapi.responses.TCData => {
+export const fullConsent = (
+  vendorConsents: tcfapi.BooleanVector = {}
+): tcfapi.responses.TCDataWithGDPR => {
   return {
     cmpId: 6,
     cmpVersion: 1,
@@ -69,3 +71,16 @@ export const fullConsent = (vendorConsents: tcfapi.BooleanVector = {}): tcfapi.r
 };
 
 export const tcData: tcfapi.responses.TCData = fullConsent();
+
+/**
+ * This what a sourcepoint "gdpr doesn not apply" TCData object looks like
+ */
+export const tcDataNoGdpr: tcfapi.responses.TCDataNoGDPR = {
+  cmpId: 6,
+  cmpVersion: 1,
+  gdprApplies: false,
+  eventStatus: tcfapi.status.EventStatus.TC_LOADED,
+  cmpStatus: tcfapi.status.CmpStatus.LOADED,
+  listenerId: null,
+  tcfPolicyVersion: undefined
+};

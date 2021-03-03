@@ -273,7 +273,9 @@ export class AdPipeline {
 
       // purpose 1: storing information on the user device (cookie, localstorage, etc)
       // this labels main purpose is to be able to only enable prebid partners that treat this correctly
-      if (consentData.purpose.consents['1']) {
+      if (consentData.gdprApplies && consentData.purpose.consents['1']) {
+        extraLabels.push('purpose-1');
+      } else if (!consentData.gdprApplies) {
         extraLabels.push('purpose-1');
       }
 

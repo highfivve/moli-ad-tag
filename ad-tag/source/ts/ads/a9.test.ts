@@ -13,7 +13,7 @@ import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
 import { a9ClearTargetingStep, a9Configure, a9Init, a9RequestBids } from './a9';
-import { tcData, fullConsent } from '../stubs/consentStubs';
+import { tcData, fullConsent, tcDataNoGdpr } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
@@ -110,6 +110,13 @@ describe('a9', () => {
       const tcData = fullConsent({ '793': true });
 
       await step({ ...adPipelineContext(), tcData });
+      expect(assetLoaderStub).to.have.been.calledOnce;
+    });
+
+    it('should load the a9 script if gdpr does not apply', async () => {
+      const step = a9Init(a9ConfigStub, assetLoaderService);
+
+      await step({ ...adPipelineContext(), tcData: tcDataNoGdpr });
       expect(assetLoaderStub).to.have.been.calledOnce;
     });
 

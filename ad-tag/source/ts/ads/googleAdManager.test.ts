@@ -20,7 +20,7 @@ import {
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createAssetLoaderService } from '../util/assetLoaderService';
-import { tcData, tcfapiFunction } from '../stubs/consentStubs';
+import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 
@@ -258,6 +258,14 @@ describe('google ad manager', () => {
   });
 
   describe('gptConsentKeyValue', () => {
+    it('should set full if gdpr does not apply', async () => {
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      const step = gptConsentKeyValue();
+      await step({ ...adPipelineContext(), tcData: tcDataNoGdpr }, []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'full');
+    });
+
     it('should set full if consent is available for all purposes', async () => {
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       const step = gptConsentKeyValue();
@@ -270,9 +278,10 @@ describe('google ad manager', () => {
       it(`should set none if consent is missing for purpose ${purpose}`, async () => {
         const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
         const step = gptConsentKeyValue();
-        const context = adPipelineContext();
-        context.tcData.purpose.consents[purpose] = false;
-        await step(context, []);
+        const tcData = fullConsent();
+        tcData.purpose.consents[purpose] = false;
+
+        await step({ ...adPipelineContext(), tcData }, []);
         expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'none');
       });
     });

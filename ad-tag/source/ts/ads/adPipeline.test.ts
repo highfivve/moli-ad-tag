@@ -15,7 +15,7 @@ import {
 } from './adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from './slotEventService';
-import { fullConsent, tcData, tcfapiFunction } from '../stubs/consentStubs';
+import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 
@@ -203,6 +203,21 @@ describe('AdPipeline', () => {
       await pipeline.run([adSlot], emptyConfig, 1);
 
       expect(supportedLabels).to.not.contain('purpose-1');
+    });
+
+    it('should contain purpose-1 label if gdpr does not apply', async () => {
+      dom.window.__tcfapi = tcfapiFunction(tcDataNoGdpr);
+      let supportedLabels: string[] = [];
+      const configureStep: ConfigureStep[] = [
+        context => {
+          supportedLabels = context.labelConfigService.getSupportedLabels();
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
+      await pipeline.run([adSlot], emptyConfig, 1);
+
+      expect(supportedLabels).to.contain('purpose-1');
     });
   });
 });

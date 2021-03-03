@@ -56,11 +56,11 @@ export const a9Init = (
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
+        const tcData = context.tcData;
         if (
-          context.tcData.vendor.consents['793'] &&
-          ['1', '2', '3', '4', '7', '9', '10'].every(
-            purpose => context.tcData.purpose.consents[purpose]
-          )
+          !tcData.gdprApplies ||
+          (tcData.vendor.consents['793'] &&
+            ['1', '2', '3', '4', '7', '9', '10'].every(purpose => tcData.purpose.consents[purpose]))
         ) {
           // async fetch as everything is already initialized
           assetService.loadScript({

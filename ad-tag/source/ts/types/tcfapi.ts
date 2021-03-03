@@ -58,8 +58,8 @@ export namespace tcfapi {
        * undefined - unknown whether GDPR Applies
        * see the section: "What does the gdprApplies value mean?"
        */
-      readonly gdprApplies: boolean;
-      readonly tcfPolicyVersion: number;
+      readonly gdprApplies: boolean | undefined;
+      readonly tcfPolicyVersion: number | undefined;
     }
 
     export interface Ping extends Response {
@@ -75,7 +75,14 @@ export namespace tcfapi {
       readonly cmpLoaded: boolean;
     }
 
-    export interface TCData extends Response {
+    export type TCData = TCDataWithGDPR | TCDataNoGDPR;
+
+    export interface TCDataWithGDPR extends Response {
+      /**
+       * GDPR applies
+       */
+      readonly gdprApplies: true;
+
       readonly tcString: string;
       /**
        * If this TCData is sent to the callback of addEventListener: number,
@@ -148,6 +155,27 @@ export namespace tcfapi {
           };
         };
       };
+    }
+    export interface TCDataNoGDPR extends Response {
+      /**
+       * GDPR does not apply
+       */
+      readonly gdprApplies: false | undefined;
+
+      /**
+       * If this TCData is sent to the callback of addEventListener: number,
+       * the unique ID assigned by the CMP to the listener function registered
+       * via addEventListener.
+       * Others: undefined.
+       */
+      readonly listenerId: number | undefined | null;
+
+      /**
+       * see addEventListener command
+       */
+      readonly eventStatus: status.EventStatus;
+
+      readonly tcfPolicyVersion: undefined;
     }
 
     /**
