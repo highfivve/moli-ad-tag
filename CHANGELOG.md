@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-2728](https://jira.gutefrage.net/browse/GD-2728). Fix bug that breaks moli if gdpr does not apply
+
 ## 3.24.0
 
 [GD-2716](https://jira.gutefrage.net/browse/GD-2716). Don't call prebid `requestBids` if all slots are filtered,
