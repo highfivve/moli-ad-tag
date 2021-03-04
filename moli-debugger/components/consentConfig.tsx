@@ -44,6 +44,7 @@ const cmpVendors: CmpVendors = {
 declare const window: Window & tcfapi.TCFApiWindow;
 
 type IConsentConfigState = {
+  gdprApplies?: boolean;
   cmpStatus?: tcfapi.status.CmpStatus;
   tcModel?: TCModel;
   tcString?: string;
@@ -77,6 +78,12 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
   private consent = (): JSX.Element => {
     return (
       <div>
+        <div className="MoliDebug-tagContainer">
+          <span className="MoliDebug-tagLabel">
+            <a href="https://iabeurope.eu/cmp-list/">GDPR</a>
+          </span>
+          {!!this.state.gdprApplies}
+        </div>
         <div className="MoliDebug-tagContainer">
           <span className="MoliDebug-tagLabel">
             <a href="https://iabeurope.eu/cmp-list/">CMP ID</a>
@@ -126,21 +133,22 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
     if (window.__tcfapi) {
       // fetch initial TCData
       window.__tcfapi('getTCData', 2, (data: tcfapi.responses.TCData) => {
-        const tcModel = TCString.decode(data.tcString);
+        const tcModel = data.gdprApplies ? TCString.decode(data.tcString) : undefined;
         this.setState({
+          gdprApplies: data.gdprApplies,
           cmpStatus: data.cmpStatus,
           tcModel: tcModel,
-          tcString: data.tcString
+          tcString: data.gdprApplies ? data.tcString : 'none'
         });
       });
 
       // Update on changes
       window.__tcfapi('addEventListener', 2, event => {
-        const tcModel = TCString.decode(event.tcString);
+        const tcModel = event.gdprApplies ? TCString.decode(event.tcString) : undefined;
         this.setState({
           cmpStatus: event.cmpStatus,
           tcModel: tcModel,
-          tcString: event.tcString
+          tcString: event.gdprApplies ? event.tcString : 'none'
         });
       });
     } else {
