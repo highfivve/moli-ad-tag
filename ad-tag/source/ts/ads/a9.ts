@@ -13,6 +13,7 @@ import {
 import { Moli } from '../types/moli';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { SizeConfigService } from './sizeConfigService';
+import { apstag } from '../types/apstag';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -114,7 +115,7 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
     }
   );
 
-export const a9RequestBids = (): RequestBidsStep =>
+export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsStep =>
   mkRequestBidsStep(
     'a9-fetch-bids',
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
@@ -141,20 +142,26 @@ export const a9RequestBids = (): RequestBidsStep =>
           context.reportingService.markA9fetchBids(context.requestId);
           context.window.apstag.fetchBids(
             {
-              slots: filteredSlots.map(({ moliSlot, filterSupportedSizes }) => {
+              slots: filteredSlots.map(({ moliSlot, priceRule, filterSupportedSizes }) => {
                 if (moliSlot.a9.mediaType === 'video') {
                   return {
                     slotID: moliSlot.domId,
                     mediaType: 'video'
-                  };
+                  } as apstag.IVideoSlot;
                 } else {
                   return {
                     slotID: moliSlot.domId,
                     slotName: moliSlot.adUnitPath,
                     sizes: filterSupportedSizes(moliSlot.sizes).filter(
                       SizeConfigService.isFixedSize
-                    )
-                  };
+                    ),
+                    ...(config.enableFloorPrices && priceRule
+                      ? // During the beta phase we need to be able to activate and deactivate floor prices
+                        // We also need to do a currency conversion from EUR to USD (x1.19 , 08.03.2021)
+                        // THe floor price is sent in EUR, amazon requires Cents
+                        { floor: { value: priceRule.floorprice * 100 * 1.19, currency: 'EUR' } }
+                      : {})
+                  } as apstag.IDisplaySlot;
                 }
               })
             },

@@ -1329,6 +1329,13 @@ export namespace Moli {
        * timeout for the cmp provider to return a consent string
        */
       readonly cmpTimeout: number;
+
+      /**
+       * If set to true the yield optimization floor price will be sent to amazon.
+       *
+       * default: false
+       */
+      readonly enableFloorPrices?: boolean;
     }
 
     /**

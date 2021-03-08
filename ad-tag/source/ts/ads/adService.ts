@@ -185,7 +185,7 @@ export class AdService {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9));
       prepareRequestAds.push(a9ClearTargetingStep());
-      requestBids.push(a9RequestBids());
+      requestBids.push(a9RequestBids(config.a9));
     }
 
     // add additional steps if configured

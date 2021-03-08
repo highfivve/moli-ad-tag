@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+[GD-2735](https://jira.gutefrage.net/browse/GD-2735). Add Amazon A9 / TAM floor price configuration.
+This needs to be enabled explicitly as this is currently in beta
+
+```javascript
+{
+  a9: {
+    // ...
+    enableFloorPrices: true
+  }
+}
+```
+
+
 [GD-2728](https://jira.gutefrage.net/browse/GD-2728). Fix bug that breaks moli if gdpr does not apply
 
 ## 3.24.0

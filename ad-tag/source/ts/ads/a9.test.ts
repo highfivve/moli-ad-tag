@@ -170,7 +170,7 @@ describe('a9', () => {
   describe('a9 request bids step', () => {
     it('should add empty adunits array when the slots array is empty', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-      const step = a9RequestBids();
+      const step = a9RequestBids(a9ConfigStub);
 
       return step(adPipelineContext(), []).then(() => {
         expect(addAdUnitsSpy).not.to.have.been.called;
@@ -179,7 +179,7 @@ describe('a9', () => {
 
     it('should request for the wandted ad slot', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-      const step = a9RequestBids();
+      const step = a9RequestBids(a9ConfigStub);
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
@@ -203,7 +203,7 @@ describe('a9', () => {
 
     it('should return mediaType video when wanted', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-      const step = a9RequestBids();
+      const step = a9RequestBids(a9ConfigStub);
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {
@@ -228,7 +228,7 @@ describe('a9', () => {
 
     it('should return video and display slots', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-      const step = a9RequestBids();
+      const step = a9RequestBids(a9ConfigStub);
 
       const displayDomId = getDomId();
       const displaySlot = createSlotDefinitions(displayDomId, {});
@@ -257,6 +257,34 @@ describe('a9', () => {
           Sinon.match.func
         );
       });
+    });
+
+    it('should add floor config if enabled', async () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids({ ...a9ConfigStub, enableFloorPrices: true });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+      singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
+
+      await step(adPipelineContext(), [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec,
+              floor: {
+                value: 0.1 * 100 * 1.19,
+                currency: 'EUR'
+              }
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
   });
 

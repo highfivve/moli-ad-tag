@@ -114,13 +114,26 @@ export namespace apstag {
     bidTimeout?: number;
   }
 
-  export type ISlot = IDisplySlot | IVideoSlot;
+  export type ISlot = IDisplaySlot | IVideoSlot;
 
-  export interface IDisplySlot {
+  export interface IFloorPrice {
+    /**
+     * Contains the value of the floor price where 100 = $1.00
+     */
+    readonly value: number;
+
+    /**
+     * Contains a string to configure the floor currency using the International Organization for Standards (ISO)
+     * three letter currency abbreviation (Ex. 'USD' for US Dollar) https://www.iso.org/iso-4217-currency-codes.html
+     */
+    readonly currency: 'USD' | 'EUR';
+  }
+
+  export interface IDisplaySlot {
     /**
      * The div ID the slot will render into
      */
-    slotID: string;
+    readonly slotID: string;
 
     /**
      * The name of the slot requested; this is used for reporting and is also the tag_id in OpenRTB sent to bidding
@@ -128,12 +141,17 @@ export namespace apstag {
      *
      * Eg. /1234/mysite/sports/atf_multi_flex
      */
-    slotName: string;
+    readonly slotName: string;
 
     /**
      * The sizes to consider in the auction for this slot
      */
-    sizes: [number, number][];
+    readonly sizes: [number, number][];
+
+    /**
+     * An object, containing the value and currency for a custom floor price.
+     */
+    readonly floor?: IFloorPrice;
   }
 
   export interface IVideoSlot {
