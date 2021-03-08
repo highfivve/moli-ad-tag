@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.25.0
+
 [GD-2735](https://jira.gutefrage.net/browse/GD-2735). Add Amazon A9 / TAM floor price configuration.
 This needs to be enabled explicitly as this is currently in beta
 
