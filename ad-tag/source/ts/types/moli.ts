@@ -3,6 +3,7 @@ import { prebidjs } from './prebidjs';
 import { IModule, ModuleMeta } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
+import { apstag } from './apstag';
 
 export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
@@ -1336,6 +1337,11 @@ export namespace Moli {
        * default: false
        */
       readonly enableFloorPrices?: boolean;
+
+      /**
+       * Configure the floor price currency. Will be mandatory once the feature is out of beta.
+       */
+      readonly floorPriceCurrency?: apstag.Currency;
     }
 
     /**

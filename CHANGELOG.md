@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.25.0
+## 3.25.0 / 3.25.1
 
 [GD-2735](https://jira.gutefrage.net/browse/GD-2735). Add Amazon A9 / TAM floor price configuration.
 This needs to be enabled explicitly as this is currently in beta
@@ -11,7 +11,8 @@ This needs to be enabled explicitly as this is currently in beta
 {
   a9: {
     // ...
-    enableFloorPrices: true
+    enableFloorPrices: true,
+    floorPriceCurrency: 'EUR'
   }
 }
 ```

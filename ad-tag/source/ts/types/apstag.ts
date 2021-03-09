@@ -116,17 +116,24 @@ export namespace apstag {
 
   export type ISlot = IDisplaySlot | IVideoSlot;
 
+  /**
+   * @see https://www.iso.org/iso-4217-currency-codes.html
+   */
+  export type Currency = 'USD' | 'EUR';
+
   export interface IFloorPrice {
     /**
      * Contains the value of the floor price where 100 = $1.00
+     * Must be an integer, not a float
      */
     readonly value: number;
 
     /**
      * Contains a string to configure the floor currency using the International Organization for Standards (ISO)
-     * three letter currency abbreviation (Ex. 'USD' for US Dollar) https://www.iso.org/iso-4217-currency-codes.html
+     * three letter currency abbreviation (Ex. 'USD' for US Dollar)
+     * @see https://www.iso.org/iso-4217-currency-codes.html
      */
-    readonly currency: 'USD' | 'EUR';
+    readonly currency: Currency;
   }
 
   export interface IDisplaySlot {

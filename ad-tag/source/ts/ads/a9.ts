@@ -159,7 +159,12 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
                       ? // During the beta phase we need to be able to activate and deactivate floor prices
                         // We also need to do a currency conversion from EUR to USD (x1.19 , 08.03.2021)
                         // THe floor price is sent in EUR, amazon requires Cents
-                        { floor: { value: priceRule.floorprice * 100 * 1.19, currency: 'EUR' } }
+                        {
+                          floor: {
+                            value: Math.ceil(priceRule.floorprice * 100 * 1.19),
+                            currency: config.floorPriceCurrency || 'USD'
+                          }
+                        }
                       : {})
                   } as apstag.IDisplaySlot;
                 }

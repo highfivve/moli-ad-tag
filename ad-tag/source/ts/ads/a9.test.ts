@@ -277,14 +277,48 @@ describe('a9', () => {
               slotName: singleSlot.adSlot.getAdUnitPath(),
               sizes: mediumRec,
               floor: {
-                value: 0.1 * 100 * 1.19,
-                currency: 'EUR'
+                value: 12,
+                currency: 'USD'
               }
             }
           ]
         },
         Sinon.match.func
       );
+    });
+
+    ['USD' as const, 'EUR' as const].forEach(currency => {
+      it(`should add floor config with configured currency ${currency}`, async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+        const step = a9RequestBids({
+          ...a9ConfigStub,
+          enableFloorPrices: true,
+          floorPriceCurrency: currency
+        });
+
+        const domId = getDomId();
+        const singleSlot = createSlotDefinitions(domId, {});
+        singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
+
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+          {
+            slots: [
+              {
+                slotID: domId,
+                slotName: singleSlot.adSlot.getAdUnitPath(),
+                sizes: mediumRec,
+                floor: {
+                  value: 12, // value must be rounded up
+                  currency: currency
+                }
+              }
+            ]
+          },
+          Sinon.match.func
+        );
+      });
     });
   });
 
