@@ -339,7 +339,7 @@ describe('Moli Ad Reload Module', () => {
     const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
 
     const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
-    const adPipelineRunSpy = sandbox.spy(adPipeline, 'run');
+    const adPipelineRunSpy = sandbox.stub(adPipeline, 'run').resolves();
 
     const slotRenderEndedEvent: ISlotRenderEndedEvent = {
       slot: googleSlot,
