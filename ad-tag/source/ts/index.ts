@@ -7,6 +7,7 @@ export * from './types/tcfapi';
 export * from './ads/moliGlobal';
 export * from './ads/moli';
 export * from './ads/adPipeline';
+export * from './ads/prebid-outstream';
 export * from './ads/slotEventService';
 export * from './util/assetLoaderService';
 export * from './util/arrayUtils';

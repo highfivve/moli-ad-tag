@@ -1069,6 +1069,10 @@ export namespace prebidjs {
      * Player size(s) that this ad unit can accept (width, height).
      */
     readonly playerSize: [number, number][] | [number, number];
+    /**
+     * The renderer associated to the ad-unit. Only for mediaType = video.
+     */
+    readonly renderer?: IRenderer;
   }
 
   interface IMediaTypeNativeRequirement {
@@ -1384,6 +1388,12 @@ export namespace prebidjs {
      * A function that tells Prebid.js how to invoke the renderer script.
      */
     readonly render: (bid: any) => void; // TODO: find out bid type
+
+    /**
+     * Optional field, if set to true, buyer or adapter renderer will be preferred.
+     * Default is true.
+     */
+    readonly backupOnly?: boolean;
 
     /**
      * NOTE: we only want publishers that offer us url and renderer, but we want to keep this possibility open

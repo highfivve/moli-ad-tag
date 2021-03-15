@@ -1,4 +1,4 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { Moli, prebidjs, prebidOutstreamRenderer } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
 
 const teadsVerticalBid = (
@@ -220,7 +220,9 @@ export const adConfiguration: Moli.MoliConfig = {
                   [605, 340],
                   [536, 302],
                   [1, 1]
-                ]
+                ],
+                // Use Moli's outstream player
+                renderer: { ...prebidOutstreamRenderer('prebid-adslot'), backupOnly: false }
               }
             },
             bids: [

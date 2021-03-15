@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 3.26.0
+
+[GD-2495](https://jira.gutefrage.net/browse/GD-2495) Added types and support for the prebid-outstream player.
+
+```ts
+adUnit: {
+  mediaTypes: {
+    video: {
+      renderer: prebidOutstreamRenderer('prebid-adslot')
+    }
+  }
+}
+```
+
 ## 3.25.0 / 3.25.1
 
 [GD-2735](https://jira.gutefrage.net/browse/GD-2735). Add Amazon A9 / TAM floor price configuration.
