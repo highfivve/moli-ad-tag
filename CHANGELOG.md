@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.26.1
+
+[GD-2777](https://jira.gutefrage.net/browse/GD-2777) Remove pubstack SDK stub.
+
 ## 3.26.0
 
 [GD-2495](https://jira.gutefrage.net/browse/GD-2495) Added types and support for the prebid-outstream player.
