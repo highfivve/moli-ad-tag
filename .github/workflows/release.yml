@@ -1,0 +1,64 @@
+# https://github.com/release-drafter/release-drafter/pull/424#issuecomment-598830640
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Check and Release New Version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Get release version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      # Node setup
+      - name: Node setup
+        uses: actions/setup-node@v1
+        with:
+          always-auth: true
+          node-version: '14.x'
+          registry-url: https://npm.pkg.github.com
+          scope: '@muuki88'
+
+
+      # Yarn cache
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v2
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      # Validate and publish
+      - name: Yarn setup and validation
+        run: |
+          yarn setup
+          yarn workspaces run validate
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Publish New Package Version
+        run: yarn github:publish --yes
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Publish Release Notes
+        uses: release-drafter/release-drafter@v5
+        with:
+          publish: true
+          tag: ${{ env.RELEASE_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
