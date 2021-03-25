@@ -45,47 +45,6 @@ If you have already checkout this repository you may want to clean things before
 $ yarn clean && yarn setup
 ```
 
-## Using lerna
-
-Using lerna for managing multi-package repository. [Lerna on Github](https://github.com/lerna/lerna)
-
-Add a dependency to a package
-```bash
-$ yarn lerna add <package>
-```
-
-Link local packages together and install remaining package dependencies
-```bash
-$ yarn lerna bootstrap
-```
-
-Run an npm script in each package that contains that script
-```bash
-$ yarn lerna run <script>
-// e.g.
-$ yarn lerna run make:nodemodule
-```
-
-## Publishing a package
-
-While everything is still a bit shaky, this is the "it will definitely work command"
-
-```bash
-yarn && yarn clean:lib && yarn setup && yarn workspace @highfivve/ad-tag make:nodemodule && yarn lerna version && yarn github:publish
-```
-
-
-Bump version of packages changed since the last release
-```bash
-$ yarn lerna version
-```
-
-See [version command documentation](https://github.com/lerna/lerna/tree/main/commands/version)
-
-Publish packages in the current project
-```bash
-$ yarn github:publish
-```
 
 # Examples
 
@@ -116,3 +75,14 @@ $ yarn workspace @highfivve/example-publisher-mode start
 - The examples are listed as yarn workspaces, but not configured in the the [lerna.json](lerna.json).
   Ideally this prevents these packages from being published as NPM modules
 - Build a github release with lerna (see `--create-release` flag in the `lerna version` command)
+
+# Release
+
+Releases are automatically prepared and publish via github actions. To trigger a release run
+
+```bash
+yarn lerna version
+```
+
+There will always be a release draft on the [github release page](https://github.com/highfivve/moli-ad-tag/releases).
+Pick the version the release drafter suggests.
