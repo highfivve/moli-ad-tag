@@ -86,3 +86,9 @@ yarn lerna version
 
 There will always be a release draft on the [github release page](https://github.com/highfivve/moli-ad-tag/releases).
 Pick the version the release drafter suggests.
+
+After the version is bumped, push everything to the github repo. Assuming your `remote` is called `github`
+
+```bash
+git push github master --tags
+```
