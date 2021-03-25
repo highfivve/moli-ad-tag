@@ -11,7 +11,7 @@
   "scripts": {
     "setup:all": "yarn workspaces run setup",
     "setup": "yarn && yarn clean:lib && lerna bootstrap && yarn setup:all",
-    "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts && yarn workspace @highfivve/ad-tag make:nodemodule",
+    "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts && yarn workspace @highfivve/ad-tag codeGen && yarn workspace @highfivve/ad-tag make:nodemodule",
     "preversion": "yarn workspaces run validate",
     "postversion": "git push && git push --tags",
     "clean:node_modules": "rm -rf node_modules ad-tag/node_modules modules/**/node_modules moli-release/node_modules moli-debugger/node_modules",

@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "setup": "yarn",
+    "setup": "yarn && yarn codeGen",
     "make:nodemodule": "tsc -p tsconfig.build.json",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
@@ -26,8 +26,8 @@
     "validate": "yarn compile && yarn lint && yarn test && yarn docs",
     "validate:github": "yarn compile && yarn lint && yarn test:junit",
     "validate:jenkins": "yarn compile && yarn lint && yarn test:junit",
-    "codeGen:packageJson": "node codeGen.js",
-    "postinstall": "yarn codeGen:packageJson"
+    "codeGen": "yarn codeGen:packageJson",
+    "codeGen:packageJson": "node codeGen.js"
   },
   "repository": {
     "type": "git",
