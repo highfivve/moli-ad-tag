@@ -17,6 +17,7 @@ import {
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
 } from '../util/environmentOverride';
+import { packageJson } from '../gen/packageJson';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -725,6 +726,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   return {
     que: que,
+    version: packageJson.version,
     setTargeting: setTargeting,
     addLabel: addLabel,
     setLogger: setLogger,

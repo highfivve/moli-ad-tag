@@ -77,6 +77,11 @@ export namespace Moli {
     };
 
     /**
+     * the moli ad tag library version
+     */
+    version: string;
+
+    /**
      * Set a key value. Can be used in DFP or prebid bids configuration.
      * @param key
      * @param value

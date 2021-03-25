@@ -11,6 +11,7 @@ lerna-debug.log
 dist/
 docs/
 ad-tag/lib
+ad-tag/source/ts/gen
 moli-debugger/lib
 moli-release/lib
 modules/*/lib

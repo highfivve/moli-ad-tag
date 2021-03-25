@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.26.2
+
+[GD-2807](https://jira.gutefrage.net/browse/GD-2807). Add `moli.version` property to access the moli version
+
 ## 3.26.1
 
 [GD-2777](https://jira.gutefrage.net/browse/GD-2777) Remove pubstack SDK stub.
