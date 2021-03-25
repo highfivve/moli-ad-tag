@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.26.2
+## 3.26.2 / 3.26.3
 
 [GD-2807](https://jira.gutefrage.net/browse/GD-2807). Add `moli.version` property to access the moli version
 
