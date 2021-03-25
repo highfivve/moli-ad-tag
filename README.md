@@ -36,45 +36,38 @@ I recommend putting this under `~/.npmrc` as described in the [npmrc documentati
 You require `yarn` for developing.
 
 ```bash
-$ yarn setup
+yarn setup
 ```
 
 If you have already checkout this repository you may want to clean things before:
 
 ```bash
-$ yarn clean && yarn setup
+yarn clean && yarn setup
 ```
 
 
-# Examples
+## Examples
 
 In order to run the examples you need to build the ad tag and all modules first.
 
 ```bash
-$ yarn workspaces run make:nodemodule
+yarn workspaces run make:nodemodule
 ```
 
-## Testing with examples
+### Testing with examples
 
-If you want to test code changes within the examples you have to perform the current steps
-in order for changes to appear.
+If you want to test code changes within the examples you have to start the module in watch mode.
 
 ```bash
 # rebuild the module you change, e.g. ad-tag
-$ yarn workspace @highfivve/ad-tag make:nodemodule
-
-# restart the example ad tag, e.g. the example-publisher-mode
-$ yarn workspace @highfivve/example-publisher-mode start
+yarn workspace @highfivve/ad-tag make:nodemodule --watch
 ```
 
-# TODOs for Open Source migration
+And then start one of the example projects
 
-- The examples currently depend on the ad-tag through yarn workspaces.
-  This is the ideal way to work with an ad tag and to develop some features or reproduce bugs.
-  Hopefully we can keep it that way.
-- The examples are listed as yarn workspaces, but not configured in the the [lerna.json](lerna.json).
-  Ideally this prevents these packages from being published as NPM modules
-- Build a github release with lerna (see `--create-release` flag in the `lerna version` command)
+```bash
+yarn workspace @highfivve/example-publisher-mode start
+```
 
 # Release
 
