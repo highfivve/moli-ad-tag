@@ -116,3 +116,14 @@ $ yarn workspace @highfivve/example-publisher-mode start
 - The examples are listed as yarn workspaces, but not configured in the the [lerna.json](lerna.json).
   Ideally this prevents these packages from being published as NPM modules
 - Build a github release with lerna (see `--create-release` flag in the `lerna version` command)
+
+# Release
+
+Releases are automatically prepared and publish via github actions. To trigger a release run
+
+```bash
+yarn lerna version
+```
+
+There will always be a release draft on the [github release page](https://github.com/highfivve/moli-ad-tag/releases).
+Pick the version the release drafter suggests.
