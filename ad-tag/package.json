@@ -25,7 +25,9 @@
     "docs": "yarn typedoc --readme source/ts/types/README.md --theme default --out docs/ source/ts/types/",
     "validate": "yarn compile && yarn lint && yarn test && yarn docs",
     "validate:github": "yarn compile && yarn lint && yarn test:junit",
-    "validate:jenkins": "yarn compile && yarn lint && yarn test:junit"
+    "validate:jenkins": "yarn compile && yarn lint && yarn test:junit",
+    "codeGen:packageJson": "node codeGen.js",
+    "postinstall": "yarn codeGen:packageJson"
   },
   "repository": {
     "type": "git",

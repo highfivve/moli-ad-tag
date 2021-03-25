@@ -11,7 +11,9 @@ const tsconfigJsonFile = fs.readFileSync('tsconfig.json');
 const tsconfigJson = JSON.parse(tsconfigJsonFile);
 
 const genCodeDirectory = path.join(tsconfigJson.compilerOptions.rootDir, 'gen');
-fs.mkdirSync(genCodeDirectory);
+if (!fs.existsSync(genCodeDirectory)) {
+  fs.mkdirSync(genCodeDirectory);
+}
 
 const packageJsonTs = path.join(genCodeDirectory, 'packageJson.ts');
 
