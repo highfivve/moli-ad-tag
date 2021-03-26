@@ -1,19 +1,24 @@
 import { prebidjs } from '../types/prebidjs';
+import { getDefaultLogger } from '../util/logging';
 
 /**
  * These types are copied from prebid-outstream.
  */
 
-type OutStreamPlayerWindow = {
+export type OutStreamPlayerWindow = {
   /**
    * Set by prebid-outstream as soon as it is loaded from the configured url below.
    */
-  outstreamPlayer?: (bid: Bid, elementId: string, config: GenericConfiguration) => void;
+  outstreamPlayer?: (
+    bid: PrebidOutstreamBid,
+    elementId: string,
+    config: PrebidOutstreamConfiguration
+  ) => void;
 };
 
 declare const window: Window & OutStreamPlayerWindow;
 
-export type GenericConfiguration = Partial<{
+export type PrebidOutstreamConfiguration = Partial<{
   width: number;
   height: number;
   vastTimeout: number;
@@ -25,7 +30,7 @@ export type GenericConfiguration = Partial<{
   adText: string;
 }>;
 
-type Bid = Partial<{
+export type PrebidOutstreamBid = Partial<{
   ad: string | null;
   vastXml: string;
   id: string;
@@ -39,6 +44,7 @@ type Bid = Partial<{
     dspid: number;
     advid: number;
   };
+  renderer: { push: (func: () => void) => void };
 }>;
 
 /**
@@ -67,9 +73,26 @@ type Bid = Partial<{
  */
 export const prebidOutstreamRenderer = (
   domId: string,
-  config: GenericConfiguration = {}
+  config: PrebidOutstreamConfiguration = {}
 ): prebidjs.IRenderer => ({
   url: 'https://assets.h5v.eu/prebid-outstream/3/bundle.js',
-  render: bid => bid.renderer.push(() => window.outstreamPlayer?.(bid, domId, config)),
+  render: bid => renderPrebidOutstream(bid, domId, config),
   backupOnly: true
 });
+
+/**
+ * Renders the prebid outstream player directly, using the specified parameters.
+ */
+export const renderPrebidOutstream = (
+  bid: PrebidOutstreamBid,
+  domId: string,
+  config: PrebidOutstreamConfiguration = {}
+) => {
+  if (!bid.renderer) {
+    getDefaultLogger().error(
+      'Can not initialize prebid outstream player, because bid.renderer is not defined'
+    );
+    return;
+  }
+  bid.renderer.push(() => window.outstreamPlayer?.(bid, domId, config));
+};
