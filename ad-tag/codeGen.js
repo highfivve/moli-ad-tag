@@ -5,8 +5,6 @@ const path = require('path');
 const packageJsonFile = fs.readFileSync('package.json');
 const packageJson = JSON.parse(packageJsonFile);
 
-console.log(packageJson.version);
-
 const tsconfigJsonFile = fs.readFileSync('tsconfig.json');
 const tsconfigJson = JSON.parse(tsconfigJsonFile);
 
