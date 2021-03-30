@@ -1347,6 +1347,13 @@ export namespace Moli {
        * Configure the floor price currency. Will be mandatory once the feature is out of beta.
        */
       readonly floorPriceCurrency?: apstag.Currency;
+
+      /**
+       * all sizes that requests will be made for and are support from a9.
+       *
+       * default: requesting all sizes that are defined in the adSlot configuration.
+       */
+      readonly supportedSizes?: DfpSlotSize[];
     }
 
     /**

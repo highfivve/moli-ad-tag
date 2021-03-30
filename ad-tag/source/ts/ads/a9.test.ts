@@ -50,7 +50,10 @@ describe('a9', () => {
   };
 
   let domIdCounter: number = 0;
-  const mediumRec: [number, number][] = [[300, 250]];
+  const mediumRec: [number, number][] = [
+    [300, 250],
+    [300, 200]
+  ];
 
   const getDomId = (): string => {
     domIdCounter = domIdCounter + 1;
@@ -177,7 +180,7 @@ describe('a9', () => {
       });
     });
 
-    it('should request for the wandted ad slot', () => {
+    it('should request for the wanted ad slot', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
 
@@ -193,6 +196,33 @@ describe('a9', () => {
                 slotID: domId,
                 slotName: singleSlot.adSlot.getAdUnitPath(),
                 sizes: mediumRec
+              }
+            ]
+          },
+          Sinon.match.func
+        );
+      });
+    });
+
+    it('should respect the supportedSizes configuration in the global a9 config', () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids({
+        ...a9ConfigStub,
+        supportedSizes: [[300, 250]]
+      });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+
+      return step(adPipelineContext(), [singleSlot]).then(() => {
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+          {
+            slots: [
+              {
+                slotID: domId,
+                slotName: singleSlot.adSlot.getAdUnitPath(),
+                sizes: [[300, 250]]
               }
             ]
           },

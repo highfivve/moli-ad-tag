@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.27.2
+
+[GD-2814](https://jira.gutefrage.net/browse/GD-2814) Add `supportedSizes` to a9 configuration to filter sizes we don't want to include in the requests.
+
 ## 3.27.0
 
 [GD-2495](https://jira.gutefrage.net/browse/GD-2495) Improved types and functions around prebid-outstream player

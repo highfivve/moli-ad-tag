@@ -149,12 +149,20 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
                     mediaType: 'video'
                   } as apstag.IVideoSlot;
                 } else {
+                  // Filter all sizes that we don't want to send requests to a9.
+                  const enabledSizes = config.supportedSizes
+                    ? moliSlot.sizes.filter(moliSize =>
+                        config.supportedSizes?.some(
+                          supportedSize =>
+                            supportedSize[0] === moliSize[0] && supportedSize[1] === moliSize[1]
+                        )
+                      )
+                    : moliSlot.sizes;
+
                   return {
                     slotID: moliSlot.domId,
                     slotName: moliSlot.adUnitPath,
-                    sizes: filterSupportedSizes(moliSlot.sizes).filter(
-                      SizeConfigService.isFixedSize
-                    ),
+                    sizes: filterSupportedSizes(enabledSizes).filter(SizeConfigService.isFixedSize),
                     ...(config.enableFloorPrices && priceRule
                       ? // During the beta phase we need to be able to activate and deactivate floor prices
                         // We also need to do a currency conversion from EUR to USD (x1.19 , 08.03.2021)
