@@ -827,7 +827,12 @@ export namespace Moli {
     readonly labelsSupported: string[];
   }
 
-  export type IPosition = 'in-page' | 'out-of-page' | 'out-of-page-interstitial';
+  export type IPosition =
+    | 'in-page'
+    | 'out-of-page'
+    | 'out-of-page-interstitial'
+    | 'out-of-page-top-anchor'
+    | 'out-of-page-bottom-anchor';
 
   export interface IAdSlot {
     /** id for the ad slot element */

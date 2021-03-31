@@ -244,6 +244,18 @@ export const gptDefineSlots = (): DefineSlotsStep => (
             moliSlot.adUnitPath,
             context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
           );
+        case 'out-of-page-bottom-anchor':
+          context.logger.debug('GAM', `defined bottom anchor for ${moliSlot.adUnitPath}`);
+          return context.window.googletag.defineOutOfPageSlot(
+            moliSlot.adUnitPath,
+            context.window.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+          );
+        case 'out-of-page-top-anchor':
+          context.logger.debug('GAM', `defined top anchor for ${moliSlot.adUnitPath}`);
+          return context.window.googletag.defineOutOfPageSlot(
+            moliSlot.adUnitPath,
+            context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
+          );
       }
     };
 
@@ -285,8 +297,12 @@ export const gptDefineSlots = (): DefineSlotsStep => (
         default:
           return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
-    } else if (moliSlot.position === 'out-of-page-interstitial') {
-      context.logger.warn('GAM', 'web interstitial is not supported');
+    } else if (
+      moliSlot.position === 'out-of-page-interstitial' ||
+      moliSlot.position === 'out-of-page-top-anchor' ||
+      moliSlot.position === 'out-of-page-bottom-anchor'
+    ) {
+      context.logger.warn('GAM', `${moliSlot.position} is not supported`);
       return Promise.resolve(null);
     } else {
       const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;

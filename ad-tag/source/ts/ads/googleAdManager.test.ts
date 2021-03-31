@@ -418,6 +418,108 @@ describe('google ad manager', () => {
         });
       });
 
+      it('should define out-of-page-top-anchor slots', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page-top-anchor'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 2);
+          expect(addServiceSpy).to.have.been.calledOnce;
+          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+          expect(displaySpy).to.have.been.calledOnce;
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+          expect(slotDefinitions).to.have.length(1);
+          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+        });
+      });
+
+      it('should resolve if out-of-page-top-anchor slot can not be defined', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page-top-anchor'
+        };
+
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(null);
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 2);
+          expect(slotDefinitions).to.have.length(0);
+        });
+      });
+
+      it('should define out-of-page-bottom-anchor slots', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page-bottom-anchor'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 3);
+          expect(addServiceSpy).to.have.been.calledOnce;
+          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+          expect(displaySpy).to.have.been.calledOnce;
+          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+          expect(slotDefinitions).to.have.length(1);
+          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+        });
+      });
+
+      it('should resolve if out-of-page-bottom-anchor slot can not be defined', () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const outOfPageAdSlot: Moli.AdSlot = {
+          ...adSlot,
+          position: 'out-of-page-bottom-anchor'
+        };
+
+        const defineOutOfPageSlotStub = sandbox
+          .stub(dom.window.googletag, 'defineOutOfPageSlot')
+          .returns(null);
+
+        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 3);
+          expect(slotDefinitions).to.have.length(0);
+        });
+      });
+
       it('should define a slot only once', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
