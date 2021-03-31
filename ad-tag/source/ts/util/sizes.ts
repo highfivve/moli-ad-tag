@@ -1,4 +1,4 @@
-import { Moli } from 'ad-tag/source/ts/types/moli';
+import { Moli } from '../types/moli';
 import DfpSlotSize = Moli.DfpSlotSize;
 
 /**
