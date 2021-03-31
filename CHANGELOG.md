@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.27.3
+[GD-2835](https://jira.gutefrage.net/browse/GD-2835) Added `out-of-page-top-anchor` and `out-of-page-bottom-anchor` positions.
+
 ## 3.27.2
 
 [GD-2814](https://jira.gutefrage.net/browse/GD-2814) Add `supportedSizes` to a9 configuration to filter sizes we don't want to include in the requests.
