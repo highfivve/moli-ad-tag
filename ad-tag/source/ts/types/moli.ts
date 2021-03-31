@@ -1354,7 +1354,7 @@ export namespace Moli {
       readonly floorPriceCurrency?: apstag.Currency;
 
       /**
-       * all sizes that requests will be made for and are support from a9.
+       * all sizes that requests will be made for and are supported by a9.
        *
        * default: requesting all sizes that are defined in the adSlot configuration.
        */

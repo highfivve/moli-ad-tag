@@ -1,5 +1,6 @@
 import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
+import { isSizeEqual } from '../util/sizes';
 
 import DfpSlotSize = Moli.DfpSlotSize;
 import SizeConfigEntry = Moli.SizeConfigEntry;
@@ -106,7 +107,7 @@ export class SizeConfigService {
             } else if (givenSize === 'fluid') {
               return false;
             } else {
-              return givenSize[0] === configuredSize[0] && givenSize[1] === configuredSize[1];
+              return isSizeEqual(givenSize, configuredSize);
             }
           })
         );

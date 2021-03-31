@@ -1,0 +1,9 @@
+import { Moli } from 'ad-tag/source/ts/types/moli';
+import DfpSlotSize = Moli.DfpSlotSize;
+
+/**
+ * Checks if two dfp slot sizes are equal.
+ */
+export const isSizeEqual = (size1: DfpSlotSize, size2: DfpSlotSize): boolean => {
+  return size1[0] === size2[0] && size1[1] === size2[1];
+};

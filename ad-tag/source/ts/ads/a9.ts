@@ -12,6 +12,7 @@ import {
 } from './adPipeline';
 import { Moli } from '../types/moli';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
+import { isSizeEqual } from '../util/sizes';
 import { SizeConfigService } from './sizeConfigService';
 import { apstag } from '../types/apstag';
 
@@ -152,9 +153,8 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
                   // Filter all sizes that we don't want to send requests to a9.
                   const enabledSizes = config.supportedSizes
                     ? moliSlot.sizes.filter(moliSize =>
-                        config.supportedSizes?.some(
-                          supportedSize =>
-                            supportedSize[0] === moliSize[0] && supportedSize[1] === moliSize[1]
+                        config.supportedSizes?.some(supportedSize =>
+                          isSizeEqual(supportedSize, moliSize)
                         )
                       )
                     : moliSlot.sizes;
