@@ -150,6 +150,41 @@ describe('prebid', () => {
       });
     });
 
+    it('should use the code property if set', async () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+      const step = prebidPrepareRequestAds();
+
+      const domId = getDomId();
+      const code = 'not-the-domid';
+      const adUnit = {
+        ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }]),
+        code: code
+      };
+      const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+      await step(adPipelineContext(), [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
+    });
+
+    it('should pass along arbitrary additional properties', async () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+      const step = prebidPrepareRequestAds();
+
+      const domId = getDomId();
+      const adUnit = {
+        ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }]),
+        foo: {
+          bar: 'baz'
+        }
+      } as any;
+      const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+      await step(adPipelineContext(), [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
+    });
+
     describe('labels', () => {
       it('should remove labelAll', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');

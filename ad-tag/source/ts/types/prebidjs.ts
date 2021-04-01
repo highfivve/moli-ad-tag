@@ -1425,8 +1425,10 @@ export namespace prebidjs {
     /**
      * A unique identifier that you create and assign to this ad unit. This identifier will be used to set
      * query string targeting on the ad. If you're using GPT, we recommend setting this to the slot element ID.
+     *
+     * Moli allows to omit the `code` and will use the `domId` of the slot
      */
-    readonly code: string;
+    readonly code?: string;
 
     /**
      * Defines one or multiple media types the ad unit supports.

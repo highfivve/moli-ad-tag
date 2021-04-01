@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.28.0
+
+[GD-2829](https://jira.gutefrage.net/browse/GD-2829) Honor use `code` property in prebid adunit, but make it optional.
+Fallback is the `domID`.
+
+Additional properties in the `adUnit` are now passed along and not filtered out.
+
+
 ## 3.27.4
 [GD-2835](https://jira.gutefrage.net/browse/GD-2835) Allow creation of adSlot with anchor position without existing element in the dom.
 

@@ -176,22 +176,17 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                     }
                   : undefined;
 
-                const pubstack = prebidAdSlotConfig.adUnit.pubstack
-                  ? {
-                      pubstack: prebidAdSlotConfig.adUnit.pubstack
-                    }
-                  : {};
-
                 return {
-                  code: moliSlot.domId,
+                  ...prebidAdSlotConfig.adUnit,
+                  // use domId if adUnit code is not defined
+                  code: prebidAdSlotConfig.adUnit.code || moliSlot.domId,
                   mediaTypes: {
                     ...video,
                     ...banner,
                     ...native
                   },
-                  bids: bids,
-                  ...pubstack
-                } as prebidjs.IAdUnit;
+                  bids: bids
+                };
               })
               .filter(adUnit => {
                 return (
