@@ -7,7 +7,7 @@ import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 
-import Skin, { SkinConfig, SkinConfigEffect } from './index';
+import { Skin, SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
 
 // setup sinon-chai

@@ -8,7 +8,7 @@ import {
 } from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
 import { ATS } from './types/identitylink';
 
-import IdentityLink from './index';
+import { IdentityLink } from './index';
 
 // setup sinon-chai
 use(sinonChai);

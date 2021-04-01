@@ -1,0 +1,3 @@
+---
+title: Consent (TCF2)
+---

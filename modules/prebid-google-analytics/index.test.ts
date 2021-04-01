@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import PrebidGoogleAnalytics from './index';
+import { PrebidGoogleAnalytics } from './index';
 import { Moli, createAssetLoaderService } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';

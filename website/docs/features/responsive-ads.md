@@ -1,0 +1,3 @@
+---
+title: Responsive Ad Slots
+---

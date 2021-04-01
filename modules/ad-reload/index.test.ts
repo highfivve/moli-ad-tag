@@ -20,7 +20,7 @@ import {
 
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
-import AdReload from './index';
+import { AdReload } from './index';
 
 use(sinonChai);
 

@@ -2,8 +2,9 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import BlocklistUrls, {
-  IBlocklist,
+import {
+  BlocklistedUrls,
+  Blocklist,
   DynamicBlocklistProvider,
   StaticBlocklistProvider
 } from './index';
@@ -26,7 +27,7 @@ import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs'
 use(sinonChai);
 use(chaiAsPromised);
 
-describe('BlocklistUrls Module', () => {
+describe('BlocklistedUrls Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
   const jsDomWindow: Window &
@@ -41,12 +42,12 @@ describe('BlocklistUrls Module', () => {
 
   dom.window.googletag = googletagStub;
 
-  const emptyBlocklist: IBlocklist = { urls: [] };
+  const emptyBlocklist: Blocklist = { urls: [] };
 
   const blocklist = (
     patterns: string[],
     matchType: 'regex' | 'contains' | 'exact' = 'regex'
-  ): IBlocklist => {
+  ): Blocklist => {
     return {
       urls: patterns.map(pattern => {
         return { pattern, matchType };
@@ -92,7 +93,7 @@ describe('BlocklistUrls Module', () => {
 
   it('should configure nothing in test mode', () => {
     const testConfig: Moli.MoliConfig = { ...newEmptyConfig(), environment: 'test' };
-    const module = new BlocklistUrls(
+    const module = new BlocklistedUrls(
       {
         mode: 'block',
         blocklist: staticBlocklistProvider()
@@ -107,9 +108,9 @@ describe('BlocklistUrls Module', () => {
   describe('block mode with static provider', () => {
     const createInitializedModule = (
       patterns: string[]
-    ): { configureStep: ConfigureStep; module: BlocklistUrls; config: Moli.MoliConfig } => {
+    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: Moli.MoliConfig } => {
       const config = newEmptyConfig();
-      const module = new BlocklistUrls(
+      const module = new BlocklistedUrls(
         {
           mode: 'block',
           blocklist: staticBlocklistProvider(patterns)
@@ -164,9 +165,9 @@ describe('BlocklistUrls Module', () => {
   describe('block mode with dynamic provider', () => {
     const createInitializedModule = (
       patterns: string[]
-    ): { configureStep: ConfigureStep; module: BlocklistUrls; config: Moli.MoliConfig } => {
+    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: Moli.MoliConfig } => {
       const config = newEmptyConfig();
-      const module = new BlocklistUrls(
+      const module = new BlocklistedUrls(
         { mode: 'block', blocklist: dynamicBlocklistProvider },
         jsDomWindow
       );
@@ -238,11 +239,11 @@ describe('BlocklistUrls Module', () => {
       isBlocklistedValue?: string
     ): {
       prepareRequestAdsSteps: PrepareRequestAdsStep;
-      module: BlocklistUrls;
+      module: BlocklistedUrls;
       config: Moli.MoliConfig;
     } => {
       const config = newEmptyConfig();
-      const module = new BlocklistUrls(
+      const module = new BlocklistedUrls(
         {
           mode: 'key-value',
           key: 'isBlocklisted',
@@ -321,11 +322,11 @@ describe('BlocklistUrls Module', () => {
       isBlocklistedValue?: string
     ): {
       prepareRequestAdsSteps: PrepareRequestAdsStep;
-      module: BlocklistUrls;
+      module: BlocklistedUrls;
       config: Moli.MoliConfig;
     } => {
       const config = newEmptyConfig();
-      const module = new BlocklistUrls(
+      const module = new BlocklistedUrls(
         {
           mode: 'key-value',
           key: 'isBlocklisted',
@@ -417,7 +418,7 @@ describe('BlocklistUrls Module', () => {
 
   describe('isBlocklisted method', () => {
     // the isBlocklisted method is stateless
-    const module = new BlocklistUrls(
+    const module = new BlocklistedUrls(
       {
         mode: 'block',
         blocklist: staticBlocklistProvider()

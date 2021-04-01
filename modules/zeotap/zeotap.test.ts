@@ -13,7 +13,7 @@ import {
   prebidjs
 } from '@highfivve/ad-tag';
 
-import Zeotap from './zeotap';
+import { Zeotap } from './zeotap';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 
 // setup sinon-chai

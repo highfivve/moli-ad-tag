@@ -7,7 +7,7 @@ import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 
-import YieldOptimization, { StaticYieldOptimizationConfig } from './index';
+import { YieldOptimization, StaticYieldOptimizationConfig } from './index';
 import { YieldOptimizationService } from './yieldOptimizationService';
 
 // setup sinon-chai
