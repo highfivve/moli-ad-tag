@@ -227,7 +227,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           {hasMultipleBids && <h5>{index + 1}. config</h5>}
           <div className="MoliDebug-tagContainer">
             <span className="MoliDebug-tagLabel">Code</span>
-            <Tag variant="green">{prebidAdUnit.code}</Tag>
+            <Tag variant="green">{prebidAdUnit.code || this.props.slot.domId}</Tag>
           </div>
           {banner && (
             <div className="MoliDebug-tagContainer">
