@@ -20,7 +20,7 @@ import 'prebid.js/modules/unrulyBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import AdReload from '@highfivve/module-moli-ad-reload';
+import { AdReload } from '@highfivve/module-moli-ad-reload';
 
 prebid.processQueue();
 

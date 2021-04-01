@@ -20,12 +20,12 @@ import 'prebid.js/modules/rubiconBidAdapter';
 
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
-import Confiant from '@highfivve/module-confiant';
+import { Confiant } from '@highfivve/module-confiant';
 
-import BlocklistedUrls from '@highfivve/module-blocklist-url';
-import Skin from '@highfivve/module-generic-skin';
-import AdReload from '@highfivve/module-moli-ad-reload';
-import YieldOptimization from '@highfivve/module-yield-optimization';
+import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
+import { Skin } from '@highfivve/module-generic-skin';
+import { AdReload } from '@highfivve/module-moli-ad-reload';
+import { YieldOptimization } from '@highfivve/module-yield-optimization';
 
 prebid.processQueue();
 

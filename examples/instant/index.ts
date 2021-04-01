@@ -14,8 +14,8 @@ import 'prebid.js/modules/unrulyBidAdapter';
 import { initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
-import PrebidGoogleAnalytics from '@highfivve/module-prebid-google-analytics';
-import AdReload from '@highfivve/module-moli-ad-reload';
+import { PrebidGoogleAnalytics } from '@highfivve/module-prebid-google-analytics';
+import { AdReload } from '@highfivve/module-moli-ad-reload';
 
 prebid.processQueue();
 
