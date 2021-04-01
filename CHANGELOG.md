@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.27.4
+[GD-2835](https://jira.gutefrage.net/browse/GD-2835) Allow creation of adSlot with anchor position without existing element in the dom.
+
 ## 3.27.3
 [GD-2835](https://jira.gutefrage.net/browse/GD-2835) Added `out-of-page-top-anchor` and `out-of-page-bottom-anchor` positions.
 

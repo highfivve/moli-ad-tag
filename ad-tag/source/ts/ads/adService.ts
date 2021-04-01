@@ -358,8 +358,10 @@ export class AdService {
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
     return (
       !!this.window.document.getElementById(slot.domId) ||
-      // web interstitials don't require a dom element
-      slot.position === 'out-of-page-interstitial'
+      // web interstitials and web anchors don't require a dom element
+      slot.position === 'out-of-page-interstitial' ||
+      slot.position === 'out-of-page-top-anchor' ||
+      slot.position === 'out-of-page-bottom-anchor'
     );
   };
 }
