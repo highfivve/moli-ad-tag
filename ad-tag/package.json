@@ -22,7 +22,7 @@
     "test": "mocha --require ts-node/register source/**/*.test.ts",
     "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register source/**/*.test.ts",
     "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"source/**/*.ts*\"",
-    "validate": "yarn compile && yarn lint && yarn test && yarn docs",
+    "validate": "yarn compile && yarn lint && yarn test",
     "validate:github": "yarn compile && yarn lint && yarn test:junit",
     "validate:jenkins": "yarn compile && yarn lint && yarn test:junit",
     "codeGen": "yarn codeGen:packageJson",
