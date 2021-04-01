@@ -26,18 +26,12 @@ jobs:
             ${{ runner.os }}-yarn-
 
       # Build website
-      - name: Use Node.js
+      - name: build website
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-
-      - name: build typescript api docs
         run: |
-          yarn install
-          yarn typedoc
-      - name: yarn install and build
-        run: |
-          cd docs
+          cd website
           yarn install
           yarn build
 
