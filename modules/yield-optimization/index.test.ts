@@ -7,7 +7,7 @@ import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 
-import YieldOptimization, { IStaticYieldOptimizationConfig } from './index';
+import YieldOptimization, { StaticYieldOptimizationConfig } from './index';
 import { YieldOptimizationService } from './yieldOptimizationService';
 
 // setup sinon-chai
@@ -22,7 +22,7 @@ describe('Yield Optimization module', () => {
   const assetLoader = createAssetLoaderService(jsDomWindow);
 
   const adUnitId = 'adUnit1';
-  const yieldConfig: IStaticYieldOptimizationConfig = {
+  const yieldConfig: StaticYieldOptimizationConfig = {
     provider: 'static',
     config: {
       rules: {

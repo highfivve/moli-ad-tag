@@ -1,3 +1,50 @@
+/**
+ * # [Zeotap](https://zeotap.com) data and identity plus module
+ *
+ * This module provides Zeotap's data collection and identity provider functionality to moli.
+ *
+ * ## Integration
+ *
+ * In your `index.ts`, import Zeotap and register the module.
+ *
+ * ```js
+ * import { Zeotap } from '@highfivve/module-zeotap';
+ *
+ * const zeotap = new Zeotap({
+ *   assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
+ *   countryCode: 'DEU',
+ *   mode: 'default',
+ *   hashedEmailAddress: 'somehashedaddress',
+ *   dataKeyValues: [
+ *     { keyValueKey: 'channel', parameterKey: 'zcat' },
+ *     { keyValueKey: 'subChannel', parameterKey: 'zscat' },
+ *     { keyValueKey: 'tags', parameterKey: 'zcid' }
+ *   ],
+ *   exclusionKeyValues: [
+ *     { keyValueKey: 'channel', disableOnValue: 'MedicalHealth' },
+ *     { keyValueKey: 'subChannel', disableOnValue: 'Pornography' }
+ *   ]
+ * });
+ *
+ * moli.registerModule(zeotap);
+ * ```
+ *
+ * Configure the module with:
+ *
+ * - `assetUrl`: the zeotap `mapper.js` URL (can be protocol relative)
+ * - `mode`: the mode you want to run the module in, depending on your site's structure. If you're running a single
+ *   page application (SPA), select `spa` mode. Else, select `default`.
+ * - `dataKeyValues`: Specifies which keys to extract from moli's targeting (key/value pairs) and which key then to use to
+ *   transfer the extracted data in the Zeotap request URL.
+ * - `exclusionKeyValues`: Specifies which key/value pairs should prevent the Zeotap script from being loaded, e.g. to
+ *   prevent data collection in pages with sensitive topics such as medical/health content.
+ * - `countryCode` _(optional)_: your site's Alpha-ISO3 country code. If omitted, Zeotap will guess the country from the
+ *   sender's IP address.
+ * - `hashedEmailAddress` _(optional)_: if you want to use Zeotap's id+ module, configure the module with a sha-256 hashed
+ *   email address.
+ *
+ * @module zeotap
+ */
 import {
   AssetLoadMethod,
   IAssetLoaderService,
@@ -21,7 +68,7 @@ import {
  *   parameterKey: 'abc'
  * }
  */
-type DataKeyValue = {
+export type DataKeyValue = {
   keyValueKey: string;
   parameterKey: string;
 };
@@ -37,12 +84,12 @@ type DataKeyValue = {
  *   disableOnValue: 'MedicalTopic'
  * }
  */
-type ExclusionKeyValue = {
+export type ExclusionKeyValue = {
   keyValueKey: string;
   disableOnValue: string;
 };
 
-type ZeotapModuleConfig = {
+export type ZeotapModuleConfig = {
   /**
    * Points to the Zeotap script, containing only env, eventType and zdid parameters. The other parameters (country
    * code, idp, hashed email address, and custom parameters) are added through configuration parameters.
@@ -82,11 +129,13 @@ type ZeotapModuleConfig = {
 };
 
 /**
+ * # Zeotap / ID+
+ *
  * This module provides Zeotap's data collection and identity plus (id+/idp) functionality to moli.
  *
  * @see: https://zeotap.com/
  */
-export default class Zeotap implements IModule {
+export class Zeotap implements IModule {
   public readonly name: string = 'zeotap';
   public readonly description: string =
     'Provides Zeotap functionality (data collection and identity plus) to Moli.';

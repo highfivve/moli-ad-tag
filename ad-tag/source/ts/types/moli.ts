@@ -47,7 +47,7 @@ export namespace Moli {
    * The general usage pattern is like `gpt` or `prebid`. If the ad tag is not yet available, commands can be pushed to
    * a que that will eventually be processed.
    *
-   * @example minimal example on how to request ads <br><br>
+   * @example minimal example on how to request ads
    *
    * ```
    * window.moli = window.moli || { que: [] };
@@ -172,7 +172,7 @@ export namespace Moli {
      * We recommend using the moli que to issue commands to moli due to the asynchronous nature. A minimal,
      * vanilla javascript example would look like this:
      *
-     * @example On navigation change execute <br><br>
+     * @example On navigation change execute
      * ```
      * window.moli = window.moli || { que: [] };
      * window.moli.que.push(function(moliAdTag) {
@@ -1489,7 +1489,7 @@ export namespace Moli {
      * A reporter is a simple function that receives a metric and handles it.
      *
      * @example A simple console log reporter that logs everything in grouped outputs.
-     * </br></br>
+     *
      * ```typescript
      * import { Moli } from 'moli-ad-tag/source/ts/types/moli';
      * export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporting.Metric) => {
@@ -1665,14 +1665,14 @@ export namespace Moli {
       /**
        * Advertiser ID of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
        *
-       * Viewable in ad manager: https://admanager.google.com/<publisherId>#admin/companyDetail/id=<advertiserId>
+       * Viewable in ad manager: https://admanager.google.com/[publisherId]#admin/companyDetail/id=[advertiserId]
        */
       readonly advertiserId?: number;
 
       /**
        * Campaign ID (Order ID) of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
        *
-       * Viewable in ad manager: https://admanager.google.com/<publisherId>#delivery/OrderDetail/orderId=<campaignId>
+       * Viewable in ad manager: https://admanager.google.com/[publisherId]#delivery/OrderDetail/orderId=[campaignId]
        */
       readonly campaignId?: number;
 
@@ -1680,7 +1680,7 @@ export namespace Moli {
        * Line item ID of the rendered reservation ad. Value is null for empty slots, backfill ads or creatives rendered
        * by services other than pubads service.
        *
-       * Viewable in ad manager: https://admanager.google.com/<publisherId>#delivery/LineItemDetail/orderId=<campaignId>&lineItemId=<lineItemId>
+       * Viewable in ad manager: https://admanager.google.com/[publisherId]#delivery/LineItemDetail/orderId=[campaignId]&lineItemId=[lineItemId]
        */
       readonly lineItemId?: number;
 
@@ -1789,7 +1789,7 @@ export namespace Moli {
    * });
    * ```
    *
-   * @example Noop logger <br><br>
+   * @example Noop logger
    * ```
    * const noopLogger = {
    *    debug: () => { return; },
@@ -1804,7 +1804,7 @@ export namespace Moli {
    * });
    * ```
    *
-   * @example console logger <br><br>
+   * @example console logger
    * ```
    * const noopLogger = {
    *    debug: window.debug,

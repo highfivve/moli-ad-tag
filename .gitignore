@@ -9,7 +9,6 @@ lerna-debug.log
 
 # output
 dist/
-docs/
 ad-tag/lib
 ad-tag/source/ts/gen
 moli-debugger/lib
@@ -17,6 +16,10 @@ moli-release/lib
 modules/*/lib
 modules/*/temp
 tsconfig.tsbuildinfo
+website/build
+website/docs/api
+website/docs/modules
+website/**typedoc-sidebar.js
 
 # Runtime data
 pids

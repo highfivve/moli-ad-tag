@@ -1,3 +1,97 @@
+/**
+ * # Blocklist URLs
+ *
+ * This module adds `configureStep` or `prepareRequestAds` steps to the ad pipeline in order to prevent ad requests entirely
+ * or a set a configurable key-value, which can be used in the ad server to handle blocklisted urls
+ *
+ * ## Integration
+ *
+ * In your `index.ts` import the blocklist-urls module and register it.
+ *
+ * The configuration has multiple parameters
+ *
+ * - `mode` - this describes what the module does if a blocklisted url is detected
+ *   - `key-value` - sets a specific key-value on the googletag
+ *   - `block` - rejects the pipeline step which leads to no ads being loaded
+ * - `blocklist` - this config object contains the blocklist configuration
+ *   - `provider` - select how the blocklist is being loaded
+ *     - `static` - inline configuration inside the ad tag
+ *     - `dynamic` - loads an external json file
+ *
+ *
+ * ### Blocklist format
+ *
+ * A blocklist contains a list of blocklist entries stored in the `urls` property. A `IBlocklistEntry` has two
+ * properties.
+ *
+ * - `pattern` - a string that is evaluated depending on the `matchType`
+ * - `matchType`
+ *   - `exact` - the url must match the pattern string
+ *   - `contains` - the url must contain the given pattern string
+ *   - `regex` - the url tests positive against the pattern regex string
+ *
+ * ### Examples
+ *
+ *
+ * ```javascript
+ * import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
+ *
+ * moli.registerModule(new BlocklistedUrls({
+ *   mode: 'block',
+ *   blocklist: {
+ *     provider: 'static',
+ *     blocklist: {
+ *       urls: [
+ *         // a specific path
+ *         { pattern: '\/path\/that\/should\/be\/blocklisted', matchType: 'regex' },
+ *         // all http sites
+ *         { pattern: '^http:\/\/.*', matchType: 'regex' },
+ *         // contains a bad word
+ *         { pattern: '/tag/badword', matchType: 'contains' },
+ *         // exact url
+ *         { pattern: 'https://www.example.com/login', matchType: 'exact' }
+ *       ]
+ *     }
+ *   }
+ * }, window));
+ * ```
+ *
+ * You can combine `block` and `key-value` mode by adding the module twice.
+ *
+ * ```javascript
+ * import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
+ *
+ * moli.registerModule(new BlocklistedUrls({
+ *   mode: 'block',
+ *   blocklist: {
+ *     provider: 'static',
+ *     blocklist: {
+ *       urls: [
+ *         { pattern: '\/login$' },
+ *         { pattern: '\/register$' },
+ *       ]
+ *     }
+ *   }
+ * }, window));
+ *
+ * moli.registerModule(new BlocklistedUrls({
+ *   mode: 'key-value',
+ *   blocklist: {
+ *     provider: 'static',
+ *     blocklist: {
+ *       urls: [
+ *         // a specific path
+ *         { pattern: '\/path\/that\/should\/be\/blocklisted' },
+ *         // all http sites
+ *         { pattern: '^http:\/\/.*' }
+ *       ]
+ *     }
+ *   }
+ * }, window));
+ * ```
+ *
+ * @module
+ */
 import {
   IModule,
   ModuleType,
@@ -10,7 +104,7 @@ import {
   Moli
 } from '@highfivve/ad-tag';
 
-export interface IBlocklistEntry {
+export type BlocklistEntry = {
   /**
    * A regex pattern for the complete href of the page
    */
@@ -24,36 +118,36 @@ export interface IBlocklistEntry {
    * - `exact` - checks if the url exactly matches the given pattern string
    */
   readonly matchType: 'regex' | 'contains' | 'exact';
-}
+};
 
-export interface IBlocklist {
-  readonly urls: IBlocklistEntry[];
-}
+export type Blocklist = {
+  readonly urls: BlocklistEntry[];
+};
 
 /**
  * A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added
  */
-export interface IStaticBlocklistProvider {
+export type StaticBlocklistProvider = {
   readonly provider: 'static';
 
-  readonly blocklist: IBlocklist;
-}
+  readonly blocklist: Blocklist;
+};
 
 /**
  * The dynamic configuration provider that lets you update entries without updating the ad tag
  */
-export interface IDynamicBlocklistProvider {
+export type DynamicBlocklistProvider = {
   readonly provider: 'dynamic';
 
   /**
    * Fetch the blocklist json from the specified endpoint
    */
   readonly endpoint: string;
-}
+};
 
-export type BlocklistProvider = IStaticBlocklistProvider | IDynamicBlocklistProvider;
+export type BlocklistProvider = StaticBlocklistProvider | DynamicBlocklistProvider;
 
-export interface IBlocklistUrlsBlockingConfig {
+export type BlocklistUrlsBlockingConfig = {
   /**
    * `block` - this mode blocks ad requests entirely
    * `key-value` - sets a specified key value
@@ -64,9 +158,9 @@ export interface IBlocklistUrlsBlockingConfig {
    * blocklist content
    */
   readonly blocklist: BlocklistProvider;
-}
+};
 
-export interface IBlocklistUrlsKeyValueConfig {
+export type BlocklistUrlsKeyValueConfig = {
   /**
    * `block` - this mode blocks ad requests entirely
    * `key-value` - sets a specified key value
@@ -86,11 +180,14 @@ export interface IBlocklistUrlsKeyValueConfig {
    * default is `true`
    */
   readonly isBlocklistedValue?: string;
-}
+};
 
-export type BlocklistUrlsConfig = IBlocklistUrlsBlockingConfig | IBlocklistUrlsKeyValueConfig;
+export type BlocklistUrlsConfig = BlocklistUrlsBlockingConfig | BlocklistUrlsKeyValueConfig;
 
-export default class BlocklistedUrls implements IModule {
+/**
+ * ## Blocklisted URLs Module
+ */
+export class BlocklistedUrls implements IModule {
   public readonly name: string = 'Blocklist URLs';
   public readonly description: string =
     'Blocks ad requests entirely or adds key-values for blocklistd urls';
@@ -160,7 +257,7 @@ export default class BlocklistedUrls implements IModule {
     }
   }
 
-  isBlocklisted = (blocklist: IBlocklist, href: string, log: Moli.MoliLogger): boolean => {
+  isBlocklisted = (blocklist: Blocklist, href: string, log: Moli.MoliLogger): boolean => {
     return blocklist.urls.some(({ pattern, matchType }) => {
       switch (matchType) {
         case 'exact':
@@ -187,12 +284,12 @@ export default class BlocklistedUrls implements IModule {
     blocklist: BlocklistProvider,
     assetLoaderService: IAssetLoaderService,
     log: Moli.MoliLogger
-  ): () => Promise<IBlocklist> {
+  ): () => Promise<Blocklist> {
     switch (blocklist.provider) {
       case 'static':
         return () => Promise.resolve(blocklist.blocklist);
       case 'dynamic':
-        let cachedResult: Promise<IBlocklist>;
+        let cachedResult: Promise<Blocklist>;
         return () => {
           if (!cachedResult) {
             cachedResult = this.loadConfigWithRetry(
@@ -215,12 +312,12 @@ export default class BlocklistedUrls implements IModule {
     endpoint: string,
     retriesLeft: number,
     lastError: any | null = null
-  ): Promise<IBlocklist> {
+  ): Promise<Blocklist> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
 
-    return assetLoaderService.loadJson<IBlocklist>('blocklist-urls.json', endpoint).catch(error => {
+    return assetLoaderService.loadJson<Blocklist>('blocklist-urls.json', endpoint).catch(error => {
       // for 3 retries the backoff time will be 33ms / 50ms / 100ms
       const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
       return exponentialBackoff.then(() =>

@@ -1,11 +1,17 @@
 import domready from '../util/domready';
 import { IPerformanceMeasurementService, createPerformanceService } from './performanceService';
 
+/**
+ * @internal
+ */
 export enum AssetLoadMethod {
   FETCH,
   TAG
 }
 
+/**
+ * @internal
+ */
 export interface ILoadAssetParams {
   /**
    * Short identifier for the style/script. Used for performance measurement and error messages.
@@ -23,6 +29,9 @@ export interface ILoadAssetParams {
   loadMethod: AssetLoadMethod;
 }
 
+/**
+ * @internal
+ */
 export interface IAssetLoaderService {
   /**
    * Loads the script and append it to the DOM.
@@ -41,6 +50,9 @@ export interface IAssetLoaderService {
   loadJson<T>(name: string, assetUrl: string): Promise<T>;
 }
 
+/**
+ * @internal
+ */
 export class AssetLoaderService implements IAssetLoaderService {
   constructor(
     private readonly performanceService: IPerformanceMeasurementService,
@@ -146,5 +158,8 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 }
 
+/**
+ * @internal
+ */
 export const createAssetLoaderService = (window: Window): IAssetLoaderService =>
   new AssetLoaderService(createPerformanceService(window), window);

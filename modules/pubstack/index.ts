@@ -1,3 +1,25 @@
+/**
+ * # [Pubstack](https://pubstack.io/)
+ *
+ * Pubstack is an Ad Analytics provider, which focuses on Prebid and Google AdExchange.
+ *
+ * ## Integration
+ *
+ * In your `index.ts` import pubstack and register the module.
+ *
+ * ```js
+ * import { Pubstack } from '@highfivve/module-pubstack';
+ * moli.registerModule(new Pubstack({
+ *   tagId: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+ * }, window));
+ * ```
+ *
+ * ## Resources
+ *
+ * - [Documentation](https://pubstack.freshdesk.com/support/home)
+ *
+ * @module
+ */
 import {
   Moli,
   IModule,
@@ -7,23 +29,26 @@ import {
   IAssetLoaderService
 } from '@highfivve/ad-tag';
 
-export interface IPubstackConfig {
+export type PubstackConfig = {
+  /**
+   * TagID from pubstack
+   */
   readonly tagId: string;
-}
+};
 
 /**
- * == Pubstack Analytics ==
+ * ## Pubstack Analytics
  *
  * Provides analytics for prebid, adx and hopefully more.
  *
  * @see https://pubstack.io
  */
-export default class Pubstack implements IModule {
+export class Pubstack implements IModule {
   public readonly name: string = 'pubstack';
   public readonly description: string = 'prebid analytics integration';
   public readonly moduleType: ModuleType = 'reporting';
 
-  constructor(private readonly pubstackConfig: IPubstackConfig) {}
+  constructor(private readonly pubstackConfig: PubstackConfig) {}
 
   config(): Object | null {
     return this.pubstackConfig;

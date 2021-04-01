@@ -7,7 +7,6 @@ import { SlotEventService } from './slotEventService';
  * == Refresh Listener ==
  *
  * Class to define refreshable logic for Ads
- *
  */
 export interface IAdRefreshListener {
   /**

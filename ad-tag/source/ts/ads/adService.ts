@@ -44,6 +44,9 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 
+/**
+ * @internal
+ */
 export class AdService {
   /**
    * Access to a logger

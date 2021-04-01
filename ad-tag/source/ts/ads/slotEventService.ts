@@ -1,3 +1,7 @@
+/**
+ * @module
+ * @internal
+ */
 import { Moli } from '../types/moli';
 import { googletag } from '../types/googletag';
 import { AdPipelineContext, ConfigureStep, mkConfigureStep } from './adPipeline';
@@ -54,6 +58,7 @@ type IEventSources = {
  * - provide common use cases that are use in different places (e.g. all ads are rendered)
  * - add additional features (e.g. remove listeners to avoid memory leaks)
  *
+ * @internal
  */
 export class SlotEventService {
   /**

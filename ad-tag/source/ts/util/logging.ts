@@ -161,6 +161,7 @@ export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.
 
 /**
  * Allows to change the underlying logging during runtime.
+ * @internal
  */
 export class ProxyLogger implements Moli.MoliLogger {
   constructor(private logger: Moli.MoliLogger) {}

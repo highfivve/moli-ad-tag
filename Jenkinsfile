@@ -84,8 +84,8 @@ pipeline {
 
                 stage('API docs') {
                     steps {
-                        sh "yarn workspace @highfivve/ad-tag docs"
-                        sh "tar -zcvf ${DOCS_FILE} -C ad-tag/docs ."
+                        sh "yarn docs"
+                        sh "tar -zcvf ${DOCS_FILE} -C website/build ."
                         echo "Publishing to ${HDFS_PATH_API_DOCS}"
                         sh "/usr/local/bin/httpfs put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
                         sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_API_DOCS} --bind=docsFile=${DOCS_FILE}  gfaurora/frontend/prod/moli-api-docs docs.aurora"

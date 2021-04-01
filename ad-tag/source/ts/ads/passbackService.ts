@@ -1,6 +1,9 @@
 import { Moli } from '../types/moli';
 import { googletag } from '../types/googletag';
 
+/**
+ * @internal
+ */
 type IPassbackMessage = {
   type: 'passback';
 
@@ -27,6 +30,9 @@ type IPassbackMessage = {
   passbackOrigin: string;
 };
 
+/**
+ * @internal
+ */
 export class PassbackService {
   /**
    * We lazy initialize the window message listener and track

@@ -1,3 +1,63 @@
+/**
+ * # Yield Optimization
+ *
+ * This module allows you to apply floor prices to all supporting bidders and setting
+ * a unified pricing rule for GAM.
+ *
+ * ## Requirements
+ *
+ * - Unified pricing rules setup in GAM
+ * - Server providing the yield configuration
+ *
+ * ## Integration
+ *
+ * In your `index.ts` import the generic-skin module and register it.
+ *
+ * ### Dynamic optimization
+ *
+ * This requires and endpoint that provides the yield config.
+ *
+ * ```javascript
+ * import { YieldOptimization } from '@highfivve/module-yield-optimization'
+ *
+ * moli.registerModule(new YieldOptimization({
+ *   provider: 'dynamic',
+ *   configEndpoint: 'https://yield.h5v.eu/config/gutefrage'
+ * }, window));
+ * ```
+ *
+ * ### Static
+ *
+ * For local testing or base settings you can define static rules.
+ *
+ * ```javascript
+ * import { YieldOptimization } from '@highfivve/module-yield-optimization'
+ *
+ * moli.registerModule(new YieldOptimization({
+ *   provider: 'static',
+ *   config: {
+ *     rules: {
+ *       'ad-unit-dom-id-1': {
+ *         priceRuleId: 123,
+ *         floorpirce: 0.1,
+ *         main: true
+ *       }
+ *     }
+ *   }
+ * }, window));
+ * ```
+ *
+ * ### None
+ *
+ * If you want to turn off the optimization you can also provide `none`
+ *
+ * ```javascript
+ * import { YieldOptimization } from '@highfivve/module-yield-optimization'
+ *
+ * moli.registerModule(new YieldOptimization({  provider: 'none'}, window));
+ * ```
+ * @module
+ */
 import {
   IModule,
   ModuleType,
@@ -19,41 +79,41 @@ export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
  * Available options to configure yield optimization
  */
 export type YieldOptimizationConfig =
-  | INoYieldOptimizationConfig
-  | IStaticYieldOptimizationConfig
-  | IDynamicYieldOptimizationConfig;
+  | NoYieldOptimizationConfig
+  | StaticYieldOptimizationConfig
+  | DynamicYieldOptimizationConfig;
 
-export interface IYieldOptimizationConfig {
+export type IYieldOptimizationConfig = {
   readonly provider: YieldOptimizationConfigProvider;
-}
+};
 
 /**
  * No key values will be applied. The system is inactive.
  */
-export interface INoYieldOptimizationConfig extends IYieldOptimizationConfig {
+export type NoYieldOptimizationConfig = IYieldOptimizationConfig & {
   readonly provider: 'none';
-}
+};
 
 /**
  * A static configuration for all ad units. This is to emulate server requests
  */
-export interface IStaticYieldOptimizationConfig extends IYieldOptimizationConfig {
+export type StaticYieldOptimizationConfig = IYieldOptimizationConfig & {
   readonly provider: 'static';
 
-  readonly config: IAdunitPriceRulesResponse;
-}
+  readonly config: AdunitPriceRulesResponse;
+};
 
 /**
  * A dynamic configuration
  */
-export interface IDynamicYieldOptimizationConfig extends IYieldOptimizationConfig {
+export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
   readonly provider: 'dynamic';
 
   /**
    * URL to a json config file that contains a list of AdUnitPriceRules.
    */
   readonly configEndpoint: string;
-}
+};
 
 export type PriceRules = {
   /**
@@ -65,9 +125,9 @@ export type PriceRules = {
 /**
  * Response from the yield optimization server
  */
-export interface IAdunitPriceRulesResponse {
+export type AdunitPriceRulesResponse = {
   readonly rules: PriceRules;
-}
+};
 
 /**
  * == Yield Optimization ==
@@ -78,7 +138,7 @@ export interface IAdunitPriceRulesResponse {
  *
  * @see https://support.google.com/admanager/answer/9298008?hl=en
  */
-export default class YieldOptimization implements IModule {
+export class YieldOptimization implements IModule {
   public readonly name: string = 'YieldOptimization';
   public readonly description: string = 'Provides floors and UPR ids';
   public readonly moduleType: ModuleType = 'yield';

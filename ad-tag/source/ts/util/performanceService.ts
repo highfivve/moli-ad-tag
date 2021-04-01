@@ -1,3 +1,6 @@
+/**
+ * @internal
+ */
 export interface IPerformanceMeasurementService {
   /**
    * Create a performance mark with the given name
@@ -34,6 +37,7 @@ export interface IPerformanceMeasurementService {
  *
  * Wraps the native browser "performance" API
  *
+ * @internal
  */
 class PerformanceMeasurementService implements IPerformanceMeasurementService {
   public mark(name: string): void {

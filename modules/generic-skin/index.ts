@@ -1,3 +1,77 @@
+/**
+ * # Generic Skin / Wallpaper Module
+ *
+ * This module allows us to configure `prebidResponse` listener that when a just premium or dspx wallpaper has won the auction
+ *
+ * - removes certain other ad units
+ * - hides the ad slot div where the skin was requested
+ *
+ * ## Integration
+ *
+ * In your `index.ts` import the generic-skin module and register it.
+ *
+ *
+ * ```javascript
+ * import { Skin } from '@highfivve/module-generic-skin'
+ *
+ * moli.registerModule(new Skin({
+ *   configs: [
+ *     // configuration for regular wallpaper/skin from JustPremium or Screen on Demand (DSPX)
+ *     {
+ *       formatFilter: [
+ *         { bidder: 'justpremium', format: 'wp' },
+ *         { bidder: 'dspx' },
+ *       ],
+ *       skinAdSlotDomId: 'my_header',
+ *       hideSkinAdSlot: false,
+ *       hideBlockedSlots: true,
+ *       blockedAdSlotDomIds: [
+ *         'my_sidebar_1',
+ *         'my_sidebar_2',
+ *         'my_sidebar_left',
+ *         'my_floorad'
+ *       ]
+ *     }
+ *   ]
+ * }, window));
+ * ```
+ *
+ * ### Skin optimization
+ *
+ * This module is capable of blocking the skin ad if the summed up CPM of all
+ * blocked ad slots is higher than the skin CPM.
+ *
+ * This requires a separate ad unit for the skin.
+ *
+ * ```javascript
+ * import { Skin } from '@highfivve/module-generic-skin'
+ *
+ * moli.registerModule(new Skin({
+ *   configs: [
+ *     // configuration for regular wallpaper/skin from JustPremium or Screen on Demand (DSPX)
+ *     {
+ *       formatFilter: [
+ *         { bidder: 'justpremium', format: 'wp' },
+ *         { bidder: 'dspx' },
+ *       ],
+ *       skinAdSlotDomId: 'my_skin',
+ *       hideSkinAdSlot: false,
+ *       hideBlockedSlots: true,
+ *       blockedAdSlotDomIds: [
+ *         'my_header',
+ *         'my_sidebar_1',
+ *         'my_sidebar_2',
+ *         'my_sidebar_left',
+ *         'my_floorad'
+ *       ],
+ *       enableCpmComparison: true // set this to true to prevent skin from rendering if its cpm is too low
+ *     }
+ *   ]
+ * }, window));
+ * ```
+ *
+ * @module
+ */
 import {
   googletag,
   IModule,
@@ -10,12 +84,12 @@ import {
   isNotNull
 } from '@highfivve/ad-tag';
 
-interface ISkinModuleConfig {
+export type SkinModuleConfig = {
   /**
    * A list of configurations. The first configuration with matching
    * format filters will be used.
    */
-  readonly configs: ISkinConfig[];
+  readonly configs: SkinConfig[];
 
   /**
    * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
@@ -23,24 +97,24 @@ interface ISkinModuleConfig {
    */
   readonly trackSkinCpmLow?: (
     cpms: { skin: number; combinedNonSkinSlots: number },
-    skinConfig: ISkinConfig,
+    skinConfig: SkinConfig,
     skinBid: prebidjs.IJustPremiumBidResponse | prebidjs.IGenericBidResponse
   ) => void;
-}
+};
 
-interface IJustPremiumFormatFilter {
+export type JustPremiumFormatFilter = {
   readonly bidder: typeof prebidjs.JustPremium;
 
   readonly format: prebidjs.JustPremiumFormat;
-}
+};
 
-interface IDSPXFormatFilter {
+export type DSPXFormatFilter = {
   readonly bidder: typeof prebidjs.DSPX;
-}
+};
 
-type FormatFilter = IJustPremiumFormatFilter | IDSPXFormatFilter;
+export type FormatFilter = JustPremiumFormatFilter | DSPXFormatFilter;
 
-export interface ISkinConfig {
+export type SkinConfig = {
   /**
    * A list of filters. If one of the filter applies then this
    * configuration will be executed.
@@ -80,7 +154,7 @@ export interface ISkinConfig {
    * if the other slots have a higher combined cpm.
    */
   readonly enableCpmComparison: boolean;
-}
+};
 
 export enum SkinConfigEffect {
   BlockSkinSlot = 'BlockSkinSlot',
@@ -88,7 +162,10 @@ export enum SkinConfigEffect {
   NoBlocking = 'NoBlocking'
 }
 
-export default class Skin implements IModule {
+/**
+ * # Skin Module
+ */
+export class Skin implements IModule {
   public readonly name: string = 'Skin';
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
@@ -96,7 +173,7 @@ export default class Skin implements IModule {
   private log?: Moli.MoliLogger;
 
   constructor(
-    private readonly skinModuleConfig: ISkinModuleConfig,
+    private readonly skinModuleConfig: SkinModuleConfig,
     private readonly window: Window
   ) {}
 
@@ -110,7 +187,7 @@ export default class Skin implements IModule {
    * to see if we'd be missing out on revenue if we applied the skin to the page.
    */
   getConfigEffect = (
-    config: ISkinConfig,
+    config: SkinConfig,
     bidResponses: prebidjs.IBidResponsesMap
   ): SkinConfigEffect => {
     const { trackSkinCpmLow } = this.skinModuleConfig;
@@ -200,7 +277,7 @@ export default class Skin implements IModule {
    */
   selectConfig = (
     bidResponses: prebidjs.IBidResponsesMap
-  ): { skinConfig: ISkinConfig; configEffect: SkinConfigEffect } | undefined =>
+  ): { skinConfig: SkinConfig; configEffect: SkinConfigEffect } | undefined =>
     this.skinModuleConfig.configs
       .map(config => ({
         skinConfig: config,

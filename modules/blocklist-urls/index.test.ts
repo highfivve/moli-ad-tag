@@ -4,8 +4,8 @@ import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import BlocklistUrls, {
   IBlocklist,
-  IDynamicBlocklistProvider,
-  IStaticBlocklistProvider
+  DynamicBlocklistProvider,
+  StaticBlocklistProvider
 } from './index';
 
 import {
@@ -57,11 +57,11 @@ describe('BlocklistUrls Module', () => {
   const staticBlocklistProvider = (
     patterns: string[] = [],
     matchType: 'regex' | 'contains' | 'exact' = 'regex'
-  ): IStaticBlocklistProvider => {
+  ): StaticBlocklistProvider => {
     return { provider: 'static', blocklist: blocklist(patterns, matchType) };
   };
 
-  const dynamicBlocklistProvider: IDynamicBlocklistProvider = {
+  const dynamicBlocklistProvider: DynamicBlocklistProvider = {
     provider: 'dynamic',
     endpoint: 'http://localhost/blocklist.json'
   };

@@ -1,3 +1,7 @@
+/**
+ * @module identitylink/ats
+ * @internal
+ */
 export namespace ATS {
   /**
    * The config object needed for window.ats.start.

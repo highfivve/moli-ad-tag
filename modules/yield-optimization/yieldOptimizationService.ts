@@ -2,7 +2,7 @@ import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import MoliLogger = Moli.MoliLogger;
 import IAdSlot = googletag.IAdSlot;
-import { IAdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
+import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
 
 /**
  * Extended representation which adds
@@ -133,7 +133,7 @@ export class YieldOptimizationService {
     configEndpoint: string,
     retriesLeft: number,
     lastError: any | null = null
-  ): Promise<IAdunitPriceRulesResponse> {
+  ): Promise<AdunitPriceRulesResponse> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
@@ -185,7 +185,7 @@ export class YieldOptimizationService {
       });
   }
 
-  private isAdunitPricesRulesResponse(obj: Object): obj is IAdunitPriceRulesResponse {
+  private isAdunitPricesRulesResponse(obj: Object): obj is AdunitPriceRulesResponse {
     return obj.hasOwnProperty('rules');
   }
 

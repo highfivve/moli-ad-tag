@@ -6,10 +6,10 @@ import { YieldOptimizationService } from './yieldOptimizationService';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import {
-  IAdunitPriceRulesResponse,
-  IDynamicYieldOptimizationConfig,
-  INoYieldOptimizationConfig,
-  IStaticYieldOptimizationConfig,
+  AdunitPriceRulesResponse,
+  DynamicYieldOptimizationConfig,
+  NoYieldOptimizationConfig,
+  StaticYieldOptimizationConfig,
   YieldOptimizationConfig
 } from './index';
 
@@ -36,7 +36,7 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('provider: none', () => {
-    const config: INoYieldOptimizationConfig = { provider: 'none' };
+    const config: NoYieldOptimizationConfig = { provider: 'none' };
     const service = createService(config);
 
     it('should always return undefined', async () => {
@@ -59,7 +59,7 @@ describe('YieldOptimizationService', () => {
 
   describe('provider: static', () => {
     describe('empty config', () => {
-      const config: IStaticYieldOptimizationConfig = { provider: 'static', config: { rules: {} } };
+      const config: StaticYieldOptimizationConfig = { provider: 'static', config: { rules: {} } };
       const service = createService(config);
 
       it('should always return undefined', async () => {
@@ -82,7 +82,7 @@ describe('YieldOptimizationService', () => {
 
     describe('non empty config', () => {
       const adUnit = 'ad_content_1';
-      const config: IStaticYieldOptimizationConfig = {
+      const config: StaticYieldOptimizationConfig = {
         provider: 'static',
         config: {
           rules: {
@@ -117,12 +117,12 @@ describe('YieldOptimizationService', () => {
 
   describe('provider: dynamic', () => {
     const adUnit = 'ad_content_1';
-    const config: IDynamicYieldOptimizationConfig = {
+    const config: DynamicYieldOptimizationConfig = {
       provider: 'dynamic',
       configEndpoint: '//localhost'
     };
 
-    const publisherYieldConfiguration: IAdunitPriceRulesResponse = {
+    const publisherYieldConfiguration: AdunitPriceRulesResponse = {
       rules: {
         [adUnit]: {
           priceRuleId: 3,

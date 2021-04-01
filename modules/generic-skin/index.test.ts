@@ -7,7 +7,7 @@ import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 
-import Skin, { ISkinConfig, SkinConfigEffect } from './index';
+import Skin, { SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
 
 // setup sinon-chai
@@ -168,7 +168,7 @@ describe('Skin Module', () => {
     };
 
     describe('just premium wallpaper', () => {
-      const config: ISkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: 'justpremium', format: 'wp' }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -217,7 +217,7 @@ describe('Skin Module', () => {
     });
 
     describe('just premium cascade ad', () => {
-      const config: ISkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: 'justpremium', format: 'ca' }],
         skinAdSlotDomId: 'cascade-ad-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -266,7 +266,7 @@ describe('Skin Module', () => {
     });
 
     describe('just premium mobile skin', () => {
-      const config: ISkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: 'justpremium', format: 'mt' }],
         skinAdSlotDomId: 'mobile-skin-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -315,7 +315,7 @@ describe('Skin Module', () => {
     });
 
     describe('dspx', () => {
-      const config: ISkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: 'dspx' }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -359,7 +359,7 @@ describe('Skin Module', () => {
           jsDomWindow
         );
 
-        const config: ISkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [{ bidder: prebidjs.JustPremium, format: prebidjs.JustPremiumWallpaper }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
@@ -402,7 +402,7 @@ describe('Skin Module', () => {
           jsDomWindow
         );
 
-        const config: ISkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [{ bidder: prebidjs.DSPX }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
@@ -429,7 +429,7 @@ describe('Skin Module', () => {
     });
 
     describe('selectConfig filter selection', () => {
-      const wallpaperConfig: ISkinConfig = {
+      const wallpaperConfig: SkinConfig = {
         formatFilter: [{ bidder: 'justpremium', format: 'wp' }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -438,7 +438,7 @@ describe('Skin Module', () => {
         enableCpmComparison: false
       };
 
-      const mobileSkinConfig: ISkinConfig = {
+      const mobileSkinConfig: SkinConfig = {
         formatFilter: [{ bidder: 'justpremium', format: 'mt' }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -480,7 +480,7 @@ describe('Skin Module', () => {
       it('should select the highest skin bid if there are multiple skin bids', () => {
         const trackSkinCpmLow = sandbox.stub();
 
-        const config: ISkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [
             { bidder: prebidjs.JustPremium, format: prebidjs.JustPremiumWallpaper },
             { bidder: prebidjs.DSPX }
