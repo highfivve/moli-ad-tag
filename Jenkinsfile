@@ -87,7 +87,7 @@ pipeline {
                         dir('website') {
                           sh "yarn install"
                           sh "yarn build"
-                          sh "tar -zcvf ${DOCS_FILE} -C website/build ."
+                          sh "tar -zcvf ${DOCS_FILE} -C build ."
                           echo "Publishing to ${HDFS_PATH_API_DOCS}"
                           sh "/usr/local/bin/httpfs put ${DOCS_FILE} ${HDFS_PATH_API_DOCS}"
                           sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_API_DOCS} --bind=docsFile=${DOCS_FILE}  gfaurora/frontend/prod/moli-api-docs docs.aurora"
