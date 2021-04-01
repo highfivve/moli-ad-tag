@@ -27,14 +27,14 @@
  * ## Resources
  *
  * - [Confiant Dashboard](https://app.confiant.com/)
-
+ *
  * @module
  */
 import { Moli, IModule, ModuleType, AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag';
 
 export type ConfiantConfig = {
   /**
-   * Conviant loads a single javascript file that contains all the configuration properties
+   * Confiant loads a single javascript file that contains all the configuration properties
    */
   readonly assetUrl: string;
 };
