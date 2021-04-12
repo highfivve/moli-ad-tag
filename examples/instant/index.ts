@@ -11,11 +11,13 @@ import 'prebid.js/modules/smartadserverBidAdapter';
 import 'prebid.js/modules/teadsBidAdapter';
 import 'prebid.js/modules/unrulyBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag';
+import { googletag, initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
 import { PrebidGoogleAnalytics } from '@highfivve/module-prebid-google-analytics';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
+
+declare const window: Window & googletag.IGoogleTagWindow;
 
 prebid.processQueue();
 
@@ -54,7 +56,8 @@ moli.registerModule(
       ],
       includeOrderIds: [],
       excludeOrderIds: [],
-      includeAdvertiserIds: [4693931408 /* AppNexus */]
+      includeAdvertiserIds: [4693931408 /* AppNexus */],
+      optimizeClsScoreDomIds: []
     },
     window
   )
