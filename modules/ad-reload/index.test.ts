@@ -74,25 +74,31 @@ describe('Moli Ad Reload Module', () => {
     includeOrderIds: Array<number> = [],
     excludeOrderIds: Array<number> = [],
     excludeAdSlotDomIds: Array<string> = [],
-    window: Window = jsDomWindow
+    optimizeClsScoreDomIds: Array<string> = [],
+    window: Window & googletag.IGoogleTagWindow = jsDomWindow
   ): AdReload => {
     return new AdReload(
       {
         includeAdvertiserIds,
         includeOrderIds,
         excludeOrderIds,
-        excludeAdSlotDomIds
+        excludeAdSlotDomIds,
+        optimizeClsScoreDomIds
       },
       window,
       reloadKeyValue
     );
   };
 
-  const initModule = (module: AdReload, configPipeline?: Moli.pipeline.PipelineConfig) => {
-    const moliSlot = { domId: 'foo' } as Moli.AdSlot;
+  const initModule = (
+    module: AdReload,
+    configPipeline?: Moli.pipeline.PipelineConfig,
+    moliSlot?: Moli.AdSlot
+  ) => {
+    const slot = moliSlot || ({ domId: 'foo' } as Moli.AdSlot);
 
     const moliConfig: Moli.MoliConfig = {
-      slots: [moliSlot],
+      slots: [slot],
       pipeline: configPipeline,
       logger: noopLogger
     };
@@ -360,6 +366,109 @@ describe('Moli Ad Reload Module', () => {
     reloadCallback(googleSlot);
 
     expect(setTargetingSpy).to.have.been.calledOnceWithExactly('foo-reload', 'true');
+
+    expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly([moliSlot], moliConfig, 1);
+  });
+
+  it('should filter possible sizes to same or lower height when CLS optimization is enabled', async () => {
+    const moliSlot = { domId: 'foo', sizes: ['fluid', [300, 600], [300, 250]] } as Moli.AdSlot;
+    const module = createAdReloadModule('foo-reload', [1337], [4711], [], [], ['foo']);
+    const { moliConfig, adPipeline } = initModule(module, undefined, moliSlot);
+
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [moliSlot]);
+
+    const googleSlot = googleAdSlotStub('foo', 'foo');
+    const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
+    const destroySlotSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+
+    const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+    const adPipelineRunSpy = sandbox.stub(adPipeline, 'run').resolves();
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: googleSlot,
+      advertiserId: 1337,
+      campaignId: 4711
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(trackSlotSpy).to.have.been.called;
+
+    const reloadCallback = trackSlotSpy.args[0][1] as (googleTagSlot: googletag.IAdSlot) => void;
+
+    const styleSetPropertySpy = sandbox.spy();
+
+    sandbox.stub(dom.window.document, 'getElementById').returns({
+      scrollHeight: 250,
+      style: { setProperty: styleSetPropertySpy as Function }
+    } as HTMLElement);
+
+    reloadCallback(googleSlot);
+
+    expect(styleSetPropertySpy).to.have.been.calledOnceWithExactly('height', '250px');
+    expect(setTargetingSpy).to.have.been.calledOnceWithExactly('foo-reload', 'true');
+    expect(destroySlotSpy).to.have.been.calledOnceWithExactly([googleSlot]);
+
+    // poof, 300x600 is gone
+    expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly(
+      [{ ...moliSlot, sizes: ['fluid', [300, 250]] }],
+      { ...moliConfig, slots: [{ ...moliSlot, sizes: ['fluid', [300, 250]] }] },
+      1
+    );
+  });
+
+  it("should NOT destroy the googleslot if possible sizes don't change when CLS optimization is enabled", async () => {
+    const moliSlot = { domId: 'foo', sizes: ['fluid', [300, 600], [300, 250]] } as Moli.AdSlot;
+    const module = createAdReloadModule('foo-reload', [1337], [4711], [], [], ['foo']);
+    const { moliConfig, adPipeline } = initModule(module, undefined, moliSlot);
+
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [moliSlot]);
+
+    const googleSlot = googleAdSlotStub('foo', 'foo');
+    const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
+    const destroySlotSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+
+    const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+    const adPipelineRunSpy = sandbox.stub(adPipeline, 'run').resolves();
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: googleSlot,
+      advertiserId: 1337,
+      campaignId: 4711
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(trackSlotSpy).to.have.been.called;
+
+    const reloadCallback = trackSlotSpy.args[0][1] as (googleTagSlot: googletag.IAdSlot) => void;
+
+    const styleSetPropertySpy = sandbox.spy();
+
+    sandbox.stub(dom.window.document, 'getElementById').returns({
+      scrollHeight: 600,
+      style: { setProperty: styleSetPropertySpy as Function }
+    } as HTMLElement);
+
+    reloadCallback(googleSlot);
+
+    expect(styleSetPropertySpy).to.have.been.calledOnceWithExactly('height', '600px');
+    expect(setTargetingSpy).to.have.been.calledOnceWithExactly('foo-reload', 'true');
+
+    // no destroying anything, sizes didn't change because the first impression already had 600px height
+    expect(destroySlotSpy).to.not.have.been.called;
 
     expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly([moliSlot], moliConfig, 1);
   });

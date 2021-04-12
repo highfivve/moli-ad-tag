@@ -18,7 +18,7 @@ import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag';
+import { googletag, initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import { Confiant } from '@highfivve/module-confiant';
 
@@ -70,16 +70,19 @@ moli.registerModule(
         'refreshable-adslot',
         'manual-adslot',
         'a9-adslot',
-        'prebid-adslot-2',
-        'prebid-adslot',
-        'eager-loading-adslot-not-in-dom',
-        'eager-loading-adslot'
+        'eager-loading-adslot-not-in-dom'
       ],
-      includeOrderIds: [],
+      optimizeClsScoreDomIds: [
+        'appnexus-native-example-2',
+        'appnexus-native-example-1',
+        'eager-loading-adslot',
+        'prebid-adslot-2'
+      ],
+      includeOrderIds: [2690210604, 2690917340, 2674536678],
       excludeOrderIds: [],
-      includeAdvertiserIds: [4693931408 /* AppNexus */]
+      includeAdvertiserIds: [4693931408 /* AppNexus */, 4868030566]
     },
-    window
+    (window as unknown) as Window & googletag.IGoogleTagWindow
   )
 );
 

@@ -11,6 +11,7 @@
  *
  * moli.registerModule(new AdReload({
  *    excludeAdSlotDomIds: [ ... ],
+ *    optimizeClsScoreDomIds: [ ... ],
  *    includeAdvertiserIds: [ ... ],
  *    includeOrderIds: [ ... ],
  *    excludeOrderIds: [ ... ],
@@ -22,7 +23,9 @@
  *
  * Configure the module with:
  *
- *  * the DOM IDs you want to **exclude** from being reloaded
+ * * the DOM IDs you want to **exclude** from being reloaded
+ * * the DOM IDs that have an influence on content positioning, e.g. header or content positions - the module
+ *   will make sure that reloading these slots will not negatively impact CLS scores
  * * the order ids ("campaign ids" in Google's terminology) you want to **include** for reloading
  * * the advertiser ids ("company ids" in Google's terminology) you want to **include** for reloading
  * * the order ids ("campaign ids" in Google's terminology) you want to **exclude** for reloading; this option
@@ -64,6 +67,14 @@ export type AdReloadModuleConfig = {
    * Ad slots that should never be reloaded
    */
   excludeAdSlotDomIds: Array<string>;
+
+  /**
+   * Ad slots that have an influence on content positioning should be included here. The ad reload
+   * module will make sure that reloading these slots will not negatively impact CLS scores.
+   *
+   * @see https://web.dev/cls/
+   */
+  optimizeClsScoreDomIds: Array<string>;
 
   /**
    * Include list for advertisers that are eligible to be reloaded.
@@ -119,7 +130,7 @@ export class AdReload implements IModule {
 
   constructor(
     private readonly moduleConfig: AdReloadModuleConfig,
-    private readonly window: Window,
+    private readonly window: Window & googletag.IGoogleTagWindow,
     private readonly reloadKeyValue: string = 'native-ad-reload'
   ) {
     if (moduleConfig.refreshIntervalMs) {
@@ -256,18 +267,82 @@ export class AdReload implements IModule {
     });
 
   private reloadAdSlot = (moliConfig: Moli.MoliConfig) => (googleTagSlot: googletag.IAdSlot) => {
-    const moliSlot = moliConfig.slots.find(
-      moliSlot => moliSlot.domId === googleTagSlot.getSlotElementId()
-    );
+    const slotId = googleTagSlot.getSlotElementId();
+    const moliSlot = moliConfig.slots.find(moliSlot => moliSlot.domId === slotId);
     const adPipeline = this.getAdPipeline && this.getAdPipeline();
 
     if (moliSlot && adPipeline) {
       this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
+      const slotWithOptimizedSizes = this.maybeOptimizeSlotForCls(moliSlot, googleTagSlot);
+
       googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-      adPipeline.run([moliSlot], moliConfig, this.requestAdsCalls);
+      adPipeline.run(
+        [slotWithOptimizedSizes],
+        {
+          ...moliConfig,
+          slots: [
+            ...moliConfig.slots.filter(({ domId }) => domId !== slotId),
+            slotWithOptimizedSizes
+          ]
+        },
+        this.requestAdsCalls
+      );
     }
+  };
+
+  /**
+   * If the given ad slot should be optimized for low CLS, filters the slot's sizes to only contain
+   * any sizes featuring a smaller or equal height compared to the previously displayed ad. This
+   * prevents layout shifts caused by a bigger slot height replacing a smaller one.
+   *
+   * *SIDE EFFECT*: If the slot should be optimized, a height style property matching the previous
+   * height will be set on the slot's DOM element to prevent flicker during the reload.
+   *
+   * *SIDE EFFECT*: If the slot should be reloaded with fewer sizes due to height restrictions, the
+   * googletag slot pendant will be destroyed and rebuilt.
+   */
+  private maybeOptimizeSlotForCls = (
+    moliSlot: Moli.AdSlot,
+    googleTagSlot: googletag.IAdSlot
+  ): Moli.AdSlot => {
+    const slotDomId = moliSlot.domId;
+
+    if (this.moduleConfig.optimizeClsScoreDomIds.indexOf(slotDomId) > -1) {
+      const slotDomElement = this.window.document.getElementById(slotDomId);
+      if (slotDomElement) {
+        const slotHeight = slotDomElement.scrollHeight;
+        slotDomElement.style.setProperty('height', `${slotHeight}px`);
+
+        const newSlotSizes = moliSlot.sizes.filter(
+          size => size === 'fluid' || size[1] <= slotHeight
+        );
+
+        this.logger?.debug(
+          'AdReload',
+          `CLS optimization: slot ${slotDomId} received fixed height ${slotHeight}px`,
+          'new sizes:',
+          newSlotSizes
+        );
+
+        if (newSlotSizes.length < moliSlot.sizes.length) {
+          this.window.googletag.destroySlots([googleTagSlot]);
+        }
+
+        return {
+          ...moliSlot,
+          sizes: newSlotSizes
+        };
+      }
+
+      this.logger?.warn(
+        'AdReload',
+        `CLS optimization: slot ${slotDomId} to be optimized but not found in DOM.`
+      );
+    }
+
+    return moliSlot;
   };
 
   private logTrackingDisallowedReason = (

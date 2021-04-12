@@ -131,12 +131,12 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/55155651/test-ad-unit',
-      sizes: ['fluid', [300, 250], [1, 1]],
+      sizes: ['fluid', [300, 250], [300, 600], [1, 1]],
       passbackSupport: true,
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: ['fluid', [300, 250], [1, 1]]
+          sizesSupported: ['fluid', [300, 250], [300, 600], [1, 1]]
         }
       ]
     },
@@ -318,7 +318,7 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: { loaded: 'eager', bucket: 'ONE' },
       // adUnitPath: '/19968336/prebid_native_example_1',
       adUnitPath: '/55155651/prebid_native_1',
-      sizes: [[1, 1], 'fluid'],
+      sizes: [[1, 1], [300, 250], [300, 600], 'fluid'],
       prebid: {
         adUnit: {
           code: 'appnexus-native-example-1',
@@ -336,7 +336,7 @@ export const adConfiguration: Moli.MoliConfig = {
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: [[1, 1], 'fluid']
+          sizesSupported: [[1, 1], [300, 250], [300, 600], 'fluid']
         }
       ]
     },
@@ -346,7 +346,7 @@ export const adConfiguration: Moli.MoliConfig = {
       behaviour: { loaded: 'eager', bucket: 'ONE' },
       // adUnitPath: '/19968336/prebid_native_example_2',
       adUnitPath: '/55155651/prebid_native_2',
-      sizes: [[1, 1], 'fluid'],
+      sizes: [[1, 1], [300, 250], [300, 600], 'fluid'],
       prebid: {
         adUnit: {
           code: 'appnexus-native-example-2',
@@ -366,7 +366,7 @@ export const adConfiguration: Moli.MoliConfig = {
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: [[1, 1], 'fluid']
+          sizesSupported: [[1, 1], [300, 250], [300, 600], 'fluid']
         }
       ]
     },
