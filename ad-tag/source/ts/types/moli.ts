@@ -834,7 +834,7 @@ export namespace Moli {
     | 'out-of-page-top-anchor'
     | 'out-of-page-bottom-anchor';
 
-  export interface IAdSlot {
+  export interface AdSlot {
     /** id for the ad slot element */
     readonly domId: string;
 
@@ -848,7 +848,7 @@ export namespace Moli {
     readonly position: IPosition;
 
     /** configure how and when the slot should be loaded */
-    readonly behaviour: behaviour.ISlotLoading;
+    readonly behaviour: behaviour.SlotLoading;
 
     /**
      * Conditionally select the ad unit based on labels.
@@ -915,71 +915,6 @@ export namespace Moli {
      */
     readonly passbackSupport?: Boolean;
   }
-
-  // -----------------------------------------
-  // ------- Ad Slot definitions -------------
-  // -----------------------------------------
-
-  /**
-   * An ad slot which is requested during page load.
-   * This is the standard behaviour.
-   */
-  export interface EagerAdSlot extends IAdSlot {
-    readonly behaviour: behaviour.Eager;
-  }
-
-  /**
-   * An ad slot that is manually triggered via the `moli.refreshAdSlot` API.
-   */
-  export interface ManualAdSlot extends IAdSlot {
-    readonly behaviour: behaviour.Manual;
-  }
-
-  /**
-   * An ad slot which is requested lazily.
-   * DFP offers a similar implementation, but only for "load when in view port"
-   */
-  export interface LazyAdSlot extends IAdSlot {
-    readonly behaviour: behaviour.Lazy;
-  }
-
-  /**
-   * An ad slot which can be refreshed.
-   * Useful for
-   * - sorting lists that contain ads
-   * - Single page applications (SPA)
-   */
-  export interface RefreshableAdSlot extends IAdSlot {
-    readonly behaviour: behaviour.Refreshable;
-  }
-
-  /**
-   * An ad slot that should request prebid SSPs.
-   */
-  export interface PrebidAdSlot extends IAdSlot {
-    readonly prebid: headerbidding.PrebidAdSlotConfigProvider;
-  }
-
-  /**
-   * An ad slot that should request a9 bids.
-   */
-  export interface A9AdSlot extends IAdSlot {
-    readonly a9: headerbidding.A9AdSlotConfig;
-  }
-
-  /**
-   * AdSlot type
-   *
-   * Used for discriminating unions to make type safe assumptions about the existence
-   * or type of individual properties.
-   */
-  export type AdSlot =
-    | EagerAdSlot
-    | ManualAdSlot
-    | LazyAdSlot
-    | RefreshableAdSlot
-    | PrebidAdSlot
-    | A9AdSlot;
 
   export type FilterSupportedSizes = (givenSizes: DfpSlotSize[]) => DfpSlotSize[];
 
@@ -1126,6 +1061,11 @@ export namespace Moli {
        */
       readonly throttle?: number;
     }
+
+    /**
+     * all available slot loading behaviours.
+     */
+    export type SlotLoading = Eager | Manual | Lazy | Refreshable;
 
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;

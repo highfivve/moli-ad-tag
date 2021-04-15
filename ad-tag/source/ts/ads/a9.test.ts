@@ -60,7 +60,7 @@ describe('a9', () => {
     return `dom-id-${domIdCounter}`;
   };
 
-  const a9Slot = (domId: string, a9: Moli.headerbidding.A9AdSlotConfig): Moli.A9AdSlot => {
+  const a9Slot = (domId: string, a9: Moli.headerbidding.A9AdSlotConfig): Moli.AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,

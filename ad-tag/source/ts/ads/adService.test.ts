@@ -353,7 +353,7 @@ describe('AdService', () => {
       source: jsDomWindow
     };
 
-    const eagerAdSlot = (): Moli.EagerAdSlot => {
+    const eagerAdSlot = (): Moli.AdSlot => {
       domIdCounter = domIdCounter + 1;
       return {
         domId: `dom-id-${domIdCounter}`,
@@ -365,22 +365,24 @@ describe('AdService', () => {
       };
     };
 
-    const refreshableAdSlot = (lazy: boolean): Moli.RefreshableAdSlot => {
+    const refreshableAdSlot = (
+      lazy: boolean
+    ): Moli.AdSlot & { behaviour: Moli.behaviour.Refreshable } => {
       return {
         ...eagerAdSlot(),
         behaviour: { loaded: 'refreshable', trigger: eventTrigger, lazy }
       };
     };
 
-    const lazyAdSlot = (): Moli.LazyAdSlot => {
+    const lazyAdSlot = (): Moli.AdSlot & { behaviour: Moli.behaviour.Lazy } => {
       return { ...eagerAdSlot(), behaviour: { loaded: 'lazy', trigger: eventTrigger } };
     };
 
-    const manualAdSlot = (): Moli.ManualAdSlot => {
+    const manualAdSlot = (): Moli.AdSlot => {
       return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
     };
 
-    const addToDom = (adSlots: Moli.IAdSlot[]): void => {
+    const addToDom = (adSlots: Moli.AdSlot[]): void => {
       adSlots.forEach(slot => {
         const adDiv = dom.window.document.createElement('div');
         adDiv.id = slot.domId;
@@ -397,7 +399,7 @@ describe('AdService', () => {
     });
 
     it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
-      const outOfPageInterstitial: Moli.EagerAdSlot = {
+      const outOfPageInterstitial: Moli.AdSlot = {
         ...eagerAdSlot(),
         position: 'out-of-page-interstitial'
       };
@@ -445,11 +447,11 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
-      const eagerAdSlot1: Moli.EagerAdSlot = {
+      const eagerAdSlot1: Moli.AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager', bucket: 'bucket1' }
       };
-      const refreshableAdSlot2: Moli.RefreshableAdSlot = {
+      const refreshableAdSlot2: Moli.AdSlot & { behaviour: Moli.behaviour.Refreshable } = {
         ...refreshableAdSlot(false),
         behaviour: {
           loaded: 'refreshable',
@@ -458,7 +460,7 @@ describe('AdService', () => {
           bucket: 'bucket2'
         }
       };
-      const eagerAdSlot3: Moli.EagerAdSlot = {
+      const eagerAdSlot3: Moli.AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager' }
       };

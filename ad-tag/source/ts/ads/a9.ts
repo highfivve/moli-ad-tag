@@ -18,7 +18,9 @@ import { apstag } from '../types/apstag';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
-): slotDefinition is Moli.SlotDefinition<Moli.A9AdSlot> => {
+): slotDefinition is Moli.SlotDefinition<
+  Moli.AdSlot & { a9: Moli.headerbidding.A9AdSlotConfig }
+> => {
   return !!slotDefinition.moliSlot.a9;
 };
 

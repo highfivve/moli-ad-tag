@@ -59,7 +59,7 @@ describe('prebid', () => {
   const prebidSlot = (
     domId: string,
     provider: Moli.headerbidding.PrebidAdSlotConfigProvider
-  ): Moli.PrebidAdSlot => {
+  ): Moli.AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
