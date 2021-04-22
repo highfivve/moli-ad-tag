@@ -1488,6 +1488,7 @@ export namespace prebidjs {
   }
 
   // Supported SSPs
+  export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
@@ -1513,6 +1514,7 @@ export namespace prebidjs {
    * The bidder code is used to identify the different SSPs.
    */
   export type BidderCode =
+    | typeof AdUp
     | typeof Criteo
     | typeof AppNexusAst
     | typeof AppNexus
@@ -1578,6 +1580,38 @@ export namespace prebidjs {
      */
     readonly bidSource?: server.BidSource;
   }
+
+  /**
+   * AdUp Technology bid params
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/aduptech
+   */
+  export interface IAdUpParams {
+    /**
+     * Unique publisher id
+     * @example '1234'
+     */
+    readonly publisher: string;
+
+    /**
+     * Unique placement id per publisher
+     * @example '5678'
+     */
+    readonly placement: string;
+
+    /**
+     * Semicolon separated list of keywords
+     * @example 'urlaub;ibiza;mallorca'
+     */
+    readonly query?: string;
+
+    /**
+     * Impressions and clicks will not be tracked if enabled
+     */
+    readonly adtest?: boolean;
+  }
+
+  export interface IAdUpBid extends IBidObject<typeof AdUp, IAdUpParams> {}
 
   /**
    * Criteo bid parameters. There is no public available documentation. All information was
@@ -2449,6 +2483,7 @@ export namespace prebidjs {
    * Supported bid object types.
    */
   export type IBid =
+    | IAdUpBid
     | ICriteoBid
     | IAppNexusASTBid
     | IImproveDigitalBid
