@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.29.0
+
 [GD-2808](https://jira.gutefrage.net/browse/GD-2808) Ad reload now sets fixed heights on configured slots before
 reloading them, and only requests sizes with the same or lower height on reload to not affect the site's CLS score.
 
