@@ -34,8 +34,10 @@ const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
   });
 
 const isPrebidSlotDefinition = (
-  slotDefinition: Moli.SlotDefinition<Moli.AdSlot>
-): slotDefinition is Moli.SlotDefinition<Moli.PrebidAdSlot> => {
+  slotDefinition: Moli.SlotDefinition
+): slotDefinition is Moli.SlotDefinition<
+  Moli.AdSlot & { prebid: Moli.headerbidding.PrebidAdSlotConfigProvider }
+> => {
   return !!slotDefinition.moliSlot.prebid;
 };
 

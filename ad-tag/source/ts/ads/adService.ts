@@ -346,15 +346,21 @@ export class AdService {
     this.logger.setLogger(logger);
   };
 
-  private isLazySlot = (slot: Moli.AdSlot): slot is Moli.LazyAdSlot => {
+  private isLazySlot = (
+    slot: Moli.AdSlot
+  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Lazy } => {
     return slot.behaviour.loaded === 'lazy';
   };
 
-  private isRefreshableAdSlot = (slot: Moli.AdSlot): slot is Moli.RefreshableAdSlot => {
+  private isRefreshableAdSlot = (
+    slot: Moli.AdSlot
+  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Refreshable } => {
     return slot.behaviour.loaded === 'refreshable';
   };
 
-  private isManualSlot = (slot: Moli.AdSlot): slot is Moli.ManualAdSlot => {
+  private isManualSlot = (
+    slot: Moli.AdSlot
+  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Manual } => {
     return slot.behaviour.loaded === 'manual';
   };
 
