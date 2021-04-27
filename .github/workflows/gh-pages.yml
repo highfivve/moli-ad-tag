@@ -31,6 +31,11 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
+
+      ## type declarations need to be present for docs to work properly
+      - name: setup project
+        run: yarn setup
+
       - name: build website
         working-directory: ./website
         run: |
