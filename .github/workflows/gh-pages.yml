@@ -32,8 +32,8 @@ jobs:
         with:
           node-version: 14.x
       - name: build website
+        working-directory: ./website
         run: |
-          cd website
           yarn install
           yarn build
 
@@ -43,5 +43,5 @@ jobs:
         env:
           REPO: self
           BRANCH: gh-pages
-          FOLDER: docs/build
+          FOLDER: website/build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
