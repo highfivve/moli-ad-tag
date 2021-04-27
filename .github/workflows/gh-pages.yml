@@ -2,6 +2,7 @@ name: Github Pages Deployment
 
 on:
   push:
+    branches: [ master ]
     tags:
       - 'v*'
 
