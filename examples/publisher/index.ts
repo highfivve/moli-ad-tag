@@ -31,6 +31,8 @@ prebid.processQueue();
 
 const moli = initAdTag(window);
 
+declare const window: Window & googletag.IGoogleTagWindow;
+
 // ad fraud protection
 moli.registerModule(
   new Confiant(
@@ -82,7 +84,7 @@ moli.registerModule(
       excludeOrderIds: [],
       includeAdvertiserIds: [4693931408 /* AppNexus */, 4868030566]
     },
-    (window as unknown) as Window & googletag.IGoogleTagWindow
+    window
   )
 );
 

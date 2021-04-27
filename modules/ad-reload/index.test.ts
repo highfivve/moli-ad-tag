@@ -415,10 +415,10 @@ describe('Moli Ad Reload Module', () => {
     expect(setTargetingSpy).to.have.been.calledOnceWithExactly('foo-reload', 'true');
     expect(destroySlotSpy).to.have.been.calledOnceWithExactly([googleSlot]);
 
-    // poof, 300x600 is gone
+    // poof, 300x600 and "fluid" are gone
     expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly(
-      [{ ...moliSlot, sizes: ['fluid', [300, 250]] }],
-      { ...moliConfig, slots: [{ ...moliSlot, sizes: ['fluid', [300, 250]] }] },
+      [{ ...moliSlot, sizes: [[300, 250]] }],
+      { ...moliConfig, slots: [{ ...moliSlot, sizes: [[300, 250]] }] },
       1
     );
   });
@@ -470,7 +470,31 @@ describe('Moli Ad Reload Module', () => {
     // no destroying anything, sizes didn't change because the first impression already had 600px height
     expect(destroySlotSpy).to.not.have.been.called;
 
-    expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly([moliSlot], moliConfig, 1);
+    // "fluid" size is out nevertheless because CLS optimization is enabled
+    expect(adPipelineRunSpy).to.have.been.calledOnceWithExactly(
+      [
+        {
+          ...moliSlot,
+          sizes: [
+            [300, 600],
+            [300, 250]
+          ]
+        }
+      ],
+      {
+        ...moliConfig,
+        slots: [
+          {
+            ...moliSlot,
+            sizes: [
+              [300, 600],
+              [300, 250]
+            ]
+          }
+        ]
+      },
+      1
+    );
   });
 
   it('should remove visibility tracking if reloading is not allowed again', async () => {

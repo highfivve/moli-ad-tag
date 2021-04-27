@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.29.1
+
+[GD-2808](https://jira.gutefrage.net/browse/GD-2808) Ad reload CLS optimization now removes "fluid" size when reloading.
+
 ## 3.29.0
 
 [GD-2808](https://jira.gutefrage.net/browse/GD-2808) Ad reload now sets fixed heights on configured slots before

@@ -131,12 +131,12 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/55155651/test-ad-unit',
-      sizes: ['fluid', [300, 250], [300, 600], [1, 1]],
+      sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
       passbackSupport: true,
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: ['fluid', [300, 250], [300, 600], [1, 1]]
+          sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
         }
       ]
     },

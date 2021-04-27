@@ -28,8 +28,8 @@
  *   will make sure that reloading these slots will not negatively impact CLS scores
  * * the order ids ("campaign ids" in Google's terminology) you want to **include** for reloading
  * * the advertiser ids ("company ids" in Google's terminology) you want to **include** for reloading
- * * the order ids ("campaign ids" in Google's terminology) you want to **exclude** for reloading; this option
- *   **overrides the includes**!
+ * * the order ids ("campaign ids" in Google's terminology) you want to **exclude** from reloading;
+ *   this option **overrides the includes**!
  * **[optional]** the refresh interval that the reload module should wait before reloading a slot. The interval
  * specifies the minimum time in which the ad has to be visible before refreshing it.
  * * **[optional]** the strictness of checking user activity. The strictness levels are defined like this:
@@ -311,12 +311,12 @@ export class AdReload implements IModule {
 
     if (this.moduleConfig.optimizeClsScoreDomIds.indexOf(slotDomId) > -1) {
       const slotDomElement = this.window.document.getElementById(slotDomId);
-      if (slotDomElement) {
+      if (slotDomElement && !!slotDomElement.style) {
         const slotHeight = slotDomElement.scrollHeight;
         slotDomElement.style.setProperty('height', `${slotHeight}px`);
 
         const newSlotSizes = moliSlot.sizes.filter(
-          size => size === 'fluid' || size[1] <= slotHeight
+          size => size !== 'fluid' && size[1] <= slotHeight
         );
 
         this.logger?.debug(
@@ -326,7 +326,7 @@ export class AdReload implements IModule {
           newSlotSizes
         );
 
-        if (newSlotSizes.length < moliSlot.sizes.length) {
+        if (newSlotSizes.length < moliSlot.sizes.filter(size => size !== 'fluid').length) {
           this.window.googletag.destroySlots([googleTagSlot]);
         }
 
