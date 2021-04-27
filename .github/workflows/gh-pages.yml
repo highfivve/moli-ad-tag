@@ -26,10 +26,11 @@ jobs:
             ${{ runner.os }}-yarn-
 
       # Build website
-      - name: build website
+      - name: setup node
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
+      - name: build website
         run: |
           cd website
           yarn install
