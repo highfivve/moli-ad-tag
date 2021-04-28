@@ -77,6 +77,22 @@ export namespace tcfapi {
 
     export type TCData = TCDataWithGDPR | TCDataNoGDPR;
 
+    export enum TCPurpose {
+      STORE_INFORMATION_ON_DEVICE = 1,
+      SELECT_BASIC_ADS = 2,
+      CREATE_PERSONALISED_ADS_PROFILE = 3,
+      SELECT_PERSONALISED_ADS = 4,
+      CREATE_PERSONALISED_CONTENT_PROFILE = 5,
+      SELECT_PERSONALISED_CONTENT = 6,
+      MEASURE_AD_PERFORMANCE = 7,
+      MEASURE_CONTENT_PERFORMANCE = 8,
+      APPLY_MARKET_RESEARCH = 9,
+      DEVELOP_IMPROVE_PRODUCTS = 10
+    }
+    export type PurposeVector = {
+      [purpose in TCPurpose]: boolean;
+    };
+
     export interface TCDataWithGDPR extends Response {
       /**
        * GDPR applies
@@ -128,7 +144,7 @@ export namespace tcfapi {
       readonly purposeOneTreatment: boolean;
 
       readonly purpose: {
-        readonly consents: BooleanVector;
+        readonly consents: PurposeVector;
 
         readonly legitimateInterests: BooleanVector;
       };
@@ -156,6 +172,7 @@ export namespace tcfapi {
         };
       };
     }
+
     export interface TCDataNoGDPR extends Response {
       /**
        * GDPR does not apply

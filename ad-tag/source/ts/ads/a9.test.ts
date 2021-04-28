@@ -17,6 +17,8 @@ import { tcData, fullConsent, tcDataNoGdpr } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
+import { tcfapi } from '../types/tcfapi';
+import TCPurpose = tcfapi.responses.TCPurpose;
 
 // setup sinon-chai
 use(sinonChai);
@@ -139,7 +141,15 @@ describe('a9', () => {
       expect(assetLoaderStub).not.have.been.called;
     });
 
-    ['1', '2', '3', '4', '7', '9', '10'].forEach(purpose => {
+    [
+      TCPurpose.STORE_INFORMATION_ON_DEVICE,
+      TCPurpose.SELECT_BASIC_ADS,
+      TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+      TCPurpose.SELECT_PERSONALISED_ADS,
+      TCPurpose.MEASURE_AD_PERFORMANCE,
+      TCPurpose.APPLY_MARKET_RESEARCH,
+      TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+    ].forEach(purpose => {
       it(`should not load the a9 script if purpose ${purpose} is missing`, async () => {
         const step = a9Init(a9ConfigStub, assetLoaderService);
         const tcData = fullConsent({ '793': true });

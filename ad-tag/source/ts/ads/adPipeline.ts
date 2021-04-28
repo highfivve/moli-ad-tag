@@ -8,6 +8,7 @@ import { tcfapi } from '../types/tcfapi';
 import { consentReady } from './consent';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
+import TCPurpose = tcfapi.responses.TCPurpose;
 
 /**
  * Context passed to every pipeline step.
@@ -273,7 +274,10 @@ export class AdPipeline {
 
       // purpose 1: storing information on the user device (cookie, localstorage, etc)
       // this labels main purpose is to be able to only enable prebid partners that treat this correctly
-      if (consentData.gdprApplies && consentData.purpose.consents['1']) {
+      if (
+        consentData.gdprApplies &&
+        consentData.purpose.consents[TCPurpose.STORE_INFORMATION_ON_DEVICE]
+      ) {
         extraLabels.push('purpose-1');
       } else if (!consentData.gdprApplies) {
         extraLabels.push('purpose-1');

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 3.29.3
+
+[GD-2699](https://jira.gutefrage.net/browse/GD-2699) Purpose types in moli ad tag
+
+Defined `TCPurpose` enum to check if consent is given.
+
 ## 3.29.2
 
 [GD-2950](https://jira.gutefrage.net/browse/GD-2950) Add new formats for just premium

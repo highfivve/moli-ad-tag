@@ -15,6 +15,8 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
 import { isSizeEqual } from '../util/sizes';
 import { SizeConfigService } from './sizeConfigService';
 import { apstag } from '../types/apstag';
+import { tcfapi } from '../types/tcfapi';
+import TCPurpose = tcfapi.responses.TCPurpose;
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -64,7 +66,15 @@ export const a9Init = (
         if (
           !tcData.gdprApplies ||
           (tcData.vendor.consents['793'] &&
-            ['1', '2', '3', '4', '7', '9', '10'].every(purpose => tcData.purpose.consents[purpose]))
+            [
+              TCPurpose.STORE_INFORMATION_ON_DEVICE,
+              TCPurpose.SELECT_BASIC_ADS,
+              TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+              TCPurpose.SELECT_PERSONALISED_ADS,
+              TCPurpose.MEASURE_AD_PERFORMANCE,
+              TCPurpose.APPLY_MARKET_RESEARCH,
+              TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+            ].every(purpose => tcData.purpose.consents[purpose]))
         ) {
           // async fetch as everything is already initialized
           assetService.loadScript({

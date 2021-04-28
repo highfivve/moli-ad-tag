@@ -16,10 +16,11 @@ import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
-import SlotDefinition = Moli.SlotDefinition;
 import { tcfapi } from '../types/tcfapi';
-import IGoogleTag = googletag.IGoogleTag;
 import { createTestSlots } from '../util/test-slots';
+import SlotDefinition = Moli.SlotDefinition;
+import IGoogleTag = googletag.IGoogleTag;
+import TCPurpose = tcfapi.responses.TCPurpose;
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -43,8 +44,13 @@ const useStandardGpt = (tcData: tcfapi.responses.TCData): boolean => {
   return (
     !tcData.gdprApplies ||
     (tcData.vendor.consents[755] &&
-      tcData.purpose.consents[1] &&
-      [2, 7, 9, 10].every(
+      tcData.purpose.consents[TCPurpose.STORE_INFORMATION_ON_DEVICE] &&
+      [
+        TCPurpose.SELECT_BASIC_ADS,
+        TCPurpose.MEASURE_AD_PERFORMANCE,
+        TCPurpose.APPLY_MARKET_RESEARCH,
+        TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+      ].every(
         purposeId =>
           tcData.purpose.consents[purposeId] || tcData.purpose.legitimateInterests[purposeId]
       ))
@@ -202,9 +208,18 @@ export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
         // set consent key value
         const fullConsent =
           !tcData.gdprApplies ||
-          ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].every(
-            purpose => tcData.purpose.consents[purpose]
-          );
+          [
+            TCPurpose.STORE_INFORMATION_ON_DEVICE,
+            TCPurpose.SELECT_BASIC_ADS,
+            TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+            TCPurpose.SELECT_PERSONALISED_ADS,
+            TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
+            TCPurpose.SELECT_PERSONALISED_CONTENT,
+            TCPurpose.MEASURE_AD_PERFORMANCE,
+            TCPurpose.MEASURE_CONTENT_PERFORMANCE,
+            TCPurpose.APPLY_MARKET_RESEARCH,
+            TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+          ].every(purpose => tcData.purpose.consents[purpose]);
         ctx.window.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
         resolve();
       })
