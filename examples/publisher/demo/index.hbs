@@ -175,12 +175,27 @@
       <div id="eager-loading-adslot"></div>
     </div>
     <div class="col-md">
-      <h1>Prebid AdSlot Banner only</h1>
+      <h1>Amazon A9 AdSlot</h1>
+      <div id="a9-adslot"></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="alert alert-info w-100">
+      <h2>Trigger <code>ads.refreshable-adslot-2</code>
+        <button class="btn btn-primary" onclick="window.dispatchEvent(new Event('ads.refreshable-adslot-2'))">Refresh
+        </button>
+      </h2>
+    </div>
+    <div class="col-md">
+      <h1>Prebid AdSlot Banner only (listening for <code>ads.refreshable-adslot-2</code>)</h1>
       <div id="prebid-adslot-2"></div>
     </div>
     <div class="col-md">
-      <h1>Amazon A9 AdSlot</h1>
-      <div id="a9-adslot"></div>
+      <h1>Refreshable AdSlot (listening for <code>ads.refreshable-adslot-2</code>)</h1>
+      <div id="refreshable-adslot"></div>
     </div>
   </div>
 
@@ -195,12 +210,12 @@
       <div id="lazy-adslot"></div>
     </div>
     <div class="col-md">
-      <h1>Refreshable AdSlot</h1>
+      <h1>Refreshable AdSlot 3</h1>
       <p>
         <button class="btn btn-primary" onclick="window.dispatchEvent(new Event('ads.refreshable-adslot'))">Refresh
         </button>
       </p>
-      <div id="refreshable-adslot"></div>
+      <div id="refreshable-adslot-3"></div>
     </div>
     <div class="col-md">
       <h1>Manual AdSlot</h1>

@@ -1071,7 +1071,8 @@ export namespace Moli {
     export type Trigger = EventTrigger;
 
     /**
-     * Triggers when a certain event is fired via `window.dispatchEvent`.
+     * Triggers when a certain event is fired via `dispatchEvent` on window, document, or any other
+     * element.
      */
     export interface EventTrigger {
       readonly name: 'event';

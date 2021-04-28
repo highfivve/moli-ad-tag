@@ -36,6 +36,7 @@ describe('EventService', () => {
   describe('getOrCreate EventSource', () => {
     it('should create an event source on window', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = false;
       const eventSource = eventService.getOrCreateEventSource(
         {
           name: 'event',
@@ -46,13 +47,14 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      eventSource.setCallback(callbackSpy);
+      eventSource.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.be.calledOnce;
     });
 
     it('should create an event source on document', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = false;
 
       const eventSource = eventService.getOrCreateEventSource(
         {
@@ -64,13 +66,14 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      eventSource.setCallback(callbackSpy);
+      eventSource.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', dom.window.document);
       expect(callbackSpy).to.be.calledOnce;
     });
 
     it('should create an event source on an element in the DOM', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = false;
 
       const div = dom.window.document.createElement('div');
       div.id = 'myslot';
@@ -86,13 +89,14 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      eventSource.setCallback(callbackSpy);
+      eventSource.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', div);
       expect(callbackSpy).to.be.calledOnce;
     });
 
     it('should create an event source only once on window', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = false;
 
       const windowTrigger: EventTrigger = {
         name: 'event',
@@ -112,14 +116,15 @@ describe('EventService', () => {
       );
       expect(eventSource1).to.be.equal(eventSource2);
 
-      eventSource1.setCallback(callbackSpy);
-      eventSource2.setCallback(callbackSpy);
+      eventSource1.addCallback({ callback: callbackSpy, permanent });
+      eventSource2.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', jsDomWindow);
-      expect(callbackSpy).to.be.calledOnce;
+      expect(callbackSpy).to.be.calledTwice;
     });
 
     it('should create an event source only once on document', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = false;
 
       const documentWindow: EventTrigger = {
         name: 'event',
@@ -139,14 +144,15 @@ describe('EventService', () => {
       );
       expect(eventSource1).to.be.equal(eventSource2);
 
-      eventSource1.setCallback(callbackSpy);
-      eventSource2.setCallback(callbackSpy);
+      eventSource1.addCallback({ callback: callbackSpy, permanent });
+      eventSource2.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', dom.window.document);
-      expect(callbackSpy).to.be.calledOnce;
+      expect(callbackSpy).to.be.calledTwice;
     });
 
     it('should create an event source only once on an element in the DOM', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = false;
 
       const div = dom.window.document.createElement('div');
       div.id = 'myslot';
@@ -170,9 +176,49 @@ describe('EventService', () => {
       );
       expect(eventSource1).to.be.equal(eventSource2);
 
-      eventSource1.setCallback(callbackSpy);
-      eventSource2.setCallback(callbackSpy);
+      eventSource1.addCallback({ callback: callbackSpy, permanent });
+      eventSource2.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', div);
+      expect(callbackSpy).to.be.calledTwice;
+    });
+  });
+
+  describe('permanent and non-permanent callbacks', () => {
+    it('should create an event source on window and attach a permanent callback', () => {
+      const eventService = new SlotEventService(noopLogger);
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: jsDomWindow
+        },
+        undefined,
+        jsDomWindow
+      );
+
+      eventSource.addCallback({ callback: callbackSpy, permanent: true });
+      dispatchEvent('ads', jsDomWindow);
+      dispatchEvent('ads', jsDomWindow);
+      dispatchEvent('ads', jsDomWindow);
+      expect(callbackSpy).to.be.calledThrice;
+    });
+
+    it('should create an event source on window and attach a non-permanent callback', () => {
+      const eventService = new SlotEventService(noopLogger);
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: jsDomWindow
+        },
+        undefined,
+        jsDomWindow
+      );
+
+      eventSource.addCallback({ callback: callbackSpy, permanent: false });
+      dispatchEvent('ads', jsDomWindow);
+      dispatchEvent('ads', jsDomWindow);
+      dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.be.calledOnce;
     });
   });
@@ -180,6 +226,7 @@ describe('EventService', () => {
   describe('remove all event sources', () => {
     it('should remove all event listeners', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
 
       const windowEventSource = eventService.getOrCreateEventSource(
         {
@@ -191,7 +238,7 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      windowEventSource.setCallback(callbackSpy);
+      windowEventSource.addCallback({ callback: callbackSpy, permanent });
       const documentEventSource = eventService.getOrCreateEventSource(
         {
           name: 'event',
@@ -202,7 +249,7 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      documentEventSource.setCallback(callbackSpy);
+      documentEventSource.addCallback({ callback: callbackSpy, permanent });
       const div = dom.window.document.createElement('div');
 
       div.id = 'myslot';
@@ -217,7 +264,7 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      elementEventSource.setCallback(callbackSpy);
+      elementEventSource.addCallback({ callback: callbackSpy, permanent });
 
       // dispatch first series of events
       dispatchEvent('ads', jsDomWindow);
@@ -239,6 +286,7 @@ describe('EventService', () => {
   describe('remove event source', () => {
     it('should remove the event sources on window', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
 
       const trigger: EventTrigger = {
         name: 'event',
@@ -251,7 +299,7 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      windowEventSource.setCallback(callbackSpy);
+      windowEventSource.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', jsDomWindow);
       eventService.removeEventSource(trigger, jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
@@ -263,6 +311,7 @@ describe('EventService', () => {
 
     it('should remove the event sources on document', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
 
       const trigger: EventTrigger = {
         name: 'event',
@@ -275,7 +324,7 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      documentEventSource.setCallback(callbackSpy);
+      documentEventSource.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', dom.window.document);
       eventService.removeEventSource(trigger, jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
@@ -287,6 +336,7 @@ describe('EventService', () => {
 
     it('should remove the event sources on DOM node', () => {
       const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
 
       const div = dom.window.document.createElement('div');
 
@@ -304,7 +354,7 @@ describe('EventService', () => {
         jsDomWindow
       );
 
-      elementEventSource.setCallback(callbackSpy);
+      elementEventSource.addCallback({ callback: callbackSpy, permanent });
       dispatchEvent('ads', div);
       eventService.removeEventSource(trigger, jsDomWindow);
       expect(callbackSpy).to.have.been.calledOnce;
@@ -315,63 +365,68 @@ describe('EventService', () => {
     });
   });
 
-  it('should throttle events with 0s throttle duration', () => {
-    const eventService = new SlotEventService(noopLogger);
-    const eventSource = eventService.getOrCreateEventSource(
-      {
-        name: 'event',
-        event: 'ads',
-        source: jsDomWindow
-      },
-      0,
-      jsDomWindow
-    );
+  describe('throttling events', () => {
+    it('should throttle events with 0s throttle duration', () => {
+      const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: jsDomWindow
+        },
+        0,
+        jsDomWindow
+      );
 
-    eventSource.setCallback(callbackSpy);
-    dispatchEvent('ads', jsDomWindow);
-    dispatchEvent('ads', jsDomWindow);
-    expect(callbackSpy).to.be.calledTwice;
-  });
-
-  it('should discard events with 1s throttle duration', () => {
-    const eventService = new SlotEventService(noopLogger);
-    const eventSource = eventService.getOrCreateEventSource(
-      {
-        name: 'event',
-        event: 'ads',
-        source: jsDomWindow
-      },
-      1,
-      jsDomWindow
-    );
-
-    eventSource.setCallback(callbackSpy);
-    dispatchEvent('ads', jsDomWindow);
-    dispatchEvent('ads', jsDomWindow);
-    expect(callbackSpy).to.be.calledOnce;
-  });
-
-  it('should throttle events with 0.01s throttle duration', done => {
-    const eventService = new SlotEventService(noopLogger);
-    const eventSource = eventService.getOrCreateEventSource(
-      {
-        name: 'event',
-        event: 'ads',
-        source: jsDomWindow
-      },
-      0.01,
-      jsDomWindow
-    );
-
-    eventSource.setCallback(callbackSpy);
-    dispatchEvent('ads', jsDomWindow);
-    dispatchEvent('ads', jsDomWindow);
-    expect(callbackSpy).to.be.calledOnce;
-
-    setTimeout(() => {
+      eventSource.addCallback({ callback: callbackSpy, permanent });
+      dispatchEvent('ads', jsDomWindow);
       dispatchEvent('ads', jsDomWindow);
       expect(callbackSpy).to.be.calledTwice;
-      done();
-    }, 10);
+    });
+
+    it('should discard events with 1s throttle duration', () => {
+      const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: jsDomWindow
+        },
+        1,
+        jsDomWindow
+      );
+
+      eventSource.addCallback({ callback: callbackSpy, permanent });
+      dispatchEvent('ads', jsDomWindow);
+      dispatchEvent('ads', jsDomWindow);
+      expect(callbackSpy).to.be.calledOnce;
+    });
+
+    it('should throttle events with 0.01s throttle duration', done => {
+      const eventService = new SlotEventService(noopLogger);
+      const permanent = true;
+      const eventSource = eventService.getOrCreateEventSource(
+        {
+          name: 'event',
+          event: 'ads',
+          source: jsDomWindow
+        },
+        0.01,
+        jsDomWindow
+      );
+
+      eventSource.addCallback({ callback: callbackSpy, permanent });
+      dispatchEvent('ads', jsDomWindow);
+      dispatchEvent('ads', jsDomWindow);
+      expect(callbackSpy).to.be.calledOnce;
+
+      setTimeout(() => {
+        dispatchEvent('ads', jsDomWindow);
+        expect(callbackSpy).to.be.calledTwice;
+        done();
+      }, 10);
+    });
   });
 });

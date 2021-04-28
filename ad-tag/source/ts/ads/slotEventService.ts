@@ -20,6 +20,18 @@ export const slotEventServiceConfigure = (slotService: SlotEventService): Config
 };
 
 /**
+ * # CallbackConfig for slot event sources
+ *
+ * Configures the callback handling:
+ * - callback: called when the underlying event is fired
+ * - permanent: if the callback should stay active after the event was fired once
+ */
+type CallbackConfig = {
+  callback: EventListener;
+  permanent: boolean;
+};
+
+/**
  * # Slot EventSource
  *
  * An event source wraps a single eventListener and ensures that events aren't handled
@@ -30,12 +42,14 @@ export const slotEventServiceConfigure = (slotService: SlotEventService): Config
  */
 export interface ISlotEventSource {
   /**
-   * Set a callback that is called when the underlying event is fired.
-   * This will override any previous callback.
+   * Add a callback that is called when the underlying event is fired.
+   * Only callbacks marked as permanent will be preserved after the first event.
    *
-   * @param callback - called when the underlying event is fired
+   * @param callbackObj configures the callback handling.
+   * - callback: called when the underlying event is fired
+   * - permanent: if the callback should stay active after the event was fired once
    */
-  setCallback(callback: EventListenerOrEventListenerObject): void;
+  addCallback(callbackObj: CallbackConfig): void;
 }
 
 // internal datastructures to managed EventSources
@@ -179,7 +193,7 @@ export class SlotEventService {
   }
 
   /**
-   * Removes all registered listeners on window, documenet and
+   * Removes all registered listeners on window, document and elements
    * @param window
    */
   public removeAllEventSources(window: Window): void {
@@ -261,7 +275,7 @@ export class SlotEventService {
  *
  */
 class SlotEventSource implements ISlotEventSource, EventListenerObject {
-  private currentCallback: EventListener;
+  private callbacks: CallbackConfig[];
 
   /**
    * by default all events can pass
@@ -269,20 +283,16 @@ class SlotEventSource implements ISlotEventSource, EventListenerObject {
   private isNotThrottled = true;
 
   /**
-   *
    * @param throttleDuration duration in seconds - the event source will throw away events if they were fired in the throttled duration
    */
   constructor(private readonly throttleDuration: number | undefined) {
-    // default to noop on registration
-    this.currentCallback = (_: Event) => {
-      return;
-    };
+    this.callbacks = [];
   }
 
   public handleEvent(evt: Event): void {
     if (this.throttleDuration) {
       if (this.isNotThrottled) {
-        this.currentCallback(evt);
+        this.fireCallbacksAndClean(evt);
         this.isNotThrottled = false;
 
         // allow events after the throttle duration has settled
@@ -291,11 +301,20 @@ class SlotEventSource implements ISlotEventSource, EventListenerObject {
         }, this.throttleDuration * 1000);
       }
     } else {
-      this.currentCallback(evt);
+      this.fireCallbacksAndClean(evt);
     }
   }
 
-  public setCallback(callback: EventListener): void {
-    this.currentCallback = callback;
+  public addCallback(callbackCfg: CallbackConfig): void {
+    this.callbacks.push(callbackCfg);
+  }
+
+  private fireCallbacksAndClean(evt: Event) {
+    this.callbacks = this.callbacks.filter(({ callback, permanent }) => {
+      // call the function first, then check for permanent
+      // do both in `.filter` to avoid double iteration over `callbacks`
+      callback(evt);
+      return permanent;
+    });
   }
 }

@@ -66,7 +66,7 @@ moli.registerModule(
 moli.registerModule(
   new AdReload(
     {
-      refreshIntervalMs: 10000,
+      refreshIntervalMs: 30000,
       excludeAdSlotDomIds: [
         'lazy-adslot',
         'refreshable-adslot',

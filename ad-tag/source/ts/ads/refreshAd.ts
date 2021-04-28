@@ -19,7 +19,7 @@ export interface IAdRefreshListener {
    *
    * @param {(event: CustomEvent) => void} func
    */
-  addAdRefreshListener(func: EventListenerOrEventListenerObject): void;
+  addAdRefreshListener(func: EventListener): void;
 }
 
 /**
@@ -45,8 +45,10 @@ const createEventRefreshListener = (
   window: Window
 ): IAdRefreshListener => {
   return {
-    addAdRefreshListener(callback: EventListenerOrEventListenerObject): void {
-      slotEventService.getOrCreateEventSource(trigger, throttled, window).setCallback(callback);
+    addAdRefreshListener(callback: EventListener): void {
+      slotEventService
+        .getOrCreateEventSource(trigger, throttled, window)
+        .addCallback({ callback, permanent: true });
     }
   };
 };

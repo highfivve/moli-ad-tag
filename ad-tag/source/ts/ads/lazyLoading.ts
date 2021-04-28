@@ -25,10 +25,11 @@ const createEventLazyLoader = (
     onLoad: () => {
       return new Promise<void>((resolve, reject) => {
         try {
-          slotEventService.getOrCreateEventSource(trigger, undefined, window).setCallback(() => {
-            resolve();
-            // remove the eventSource once this
-            slotEventService.removeEventSource(trigger, window);
+          slotEventService.getOrCreateEventSource(trigger, undefined, window).addCallback({
+            callback: () => {
+              resolve();
+            },
+            permanent: false
           });
         } catch (e) {
           reject(e);

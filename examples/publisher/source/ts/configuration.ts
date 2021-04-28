@@ -154,6 +154,28 @@ export const adConfiguration: Moli.MoliConfig = {
       ]
     },
     {
+      domId: 'refreshable-adslot',
+      position: 'in-page',
+      behaviour: {
+        lazy: true,
+        loaded: 'refreshable',
+        trigger: {
+          name: 'event',
+          event: 'ads.refreshable-adslot-2',
+          source: window
+        }
+      },
+      adUnitPath: '/55155651/test-ad-unit',
+      sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
+        }
+      ]
+    },
+    {
       position: 'in-page',
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager', bucket: 'ONE' },
@@ -258,10 +280,24 @@ export const adConfiguration: Moli.MoliConfig = {
     {
       position: 'in-page',
       domId: 'prebid-adslot-2',
-      behaviour: { loaded: 'eager', bucket: 'TWO' },
+      behaviour: {
+        loaded: 'refreshable',
+        trigger: {
+          name: 'event',
+          event: 'ads.refreshable-adslot-2',
+          source: window
+        },
+        bucket: 'TWO'
+      },
       adUnitPath: '/55155651/prebid_test',
+      sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
+        }
+      ],
       passbackSupport: true,
-      sizes: [[300, 250]],
       prebid: context => {
         return {
           adUnit: {
@@ -278,13 +314,7 @@ export const adConfiguration: Moli.MoliConfig = {
             ]
           }
         };
-      },
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [[300, 250]]
-        }
-      ]
+      }
     },
 
     {
@@ -394,7 +424,7 @@ export const adConfiguration: Moli.MoliConfig = {
       ]
     },
     {
-      domId: 'refreshable-adslot',
+      domId: 'refreshable-adslot-3',
       position: 'in-page',
       behaviour: {
         loaded: 'refreshable',
