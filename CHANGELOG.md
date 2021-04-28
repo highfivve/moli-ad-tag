@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+[GD-2950](https://jira.gutefrage.net/browse/GD-2950) Add new formats for just premium
+
+* Video Wallpaper: `wv`
+* Video Floor Ad: `fv`
+
 ## 3.29.1
 
 [GD-2808](https://jira.gutefrage.net/browse/GD-2808) Ad reload CLS optimization now removes "fluid" size when reloading.

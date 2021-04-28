@@ -1830,6 +1830,8 @@ export namespace prebidjs {
   export const JustPremiumMobileScroller = 'is';
   export const JustPremiumMobileSkin = 'mt';
   export const JustPremiumCascadeAd = 'ca';
+  export const JustPremiumVideoWallpaper = 'wv';
+  export const JustPremiumVideoFloorAd = 'fv';
 
   /**
    * The JustPremium HeaderBidding Guide offers a complete list of all formats.
@@ -1849,7 +1851,9 @@ export namespace prebidjs {
     | typeof JustPremiumWallpaper
     | typeof JustPremiumMobileScroller
     | typeof JustPremiumMobileSkin
-    | typeof JustPremiumCascadeAd;
+    | typeof JustPremiumCascadeAd
+    | typeof JustPremiumVideoWallpaper
+    | typeof JustPremiumVideoFloorAd;
 
   /**
    * JustPremium bid parameters
