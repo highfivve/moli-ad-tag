@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.29.2
+
 [GD-2950](https://jira.gutefrage.net/browse/GD-2950) Add new formats for just premium
 
 * Video Wallpaper: `wv`
