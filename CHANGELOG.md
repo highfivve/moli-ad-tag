@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.29.5
+## 3.29.5 / 3.29.6
 
 [GD-3027](https://jira.gutefrage.net/browse/GD-3027) / [GD-1946](https://jira.gutefrage.net/browse/GD-1946) Add `BidWon` event for `pbs.onEvent('bidWon', callback)`.
 
