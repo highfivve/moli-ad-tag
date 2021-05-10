@@ -38,7 +38,7 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void {
       return;
     },
-    onEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void {
+    onEvent: () => {
       return;
     },
     offEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void {

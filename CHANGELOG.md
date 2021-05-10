@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+[GD-3027](https://jira.gutefrage.net/browse/GD-3027) / [GD-1946](https://jira.gutefrage.net/browse/GD-1946) Add `BidWon` event for `pbs.onEvent('bidWon', callback)`.
+
+In your ad tag you can now
+
+```typescript
+import {  prebidjs } from '@highfivve/ad-tag';
+
+declare const window: Window & prebidjs.IPrebidjsWindow;
+
+window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidWonEvent)  => {
+  console.log(bidWon);
+});
+
+```
+
 ## 3.29.3
 
 [GD-2699](https://jira.gutefrage.net/browse/GD-2699) Purpose types in moli ad tag

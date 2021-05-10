@@ -18,7 +18,7 @@ import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 
-import { googletag, initAdTag } from '@highfivve/ad-tag';
+import { googletag, initAdTag, prebidjs } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import { Confiant } from '@highfivve/module-confiant';
 
@@ -31,7 +31,11 @@ prebid.processQueue();
 
 const moli = initAdTag(window);
 
-declare const window: Window & googletag.IGoogleTagWindow;
+declare const window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
+
+window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidWonEvent) => {
+  console.log('bidWon', bidWon);
+});
 
 // ad fraud protection
 moli.registerModule(

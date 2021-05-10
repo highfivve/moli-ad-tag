@@ -115,7 +115,7 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    onEvent(event: event.EventName, handler: Function, id?: any): void;
+    onEvent: event.OnEventHandler;
 
     /**
      * Deregister
@@ -650,6 +650,175 @@ export namespace prebidjs {
       | 'auctionDebug'
       | 'bidderDone'
       | 'tcf2Enforcement';
+
+    /**
+     * All events that have no type definitions
+     */
+    export type UntypedEventName = Exclude<EventName, 'bidWon'>;
+
+    export type OnEventHandler = {
+      /**
+       * Triggered when a prebid bid has won the entire auction.
+       *
+       * @param event
+       * @param handler
+       * @param id - ad unit code
+       */
+      (event: 'bidWon', handler: (bid: BidWonEvent) => void, id?: string): void;
+
+      (event: UntypedEventName, bid: any, id?: string): void;
+    };
+
+    export type BidWonEvent = {
+      readonly bidder: string;
+      readonly bidderCode: BidderCode;
+
+      /**
+       * Contains all configured bids for the placement
+       * This depends on the bidder code.
+       *
+       * Note: future versions of this typing may refine the type based on the
+       *       `bidderCode` property.
+       */
+      readonly params: any[];
+
+      /**
+       * Depends on SSP what's inside
+       */
+      readonly meta: any;
+
+      /**
+       * can be undefined for native / outstream media types
+       */
+      readonly width?: number;
+
+      /**
+       * can be undefined for native / outstream media types
+       */
+      readonly height?: number;
+
+      /**
+       * If the bid is associated with a Deal, this field contains the deal ID.
+       * @see https://docs.prebid.org/adops/deals.html
+       */
+      readonly dealId?: number;
+
+      /**
+       * The unique identifier of a bid creative. It’s used by the line item’s creative
+       */
+      readonly adId: string;
+      readonly requestId: string;
+      readonly mediaType: 'banner' | 'video' | 'native';
+      readonly source: 'client' | 's2s';
+
+      /**
+       * The exact bid price from the bidder
+       */
+      readonly cpm: number;
+
+      /**
+       * Bidder-specific creative ID
+       */
+      readonly creativeId: number;
+      readonly currency: 'EUR' | 'USD';
+      readonly netRevenue: boolean;
+      readonly ttl: number;
+      readonly adUnitCode: string;
+
+      readonly ad: string;
+      readonly originalCpm?: number;
+      readonly originalCurrency?: 'EUR' | 'USD';
+      readonly auctionId: string;
+      readonly responseTimestamp: number;
+      readonly requestTimestamp: number;
+      readonly timeToRespond: number;
+
+      /**
+       * price bucket: 'low granularity'
+       */
+      readonly pbLg: string;
+      /**
+       * price bucket: 'medium granularity'
+       */
+      readonly pbMg: string;
+      /**
+       * price bucket: 'high granularity'
+       */
+      readonly pbHg: string;
+      /**
+       * price bucket: 'auto granularity'
+       */
+      readonly pbAg: string;
+      /**
+       * price bucket: 'dense granularity'
+       */
+      readonly pbDg: string;
+      /**
+       * price bucket: 'custom granularity'
+       */
+      readonly pbCg: string;
+      /**
+       * @example 728x90
+       */
+      readonly size: string;
+
+      /**
+       * Contains all the adserver targeting parameters
+       */
+      readonly adserverTargeting: {
+        readonly hb_bidder: string;
+        readonly hb_adid: string;
+        readonly hb_pb: string;
+        readonly hb_size: string;
+        readonly hb_source: string;
+        readonly hb_format: string;
+        readonly hb_adomain: string;
+      };
+
+      /**
+       * Status of the bid. Possible values: targetingSet, rendered
+       */
+      readonly status: 'rendered' | 'targetingSet';
+
+      /**
+       *  The bid’s status message
+       */
+      readonly statusMessage: 'Bid returned empty or error response' | 'Bid available';
+
+      // outstream
+      readonly vastXml?: string;
+      readonly vastImpUrl?: string;
+
+      // native
+      /**
+       *  Contains native key value pairs.
+       */
+      readonly native: {
+        readonly address?: string;
+        readonly body?: string;
+        readonly body2?: string;
+        readonly cta?: string;
+        readonly clickTrackers?: string[];
+        readonly clickUrl?: string;
+        readonly displayUrl?: string;
+        readonly downloads?: string;
+        readonly image?: {
+          readonly url: string;
+          readonly height: number;
+          readonly width: number;
+        };
+        readonly impressionTrackers?: string[];
+        readonly javascriptTrackers?: string;
+        readonly likes?: any;
+        readonly phone?: string;
+        readonly price?: string;
+        readonly privacyLink?: string;
+        readonly rating?: string;
+        readonly salePrice?: string;
+        readonly sponsoredBy?: string;
+        readonly title?: string;
+      };
+    };
   }
 
   export namespace currency {
