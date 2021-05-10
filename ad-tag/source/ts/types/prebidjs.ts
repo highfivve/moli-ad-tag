@@ -701,7 +701,7 @@ export namespace prebidjs {
        * If the bid is associated with a Deal, this field contains the deal ID.
        * @see https://docs.prebid.org/adops/deals.html
        */
-      readonly dealId?: number;
+      readonly dealId?: string;
 
       /**
        * The unique identifier of a bid creative. It’s used by the line item’s creative
@@ -751,7 +751,7 @@ export namespace prebidjs {
       readonly pbAg: string;
       /**
        * price bucket: 'dense granularity'
-       */
+       */ number;
       readonly pbDg: string;
       /**
        * price bucket: 'custom granularity'
