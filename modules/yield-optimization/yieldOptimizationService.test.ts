@@ -241,7 +241,6 @@ describe('YieldOptimizationService', () => {
         expect(rule!.priceRuleId).to.be.eq(3);
         expect(rule!.floorprice).to.be.eq(0.2);
         expect(rule!.main).to.be.eq(true);
-        expect(rule!.model).to.be.eq('static');
       });
 
       describe('setTargeting', async () => {
