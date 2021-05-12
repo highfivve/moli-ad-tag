@@ -116,7 +116,8 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('provider: dynamic', () => {
-    const adUnit = 'ad_content_1';
+    const adUnit1 = 'ad_content_1';
+    const adUnit2 = 'ad_content_2';
     const config: DynamicYieldOptimizationConfig = {
       provider: 'dynamic',
       configEndpoint: '//localhost'
@@ -124,10 +125,16 @@ describe('YieldOptimizationService', () => {
 
     const publisherYieldConfiguration: AdunitPriceRulesResponse = {
       rules: {
-        [adUnit]: {
+        [adUnit1]: {
           priceRuleId: 3,
           floorprice: 0.2,
           main: true
+        },
+        [adUnit2]: {
+          priceRuleId: 4,
+          floorprice: 0.3,
+          model: 'ml',
+          main: false
         }
       }
     };
@@ -145,7 +152,7 @@ describe('YieldOptimizationService', () => {
         const service = createService(config);
         await service.init([]);
 
-        const rule = await service.getPriceRule(adUnit);
+        const rule = await service.getPriceRule(adUnit1);
         expect(rule).not.to.be.undefined;
         expect(fetchStub).to.have.been.calledThrice;
       });
@@ -155,7 +162,7 @@ describe('YieldOptimizationService', () => {
         const service = createService(config);
 
         await service.init([]);
-        const rule = await service.getPriceRule(adUnit);
+        const rule = await service.getPriceRule(adUnit1);
         expect(rule).to.be.undefined;
         expect(fetchStub).to.have.been.calledThrice;
       });
@@ -170,7 +177,7 @@ describe('YieldOptimizationService', () => {
         const service = createService(config);
         await service.init([]);
 
-        const rule = await service.getPriceRule(adUnit);
+        const rule = await service.getPriceRule(adUnit1);
         expect(rule).to.be.undefined;
         expect(fetchStub).to.have.been.called;
       });
@@ -185,7 +192,7 @@ describe('YieldOptimizationService', () => {
         const service = createService(config);
         await service.init([]);
 
-        const rule = await service.getPriceRule(adUnit);
+        const rule = await service.getPriceRule(adUnit1);
         expect(rule).to.be.undefined;
         expect(fetchStub).to.have.been.called;
       });
@@ -203,10 +210,10 @@ describe('YieldOptimizationService', () => {
 
       it('should call the configured endpoint only once', async () => {
         const service = createService(config);
-        const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
+        const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit1);
 
         await service.init([]);
-        await service.getPriceRule(adUnit);
+        await service.getPriceRule(adUnit1);
         await service.setTargeting(adSlot);
 
         expect(fetchStub).to.have.been.calledOnce;
@@ -228,12 +235,40 @@ describe('YieldOptimizationService', () => {
       it('should return the price rule', async () => {
         const service = createService(config);
         await service.init([]);
-        const rule = await service.getPriceRule(adUnit);
+        const rule = await service.getPriceRule(adUnit1);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;
         expect(rule!.priceRuleId).to.be.eq(3);
         expect(rule!.floorprice).to.be.eq(0.2);
         expect(rule!.main).to.be.eq(true);
+        expect(rule!.model).to.be.eq('static');
+      });
+
+      describe('setTargeting', async () => {
+        it('should setTargeting with model fallback', async () => {
+          const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit1);
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createService(config);
+          await service.init([]);
+          const rule = await service.getPriceRule(adUnit1);
+          await service.setTargeting(adSlot);
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', rule!.priceRuleId.toFixed(0));
+          expect(setTargetingSpy).has.been.calledWith('upr_model', 'static');
+          expect(setTargetingSpy).has.been.calledWith('upr_main', `${rule!.main}`);
+        });
+
+        it('should setTargeting with model', async () => {
+          const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit2);
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createService(config);
+          await service.init([]);
+          await service.setTargeting(adSlot);
+
+          expect(setTargetingSpy).has.been.calledWith('upr_model', 'ml');
+        });
       });
     });
 
@@ -256,10 +291,10 @@ describe('YieldOptimizationService', () => {
       ].forEach(({ labels, label }) => {
         it(`should use ${label} with input [${labels.join(',')}]`, async () => {
           const service = createService(config);
-          const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit);
+          const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnit1);
 
           await service.init(labels);
-          await service.getPriceRule(adUnit);
+          await service.getPriceRule(adUnit1);
           await service.setTargeting(adSlot);
 
           expect(fetchStub).to.have.been.calledOnce;

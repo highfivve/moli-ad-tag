@@ -119,6 +119,7 @@ export class YieldOptimizationService {
           `set price rule id ${rule.priceRuleId} for ${adUnitDomId}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
         );
         adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+        adSlot.setTargeting('upr_model', rule.model || 'static');
         if (rule.main) {
           adSlot.setTargeting('upr_main', 'true');
         }

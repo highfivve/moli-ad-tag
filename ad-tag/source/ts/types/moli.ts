@@ -1700,6 +1700,16 @@ export namespace Moli {
       readonly priceRuleId: number;
 
       /**
+       * The model used to determine the price rule
+       *
+       * - `static`: fixed price rules in A/B test
+       * - `ml`: super clever machine learning
+       *
+       * If none is provided `static` is used as a fallback
+       */
+      readonly model?: 'static' | 'ml';
+
+      /**
        * The floor price CPM in EUR if available.
        */
       readonly floorprice: number;
