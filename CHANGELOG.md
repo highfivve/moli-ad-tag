@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.30.0
+
 [GD-3068](https://jira.gutefrage.net/browse/GD-3068) Add `upr_model` targeting to yield optimization module.
 
 ## 3.29.5 / 3.29.6
