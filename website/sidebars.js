@@ -8,7 +8,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Getting started',
-      items: ['getting-started/setup', 'getting-started/ad-slot-configuration'],
+      items: ['getting-started/5-minute-setup', 'getting-started/setup', 'getting-started/ad-slot-configuration'],
       collapsed: false
     },
     {
@@ -16,6 +16,8 @@ module.exports = {
       label: 'Features',
       items: [
         'features/adslots',
+        'features/prebid',
+        'features/tam',
         'features/consent',
         'features/targeting',
         'features/responsive-ads',
