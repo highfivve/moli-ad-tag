@@ -70,7 +70,10 @@ moli.registerModule(
 moli.registerModule(
   new AdReload(
     {
-      refreshIntervalMs: 30000,
+      refreshIntervalMs: 60000,
+      refreshIntervalMsOverrides: {
+        'appnexus-native-example-1': 40000
+      },
       excludeAdSlotDomIds: [
         'lazy-adslot',
         'refreshable-adslot',

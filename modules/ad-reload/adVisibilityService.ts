@@ -2,6 +2,7 @@ import { UserActivityService } from './userActivityService';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
+import { RefreshIntervalOverrides } from './index';
 
 /**
  * Tracks the visibility of ad slots.
@@ -42,6 +43,7 @@ export class AdVisibilityService {
   constructor(
     private readonly userActivityService: UserActivityService,
     private readonly refreshInterval: number,
+    private readonly refreshIntervalOverrides: RefreshIntervalOverrides,
     readonly useIntersectionObserver: boolean,
     private readonly window: Window & googletag.IGoogleTagWindow,
     private readonly logger?: Moli.MoliLogger
@@ -150,7 +152,11 @@ export class AdVisibilityService {
     });
 
     Array.from(this.visibilityRecords.values())
-      .filter(record => record.durationVisibleSum > this.refreshInterval)
+      .filter(record => {
+        const interval: number =
+          this.refreshIntervalOverrides[record.slot.getSlotElementId()] || this.refreshInterval;
+        return record.durationVisibleSum > interval;
+      })
       .forEach(record => {
         this.logger?.debug(
           'AdVisibilityService',

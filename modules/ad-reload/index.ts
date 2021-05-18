@@ -62,6 +62,10 @@ import {
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityLevelControl, UserActivityService } from './userActivityService';
 
+export type RefreshIntervalOverrides = {
+  [slotDomId: string]: number;
+};
+
 export type AdReloadModuleConfig = {
   /**
    * Ad slots that should never be reloaded
@@ -96,6 +100,12 @@ export type AdReloadModuleConfig = {
    * Time an ad must be visible before it can be reloaded.
    */
   refreshIntervalMs?: number;
+
+  /**
+   * Configures an override for the default refresh interval configured in
+   * `refreshIntervalMs` per ad slot.
+   */
+  refreshIntervalMsOverrides?: RefreshIntervalOverrides;
 
   /**
    * Configure what defines a user as active / inactive.
@@ -200,6 +210,7 @@ export class AdReload implements IModule {
     this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, this.moduleConfig.userActivityLevelControl, this.logger),
       this.refreshIntervalMs,
+      this.moduleConfig.refreshIntervalMsOverrides || {},
       false,
       window,
       this.logger

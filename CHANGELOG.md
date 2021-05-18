@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+[GD-2965](https://jira.gutefrage.net/browse/GD-2965) Override refresh interval by slot.
+
+Use the `refreshIntervalMsOverrides` to specify a config object with `domID` to `refreshInterval` mapping.
+
+```typescript
+new AdReload(
+  {
+    refreshIntervalMs: 20000,
+    refreshIntervalMsOverrides: {
+      // slot-1 will have a refresh interval of 10000
+      'slot-1': 10000
+    }
+    // ...
+  },
+  window
+)
+```
+
 [GD-3080](https://jira.gutefrage.net/browse/GD-3080) Add prebidjs types for Adform.
 
 ## 3.30.0

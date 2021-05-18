@@ -8,6 +8,7 @@ import { UserActivityService } from './userActivityService';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { googletag } from '@highfivve/ad-tag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
+import { RefreshIntervalOverrides } from './index';
 
 use(sinonChai);
 
@@ -31,7 +32,9 @@ describe('AdVisibilityService', () => {
 
   const adRefreshInterval = 20000;
   const tickInterval = 1000;
-  const createAdVisibilityService = (): AdVisibilityService => {
+  const createAdVisibilityService = (
+    overrides: RefreshIntervalOverrides = {}
+  ): AdVisibilityService => {
     const userActivityService = new UserActivityService(jsDomWindow, { level: 'strict' }, logger);
 
     // decouple logic from actual userActivityService
@@ -40,6 +43,7 @@ describe('AdVisibilityService', () => {
     return new AdVisibilityService(
       userActivityService,
       adRefreshInterval,
+      overrides,
       false,
       jsDomWindow,
       logger
@@ -153,6 +157,50 @@ describe('AdVisibilityService', () => {
 
     // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
     expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
+
+    expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+  });
+
+  it('should call the refreshCallback after the specified time in the override config', () => {
+    const newRefreshInterval = 10000;
+    sandbox.useFakeTimers();
+
+    const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    // performance.now needs to be stubbed "by hand":
+    // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+    const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+    Array.from({ length: 15 }).forEach((_, index) => {
+      performanceNowStub.onCall(index).returns((index + 1) * 1000);
+    });
+
+    const service = createAdVisibilityService({ bar: newRefreshInterval });
+
+    const slot = googleAdSlotStub('bar', 'bar');
+
+    expect(addEventListenerSpy).to.have.been.calledOnce;
+    expect(addEventListenerSpy).to.have.been.calledWithMatch(
+      'slotVisibilityChanged',
+      Sinon.match.func
+    );
+
+    const visibilityChangedListener: (event: ISlotVisibilityChangedEvent) => void =
+      addEventListenerSpy.args[0][1];
+
+    sandbox
+      .stub(jsDomWindow.document, 'getElementById')
+      .returns(jsDomWindow.document.createElement('div'));
+
+    const refreshCallback = sandbox.stub();
+    service.trackSlot(slot, refreshCallback);
+
+    visibilityChangedListener({ inViewPercentage: 99, slot } as ISlotVisibilityChangedEvent);
+
+    sandbox.clock.tick(newRefreshInterval + tickInterval);
+
+    // initial call for ad slot visibility + 11 calls accounting for 1..10s + final call when refreshing the slot
+    expect(performanceNowStub).to.have.callCount(1 + 11 + 1);
 
     expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
   });
