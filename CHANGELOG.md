@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-3080](https://jira.gutefrage.net/browse/GD-3080) Add prebidjs types for Adform.
+
 ## 3.30.0
 
 [GD-3068](https://jira.gutefrage.net/browse/GD-3068) Add `upr_model` targeting to yield optimization module.

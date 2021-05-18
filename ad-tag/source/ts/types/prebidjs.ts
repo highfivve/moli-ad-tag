@@ -1657,6 +1657,7 @@ export namespace prebidjs {
   }
 
   // Supported SSPs
+  export const Adform = 'adform';
   export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
   export const AppNexusAst = 'appnexusAst';
@@ -1684,6 +1685,7 @@ export namespace prebidjs {
    */
   export type BidderCode =
     | typeof AdUp
+    | typeof Adform
     | typeof Criteo
     | typeof AppNexusAst
     | typeof AppNexus
@@ -1749,6 +1751,62 @@ export namespace prebidjs {
      */
     readonly bidSource?: server.BidSource;
   }
+
+  /**
+   * Adform bid params
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/adform.html
+   */
+  export interface IAdformParams {
+    /**
+     * @example 12345
+     */
+    readonly mid: number;
+
+    /**
+     * The Adform domain
+     * @example 	'adx.adform.net'
+     */
+    readonly adxDomain?: string;
+
+    /**
+     * An expected price type (net or gross) of bids
+     * @example 'net'
+     */
+    readonly priceType?: 'net' | 'gross';
+
+    /**
+     * Comma-separated key-value pairs
+     * @example 'city:NY'
+     */
+    readonly mkv?: string;
+
+    /**
+     * Comma-separated keywords
+     * @example 'news,sport'
+     */
+    readonly mkw?: string;
+
+    /**
+     * Minimum CPM price
+     * @example 2.55
+     */
+    readonly minp?: number;
+
+    /**
+     * Comma-separated creative dimentions
+     * @example '300x250'
+     */
+    readonly cdims?: string;
+
+    /**
+     * Custom targeting URL
+     * @example 'https://some.app/?home'
+     */
+    readonly url?: string;
+  }
+
+  export interface IAdformBid extends IBidObject<typeof Adform, IAdformParams> {}
 
   /**
    * AdUp Technology bid params
@@ -2656,6 +2714,7 @@ export namespace prebidjs {
    * Supported bid object types.
    */
   export type IBid =
+    | IAdformBid
     | IAdUpBid
     | ICriteoBid
     | IAppNexusASTBid
