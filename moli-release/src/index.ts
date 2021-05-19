@@ -196,7 +196,7 @@ async function getGitCommitMessages(numberOfCommits: number = 10): Promise<strin
         if (stderr) {
           reject(stderr);
         }
-        stdout = stdout.replace(/\n/g, ' ');
+        stdout = stdout.replace(/([\n\t])/g, ' ');
         const consoleOutput = `[${stdout.slice(0, -1)}]`;
 
         // This regex escapes double quotes in the console output:
