@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-publisher-mode",
-  "version": "3.31.0",
+  "version": "4.0.0",
   "description": "Demonstrating the publisher mode",
   "main": "index.ts",
   "private": true,

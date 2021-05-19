@@ -1,16 +1,31 @@
 {
-  "currentVersion": 2,
-  "currentFilename": "moli_1337.js",
+  "currentVersion": 4,
+  "currentFilename": "moli_e0bd16722dc7c7cfd920.mjs",
+  "currentFilenameEs5": "moli_es5_e6a11155a7dac14c79b1.js",
+  "publisherName": "publisher-mode-example-publisher",
   "versions": [
+    {
+      "version": 4,
+      "filename": "moli_e0bd16722dc7c7cfd920.mjs",
+      "filenameEs5": "moli_es5_e6a11155a7dac14c79b1.js",
+      "changelog": [
+        "GD-2840: prepare releasing moli as ES5+ES6, fix moli-debugger issues",
+        "GD-3019: fix moli-release choking on commits containing tabs"
+      ]
+    },
     {
       "version": 2,
       "filename": "moli_1337.js",
-      "changelog": ["1337 h4xx0r release"]
+      "changelog": [
+        "1337 h4xx0r release"
+      ]
     },
     {
       "version": 1,
       "filename": "moli_101.js",
-      "changelog": ["Initial release"]
+      "changelog": [
+        "Initial release"
+      ]
     }
   ]
 }
