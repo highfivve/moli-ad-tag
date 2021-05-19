@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.31.1
+
+[GD-2840](https://jira.gutefrage.net/browse/GD-2840): Enable releasing moli as ES5+ES6
+
 ## 3.31.0
 
 [GD-2965](https://jira.gutefrage.net/browse/GD-2965) Override refresh interval by slot.
