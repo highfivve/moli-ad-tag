@@ -4,14 +4,11 @@ import { tcfapi } from '../types/tcfapi';
  *
  * @param returnValue the returnValue passed into the callback function
  */
-export const tcfapiFunction = (returnValue: any) => (
-  cmd: string,
-  version: 2,
-  callback: Function,
-  params?: any
-): void => {
-  callback(returnValue, true);
-};
+export const tcfapiFunction =
+  (returnValue: any) =>
+  (cmd: string, version: 2, callback: Function, params?: any): void => {
+    callback(returnValue, true);
+  };
 
 export const fullConsent = (
   vendorConsents: tcfapi.BooleanVector = {}

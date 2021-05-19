@@ -2,13 +2,12 @@
 
 const path = require('path');
 
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const { postCssLoader } = require('./postcss.config');
 
 module.exports = (env, argv) => ({
   mode: 'development',
-  devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
+  devtool: argv.mode === 'production' ? false : 'inline-source-map',
   entry: './debug.tsx',
   output: {
     path: path.resolve(__dirname, 'lib'),
@@ -39,14 +38,5 @@ module.exports = (env, argv) => ({
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.css'],
     plugins: [new TsconfigPathsPlugin()]
-  },
-  optimization: {
-    minimizer: [
-      new UglifyJsPlugin({
-        sourceMap: false,
-        test: /\.min.js$/,
-        parallel: true
-      })
-    ]
   }
 });

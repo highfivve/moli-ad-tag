@@ -43,9 +43,8 @@ describe('AdPipeline', () => {
   };
 
   const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
+    dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();

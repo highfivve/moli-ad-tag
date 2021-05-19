@@ -138,9 +138,18 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       const manifestJson = JSON.parse(manifestFile as any); // yes, we can
       const filename = manifestJson.moli; // moli is the ad tag name by convention
 
+      const manifestPathEs5 = path.join(process.cwd(), 'dist', 'manifest.es5.json');
+
+      const manifestFileEs5 = fs.existsSync(manifestPathEs5)
+        ? fs.readFileSync(manifestPathEs5)
+        : undefined;
+      const manifestJsonEs5 = manifestFileEs5 ? JSON.parse(manifestFileEs5 as any) : undefined; // yes, we can
+      const filenameEs5 = manifestJsonEs5?.moli_es5; // moli_es5 is the ES5 ad tag name by convention
+
       const change: IAdTagRelease = {
         version: version,
         filename: filename,
+        filenameEs5: filenameEs5,
         changelog: answers.changes.split('\n').filter(element => element != '')
       };
 
@@ -149,6 +158,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       const releasesJsonContent: IReleasesJson = {
         currentVersion: version,
         currentFilename: filename,
+        currentFilenameEs5: filenameEs5,
         publisherName: releasesJson.publisherName,
         versions: versions
       };

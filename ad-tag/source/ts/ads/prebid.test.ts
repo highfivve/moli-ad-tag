@@ -26,9 +26,8 @@ describe('prebid', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
+    dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,

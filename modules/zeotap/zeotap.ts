@@ -195,14 +195,8 @@ export class Zeotap implements IModule {
    * config.
    */
   private loadScript = (config: Moli.MoliConfig): Promise<void> => {
-    const {
-      mode,
-      dataKeyValues,
-      exclusionKeyValues,
-      assetUrl,
-      hashedEmailAddress,
-      countryCode
-    } = this.moduleConfig;
+    const { mode, dataKeyValues, exclusionKeyValues, assetUrl, hashedEmailAddress, countryCode } =
+      this.moduleConfig;
 
     if (!this.assetLoaderService) {
       return Promise.reject('Zeotap module :: no asset loader found, module not initialized yet?');

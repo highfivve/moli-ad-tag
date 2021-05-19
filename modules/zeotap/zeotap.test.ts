@@ -23,9 +23,8 @@ use(chaiAsPromised);
 describe('Zeotap Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow = dom.window as any;
+  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
+    dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');

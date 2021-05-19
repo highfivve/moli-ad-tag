@@ -17,7 +17,6 @@
     "noLib": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es6",
     "sourceMap": true,
     "lib": ["dom", "es6", "scripthost"]
   },

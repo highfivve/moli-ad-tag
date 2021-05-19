@@ -13,6 +13,11 @@ export interface IReleasesJson {
   readonly currentFilename: string;
 
   /**
+   * The name of the es5 file for the current version, if any.
+   */
+  readonly currentFilenameEs5?: string;
+
+  /**
    * The name of the publisher. Needed to create a unique git tag.
    */
   readonly publisherName: string;
@@ -36,6 +41,11 @@ export interface IAdTagRelease {
    * The name of the file for this version.
    */
   readonly filename: string;
+
+  /**
+   * The name of the es5 file for this version, if any.
+   */
+  readonly filenameEs5?: string;
 
   /**
    * The changes for the version of this ad tag.

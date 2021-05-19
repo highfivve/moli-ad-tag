@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = (env, argv) => ({
   mode: 'development',
   target: 'node',
-  devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
+  devtool: argv.mode === 'production' ? false : 'inline-source-map',
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, 'lib'),
@@ -13,7 +13,7 @@ module.exports = (env, argv) => ({
   },
   node: {
     __dirname: false,
-    __filename: false,
+    __filename: false
   },
   module: {
     rules: [

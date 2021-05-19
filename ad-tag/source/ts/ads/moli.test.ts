@@ -76,14 +76,14 @@ describe('moli', () => {
 
   describe('init ad tag', () => {
     it('should initialize the global moli variable', () => {
-      const moliWindow = (jsDomWindow as unknown) as Moli.MoliWindow;
+      const moliWindow = jsDomWindow as unknown as Moli.MoliWindow;
       expect(moliWindow.moli).to.be.undefined;
       const moli = initAdTag(moliWindow);
       expect(moliWindow.moli).to.be.equal(moli);
     });
 
     it('should process the global command queue', () => {
-      const moliWindow = (jsDomWindow as unknown) as Moli.MoliWindow;
+      const moliWindow = jsDomWindow as unknown as Moli.MoliWindow;
       const cmd1Spy = sandbox.spy();
       const cmd2Spy = sandbox.spy();
       moliWindow.moli = { que: [cmd1Spy, cmd2Spy] } as any;

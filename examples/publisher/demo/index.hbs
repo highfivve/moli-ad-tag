@@ -232,13 +232,19 @@
 
 
 </div>
-<!-- update the {{domain}} variable in the integration example -->
+<!-- update the [[domain]] variable in the integration example -->
 <script>
   const code = document.getElementById('integration-code');
   if (code) {
     code.innerText = code.innerText.replace('[[domain]]', location.protocol + '//' + location.host + location.pathname);
   }
 </script>
+
+{{#if es5Mode }}
+  <script defer nomodule src="<%= htmlWebpackPlugin.files.js[0] %>"></script>
+{{else}}
+  <script defer type="module" src="<%= htmlWebpackPlugin.files.js[0] %>"></script>
+{{/if}}
 
 {{> partials/foot }}
 

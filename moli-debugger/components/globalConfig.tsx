@@ -66,7 +66,8 @@ const debugSidebarSelector = 'moli-debug-sidebar';
 
 export class GlobalConfig
   extends preact.Component<IGlobalConfigProps, IGlobalConfigState>
-  implements IWindowEventObserver {
+  implements IWindowEventObserver
+{
   constructor(props: IGlobalConfigProps) {
     super();
     this.state = {
@@ -143,9 +144,19 @@ export class GlobalConfig
                       <Tag variant="green">Production</Tag>
                     )}
                     {isEnvironmentOverriden ? (
-                      <button onClick={this.resetEnvironmentOverrides}>Reset override</button>
+                      <button
+                        className="MoliDebug-button MoliDebug-button--green"
+                        onClick={this.resetEnvironmentOverrides}
+                      >
+                        ◀ Reset override
+                      </button>
                     ) : (
-                      <button onClick={this.overrideEnvironmentToTest}>Override to test</button>
+                      <button
+                        className="MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText"
+                        onClick={this.overrideEnvironmentToTest}
+                      >
+                        ▶ Override to test
+                      </button>
                     )}
                   </div>
                   <div className="MoliDebug-tagContainer">
@@ -169,12 +180,13 @@ export class GlobalConfig
                   </div>
                   <div className="MoliDebug-tagContainer">
                     <button
+                      className="MoliDebug-button MoliDebug-button--blue"
                       onClick={() => {
                         config.slots.forEach(removeTestSlotSizeFromLocalStorage);
                         window.location.reload();
                       }}
                     >
-                      Reset all test slot sizes
+                      ▶ Reset all test slot sizes
                     </button>
                     <br />
                     <br />
@@ -782,8 +794,7 @@ export class GlobalConfig
     if (!window.pbjs.version) {
       messages.push({
         kind: 'error',
-        text:
-          'No prebid instance available! Either remove the prebid configuration or add prebid to the ad tag'
+        text: 'No prebid instance available! Either remove the prebid configuration or add prebid to the ad tag'
       });
     }
   };
@@ -809,17 +820,16 @@ export class GlobalConfig
     }
   };
 
-  private checkGlobalSizeConfigEntry = (messages: Message[]) => (
-    entry: Moli.LabelSizeConfigEntry,
-    _: number
-  ): void => {
-    if (entry.labelsSupported.length === 0) {
-      messages.push({
-        kind: 'warning',
-        text: `No Global LabelSizeConfig entries. We recommend defining labels.`
-      });
-    }
-  };
+  private checkGlobalSizeConfigEntry =
+    (messages: Message[]) =>
+    (entry: Moli.LabelSizeConfigEntry, _: number): void => {
+      if (entry.labelsSupported.length === 0) {
+        messages.push({
+          kind: 'warning',
+          text: `No Global LabelSizeConfig entries. We recommend defining labels.`
+        });
+      }
+    };
 
   private checkForWrongPrebidCodeEntry = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {

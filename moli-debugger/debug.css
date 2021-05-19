@@ -7,6 +7,7 @@
   --MoliDebug-blue: #76949f;
   --MoliDebug-blue--light: #edf6fc;
   --MoliDebug-grey--light: #e9ecef;
+  --MoliDebug-grey--dark: #454547;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
   --MoliDebug-buttons-padding: 5px;
@@ -24,9 +25,7 @@
 }
 
 .MoliDebug {
-
   &-module {
-
     &::before {
       align-items: center;
       background: var(--MoliDebug-green);
@@ -57,6 +56,7 @@
     padding: var(--MoliDebug-close-handle-height) 0 var(--MoliDebug-sidebar-padding);
     position: fixed;
     right: 0;
+    text-align: left;
     top: 0;
     z-index: var(--MoliDebug-sidebar-z-index);
 
@@ -227,7 +227,16 @@
     }
   }
 
-  &-tag {
+  &-button {
+    border: 1px solid #d3d3d3;
+
+    &:hover {
+      border-color: #000;
+    }
+  }
+
+  &-tag,
+  &-button {
     color: white;
     background: #76949f;
     border-radius: var(--MoliDebug-border-radius);
@@ -249,6 +258,10 @@
 
     &--greenText {
       color: var(--MoliDebug-green);
+    }
+
+    &--greyText {
+      color: var(--MoliDebug-grey--dark);
     }
 
     &--yellow {

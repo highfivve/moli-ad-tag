@@ -27,9 +27,8 @@ use(sinonChai);
 describe('Moli Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow = dom.window as any;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
+    dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
@@ -176,9 +175,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 42
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -206,9 +205,9 @@ describe('Moli Ad Reload Module', () => {
       isEmpty: true
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -235,9 +234,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 42
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -265,9 +264,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: excludedOrderId
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -294,9 +293,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 42
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -323,9 +322,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 42
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -353,9 +352,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 4711
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -392,9 +391,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 4711
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -445,9 +444,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 4711
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(slotRenderEndedEvent);
 
@@ -518,9 +517,9 @@ describe('Moli Ad Reload Module', () => {
       campaignId: 42
     } as ISlotRenderEndedEvent;
 
-    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = (listenerSpy.args.find(
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
-    )?.[1] as unknown) as (event: ISlotRenderEndedEvent) => void;
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     // slot was already tracked from a previous run
     const slotTrackedStub = sandbox

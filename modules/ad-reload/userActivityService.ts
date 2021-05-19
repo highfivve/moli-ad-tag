@@ -98,10 +98,8 @@ export class UserActivityService implements UserActivityParameters {
         break;
 
       default:
-        const {
-          userActivityDuration,
-          userBecomingInactiveDuration
-        } = userActivityParametersForLevel.get(userActivityLevelControl.level)!;
+        const { userActivityDuration, userBecomingInactiveDuration } =
+          userActivityParametersForLevel.get(userActivityLevelControl.level)!;
 
         this.userActivityDuration = userActivityDuration;
         this.userBecomingInactiveDuration = userBecomingInactiveDuration;

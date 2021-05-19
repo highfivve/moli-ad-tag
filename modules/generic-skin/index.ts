@@ -221,8 +221,8 @@ export class Skin implements IModule {
         )
         .filter(bidObject => isNotNull(bidObject.bids))
         .map(bidObject =>
-          bidObject.bids
-            // filter out skin bid to not include it in the non-skin cpm sum
+          bidObject
+            .bids! // filter out skin bid to not include it in the non-skin cpm sum
             .filter(bid => !isSkinBid(bid))
             // highest cpm bid goes first
             .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
@@ -293,12 +293,14 @@ export class Skin implements IModule {
    * @param slotDefinitions all available slots
    * @return function that destroys a given adSlot by domId
    */
-  destroyAdSlot = (slotDefinitions: Moli.SlotDefinition[]) => (adSlotDomId: string): void => {
-    const adSlots = slotDefinitions
-      .map(slot => slot.adSlot)
-      .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
-    (this.window as Window & googletag.IGoogleTagWindow).googletag.destroySlots(adSlots);
-  };
+  destroyAdSlot =
+    (slotDefinitions: Moli.SlotDefinition[]) =>
+    (adSlotDomId: string): void => {
+      const adSlots = slotDefinitions
+        .map(slot => slot.adSlot)
+        .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
+      (this.window as Window & googletag.IGoogleTagWindow).googletag.destroySlots(adSlots);
+    };
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
@@ -353,15 +355,17 @@ export class Skin implements IModule {
     };
   }
 
-  private hideAdSlot = (log: Moli.MoliLogger) => (domId: string): void => {
-    const element = this.window.document.getElementById(domId);
-    try {
-      if (element) {
-        log.debug('SkinModule', `Set display:none for ${domId}`);
-        element.style.setProperty('display', 'none');
+  private hideAdSlot =
+    (log: Moli.MoliLogger) =>
+    (domId: string): void => {
+      const element = this.window.document.getElementById(domId);
+      try {
+        if (element) {
+          log.debug('SkinModule', `Set display:none for ${domId}`);
+          element.style.setProperty('display', 'none');
+        }
+      } catch (e) {
+        log.error('SkinModule', `Couldn't set the the wallpaper div ${domId} to display:none;`, e);
       }
-    } catch (e) {
-      log.error('SkinModule', `Couldn't set the the wallpaper div ${domId} to display:none;`, e);
-    }
-  };
+    };
 }

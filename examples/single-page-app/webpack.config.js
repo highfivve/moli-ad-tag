@@ -1,18 +1,18 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = (_, argv) => {
   return {
-    devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
+    mode: 'development',
+    devtool: argv.mode === 'production' ? false : 'inline-source-map',
     entry: {
       moli: './index.ts',
       app: './source/demo/app.tsx'
     },
     output: {
-      filename: argv.mode === 'production' ? '[name]_[chunkHash].js' : '[name].js'
+      filename: argv.mode === 'production' ? '[name]_[chunkhash].js' : '[name].js'
     },
     module: {
       rules: [
@@ -40,11 +40,7 @@ module.exports = (_, argv) => {
     },
     // local development
     devServer: {
-      https: {
-        key: fs.readFileSync(path.join(__dirname, 'certs/selfsigned.key')),
-        cert: fs.readFileSync(path.join(__dirname, 'certs/selfsigned.crt')),
-        ca: fs.readFileSync(path.join(__dirname, 'certs/selfsigned.pem'))
-      },
+      https: true,
       contentBase: [
         path.join(__dirname, 'dist'),
         // always use the latest moli-debugger
@@ -52,7 +48,8 @@ module.exports = (_, argv) => {
       ],
       compress: true,
       port: 9000,
-      allowedHosts: ['localhost', '.h5v.eu']
+      allowedHosts: ['localhost', '.h5v.eu'],
+      writeToDisk: true
     },
     plugins: [
       new HtmlWebpackPlugin({

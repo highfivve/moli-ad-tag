@@ -64,7 +64,7 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
       result = new Promise<void>(resolve => {
         context.logger.debug('GAM', 'init googletag stub');
         context.window.googletag =
-          context.window.googletag || (({ cmd: [] } as unknown) as IGoogleTag);
+          context.window.googletag || ({ cmd: [] } as unknown as IGoogleTag);
         context.window.googletag.cmd.push(resolve);
 
         assetLoader.loadScript({
@@ -225,134 +225,135 @@ export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
       })
   );
 
-export const gptDefineSlots = (): DefineSlotsStep => (
-  context: AdPipelineContext,
-  slots: Moli.AdSlot[]
-) => {
-  const slotDefinitions = slots.map(moliSlot => {
-    const sizeConfigService = new SizeConfigService(
-      moliSlot.sizeConfig,
-      context.labelConfigService.getSupportedLabels(),
-      context.window
-    );
-    const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
+export const gptDefineSlots =
+  (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
+    const slotDefinitions = slots.map(moliSlot => {
+      const sizeConfigService = new SizeConfigService(
+        moliSlot.sizeConfig,
+        context.labelConfigService.getSupportedLabels(),
+        context.window
+      );
+      const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
 
-    // filter slots that shouldn't be displayed
-    if (
-      !(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))
-    ) {
-      return Promise.resolve(null);
-    }
-
-    const sizes = filterSupportedSizes(moliSlot.sizes);
-
-    // define an ad slot depending on the `position` parameter
-    const defineAdSlot = (): googletag.IAdSlot | null => {
-      switch (moliSlot.position) {
-        case 'in-page':
-          return context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId);
-        case 'out-of-page':
-          return context.window.googletag.defineOutOfPageSlot(moliSlot.adUnitPath, moliSlot.domId);
-        case 'out-of-page-interstitial':
-          context.logger.debug('GAM', `defined web interstitial for ${moliSlot.adUnitPath}`);
-          return context.window.googletag.defineOutOfPageSlot(
-            moliSlot.adUnitPath,
-            context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
-          );
-        case 'out-of-page-bottom-anchor':
-          context.logger.debug('GAM', `defined bottom anchor for ${moliSlot.adUnitPath}`);
-          return context.window.googletag.defineOutOfPageSlot(
-            moliSlot.adUnitPath,
-            context.window.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
-          );
-        case 'out-of-page-top-anchor':
-          context.logger.debug('GAM', `defined top anchor for ${moliSlot.adUnitPath}`);
-          return context.window.googletag.defineOutOfPageSlot(
-            moliSlot.adUnitPath,
-            context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
-          );
+      // filter slots that shouldn't be displayed
+      if (
+        !(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))
+      ) {
+        return Promise.resolve(null);
       }
-    };
 
-    // ensures that an ad slot is only displayed once
-    const defineAndDisplayAdSlot = (): googletag.IAdSlot | null => {
-      const adSlot = defineAdSlot();
+      const sizes = filterSupportedSizes(moliSlot.sizes);
+
+      // define an ad slot depending on the `position` parameter
+      const defineAdSlot = (): googletag.IAdSlot | null => {
+        switch (moliSlot.position) {
+          case 'in-page':
+            return context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId);
+          case 'out-of-page':
+            return context.window.googletag.defineOutOfPageSlot(
+              moliSlot.adUnitPath,
+              moliSlot.domId
+            );
+          case 'out-of-page-interstitial':
+            context.logger.debug('GAM', `defined web interstitial for ${moliSlot.adUnitPath}`);
+            return context.window.googletag.defineOutOfPageSlot(
+              moliSlot.adUnitPath,
+              context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
+            );
+          case 'out-of-page-bottom-anchor':
+            context.logger.debug('GAM', `defined bottom anchor for ${moliSlot.adUnitPath}`);
+            return context.window.googletag.defineOutOfPageSlot(
+              moliSlot.adUnitPath,
+              context.window.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+            );
+          case 'out-of-page-top-anchor':
+            context.logger.debug('GAM', `defined top anchor for ${moliSlot.adUnitPath}`);
+            return context.window.googletag.defineOutOfPageSlot(
+              moliSlot.adUnitPath,
+              context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
+            );
+        }
+      };
+
+      // ensures that an ad slot is only displayed once
+      const defineAndDisplayAdSlot = (): googletag.IAdSlot | null => {
+        const adSlot = defineAdSlot();
+        if (adSlot) {
+          // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
+          context.window.googletag.display(adSlot);
+        }
+        return adSlot;
+      };
+
+      // lookup existing slots and use those if already present. This makes defineSlots idempotent
+      const allSlots =
+        context.env === 'production'
+          ? context.window.googletag.pubads().getSlots()
+          : context.window.googletag.content().getSlots();
+      const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
+
+      // define and display ad slot if doesn't exist yet
+      const adSlot: googletag.IAdSlot | null = existingSlot
+        ? existingSlot
+        : defineAndDisplayAdSlot();
+
       if (adSlot) {
-        // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
-        context.window.googletag.display(adSlot);
+        adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
+
+        switch (context.env) {
+          case 'production':
+            adSlot.addService(context.window.googletag.pubads());
+            context.logger.debug(
+              'GAM',
+              `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
+            );
+            return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+          case 'test':
+            context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
+            adSlot.addService(context.window.googletag.content());
+            return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+          default:
+            return Promise.reject(`invalid environment: ${context.config.environment}`);
+        }
+      } else if (
+        moliSlot.position === 'out-of-page-interstitial' ||
+        moliSlot.position === 'out-of-page-top-anchor' ||
+        moliSlot.position === 'out-of-page-bottom-anchor'
+      ) {
+        context.logger.warn('GAM', `${moliSlot.position} is not supported`);
+        return Promise.resolve(null);
+      } else {
+        const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
+        context.logger.error('GAM', error);
+        return Promise.reject(new Error(error));
       }
-      return adSlot;
-    };
+    });
 
-    // lookup existing slots and use those if already present. This makes defineSlots idempotent
-    const allSlots =
-      context.env === 'production'
-        ? context.window.googletag.pubads().getSlots()
-        : context.window.googletag.content().getSlots();
-    const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
+    return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
+  };
 
-    // define and display ad slot if doesn't exist yet
-    const adSlot: googletag.IAdSlot | null = existingSlot ? existingSlot : defineAndDisplayAdSlot();
-
-    if (adSlot) {
-      adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
-
+export const gptRequestAds =
+  (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition[]) =>
+    new Promise<void>(resolve => {
+      context.logger.debug('GAM', 'requestAds');
       switch (context.env) {
-        case 'production':
-          adSlot.addService(context.window.googletag.pubads());
-          context.logger.debug(
-            'GAM',
-            `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
-          );
-          return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         case 'test':
-          context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
-          adSlot.addService(context.window.googletag.content());
-          return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
-        default:
-          return Promise.reject(`invalid environment: ${context.config.environment}`);
+          createTestSlots(context, slots);
+          break;
+        case 'production':
+          // load ads
+          context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
+          // mark slots as refreshed
+          slots.forEach(({ moliSlot }) => context.reportingService.markRefreshed(moliSlot));
+
+          // debug logs
+          const debugMessage = slots
+            .map(({ moliSlot }) => `[DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`)
+            .join('\n');
+          context.logger.debug('GAM', `Refresh ${slots.length} slot(s):\n${debugMessage}`);
+
+          break;
       }
-    } else if (
-      moliSlot.position === 'out-of-page-interstitial' ||
-      moliSlot.position === 'out-of-page-top-anchor' ||
-      moliSlot.position === 'out-of-page-bottom-anchor'
-    ) {
-      context.logger.warn('GAM', `${moliSlot.position} is not supported`);
-      return Promise.resolve(null);
-    } else {
-      const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
-      context.logger.error('GAM', error);
-      return Promise.reject(new Error(error));
-    }
-  });
 
-  return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
-};
-
-export const gptRequestAds = (): RequestAdsStep => (
-  context: AdPipelineContext,
-  slots: SlotDefinition[]
-) =>
-  new Promise<void>(resolve => {
-    context.logger.debug('GAM', 'requestAds');
-    switch (context.env) {
-      case 'test':
-        createTestSlots(context, slots);
-        break;
-      case 'production':
-        // load ads
-        context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
-        // mark slots as refreshed
-        slots.forEach(({ moliSlot }) => context.reportingService.markRefreshed(moliSlot));
-
-        // debug logs
-        const debugMessage = slots
-          .map(({ moliSlot }) => `[DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`)
-          .join('\n');
-        context.logger.debug('GAM', `Refresh ${slots.length} slot(s):\n${debugMessage}`);
-
-        break;
-    }
-
-    resolve();
-  });
+      resolve();
+    });

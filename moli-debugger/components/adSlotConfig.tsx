@@ -289,10 +289,9 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
         {
           <div className="MoliDebug-tagContainer">
             <span className="MoliDebug-tagLabel">Sizes</span>
-            {this.validateSlotSizes(
-              this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)
-            ).map(validatedSlotSize =>
-              this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
+            {this.validateSlotSizes(this.props.slot.sizes.filter(AdSlotConfig.isFixedSize)).map(
+              validatedSlotSize =>
+                this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
             )}
           </div>
         }

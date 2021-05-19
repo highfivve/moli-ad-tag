@@ -5,7 +5,7 @@
     "lib": ["dom", "es6", "scripthost"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2015",
+    "target": "es5",
     "skipLibCheck": true,
     "outDir": "./dist"
   },
