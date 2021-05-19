@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.31.0
+
 [GD-2965](https://jira.gutefrage.net/browse/GD-2965) Override refresh interval by slot.
 
 Use the `refreshIntervalMsOverrides` to specify a config object with `domID` to `refreshInterval` mapping.
