@@ -267,7 +267,9 @@ export class AdPipeline {
     );
 
     // fetch the consent data when ready
-    this.tcData = this.tcData ? this.tcData : consentReady(this.window, this.logger);
+    this.tcData = this.tcData
+      ? this.tcData
+      : consentReady(this.window, this.logger, config.environment);
 
     return this.tcData.then(consentData => {
       const extraLabels = [...(config.targeting?.labels || [])];
