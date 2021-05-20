@@ -862,7 +862,22 @@ export namespace prebidjs {
   }
 
   export namespace server {
-    export type S2SConfig = IS2SConfig & IS2DTestingConfig;
+    export type S2SConfig = IS2SConfig & IS2STestingConfig;
+
+    /**
+     * Endpoint definition
+     */
+    export type Endpoint = {
+      /**
+       * Endpoint that supports cookies
+       */
+      readonly p1Consent: string;
+
+      /**
+       * Endpoint that works without cookies
+       */
+      readonly noP1Consent?: string;
+    };
 
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
@@ -907,12 +922,12 @@ export namespace prebidjs {
       /**
        *  Defines the auction endpoint for the Prebid Server cluster
        */
-      readonly endpoint: string;
+      readonly endpoint: Endpoint;
 
       /**
        * Defines the cookie_sync endpoint for the Prebid Server cluster
        */
-      readonly syncEndpoint: string;
+      readonly syncEndpoint: Endpoint;
 
       /**
        * Max number of userSync URLs that can be executed by Prebid Server cookie_sync per request. If not defined,
@@ -960,7 +975,7 @@ export namespace prebidjs {
      * Only available with the s2sTesting module
      * @see https://docs.prebid.org/dev-docs/modules/s2sTesting.html
      */
-    export interface IS2DTestingConfig {
+    export interface IS2STestingConfig {
       /**
        * This attribute is required to enable the bidderControl and bidSource features.
        * This shouldn't be confused with the enabled: true flag which enables the entire server-to-server feature.

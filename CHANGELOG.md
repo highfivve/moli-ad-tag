@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-3121](https://jira.gutefrage.net/browse/GD-3121). Change `s2sConfig` types to match [#6484](https://github.com/prebid/Prebid.js/pull/6484).
+
 ## 3.31.1
 
 [GD-2840](https://jira.gutefrage.net/browse/GD-2840): Enable releasing moli as ES5+ES6
