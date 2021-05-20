@@ -1,7 +1,7 @@
 {
-  "name": "@highfivve/example-publisher-mode",
+  "name": "@highfivve/example-vanilla-ad-tag",
   "version": "3.30.0",
-  "description": "Demonstrating the publisher mode",
+  "description": "Demonstrating an empty ad tag",
   "main": "index.ts",
   "private": true,
   "scripts": {
