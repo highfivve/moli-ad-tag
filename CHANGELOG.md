@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.31.3
+
+[GD-1363](https://jira.gutefrage.net/browse/GD-1363). No CMP is required in `test` environment.
+
 ## 3.31.2
 
 [GD-3121](https://jira.gutefrage.net/browse/GD-3121). Change `s2sConfig` types to match [#6484](https://github.com/prebid/Prebid.js/pull/6484).
