@@ -1,24 +1,17 @@
 'use strict';
 
 const path = require('path');
-const fs = require('fs');
-
-const {
-  makeDocsPages,
-  manifestPlugin
-} = require('@highfivve/moli-release/releases/webpack-helpers');
-
-const releasesJson = require('./releases.json');
-const publisherName = 'moli-publisher-example-publisher';
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = (_, argv) => {
   return {
-    devtool: argv.mode === 'production' ? 'none' : 'inline-source-map',
+    mode: 'development',
+    devtool: argv.mode === 'production' ? false : 'inline-source-map',
     entry: {
       moli: './index.ts'
     },
     output: {
-      filename: argv.mode === 'production' ? '[name]_[chunkHash].js' : '[name].js'
+      filename: argv.mode === 'production' ? '[name]_[chunkhash].js' : '[name].js'
     },
     module: {
       rules: [
@@ -26,6 +19,18 @@ module.exports = (_, argv) => {
           test: /\.ts$/,
           loader: 'ts-loader',
           options: { allowTsInNodeModules: false, projectReferences: true }
+        },
+        // this separate rule is required to make sure that the Prebid.js files are babel-ified.  this rule will
+        // override the regular exclusion from above (for being inside node_modules).
+        {
+          test: /.js$/,
+          include: new RegExp(`\\${path.sep}prebid\.js`),
+          use: {
+            loader: 'babel-loader',
+            // presets and plugins for Prebid.js must be manually specified separate from your other babel rule.
+            // this can be accomplished by requiring prebid's .babelrc.js file (requires Babel 7 and Node v8.9.0+)
+            options: require('prebid.js/.babelrc.js')
+          }
         }
       ]
     },
@@ -34,6 +39,7 @@ module.exports = (_, argv) => {
     },
     // local development
     devServer: {
+      https: true,
       contentBase: [
         path.join(__dirname, 'dist'),
         // always use the latest moli-debugger
@@ -42,10 +48,13 @@ module.exports = (_, argv) => {
       compress: true,
       port: 9000,
       allowedHosts: ['localhost', '.h5v.eu'],
+      writeToDisk: true
     },
     plugins: [
-      ...makeDocsPages(publisherName, releasesJson.currentFilename, __dirname),
-      manifestPlugin()
+      new HtmlWebpackPlugin({
+        title: 'Vanilla Ad Tag',
+        template: 'demo/index.html'
+      })
     ]
   };
 };
