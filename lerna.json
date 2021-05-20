@@ -6,7 +6,7 @@
     "modules/*",
     "examples/*"
   ],
-  "version": "3.31.1",
+  "version": "3.31.2",
   "npmClient": "yarn",
   "useWorkspaces": true,
   "command": {
