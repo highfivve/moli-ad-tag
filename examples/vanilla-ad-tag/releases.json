@@ -1,0 +1,16 @@
+{
+  "currentVersion": 2,
+  "currentFilename": "moli_1337.js",
+  "versions": [
+    {
+      "version": 2,
+      "filename": "moli_1337.js",
+      "changelog": ["1337 h4xx0r release"]
+    },
+    {
+      "version": 1,
+      "filename": "moli_101.js",
+      "changelog": ["Initial release"]
+    }
+  ]
+}

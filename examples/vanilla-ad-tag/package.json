@@ -1,0 +1,34 @@
+{
+  "name": "@highfivve/example-publisher-mode",
+  "version": "3.30.0",
+  "description": "Demonstrating the publisher mode",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "setup": "yarn",
+    "build": "webpack --mode=production",
+    "start": "webpack serve",
+    "validate": "yarn build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git"
+  },
+  "keywords": [
+    "publisher"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "handlebars-webpack-plugin": "^2.2.1",
+    "html-webpack-plugin": "^4.5.0",
+    "ts-loader": "^8.0.17",
+    "typescript": "^4.1.5",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^4.1.0",
+    "webpack-dev-server": "^3.11.0",
+    "webpack-manifest-plugin": "^3.0.0"
+  },
+  "dependencies": {
+    "@highfivve/ad-tag": "^3.30.0"
+  }
+}
