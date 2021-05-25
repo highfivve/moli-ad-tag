@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.31.4
+
+[GD-2840](https://jira.gutefrage.net/browse/GD-2840): Update overview page with ES6 + ES5 ad tags.
+
 ## 3.31.3
 
 [GD-1363](https://jira.gutefrage.net/browse/GD-1363). No CMP is required in `test` environment.

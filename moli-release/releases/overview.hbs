@@ -48,10 +48,19 @@
             </div>
             <div class="card-footer text-center py-0 px-3">
               <div class="row">
-                <a class="col-6 d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
+                <a class="{{#if filenameEs5}}col-4{{else}}col-6{{/if}} d-block py-2{{#if
+                  isCurrentVersion}} text-warning{{/if}}"
                    href="/{{version}}/">Demo page</a>
-                <a class="col-6 border-left d-block py-2{{#if isCurrentVersion}} text-warning{{/if}}"
-                   href="/{{version}}/{{filename}}">moli.min.js</a>
+                <a class="{{#if filenameEs5}}col-4{{else}}col-6{{/if}} border-left d-block py-2{{#if
+                  isCurrentVersion}} text-warning{{/if}}"
+                   href="/{{version}}/{{filename}}"><span class="badge badge-pill badge-danger">ES6</span>
+                  moli.min.js</a>
+                {{#if filenameEs5}}
+                  <a class="col-4 border-left d-block py-2{{#if
+                    isCurrentVersion}} text-warning{{/if}}"
+                     href="/{{version}}/{{filenameEs5}}"><span class="badge badge-pill badge-warning">ES5</span>
+                    moli.es5.min.js</a>
+                {{/if}}
               </div>
             </div>
           </div>

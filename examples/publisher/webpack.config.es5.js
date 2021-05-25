@@ -44,8 +44,7 @@ module.exports = (_, argv) => {
               loader: 'ts-loader',
               options: {
                 allowTsInNodeModules: false,
-                projectReferences: true,
-                configFile: 'tsconfig.es5.json'
+                projectReferences: true
               }
             }
           ]
