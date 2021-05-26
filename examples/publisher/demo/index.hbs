@@ -101,7 +101,11 @@
 <body>
 <div class="container-fluid">
   <div class="jumbotron">
-    <h1 class="display-4">Publisher Mode Demo: {{publisher}}</h1>
+    <h1 class="display-4">
+      {{#if es5Mode }}<span class="badge badge-pill badge-warning">ES5</span>{{else~}}
+        <span class="badge badge-pill badge-danger">ES6</span>{{/if}}
+      Publisher Mode Demo: {{publisher}}
+    </h1>
     <p class="lead">This page contains the complete ad configuration</p>
     <hr class="my-4">
     <h3>Integration</h3>
@@ -109,7 +113,11 @@
     <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
     &lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
     &lt;!-- your ad tag --&gt;
-    &lt;script async="async" src="[[domain]]{{currentFilename}}"&gt;&lt;/script&gt;</code></pre>
+      {{#if es5Mode~}}
+        &lt;script defer nomodule src="{{currentFilename}}"&gt;&lt;/script&gt;
+      {{~ else ~}}
+        &lt;script defer type="module" src="{{currentFilename}}"&gt;&lt;/script&gt;
+      {{~/if}}</code></pre>
 
     <p>In publisher mode the publisher site needs to trigger the <code>requestAds()</code> method. This test pages
       executes this additional javascript</p>
@@ -241,9 +249,9 @@
 </script>
 
 {{#if es5Mode }}
-  <script defer nomodule src="<%= htmlWebpackPlugin.files.js[0] %>"></script>
+  <script defer src="{{currentFilename}}"></script>
 {{else}}
-  <script defer type="module" src="<%= htmlWebpackPlugin.files.js[0] %>"></script>
+  <script defer type="module" src="{{currentFilename}}"></script>
 {{/if}}
 
 {{> partials/foot }}
