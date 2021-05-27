@@ -115,7 +115,7 @@
       {{#if es5Mode~}}
         &lt;script defer nomodule src="[[domain]]{{#if production}}{{currentFilename}}{{else}}moli.es5.js{{/if}}"&gt;&lt;/script&gt;
       {{~ else ~}}
-        &lt;script defer type="module" src="[[domain]]{{#if production}}{{currentFilename}}{{else}}moli.es5.js{{/if}}"&gt;&lt;/script&gt;
+        &lt;script defer type="module" src="[[domain]]{{#if production}}{{currentFilename}}{{else}}moli.mjs{{/if}}"&gt;&lt;/script&gt;
       {{~/if}}</code></pre>
 
     <p>In publisher mode the publisher site needs to trigger the <code>requestAds()</code> method. This test pages
