@@ -61,41 +61,15 @@ module.exports = (_, argv) => {
     resolve: {
       extensions: ['.ts', '.js', '.json']
     },
-    // local development
-    devServer: {
-      https: true,
-      contentBase: [
-        path.join(__dirname, 'dist'),
-        path.join(__dirname, 'yield-config'),
-        // always use the latest moli-debugger
-        '../../moli-debugger/lib'
-      ],
-      compress: true,
-      port: 9000,
-      allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu'],
-      writeToDisk: true,
-      // configure a mock yield config server
-      before: app => {
-        // parse the req body as json
-        const bodyParser = require('body-parser');
-        app.use(bodyParser.json());
-
-        // yield config endpoint
-        app.post('/yield-config.json', (req, res) => {
-          res.sendFile(`yield-config.${req.body.device}.json`, {
-            root: path.join(__dirname, 'yield-config')
-          });
-        });
-      }
-    },
     plugins: [
-      ...makeDocsPages(
-        publisherName,
-        releasesJson.currentFilenameEs5,
-        __dirname,
-        ['moli_es5'],
-        true
-      ),
+      ...makeDocsPages({
+        publisherName: publisherName,
+        currentFilename: releasesJson.currentFilenameEs5,
+        basePath: __dirname,
+        chunks: ['moli_es5'],
+        es5Mode: true,
+        mode: argv.mode || 'development'
+      }),
       manifestPlugin(['moli_es5'], true)
     ]
   };

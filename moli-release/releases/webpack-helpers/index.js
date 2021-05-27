@@ -16,20 +16,25 @@ const additionalHandlebarsConfig = {
 /**
  * Assumes that the main ad tag entrypoint is named `moli`.
  *
- * @param publisherName - passed to the handlebar templates as {{publisher}}
- * @param currentFilename - moli.js filename from the releases.json
- * @param basePath - should be `__dirname`
- * @param chunks - chunks that should be included. By default `moli`
- * @param es5Mode - this will be the legacy es5 demo page.
+ * @param {Object} options - The employee who is responsible for the project.
+ * @param {string} options.publisherName passed to the handlebar templates as {{publisher}}.
+ * @param {string} options.currentFilename moli.js filename from the releases.json.
+ * @param {string} options.basePath should be `__dirname`.
+ * @param {('production'|'development')} options.mode the mode (production|development) that the current build runs in.
+ * @param {string[]} [options.chunks=['moli']] chunks that should be included. By default `moli`
+ * @param {boolean} [options.es5Mode=false] this will be the legacy es5 demo page. By default false
  * @return {[HtmlWebpackPlugin, HandlebarsPlugin, HandlebarsPlugin]}
  */
-const makeDocsPages = (
-  publisherName,
-  currentFilename,
-  basePath,
-  chunks = ['moli'],
-  es5Mode = false
-) => {
+const makeDocsPages = options => {
+  const {
+    publisherName,
+    currentFilename,
+    basePath,
+    mode,
+    chunks = ['moli'],
+    es5Mode = false
+  } = options;
+
   return [
     new HtmlWebpackPlugin({
       template: path.join(basePath, 'demo', 'index.hbs'),
@@ -64,7 +69,8 @@ const makeDocsPages = (
       data: {
         publisher: publisherName,
         currentFilename,
-        es5Mode
+        es5Mode,
+        production: mode === 'production'
       },
       ...additionalHandlebarsConfig,
       partials: [...additionalHandlebarsConfig.partials, 'html/*.hbs']
@@ -74,6 +80,9 @@ const makeDocsPages = (
 
 /**
  * The manifest.json is required for the release process to find the moli.js file.
+ *
+ * @param {string[]} [chunkNames=['moli']] chunks that should be included. By default `moli`
+ * @param {boolean} [es5Mode=false] this will be the legacy es5 manifest file. By default false
  */
 const manifestPlugin = (chunkNames = ['moli'], es5Mode = false) =>
   new WebpackManifestPlugin({

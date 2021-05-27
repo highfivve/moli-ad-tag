@@ -103,7 +103,12 @@ module.exports = (_, argv) => ({
     }
   },
   plugins: [
-    ...makeDocsPages(publisherName, releasesJson.currentFilename, __dirname),
+    ...makeDocsPages({
+      publisherName: publisherName,
+      currentFilename: releasesJson.currentFilename,
+      basePath: __dirname,
+      mode: argv.mode || 'development'
+    }),
     manifestPlugin()
   ]
 });

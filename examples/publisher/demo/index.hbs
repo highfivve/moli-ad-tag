@@ -104,19 +104,18 @@
     <h1 class="display-4">
       {{#if es5Mode }}<span class="badge badge-pill badge-warning">ES5</span>{{else~}}
         <span class="badge badge-pill badge-danger">ES6</span>{{/if}}
+      {{#unless production }}<span class="badge badge-pill badge-warning">DEV</span>{{/unless}}
       Publisher Mode Demo: {{publisher}}
     </h1>
     <p class="lead">This page contains the complete ad configuration</p>
     <hr class="my-4">
     <h3>Integration</h3>
     <p>This code should be placed in the head of your page</p>
-    <pre><code id="integration-code" class="html">&lt;!-- google ad manager tag (required) --&gt;
-    &lt;script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"&gt;&lt;/script&gt;
-    &lt;!-- your ad tag --&gt;
+    <pre><code id="integration-code" class="html">&lt;!-- your ad tag --&gt;
       {{#if es5Mode~}}
-        &lt;script defer nomodule src="{{currentFilename}}"&gt;&lt;/script&gt;
+        &lt;script defer nomodule src="[[domain]]{{#if production}}{{currentFilename}}{{else}}moli.es5.js{{/if}}"&gt;&lt;/script&gt;
       {{~ else ~}}
-        &lt;script defer type="module" src="{{currentFilename}}"&gt;&lt;/script&gt;
+        &lt;script defer type="module" src="[[domain]]{{#if production}}{{currentFilename}}{{else}}moli.es5.js{{/if}}"&gt;&lt;/script&gt;
       {{~/if}}</code></pre>
 
     <p>In publisher mode the publisher site needs to trigger the <code>requestAds()</code> method. This test pages
@@ -244,14 +243,14 @@
 <script>
   const code = document.getElementById('integration-code');
   if (code) {
-    code.innerText = code.innerText.replace('[[domain]]', location.protocol + '//' + location.host + location.pathname);
+    code.innerText = code.innerText.replaceAll('[[domain]]', location.protocol + '//' + location.host + location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/');
   }
 </script>
 
 {{#if es5Mode }}
-  <script defer src="{{currentFilename}}"></script>
+  <script defer src="{{#if production}}{{currentFilename}}{{else}}moli.es5.js{{/if}}"></script>
 {{else}}
-  <script defer type="module" src="{{currentFilename}}"></script>
+  <script defer type="module" src="{{#if production}}{{currentFilename}}{{else}}moli.mjs{{/if}}"></script>
 {{/if}}
 
 {{> partials/foot }}
