@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## 3.31.5
+
+[GD-3121](https://jira.gutefrage.net/browse/GD-3121). Add `ortb2Imp` property typings for prebid ad unit.
+
+```javascript
+const adUnit = {
+  adUnit: {
+    code: 'pos1',
+    // ...
+    ortb2Imp: {
+      ext: {
+        prebid: {
+          storedrequest: {
+            id: 'pos1'
+          }
+        }
+      }
+    }
+  }
+};
+```
+
 ## 3.31.4
 
 [GD-2840](https://jira.gutefrage.net/browse/GD-2840): Update overview page with ES6 + ES5 ad tags.
