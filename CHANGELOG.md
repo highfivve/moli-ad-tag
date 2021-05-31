@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.31.5
+## 3.32.2
 
 [GD-3121](https://jira.gutefrage.net/browse/GD-3121). Add `ortb2Imp` property typings for prebid ad unit.
 
