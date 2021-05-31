@@ -1669,6 +1669,39 @@ export namespace prebidjs {
        */
       readonly tags?: string[];
     };
+
+    /**
+     * Configure additional information per ad unit that should be send along
+     * with a prebid server auction call.
+     */
+    readonly ortb2Imp?: IOrtb2Imp;
+  }
+
+  /**
+   * Values passed by prebid during a prebid server auction call.
+   *
+   * @see https://github.com/prebid/Prebid.js/pull/6494
+   * @see https://github.com/prebid/Prebid.js/issues/6528
+   */
+  export interface IOrtb2Imp {
+    readonly ext?: {
+      readonly data?: any;
+
+      /**
+       * custom prebid extensions
+       */
+      readonly prebid?: {
+        readonly bidder?: {
+          readonly [Bidder in BidderCode]: any;
+        };
+        readonly storedrequest?: {
+          /**
+           * Specify a stored request id
+           */
+          readonly id?: string;
+        };
+      };
+    };
   }
 
   // Supported SSPs
