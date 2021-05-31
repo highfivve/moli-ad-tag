@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.32.3
+
+[GD-2840](https://jira.gutefrage.net/browse/GD-2840). Fix displayed filenames on releases overview page.
+
 ## 3.32.2
 
 [GD-3121](https://jira.gutefrage.net/browse/GD-3121). Add `ortb2Imp` property typings for prebid ad unit.
@@ -23,6 +27,14 @@ const adUnit = {
   }
 };
 ```
+
+## 3.32.1
+
+[GD-2840](https://jira.gutefrage.net/browse/GD-2840): Use a config object for makeDocsPages function.
+
+## 3.32.0
+
+[GD-2840](https://jira.gutefrage.net/browse/GD-2840): Moli core and modules are now published as ES6 to github npm registry.
 
 ## 3.31.4
 
