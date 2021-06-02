@@ -2294,6 +2294,32 @@ export namespace prebidjs {
      * Bid floor for this placement in USD or in the currency specified by the currency parameter. (Default: 0.0)
      */
     readonly bidfloor?: number;
+
+    /**
+     * Parameter object for instream video.
+     *
+     * This is also required for outstream
+     */
+    readonly video?: {
+
+      /**
+       * Maximum open RTB video protocol supported.
+       *
+       * Despite being marked as optionl, this is required for ad slots with
+       * mediaType `video`
+       *
+       * @example 8 (VAST 4.0 wrapper)
+       */
+      readonly protocol: number;
+
+      /**
+       * Allowed values:
+       *  - 1 (generic pre-roll, default)
+       *  - 2 (generic mid-roll)
+       *  - 3 (generic post-roll)
+       */
+      readonly startDelay?: 1 | 2 | 3;
+    }
   }
 
   /**
