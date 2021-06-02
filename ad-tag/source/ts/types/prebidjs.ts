@@ -2301,7 +2301,6 @@ export namespace prebidjs {
      * This is also required for outstream
      */
     readonly video?: {
-
       /**
        * Maximum open RTB video protocol supported.
        *
@@ -2319,7 +2318,7 @@ export namespace prebidjs {
        *  - 3 (generic post-roll)
        */
       readonly startDelay?: 1 | 2 | 3;
-    }
+    };
   }
 
   /**

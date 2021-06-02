@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.32.4
+
+[GD-3132](https://jira.gutefrage.net/browse/GD-3132). Add `video` params to smart ad server bidder.
+
 ## 3.32.3
 
 [GD-2840](https://jira.gutefrage.net/browse/GD-2840). Fix displayed filenames on releases overview page.
