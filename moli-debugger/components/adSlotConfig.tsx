@@ -207,8 +207,9 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
   }
 
   private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
+    const labels = this.props.labelConfigService.getSupportedLabels();
     const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs(
-      { keyValues: {}, floorPrice: undefined },
+      { keyValues: {}, floorPrice: undefined, labels, isMobile: !labels.includes('desktop') },
       prebid
     ).map(config => config.adUnit);
 
@@ -335,7 +336,11 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     const prebid = this.props.slot.prebid;
 
     if (prebid) {
-      return extractPrebidAdSlotConfigs({ keyValues: {}, floorPrice: undefined }, prebid)
+      const labels = this.props.labelConfigService.getSupportedLabels();
+      return extractPrebidAdSlotConfigs(
+        { keyValues: {}, floorPrice: undefined, labels, isMobile: !labels.includes('desktop') },
+        prebid
+      )
         .map(config => config.adUnit)
         .some(prebidAdUnit => {
           const video = prebidAdUnit.mediaTypes.video;

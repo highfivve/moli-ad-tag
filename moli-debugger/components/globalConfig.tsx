@@ -817,10 +817,13 @@ export class GlobalConfig
 
   private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
+      const labels = this.props.labelConfigService.getSupportedLabels();
       extractPrebidAdSlotConfigs(
         {
           keyValues: {},
-          floorPrice: undefined
+          floorPrice: undefined,
+          labels,
+          isMobile: !labels.includes('desktop')
         },
         slot.prebid
       ).forEach(prebidConfig => {
@@ -849,10 +852,13 @@ export class GlobalConfig
 
   private checkForWrongPrebidCodeEntry = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
+      const labels = this.props.labelConfigService.getSupportedLabels();
       extractPrebidAdSlotConfigs(
         {
           keyValues: {},
-          floorPrice: undefined
+          floorPrice: undefined,
+          labels,
+          isMobile: !labels.includes('desktop')
         },
         slot.prebid
       ).forEach(prebidConfig => {
