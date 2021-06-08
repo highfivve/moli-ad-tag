@@ -1140,9 +1140,19 @@ export namespace Moli {
       readonly keyValues: DfpKeyValueMap;
 
       /**
-       *
+       * Floor price in EUR
        */
       readonly floorPrice: number | undefined;
+
+      /**
+       * all supported labels
+       */
+      readonly labels: string[];
+
+      /**
+       * true if `labels` does not contain 'desktop'
+       */
+      readonly isMobile: boolean;
     }
 
     /**

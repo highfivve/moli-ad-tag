@@ -121,6 +121,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
             const targeting = context.config.targeting;
             const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
             const floorPrice = priceRule ? priceRule.floorprice : undefined;
+            const labels = context.labelConfigService.getSupportedLabels();
             context.logger.debug(
               'Prebid',
               context.requestId,
@@ -132,7 +133,9 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
             return extractPrebidAdSlotConfigs(
               {
                 keyValues: keyValues,
-                floorPrice: floorPrice
+                floorPrice: floorPrice,
+                labels: labels,
+                isMobile: labels.indexOf('desktop') === -1
               },
               moliSlot.prebid
             )

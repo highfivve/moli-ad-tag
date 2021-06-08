@@ -16,6 +16,7 @@ import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
+import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 
 // setup sinon-chai
 use(sinonChai);
@@ -182,6 +183,45 @@ describe('prebid', () => {
       await step(adPipelineContext(), [singleSlot]);
       expect(addAdUnitsSpy).to.have.been.calledOnce;
       expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
+    });
+
+    describe('prebid adslot context', () => {
+      const stubPrebidAdSlotConfigProvider = (domId: string) => {
+        return sandbox.stub().returns({
+          adUnit: prebidAdUnit(domId, [
+            { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+          ])
+        });
+      };
+
+      it('should have isMobile true if labels are empty', async () => {
+        const step = prebidPrepareRequestAds();
+        const domId = getDomId();
+        const provider = stubPrebidAdSlotConfigProvider(domId);
+        const singleSlot = createSlotDefinitions(domId, provider);
+
+        await step(adPipelineContext(), [singleSlot]);
+        expect(provider).to.have.been.calledOnce;
+        const context: PrebidAdSlotContext = provider.firstCall.firstArg;
+        expect(context.labels).to.be.empty;
+        expect(context.isMobile).to.be.true;
+      });
+
+      it('should have isMobile false if labels contains desktop', async () => {
+        const step = prebidPrepareRequestAds();
+        const domId = getDomId();
+        const provider = stubPrebidAdSlotConfigProvider(domId);
+        const singleSlot = createSlotDefinitions(domId, provider);
+
+        const pipelineContext = adPipelineContext();
+        sandbox.stub(pipelineContext.labelConfigService, 'getSupportedLabels').returns(['desktop']);
+
+        await step(pipelineContext, [singleSlot]);
+        expect(provider).to.have.been.calledOnce;
+        const context: PrebidAdSlotContext = provider.firstCall.firstArg;
+        expect(context.labels).contains('desktop');
+        expect(context.isMobile).to.be.false;
+      });
     });
 
     describe('labels', () => {
