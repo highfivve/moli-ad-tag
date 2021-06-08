@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+## 3.32.6
+
+[GD-3153](https://jira.gutefrage.net/browse/GD-3153). Add `isMobile` and `labels` to the `PrebidAdSlotContext`.
+This allows to perform logic in the `adUnit` creation, when using the context.
+
+Example: Different stored impression ids
+
+```javascript
+const adSlot = {
+  domId: 'content_1',
+  // ...
+  prebid: context => {
+    return {
+      adUnit: {
+        ortb2Imp: {
+          ext: {
+            prebid: {
+              storedrequest: `content_1.${context.isMobile ? 'mobile' : 'desktop'}`
+            }
+          }
+        },
+      }
+    };
+  }
+};
+```
+
 ## 3.32.5
 
 [GD-3151](https://jira.gutefrage.net/browse/GD-3151). Migrate moli-debugger to React, fix bugs, visual glitches, and warnings.
