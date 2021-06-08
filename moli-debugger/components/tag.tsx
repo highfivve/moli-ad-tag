@@ -1,6 +1,4 @@
-import * as preact from 'preact';
-import { JSX } from 'preact';
-
+import React from 'react';
 import { classList } from '../util/stringUtils';
 
 type TagVariant = 'green' | 'red' | 'yellow' | 'blue' | 'grey' | 'transparent';
@@ -11,6 +9,7 @@ export const Tag = (props: {
   variant?: TagVariant;
   title?: string;
   spacing?: TagSpacing;
+  key?: string | number;
 }): JSX.Element => (
   <div
     className={classList(

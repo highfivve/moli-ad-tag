@@ -4,7 +4,8 @@
   "compilerOptions": {
     "composite": true,
     "jsx": "react",
-    "jsxFactory": "preact.h",
+    "jsxFactory": "React.createElement",
+    "jsxFragmentFactory": "React.Fragment",
     "baseUrl": ".",
     "esModuleInterop": true,
     "skipLibCheck": true,

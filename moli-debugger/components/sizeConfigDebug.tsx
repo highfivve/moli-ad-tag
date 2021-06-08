@@ -1,5 +1,4 @@
-import * as preact from 'preact';
-import { JSX } from 'preact';
+import React, { Component } from 'react';
 
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
@@ -15,15 +14,16 @@ type ISizeConfigProps = {
 
 type ISizeConfigState = {};
 
-export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeConfigState> {
-  render(props: ISizeConfigProps, state: ISizeConfigState): JSX.Element {
+export class SizeConfigDebug extends Component<ISizeConfigProps, ISizeConfigState> {
+  render(): JSX.Element {
+    const { sizeConfig, supportedLabels } = this.props;
     return (
       <div>
-        {props.sizeConfig.map((sizeConfigEntry, idx) => {
+        {sizeConfig.map((sizeConfigEntry, idx) => {
           const mediaQueryMatches = window.matchMedia(sizeConfigEntry.mediaQuery).matches;
 
           return (
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
+            <div key={idx} className="MoliDebug-sidebarSection MoliDebug-sidebarSection--noBorder">
               Entry <strong>#{idx + 1}</strong>
               <div className="MoliDebug-tagContainer">
                 <span className="MoliDebug-tagLabel">Media query</span>
@@ -42,9 +42,10 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
                 <div className="MoliDebug-tagContainer">
                   <span className="MoliDebug-tagLabel">Label All</span>
                   {sizeConfigEntry.labelAll.map(label => {
-                    const labelMatches = props.supportedLabels.includes(label);
+                    const labelMatches = supportedLabels.includes(label);
                     return (
                       <div
+                        key={label}
                         className={classList(
                           'MoliDebug-tag',
                           [labelMatches, 'MoliDebug-tag--green'],
@@ -70,6 +71,7 @@ export class SizeConfigDebug extends preact.Component<ISizeConfigProps, ISizeCon
   }
 
   private tagFromSlotSize = (slotSize: DfpSlotSize): JSX.Element => {
-    return <Tag>{slotSize === 'fluid' ? slotSize : `${slotSize[0]}x${slotSize[1]}`}</Tag>;
+    const sizeString = slotSize === 'fluid' ? slotSize : `${slotSize[0]}x${slotSize[1]}`;
+    return <Tag key={sizeString}>{sizeString}</Tag>;
   };
 }

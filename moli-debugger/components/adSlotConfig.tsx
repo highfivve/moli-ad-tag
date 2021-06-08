@@ -1,5 +1,4 @@
-import * as preact from 'preact';
-import { JSX } from 'preact';
+import React, { Component, Fragment } from 'react';
 
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
@@ -44,9 +43,9 @@ const defaultPanelState: Pick<
 
 type ValidatedSlotSize = { valid: boolean; size: DfpSlotSize };
 
-export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotConfigState> {
+export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigState> {
   constructor(props: IAdSlotConfigProps) {
-    super();
+    super(props);
 
     if (props.parentElement) {
       props.parentElement.classList.add('MoliDebug-posRelative');
@@ -61,9 +60,11 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     }
   }
 
-  render(props: IAdSlotConfigProps, state: IAdSlotConfigState): JSX.Element {
-    const slotValid = props.labelConfigService.filterSlot(props.slot);
-    const slotElementExists = !!document.getElementById(props.slot.domId);
+  render(): JSX.Element {
+    const { labelConfigService, slot, reportingConfig, parentElement } = this.props;
+    const { dimensions, showGeneral, showA9, showPrebid, showSizeConfig } = this.state;
+    const slotValid = labelConfigService.filterSlot(slot);
+    const slotElementExists = !!document.getElementById(slot.domId);
     const slotVisible = slotValid && slotElementExists;
 
     const prebidValid = this.isVisiblePrebid();
@@ -71,20 +72,17 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
 
     // This code is duplicated from the ReportingService as sharing makes things more complicated
     // and if something breaks this is nothing serious and easy to fix.
-    const adUnitRegex = (props.reportingConfig && props.reportingConfig.adUnitRegex) || /\/\d*\//i;
-    const measureName = `${props.slot.adUnitPath.replace(adUnitRegex, '')}_content_loaded_total`;
+    const adUnitRegex = (reportingConfig && reportingConfig.adUnitRegex) || /\/\d*\//i;
+    const measureName = `${slot.adUnitPath.replace(adUnitRegex, '')}_content_loaded_total`;
     const contentLoadTime = createPerformanceService(window).getMeasure(measureName);
 
     return (
       <div
-        className={classList('MoliDebug-adSlot', [
-          !!props.parentElement,
-          'MoliDebug-adSlot--overlay'
-        ])}
-        style={state.dimensions}
+        className={classList('MoliDebug-adSlot', [!!parentElement, 'MoliDebug-adSlot--overlay'])}
+        style={dimensions}
       >
         <div className="MoliDebug-adSlot-buttons">
-          {!props.parentElement && (
+          {!parentElement && (
             <button
               title={`Slot ${slotVisible ? '' : 'not '}rendered`}
               className={classList(
@@ -99,17 +97,17 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
           )}
           <button
             title="Show general slot info"
-            className={classList('MoliDebug-adSlot-button', [state.showGeneral, 'is-active'])}
+            className={classList('MoliDebug-adSlot-button', [showGeneral, 'is-active'])}
             onClick={this.toggleGeneral}
           >
             &#9432;
           </button>
-          {props.slot.a9 && (
+          {slot.a9 && (
             <button
               title="Show A9 config"
               className={classList(
                 'MoliDebug-adSlot-button',
-                [state.showA9, 'is-active'],
+                [showA9, 'is-active'],
                 [a9Valid, 'is-rendered'],
                 [!a9Valid, 'is-notRendered']
               )}
@@ -118,12 +116,12 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
               A9
             </button>
           )}
-          {props.slot.prebid && (
+          {slot.prebid && (
             <button
               title="Show Prebid config"
               className={classList(
                 'MoliDebug-adSlot-button',
-                [state.showPrebid, 'is-active'],
+                [showPrebid, 'is-active'],
                 [prebidValid, 'is-rendered'],
                 [!prebidValid, 'is-notRendered']
               )}
@@ -133,24 +131,24 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
             </button>
           )}
 
-          {props.slot.sizeConfig && (
+          {slot.sizeConfig && (
             <button
               title="Show sizeConfig"
               className={classList(
                 'MoliDebug-adSlot-button MoliDebug-adSlot-button--sizeConfig',
                 [slotValid, 'is-rendered'],
                 [!slotValid, 'is-notRendered'],
-                [state.showSizeConfig, 'is-active']
+                [showSizeConfig, 'is-active']
               )}
               onClick={this.toggleSizeConfig}
             />
           )}
         </div>
-        {state.showGeneral && (
+        {showGeneral && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
             <div className="MoliDebug-tagContainer">
-              <Tag variant="green">{props.slot.position}</Tag>
-              <Tag variant="yellow">{props.slot.behaviour.loaded}</Tag>
+              <Tag variant="green">{slot.position}</Tag>
+              <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
             </div>
             <div className="MoliDebug-tagContainer">
               <span
@@ -166,41 +164,41 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
                 variant={slotElementExists ? 'green' : 'red'}
                 title={`Slot ${slotElementExists ? '' : 'not '}found in DOM`}
               >
-                {props.slot.domId}
+                {slot.domId}
               </Tag>
             </div>
             <div className="MoliDebug-tagContainer">
               <span className="MoliDebug-tagLabel">AdUnit path</span>
-              <Tag>{props.slot.adUnitPath}</Tag>
+              <Tag>{slot.adUnitPath}</Tag>
             </div>
-            {props.slot.sizes.length > 0 && (
+            {slot.sizes.length > 0 && (
               <div className="MoliDebug-tagContainer">
                 <span className="MoliDebug-tagLabel">Sizes</span>
-                {this.validateSlotSizes(props.slot.sizes).map(validatedSlotSize =>
-                  this.tagFromValidatedSlotSize(validatedSlotSize, !!props.slot.sizeConfig)
+                {this.validateSlotSizes(slot.sizes).map(validatedSlotSize =>
+                  this.tagFromValidatedSlotSize(validatedSlotSize, !!slot.sizeConfig)
                 )}
               </div>
             )}
-            <div className="MoliDebug-tagContainer">{this.labelConfig(this.props.slot)}</div>
+            <div className="MoliDebug-tagContainer">{this.labelConfig(slot)}</div>
             {contentLoadTime && this.adSlotLoadStart(contentLoadTime)}
             {contentLoadTime && this.performance('Content Loaded', contentLoadTime)}
           </div>
         )}
-        {state.showA9 && props.slot.a9 && (
+        {showA9 && slot.a9 && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            {this.a9Config(props.slot.a9)}
+            {this.a9Config(slot.a9)}
           </div>
         )}
-        {state.showPrebid && props.slot.prebid && (
+        {showPrebid && slot.prebid && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
-            {this.prebidConfig(props.slot.prebid)}
+            {this.prebidConfig(slot.prebid)}
           </div>
         )}
-        {state.showSizeConfig && props.slot.sizeConfig && (
+        {showSizeConfig && slot.sizeConfig && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
             <SizeConfigDebug
-              sizeConfig={props.slot.sizeConfig}
-              supportedLabels={this.props.labelConfigService.getSupportedLabels()}
+              sizeConfig={slot.sizeConfig}
+              supportedLabels={labelConfigService.getSupportedLabels()}
             />
           </div>
         )}
@@ -222,7 +220,7 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
       const video = prebidAdUnit.mediaTypes.video;
       const native = prebidAdUnit.mediaTypes.native;
       return (
-        <div>
+        <div key={index}>
           {index > 0 && <hr />}
           {hasMultipleBids && <h5>{index + 1}. config</h5>}
           <div className="MoliDebug-tagContainer">
@@ -254,18 +252,20 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
               <Tag variant="green">true</Tag>
             </div>
           )}
-          {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => [
-            <hr />,
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
-              <Tag variant="blue">{bid.bidder}</Tag>
-            </div>,
-            <div className="MoliDebug-tagContainer">{this.labelConfig(bid)}</div>,
-            <div className="MoliDebug-tagContainer">
-              <span className="MoliDebug-tagLabel">Params</span>
-              <Tag>{JSON.stringify(bid.params)}</Tag>
-            </div>
-          ])}
+          {prebidAdUnit.bids.map((bid: prebidjs.IBid, idx: number) => (
+            <Fragment key={idx}>
+              <hr />
+              <div className="MoliDebug-tagContainer">
+                <span className="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
+                <Tag variant="blue">{bid.bidder}</Tag>
+              </div>
+              <div className="MoliDebug-tagContainer">{this.labelConfig(bid)}</div>
+              <div className="MoliDebug-tagContainer">
+                <span className="MoliDebug-tagLabel">Params</span>
+                <Tag>{JSON.stringify(bid.params)}</Tag>
+              </div>
+            </Fragment>
+          ))}
         </div>
       );
     });
@@ -406,15 +406,17 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
     slotSize: ValidatedSlotSize,
     hasSlotSizeConfig: boolean
   ): JSX.Element => {
+    const sizeString =
+      slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`;
     return (
       <Tag
+        key={sizeString}
         variant={slotSize.valid ? 'green' : 'red'}
         title={`${slotSize.valid ? 'Valid' : 'Invalid'} (${
           hasSlotSizeConfig ? 'slot' : 'global'
         } sizeConfig)`}
       >
-        {slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`}{' '}
-        {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
+        {sizeString} {hasSlotSizeConfig ? 'Ⓢ' : 'Ⓖ'}
       </Tag>
     );
   };
@@ -449,7 +451,9 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
               labelAll
             </span>
             {labelAll.map(label => (
-              <Tag variant={supportedLabels.indexOf(label) > -1 ? 'green' : 'red'}>{label}</Tag>
+              <Tag key={label} variant={supportedLabels.indexOf(label) > -1 ? 'green' : 'red'}>
+                {label}
+              </Tag>
             ))}
           </div>
         )}
@@ -469,7 +473,11 @@ export class AdSlotConfig extends preact.Component<IAdSlotConfigProps, IAdSlotCo
             )}
             {labelAny.map(label => {
               const labelFound = supportedLabels.indexOf(label) > -1;
-              return <Tag variant={labelFound ? 'green' : 'red'}>{label}</Tag>;
+              return (
+                <Tag key={label} variant={labelFound ? 'green' : 'red'}>
+                  {label}
+                </Tag>
+              );
             })}
           </div>
         )}

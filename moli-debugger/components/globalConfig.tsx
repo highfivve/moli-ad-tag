@@ -1,5 +1,4 @@
-import * as preact from 'preact';
-import { Fragment, JSX } from 'preact';
+import React, { Fragment, Component } from 'react';
 
 import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
@@ -44,6 +43,7 @@ type IGlobalConfigState = {
   expandSection: {
     slots: boolean;
     moli: boolean;
+    modules: boolean;
     targeting: boolean;
     prebid: boolean;
     a9: boolean;
@@ -65,16 +65,17 @@ type Message = {
 const debugSidebarSelector = 'moli-debug-sidebar';
 
 export class GlobalConfig
-  extends preact.Component<IGlobalConfigProps, IGlobalConfigState>
+  extends Component<IGlobalConfigProps, IGlobalConfigState>
   implements IWindowEventObserver
 {
   constructor(props: IGlobalConfigProps) {
-    super();
+    super(props);
     this.state = {
       sidebarHidden: false,
       expandSection: {
         slots: true,
         moli: true,
+        modules: false,
         targeting: false,
         prebid: false,
         a9: false,
@@ -109,22 +110,23 @@ export class GlobalConfig
     }
   }
 
-  render(props: IGlobalConfigProps, state: IGlobalConfigState): JSX.Element {
-    const classes = classList('MoliDebug-sidebar', [this.state.sidebarHidden, 'is-hidden']);
-    const { config, modules } = props;
-    const showHideMessage = `${state.sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
+  render(): JSX.Element {
+    const { config, modules, labelConfigService } = this.props;
+    const { sidebarHidden, showOnlyRenderedSlots, expandSection } = this.state;
+    const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
+    const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
     const debugDelay = getDebugDelayFromLocalStorage(window);
 
     return (
-      <div>
+      <>
         <button
           className="MoliDebug-sidebar-closeHandle"
           title={showHideMessage}
           onClick={this.toggleSidebar}
         >
-          {state.sidebarHidden && <span>&#11013; </span>}
-          {!state.sidebarHidden && <span>&times; </span>}
+          {sidebarHidden && <span>&#11013; </span>}
+          {!sidebarHidden && <span>&times; </span>}
           {showHideMessage}
         </button>
         {config && (
@@ -134,7 +136,7 @@ export class GlobalConfig
                 {this.collapseToggle('moli')}
                 Moli
               </h4>
-              {this.state.expandSection.moli && (
+              {expandSection.moli && (
                 <div>
                   <div className="MoliDebug-tagContainer">
                     <TagLabel>Mode</TagLabel>
@@ -192,37 +194,45 @@ export class GlobalConfig
                     <br />
                   </div>
                   {modules.length > 0 && (
-                    <Fragment>
-                      <h5>Moli Modules</h5>
-                      {modules.map((module, index) => {
-                        const moduleConfig = module.config;
+                    <>
+                      <h5>
+                        {this.collapseToggle('modules')}
+                        Moli Modules
+                      </h5>
+                      {expandSection.modules && (
+                        <>
+                          {modules.map((module, index) => {
+                            const moduleConfig = module.config;
 
-                        return (
-                          <Fragment>
-                            <div
-                              className="MoliDebug-tagContainer MoliDebug-module"
-                              data-module-key={index + 1}
-                            >
-                              <Tag>{module.name}</Tag>
-                            </div>
-                            <div className="MoliDebug-tagContainer">
-                              <TagLabel>Module Description</TagLabel>
-                              <Tag variant="transparent">{module.description}</Tag>
-                            </div>
-                            <div className="MoliDebug-tagContainer">
-                              <TagLabel>Module Type</TagLabel>
-                              <Tag variant="blue">{module.moduleType}</Tag>
-                            </div>
-                            {moduleConfig && (
-                              <Fragment>
-                                <h6>Module Config</h6>
-                                {this.unwrapConfig(moduleConfig)}
-                              </Fragment>
-                            )}
-                          </Fragment>
-                        );
-                      })}
-                    </Fragment>
+                            return (
+                              <div key={index}>
+                                <div
+                                  className="MoliDebug-tagContainer MoliDebug-module"
+                                  data-module-key={index + 1}
+                                >
+                                  <Tag>{module.name}</Tag>
+                                </div>
+                                <div className="MoliDebug-tagContainer">
+                                  <TagLabel>Module Description</TagLabel>
+                                  <Tag variant="transparent">{module.description}</Tag>
+                                </div>
+                                <div className="MoliDebug-tagContainer">
+                                  <TagLabel>Module Type</TagLabel>
+                                  <Tag variant="blue">{module.moduleType}</Tag>
+                                </div>
+                                {moduleConfig && (
+                                  <Fragment>
+                                    <h6>Module Config</h6>
+                                    {this.unwrapConfig(moduleConfig)}
+                                  </Fragment>
+                                )}
+                                {index !== modules.length - 1 && <hr />}
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -234,9 +244,9 @@ export class GlobalConfig
                 Slots
               </h4>
 
-              {this.state.expandSection.slots && (
+              {expandSection.slots && (
                 <div>
-                  <p className="MoliDebug-panel MoliDebug-panel--grey">
+                  <div className="MoliDebug-panel MoliDebug-panel--grey">
                     Slot sizes are annotated to show the origin of their validation state:
                     <ul>
                       <li>
@@ -248,9 +258,9 @@ export class GlobalConfig
                         <strong>global sizeConfig</strong>.
                       </li>
                     </ul>
-                  </p>
+                  </div>
 
-                  <p className="MoliDebug-panel MoliDebug-panel--grey">
+                  <div className="MoliDebug-panel MoliDebug-panel--grey">
                     <label className="MoliDebug-checkBox">
                       <input
                         type="checkbox"
@@ -262,15 +272,15 @@ export class GlobalConfig
                       />
                       Show only rendered slots
                     </label>
-                  </p>
+                  </div>
 
                   {config.slots.map(slot =>
-                    this.isSlotRendered(slot) || !state.showOnlyRenderedSlots ? (
-                      <div>
-                        <strong>{slot.behaviour}</strong> slot with DOM ID{' '}
+                    this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
+                      <div key={slot.domId}>
+                        <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
                         <strong>{slot.domId}</strong>
                         <AdSlotConfig
-                          labelConfigService={props.labelConfigService}
+                          labelConfigService={labelConfigService}
                           reportingConfig={config.reporting}
                           slot={slot}
                         />
@@ -287,7 +297,7 @@ export class GlobalConfig
                 Targeting
               </h4>
 
-              {this.state.expandSection.targeting && (
+              {expandSection.targeting && (
                 <div>
                   {config.targeting && (
                     <div>
@@ -297,7 +307,7 @@ export class GlobalConfig
                       {this.labels(config.targeting.labels)}
                       <h5>Labels from label size config</h5>
                       {this.labels(
-                        props.labelConfigService
+                        labelConfigService
                           .getSupportedLabels()
                           .filter(l1 => !(config.targeting!.labels || []).find(l2 => l2 === l1))
                       )}
@@ -314,7 +324,7 @@ export class GlobalConfig
                 Label Size config
               </h4>
 
-              {this.state.expandSection.labelSizeConfig && (
+              {expandSection.labelSizeConfig && (
                 <div>
                   {config.labelSizeConfig && config.labelSizeConfig.length > 0 && (
                     <LabelConfigDebug labelSizeConfig={config.labelSizeConfig} />
@@ -333,7 +343,7 @@ export class GlobalConfig
                   Prebid
                 </h4>
 
-                {this.state.expandSection.prebid && (
+                {expandSection.prebid && (
                   <div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Version</TagLabel>
@@ -459,7 +469,7 @@ export class GlobalConfig
                   A9
                 </h4>
 
-                {this.state.expandSection.a9 && (
+                {expandSection.a9 && (
                   <div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>PubID</TagLabel>
@@ -488,7 +498,7 @@ export class GlobalConfig
                 Consent
               </h4>
 
-              {this.state.expandSection.consent && (
+              {expandSection.consent && (
                 <div>
                   <ConsentConfig />
                 </div>
@@ -502,7 +512,7 @@ export class GlobalConfig
                   Performance
                 </h4>
 
-                {this.state.expandSection.performance && (
+                {expandSection.performance && (
                   <div>
                     {this.singlePerformanceMeasure('ttfa')}
                     {this.singlePerformanceMeasure('ttfr')}
@@ -516,8 +526,9 @@ export class GlobalConfig
 
             <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
               <h4>Moli configuration issues and warnings</h4>
-              {this.state.messages.map(message => (
+              {this.state.messages.map((message, index) => (
                 <div
+                  key={`${message.text}-${index}`}
                   className={classList(
                     'MoliDebug-configMessage',
                     `MoliDebug-configMessage--${message.kind}`
@@ -538,7 +549,7 @@ export class GlobalConfig
             </div>
           </div>
         )}
-      </div>
+      </>
     );
   }
 
@@ -561,7 +572,7 @@ export class GlobalConfig
 
   private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): JSX.Element => {
     return (
-      <Fragment>
+      <Fragment key={Math.random()}>
         {Object.keys(moduleConfig).map(key => {
           const configValue = moduleConfig[key];
           const configValueType: 'other' | 'object' | 'array' =
@@ -573,6 +584,7 @@ export class GlobalConfig
 
           return (
             <div
+              key={key}
               className={classList('MoliDebug-tagContainer', [
                 subEntry,
                 'MoliDebug-tagContainer--subEntry'
@@ -583,11 +595,13 @@ export class GlobalConfig
                 (configValue.length === 0 ? (
                   <i>No values</i>
                 ) : (
-                  configValue.map((value: unknown) =>
+                  configValue.map((value: unknown, index: number) =>
                     typeof value === 'object' ? (
                       this.unwrapConfig(value as Object, true)
                     ) : (
-                      <Tag variant="green">{(value as any).toString()}</Tag>
+                      <Tag variant="green" key={index}>
+                        {(value as any).toString()}
+                      </Tag>
                     )
                   )
                 ))}
@@ -616,7 +630,7 @@ export class GlobalConfig
             const value = keyValues[key];
 
             return (
-              <tr>
+              <tr key={key}>
                 <td>{key}</td>
                 <td>
                   {Array.isArray(value)
@@ -638,7 +652,7 @@ export class GlobalConfig
       <div className="MoliDebug-tagContainer">
         {labels &&
           labels.map(label => (
-            <Tag variant="blue" spacing="medium">
+            <Tag key={label} variant="blue" spacing="medium">
               {label}
             </Tag>
           ))}
@@ -669,7 +683,7 @@ export class GlobalConfig
   };
 
   private standardTagFromString = (content: string): JSX.Element => {
-    return <Tag>{content}</Tag>;
+    return <Tag key={content}>{content}</Tag>;
   };
 
   private toggleSidebar = (): void => {
@@ -704,6 +718,7 @@ export class GlobalConfig
       IGlobalConfigState['expandSection'],
       | 'slots'
       | 'moli'
+      | 'modules'
       | 'targeting'
       | 'prebid'
       | 'a9'
@@ -717,6 +732,7 @@ export class GlobalConfig
         IGlobalConfigState['expandSection'],
         | 'slots'
         | 'moli'
+        | 'modules'
         | 'targeting'
         | 'prebid'
         | 'a9'

@@ -1,5 +1,4 @@
-import * as preact from 'preact';
-import { JSX } from 'preact';
+import React, { Component } from 'react';
 
 import { Tag } from './tag';
 
@@ -56,17 +55,20 @@ type Message = {
   text: string | JSX.Element;
 };
 
-export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
-  constructor() {
-    super();
+export class ConsentConfig extends Component<{}, IConsentConfigState> {
+  constructor(props) {
+    super(props);
     this.state = {
       messages: []
     };
     this.checkConsentConfig(this.state.messages);
+  }
+
+  componentDidMount() {
     this.initConsentData();
   }
 
-  render(props: {}, state: IConsentConfigState): JSX.Element {
+  render(): JSX.Element {
     return (
       <div>
         {this.consent()}
@@ -76,13 +78,14 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
   }
 
   private consent = (): JSX.Element => {
+    const { gdprApplies, tcModel } = this.state;
     return (
       <div>
         <div className="MoliDebug-tagContainer">
           <span className="MoliDebug-tagLabel">
             <a href="https://iabeurope.eu/cmp-list/">GDPR</a>
           </span>
-          {!!this.state.gdprApplies}
+          {!!gdprApplies}
         </div>
         <div className="MoliDebug-tagContainer">
           <span className="MoliDebug-tagLabel">
@@ -92,19 +95,15 @@ export class ConsentConfig extends preact.Component<{}, IConsentConfigState> {
         </div>
         <div className="MoliDebug-tagContainer">
           <span className="MoliDebug-tagLabel">Last updated</span>
-          {this.state.tcModel ? (
-            <Tag>{this.state.tcModel.lastUpdated.toLocaleString()}</Tag>
+          {tcModel ? (
+            <Tag>{tcModel.lastUpdated.toLocaleString()}</Tag>
           ) : (
             <Tag variant="red">Unknown</Tag>
           )}
         </div>
         <div className="MoliDebug-tagContainer">
           <span className="MoliDebug-tagLabel">TCF Version</span>
-          {this.state.tcModel ? (
-            <Tag>{this.state.tcModel.version.toString()}</Tag>
-          ) : (
-            <Tag variant="red">Unknown</Tag>
-          )}
+          {tcModel ? <Tag>{tcModel.version.toString()}</Tag> : <Tag variant="red">Unknown</Tag>}
         </div>
       </div>
     );

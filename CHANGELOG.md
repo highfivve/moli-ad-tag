@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.32.5
+
+[GD-3151](https://jira.gutefrage.net/browse/GD-3151). Migrate moli-debugger to React, fix bugs, visual glitches, and warnings.
+
 ## 3.32.4
 
 [GD-3132](https://jira.gutefrage.net/browse/GD-3132). Add `video` params to smart ad server bidder.

@@ -1,4 +1,5 @@
-import preact = require('preact');
+import React from 'react';
+import { render } from 'react-dom';
 
 import { GlobalConfig } from './components/globalConfig';
 import { AdSlotConfig } from './components/adSlotConfig';
@@ -29,7 +30,7 @@ if (moliConfig) {
     window
   );
 
-  preact.render(
+  render(
     <GlobalConfig
       config={moliConfig}
       modules={modulesMeta}
@@ -44,7 +45,7 @@ if (moliConfig) {
   moliConfig.slots.forEach(slot => {
     const slotDomElement = document.getElementById(slot.domId);
     if (slotDomElement && labelConfigService.filterSlot(slot)) {
-      preact.render(
+      render(
         <AdSlotConfig
           labelConfigService={labelConfigService}
           slot={slot}
