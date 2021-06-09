@@ -2190,6 +2190,110 @@ export namespace prebidjs {
      * @example 'renderer_test_pubmatic'
      */
     readonly outstreamAU?: string;
+
+    /**
+     * Vide parameters. Required if mediaType contains `video`.
+     */
+    readonly video?: {
+      /**
+       * @see https://www.iana.org/assignments/media-types/media-types.xhtml#video
+       * @example `['video/mp4','video/x-flv']`
+       */
+      readonly mimes: Array<
+        'video/mp4' | 'video/webm' | 'video/flv' | 'video/H264' | 'video/ogg' | 'video/MPV'
+      >;
+
+      /**
+       * 	If ‘true’, user can skip ad
+       */
+      readonly skippable?: boolean;
+
+      /**
+       * Minimum ad duration in seconds
+       */
+      readonly minduration?: number;
+
+      /**
+       * 	Maximum ad duration in seconds
+       */
+      readonly maxduration?: number;
+
+      /**
+       * Defines whether inventory is user-initiated or autoplay sound on/off
+       * Values:
+       *  1: Auto-play, sound on
+       *  2: Auto-play, sound off
+       *  3: Click-to-play
+       *  4: mouse-over
+       */
+      readonly playbackmethod?: 1 | 2 | 3 | 4;
+
+      /**
+       * API frameworks supported
+       * Values:
+       *   1: VPAID 1.0
+       *   2: VPAID 2.0
+       *   3: MRAID-1
+       *   4: ORMMA
+       *   5: MRAID-2
+       *
+       * @example `[1, 2]`
+       */
+      readonly api?: Array<1 | 2 | 3 | 4 | 5>;
+
+      /**
+       * Supported video bid response protocols
+       * Values
+       *   1: VAST 1.0
+       *   2: VAST 2.0
+       *   3: VAST 3.0
+       *   4: VAST 1.0 Wrapper
+       *   5: VAST 2.0 Wrapper
+       *   6: VAST 3.0 Wrapper
+       *
+       * @example `[5, 6]`
+       */
+      readonly protocols?: Array<1 | 2 | 3 | 4 | 5 | 6>;
+
+      /**
+       * Blocked creative attributes,
+       *
+       * @see [OpenRTB 2.5 specification, List 5.3 for values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
+       * @example `[3, 9]`
+       */
+      readonly battr?: number[];
+
+      /**
+       * Indicates if the impression is linear or nonlinear
+       * Values:
+       *   1: Linear/In-Stream
+       *   2: Non-Linear/Overlay.
+       */
+      readonly linearity?: 1 | 2;
+
+      /**
+       * Video placement type.
+       *
+       *   1: In-Stream
+       *   2: In-Banner
+       *   3: In-Article
+       *   4: In-Feed
+       *   5: Interstitial/Slider/Floating
+       *
+       * @see [OpenRTB 2.5 specification, List 5.9 for Values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
+       */
+      readonly placement?: 1 | 2 | 3 | 4 | 5;
+
+      /**
+       * Minimum bit rate in Kbps.
+       */
+      readonly minbitrate?: number;
+
+      /**
+       * Maximum bit rate in Kbps.
+       */
+      readonly maxbitrate?: number;
+    };
   }
 
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
