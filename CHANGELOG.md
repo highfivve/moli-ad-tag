@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.32.7
+
+[GD-3161](https://jira.gutefrage.net/browse/GD-3161). Add `video` params for Pubmatic bidder.
+See [Video parameters](https://docs.prebid.org/dev-docs/bidders/pubmatic#video-parameters).
+
 ## 3.32.6
 
 [GD-3153](https://jira.gutefrage.net/browse/GD-3153). Add `isMobile` and `labels` to the `PrebidAdSlotContext`.
