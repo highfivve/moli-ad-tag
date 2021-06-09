@@ -13,6 +13,7 @@ import { AdSlotConfig } from './adSlotConfig';
 import { Tag, TagLabel } from './tag';
 import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
+import { Theme, ThemingService } from '../util/themingService';
 
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
@@ -37,6 +38,7 @@ type IGlobalConfigProps = {
   modules: Array<ModuleMeta>;
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
+  themingService: ThemingService;
 };
 type IGlobalConfigState = {
   sidebarHidden: boolean;
@@ -55,6 +57,7 @@ type IGlobalConfigState = {
   messages: Message[];
   browserResized: boolean;
   showOnlyRenderedSlots: boolean;
+  theme: Theme;
 };
 
 type Message = {
@@ -86,7 +89,8 @@ export class GlobalConfig
       },
       messages: [],
       browserResized: false,
-      showOnlyRenderedSlots: false
+      showOnlyRenderedSlots: false,
+      theme: props.themingService.currentTheme()
     };
 
     if (!props.config) {
@@ -112,11 +116,14 @@ export class GlobalConfig
 
   render(): JSX.Element {
     const { config, modules, labelConfigService } = this.props;
-    const { sidebarHidden, showOnlyRenderedSlots, expandSection } = this.state;
+    const { sidebarHidden, showOnlyRenderedSlots, expandSection, theme } = this.state;
     const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
     const debugDelay = getDebugDelayFromLocalStorage(window);
+    const isDarkTheme = theme === 'dark';
+    const switchToDarkTheme = () => this.setTheme('dark');
+    const switchToLightTheme = () => this.setTheme('light');
 
     return (
       <>
@@ -132,6 +139,27 @@ export class GlobalConfig
         {config && (
           <div className={classes} data-ref={debugSidebarSelector}>
             <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--moli">
+              <div className="MoliDebug-tagContainer">
+                <TagLabel>Appearance</TagLabel>
+                {isDarkTheme && (
+                  <button
+                    className="MoliDebug-button"
+                    onClick={switchToLightTheme}
+                    title="Switch to light theme"
+                  >
+                    🌔 dark
+                  </button>
+                )}
+                {!isDarkTheme && (
+                  <button
+                    className="MoliDebug-button"
+                    onClick={switchToDarkTheme}
+                    title="Switch to dark theme"
+                  >
+                    🌞 light
+                  </button>
+                )}
+              </div>
               <h4>
                 {this.collapseToggle('moli')}
                 Moli
@@ -613,6 +641,9 @@ export class GlobalConfig
       </Fragment>
     );
   };
+
+  private setTheme = (theme: Theme) =>
+    this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
 
   private keyValues = (keyValues: Moli.DfpKeyValueMap): JSX.Element => {
     const properties = Object.keys(keyValues);

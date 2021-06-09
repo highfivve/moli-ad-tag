@@ -13,6 +13,7 @@ import MoliConfig = Moli.MoliConfig;
 
 import './debug.css';
 
+import { ThemingService } from './util/themingService';
 import { WindowResizeService } from './util/windowResizeService';
 
 declare const window: Moli.MoliWindow;
@@ -30,12 +31,17 @@ if (moliConfig) {
     window
   );
 
+  const themingService = new ThemingService(globalConfigElement);
+  themingService.applyTheme();
+  themingService.enableSystemThemeListener();
+
   render(
     <GlobalConfig
       config={moliConfig}
       modules={modulesMeta}
       labelConfigService={labelConfigService}
       windowResizeService={new WindowResizeService()}
+      themingService={themingService}
     />,
     globalConfigElement
   );

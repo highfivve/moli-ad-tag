@@ -4,6 +4,7 @@
   --MoliDebug-green: #90be6d;
   --MoliDebug-red: #db3b3d;
   --MoliDebug-yellow: #ffe152;
+  --MoliDebug-yellow-dark: #ffcb00;
   --MoliDebug-blue: #76949f;
   --MoliDebug-blue--light: #edf6fc;
   --MoliDebug-grey--light: #e9ecef;
@@ -15,6 +16,9 @@
   --MoliDebug-sidebar-padding: 15px;
   --MoliDebug-sidebar-z-index: 99999999;
   --MoliDebug-sidebar-bg: white;
+  --MoliDebug-sidebar-bg-dark: var(--MoliDebug-grey--dark);
+  --MoliDebug-sidebar-text: #242424;
+  --MoliDebug-sidebar-text-dark: #d9d9d9;
   --MoliDebug-sidebar-box-shadow: -3px 0 5px 0px rgba(0, 0, 0, 0.2);
   --MoliDebug-close-handle-height: 32px;
 }
@@ -47,6 +51,7 @@
     background: var(--MoliDebug-sidebar-bg);
     box-shadow: var(--MoliDebug-sidebar-box-shadow);
     box-sizing: border-box;
+    color: var(--MoliDebug-sidebar-text);
     display: block;
     font-size: var(--MoliDebug-font-size);
     font-family: Helvetica, Arial, sans-serif;
@@ -59,6 +64,11 @@
     text-align: left;
     top: 0;
     z-index: var(--MoliDebug-sidebar-z-index);
+
+    .dark & {
+      background: var(--MoliDebug-sidebar-bg-dark);
+      color: var(--MoliDebug-sidebar-text-dark);
+    }
 
     @media (min-width: 768px) {
       min-width: 500px;
@@ -85,6 +95,11 @@
       top: 0;
       width: 100vw;
       z-index: calc(var(--MoliDebug-sidebar-z-index) + 1);
+
+      .dark & {
+        background: var(--MoliDebug-yellow-dark);
+        color: var(--MoliDebug-sidebar-text);
+      }
 
       @media (min-width: 768px) {
         border-bottom-left-radius: var(--MoliDebug-border-radius);
@@ -150,6 +165,10 @@
     font-family: Helvetica, Arial, sans-serif;
     min-height: calc(var(--MoliDebug-buttons-height) + 2 * var(--MoliDebug-buttons-padding));
     text-align: left;
+
+    .dark & {
+      background: transparent;
+    }
 
     &--overlay {
       border: 1px solid black;
@@ -217,10 +236,19 @@
     &--grey {
       background: lightgray;
       border-radius: var(--MoliDebug-border-radius);
+
+      .dark & {
+        background: #6a6a6a;
+        color: white;
+      }
     }
 
     &--blue {
       background-color: var(--MoliDebug-blue--light);
+
+      .dark & {
+        color: var(--MoliDebug-sidebar-bg-dark);
+      }
     }
 
     &--collapsible {
@@ -268,6 +296,10 @@
 
     &--yellow {
       background: var(--MoliDebug-yellow);
+
+      .dark & {
+        background: var(--MoliDebug-yellow-dark);
+      }
     }
 
     &--blue {
@@ -294,16 +326,20 @@
     }
 
     &LabelBtn {
-      display: inline-block;
-      min-width: 135px;
-      padding-right: 5px;
-      padding-left: 5px;
       background: lightgray;
       border: 1px solid lightgray;
       border-radius: var(--MoliDebug-border-radius);
       cursor: pointer;
+      display: inline-block;
       margin-right: 5px;
       margin-bottom: 5px;
+      min-width: 135px;
+      padding-right: 5px;
+      padding-left: 5px;
+
+      .dark & {
+        color: var(--MoliDebug-sidebar-bg-dark);
+      }
     }
 
     &Container {
@@ -339,6 +375,10 @@
 
     &:hover {
       background-color: #e4f1ff;
+
+      .dark & {
+        color: var(--MoliDebug-sidebar-text);
+      }
     }
 
     &--error {
