@@ -1238,14 +1238,6 @@ export namespace Moli {
       listener?: PrebidListenerProvider;
 
       /**
-       * If true, moli will use `window.moliPbjs` to access the prebid instance. The actual renaming of this
-       * variable has to be done in the publisher tag.
-       *
-       * default: `false`
-       */
-      readonly useMoliPbjs?: boolean;
-
-      /**
        * Configure the user sync behaviour of prebid. Note that you always need to configure
        * the prebid `userSync.enableOverride` to `true` otherwise this won't have any effect
        * and the default prebid behaviour will be used instead.       *
