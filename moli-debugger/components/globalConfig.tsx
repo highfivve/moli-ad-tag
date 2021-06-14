@@ -894,12 +894,13 @@ export class GlobalConfig
         slot.prebid
       ).forEach(prebidConfig => {
         const code = prebidConfig.adUnit.code;
-        if (code !== slot.domId) {
+        if (code && code !== slot.domId) {
           messages.push({
             kind: 'error',
             text: (
               <span>
-                The <code>prebid.adUnit.code</code> must match the <code>slot.domID</code>, but
+                The <code>prebid.adUnit.code</code> must match the <code>slot.domID</code>{' '}
+                <strong>${slot.domId}</strong>, but
                 <br /> <strong>{code}</strong> was not <strong>{slot.domId}</strong>
               </span>
             )
