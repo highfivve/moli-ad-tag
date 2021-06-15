@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 3.32.8
+
+- Remove `useMoliPbjs` setting
+- Add *EMX Digital* bidder code
+- Add *Triplelift* bidder code
+
 ## 3.32.7
 
 [GD-3161](https://jira.gutefrage.net/browse/GD-3161). Add `video` params for Pubmatic bidder.
