@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.32.8
+## 3.32.9
 
 - Remove `useMoliPbjs` setting
 - Add *EMX Digital* bidder code
