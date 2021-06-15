@@ -1710,6 +1710,7 @@ export namespace prebidjs {
   export const Criteo = 'criteo';
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
+  export const EmxDigital = 'emx_digital';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
   export const NanoInteractive = 'nanointeractive';
@@ -1719,6 +1720,7 @@ export namespace prebidjs {
   export const SmartAdServer = 'smartadserver';
   export const Unruly = 'unruly';
   export const Teads = 'teads';
+  export const Triplelift = 'triplelift';
   export const Yieldlab = 'yieldlab';
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
@@ -1737,6 +1739,7 @@ export namespace prebidjs {
     | typeof Criteo
     | typeof AppNexusAst
     | typeof AppNexus
+    | typeof EmxDigital
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof JustPremium
@@ -1746,6 +1749,7 @@ export namespace prebidjs {
     | typeof SmartAdServer
     | typeof Unruly
     | typeof Teads
+    | typeof Triplelift
     | typeof Yieldlab
     | typeof Spotx
     | typeof ShowHeroes
