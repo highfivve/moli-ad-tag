@@ -78,7 +78,12 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
 
     return (
       <div
-        className={classList('MoliDebug-adSlot', [!!parentElement, 'MoliDebug-adSlot--overlay'])}
+        className={classList(
+          'MoliDebug-adSlot',
+          [!!parentElement, 'MoliDebug-adSlot--overlay'],
+          [!parentElement && slotVisible, 'is-rendered'],
+          [!parentElement && !slotVisible, 'is-notRendered']
+        )}
         style={dimensions}
       >
         <div className="MoliDebug-adSlot-buttons">

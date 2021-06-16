@@ -172,6 +172,14 @@
       background: transparent;
     }
 
+    &.is-rendered {
+      border-left: 4px solid var(--MoliDebug-green);
+    }
+
+    &.is-notRendered {
+      border-left: 4px solid var(--MoliDebug-red);
+    }
+
     &--overlay {
       border: 1px solid black;
       border-radius: var(--MoliDebug-border-radius);
