@@ -9,6 +9,7 @@
   --MoliDebug-blue--light: #edf6fc;
   --MoliDebug-grey--light: #e9ecef;
   --MoliDebug-grey--dark: #454547;
+  --MoliDebug-adSlot-margin: 0 0 15px 0;
   --MoliDebug-border-radius: 4px;
   --MoliDebug-buttons-height: 24px;
   --MoliDebug-buttons-padding: 5px;
@@ -163,6 +164,7 @@
     flex-direction: column;
     font-size: var(--MoliDebug-font-size);
     font-family: Helvetica, Arial, sans-serif;
+    margin: var(--MoliDebug-adSlot-margin);
     min-height: calc(var(--MoliDebug-buttons-height) + 2 * var(--MoliDebug-buttons-padding));
     text-align: left;
 
