@@ -119,7 +119,7 @@ export type PriceRules = {
   /**
    * The ad unit that is being configured along with a price that was selected from the server
    */
-  readonly [adUnitDomId: string]: Moli.yield_optimization.PriceRule;
+  readonly [adUnitPath: string]: Moli.yield_optimization.PriceRule;
 };
 
 /**

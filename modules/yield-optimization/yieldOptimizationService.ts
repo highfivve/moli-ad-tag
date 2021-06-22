@@ -91,15 +91,15 @@ export class YieldOptimizationService {
   }
 
   /**
-   * Return the price rule for the given ad slot domID if available.
+   * Return the price rule for the given ad slot adUnitPath if available.
    *
    * If the provider is `dynamic` this is an async operation as the configuration file might
    * not be loaded yet.
    *
-   * @param adUnitDomId
+   * @param adUnitPath
    */
-  public getPriceRule(adUnitDomId: string): Promise<PriceRule | undefined> {
-    return this.adUnitPricingRules.then(rules => rules[adUnitDomId]);
+  public getPriceRule(adUnitPath: string): Promise<PriceRule | undefined> {
+    return this.adUnitPricingRules.then(rules => rules[adUnitPath]);
   }
 
   /**
@@ -111,12 +111,12 @@ export class YieldOptimizationService {
    * @param adSlot
    */
   public setTargeting(adSlot: IAdSlot): Promise<PriceRule | undefined> {
-    const adUnitDomId = adSlot.getSlotElementId();
-    return this.getPriceRule(adUnitDomId).then(rule => {
+    const adUnitPath = adSlot.getAdUnitPath();
+    return this.getPriceRule(adUnitPath).then(rule => {
       if (rule) {
         this.log.debug(
           'YieldOptimizationService',
-          `set price rule id ${rule.priceRuleId} for ${adUnitDomId}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+          `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
         );
         adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
         adSlot.setTargeting('upr_model', rule.model || 'static');
@@ -124,7 +124,7 @@ export class YieldOptimizationService {
           adSlot.setTargeting('upr_main', 'true');
         }
       } else if (this.isEnabled) {
-        this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitDomId}`);
+        this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
       }
       return rule;
     });
@@ -149,7 +149,9 @@ export class YieldOptimizationService {
         },
         //
         body: JSON.stringify({
-          device: this.device
+          device: this.device,
+          // GD-2996 - temporary migration to new key
+          key: 'adUnitPath'
         })
       })
       .then(response => {
