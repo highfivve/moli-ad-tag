@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.33.0
+
+[GD-2996](https://jira.gutefrage.net/browse/GD-2996). Yield optimization module now works with `adUnitPath` instead
+of `domID`. Requires no change in the ad tag.
+
 ## 3.32.9
 
 - Remove `useMoliPbjs` setting
