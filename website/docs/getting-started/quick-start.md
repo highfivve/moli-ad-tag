@@ -33,9 +33,8 @@ First create an `index.html` with the following content:
     </script>
     <script src="https://cdn.privacy-mgmt.com/wrapperMessagingWithoutDetection.js"></script>
 
-    <!-- TODO push this on a highfivve domain or github pages -->
     <!-- your ad tag -->
-    <script async="async" src="https://frag-muki.de/moli/latest.js"></script>
+    <script async="async" src="https://assets.h5v.eu/prebuilt/ad-tag/latest.js"></script>
 
     <!-- configure slots and request ads -->
     <script>
@@ -98,4 +97,4 @@ $ python -m SimpleHTTPServer 8000
 And open localhost:8000
 
 🌟 Congratulations 🌟 You have configured and used your first own ad tag. In the folowing chapters
-wel will unpack everything that's in this minimal example. 
+wel will unpack everything that's in this minimal example.

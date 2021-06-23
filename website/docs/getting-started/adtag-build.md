@@ -12,7 +12,7 @@ big bundle that contains everything.
 Your `index.html` contains a pre built ad tag that has no configuration.
 
 ```html
-<script async="async" src="https://frag-muki.de/moli/latest.js"></script>
+<script async="async" src="https://assets.h5v.eu/prebuilt/ad-tag/latest.js"></script>
 ```
 
 The configuration is inlined on the page:
@@ -32,7 +32,7 @@ window.moli.que.push(function(adTag) {
 ```
 
 We highly recommend adding the configuration into the ad tag and use typescript to
-check for compilation errors. 
+check for compilation errors.
 
 How to setup an ad tag then? It's a javascript bundle that you can build with the tools
 you like. `yarn` or `npm` as dependency management. `wepback` or `parcel` for minification.

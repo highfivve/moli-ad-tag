@@ -114,15 +114,15 @@ pipeline {
                         withAWS(endpointUrl: 'https://minio.gutefrage.net', credentials: 'minio') {
                             echo 'starting upload to minio'
                             s3Upload(
-                                file: 'prebuilt/ad-tag/dist/prebuilt-ad-tag.js',
+                                file: 'prebuilt/ad-tag/dist/adtag.*.js',
                                 bucket: "assets.h5v.eu",
-                                path: "prebuilt/ad-tag/tag.${packageJSONVersion}.js",
+                                path: "prebuilt/ad-tag/",
                                 pathStyleAccessEnabled: true,
                                 cacheControl: 'public,max-age=31536000,immutable',
                                 contentType: 'text/javascript;charset=utf-8'
                             )
                             s3Upload(
-                                file: 'prebuilt/ad-tag/dist/prebuilt-ad-tag.js',
+                                file: 'prebuilt/ad-tag/dist/latest.js',
                                 bucket: "assets.h5v.eu",
                                 path: "prebuilt/ad-tag/latest.js",
                                 pathStyleAccessEnabled: true,
