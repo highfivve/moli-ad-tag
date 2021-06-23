@@ -1,5 +1,5 @@
 {
-  "name": "@highfivve/prebuilt-ad-tag",
+  "name": "@highfivve/module-prebuilt-ad-tag",
   "version": "3.33.1",
   "description": "prebuilt ad tag for testing",
   "main": "index.ts",
@@ -7,7 +7,8 @@
     "setup": "yarn",
     "build": "webpack --mode=production",
     "start": "webpack serve",
-    "validate": "yarn build"
+    "validate": "yarn build",
+    "validate:jenkins": "yarn validate"
   },
   "repository": {
     "type": "git",
