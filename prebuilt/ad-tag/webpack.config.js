@@ -1,16 +1,18 @@
 'use strict';
 
 const path = require('path');
+const packageJson = require('./package.json');
 
 module.exports = (_, argv) => {
   return {
     mode: 'development',
     devtool: argv.mode === 'production' ? false : 'inline-source-map',
     entry: {
-      moli: './index.ts'
+      [`adtag.${packageJson.version}`] : './index.ts',
+      latest: './index.ts'
     },
     output: {
-      filename: 'prebuilt-ad-tag.js'
+      filename: '[name].js'
     },
     module: {
       rules: [
