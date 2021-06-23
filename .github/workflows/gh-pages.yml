@@ -50,7 +50,7 @@ jobs:
         run: |
           yarn install
           yarn build
-          cp dist/* ../website/build/assets/js
+          cp dist/* ../../website/build/assets/js/
 
       # Deploy website
       - name: Deploy
