@@ -4,7 +4,8 @@
     "moli-debugger",
     "moli-release",
     "modules/*",
-    "examples/*"
+    "examples/*",
+    "prebuilt/*"
   ],
   "version": "3.33.0",
   "npmClient": "yarn",
