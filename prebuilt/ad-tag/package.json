@@ -3,7 +3,6 @@
   "version": "3.33.0",
   "description": "prebuilt ad tag for testing",
   "main": "index.ts",
-  "private": true,
   "scripts": {
     "setup": "yarn",
     "build": "webpack --mode=production",
