@@ -104,6 +104,33 @@ pipeline {
                         sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug moli-debugger.aurora"
                     }
                 }
+
+                stage('Prebuilt AdTag') {
+                    steps {
+                        script {
+                            def packageJSON = readJSON file: 'prebuilt/ad-tag/package.json'
+                            packageJSONVersion = packageJSON.version
+                        }
+                        withAWS(endpointUrl: 'https://minio.gutefrage.net', credentials: 'minio') {
+                            echo 'starting upload to minio'
+                            s3Upload(
+                                file: 'prebuilt/ad-tag/dist/prebuilt-ad-tag.js',
+                                bucket: "assets.h5v.eu",
+                                path: "prebuilt/ad-tag/tag.${packageJSONVersion}.js",
+                                pathStyleAccessEnabled: true,
+                                cacheControl: 'public,max-age=31536000,immutable',
+                                contentType: 'text/javascript;charset=utf-8'
+                            )
+                            s3Upload(
+                                file: 'prebuilt/ad-tag/dist/prebuilt-ad-tag.js',
+                                bucket: "assets.h5v.eu",
+                                path: "prebuilt/ad-tag/latest.js",
+                                pathStyleAccessEnabled: true,
+                                contentType: 'text/javascript;charset=utf-8'
+                            )
+                        }
+                    }
+                }
             }
         }
     }

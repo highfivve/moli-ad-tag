@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.33.1
+
+[GD-2570](https://jira.gutefrage.net/browse/GD-2570). Add prebuilt ad tag.
+
 ## 3.33.0
 
 [GD-2996](https://jira.gutefrage.net/browse/GD-2996). Yield optimization module now works with `adUnitPath` instead
