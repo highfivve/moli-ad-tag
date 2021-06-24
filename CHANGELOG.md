@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.33.2
+
+[GD-3207](https://jira.gutefrage.net/browse/GD-3207) Fix a9 blocking the ad pipline if consent is missing
+
 ## 3.33.1
 
 [GD-2570](https://jira.gutefrage.net/browse/GD-2570). Add prebuilt ad tag.
