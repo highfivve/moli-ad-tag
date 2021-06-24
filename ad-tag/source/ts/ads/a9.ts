@@ -26,6 +26,19 @@ const isA9SlotDefinition = (
   return !!slotDefinition.moliSlot.a9;
 };
 
+const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
+  !tcData.gdprApplies ||
+  (tcData.vendor.consents['793'] &&
+    [
+      TCPurpose.STORE_INFORMATION_ON_DEVICE,
+      TCPurpose.SELECT_BASIC_ADS,
+      TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+      TCPurpose.SELECT_PERSONALISED_ADS,
+      TCPurpose.MEASURE_AD_PERFORMANCE,
+      TCPurpose.APPLY_MARKET_RESEARCH,
+      TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+    ].every(purpose => tcData.purpose.consents[purpose]));
+
 /**
  * Initialize and load the A9 tag.
  *
@@ -62,20 +75,7 @@ export const a9Init = (
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
-        const tcData = context.tcData;
-        if (
-          !tcData.gdprApplies ||
-          (tcData.vendor.consents['793'] &&
-            [
-              TCPurpose.STORE_INFORMATION_ON_DEVICE,
-              TCPurpose.SELECT_BASIC_ADS,
-              TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
-              TCPurpose.SELECT_PERSONALISED_ADS,
-              TCPurpose.MEASURE_AD_PERFORMANCE,
-              TCPurpose.APPLY_MARKET_RESEARCH,
-              TCPurpose.DEVELOP_IMPROVE_PRODUCTS
-            ].every(purpose => tcData.purpose.consents[purpose]))
-        ) {
+        if (hasRequiredConsent(context.tcData)) {
           // async fetch as everything is already initialized
           assetService.loadScript({
             name: 'A9',
@@ -133,6 +133,12 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
     'a9-fetch-bids',
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
+        if (!hasRequiredConsent(context.tcData)) {
+          context.logger.debug('A9', 'Skip any due to missing consent');
+          resolve();
+          return;
+        }
+
         const filteredSlots = slots.filter(isA9SlotDefinition).filter(slot => {
           const isVideo = slot.moliSlot.a9.mediaType === 'video';
           const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);

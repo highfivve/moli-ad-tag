@@ -326,6 +326,23 @@ describe('a9', () => {
       );
     });
 
+    it('should resolve immediately if no consent is given', async () => {
+      const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids({ ...a9ConfigStub, enableFloorPrices: true });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+      const tcDataNoPurpose1 = fullConsent();
+      tcDataNoPurpose1.purpose.consents['1'] = false;
+      const context: AdPipelineContext = {
+        ...adPipelineContext(),
+        tcData: tcDataNoPurpose1
+      };
+
+      await step(context, [singleSlot]);
+      expect(fetchBidsSpy).to.have.been.callCount(0);
+    });
+
     ['USD' as const, 'EUR' as const].forEach(currency => {
       it(`should add floor config with configured currency ${currency}`, async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
