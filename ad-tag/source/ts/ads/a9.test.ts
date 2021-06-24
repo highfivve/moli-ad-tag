@@ -86,6 +86,11 @@ describe('a9', () => {
     };
   };
 
+  const contextWithConsent: AdPipelineContext = {
+    ...adPipelineContext(),
+    tcData: fullConsent({ '793': true })
+  };
+
   after(() => {
     // bring everything back to normal after tests
     sandbox.restore();
@@ -184,7 +189,7 @@ describe('a9', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
 
-      return step(adPipelineContext(), []).then(() => {
+      return step(contextWithConsent, []).then(() => {
         expect(addAdUnitsSpy).not.to.have.been.called;
       });
     });
@@ -196,7 +201,7 @@ describe('a9', () => {
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
 
-      return step(adPipelineContext(), [singleSlot]).then(() => {
+      return step(contextWithConsent, [singleSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -223,7 +228,7 @@ describe('a9', () => {
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
 
-      return step(adPipelineContext(), [singleSlot]).then(() => {
+      return step(contextWithConsent, [singleSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -249,7 +254,7 @@ describe('a9', () => {
         mediaType: 'video'
       });
 
-      return step(adPipelineContext(), [singleSlot]).then(() => {
+      return step(contextWithConsent, [singleSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -277,7 +282,7 @@ describe('a9', () => {
         mediaType: 'video'
       });
 
-      return step(adPipelineContext(), [displaySlot, videoSlot]).then(() => {
+      return step(contextWithConsent, [displaySlot, videoSlot]).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
@@ -299,16 +304,16 @@ describe('a9', () => {
     });
 
     it('should add floor config if enabled', async () => {
-      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids({ ...a9ConfigStub, enableFloorPrices: true });
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
       singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
 
-      await step(adPipelineContext(), [singleSlot]);
-      expect(addAdUnitsSpy).to.have.been.calledOnce;
-      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+      await step(contextWithConsent, [singleSlot]);
+      expect(fetchBidsSpy).to.have.been.calledOnce;
+      expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
         {
           slots: [
             {
@@ -345,7 +350,7 @@ describe('a9', () => {
 
     ['USD' as const, 'EUR' as const].forEach(currency => {
       it(`should add floor config with configured currency ${currency}`, async () => {
-        const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+        const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
         const step = a9RequestBids({
           ...a9ConfigStub,
           enableFloorPrices: true,
@@ -356,9 +361,9 @@ describe('a9', () => {
         const singleSlot = createSlotDefinitions(domId, {});
         singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
 
-        await step(adPipelineContext(), [singleSlot]);
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        await step(contextWithConsent, [singleSlot]);
+        expect(fetchBidsSpy).to.have.been.calledOnce;
+        expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
           {
             slots: [
               {
@@ -405,7 +410,7 @@ describe('a9', () => {
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
-      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 1 };
+      const ctx: AdPipelineContext = { ...contextWithConsent, requestId: 1 };
 
       await step(ctx, [slot]);
       expect(getTargetingKeysStub).to.have.been.calledOnce;
@@ -421,7 +426,7 @@ describe('a9', () => {
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot, ['amznp', 'foo']);
-      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 1 };
+      const ctx: AdPipelineContext = { ...contextWithConsent, requestId: 1 };
 
       await step(ctx, [slot]);
       expect(getTargetingKeysStub).to.have.been.calledOnce;
