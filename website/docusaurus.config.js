@@ -145,6 +145,7 @@ module.exports = {
         disableSources: true,
         excludeInternal: true,
         sidebar: {
+          categoryLabel: 'Modules',
           sidebarFile: 'modules-typedoc-sidebar.js'
         }
       }

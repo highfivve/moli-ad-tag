@@ -1,6 +1,12 @@
-const modulesSidebarItem = require('./modules-typedoc-sidebar').find(
-  item => typeof item === 'object' && item.label === 'Modules'
-).items;
+// workaround dirName setting absolute instead of relativ paths
+const moduleSidebar = require('./modules-typedoc-sidebar')[0];
+moduleSidebar.dirName = 'modules';
+
+// only generate a sidebar
+const modulesOnlySidebar = { ...moduleSidebar, dirName: 'modules/modules' };
+
+const apiSidebar = require('./ad-tag-typedoc-sidebar');
+apiSidebar[0].dirName = 'api';
 
 module.exports = {
   docs: [
@@ -36,7 +42,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Modules',
-      items: modulesSidebarItem,
+      items: [modulesOnlySidebar],
       collapsed: true
     },
     {
@@ -46,6 +52,6 @@ module.exports = {
       collapsed: false
     }
   ],
-  API: require('./ad-tag-typedoc-sidebar'),
-  Modules: require('./modules-typedoc-sidebar')
+  API: apiSidebar,
+  Modules: [moduleSidebar]
 };
