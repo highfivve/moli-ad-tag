@@ -844,7 +844,19 @@ export namespace Moli {
     /** the sizes for this ad slot */
     readonly sizes: DfpSlotSize[];
 
-    /** is this a dfp out-of-page (interstitial) slot or not */
+    /**
+     * Configure the ad slot position
+     *
+     * - `in-page` is the standard display ad
+     * - `out-of-page` uses the `defineOutOfPageSlot` API
+     * - `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`
+     * - `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`
+     * - `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`
+     *
+     * @see [Display anchor ad](https://developers.google.com/publisher-tag/samples/display-anchor-ad)
+     * @see [OutOfPageFormat](https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat)
+     *
+     */
     readonly position: IPosition;
 
     /** configure how and when the slot should be loaded */
@@ -864,10 +876,12 @@ export namespace Moli {
 
     /**
      * Size configuration to support "responsive" ads.
-     * This is an alternative solution to custom () => DfpSlotSize[] functions and is taken
-     * from prebid.js.
      *
-     * https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
+     * The implementation matches the prebid.js specification for responsive ads.
+     * However this information is not passed to prebid. The ad tag already takes
+     * care of filtering sizes.
+     *
+     * @see [prebid configure responsive ads](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-Responsive-Ads)
      */
     readonly sizeConfig: SizeConfigEntry[];
 

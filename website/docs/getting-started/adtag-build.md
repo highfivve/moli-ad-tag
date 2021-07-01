@@ -80,7 +80,7 @@ This is a little bit more effort, but comes with some nice benefits
 3. You can a/b test different bundles
 4. You can rollout incrementally
 
-### Built ES5 and ES6 bundles
+### Build ES5 and ES6 bundles
 
 :::important TODO
 :::
