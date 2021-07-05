@@ -1705,7 +1705,7 @@ export namespace prebidjs {
   }
 
   // Supported SSPs
-  export const Adform = 'adform';
+  export const Adform = 'adf';
   export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
   export const AppNexusAst = 'appnexusAst';
@@ -1807,7 +1807,7 @@ export namespace prebidjs {
   /**
    * Adform bid params
    *
-   * @see https://docs.prebid.org/dev-docs/bidders/adform.html
+   * @see https://docs.prebid.org/dev-docs/bidders/adf.html
    */
   export interface IAdformParams {
     /**
