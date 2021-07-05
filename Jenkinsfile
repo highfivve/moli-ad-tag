@@ -26,7 +26,7 @@ pipeline {
         stage('Prepare environment') {
             steps {
                 echo "Setting up yarn and install dependencies"
-                sh "npm install yarn@1.22.7"
+                sh "rm -rf node_modules/"
                 // fresh install
                 sh "yarn install && yarn setup:all"
             }
