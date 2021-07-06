@@ -25,6 +25,7 @@ import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import { apstag } from '../types/apstag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -37,6 +38,7 @@ describe('a9', () => {
   const dom = createDom();
   const jsDomWindow: Window &
     googletag.IGoogleTagWindow &
+    apstag.WindowA9 &
     prebidjs.IPrebidjsWindow &
     tcfapi.TCFApiWindow = dom.window as any;
   const adPipelineContext = (
