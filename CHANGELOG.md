@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.33.2
+## 3.33.3
 
 [GD-3129](https://jira.gutefrage.net/browse/GD-3129) Change adform biddercode to `adf`
 
