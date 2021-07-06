@@ -1277,6 +1277,23 @@ export namespace Moli {
       readonly adUnit: prebidjs.IAdUnit;
     }
 
+    /**
+     * ## Amazon Publisher Audience
+     *
+     * Allow Amazon to target on hashed user email addresses when consent is given.
+     */
+    export interface A9PublisherAudienceConfig {
+      /**
+       * enabled or disable
+       */
+      readonly enabled: boolean;
+
+      /**
+       * user email address hashed with SHA256
+       */
+      readonly sha256Email: string;
+    }
+
     export interface A9Config {
       /**
        * publisher ID
@@ -1316,6 +1333,11 @@ export namespace Moli {
        * default: requesting all sizes that are defined in the adSlot configuration.
        */
       readonly supportedSizes?: DfpSlotSize[];
+
+      /**
+       * Configure the Amazon _Publisher Audiences_ feature.
+       */
+      readonly publisherAudience?: A9PublisherAudienceConfig;
     }
 
     /**

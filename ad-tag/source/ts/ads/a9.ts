@@ -4,6 +4,7 @@ import {
   InitStep,
   LOW_PRIORITY,
   mkConfigureStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   mkPrepareRequestAdsStep,
   mkRequestBidsStep,
@@ -71,6 +72,15 @@ export const a9Init = (
           },
           targetingKeys: function (): void {
             return;
+          },
+          dpa: function (): void {
+            context.window.apstag._Q.push(['di', arguments]);
+          },
+          rpa: function (): void {
+            context.window.apstag._Q.push(['ri', arguments]);
+          },
+          upa: function (): void {
+            context.window.apstag._Q.push(['ui', arguments]);
           }
         };
 
@@ -102,6 +112,36 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
             cmpTimeout: config.cmpTimeout
           }
         });
+        resolve();
+      })
+  );
+
+export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
+  mkConfigureStepOncePerRequestAdsCycle(
+    'a9-publisher-audiences',
+    (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
+      new Promise<void>(resolve => {
+        const publisherAudience = config.publisherAudience;
+        if (publisherAudience && publisherAudience.enabled) {
+          const tokenConfig: apstag.ITokenConfig = {
+            hashedRecords: [
+              {
+                type: 'email',
+                record: publisherAudience.sha256Email
+              }
+            ]
+          };
+
+          context.logger.debug('A9', 'Enable publisher audiences');
+          context.window.apstag.rpa(tokenConfig);
+
+          // if the user consent changes update the token config
+          if (context.window.__tcfapi) {
+            context.window.__tcfapi('addEventListener', 2, () =>
+              context.window.apstag.upa(tokenConfig)
+            );
+          }
+        }
         resolve();
       })
   );

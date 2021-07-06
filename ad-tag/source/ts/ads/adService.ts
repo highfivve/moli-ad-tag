@@ -34,7 +34,13 @@ import {
   prebidRemoveAdUnits,
   prebidRequestBids
 } from './prebid';
-import { a9Configure, a9Init, a9RequestBids, a9ClearTargetingStep } from './a9';
+import {
+  a9Configure,
+  a9Init,
+  a9RequestBids,
+  a9ClearTargetingStep,
+  a9PublisherAudiences
+} from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
 import { createLazyLoader } from './lazyLoading';
 import { createRefreshListener } from './refreshAd';
@@ -187,6 +193,7 @@ export class AdService {
     if (config.a9 && env === 'production') {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9));
+      configure.push(a9PublisherAudiences(config.a9));
       prepareRequestAds.push(a9ClearTargetingStep());
       requestBids.push(a9RequestBids(config.a9));
     }

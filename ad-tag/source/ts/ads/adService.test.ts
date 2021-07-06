@@ -122,13 +122,6 @@ describe('AdService', () => {
           expect(stepNames).not.to.contain('a9-init');
         });
       });
-
-      it('should add the a9-clear-targeting-step step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('a9-clear-targeting');
-        });
-      });
     });
   });
 
@@ -226,6 +219,13 @@ describe('AdService', () => {
           expect(stepNames).not.to.contain('a9-configure');
         });
       });
+
+      it('should configure publisher audiences if available', () => {
+        return initialize(emptyConfigWithA9).then(pipeline => {
+          const stepNames = pipeline.configure.map(step => step.name);
+          expect(stepNames).to.contain('a9-publisher-audiences');
+        });
+      });
     });
   });
 
@@ -266,6 +266,15 @@ describe('AdService', () => {
         return initialize().then(pipeline => {
           const stepNames = pipeline.prepareRequestAds.map(step => step.name);
           expect(stepNames).not.to.contain('prebid-prepare-adunits');
+        });
+      });
+    });
+
+    describe('a9', () => {
+      it('should add the a9-clear-targeting-step step if a9 is available', () => {
+        return initialize(emptyConfigWithA9).then(pipeline => {
+          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+          expect(stepNames).to.contain('a9-clear-targeting');
         });
       });
     });

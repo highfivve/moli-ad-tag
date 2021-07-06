@@ -20,5 +20,14 @@ export const apstagStub: apstag.IApsTag = {
   },
   targetingKeys: () => {
     return;
+  },
+  rpa() {
+    return;
+  },
+  upa() {
+    return;
+  },
+  dpa() {
+    return;
   }
 };

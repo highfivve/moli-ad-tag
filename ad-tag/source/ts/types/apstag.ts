@@ -35,6 +35,53 @@ export namespace apstag {
      * Returns an array of targeting keys associated with the bid objects
      */
     targetingKeys(): void;
+
+    /**
+     * ## Renew token
+     *
+     * This function should be called every time a page loads and there are hashed record(s) available for the current
+     * user. Where GDPR applies, this method should only be called after the CMP has loaded and after the user has
+     * configured their consent. This function will create an `AMZN-token`, if one does not already exist, or if the existing
+     * token has expired, and will store that token in the 1st party cookie space
+     *
+     * @param tokenConfig
+     * @param callback
+     * @see Amazon Publisher Audiences documentation
+     */
+    rpa(tokenConfig: ITokenConfig, callback?: () => void);
+
+    /**
+     * ## Update token
+     *
+     * This function should be called every time an event occurs that would change the value of the AMZN-token.
+     * Similar to the apstag.rpa, where GDPR applies, this method should only be called after the CMP has loaded
+     * and after the user has configured their consent. When this function is called, it will delete the current AMZN-
+     * token (if one exists), create a new AMZN-token, and save it on the client.
+     *
+     * Events for which apstag.upa should be called:
+     *
+     *  - User logs in.
+     *  - Change in GDPR consent.
+     *  - User chooses to Opt-Out of sharing their records for advertising purposes or similar opt-out (“Opt Out”).
+     *  - If a user opts-in after previously Opting-Out.
+     *  - User changes (adds, edits, deletes) their record(s).
+     *
+     * @param tokenConfig
+     * @param callback
+     * @see Amazon Publisher Audiences documentation
+     */
+    upa(tokenConfig: ITokenConfig, callback?: () => void);
+
+    /**
+     * ## Delete Token
+     *
+     * This function can be called to delete the AMZN-token without configuring arguments.
+     * This method should be used when you prefer to delete the token explicitly.
+     *
+     * @param callback
+     * @see Amazon Publisher Audiences documentation
+     */
+    dpa(callback?: () => void);
   }
 
   export interface IInitConfig {
@@ -100,6 +147,68 @@ export namespace apstag {
       [key: string]: string | string[];
     };
   }
+
+  /**
+   * ## Token Config
+   *
+   * Configuration for the _Publisher Audiences_ feature.
+   */
+  export interface ITokenConfig {
+    /**
+     * Object containing the GDPR status and consent string if applicable. If this
+     * property is not provided, apstag.js will query the cmp to obtain this
+     * information.
+     */
+    readonly gdpr?:
+      | {
+          readonly enabled: true;
+
+          /**
+           * IAB TCFV2 compliant consent string.
+           */
+          readonly consent: string;
+        }
+      | {
+          readonly enabled: false;
+        };
+
+    /**
+     * Array of objects containing the hashed record(s) and description of
+     * record type(s)
+     */
+    readonly hashedRecords: HashedRecord[];
+
+    /**
+     * `true` if the user has Opted-Out through the publisher (defined in this
+     * documentation as opt-out of the sharing of their records for advertising
+     * or similar opt-out). If configured as `true`, calls to methods apstag.rpa
+     * and apstag.upa will result in the deletion of the AMZN-token, and token
+     * creation flow will be skipped. This value will default to `false`
+     */
+    readonly optOut?: boolean;
+
+    /**
+     * The TTL of the token, in *seconds*.
+     * Defaults to 2 weeks (1209600s).
+     */
+    readonly duration?: number;
+  }
+
+  /**
+   * Currently only Sha265 email supported
+   */
+  type HashedRecord = {
+    readonly type: 'email';
+
+    /**
+     * Sha256-hashed value of the user’s records.
+     *
+     * Requirements for the email before it is hased:
+     *  - all lower case
+     *  - remove tags (e.g. JohnDoe+site@site.com -> JohnDoe@site.com)
+     */
+    readonly record: string;
+  };
 
   export interface IBidConfig {
     /**

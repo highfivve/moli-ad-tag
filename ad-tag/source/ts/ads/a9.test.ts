@@ -12,8 +12,14 @@ import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
-import { a9ClearTargetingStep, a9Configure, a9Init, a9RequestBids } from './a9';
-import { tcData, fullConsent, tcDataNoGdpr } from '../stubs/consentStubs';
+import {
+  a9ClearTargetingStep,
+  a9Configure,
+  a9Init,
+  a9PublisherAudiences,
+  a9RequestBids
+} from './a9';
+import { tcData, fullConsent, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
@@ -29,8 +35,10 @@ describe('a9', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    tcfapi.TCFApiWindow = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -180,6 +188,85 @@ describe('a9', () => {
             cmpTimeout: a9ConfigStub.cmpTimeout
           }
         });
+      });
+    });
+  });
+
+  describe('a9 publisher audiences step', () => {
+    const a9Config = (
+      publisherAudiencesConfig: Moli.headerbidding.A9PublisherAudienceConfig
+    ): Moli.headerbidding.A9Config => {
+      return {
+        ...a9ConfigStub,
+        publisherAudience: publisherAudiencesConfig
+      };
+    };
+
+    beforeEach(() => {
+      jsDomWindow.__tcfapi = tcfapiFunction;
+    });
+
+    it('should not call apstag.rpa if no config is provided', async () => {
+      const step = a9PublisherAudiences(a9ConfigStub);
+      const rpaSpy = sandbox.spy(dom.window.apstag, 'rpa');
+      await step(adPipelineContext(), []);
+      expect(rpaSpy).to.have.callCount(0);
+    });
+
+    it('should not call apstag.rpa if enabled is false', async () => {
+      const step = a9PublisherAudiences(a9ConfigStub);
+      const rpaSpy = sandbox.spy(dom.window.apstag, 'rpa');
+      await step(adPipelineContext(), []);
+      expect(rpaSpy).to.have.callCount(0);
+    });
+
+    it('should call apstag.rpa if enabled is true', async () => {
+      const emailSHA = 'dc009fb060aaa34b467d072eecb0244b38d4b1a390f1f8fe7054a4b1df3fb05a';
+      const step = a9PublisherAudiences(
+        a9Config({
+          enabled: true,
+          sha256Email: emailSHA
+        })
+      );
+      const rpaSpy = sandbox.spy(dom.window.apstag, 'rpa');
+      await step(adPipelineContext(), []);
+      expect(rpaSpy).to.have.been.calledOnce;
+      expect(rpaSpy).to.have.been.calledOnceWithExactly({
+        hashedRecords: [
+          {
+            type: 'email',
+            record: emailSHA
+          }
+        ]
+      });
+    });
+
+    it('should call apstag.upa on a consent change event', async () => {
+      const emailSHA = 'dc009fb060aaa34b467d072eecb0244b38d4b1a390f1f8fe7054a4b1df3fb05a';
+      const step = a9PublisherAudiences(
+        a9Config({
+          enabled: true,
+          sha256Email: emailSHA
+        })
+      );
+      const tcfapiStub = sandbox.stub();
+      dom.window.__tcfapi = tcfapiStub;
+      const upaSpy = sandbox.spy(dom.window.apstag, 'upa');
+      await step(adPipelineContext(), []);
+      expect(upaSpy).to.have.callCount(0);
+      expect(tcfapiStub).to.have.been.calledOnce;
+
+      // get callback function from stub
+      const callback = tcfapiStub.firstCall.args[2];
+      callback();
+      expect(upaSpy).to.have.been.calledOnce;
+      expect(upaSpy).to.have.been.calledOnceWithExactly({
+        hashedRecords: [
+          {
+            type: 'email',
+            record: emailSHA
+          }
+        ]
       });
     });
   });
