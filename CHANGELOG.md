@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## 3.34.0
+
+[GD-3202](https://jira.gutefrage.net/browse/GD-3202) Add Amazon Publisher Audiences feature.
+
+Configurable via the `A9Config`
+
+```js
+const moliConfig = {
+  // ...
+  a9: {
+    // standard configuration
+    pubID: 'xxxx',
+    timeout: 2000,
+    cmpTimeout: 500,
+
+    // optional publisher audience configuration
+    publisherAudience: {
+      enabled: true,
+      sha256Email: 'xxxxyyyyzzzzz'
+    }
+  }
+}
+```
+
 ## 3.33.3
 
 [GD-3129](https://jira.gutefrage.net/browse/GD-3129) Change adform biddercode to `adf`
