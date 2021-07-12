@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.34.1
+
+[GD-3202](https://jira.gutefrage.net/browse/GD-3202) Run `aps.upa()` only once per page load.
+
 ## 3.34.0
 
 [GD-3202](https://jira.gutefrage.net/browse/GD-3202) Add Amazon Publisher Audiences feature.
