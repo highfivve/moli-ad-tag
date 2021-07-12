@@ -8,9 +8,11 @@ import { Moli } from '../types/moli';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import {
   AdPipeline,
+  AdPipelineContext,
   ConfigureStep,
   IAdPipelineConfiguration,
   InitStep,
+  mkConfigureStepOnce,
   mkPrepareRequestAdsStep
 } from './adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
@@ -18,6 +20,8 @@ import { SlotEventService } from './slotEventService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
+import { LabelConfigService } from './labelConfigService';
+import { noopReportingService } from './reportingService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -55,6 +59,25 @@ describe('AdPipeline', () => {
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
     return new AdPipeline(config, noopLogger, jsDomWindow, reportingService, slotEventService);
+  };
+
+  const adPipelineContext = (
+    requestAdsCalls: number = 1,
+    env: Moli.Environment = 'production',
+    config: Moli.MoliConfig = emptyConfig
+  ): AdPipelineContext => {
+    return {
+      requestId: 0,
+      requestAdsCalls: requestAdsCalls,
+      env: env,
+      logger: noopLogger,
+      config: config,
+      window: jsDomWindow,
+      labelConfigService: new LabelConfigService([], [], jsDomWindow),
+      reportingService: noopReportingService,
+      slotEventService: new SlotEventService(noopLogger),
+      tcData: tcData
+    };
   };
 
   const getElementByIdStub = sandbox.stub(dom.window.document, 'getElementById');
@@ -217,6 +240,22 @@ describe('AdPipeline', () => {
       await pipeline.run([adSlot], emptyConfig, 1);
 
       expect(supportedLabels).to.contain('purpose-1');
+    });
+  });
+
+  describe('mkConfigureStepOnce', () => {
+    it('should run the configure step on the first requestAds call', async () => {
+      const stubFn = sandbox.stub().resolves();
+      const step = mkConfigureStepOnce('step', stubFn);
+      await step(adPipelineContext(1), []);
+      expect(stubFn).to.have.been.calledOnce;
+    });
+
+    it('should not run the configure step after the first requestAds call', async () => {
+      const stubFn = sandbox.stub().resolves();
+      const step = mkConfigureStepOnce('step', stubFn);
+      await step(adPipelineContext(2), []);
+      expect(stubFn).to.have.callCount(0);
     });
   });
 });

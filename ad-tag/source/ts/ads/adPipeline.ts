@@ -184,6 +184,10 @@ export const mkConfigureStep = (
  * Construct configure steps that only run once per requestAds call.
  * This is only useful for single page application
  *
+ * ## Use cases
+ *
+ * Cleanup on new page, e.g. remove previous ad slots or targeting.
+ *
  * @param name
  * @param fn
  */
@@ -202,6 +206,30 @@ export const mkConfigureStepOncePerRequestAdsCycle = (
       return Promise.resolve();
     }
   });
+};
+
+/**
+ * Construct configure steps that only run once.
+ * This is only useful for single page application.
+ *
+ * ## Use cases
+ *
+ * Something that should only be configured once, but requires something
+ * from the init step, e.g. "identity providers" but the command que must
+ * be present.
+ *
+ * @param name
+ * @param fn
+ */
+export const mkConfigureStepOnce = (
+  name: string,
+  fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>
+): ConfigureStep => {
+  Object.defineProperty(fn, 'name', { value: name });
+
+  return mkConfigureStep(name, (context, slots) =>
+    context.requestAdsCalls === 1 ? fn(context, slots) : Promise.resolve()
+  );
 };
 
 export const mkPrepareRequestAdsStep = (

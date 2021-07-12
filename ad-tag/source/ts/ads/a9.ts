@@ -4,7 +4,7 @@ import {
   InitStep,
   LOW_PRIORITY,
   mkConfigureStep,
-  mkConfigureStepOncePerRequestAdsCycle,
+  mkConfigureStepOnce,
   mkInitStep,
   mkPrepareRequestAdsStep,
   mkRequestBidsStep,
@@ -117,7 +117,7 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
   );
 
 export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
-  mkConfigureStepOncePerRequestAdsCycle(
+  mkConfigureStepOnce(
     'a9-publisher-audiences',
     (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
       new Promise<void>(resolve => {
