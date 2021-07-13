@@ -24,8 +24,7 @@ import TCPurpose = tcfapi.responses.TCPurpose;
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
-  targeting: Moli.Targeting | undefined,
-  tcData: tcfapi.responses.TCData
+  targeting: Moli.Targeting | undefined
 ): void => {
   const keyValueMap = targeting ? targeting.keyValues : {};
   Object.keys(keyValueMap).forEach(key => {
@@ -113,7 +112,7 @@ export const gptResetTargeting = (): ConfigureStep =>
         if (context.env === 'production') {
           context.logger.debug('GAM', 'reset top level targeting');
           context.window.googletag.pubads().clearTargeting();
-          configureTargeting(context.window, context.config.targeting, context.tcData);
+          configureTargeting(context.window, context.config.targeting);
         }
 
         resolve();
@@ -129,7 +128,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
         context.logger.debug('GAM', 'configure googletag');
         switch (env) {
           case 'production':
-            configureTargeting(context.window, config.targeting, context.tcData);
+            configureTargeting(context.window, config.targeting);
 
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
