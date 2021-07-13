@@ -31,20 +31,31 @@
               Version {{version}}
               {{#if isCurrentVersion}}<span class="badge badge-pill badge-warning ml-2">Neueste Version</span>{{/if}}
             </strong>
-            <div class="card-body">
-              <h5 class="card-title mb-2">Änderungen</h5>
-              <div class="card-text">
-                {{#if (empty changelog)}}
-                  <em class="text-muted">Keine Änderungen angegeben</em>
-                {{else}}
-                  <ol>
-                    {{#each changelog}}
-                      <li>{{this}}</li>
-                    {{/each}}
-                  </ol>
-                {{/if}}
+            <div class="list-group list-group-flush">
+              <div class="list-group-item{{#if isCurrentVersion}} bg-info{{/if}}">
+                <h5 class="card-title mb-2">Änderungen</h5>
+                <div class="card-text">
+                  {{#if (empty changelog)}}
+                    <em class="text-muted">Keine Änderungen angegeben</em>
+                  {{else}}
+                    <ol>
+                      {{#each changelog}}
+                        <li>{{this}}</li>
+                      {{/each}}
+                    </ol>
+                  {{/if}}
+                </div>
               </div>
-
+              <div class="list-group-item{{#if isCurrentVersion}} bg-info{{/if}}">
+                <h5 class="card-title mb-2">Code</h5>
+                <pre><code class="language-html">
+                    {{~#if filenameEs5~}}
+&lt;!-- legacy es5 bundle (IE11) --&gt;
+&lt;script async nomodule src="https://{{publisher}}.h5v.eu/{{version}}/{{filenameEs5}}"&gt;&lt;/script&gt;{{/if}}
+&lt;!-- modern es6 bundle --&gt;
+&lt;script async type="module" src="https://{{publisher}}.h5v.eu/{{version}}/{{filename}}"&gt;&lt;/script&gt;{{"\n"~}}
+                  </code></pre>
+              </div>
             </div>
             <div class="card-footer text-center py-0 px-3">
               <div class="row">
