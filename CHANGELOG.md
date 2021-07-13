@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.34.2
+
+- [GD-3274](https://jira.gutefrage.net/browse/GD-3274) Improve testability of changes made to overview.hbs in moli-release
+- [GD-3273](https://jira.gutefrage.net/browse/GD-3273) Show ES5 + ES6 bundle URLs on publisher overview page
+
 ## 3.34.1
 
 [GD-3202](https://jira.gutefrage.net/browse/GD-3202) Run `aps.upa()` only once per page load.
