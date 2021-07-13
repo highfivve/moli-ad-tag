@@ -17,7 +17,9 @@ import TCPurpose = tcfapi.responses.TCPurpose;
  */
 export type AdPipelineContext = {
   /**
-   * an incremented id that identifies a pipeline run
+   * an incremented id that identifies a pipeline run.
+   *
+   * Starts with 1 and increments by one for each pipeline run.
    */
   readonly requestId: number;
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.34.5
+
+[GD-3202](https://jira.gutefrage.net/browse/GD-3202) `mkConfigureStepOnce` take `requestAdsCalls` and `requestId` into account
+
 ## 3.34.4
 
 [GD-3202](https://jira.gutefrage.net/browse/GD-3202) Run `aps.upa()` only when required.
