@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.34.4
+
+[GD-3202](https://jira.gutefrage.net/browse/GD-3202) Run `aps.upa()` only when required.
+
 ## 3.34.3
 
 - [GD-3273](https://jira.gutefrage.net/browse/GD-3273) Fixed wrong scope for publisher name on overview page
