@@ -48,7 +48,7 @@ describe('a9', () => {
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
-      requestId: 0,
+      requestId: 1,
       requestAdsCalls: requestAdsCalls,
       env: env,
       logger: noopLogger,
