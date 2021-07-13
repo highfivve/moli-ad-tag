@@ -228,7 +228,9 @@ export const mkConfigureStepOnce = (
   Object.defineProperty(fn, 'name', { value: name });
 
   return mkConfigureStep(name, (context, slots) =>
-    context.requestAdsCalls === 1 ? fn(context, slots) : Promise.resolve()
+    context.requestAdsCalls === 1 && context.requestId === 1
+      ? fn(context, slots)
+      : Promise.resolve()
   );
 };
 

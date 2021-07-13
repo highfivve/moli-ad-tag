@@ -63,11 +63,12 @@ describe('AdPipeline', () => {
 
   const adPipelineContext = (
     requestAdsCalls: number = 1,
+    requestId: number = 1,
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig
   ): AdPipelineContext => {
     return {
-      requestId: 0,
+      requestId,
       requestAdsCalls: requestAdsCalls,
       env: env,
       logger: noopLogger,
@@ -244,17 +245,24 @@ describe('AdPipeline', () => {
   });
 
   describe('mkConfigureStepOnce', () => {
-    it('should run the configure step on the first requestAds call', async () => {
+    it('should run the configure step on the first requestAds call with requestId 1', async () => {
       const stubFn = sandbox.stub().resolves();
       const step = mkConfigureStepOnce('step', stubFn);
-      await step(adPipelineContext(1), []);
+      await step(adPipelineContext(1, 1), []);
       expect(stubFn).to.have.been.calledOnce;
+    });
+
+    it('should not run the configure step on the first requestAds call with requestId larger than 1', async () => {
+      const stubFn = sandbox.stub().resolves();
+      const step = mkConfigureStepOnce('step', stubFn);
+      await step(adPipelineContext(1, 2), []);
+      expect(stubFn).to.have.callCount(0);
     });
 
     it('should not run the configure step after the first requestAds call', async () => {
       const stubFn = sandbox.stub().resolves();
       const step = mkConfigureStepOnce('step', stubFn);
-      await step(adPipelineContext(2), []);
+      await step(adPipelineContext(2, 1), []);
       expect(stubFn).to.have.callCount(0);
     });
   });
