@@ -2,7 +2,7 @@
 
 import program = require('commander');
 
-import inquirer from 'inquirer';
+import inquirer, { DistinctQuestion, QuestionCollection } from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as child from 'child_process';
@@ -10,13 +10,18 @@ import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
 
+const CYAN_ESC = '\x1b[36m%s\x1b[0m';
+
 program
-  .version('1.0.0')
+  .version('1.1.0')
   .description('Create a release for moli ad tag')
-  .option('-D --dry', 'Dry run not creating a commit', false)
+  .option('-D, --dry', 'Dry run not creating a commit', false)
+  .option('-P, --publishername [publishername]', 'Publisher name')
   .parse(process.argv);
 
-const dryRun: boolean = program.dry;
+const options = program.opts();
+const dryRun: boolean = options.dry;
+const publisherNameFromArgs: string | undefined = options.publishername;
 
 // Parse releases.json (optional) and package.json (required)
 let releasesJson: IReleasesJson;
@@ -74,20 +79,22 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
   // If the publisherName in the releases.json isn't defined yet, we'll ask the user here.
   if (releasesJson.publisherName === '' || !releasesJson.publisherName) {
-    await inquirer
-      .prompt([
-        {
-          type: 'input',
-          name: 'publisher',
-          message: 'What is the name of the publisher in this project?'
-        }
-      ])
-      .then((answers: { publisher: string }) => {
-        releasesJson = {
-          ...releasesJson,
-          publisherName: answers.publisher
-        };
-      });
+    const publisher: string =
+      publisherNameFromArgs ||
+      (await inquirer
+        .prompt([
+          {
+            type: 'input',
+            name: 'publisher',
+            message: 'What is the name of the publisher in this project?'
+          }
+        ])
+        .then((answers: { publisher: string }) => answers.publisher));
+
+    releasesJson = {
+      ...releasesJson,
+      publisherName: publisher
+    };
   }
 
   let questions = [
@@ -109,14 +116,18 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
         return true;
       }
-    },
-    {
+    }
+  ];
+
+  // on dry runs, we don't push anyways
+  if (!dryRun) {
+    questions.push({
       type: 'confirm',
       name: 'push',
       message: 'Do you want to push your changes?',
-      default: false
-    }
-  ];
+      default: false as any
+    });
+  }
 
   await inquirer
     .prompt(questions)
@@ -140,10 +151,12 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
       const manifestPathEs5 = path.join(process.cwd(), 'dist', 'manifest.es5.json');
 
-      const manifestFileEs5 = fs.existsSync(manifestPathEs5)
+      const manifestFileEs5: Buffer | undefined = fs.existsSync(manifestPathEs5)
         ? fs.readFileSync(manifestPathEs5)
         : undefined;
-      const manifestJsonEs5 = manifestFileEs5 ? JSON.parse(manifestFileEs5 as any) : undefined; // yes, we can
+      const manifestJsonEs5: { moli_es5: string } | undefined = manifestFileEs5
+        ? JSON.parse(manifestFileEs5.toString())
+        : undefined; // yes, we can
       const filenameEs5 = manifestJsonEs5?.moli_es5; // moli_es5 is the ES5 ad tag name by convention
 
       const change: IAdTagRelease = {
@@ -163,14 +176,26 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         versions: versions
       };
 
-      if (!dryRun) {
-        packageJson.version = answers.version + '.0.0';
-        fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+      packageJson.version = answers.version + '.0.0';
 
-        fs.writeFileSync('releases.json', JSON.stringify(releasesJsonContent, null, 2));
+      const packageJsonNewContents = JSON.stringify(packageJson, null, 2);
+      const releasesJsonNewContents = JSON.stringify(releasesJsonContent, null, 2);
 
-        // The tagName for the commit including the name of the publisher and the version.
-        const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
+      // The tagName for the commit including the name of the publisher and the version.
+      const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
+
+      if (dryRun) {
+        console.log(CYAN_ESC, '>>> DRY RUN <<<');
+        console.log(CYAN_ESC, 'Projected package.json contents:');
+        console.log(packageJsonNewContents);
+        console.log(CYAN_ESC, 'Projected releases.json contents:');
+        console.log(releasesJsonNewContents);
+        console.log(CYAN_ESC, 'Projected git tag name:');
+        console.log(tagName);
+        console.log(CYAN_ESC, '>>> DRY RUN FINISHED <<<');
+      } else {
+        fs.writeFileSync('package.json', packageJsonNewContents);
+        fs.writeFileSync('releases.json', releasesJsonNewContents);
 
         const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
 

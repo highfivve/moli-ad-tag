@@ -32,3 +32,11 @@ entry: {
   moli_es5: './index.es5.ts'
 }
 ```
+
+## Manually testing changes to `overview.hbs` or to `moli-release` itself
+
+There is a separate test script that enables you to test changes to `overview.hbs` or the `moli-release` core script
+with mock data.
+
+Just run the `test:release` script from `moli-release`'s [`package.json`](package.json) and check the console logs or
+the output inside the [demo-data/dist](demo-data/dist) dir (e.g. [`overview.html`](demo-data/dist/overview.html)).

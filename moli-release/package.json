@@ -28,7 +28,8 @@
     "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",
     "prettier:fix": "yarn prettier --write",
     "validate:github": "yarn validate",
-    "validate:jenkins": "yarn validate"
+    "validate:jenkins": "yarn validate",
+    "test:release": "yarn make:nodemodule && chmod +x lib/moli-release.js && cd demo-data/ && moli-release -D -P demo-publisher"
   },
   "repository": {
     "type": "git",
