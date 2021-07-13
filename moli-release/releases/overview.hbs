@@ -20,7 +20,7 @@
   </div>
 </div>
 <div class="container-fluid">
-  <div style="">
+  <div>
     <h3>Ältere Versionen:</h3>
     <div class="row">
       {{#each releases.versions}}
@@ -51,9 +51,9 @@
                 <pre><code class="language-html">
                     {{~#if filenameEs5~}}
 &lt;!-- legacy es5 bundle (IE11) --&gt;
-&lt;script async nomodule src="https://{{publisher}}.h5v.eu/{{version}}/{{filenameEs5}}"&gt;&lt;/script&gt;{{/if}}
+&lt;script async nomodule src="https://{{../publisher}}.h5v.eu/{{version}}/{{filenameEs5}}"&gt;&lt;/script&gt;{{/if}}
 &lt;!-- modern es6 bundle --&gt;
-&lt;script async type="module" src="https://{{publisher}}.h5v.eu/{{version}}/{{filename}}"&gt;&lt;/script&gt;{{"\n"~}}
+&lt;script async type="module" src="https://{{../publisher}}.h5v.eu/{{version}}/{{filename}}"&gt;&lt;/script&gt;{{"\n"~}}
                   </code></pre>
               </div>
             </div>

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.34.3
+
+- [GD-3273](https://jira.gutefrage.net/browse/GD-3273) Fixed wrong scope for publisher name on overview page
+
 ## 3.34.2
 
 - [GD-3274](https://jira.gutefrage.net/browse/GD-3274) Improve testability of changes made to overview.hbs in moli-release
