@@ -137,9 +137,19 @@ export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): Confi
 
           // if the user consent changes update the token config
           if (context.window.__tcfapi) {
-            context.window.__tcfapi('addEventListener', 2, () =>
-              context.window.apstag.upa(tokenConfig)
-            );
+            let firstCall = true;
+            context.window.__tcfapi('addEventListener', 2, tcdata => {
+              // The event listener is called with the current state when added,
+              // which would trigger an unnecessary update
+              if (firstCall) {
+                firstCall = false;
+                return;
+              }
+              if (tcdata.eventStatus === tcfapi.status.EventStatus.USER_ACTION_COMPLETE) {
+                context.logger.debug('A9', 'Update publisher audience token');
+                context.window.apstag.upa(tokenConfig);
+              }
+            });
           }
         }
         resolve();

@@ -19,13 +19,14 @@ import {
   a9PublisherAudiences,
   a9RequestBids
 } from './a9';
-import { tcData, fullConsent, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
+import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
-import TCPurpose = tcfapi.responses.TCPurpose;
 import { apstag } from '../types/apstag';
+import TCPurpose = tcfapi.responses.TCPurpose;
+import EventStatus = tcfapi.status.EventStatus;
 
 // setup sinon-chai
 use(sinonChai);
@@ -258,9 +259,22 @@ describe('a9', () => {
       expect(upaSpy).to.have.callCount(0);
       expect(tcfapiStub).to.have.been.calledOnce;
 
+      // only update on user action complete
+      const tcDataUserActionComplete: tcfapi.responses.TCDataWithGDPR = {
+        ...fullConsent(),
+        eventStatus: EventStatus.USER_ACTION_COMPLETE
+      };
+
       // get callback function from stub
       const callback = tcfapiStub.firstCall.args[2];
-      callback();
+
+      // First call should not trigger an update as this is callback is
+      // always fired when an event listener is added
+      callback(tcDataUserActionComplete);
+      expect(upaSpy).to.have.callCount(0);
+
+      // Actual change
+      callback(tcDataUserActionComplete);
       expect(upaSpy).to.have.been.calledOnce;
       expect(upaSpy).to.have.been.calledOnceWithExactly({
         hashedRecords: [
@@ -270,6 +284,15 @@ describe('a9', () => {
           }
         ]
       });
+
+      // No change if the ui is shown
+      upaSpy.resetHistory();
+      const tcDataUserCmpUiShown: tcfapi.responses.TCDataWithGDPR = {
+        ...fullConsent(),
+        eventStatus: EventStatus.CMP_UI_SHOWN
+      };
+      callback(tcDataUserCmpUiShown);
+      expect(upaSpy).to.have.callCount(0);
     });
   });
 
