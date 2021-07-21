@@ -1729,6 +1729,7 @@ export namespace prebidjs {
   export const Rubicon = 'rubicon';
   export const Recognified = 'rads';
   export const Visx = 'visx';
+  export const Vlyby = 'vlyby';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -1757,7 +1758,8 @@ export namespace prebidjs {
     | typeof DSPX
     | typeof Rubicon
     | typeof Recognified
-    | typeof Visx;
+    | typeof Visx
+    | typeof Vlyby;
 
   /**
    * A bid object.
@@ -2856,6 +2858,26 @@ export namespace prebidjs {
   export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/vlyby
+   */
+  export interface IVlybyParams {
+    /**
+     * VLYBY PublisherId
+     */
+    readonly publisherId: string;
+
+    /**
+     * Optional placement id.
+     */
+    readonly placement?: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/visx.html
+   */
+  export interface IVlybyBid extends IBidObject<typeof Vlyby, IVlybyParams> {}
+
+  /**
    * @see https://docs.prebid.org/dev-docs/bidders/visx.html
    */
   export interface IVisxParams {
@@ -2915,6 +2937,7 @@ export namespace prebidjs {
     | IDSPXBid
     | IRubiconBid
     | IRecognifiedBid
+    | IVlybyBid
     | IVisxBid;
 
   /**

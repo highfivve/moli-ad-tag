@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+[GD-3319](https://jira.gutefrage.net/browse/GD-3319) Add `vlyby` prebid adapter types
+
 ## 3.34.5
 
 [GD-3202](https://jira.gutefrage.net/browse/GD-3202) `mkConfigureStepOnce` take `requestAdsCalls` and `requestId` into account
