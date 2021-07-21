@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+[GD-3313](https://jira.gutefrage.net/browse/GD-3313) Sanitize `adUnitPath` for `slotName`. Child network id is removed
 [GD-3319](https://jira.gutefrage.net/browse/GD-3319) Add `vlyby` prebid adapter types
 
 ## 3.34.5

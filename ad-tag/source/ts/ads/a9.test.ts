@@ -330,6 +330,39 @@ describe('a9', () => {
       });
     });
 
+    it('should use an ad unit path without the child network id', () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids(a9ConfigStub);
+
+      const adUnitPath = '/1234567,1234/Travel/Berlin';
+      const domId = getDomId();
+      const slot: Moli.AdSlot = {
+        ...a9Slot(domId, {}),
+        adUnitPath
+      };
+      const singleSlot = {
+        moliSlot: slot,
+        adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
+        filterSupportedSizes: sizes => sizes
+      };
+
+      return step(contextWithConsent, [singleSlot]).then(() => {
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+          {
+            slots: [
+              {
+                slotID: domId,
+                slotName: '/1234567/Travel/Berlin',
+                sizes: mediumRec
+              }
+            ]
+          },
+          Sinon.match.func
+        );
+      });
+    });
+
     it('should respect the supportedSizes configuration in the global a9 config', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids({

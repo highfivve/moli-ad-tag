@@ -18,6 +18,7 @@ import { SizeConfigService } from './sizeConfigService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import * as adUnitPath from './adUnitPath';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -229,7 +230,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
 
                   return {
                     slotID: moliSlot.domId,
-                    slotName: moliSlot.adUnitPath,
+                    slotName: adUnitPath.removeChildId(moliSlot.adUnitPath),
                     sizes: filterSupportedSizes(enabledSizes).filter(SizeConfigService.isFixedSize),
                     ...(config.enableFloorPrices && priceRule
                       ? // During the beta phase we need to be able to activate and deactivate floor prices
