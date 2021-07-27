@@ -516,7 +516,7 @@ describe('moli', () => {
       });
     });
 
-    it('should persists the initial key-values in spa mode for all requestAd() calls', () => {
+    it('should persists the initial key-values in spa mode for all requestAd() calls', async () => {
       const googletagPubAdsSetTargetingSpy = sandbox.spy(
         jsDomWindow.googletag.pubads(),
         'setTargeting'
@@ -538,51 +538,47 @@ describe('moli', () => {
       adTag.setTargeting('dynamicKeyValuePost', 'value');
 
       expect(adTag.getState()).to.be.eq('configured');
-      return adTag
-        .requestAds()
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-          expect(spaState.keyValues).to.be.deep.equal({});
-          expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(5);
-          expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
-          expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
-          expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
-          expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
-          googletagPubAdsSetTargetingSpy.resetHistory();
-          dom.reconfigure({
-            url: 'https://localhost/2'
-          });
-          // set targeting for next page
-          adTag.setTargeting('kv1', 'value');
-          adTag.setTargeting('kv2', 'value');
+      const state = await adTag.requestAds();
+      expect(state.state).to.be.eq('spa-finished');
+      const spaState1: ISinglePageApp = state as ISinglePageApp;
+      expect(spaState1.config).to.be.ok;
+      expect(spaState1.keyValues).to.be.deep.equal({});
+      expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(5);
+      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
+      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
+      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
+      expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
 
-          expect(spaState.keyValues).to.be.deep.equals({
-            kv1: 'value',
-            kv2: 'value'
-          });
+      googletagPubAdsSetTargetingSpy.resetHistory();
+      dom.reconfigure({
+        url: 'https://localhost/2'
+      });
+      // set targeting for next page
+      adTag.setTargeting('kv1', 'value');
+      adTag.setTargeting('kv2', 'value');
 
-          return adTag.requestAds();
-        })
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.keyValues).to.be.deep.equal({});
-          expect(spaState.config.targeting).to.be.ok;
+      expect(spaState1.keyValues).to.be.deep.equals({
+        kv1: 'value',
+        kv2: 'value'
+      });
 
-          const keyValues = spaState.config.targeting!.keyValues;
-          expect(keyValues).to.have.all.keys(['ABtest', 'keyFromAdConfig', 'kv1', 'kv2']);
-          expect(keyValues).to.have.property('keyFromAdConfig', 'value');
-          expect(keyValues).to.have.property('kv1', 'value');
-          expect(keyValues).to.have.property('kv2', 'value');
+      const nextState = await adTag.requestAds();
+      expect(nextState.state).to.be.eq('spa-finished');
+      const spaState2: ISinglePageApp = nextState as ISinglePageApp;
+      expect(spaState2.keyValues).to.be.deep.equal({});
+      expect(spaState2.config.targeting).to.be.ok;
 
-          expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(4);
-          expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
-          expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv1', 'value');
-          expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv2', 'value');
-          expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
-        });
+      const keyValues = spaState2.config.targeting!.keyValues;
+      expect(keyValues).to.have.all.keys(['ABtest', 'keyFromAdConfig', 'kv1', 'kv2']);
+      expect(keyValues).to.have.property('keyFromAdConfig', 'value');
+      expect(keyValues).to.have.property('kv1', 'value');
+      expect(keyValues).to.have.property('kv2', 'value');
+
+      expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(4);
+      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
+      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv1', 'value');
+      expect(googletagPubAdsSetTargetingSpy).calledWithExactly('kv2', 'value');
+      expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
     });
   });
 

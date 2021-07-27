@@ -338,7 +338,7 @@ export class AdService {
       );
     }
 
-    this.logger.debug('AdService', 'refresh ad slots', availableSlots);
+    this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
   }
 
