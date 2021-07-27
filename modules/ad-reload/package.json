@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-moli-ad-reload",
-  "version": "3.35.0",
+  "version": "3.35.1",
   "license": "Apache-2.0",
   "description": "Ad Reload",
   "main": "./lib/index.js",
@@ -51,6 +51,6 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.35.0"
+    "@highfivve/ad-tag": "^3.35.1"
   }
 }
