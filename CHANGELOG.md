@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.35.1
+
+[GD-3322](https://jira.gutefrage.net/browse/GD-3322) Add targeting information to `refreshAdSlot` debug output
+
 ## 3.35.0
 
 [GD-3313](https://jira.gutefrage.net/browse/GD-3313) Sanitize `adUnitPath` for `slotName`. Child network id is removed
