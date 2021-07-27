@@ -590,15 +590,6 @@ export namespace Moli {
       readonly config: Moli.MoliConfig;
 
       /**
-       * Refresh ads
-       *
-       * @param config
-       * @param refreshSlots - domIds of the manually triggered ad slots that should be refreshed immediately
-       * @return a promise that is finished when all refresh calls have been made
-       */
-      readonly refreshAds: (config: Moli.MoliConfig, refreshSlots: string[]) => Promise<void>;
-
-      /**
        * stores the information if the moli ad tag is configured yet
        */
       readonly initialized: Promise<Moli.MoliConfig>;

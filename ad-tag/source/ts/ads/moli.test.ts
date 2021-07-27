@@ -573,6 +573,8 @@ describe('moli', () => {
       expect(keyValues).to.have.property('keyFromAdConfig', 'value');
       expect(keyValues).to.have.property('kv1', 'value');
       expect(keyValues).to.have.property('kv2', 'value');
+      expect(keyValues).to.not.have.property('dynamicKeyValuePre', 'value');
+      expect(keyValues).to.not.have.property('dynamicKeyValuePost', 'value');
 
       expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(4);
       expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');

@@ -438,10 +438,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             state: 'spa-requestAds',
             configFromAdTag: state.configFromAdTag,
             config: config,
-            refreshAds: (moliConfig: Moli.MoliConfig, refreshSlots: string[]) =>
-              adService.requestAds(moliConfig, refreshSlots).then(() => {
-                return;
-              }),
             initialized,
             href: window.location.href,
             // initialize targeting values for next refreshAds call
@@ -533,7 +529,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         const beforeRequestAds = state.hooks.beforeRequestAds;
 
         const currentState = state;
-        const { initialized, refreshAds, href, keyValues, labels, configFromAdTag } = state;
+        const { initialized, href, keyValues, labels, configFromAdTag } = state;
         // we can only use the preexisting refreshSlots array if the previous requestAds call finished in time
         const refreshSlots = state.state === 'spa-finished' ? state.refreshSlots : [];
         state = {
@@ -579,15 +575,17 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             // run hooks
             beforeRequestAds.forEach(hook => hook(configWithTargeting));
 
-            return refreshAds(configWithTargeting, refreshSlots).then(() => configWithTargeting);
+            return adService
+              .requestAds(configWithTargeting, refreshSlots)
+              .then(() => configWithTargeting);
           })
           .then(configWithTargeting => {
+            // type check to get access to refreshSlots
             if (state.state === 'spa-requestAds') {
-              adService.refreshAdSlots(state.refreshSlots, state.config);
+              adService.refreshAdSlots(state.refreshSlots, configWithTargeting);
             }
             state = {
               state: 'spa-finished',
-              refreshAds,
               configFromAdTag,
               config: configWithTargeting,
               initialized,
