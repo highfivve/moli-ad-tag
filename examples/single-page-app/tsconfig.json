@@ -12,7 +12,8 @@
   },
   "include": [
     "index.ts",
-    "../prebid/prebidjs.d.ts"
+    "../prebid/prebidjs.d.ts",
+    "source"
   ],
   "references": [
     {

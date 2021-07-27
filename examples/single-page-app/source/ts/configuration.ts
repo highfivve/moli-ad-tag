@@ -23,13 +23,7 @@ export const adConfiguration: Moli.MoliConfig = {
       sizes: ['fluid', [300, 250], [120, 600], [160, 600], [200, 600], [300, 600]],
       position: 'in-page',
       behaviour: {
-        loaded: 'refreshable',
-        lazy: true,
-        trigger: {
-          name: 'event',
-          event: 'ads.ad-sidebar-1',
-          source: window
-        }
+        loaded: 'manual'
       },
       sizeConfig: [
         {
@@ -42,12 +36,7 @@ export const adConfiguration: Moli.MoliConfig = {
       position: 'in-page',
       domId: 'spa-prebid-adslot',
       behaviour: {
-        loaded: 'lazy',
-        trigger: {
-          name: 'event',
-          event: 'ads.spa-prebid-adslot',
-          source: window
-        }
+        loaded: 'manual'
       },
       adUnitPath: '/33559401/gf/fragen/pos2',
       sizes: ['fluid', [300, 250], [605, 165], [605, 340], [1, 1]],

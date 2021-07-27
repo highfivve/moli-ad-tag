@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { RequestAdsContext } from './AdContext';
 
 export interface IAdProps {
   readonly domId: string;
@@ -25,18 +24,8 @@ declare const window: Window & {
  * corresponding event to trigger the ad.
  */
 export class Ad extends React.Component<IAdProps, {}> {
-  static contextType = RequestAdsContext;
-  context!: React.ContextType<typeof RequestAdsContext>;
-
   render(): React.ReactNode {
     return <div id={this.props.domId}></div>;
-  }
-
-  /**
-   * Called when the internal state changes or the RequestAdsContext.
-   */
-  componentDidUpdate(prevProps: Readonly<{}>, prevState: Readonly<{}>, snapshot?: any): void {
-    this.dispatchAdTriggerEvent();
   }
 
   /**
@@ -51,17 +40,6 @@ export class Ad extends React.Component<IAdProps, {}> {
       window.moli.que.push(moli => {
         moli.refreshAdSlot(this.props.domId);
       });
-    }
-
-    // event based ad reload
-    this.dispatchAdTriggerEvent();
-  }
-
-  private dispatchAdTriggerEvent(): void {
-    // only trigger the ad slot when requestAdsFinished is true and this component hasn't already fired the trigger event
-    if (this.props.trigger === 'event' && this.context.requestAdsFinished) {
-      // the event type is part of the ad tag configuration and is documented on the demo page
-      window.dispatchEvent(new CustomEvent(`ads.${this.props.domId}`));
     }
   }
 }
