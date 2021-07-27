@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-## 3.35.1
+## 3.35.2
 
-[GD-3322](https://jira.gutefrage.net/browse/GD-3322) Add targeting information to `refreshAdSlot` debug output
+[GD-3322](https://jira.gutefrage.net/browse/GD-3322) Fix single page application targeting
 
 ## 3.35.0
 
