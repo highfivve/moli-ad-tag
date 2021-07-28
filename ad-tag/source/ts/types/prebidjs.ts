@@ -1377,6 +1377,24 @@ export namespace prebidjs {
     readonly startdelay?: number;
 
     /**
+     * Indicates if the player will allow the video to be skipped, where `0` = no, `1` = yes.
+     *
+     * If a bidder sends markup/creative that is itself skippable, the Bid object should include the attr array with
+     * an element of 16 indicating skippable video
+     */
+    readonly skip?: 0 | 1;
+
+    /**
+     * Blocked creative attributes,
+     *
+     * @see [OpenRTB 2.5 specification, List 5.3 for values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
+     * @example `[3, 9]`
+     */
+    readonly battr?: Array<
+      1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17
+    >;
+
+    /**
      * Video placement type.
      *
      *   1: In-Stream
