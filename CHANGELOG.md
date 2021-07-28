@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 3.35.4
+
+[GD-3231](https://jira.gutefrage.net/browse/GD-3231) Add `detectMissingSizes` config parameter for index exchange.
+
+See https://github.com/prebid/Prebid.js/pull/5856
+
 ## 3.35.3
 
 [GD-3270](https://jira.gutefrage.net/browse/GD-3270) Add additional parameters to `mediaTypes.video`.
