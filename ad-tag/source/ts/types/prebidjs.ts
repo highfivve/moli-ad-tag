@@ -1258,6 +1258,7 @@ export namespace prebidjs {
 
     /**
      * API frameworks supported
+     *
      * Values:
      *   1: VPAID 1.0
      *   2: VPAID 2.0
@@ -1265,6 +1266,8 @@ export namespace prebidjs {
      *   4: ORMMA
      *   5: MRAID-2
      *   6: MRAID-3
+     *
+     * *Recommended*
      *
      * @example `[1, 2]`
      * @see [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html)

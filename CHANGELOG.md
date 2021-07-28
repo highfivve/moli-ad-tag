@@ -4,7 +4,30 @@
 
 ## 3.35.3
 
-[GD-3270](https://jira.gutefrage.net/browse/GD-3270) Add additional parameters to `mediaTypes.video`
+[GD-3270](https://jira.gutefrage.net/browse/GD-3270) Add additional parameters to `mediaTypes.video`.
+There are new params that need to be set. This is a sensible default:
+
+```javascript
+const mediaTypes =    {
+  mediaTypes: {
+    video: {
+      context: 'outstream',
+      playerSize: [605, 340],
+
+      // ----- this is new --------
+      mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+      minduration: 1,
+      maxduration: 30,
+      playbackmethod: [2, 3, 4, 5, 6],
+      placement: 2, // placement 2 means in-banner
+      api: [1, 2, 3, 4, 5, 6]
+    }
+  }
+};
+```
+
+Note that all the numbers are not really nice to use, and you have to look up everything in the
+docs or the OpenRTB spec. Maybe these will become enums in the future.
 
 ## 3.35.2
 

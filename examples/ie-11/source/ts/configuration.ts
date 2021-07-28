@@ -112,7 +112,13 @@ export const adConfiguration: Moli.MoliConfig = {
           mediaTypes: {
             video: {
               context: 'outstream',
-              playerSize: [605, 340]
+              playerSize: [605, 340],
+              mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+              minduration: 1,
+              maxduration: 30,
+              playbackmethod: [2, 3, 4, 5, 6],
+              placement: 2,
+              api: [1, 2, 3, 4, 5, 6]
             }
           },
           bids: [

@@ -208,7 +208,13 @@ export const adConfiguration: Moli.MoliConfig = {
                   [605, 340],
                   [536, 302],
                   [1, 1]
-                ]
+                ],
+                mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+                minduration: 1,
+                maxduration: 30,
+                playbackmethod: [2, 3, 4, 5, 6],
+                placement: 2, // placement 2 means in-banner
+                api: [1, 2, 3, 4, 5, 6]
               }
             },
             bids: [
@@ -243,6 +249,12 @@ export const adConfiguration: Moli.MoliConfig = {
                   [536, 302],
                   [1, 1]
                 ],
+                mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+                minduration: 1,
+                maxduration: 30,
+                playbackmethod: [2, 3, 4, 5, 6],
+                placement: 2, // placement 2 means in-banner
+                api: [1, 2, 3, 4, 5, 6],
                 // Use Moli's outstream player
                 renderer: { ...prebidOutstreamRenderer('prebid-adslot'), backupOnly: false }
               }
