@@ -2256,7 +2256,7 @@ export namespace prebidjs {
      * An IX-specific identifier that is associated with a specific size on this ad unit. This is similar to
      * a placement ID or an ad unit ID that some other modules have.
      */
-    readonly siteId: string;
+    readonly siteId: string | number;
 
     /**
      * The single size associated with the site ID. It should be one of the sizes listed in the ad unit under
@@ -2264,7 +2264,7 @@ export namespace prebidjs {
      *
      * Note that the 'ix' Prebid Server bid adapter ignores this parameter.
      */
-    readonly size: [number, number];
+    readonly size?: [number, number];
 
     /**
      * Taken from source code:
