@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 3.35.5
+
+[GD-3231](https://jira.gutefrage.net/browse/GD-3231) Add more `mediaType.video` params.
+
+[GD-3231](https://jira.gutefrage.net/browse/GD-3231) Make `params.size` optional for index exchange and allow `number` for `params.siteId`
+
 ## 3.35.4
 
 [GD-3231](https://jira.gutefrage.net/browse/GD-3231) Add `detectMissingSizes` config parameter for index exchange.
