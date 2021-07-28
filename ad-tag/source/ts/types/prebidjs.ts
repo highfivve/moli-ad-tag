@@ -1240,19 +1240,170 @@ export namespace prebidjs {
 
   /**
    * For AdUnits with MediaType: video
+   *
+   * @see https://docs.prebid.org/dev-docs/adunit-reference.html#adunitmediatypesvideo
    */
   export interface IMediaTypeVideo {
     /**
-     * Context can be 'instream' or 'outstream'.
-     * We only show outstream videos. Outstream video ads can be shown on any web page.
-     * Instream video ads require you to have your own video inventory.
+     * The video context, either `'instream'`, `'outstream'`, or `'adpod'` (for long-form videos).
+     *
+     * Defaults to ‘instream’
      */
-    readonly context: 'outstream';
+    readonly context: 'outstream' | 'instream' | 'adpod';
 
     /**
      * Player size(s) that this ad unit can accept (width, height).
      */
     readonly playerSize: [number, number][] | [number, number];
+
+    /**
+     * API frameworks supported
+     * Values:
+     *   1: VPAID 1.0
+     *   2: VPAID 2.0
+     *   3: MRAID-1
+     *   4: ORMMA
+     *   5: MRAID-2
+     *   6: MRAID-3
+     *
+     * @example `[1, 2]`
+     * @see [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html)
+     */
+    readonly api?: Array<1 | 2 | 3 | 4 | 5 | 6>;
+
+    /**
+     * Content MIME types supported.
+     *
+     * *Require by OpenRTB when using [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html).*
+     *
+     * @see https://www.iana.org/assignments/media-types/media-types.xhtml#video
+     * @example `['video/mp4','video/x-flv']`
+     */
+    readonly mimes: Array<
+      'video/mp4' | 'video/webm' | 'video/flv' | 'video/H264' | 'video/ogg' | 'video/MPV'
+    >;
+
+    /**
+     *
+     * Array of supported video protocols. For list, see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf].
+     *
+     * *Required by OpenRTB when using [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html).*
+     *
+     * Supported video bid response protocols
+     * Values
+     *   1: VAST 1.0
+     *   2: VAST 2.0
+     *   3: VAST 3.0
+     *   4: VAST 1.0 Wrapper
+     *   5: VAST 2.0 Wrapper
+     *   6: VAST 3.0 Wrapper
+     *   7: VAST 4.0
+     *   8: VAST 4.0 Wrapper
+     *   9: DAAST 1.0
+     *  10: DAAST 1.0 Wrapper
+     *
+     * @example `[5, 6]`
+     */
+    readonly protocols?: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>;
+
+    /**
+     * Allowed playback methods.. Defines whether inventory is user-initiated or autoplay sound on/off
+     * If none specified, all are allowed. For list, see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf].
+     *
+     * *Required by OpenRTB when using [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html).*
+     *
+     * Values:
+     *  1: Auto-play, sound on
+     *  2: Auto-play, sound off
+     *  3: Click-to-play
+     *  4: mouse-over
+     *  5: Initiates on Entering Viewport with Sound Off
+     *  6: Initiates on Entering Viewport with Sound Off by Default
+     */
+    readonly playbackmethod: Array<1 | 2 | 3 | 4 | 5 | 6>;
+
+    /**
+     * Minimum ad duration in seconds
+     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly minduration: number;
+
+    /**
+     * 	Maximum ad duration in seconds
+     * 	@see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly maxduration: number;
+
+    /**
+     * Width of the video player in device independent pixels (DIPS) - *Recommended*
+     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly w?: number;
+
+    /**
+     * Height of the video player in device independent pixels (DIPS) - *Recommended*
+     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly h?: number;
+
+    /**
+     * 	Indicates the start delay in seconds for pre-roll, mid-roll, or post-roll ad placements.
+     *
+     *  Possible values:
+     * 	> 0 Mid-Roll (value indicates start delay in second)
+     * 	  0 Pre-Roll
+     * 	 -1 Generic Mid-Roll
+     * 	 -2, Generic Post-Roll
+     *
+     * 	@see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly startdelay?: number;
+
+    /**
+     * Video placement type.
+     *
+     *   1: In-Stream
+     *      Played before, during or after the streaming video content that the consumer has requested
+     *      (e.g., Pre-roll, Mid-roll, Post-roll).
+     *   2: In-Banner
+     *      Exists within a web banner that leverages the banner space to deliver a video experience as
+     *      opposed to another static or rich media format. The format relies on the existence of display
+     *      ad inventory on the page for its deliver
+     *   3: In-Article
+     *      Loads and plays dynamically between paragraphs of editorial content; existing as a standalone
+     *      branded message
+     *   4: In-Feed
+     *      Found in content, social, or product feeds
+     *   5: Interstitial/Slider/Floating
+     *
+     *  *Highly recommended* because some bidders require more than context=outstream.
+     *
+     * @see [OpenRTB 2.5 specification, List 5.9 for Values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
+     */
+    readonly placement: 1 | 2 | 3 | 4 | 5;
+
+    /**
+     * Minimum bit rate in Kbps.
+     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly minbitrate?: number;
+
+    /**
+     * Maximum bit rate in Kbps.
+     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly maxbitrate?: number;
+
+    /**
+     * Indicates if the impression is linear or nonlinear
+     * Values:
+     *   1: Linear/In-Stream
+     *   2: Non-Linear/Overlay.
+     *
+     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     */
+    readonly linearity?: 1 | 2;
+
     /**
      * The renderer associated to the ad-unit. Only for mediaType = video.
      */
