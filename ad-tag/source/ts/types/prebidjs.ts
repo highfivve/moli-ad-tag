@@ -190,7 +190,50 @@ export namespace prebidjs {
     };
   }
 
+  /**
+   *
+   * The `targetingControls` object passed to `pbjs.setConfig` provides some options to influence how an auction’s
+   * targeting keys are generated and managed.
+   *
+   * @see [Configure Targeting Controls](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#configure-targeting-controls)
+   */
   export namespace targetingcontrols {
+    /**
+     * List of available targeting keys from prebid
+     *
+     * @see [setConfig allowTargetingKeys setting](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#details-on-the-allowtargetingkeys-setting)
+     */
+    export type TargetingKeys =
+      | 'hb_bidder'
+      | 'hb_adid'
+      | 'hb_pb'
+      | 'hb_size'
+      | 'hb_source'
+      | 'hb_deal'
+      | 'hb_format'
+      | 'hb_uuid'
+      | 'hb_cache_id'
+      | 'hb_cache_host'
+      | 'hb_adomain'
+      | 'hb_native_title'
+      | 'hb_native_body'
+      | 'hb_native_body2'
+      | 'hb_native_privacy'
+      | 'hb_native_privicon'
+      | 'hb_native_brand'
+      | 'hb_native_image'
+      | 'hb_native_icon'
+      | 'hb_native_linkurl'
+      | 'hb_native_displayurl'
+      | 'hb_native_cta'
+      | 'hb_native_rating'
+      | 'hb_native_address'
+      | 'hb_native_downloads'
+      | 'hb_native_likes'
+      | 'hb_native_phone'
+      | 'hb_native_price'
+      | 'hb_native_saleprice';
+
     export interface ITargetingControls {
       /**
        * Specifies the maximum number of characters the system can add to ad server targeting.
@@ -202,6 +245,11 @@ export namespace prebidjs {
        * use the alwaysIncludeDeals flag that's part of targetingControls
        */
       readonly alwaysIncludeDeals?: boolean;
+
+      /**
+       * Selects supported default targeting keys.
+       */
+      readonly allowTargetingKeys?: TargetingKeys[];
     }
   }
 
