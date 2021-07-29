@@ -2,6 +2,54 @@
 
 ## Unreleased
 
+## 3.35.6
+
+[GD-3231](https://jira.gutefrage.net/browse/GD-3231) Add `allowTargetingKeys` to the prebid `targetingControls` config.
+
+In [#6485](https://github.com/prebid/Prebid.js/issues/6485) prebid.js made `hb_source` an optional parameter, which is
+required if you want to distinguish between client and server side traffic. For Prebid 5.x add this to the prebid config
+
+```javascript
+const targetingControls = {
+  targetingControls: {
+    alwaysIncludeDeals: true,
+    allowTargetingKeys: [
+      'hb_bidder',
+      'hb_adid',
+      'hb_pb',
+      'hb_size',
+      'hb_source',
+      'hb_deal',
+      'hb_format',
+      'hb_uuid',
+      'hb_cache_id',
+      'hb_cache_host',
+      'hb_adomain',
+      'hb_native_title',
+      'hb_native_body',
+      'hb_native_body2',
+      'hb_native_privacy',
+      'hb_native_privicon',
+      'hb_native_brand',
+      'hb_native_image',
+      'hb_native_icon',
+      'hb_native_linkurl',
+      'hb_native_displayurl',
+      'hb_native_cta',
+      'hb_native_rating',
+      'hb_native_address',
+      'hb_native_downloads',
+      'hb_native_likes',
+      'hb_native_phone',
+      'hb_native_price',
+      'hb_native_saleprice'
+    ]
+  }
+}
+```
+
+
+
 ## 3.35.5
 
 [GD-3231](https://jira.gutefrage.net/browse/GD-3231) Add more `mediaType.video` params.
