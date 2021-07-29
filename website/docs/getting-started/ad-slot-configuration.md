@@ -209,7 +209,7 @@ sizeConfig: [{
 }]
 ```
 
-See [the responsive ads section](../features/responsive-ads.md) for an in detail explanation of the size config.
+See [the responsive ads section](../configuration/size-config.md) for an in detail explanation of the size config.
 
 ## Labels
 

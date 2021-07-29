@@ -17,20 +17,21 @@ module.exports = {
       items: [
         'getting-started/quick-start',
         'getting-started/adtag-build',
-        'getting-started/ad-slot-configuration'
+        'getting-started/ad-slot-configuration',
+        'getting-started/glossary'
       ],
       collapsed: false
     },
     {
       type: 'category',
-      label: 'Features',
+      label: 'Configuration',
       items: [
+        'features/size-config',
         'features/prebid',
         'features/tam',
         'features/consent',
         'features/targeting',
         'features/labels',
-        'features/responsive-ads',
         'features/buckets',
         'features/debugging',
         'features/logger',
