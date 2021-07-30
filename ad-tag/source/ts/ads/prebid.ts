@@ -162,12 +162,22 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                     return { bidder: bid.bidder, params: bid.params } as prebidjs.IBid;
                   });
 
-                const video =
-                  mediaTypeVideo && videoSizes.length > 0
+                const videoDimensionsWH =
+                  videoSizes.length > 0 && !mediaTypeVideo?.w && !mediaTypeVideo?.h
                     ? {
-                        video: { ...mediaTypeVideo, playerSize: videoSizes }
+                        w: videoSizes[0][0],
+                        h: videoSizes[0][1]
                       }
-                    : undefined;
+                    : {};
+                const video: prebidjs.IMediaTypes | undefined = mediaTypeVideo
+                  ? {
+                      video: {
+                        ...mediaTypeVideo,
+                        playerSize: videoSizes.length === 0 ? undefined : videoSizes,
+                        ...videoDimensionsWH
+                      }
+                    }
+                  : undefined;
 
                 const banner =
                   mediaTypeBanner && bannerSizes.length > 0
@@ -362,8 +372,14 @@ const filterVideoPlayerSizes = (
   const isSinglePlayerSize = (
     size: prebidjs.IMediaTypeVideo['playerSize']
   ): size is [number, number] => {
-    return size.length === 2 && typeof size[0] === 'number' && typeof size[1] === 'number';
+    return (
+      !!size && size.length === 2 && typeof size[0] === 'number' && typeof size[1] === 'number'
+    );
   };
+
+  if (!playerSize) {
+    return [];
+  }
 
   return filterSupportedSizes(isSinglePlayerSize(playerSize) ? [playerSize] : playerSize).filter(
     SizeConfigService.isFixedSize

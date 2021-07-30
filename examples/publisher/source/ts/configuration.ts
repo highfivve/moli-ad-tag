@@ -214,7 +214,9 @@ export const adConfiguration: Moli.MoliConfig = {
                 maxduration: 30,
                 playbackmethod: [2, 3, 4, 5, 6],
                 placement: 2, // placement 2 means in-banner
-                api: [1, 2, 3, 4, 5, 6]
+                api: [1, 2, 3, 4, 5, 6],
+                // Use Moli's outstream player
+                renderer: { ...prebidOutstreamRenderer('prebid-adslot'), backupOnly: false }
               }
             },
             bids: [
@@ -224,42 +226,7 @@ export const adConfiguration: Moli.MoliConfig = {
               spotxBid('85394', 'prebid-adslot'),
               // Teads fallback placements
               teadsVerticalBid(94142, 101939, ['desktop']),
-              teadsVerticalBid(94140, 101937, ['mobile'])
-            ]
-          }
-        },
-        {
-          adUnit: {
-            code: 'prebid-adslot',
-            pubstack: {
-              adUnitPath: '/55155651/outstream_test'
-            },
-            mediaTypes: {
-              banner: {
-                sizes: [
-                  [300, 50],
-                  [300, 250],
-                  [320, 50]
-                ]
-              },
-              video: {
-                context: 'outstream',
-                playerSize: [
-                  [605, 340],
-                  [536, 302],
-                  [1, 1]
-                ],
-                mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
-                minduration: 1,
-                maxduration: 30,
-                playbackmethod: [2, 3, 4, 5, 6],
-                placement: 2, // placement 2 means in-banner
-                api: [1, 2, 3, 4, 5, 6],
-                // Use Moli's outstream player
-                renderer: { ...prebidOutstreamRenderer('prebid-adslot'), backupOnly: false }
-              }
-            },
-            bids: [
+              teadsVerticalBid(94140, 101937, ['mobile']),
               // AppNexus Test Placement - outstream only
               // see http://prebid.org/examples/video/outstream/outstream-dfp.html
               appNexusOutstream('13232385')

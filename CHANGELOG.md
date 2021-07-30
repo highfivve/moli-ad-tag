@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.35.10
+
+[GD-3293](https://jira.gutefrage.net/browse/GD-3293) Remove requirement for a single playerSize for prebid video. Moli
+now correctly handles if zero, one, or multiple sizes are set for playerSize.
+
+Also, the `w` and `h` properties on the prebid `mediaType.video` are now inferred from the first given size, if not
+explicitly specified.
+
 ## 3.35.9
 
 [GD-3350](https://jira.gutefrage.net/browse/GD-3350). Add `priceRule` to the `PrebidAdSlotContext`. This enables access

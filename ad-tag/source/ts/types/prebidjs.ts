@@ -1324,7 +1324,7 @@ export namespace prebidjs {
     /**
      * Player size(s) that this ad unit can accept (width, height).
      */
-    readonly playerSize: [number, number][] | [number, number];
+    readonly playerSize: [number, number][] | [number, number] | undefined;
 
     /**
      * API frameworks supported

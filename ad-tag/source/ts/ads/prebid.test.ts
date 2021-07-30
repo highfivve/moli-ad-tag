@@ -98,6 +98,33 @@ describe('prebid', () => {
     };
   };
 
+  const prebidVideoAdUnit = (
+    domId: string,
+    bids: prebidjs.IBid[],
+    sizes: [number, number][] | [number, number] = mediumRec,
+    w?: number,
+    h?: number
+  ): prebidjs.IAdUnit => {
+    return {
+      code: domId,
+      mediaTypes: {
+        video: {
+          context: 'outstream',
+          playerSize: sizes,
+          mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+          minduration: 1,
+          maxduration: 30,
+          playbackmethod: [2, 3, 4, 5, 6],
+          placement: 2, // placement 2 means in-banner
+          api: [1, 2, 3, 4, 5, 6],
+          w,
+          h
+        }
+      },
+      bids: bids
+    };
+  };
+
   const createSlotDefinitions = (
     domId: string,
     provider: Moli.headerbidding.PrebidAdSlotConfigProvider
@@ -449,6 +476,112 @@ describe('prebid', () => {
           expect(addAdUnitsSpy).to.have.been.calledOnce;
           expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
         });
+      });
+    });
+
+    describe('video playerSize consolidation', () => {
+      it('should set playerSize = undefined if no video sizes are given', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = {
+          ...prebidVideoAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }], [])
+        };
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          {
+            ...adUnit,
+            mediaTypes: {
+              video: { ...adUnit.mediaTypes.video, playerSize: undefined }
+            }
+          }
+        ]);
+      });
+
+      it('should set playerSize and w+h properties from a single size', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = {
+          ...prebidVideoAdUnit(
+            domId,
+            [{ bidder: 'appnexus', params: { placementId: '123' } }],
+            [300, 250]
+          )
+        };
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          {
+            ...adUnit,
+            mediaTypes: {
+              video: { ...adUnit.mediaTypes.video, playerSize: [[300, 250]], w: 300, h: 250 }
+            }
+          }
+        ]);
+      });
+
+      it('should set playerSize and w+h properties from multiple sizes', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = {
+          ...prebidVideoAdUnit(
+            domId,
+            [{ bidder: 'appnexus', params: { placementId: '123' } }],
+            [
+              [300, 250],
+              [605, 340]
+            ]
+          )
+        };
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          {
+            ...adUnit,
+            mediaTypes: {
+              video: { ...adUnit.mediaTypes.video, w: 300, h: 250 }
+            }
+          }
+        ]);
+      });
+
+      it('should not overwrite w+h properties if set in adUnit', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds();
+
+        const domId = getDomId();
+        const adUnit = {
+          ...prebidVideoAdUnit(
+            domId,
+            [{ bidder: 'appnexus', params: { placementId: '123' } }],
+            [
+              [300, 250],
+              [605, 340]
+            ],
+            1000,
+            1000
+          )
+        };
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          {
+            ...adUnit,
+            mediaTypes: {
+              video: { ...adUnit.mediaTypes.video, w: 1000, h: 1000 }
+            }
+          }
+        ]);
       });
     });
   });

@@ -245,11 +245,12 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
             <div className="MoliDebug-tagContainer">
               <span className="MoliDebug-tagLabel">Video</span>
               <Tag variant="green">{video.context}</Tag>
-              {this.validateSlotSizes(
-                this.isSingleVideoSize(video.playerSize) ? [video.playerSize] : video.playerSize
-              ).map(validatedSlotSize =>
-                this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
-              )}
+              {!!video.playerSize &&
+                this.validateSlotSizes(
+                  this.isSingleVideoSize(video.playerSize) ? [video.playerSize] : video.playerSize
+                ).map(validatedSlotSize =>
+                  this.tagFromValidatedSlotSize(validatedSlotSize, !!slotSizeConfig)
+                )}
             </div>
           )}
           {native && (
@@ -354,9 +355,10 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
 
           const videoValid =
             !!video &&
-            this.validateSlotSizes(
-              this.isSingleVideoSize(video.playerSize) ? [video.playerSize] : video.playerSize
-            ).some(validatedSlotSize => validatedSlotSize.valid);
+            (!video.playerSize ||
+              this.validateSlotSizes(
+                this.isSingleVideoSize(video.playerSize) ? [video.playerSize] : video.playerSize
+              ).some(validatedSlotSize => validatedSlotSize.valid));
 
           return (
             !!native ||
