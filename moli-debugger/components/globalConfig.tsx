@@ -431,7 +431,13 @@ export class GlobalConfig
                         <h5>User sync</h5>
                         <div className="MoliDebug-tagContainer">
                           <TagLabel>Sync enabled</TagLabel>
-                          <Tag>{(!!config.prebid.config.userSync.syncEnabled).toString()}</Tag>
+                          <Tag>
+                            {config.prebid.config.userSync.syncEnabled === undefined
+                              ? `${window.pbjs
+                                  .getConfig()
+                                  .userSync?.syncEnabled?.toString()} (default from prebid config - no value in moli config)`
+                              : config.prebid.config.userSync.syncEnabled.toString()}
+                          </Tag>
                         </div>
                         {config.prebid.config.userSync.syncDelay !== undefined && (
                           <div className="MoliDebug-tagContainer">

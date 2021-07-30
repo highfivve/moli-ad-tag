@@ -68,6 +68,14 @@ export namespace prebidjs {
     setTargetingForGPTAsync(adUnit?: string[]): void;
 
     /**
+     * Outputs the current prebid config.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getConfig.html
+     * @return {prebidjs.IPrebidJsConfig}
+     */
+    getConfig(): IPrebidJsConfig;
+
+    /**
      *
      * supports a number of advanced configuration options
      *

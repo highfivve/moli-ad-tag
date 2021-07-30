@@ -40,7 +40,6 @@ module.exports = {
     ],
     '@typescript-eslint/semi': ['error', 'always'],
     '@typescript-eslint/type-annotation-spacing': 'error',
-    'brace-style': ['error', '1tbs'],
     'comma-dangle': 'error',
     curly: 'error',
     'eol-last': 'error',

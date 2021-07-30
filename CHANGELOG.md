@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.35.8
+
+[GD-3348](https://jira.gutefrage.net/browse/GD-3348) In the moli debugger, use prebid config value for
+`userSync.syncEnabled` property when it's omitted from moli config (and therefore using the `true` default from prebid)
+
 ## 3.35.7
 
 [GD-3231](https://jira.gutefrage.net/browse/GD-3231) Add `allowTargetingKeys` to the prebid `targetingControls` config.

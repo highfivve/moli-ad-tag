@@ -26,6 +26,13 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
         requestParam.bidsBackHandler({}, false, requestParam.auctionId || 'auction-id');
       }
     },
+    getConfig: (): prebidjs.IPrebidJsConfig => ({
+      currency: {
+        adServerCurrency: 'EUR',
+        granularityMultiplier: 1,
+        defaultRates: { USD: { EUR: 1 } }
+      }
+    }),
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {
       return;
     },
