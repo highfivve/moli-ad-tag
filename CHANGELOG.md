@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.35.9
+
+[GD-3350](https://jira.gutefrage.net/browse/GD-3350). Add `priceRule` to the `PrebidAdSlotContext`. This enables access
+to all price rule information for analytics. The `floorPrice` property is also deprecated, use `context.priceRule.floorprice` now.
+
 ## 3.35.8
 
 [GD-3348](https://jira.gutefrage.net/browse/GD-3348) In the moli debugger, use prebid config value for
