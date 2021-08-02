@@ -134,6 +134,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
               {
                 keyValues: keyValues,
                 floorPrice: floorPrice,
+                priceRule: priceRule,
                 labels: labels,
                 isMobile: labels.indexOf('desktop') === -1
               },

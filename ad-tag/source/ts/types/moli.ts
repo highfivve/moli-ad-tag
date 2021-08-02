@@ -1146,8 +1146,15 @@ export namespace Moli {
 
       /**
        * Floor price in EUR
+       *
+       * @deprecated use `priceRule?.floorprice` instead
        */
       readonly floorPrice: number | undefined;
+
+      /**
+       * A unified pricing rule if available for this ad slot
+       */
+      readonly priceRule?: yield_optimization.PriceRule | undefined;
 
       /**
        * all supported labels
