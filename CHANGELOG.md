@@ -26,28 +26,8 @@ const targetingControls = {
       'DEAL',
       'SOURCE',
       'FORMAT',
-      'UUID',
       'CACHE_ID',
-      'CACHE_HOST',
-      'ADOMAIN',
-      'title',
-      'body',
-      'body2',
-      'privacyLink',
-      'privacyIcon',
-      'sponsoredBy',
-      'image',
-      'icon',
-      'clickUrl',
-      'displayUrl',
-      'cta',
-      'rating',
-      'address',
-      'downloads',
-      'likes',
-      'phone',
-      'price',
-      'salePrice'
+      'CACHE_HOST'
     ]
   }
 }
