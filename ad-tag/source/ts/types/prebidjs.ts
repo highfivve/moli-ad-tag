@@ -138,6 +138,7 @@ export namespace prebidjs {
 
     /**
      * Convert a cpm from a currency to another one.
+     *
      * @param cpm The cpm to convert.
      * @param fromCurrency The currency in which the current cpm is.
      * @param toCurrency The currency you want to convert the cpm to.

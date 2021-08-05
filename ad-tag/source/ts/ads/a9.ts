@@ -63,7 +63,7 @@ export const a9Init = (
     'a9-init',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        // We need to report prebid here since it provides the convertCurrency function, we use for the floorprices.
+        // We need to define prebid here since it provides the convertCurrency function, we use for the floorprices.
         context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
 
         context.window.apstag = context.window.apstag || {
