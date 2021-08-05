@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-sovrn-ad-reload",
-  "version": "3.35.10",
+  "version": "3.35.11",
   "license": "Apache-2.0",
   "description": "Ad Reload",
   "main": "./lib/index.js",
@@ -51,6 +51,6 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.35.10"
+    "@highfivve/ad-tag": "^3.35.11"
   }
 }
