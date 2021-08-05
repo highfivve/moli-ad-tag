@@ -12,6 +12,7 @@ import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
+import { pbjsStub } from '../stubs/prebidjsStubs';
 import {
   a9ClearTargetingStep,
   a9Configure,
@@ -474,6 +475,41 @@ describe('a9', () => {
         },
         Sinon.match.func
       );
+    });
+
+    it('should use the prebid convertCurrency function if available', async () => {
+      dom.window.pbjs = pbjsStub;
+
+      const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const convertCurrencySpy = sandbox.spy(dom.window.pbjs, 'convertCurrency');
+      const step = a9RequestBids({ ...a9ConfigStub, enableFloorPrices: true });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+      singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
+
+      await step(contextWithConsent, [singleSlot]);
+      expect(convertCurrencySpy).to.have.been.calledOnce;
+      expect(convertCurrencySpy).to.have.been.calledOnceWithExactly(0.1, 'EUR', 'USD');
+
+      expect(fetchBidsSpy).to.have.been.calledOnce;
+      expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec,
+              floor: {
+                value: 20,
+                currency: 'USD'
+              }
+            }
+          ]
+        },
+        Sinon.match.func
+      );
+      dom.window.pbjs = undefined;
     });
 
     it('should resolve immediately if no consent is given', async () => {

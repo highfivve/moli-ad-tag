@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.35.12
+[GD-2755](https://jira.gutefrage.net/browse/GD-2755) Add floor price currency conversion for a9.
+We use the currency conversion provided by prebid if available. Otherwise, the exchange rate defaults to `1.19`
+
 ## 3.35.10
 
 [GD-3293](https://jira.gutefrage.net/browse/GD-3293) Remove requirement for a single playerSize for prebid video. Moli

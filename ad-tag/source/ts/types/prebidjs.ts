@@ -135,6 +135,16 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
     offEvent(event: event.EventName, handler: Function, id?: any): void;
+
+    /**
+     * Convert a cpm from a currency to another one.
+     * @param cpm The cpm to convert.
+     * @param fromCurrency The currency in which the current cpm is.
+     * @param toCurrency The currency you want to convert the cpm to.
+     *
+     * @see https://github.com/prebid/Prebid.js/blob/804295aa2dae0484d67891b73fcfc401ef8244f1/modules/currency.js#L127
+     */
+    convertCurrency(cpm: number, fromCurrency: string, toCurrency: string): number;
   }
 
   /**

@@ -50,6 +50,10 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     offEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void {
       return;
+    },
+    convertCurrency(cpm: number, fromCurrency: string, toCurrency: string): number {
+      // We use an unrealistic value here to easily check the value in tests.
+      return cpm * 2;
     }
   };
 };
