@@ -48,7 +48,7 @@ yarn clean && yarn setup
 
 ## Examples
 
-In order to run the examples you need to build the ad tag and all modules first.
+Unless you haven't just executed `yarn setup`, you need to build the ad tag and all modules first in order to run the examples.
 
 ```bash
 yarn workspaces run make:nodemodule
