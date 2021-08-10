@@ -63,6 +63,8 @@ If you want to test code changes within the examples you have to start the modul
 yarn workspace @highfivve/ad-tag make:nodemodule --watch
 ```
 
+Note that the workspace _name_ for an example can be found in the respective project folder within the `package.json`.
+
 And then start one of the example projects
 
 ```bash
