@@ -2366,6 +2366,7 @@ export namespace prebidjs {
   export const JustPremiumCascadeAd = 'ca';
   export const JustPremiumVideoWallpaper = 'wv';
   export const JustPremiumVideoFloorAd = 'fv';
+  export const JustPremiumMobileStickyExpandable = 'ms';
 
   /**
    * The JustPremium HeaderBidding Guide offers a complete list of all formats.
@@ -2387,7 +2388,8 @@ export namespace prebidjs {
     | typeof JustPremiumMobileSkin
     | typeof JustPremiumCascadeAd
     | typeof JustPremiumVideoWallpaper
-    | typeof JustPremiumVideoFloorAd;
+    | typeof JustPremiumVideoFloorAd
+    | typeof JustPremiumMobileStickyExpandable;
 
   /**
    * JustPremium bid parameters
