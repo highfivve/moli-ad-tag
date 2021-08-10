@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.35.13
+[GD-3459](https://jira.gutefrage.net/browse/GD-3459) Add `ms` (mobile sticky expandable) key value for just premium format filter.
+
 ## 3.35.12
 [GD-2755](https://jira.gutefrage.net/browse/GD-2755) Add floor price currency conversion for a9.
 We use the currency conversion provided by prebid if available. Otherwise, the exchange rate defaults to `1.19`
