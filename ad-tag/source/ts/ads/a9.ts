@@ -19,9 +19,6 @@ import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
-import prebid from 'prebid.js';
-import { prebidjs } from '../types/prebidjs';
-import IPrebidJs = prebidjs.IPrebidJs;
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -63,9 +60,6 @@ export const a9Init = (
     'a9-init',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        // We need to define prebid here since it provides the convertCurrency function, we use for the floorprices.
-        context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
-
         context.window.apstag = context.window.apstag || {
           _Q: [],
           init: function (): void {
@@ -249,7 +243,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
                                 ? context.window.pbjs.convertCurrency(
                                     priceRule.floorprice,
                                     'EUR',
-                                    'USD'
+                                    config.floorPriceCurrency || 'USD'
                                   ) * 100
                                 : priceRule.floorprice * 100 * 1.19
                             ),

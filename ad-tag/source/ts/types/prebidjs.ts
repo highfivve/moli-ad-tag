@@ -138,6 +138,7 @@ export namespace prebidjs {
 
     /**
      * Convert a cpm from a currency to another one.
+     * This method is only available if the currency module (https://docs.prebid.org/dev-docs/modules/currency.html) is activated.
      *
      * @param cpm The cpm to convert.
      * @param fromCurrency The currency in which the current cpm is.
@@ -145,7 +146,7 @@ export namespace prebidjs {
      *
      * @see https://github.com/prebid/Prebid.js/blob/804295aa2dae0484d67891b73fcfc401ef8244f1/modules/currency.js#L127
      */
-    convertCurrency(cpm: number, fromCurrency: string, toCurrency: string): number;
+    convertCurrency?(cpm: number, fromCurrency: string, toCurrency: string): number;
   }
 
   /**
