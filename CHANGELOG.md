@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.35.14
+[GD-3459](https://jira.gutefrage.net/browse/GD-3459) Add `mv` (mobile video) and `as` (footer pushup leader board) key value for just premium format filter.
+
 ## 3.35.13
 [GD-3459](https://jira.gutefrage.net/browse/GD-3459) Add `ms` (mobile sticky expandable) key value for just premium format filter.
 
