@@ -2358,6 +2358,7 @@ export namespace prebidjs {
 
   export const JustPremiumPushUpBillboard = 'pu';
   export const JustPremiumPushDownBillboard = 'pd';
+  export const JustPremiumLeaderboard = 'as';
   export const JustPremiumFloorAd = 'fa';
   export const JustPremiumClassicFloorAd = 'cf';
   export const JustPremiumSideAd = 'sa';
@@ -2368,6 +2369,7 @@ export namespace prebidjs {
   export const JustPremiumVideoWallpaper = 'wv';
   export const JustPremiumVideoFloorAd = 'fv';
   export const JustPremiumMobileStickyExpandable = 'ms';
+  export const JustPremiumMobileVideo = 'mv';
 
   /**
    * The JustPremium HeaderBidding Guide offers a complete list of all formats.
@@ -2381,6 +2383,7 @@ export namespace prebidjs {
   export type JustPremiumFormat =
     | typeof JustPremiumPushUpBillboard
     | typeof JustPremiumPushDownBillboard
+    | typeof JustPremiumLeaderboard
     | typeof JustPremiumFloorAd
     | typeof JustPremiumClassicFloorAd
     | typeof JustPremiumSideAd
@@ -2390,7 +2393,8 @@ export namespace prebidjs {
     | typeof JustPremiumCascadeAd
     | typeof JustPremiumVideoWallpaper
     | typeof JustPremiumVideoFloorAd
-    | typeof JustPremiumMobileStickyExpandable;
+    | typeof JustPremiumMobileStickyExpandable
+    | typeof JustPremiumMobileVideo;
 
   /**
    * JustPremium bid parameters
