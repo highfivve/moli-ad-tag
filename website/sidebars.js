@@ -50,7 +50,12 @@ module.exports = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guides/conditional-ad-slots', 'guides/immutable-ad-tags', 'guides/logging'],
+      items: [
+        'guides/conditional-ad-slots',
+        'guides/immutable-ad-tags',
+        'guides/logging',
+        'guides/styleguide'
+      ],
       collapsed: false
     }
   ],
