@@ -1,5 +1,6 @@
 import { Moli, prebidjs } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
+import video = prebidjs.video;
 
 const logger: Moli.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
@@ -105,11 +106,36 @@ export const adConfiguration: Moli.MoliConfig = {
               context: 'outstream',
               playerSize: [605, 340],
               mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+              startdelay: 1,
               minduration: 1,
               maxduration: 30,
-              playbackmethod: [2, 3, 4, 5, 6],
-              placement: 2, // placement 2 means in-banner
-              api: [1, 2, 3, 4, 5, 6]
+              playbackmethod: [
+                video.PlaybackMethod.AutoPlaySoundOff,
+                video.PlaybackMethod.ClickToPlay,
+                video.PlaybackMethod.MousOver,
+                video.PlaybackMethod.InViewportSoundsOff,
+                video.PlaybackMethod.InViewportSoundsOn
+              ],
+              placement: video.Placement.InBanner,
+              api: [
+                video.Api.VPAID_1,
+                video.Api.VPAID_2,
+                video.Api.MRAID_1,
+                video.Api.MRAID_2,
+                video.Api.MRAID_3,
+                video.Api.ORMMA
+              ],
+              protocols: [
+                video.Protocol.VAST_1,
+                video.Protocol.VAST_1_WRAPPER,
+                video.Protocol.VAST_2,
+                video.Protocol.VAST_2_WRAPPER,
+                video.Protocol.VAST_3,
+                video.Protocol.VAST_3_WRAPPER,
+                video.Protocol.VAST_4,
+                video.Protocol.VAST_4_WRAPPER
+              ],
+              skip: video.Skip.YES
             }
           },
           bids: [

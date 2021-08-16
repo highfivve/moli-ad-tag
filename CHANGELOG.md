@@ -2,6 +2,60 @@
 
 ## Unreleased
 
+## 3.35.15
+
+[GD-3270](https://jira.gutefrage.net/browse/GD-3270) Add enum types for `mediaType.video` parameters.
+
+```javascript
+import { prebidjs } from '@highfivve/ad-tag';
+import video = prebidjs.video;
+
+const mediaTypes =    {
+  mediaTypes: {
+    video: {
+      context: 'outstream',
+      playerSize: [605, 340],
+
+      // ----- this is new --------
+      mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+
+      // start delay should be 1sec so Criteo doesn't break
+      startdelay: 1,
+      minduration: 1,
+      maxduration: 30,
+      playbackmethod: [
+        video.PlaybackMethod.AutoPlaySoundOff,
+        video.PlaybackMethod.ClickToPlay,
+        video.PlaybackMethod.MousOver,
+        video.PlaybackMethod.InViewportSoundsOff,
+        video.PlaybackMethod.InViewportSoundsOn
+      ],
+      placement: video.Placement.InBanner,
+      api: [
+        video.Api.VPAID_1,
+        video.Api.VPAID_2,
+        video.Api.MRAID_1,
+        video.Api.MRAID_2,
+        video.Api.MRAID_3,
+        video.Api.ORMMA
+      ],
+      protocols: [
+        video.Protocol.VAST_1,
+        video.Protocol.VAST_1_WRAPPER,
+        video.Protocol.VAST_2,
+        video.Protocol.VAST_2_WRAPPER,
+        video.Protocol.VAST_3,
+        video.Protocol.VAST_3_WRAPPER,
+        video.Protocol.VAST_4,
+        video.Protocol.VAST_4_WRAPPER
+      ],
+      skip: video.Skip.YES
+    }
+  }
+};
+
+```
+
 ## 3.35.14
 [GD-3459](https://jira.gutefrage.net/browse/GD-3459) Add `mv` (mobile video) and `as` (footer pushup leader board) key value for just premium format filter.
 

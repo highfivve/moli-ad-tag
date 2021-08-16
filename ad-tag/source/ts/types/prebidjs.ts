@@ -1320,6 +1320,132 @@ export namespace prebidjs {
     readonly sizes: [number, number][];
   }
 
+  export namespace video {
+    export const enum Skip {
+      NO = 0,
+      YES = 1
+    }
+
+    /**
+     * Open RTB Spec 2.5 Section 5.8 Protocols
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    export const enum Protocol {
+      VAST_1 = 1,
+      VAST_2 = 2,
+      VAST_3 = 3,
+      VAST_1_WRAPPER = 4,
+      VAST_2_WRAPPER = 5,
+      VAST_3_WRAPPER = 6,
+      VAST_4 = 7,
+      VAST_4_WRAPPER = 8,
+      DAAST_1 = 9,
+      DAAST_1_WRAPPER = 10
+    }
+
+    /**
+     * Open RTB Spec 2.5 Section 5.10 Playback Methods
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    export const enum PlaybackMethod {
+      AutoPlaySoundOff = 1,
+      AutoPlaySoundOn = 2,
+      ClickToPlay = 3,
+      MousOver = 4,
+      InViewportSoundsOn = 5,
+      InViewportSoundsOff = 6
+    }
+
+    /**
+     * Open RTB Spec 2.5 Section 5.6 Playback Methods
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     * @see [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html)
+     */
+    export const enum Api {
+      VPAID_1 = 1,
+      VPAID_2 = 2,
+      MRAID_1 = 3,
+      ORMMA = 4,
+      MRAID_2 = 5,
+      MRAID_3 = 6
+    }
+
+    /**
+     * Video placement type.
+     *
+     *   1: In-Stream
+     *      Played before, during or after the streaming video content that the consumer has requested
+     *      (e.g., Pre-roll, Mid-roll, Post-roll).
+     *   2: In-Banner
+     *      Exists within a web banner that leverages the banner space to deliver a video experience as
+     *      opposed to another static or rich media format. The format relies on the existence of display
+     *      ad inventory on the page for its deliver
+     *   3: In-Article
+     *      Loads and plays dynamically between paragraphs of editorial content; existing as a standalone
+     *      branded message
+     *   4: In-Feed
+     *      Found in content, social, or product feeds
+     *   5: Interstitial/Slider/Floating
+     *
+     *  *Highly recommended* because some bidders require more than context=outstream.
+     *
+     * @see [OpenRTB 2.5 specification, List 5.9 for Values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
+     */
+    export const enum Placement {
+      InStream = 1,
+      InBanner = 2,
+      InArticle = 3,
+      InFeed = 4,
+      Interstitial = 5
+    }
+
+    /**
+     * Open RTB Spec 2.5 Section 5.3 Creative Attributes
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    export const enum CreativeAttributes {
+      AudioAdAutoPlay = 1,
+      AudioAdUserInitiated = 2,
+      ExpandableAutomatic = 3,
+      ExpandableOnClick = 4,
+      ExpandableOnRollover = 5,
+      InBannerVideoAdAutoPlay = 6,
+      InBannerVideoAdClick = 7,
+      Pop = 8,
+      ProvocativeOrSuggestiveImagery = 9,
+      ShakyFlashingFlickering = 10,
+      Surveys = 11,
+      TextOnly = 12,
+      UserInteractive = 13,
+      WindowsDialogOrAlertStyle = 14,
+      HasAudioOnOffButton = 15,
+      HasSkipButton = 16,
+      AdobeFlash = 16
+    }
+
+    /**
+     * Open RTB Spec 2.5 Section 5.7 Video Linearity
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    export const enum Linearity {
+      LinerInStream = 1,
+      NonLinearOverlay = 2
+    }
+
+    export type MimeType =
+      | 'video/mp4'
+      | 'video/webm'
+      | 'video/flv'
+      | 'video/H264'
+      | 'video/ogg'
+      | 'video/MPV';
+  }
+
   /**
    * For AdUnits with MediaType: video
    *
@@ -1354,7 +1480,7 @@ export namespace prebidjs {
      * @example `[1, 2]`
      * @see [Prebid Server](https://docs.prebid.org/prebid-server/overview/prebid-server-overview.html)
      */
-    readonly api?: Array<1 | 2 | 3 | 4 | 5 | 6>;
+    readonly api: video.Api[];
 
     /**
      * Content MIME types supported.
@@ -1364,9 +1490,7 @@ export namespace prebidjs {
      * @see https://www.iana.org/assignments/media-types/media-types.xhtml#video
      * @example `['video/mp4','video/x-flv']`
      */
-    readonly mimes: Array<
-      'video/mp4' | 'video/webm' | 'video/flv' | 'video/H264' | 'video/ogg' | 'video/MPV'
-    >;
+    readonly mimes: video.MimeType[];
 
     /**
      *
@@ -1389,7 +1513,7 @@ export namespace prebidjs {
      *
      * @example `[5, 6]`
      */
-    readonly protocols?: Array<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>;
+    readonly protocols: video.Protocol[];
 
     /**
      * Allowed playback methods.. Defines whether inventory is user-initiated or autoplay sound on/off
@@ -1402,10 +1526,10 @@ export namespace prebidjs {
      *  2: Auto-play, sound off
      *  3: Click-to-play
      *  4: mouse-over
-     *  5: Initiates on Entering Viewport with Sound Off
+     *  5: Initiates on Entering Viewport with Sound On
      *  6: Initiates on Entering Viewport with Sound Off by Default
      */
-    readonly playbackmethod: Array<1 | 2 | 3 | 4 | 5 | 6>;
+    readonly playbackmethod: video.PlaybackMethod[];
 
     /**
      * Minimum ad duration in seconds
@@ -1442,7 +1566,7 @@ export namespace prebidjs {
      *
      * 	@see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
      */
-    readonly startdelay?: number;
+    readonly startdelay: number;
 
     /**
      * Indicates if the player will allow the video to be skipped, where `0` = no, `1` = yes.
@@ -1450,7 +1574,7 @@ export namespace prebidjs {
      * If a bidder sends markup/creative that is itself skippable, the Bid object should include the attr array with
      * an element of 16 indicating skippable video
      */
-    readonly skip?: 0 | 1;
+    readonly skip: video.Skip;
 
     /**
      * Blocked creative attributes,
@@ -1458,9 +1582,7 @@ export namespace prebidjs {
      * @see [OpenRTB 2.5 specification, List 5.3 for values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
      * @example `[3, 9]`
      */
-    readonly battr?: Array<
-      1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17
-    >;
+    readonly battr?: video.CreativeAttributes[];
 
     /**
      * Video placement type.
@@ -1483,7 +1605,7 @@ export namespace prebidjs {
      *
      * @see [OpenRTB 2.5 specification, List 5.9 for Values](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
      */
-    readonly placement: 1 | 2 | 3 | 4 | 5;
+    readonly placement: video.Placement;
 
     /**
      * Minimum bit rate in Kbps.
@@ -1505,7 +1627,7 @@ export namespace prebidjs {
      *
      * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
      */
-    readonly linearity?: 1 | 2;
+    readonly linearity?: video.Linearity;
 
     /**
      * The renderer associated to the ad-unit. Only for mediaType = video.
