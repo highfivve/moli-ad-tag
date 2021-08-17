@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.36.0
+
+[GD-3279](https://jira.gutefrage.net/browse/GD-3279) Set `upr_browser` as key value in yield optimization to detect
+browser discrepancies.
+
 ## 3.35.16
 
 Add `data-google-query-id` to ad slots in test mode so custom CSS that checks for this attribute works.

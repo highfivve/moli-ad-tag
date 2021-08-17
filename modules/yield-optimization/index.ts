@@ -127,6 +127,11 @@ export type PriceRules = {
  */
 export type AdunitPriceRulesResponse = {
   readonly rules: PriceRules;
+  /**
+   * the browser that was detected on the backend.
+   * @example Chrome
+   */
+  readonly browser?: string;
 };
 
 /**

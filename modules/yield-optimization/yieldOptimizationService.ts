@@ -18,10 +18,17 @@ type PriceRule = Moli.yield_optimization.PriceRule & {
 };
 
 export class YieldOptimizationService {
+  private readonly emptyAdUnitPriceRulesResponse: AdunitPriceRulesResponse = {
+    rules: {},
+    browser: 'None'
+  };
+
   /**
    * initialized with an resolved promise and no rules
    */
-  private adUnitPricingRules: Promise<PriceRules> = Promise.resolve({});
+  private adUnitPricingRuleResponse: Promise<AdunitPriceRulesResponse> = Promise.resolve(
+    this.emptyAdUnitPriceRulesResponse
+  );
 
   /**
    * true if the yield optimization is enabled (provider is not `none`) and init() was called.
@@ -59,32 +66,38 @@ export class YieldOptimizationService {
       case 'none':
         this.log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
         this.isEnabled = false;
-        this.adUnitPricingRules = Promise.resolve({});
+        this.adUnitPricingRuleResponse = Promise.resolve(this.emptyAdUnitPriceRulesResponse);
         break;
       case 'static':
         this.log.warn('YieldOptimizationService', 'Yield optimization is static!');
         this.isEnabled = true;
-        this.adUnitPricingRules = Promise.resolve(this.yieldConfig.config.rules);
+        this.adUnitPricingRuleResponse = Promise.resolve({
+          rules: this.yieldConfig.config.rules,
+          browser: 'None'
+        });
         break;
       case 'dynamic':
         this.isEnabled = true;
-        this.adUnitPricingRules = this.loadConfigWithRetry(this.yieldConfig.configEndpoint, 3)
+        this.adUnitPricingRuleResponse = this.loadConfigWithRetry(
+          this.yieldConfig.configEndpoint,
+          3
+        )
           .then(config => {
             this.log.info(
               'YieldOptimizationService',
               `loaded pricing rules for device ${this.device}`,
               config
             );
-            return config.rules;
+            return config;
           })
           .catch(error => {
             this.log.error('YieldOptimizationService', 'failed to initialize service', error);
-            return {};
+            return this.emptyAdUnitPriceRulesResponse;
           });
         break;
       default:
         this.isEnabled = false;
-        this.adUnitPricingRules = Promise.reject('Unknown config provider');
+        this.adUnitPricingRuleResponse = Promise.reject('Unknown config provider');
     }
 
     return Promise.resolve();
@@ -99,7 +112,7 @@ export class YieldOptimizationService {
    * @param adUnitPath
    */
   public getPriceRule(adUnitPath: string): Promise<PriceRule | undefined> {
-    return this.adUnitPricingRules.then(rules => rules[adUnitPath]);
+    return this.adUnitPricingRuleResponse.then(response => response.rules[adUnitPath]);
   }
 
   /**
@@ -112,7 +125,8 @@ export class YieldOptimizationService {
    */
   public setTargeting(adSlot: IAdSlot): Promise<PriceRule | undefined> {
     const adUnitPath = adSlot.getAdUnitPath();
-    return this.getPriceRule(adUnitPath).then(rule => {
+    return this.adUnitPricingRuleResponse.then(config => {
+      const rule = config.rules[adUnitPath];
       if (rule) {
         this.log.debug(
           'YieldOptimizationService',
@@ -120,6 +134,7 @@ export class YieldOptimizationService {
         );
         adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
         adSlot.setTargeting('upr_model', rule.model || 'static');
+        adSlot.setTargeting('upr_browser', config.browser || 'None');
         if (rule.main) {
           adSlot.setTargeting('upr_main', 'true');
         }
