@@ -77,7 +77,13 @@ const createBlankTestSlots = (
     const containerId = testSlotContainerId(moliSlot.domId);
     const div = document.createElement('div');
     div.id = containerId;
+    // mimic pubads service behaviour for custom CSS to work properly
+    const adSlotContainer = document.getElementById(moliSlot.domId);
+    if (adSlotContainer) {
+      adSlotContainer.setAttribute('data-google-query-id', 'test');
+    }
 
+    // render test creative
     context.window.googletag.content().setContent(adSlot, div.outerHTML);
     context.logger.debug(
       'GAM',
