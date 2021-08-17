@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.35.16
+
+Add `data-google-query-id` to ad slots in test mode so custom CSS that checks for this attribute works.
+
 ## 3.35.15
 
 [GD-3270](https://jira.gutefrage.net/browse/GD-3270) Add enum types for `mediaType.video` parameters.
