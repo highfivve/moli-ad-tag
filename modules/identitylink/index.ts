@@ -1,5 +1,5 @@
 /**
- * # LiveRamp IdentityLink module ([-> Docs](https://docs.authenticated-traffic-solution.com/docs))
+ * # LiveRamp IdentityLink module ([-> Docs](https://developers.liveramp.com/authenticatedtraffic-api/docs/atsjs-quickstart-guide))
  *
  * This module provides LiveRamp ATS (authenticated traffic solution) functionality to moli. Basically,
  * this means that users are identified cross-platform using a hash of their email address.
@@ -61,7 +61,7 @@ export type IdentityLinkModuleConfig = {
  * This module provides LiveRamp ATS (authenticated traffic solution) functionality to moli. Basically, this means that
  * users are identified cross-platform using a hash of their email address.
  *
- * @see: https://docs.authenticated-traffic-solution.com/docs/
+ * @see https://developers.liveramp.com/authenticatedtraffic-api/docs/atsjs-quickstart-guide
  */
 export class IdentityLink implements IModule {
   public readonly name: string = 'identitylink';
