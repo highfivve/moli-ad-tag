@@ -47,6 +47,7 @@ module.exports = {
       items: [modulesOnlySidebar],
       collapsed: true
     },
+    'architecture',
     {
       type: 'category',
       label: 'Guides',

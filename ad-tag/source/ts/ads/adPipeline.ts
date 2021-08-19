@@ -92,7 +92,6 @@ export type InitStep = (context: AdPipelineContext) => Promise<void>;
  * - gpt configuration
  * - prebid configuration
  * - a9 configuration
- * - consent / cmp configuration
  *
  */
 export type ConfigureStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>;
