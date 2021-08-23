@@ -136,5 +136,39 @@ describe('Yield Optimization module', () => {
       expect(setTargetingStub).to.have.been.calledOnce;
       expect(setTargetingStub).to.have.been.calledOnceWithExactly(adSlot);
     });
+
+    it('sets the browser returned by getBrowser', async () => {
+      const module = new YieldOptimization(yieldConfig, jsDomWindow);
+      const yieldOptimizationService = new YieldOptimizationService(
+        yieldConfig,
+        noopLogger,
+        jsDomWindow
+      );
+
+      const setTargetingSpy = sandbox.spy();
+
+      const getBrowserStub = sandbox
+        .stub(yieldOptimizationService, 'getBrowser')
+        .resolves('Chrome');
+
+      await module.yieldOptimizationPrepareRequestAds(yieldOptimizationService)(
+        {
+          env: 'production',
+          logger: noopLogger,
+          window: {
+            googletag: {
+              pubads: () => {
+                return { setTargeting: setTargetingSpy };
+              }
+            }
+          }
+        } as any,
+        []
+      );
+
+      expect(getBrowserStub).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('upr_browser', 'Chrome');
+    });
   });
 });

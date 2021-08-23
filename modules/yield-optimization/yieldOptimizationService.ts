@@ -116,6 +116,13 @@ export class YieldOptimizationService {
   }
 
   /**
+   * Returns the detected browser for the user agent
+   */
+  public getBrowser(): Promise<string> {
+    return this.adUnitPricingRuleResponse.then(response => response.browser || 'None');
+  }
+
+  /**
    * Sets the targeting for the given googletag ad slot if a price rule is defined for it.
    *
    * If the provider is `dynamic` this is an async operation as the configuration file might
@@ -134,7 +141,6 @@ export class YieldOptimizationService {
         );
         adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
         adSlot.setTargeting('upr_model', rule.model || 'static');
-        adSlot.setTargeting('upr_browser', config.browser || 'None');
         if (rule.main) {
           adSlot.setTargeting('upr_main', 'true');
         }

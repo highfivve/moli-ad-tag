@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.36.1
+
+[GD-3279](https://jira.gutefrage.net/browse/GD-3279) Set `upr_browser` as key value on global targeting, not per ad slot.
+
 ## 3.36.0
 
 [GD-3279](https://jira.gutefrage.net/browse/GD-3279) Set `upr_browser` as key value in yield optimization to detect

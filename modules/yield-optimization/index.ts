@@ -210,7 +210,13 @@ export class YieldOptimization implements IModule {
             .setTargeting(slot.adSlot)
             .then(priceRule => (slot.priceRule = priceRule));
         });
-        return Promise.all(slotsWithPriceRule).then(/* no-op cast to void */);
+        return Promise.all(slotsWithPriceRule)
+          .then(() => yieldOptimizationService.getBrowser())
+          .then(browser => {
+            if (context.env === 'production') {
+              context.window.googletag.pubads().setTargeting('upr_browser', browser);
+            }
+          });
       }
     );
 }
