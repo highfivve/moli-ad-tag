@@ -10,7 +10,7 @@
  * ```js
  * import { Confiant } from '@highfivve/module-confiant';
  * moli.registerModule(new Confiant({
- *   assertUrl: 'https://confiant-integrations.global.ssl.fastly.net/yqnNhQYNEfv8ldKXnwevFDx_IRM/gpt_and_prebid/config.js'
+ *   assetUrl: 'https://confiant-integrations.global.ssl.fastly.net/yqnNhQYNEfv8ldKXnwevFDx_IRM/gpt_and_prebid/config.js'
  * }, window));
  * ```
  *

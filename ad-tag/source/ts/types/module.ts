@@ -10,6 +10,7 @@ export type ModuleType =
   | 'ad-reload'
   | 'policy'
   | 'identity'
+  | 'dmp'
   | 'yield';
 
 export interface IModule {

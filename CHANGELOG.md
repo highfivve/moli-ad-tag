@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 3.37.0
+
+[GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Add The Adex
+DMP module to moli.
+
+```javascript
+import { AdexModule } from '@highfivve/module-the-adex-dmp';
+
+moli.registerModule(new AdexModule({
+  mappingDefinitions: [{ adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }],
+  adexCustomerId: '1234',
+  adexTagId: '1337',
+  spaMode: false // non-spa web project
+}, window, logger));
+```
+
 ## 3.36.1
 
 [GD-3279](https://jira.gutefrage.net/browse/GD-3279) Set `upr_browser` as key value on global targeting, not per ad slot.

@@ -70,6 +70,7 @@ function getSourceLabelStyle(
     | 'SlotEventService'
     | 'AdVisibilityService'
     | 'UserActivityService'
+    | 'Adex DMP'
 ): string {
   switch (source) {
     case 'AdPipeline':
@@ -88,6 +89,8 @@ function getSourceLabelStyle(
       return getLabelStyle('#d5ba3c');
     case 'UserActivityService':
       return getLabelStyle('#19ad0e');
+    case 'Adex DMP':
+      return getLabelStyle('#003E74');
     default:
       return getLabelStyle('#052E53');
   }

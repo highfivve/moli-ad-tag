@@ -15,6 +15,7 @@ jobs:
       matrix:
         module: [
             ad-tag,
+            module-the-adex-dmp,
             module-blocklist-url,
             module-confiant,
             module-generic-skin,
