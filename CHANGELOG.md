@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.37.1
+
+[GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Hotfix
+release telling GitHub to use Node v16.
+
 ## 3.37.0
 
 [GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Add The Adex
