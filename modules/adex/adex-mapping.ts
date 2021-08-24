@@ -46,10 +46,11 @@ export const toAdexMapType = (
   logger: MoliLogger
 ): AdexKeyValueMap | undefined => {
   const mapKey = keyValueMap[mappingDefinition.key];
-  const mapValue =
-    mappingDefinition.valueType === 'number'
-      ? Number(keyValueMap[mappingDefinition.valueKey])
-      : keyValueMap[mappingDefinition.valueKey];
+  const mapValue = extractStringOrNumber(
+    keyValueMap,
+    mappingDefinition.valueType,
+    mappingDefinition.valueKey
+  );
 
   if (
     // map `key` field not found
@@ -72,12 +73,7 @@ export const toAdexMapType = (
     return undefined;
   }
 
-  const adexTargetValue =
-    mapValue !== undefined && !Number.isNaN(mapValue)
-      ? Array.isArray(mapValue)
-        ? sortAndJoin(mapValue)
-        : mapValue
-      : mappingDefinition.defaultValue;
+  const adexTargetValue = convertToAdexTargetValue(mapValue, mappingDefinition.defaultValue);
 
   return {
     [mappingDefinition.attribute]: {
@@ -94,10 +90,11 @@ export const toAdexStringOrNumberType = (
   mappingDefinition: MappingDefinitionToAdexString | MappingDefinitionToAdexNumber,
   logger: MoliLogger
 ): AdexKeyValuePair | undefined => {
-  const value =
-    mappingDefinition.adexValueType === 'number'
-      ? Number(keyValueMap[mappingDefinition.key])
-      : keyValueMap[mappingDefinition.key];
+  const value = extractStringOrNumber(
+    keyValueMap,
+    mappingDefinition.adexValueType,
+    mappingDefinition.key
+  );
 
   if (
     // adex `value` is empty and no default value specified
@@ -117,12 +114,7 @@ export const toAdexStringOrNumberType = (
     return undefined;
   }
 
-  const adexTargetValue =
-    value !== undefined && !Number.isNaN(value)
-      ? Array.isArray(value)
-        ? sortAndJoin(value)
-        : value
-      : mappingDefinition.defaultValue;
+  const adexTargetValue = convertToAdexTargetValue(value, mappingDefinition.defaultValue);
 
   return {
     [mappingDefinition.attribute]: adexTargetValue!
@@ -130,3 +122,25 @@ export const toAdexStringOrNumberType = (
 };
 
 const sortAndJoin = (arr: Array<string>) => arr.sort().join(',');
+
+const extractStringOrNumber = (
+  keyValueMap: Moli.DfpKeyValueMap,
+  valueType: 'number' | 'string',
+  keyToExtract: string
+): number | string | string[] | undefined =>
+  valueType === 'number' ? Number(keyValueMap[keyToExtract]) : keyValueMap[keyToExtract];
+
+const convertToAdexTargetValue = (
+  value: string | number | Array<string> | undefined,
+  defaultValue: string | number | undefined
+) =>
+  // if the value is truthy, ...
+  value !== undefined && !Number.isNaN(value)
+    ? // check if it's an array
+      Array.isArray(value)
+      ? // if it is, join it together
+        sortAndJoin(value)
+      : // else, just use the value itself.
+        value
+    : // if the value is falsy, use the default as fallback.
+      defaultValue;
