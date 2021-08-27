@@ -60,7 +60,6 @@ import {
   toAdexMapType,
   toAdexStringOrNumberType
 } from './adex-mapping';
-import MoliLogger = Moli.MoliLogger;
 import TCPurpose = tcfapi.responses.TCPurpose;
 
 export interface ITheAdexWindow extends Window {
@@ -157,8 +156,7 @@ export class AdexModule implements IModule {
 
   constructor(
     private readonly moduleConfig: AdexModuleConfig,
-    private readonly window: ITheAdexWindow,
-    private readonly logger: MoliLogger
+    private readonly window: ITheAdexWindow
   ) {}
 
   config(): AdexModuleConfig {
@@ -205,7 +203,7 @@ export class AdexModule implements IModule {
     const { adexCustomerId, adexTagId, spaMode, mappingDefinitions } = this.config();
     const dfpKeyValues = context.config.targeting?.keyValues;
     if (!dfpKeyValues) {
-      this.logger.warn('Adex DMP', 'targeting key/values are empty');
+      context.logger.warn('Adex DMP', 'targeting key/values are empty');
       return Promise.resolve();
     }
 
@@ -213,15 +211,15 @@ export class AdexModule implements IModule {
       .map(def => {
         switch (def.adexValueType) {
           case 'map':
-            return toAdexMapType(dfpKeyValues, def, this.logger);
+            return toAdexMapType(dfpKeyValues, def, context.logger);
           default:
-            return toAdexStringOrNumberType(dfpKeyValues, def, this.logger);
+            return toAdexStringOrNumberType(dfpKeyValues, def, context.logger);
         }
       })
       .filter(isNotNull);
 
     if (adexKeyValues.length === 0) {
-      this.logger.warn('Adex DMP', 'no Adex key/values produced, aborting');
+      context.logger.warn('Adex DMP', 'no Adex key/values produced, aborting');
       return Promise.resolve();
     }
 

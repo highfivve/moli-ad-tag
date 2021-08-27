@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.37.2
+
+[GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Remove
+necessity to supply a logger in Adex module constructor.
+
 ## 3.37.1
 
 [GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Hotfix
@@ -20,7 +25,7 @@ moli.registerModule(new AdexModule({
   adexCustomerId: '1234',
   adexTagId: '1337',
   spaMode: false // non-spa web project
-}, window, logger));
+}, window));
 ```
 
 ## 3.36.1

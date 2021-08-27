@@ -23,7 +23,6 @@ import sinonChai from 'sinon-chai';
 import { MappingDefinition } from './adex-mapping';
 
 import { AdexModule, ITheAdexWindow } from './index';
-import MoliLogger = Moli.MoliLogger;
 import TCData = tcfapi.responses.TCData;
 import TCPurpose = tcfapi.responses.TCPurpose;
 
@@ -102,8 +101,7 @@ describe('The Adex DMP Module', () => {
     adexCustomerId: string,
     adexTagId: string,
     mappingDefinitions: Array<MappingDefinition>,
-    window: ITheAdexWindow = jsDomWindow,
-    logger: MoliLogger = noopLogger
+    window: ITheAdexWindow = jsDomWindow
   ): AdexModule => {
     return new AdexModule(
       {
@@ -112,9 +110,7 @@ describe('The Adex DMP Module', () => {
         adexTagId,
         mappingDefinitions
       },
-      window,
-
-      logger
+      window
     );
   };
 
