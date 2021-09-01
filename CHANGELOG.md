@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 3.37.3
+
+[GD-3548](https://jira.gutefrage.net/browse/GD-3548): Add disableVisibilityChecks parameter to Ad Reload, allowing to
+reload out-of-viewport ads.
+
 ## 3.37.2
 
 [GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Remove

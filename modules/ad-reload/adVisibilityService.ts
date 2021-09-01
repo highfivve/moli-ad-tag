@@ -17,11 +17,6 @@ import { RefreshIntervalOverrides } from './index';
 
 export class AdVisibilityService {
   /**
-   * Ratio that an ad has to be in the visible viewport of the browser to be considered seen. 0.5 = 50%.
-   */
-  static readonly minimalAdVisibilityRatio = 0.5;
-
-  /**
    * Visibility durations are updated in this interval. Whether a slot is visible is decided outside this interval
    * by Intersection Observer callbacks.
    */
@@ -31,6 +26,11 @@ export class AdVisibilityService {
    * Added delay for consecutive ad refreshes
    */
   static readonly consecutiveDurationToRefresh = 1500;
+
+  /**
+   * Ratio that an ad has to be in the visible viewport of the browser to be considered seen. 0.5 = 50%.
+   */
+  private readonly minimalAdVisibilityRatio;
 
   private visibilityRecords: Map<string, VisibilityRecord>;
   private readonly intersectionObserver?: IntersectionObserver;
@@ -45,15 +45,18 @@ export class AdVisibilityService {
     private readonly refreshInterval: number,
     private readonly refreshIntervalOverrides: RefreshIntervalOverrides,
     readonly useIntersectionObserver: boolean,
+    private readonly disableAdVisibilityChecks: boolean,
     private readonly window: Window & googletag.IGoogleTagWindow,
     private readonly logger?: Moli.MoliLogger
   ) {
+    this.minimalAdVisibilityRatio = disableAdVisibilityChecks ? 0 : 0.5;
+
     this.visibilityRecords = new Map<string, VisibilityRecord>();
 
     if (useIntersectionObserver && 'IntersectionObserver' in this.window) {
       this.intersectionObserver = new IntersectionObserver(
         entries => this.handleObservedAdVisibilityChanged(entries),
-        { threshold: AdVisibilityService.minimalAdVisibilityRatio }
+        { threshold: this.minimalAdVisibilityRatio }
       );
     }
 
@@ -96,7 +99,9 @@ export class AdVisibilityService {
 
       this.visibilityRecords.set(slot.getSlotElementId(), {
         slot: slot,
-        latestStartVisible: undefined,
+        latestStartVisible: this.disableAdVisibilityChecks
+          ? this.window.performance.now()
+          : undefined,
         durationVisibleSum: 0,
         refreshCallback: refreshCallback
       });
@@ -220,7 +225,7 @@ export class AdVisibilityService {
       visibilityRecord.durationVisibleSum += addedDuration;
     }
 
-    if (adVisibilityRatio > AdVisibilityService.minimalAdVisibilityRatio) {
+    if (adVisibilityRatio >= this.minimalAdVisibilityRatio) {
       visibilityRecord.latestStartVisible = this.window.performance.now();
       this.logger?.debug(
         'AdVisibilityService',

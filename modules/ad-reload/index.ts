@@ -111,6 +111,13 @@ export type AdReloadModuleConfig = {
    * Configure what defines a user as active / inactive.
    */
   userActivityLevelControl?: UserActivityLevelControl;
+
+  /**
+   * Enable reloading ads that are not in viewport. It is not advised to use this option.
+   * Impressions are usually only counted on ads that have been 50% visible and it's generally not
+   * very user-centric to load stuff that is out of viewport.
+   */
+  disableAdVisibilityChecks?: boolean;
 };
 
 /**
@@ -212,6 +219,7 @@ export class AdReload implements IModule {
       this.refreshIntervalMs,
       this.moduleConfig.refreshIntervalMsOverrides || {},
       false,
+      !!this.moduleConfig.disableAdVisibilityChecks,
       window,
       this.logger
     );

@@ -33,6 +33,7 @@ describe('AdVisibilityService', () => {
   const adRefreshInterval = 20000;
   const tickInterval = 1000;
   const createAdVisibilityService = (
+    disableVisibilityChecks: boolean,
     overrides: RefreshIntervalOverrides = {}
   ): AdVisibilityService => {
     const userActivityService = new UserActivityService(jsDomWindow, { level: 'strict' }, logger);
@@ -45,6 +46,7 @@ describe('AdVisibilityService', () => {
       adRefreshInterval,
       overrides,
       false,
+      disableVisibilityChecks,
       jsDomWindow,
       logger
     );
@@ -53,7 +55,7 @@ describe('AdVisibilityService', () => {
   it('should setup a 1s interval to check ad visibility', () => {
     const setIntervalSpy = sandbox.spy(dom.window, 'setInterval');
 
-    createAdVisibilityService();
+    createAdVisibilityService(false);
 
     expect(setIntervalSpy).to.have.been.calledOnce;
     expect(setIntervalSpy).to.have.been.calledWithMatch(
@@ -65,14 +67,14 @@ describe('AdVisibilityService', () => {
   it('should add a pubads() event listener if useIntersectionObserver is false', () => {
     const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
-    createAdVisibilityService();
+    createAdVisibilityService(false);
 
     expect(listenerSpy).to.have.been.calledOnce;
     expect(listenerSpy).to.have.been.calledWithMatch('slotVisibilityChanged', Sinon.match.func);
   });
 
   it('should track a googletag slot if the element is present in DOM', () => {
-    const service = createAdVisibilityService();
+    const service = createAdVisibilityService(false);
     const slot = googleAdSlotStub('foo', 'foo');
 
     sandbox
@@ -87,7 +89,7 @@ describe('AdVisibilityService', () => {
   });
 
   it('should not track a googletag slot if the element is NOT present in DOM', () => {
-    const service = createAdVisibilityService();
+    const service = createAdVisibilityService(false);
     const slot = googleAdSlotStub('foo', 'foo');
 
     expect(service.isSlotTracked(slot.getSlotElementId())).to.be.false;
@@ -98,7 +100,7 @@ describe('AdVisibilityService', () => {
   });
 
   it('should remove slot tracking first if the same slot should be tracked again', () => {
-    const service = createAdVisibilityService();
+    const service = createAdVisibilityService(false);
     const slot = googleAdSlotStub('foo', 'foo');
     const removeTrackingSpy = sandbox.spy(service, 'removeSlotTracking');
 
@@ -131,7 +133,7 @@ describe('AdVisibilityService', () => {
       performanceNowStub.onCall(index).returns((index + 1) * 1000);
     });
 
-    const service = createAdVisibilityService();
+    const service = createAdVisibilityService(false);
 
     const slot = googleAdSlotStub('foo', 'foo');
 
@@ -175,7 +177,7 @@ describe('AdVisibilityService', () => {
       performanceNowStub.onCall(index).returns((index + 1) * 1000);
     });
 
-    const service = createAdVisibilityService({ bar: newRefreshInterval });
+    const service = createAdVisibilityService(false, { bar: newRefreshInterval });
 
     const slot = googleAdSlotStub('bar', 'bar');
 
@@ -201,6 +203,89 @@ describe('AdVisibilityService', () => {
 
     // initial call for ad slot visibility + 11 calls accounting for 1..10s + final call when refreshing the slot
     expect(performanceNowStub).to.have.callCount(1 + 11 + 1);
+
+    expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+  });
+
+  it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport', () => {
+    sandbox.useFakeTimers();
+
+    const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    // performance.now needs to be stubbed "by hand":
+    // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+    const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+    Array.from({ length: 30 }).forEach((_, index) => {
+      performanceNowStub.onCall(index).returns(index * 1000);
+    });
+
+    const service = createAdVisibilityService(true);
+
+    const slot = googleAdSlotStub('foo', 'foo');
+
+    expect(addEventListenerSpy).to.have.been.calledOnce;
+    expect(addEventListenerSpy).to.have.been.calledWithMatch(
+      'slotVisibilityChanged',
+      Sinon.match.func
+    );
+
+    const visibilityChangedListener: (event: ISlotVisibilityChangedEvent) => void =
+      addEventListenerSpy.args[0][1];
+
+    sandbox
+      .stub(jsDomWindow.document, 'getElementById')
+      .returns(jsDomWindow.document.createElement('div'));
+
+    const refreshCallback = sandbox.stub();
+    service.trackSlot(slot, refreshCallback);
+
+    visibilityChangedListener({ inViewPercentage: 0, slot } as ISlotVisibilityChangedEvent);
+
+    sandbox.clock.tick(adRefreshInterval + tickInterval);
+
+    // when setting the initial record (because of disableVisibilityChecks flag) + initial call for
+    // ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
+    expect(performanceNowStub).to.have.callCount(1 + 1 + 21 + 1);
+
+    expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+  });
+
+  it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received', () => {
+    sandbox.useFakeTimers();
+
+    const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    // performance.now needs to be stubbed "by hand":
+    // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+    const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+    Array.from({ length: 30 }).forEach((_, index) => {
+      performanceNowStub.onCall(index).returns((index + 1) * 1000);
+    });
+
+    const service = createAdVisibilityService(true);
+
+    const slot = googleAdSlotStub('foo', 'foo');
+
+    expect(addEventListenerSpy).to.have.been.calledOnce;
+    expect(addEventListenerSpy).to.have.been.calledWithMatch(
+      'slotVisibilityChanged',
+      Sinon.match.func
+    );
+
+    sandbox
+      .stub(jsDomWindow.document, 'getElementById')
+      .returns(jsDomWindow.document.createElement('div'));
+
+    const refreshCallback = sandbox.stub();
+    service.trackSlot(slot, refreshCallback);
+
+    sandbox.clock.tick(adRefreshInterval + tickInterval);
+
+    // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
+    // note that no slot visibility event had to be fired.
+    expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
 
     expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
   });
