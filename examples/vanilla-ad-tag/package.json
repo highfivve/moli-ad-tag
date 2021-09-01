@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-vanilla-ad-tag",
-  "version": "3.37.2",
+  "version": "3.37.3",
   "description": "Demonstrating an empty ad tag",
   "main": "index.ts",
   "private": true,
@@ -29,6 +29,6 @@
     "webpack-manifest-plugin": "^3.1.1"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.37.2"
+    "@highfivve/ad-tag": "^3.37.3"
   }
 }
