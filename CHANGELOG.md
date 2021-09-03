@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.37.4
+
+[GD-3534](https://jira.gutefrage.net/browse/GD-3534): Abort ad pipeline if slots are empty after filtering.
+
 ## 3.37.3
 
 [GD-3548](https://jira.gutefrage.net/browse/GD-3548): Add disableVisibilityChecks parameter to Ad Reload, allowing to

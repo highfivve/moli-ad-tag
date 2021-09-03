@@ -13,7 +13,8 @@ import {
   IAdPipelineConfiguration,
   InitStep,
   mkConfigureStepOnce,
-  mkPrepareRequestAdsStep
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep
 } from './adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { SlotEventService } from './slotEventService';
@@ -22,6 +23,8 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { LabelConfigService } from './labelConfigService';
 import { noopReportingService } from './reportingService';
+import MoliConfig = Moli.MoliConfig;
+import SlotDefinition = Moli.SlotDefinition;
 
 // setup sinon-chai
 use(sinonChai);
@@ -149,6 +152,37 @@ describe('AdPipeline', () => {
         });
     });
 
+    it('should abort running the ad pipeline if no slots are available after filtering', async () => {
+      let callCount: number = 0;
+      const initSteps: InitStep[] = [
+        () => {
+          callCount = callCount + 1;
+          return Promise.resolve();
+        }
+      ];
+      const prepareRequestAdsStub = sandbox.stub();
+      const prepareRequestAdsSteps: PrepareRequestAdsStep[] = [
+        mkPrepareRequestAdsStep('prepare-stub', 1, () => {
+          prepareRequestAdsStub();
+          return Promise.resolve();
+        })
+      ];
+      const pipeline = newAdPipeline({
+        ...emptyPipelineConfig,
+        init: initSteps,
+        prepareRequestAds: prepareRequestAdsSteps
+      });
+
+      const config: MoliConfig = {
+        slots: [adSlot]
+      };
+
+      await expect(pipeline.run([adSlot], config, 1)).to.eventually.be.fulfilled;
+
+      expect(callCount).to.be.equals(1);
+      expect(prepareRequestAdsStub).to.not.have.been.called;
+    });
+
     it('should execute prepareRequestAds by priority', () => {
       const spyFn = sandbox.spy();
 
@@ -161,6 +195,7 @@ describe('AdPipeline', () => {
 
       const pipeline = newAdPipeline({
         ...emptyPipelineConfig,
+        defineSlots: () => Promise.resolve([{ moliSlot: adSlot } as SlotDefinition]),
         prepareRequestAds: prepareRequestAdsSteps
       });
 

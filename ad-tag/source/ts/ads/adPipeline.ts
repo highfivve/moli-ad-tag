@@ -341,6 +341,8 @@ export class AdPipeline {
             Promise.all(this.config.init.map(step => step(context)))
           );
 
+      const REJECTED_NO_SLOTS_AFTER_FILTERING = 'rejected-no-slots-after-filtering';
+
       return this.init
         .then(() =>
           this.logStage('configure', currentRequestId).then(() =>
@@ -353,6 +355,10 @@ export class AdPipeline {
           )
         )
         .then(definedSlots => {
+          if (!definedSlots.length) {
+            return Promise.reject(REJECTED_NO_SLOTS_AFTER_FILTERING);
+          }
+
           return (
             this.logStage('prepareRequestAds', currentRequestId)
               .then(() => this.runPrepareRequestAds(context, definedSlots))
@@ -367,8 +373,13 @@ export class AdPipeline {
           );
         })
         .catch(error => {
-          this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
-          return Promise.reject(error);
+          switch (error) {
+            case REJECTED_NO_SLOTS_AFTER_FILTERING:
+              return Promise.resolve();
+            default:
+              this.logger.error('AdPipeline', 'running ad pipeline failed with error', error);
+              return Promise.reject(error);
+          }
         });
     });
   }
