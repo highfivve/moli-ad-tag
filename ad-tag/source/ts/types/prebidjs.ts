@@ -147,6 +147,16 @@ export namespace prebidjs {
      * @see https://github.com/prebid/Prebid.js/blob/804295aa2dae0484d67891b73fcfc401ef8244f1/modules/currency.js#L127
      */
     convertCurrency?(cpm: number, fromCurrency: string, toCurrency: string): number;
+
+    /**
+     * This function is available when the  _First Party Data Enrichment Module_ is integrated.
+     *
+     * If the publisher needs to refresh the enriched FPD after the first auction, this can be done using a function
+     * provided by this module
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/enrichmentFpdModule.html
+     */
+    refreshFpd?();
   }
 
   /**
