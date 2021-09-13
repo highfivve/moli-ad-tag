@@ -1178,6 +1178,41 @@ export namespace prebidjs {
     };
   }
 
+  /**
+   * ## GPT Pre-Auction Module
+   *
+   * Configuration types for the GPT Pre-Auction module.
+   *
+   * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
+   */
+  export namespace gptPreAuction {
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
+     */
+    export interface GptPreAuctionConfig {
+      /**
+       * allows turning off of module. Default value is true
+       */
+      readonly enabled?: boolean;
+
+      /**
+       * Removes extra network IDs when Multiple Customer Management is active.
+       * Default is false.
+       */
+      readonly mcmEnabled?: boolean;
+
+      /**
+       * GPT slot matching function should match the customSlotMatching function sent to `setTargetingForGptAsync`
+       */
+      readonly customGptSlotMatching?: (gptSlotObj: any) => boolean;
+
+      /**
+       * Custom PB AdSlot function
+       */
+      readonly customPbAdSlot?: (adUnitCode: string, adServerSlot: string) => string;
+    }
+  }
+
   export namespace analytics {
     export type AnalyticsAdapter = IGoogleAnalyticsAdapter;
     export type AnalyticsProviders = 'ga';
@@ -1317,6 +1352,13 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
      */
     readonly s2sConfig?: server.S2SConfig | ReadonlyArray<server.S2SConfig>;
+
+    /**
+     * _GPT Pre-Auction Module_ must be enabled.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
+     */
+    readonly gptPreAuction?: gptPreAuction.GptPreAuctionConfig;
   }
 
   /**
