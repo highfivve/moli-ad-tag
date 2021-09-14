@@ -154,6 +154,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
             <div className="MoliDebug-tagContainer">
               <Tag variant="green">{slot.position}</Tag>
               <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
+              {slot.behaviour.bucket && <Tag variant="blue">{slot.behaviour.bucket}</Tag>}
             </div>
             <div className="MoliDebug-tagContainer">
               <span
