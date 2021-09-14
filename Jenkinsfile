@@ -1,3 +1,5 @@
+@Library('jenkins-shared-library') _
+
 pipeline {
     agent any
 
@@ -138,16 +140,13 @@ pipeline {
     }
     post {
         success {
-            slackSend color: 'good',
-                    message: "built moli ad tag ${BUILD_NUMBER} (<${BUILD_URL}|jenkins build>)"
+            markBuildAsSuccessful('Moli AdTag')
         }
         unstable {
-            slackSend color: 'warning',
-                    message: "build is unstable for moli ad tag ${BUILD_NUMBER} (<${BUILD_URL}|jenkins build>)"
+            markBuildAsUnstable()
         }
         failure {
-            slackSend color: 'danger',
-                    message: "build failed for moli ad tag ${BUILD_NUMBER} (<${BUILD_URL}|jenkins build>)"
+            markBuildAsFailed()
         }
         always {
             junit allowEmptyResults: false, testResults: '**/test-results.xml'
