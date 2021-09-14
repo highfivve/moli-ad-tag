@@ -166,7 +166,7 @@ export enum SkinConfigEffect {
  * # Skin Module
  */
 export class Skin implements IModule {
-  public readonly name: string = 'Skin';
+  public readonly name: string = 'skin';
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
 

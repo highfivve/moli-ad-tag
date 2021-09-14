@@ -502,7 +502,7 @@ export const adConfiguration: Moli.MoliConfig = {
     }
   ],
   buckets: {
-    enabled: true
+    enabled: false
   },
   prebid: {
     // bidderSettings: bidderSettings,
