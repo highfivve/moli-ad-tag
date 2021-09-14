@@ -140,7 +140,7 @@ pipeline {
     }
     post {
         success {
-            markBuildAsSuccessful('Moli AdTag')
+            markBuildAsSuccessful('MoliAdTag')
         }
         unstable {
             markBuildAsUnstable()
