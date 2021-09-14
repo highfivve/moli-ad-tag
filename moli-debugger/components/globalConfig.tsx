@@ -1,33 +1,36 @@
-import React, {Component, Fragment} from 'react';
+import React, { Component, Fragment } from 'react';
 
-import {ReportingService} from '@highfivve/ad-tag/source/ts/ads/reportingService';
-import {LabelConfigService} from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
-import {SkinModuleConfig} from "modules/generic-skin/index";
-import {createPerformanceService} from '@highfivve/ad-tag/source/ts/util/performanceService';
+import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
+import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
+import { SkinModuleConfig } from 'modules/generic-skin/index';
+import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 import {
   getActiveEnvironmentOverride,
   resetEnvironmentOverrides,
   setEnvironmentOverrideInStorage
 } from '@highfivve/ad-tag/source/ts/util/environmentOverride';
 
-import {AdSlotConfig} from './adSlotConfig';
-import {Tag, TagLabel} from './tag';
-import {classList} from '../util/stringUtils';
-import {IWindowEventObserver, WindowResizeService} from '../util/windowResizeService';
-import {Theme, ThemingService} from '../util/themingService';
+import { AdSlotConfig } from './adSlotConfig';
+import { Tag, TagLabel } from './tag';
+import { classList } from '../util/stringUtils';
+import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
+import { Theme, ThemingService } from '../util/themingService';
 
-import {googletag} from '@highfivve/ad-tag/source/ts/types/googletag';
-import {Moli} from '@highfivve/ad-tag/source/ts/types/moli';
-import {prebidjs} from '@highfivve/ad-tag/source/ts/types/prebidjs';
-import {ModuleMeta} from '@highfivve/ad-tag/source/ts/types/module';
-import {ConsentConfig} from './consentConfig';
-import {LabelConfigDebug} from './labelConfigDebug';
-import {extractPrebidAdSlotConfigs} from '../util/prebid';
-import {getDebugDelayFromLocalStorage, setDebugDelayToLocalStorage} from 'ad-tag/source/ts/util/debugDelay';
-import {removeTestSlotSizeFromLocalStorage} from 'ad-tag/source/ts/util/test-slots';
+import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
+import { ModuleMeta } from '@highfivve/ad-tag/source/ts/types/module';
+import { ConsentConfig } from './consentConfig';
+import { LabelConfigDebug } from './labelConfigDebug';
+import { extractPrebidAdSlotConfigs } from '../util/prebid';
+import {
+  getDebugDelayFromLocalStorage,
+  setDebugDelayToLocalStorage
+} from 'ad-tag/source/ts/util/debugDelay';
+import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
-import {isNotNull} from "@highfivve/ad-tag";
+import { isNotNull } from '@highfivve/ad-tag';
 
 declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
@@ -861,7 +864,11 @@ export class GlobalConfig
     }
   };
 
-  private checkBucketConfig = (messages: Message[], bucket: Moli.bucket.BucketConfig, slots: Moli.AdSlot[]) => {
+  private checkBucketConfig = (
+    messages: Message[],
+    bucket: Moli.bucket.BucketConfig,
+    slots: Moli.AdSlot[]
+  ) => {
     const hasBucket = slots.some(slot => !!slot.behaviour.bucket);
 
     if (!hasBucket && !bucket.enabled) {
@@ -886,8 +893,11 @@ export class GlobalConfig
     }
   };
 
-  private checkSkinConfig = (messages: Message[], modules: Array<ModuleMeta>, slots: Moli.AdSlot[]) => {
-
+  private checkSkinConfig = (
+    messages: Message[],
+    modules: Array<ModuleMeta>,
+    slots: Moli.AdSlot[]
+  ) => {
     const module = modules.find(module => module.name === 'skin');
 
     if (module) {
@@ -896,7 +906,8 @@ export class GlobalConfig
         const skinAdSlotDomId = conf.skinAdSlotDomId;
         const blockedAdSlotDomIds = conf.blockedAdSlotDomIds;
 
-        const skinAdSlotBucket = slots.find(slot => slot.domId === skinAdSlotDomId)?.behaviour.bucket;
+        const skinAdSlotBucket = slots.find(slot => slot.domId === skinAdSlotDomId)?.behaviour
+          .bucket;
         const blockedAdBuckets: string[] = blockedAdSlotDomIds
           .map(slotId => slots.find(slot => slot.domId === slotId)?.behaviour.bucket)
           .filter(isNotNull);
@@ -906,28 +917,34 @@ export class GlobalConfig
           if (!areAllInTheSameBucket) {
             messages.push({
               kind: 'error',
-              text: this.formatSkinConfigMsg({id: skinAdSlotDomId, bucket:skinAdSlotBucket}, blockedAdSlotDomIds, blockedAdBuckets)
+              text: this.formatSkinConfigMsg(
+                { id: skinAdSlotDomId, bucket: skinAdSlotBucket },
+                blockedAdSlotDomIds,
+                blockedAdBuckets
+              )
             });
           }
         }
-
       });
     }
   };
 
-  private formatSkinConfigMsg = (skinAdSlot: adSlot, blockedAdSlotsIds: Array<string>, blockedAdSlotsBuckets: Array<string>) => {
+  private formatSkinConfigMsg = (
+    skinAdSlot: adSlot,
+    blockedAdSlotsIds: Array<string>,
+    blockedAdSlotsBuckets: Array<string>
+  ) => {
     return (
-        <div>
-          {`The SkinAdSlot ${skinAdSlot.id} in the bucket ${skinAdSlot.bucket} is not in the same bucket with the BlockedAdSlots:`}
-          <ul>
-            {blockedAdSlotsIds.map((id, index) => {
-              return (<li key={index}>
-                {`${id}: ${blockedAdSlotsBuckets[index]}`}
-              </li>);
-            })}
-          </ul>
-        </div>);
-};
+      <div>
+        {`The SkinAdSlot ${skinAdSlot.id} in the bucket ${skinAdSlot.bucket} is not in the same bucket with the BlockedAdSlots:`}
+        <ul>
+          {blockedAdSlotsIds.map((id, index) => {
+            return <li key={index}>{`${id}: ${blockedAdSlotsBuckets[index]}`}</li>;
+          })}
+        </ul>
+      </div>
+    );
+  };
 
   private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
