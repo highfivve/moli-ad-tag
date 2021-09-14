@@ -1,4 +1,5 @@
 import { Moli } from '../types/moli';
+import { prebidjs } from '../types/prebidjs';
 import { parseQueryString } from '../util/query';
 import {
   createAssetLoaderService,
@@ -79,6 +80,40 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         getLogger(state.config, window).error(
           'MoliGlobal',
           `Setting key-value after configuration: ${key} : ${value}`
+        );
+        break;
+      }
+    }
+  }
+
+  function setFirstPartyData(fpData: prebidjs.firstpartydata.PrebidFirstPartyData): void {
+    switch (state.state) {
+      case 'spa-finished':
+      case 'spa-requestAds':
+      case 'configurable': {
+        state.prebidFpData = fpData;
+        break;
+      }
+      case 'configured': {
+        if (state.config.prebid) {
+          state.config = {
+            ...state.config,
+            prebid: {
+              ...state.config.prebid,
+              config: {
+                ...state.config.prebid.config,
+                ortb2: fpData
+              }
+            }
+          };
+        }
+        break;
+      }
+      default: {
+        getLogger(state.config, window).error(
+          'MoliGlobal',
+          `Setting first party data after configuration:`,
+          fpData
         );
         break;
       }
@@ -314,6 +349,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           config: {
             ...config,
             ...(envOverride && { environment: envOverride.environment }),
+            prebid: config.prebid
+              ? { ...config.prebid, config: { ...config.prebid.config, ortb2: state.prebidFpData } }
+              : undefined,
             targeting: {
               keyValues: {
                 ...(config.targeting && config.targeting.keyValues
@@ -443,6 +481,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             // initialize targeting values for next refreshAds call
             labels: [],
             keyValues: {},
+            prebidFpData: {},
             hooks: state.hooks,
             // reset refresh slots array
             refreshSlots: [],
@@ -529,7 +568,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         const beforeRequestAds = state.hooks.beforeRequestAds;
 
         const currentState = state;
-        const { initialized, href, keyValues, labels, configFromAdTag } = state;
+        const { initialized, href, keyValues, labels, configFromAdTag, prebidFpData } = state;
         // we can only use the preexisting refreshSlots array if the previous requestAds call finished in time
         const refreshSlots = state.state === 'spa-finished' ? state.refreshSlots : [];
         state = {
@@ -555,6 +594,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             // been set via the moli API (e.g. setTargeting or addLabel)
             return {
               ...config,
+              prebid: config.prebid
+                ? {
+                    ...config.prebid,
+                    config: {
+                      ...config.prebid.config,
+                      ortb2: prebidFpData
+                    }
+                  }
+                : undefined,
               targeting: {
                 keyValues: {
                   ...(configFromAdTag.targeting && configFromAdTag.targeting.keyValues
@@ -594,6 +642,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               // reset targeting after successful refreshAds()
               labels: [],
               keyValues: {},
+              prebidFpData: {},
               // reset refreshSlots
               refreshSlots: [],
               moduleMeta
@@ -726,6 +775,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     que: que,
     version: packageJson.version,
     setTargeting: setTargeting,
+    setFirstPartyData: setFirstPartyData,
     addLabel: addLabel,
     setLogger: setLogger,
     setSampleRate: setSampleRate,

@@ -1310,6 +1310,68 @@ export namespace prebidjs {
     }
   }
 
+  export namespace firstpartydata {
+    export const enum ContentQuality {
+      Unknown = 0,
+      ProfessionallyProduced = 1,
+      Prosumer = 2,
+      UGC = 3
+    }
+
+    export interface PrebidFirstPartyData {
+      site?: {
+        /**
+         * Array of IAB content categories that describe the current page or view of the site.
+         */
+        pagecat: Array<string>;
+        mobile: 0 | 1;
+        privacypolicy: 0 | 1;
+
+        /**
+         * Comma separated list of keywords about the site.
+         */
+        keywords: string;
+        page: string;
+        content: {
+          title: string;
+          url: string;
+          prodq: ContentQuality;
+
+          /**
+           * User rating of the content (e.g., number of stars, likes, etc.).
+           */
+          userrating: number;
+
+          /**
+           * Comma separated list of keywords describing the content.
+           */
+          keywords: string;
+
+          /**
+           * Content language using ISO-639-1-alpha-2.
+           */
+          language: string;
+        };
+      };
+      user?: {
+        /**
+         * Year of birth as a 4-digit integer.
+         */
+        yob: number;
+
+        /**
+         * "O" = known to be other (i.e., omitted is unknown).
+         */
+        gender?: 'M' | 'F' | 'O';
+
+        /**
+         * Comma separated list of keywords, interests, or intent.
+         */
+        keywords: string;
+      };
+    }
+  }
+
   /**
    * ## Global Prebid Configuration
    *
@@ -1405,6 +1467,17 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
      */
     readonly gptPreAuction?: gptPreAuction.GptPreAuctionConfig;
+
+    /**
+     * Publishers supply First Party Data (FPD) by specifying attributes as configuration.
+     *
+     * Note that supplying first party *user* data may require special consent in certain regions.
+     * Prebid.js does *not* police the passing of user data as part of its GDPR or CCPA modules.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-fpd
+     * @see https://docs.prebid.org/features/firstPartyData.html
+     */
+    readonly ortb2?: firstpartydata.PrebidFirstPartyData;
   }
 
   /**
