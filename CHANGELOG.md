@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 3.37.7
+
+[GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Adex module:
+Support list object type, warn about defaultValue usage
+
+[GD-3428](https://jira.gutefrage.net/browse/GD-3428) / [GD-3431](https://jira.gutefrage.net/browse/GD-3431): Moli
+Debugger: Added bucket config check + added skin config check + render the bucket name
+
+## 3.37.5
+
+[GD-3435](https://jira.gutefrage.net/browse/GD-3435) Add gpt-pre-auction module types, add refreshFpd method to pbjs
+
 ## 3.37.4
 
 [GD-3534](https://jira.gutefrage.net/browse/GD-3534): Abort ad pipeline if slots are empty after filtering.
