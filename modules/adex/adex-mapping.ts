@@ -5,7 +5,14 @@ import MoliLogger = Moli.MoliLogger;
 export type MappingDefinition =
   | MappingDefinitionToAdexString
   | MappingDefinitionToAdexNumber
-  | MappingDefinitionToAdexMap;
+  | MappingDefinitionToAdexMap
+  | MappingDefinitionToAdexList;
+
+type AdexListObject = { [key: string]: 1 };
+
+export type AdexList = {
+  [key: string]: AdexListObject;
+};
 
 export type AdexKeyValuePair = {
   [key: string]: string | number;
@@ -13,11 +20,16 @@ export type AdexKeyValuePair = {
 export type AdexKeyValueMap = {
   [key: string]: AdexKeyValuePair;
 };
-export type AdexKeyValues = AdexKeyValuePair | AdexKeyValueMap;
+export type AdexKeyValues = AdexKeyValuePair | AdexKeyValueMap | AdexList;
 
 interface ToAdexMapping {
   readonly key: string;
   readonly attribute: string;
+}
+
+interface MappingDefinitionToAdexList extends ToAdexMapping {
+  readonly adexValueType: 'list';
+  readonly defaultValue?: Array<string>;
 }
 
 interface MappingDefinitionToAdexMap extends ToAdexMapping {
@@ -121,18 +133,63 @@ export const toAdexStringOrNumberType = (
   };
 };
 
+/**
+ * Extract Adex list objects from targeting key/values.
+ */
+export const toAdexListType = (
+  keyValueMap: DfpKeyValueMap,
+  mappingDefinition: MappingDefinitionToAdexList,
+  logger: MoliLogger
+): AdexList | undefined => {
+  const value = extractStringOrNumber(keyValueMap, 'string', mappingDefinition.key);
+
+  if (
+    // adex `value` is empty and no default value specified
+    (value === undefined &&
+      (mappingDefinition.defaultValue === undefined ||
+        mappingDefinition.defaultValue.length === 0)) ||
+    typeof value === 'number'
+  ) {
+    logger.warn(
+      'Adex DMP',
+      `value for key "${mappingDefinition.key}" was empty or number. Value:`,
+      value
+    );
+    return undefined;
+  }
+
+  const adexTargetValue = convertToAdexListValue(value, mappingDefinition, logger);
+
+  return {
+    [mappingDefinition.attribute]: adexTargetValue!
+  };
+};
+
+/**
+ * Adex lists are not really lists. They consist of objects with the list items as keys, and the
+ * literal 1 as value:
+ *
+ * @example
+ * {
+ *   "Automotive": 1,
+ *   "Oldtimers": 1,
+ *   "Car Repair": 1
+ * }
+ */
+const sortAndToListObject = (arr: Array<string>): AdexListObject =>
+  Object.fromEntries(arr.sort().map(listValue => [listValue, 1]));
+
 const sortAndJoin = (arr: Array<string>) => arr.sort().join(',');
 
 const extractStringOrNumber = (
   keyValueMap: Moli.DfpKeyValueMap,
   valueType: 'number' | 'string',
   keyToExtract: string
-): number | string | string[] | undefined =>
-  valueType === 'number' ? Number(keyValueMap[keyToExtract]) : keyValueMap[keyToExtract];
+) => (valueType === 'number' ? Number(keyValueMap[keyToExtract]) : keyValueMap[keyToExtract]);
 
 const convertToAdexTargetValue = (
   value: string | number | Array<string> | undefined,
-  mappingDefinition: MappingDefinition,
+  mappingDefinition: Exclude<MappingDefinition, MappingDefinitionToAdexList>,
   logger: MoliLogger
 ) =>
   // if the value is truthy, ...
@@ -144,9 +201,38 @@ const convertToAdexTargetValue = (
       : // else, just use the value itself.
         value
     : // if the value is falsy, use the default as fallback.
-      logAndUseDefaultValue(mappingDefinition, logger);
+      (logAndUseDefaultValue(mappingDefinition, logger) as string | number | undefined);
+
+const convertToAdexListValue = (
+  value: string | Array<string> | undefined,
+  mappingDefinition: MappingDefinitionToAdexList,
+  logger: MoliLogger
+): AdexListObject | undefined => {
+  if (value === undefined) {
+    // if the value is falsy, use the default as fallback.
+    return logAndUseDefaultValue(mappingDefinition, logger) as AdexListObject | undefined;
+  }
+
+  // if the value is truthy, ...
+  // check if it's an array
+  return Array.isArray(value)
+    ? // if it is, construct the "list" object
+      sortAndToListObject(value)
+    : // else, just use the value itself as key and the literal 1 as value.
+      { [value]: 1 };
+};
 
 const logAndUseDefaultValue = (mappingDefinition: MappingDefinition, logger: MoliLogger) => {
-  logger.warn('Adex DMP', 'using defaultValue as fallback for key', mappingDefinition.key);
-  return mappingDefinition.defaultValue;
+  logger.warn(
+    'Adex DMP',
+    'using defaultValue',
+    mappingDefinition.defaultValue,
+    'as fallback for key',
+    mappingDefinition.key
+  );
+  return mappingDefinition.adexValueType === 'list'
+    ? mappingDefinition.defaultValue
+      ? sortAndToListObject(mappingDefinition.defaultValue)
+      : undefined
+    : mappingDefinition.defaultValue;
 };

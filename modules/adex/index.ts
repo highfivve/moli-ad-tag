@@ -57,6 +57,7 @@ import {
 import {
   AdexKeyValues,
   MappingDefinition,
+  toAdexListType,
   toAdexMapType,
   toAdexStringOrNumberType
 } from './adex-mapping';
@@ -212,6 +213,8 @@ export class AdexModule implements IModule {
         switch (def.adexValueType) {
           case 'map':
             return toAdexMapType(dfpKeyValues, def, context.logger);
+          case 'list':
+            return toAdexListType(dfpKeyValues, def, context.logger);
           default:
             return toAdexStringOrNumberType(dfpKeyValues, def, context.logger);
         }
