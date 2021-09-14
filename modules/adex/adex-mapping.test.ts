@@ -6,6 +6,8 @@ import sinonChai from 'sinon-chai';
 import {
   AdexKeyValueMap,
   AdexKeyValuePair,
+  AdexList,
+  toAdexListType,
   toAdexMapType,
   toAdexStringOrNumberType
 } from './adex-mapping';
@@ -154,7 +156,9 @@ describe('toAdexMapType', () => {
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
       'Adex DMP',
-      'using defaultValue as fallback for key',
+      'using defaultValue',
+      1337,
+      'as fallback for key',
       'channel'
     );
   });
@@ -181,7 +185,9 @@ describe('toAdexMapType', () => {
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
       'Adex DMP',
-      'using defaultValue as fallback for key',
+      'using defaultValue',
+      1337,
+      'as fallback for key',
       'channel'
     );
   });
@@ -304,7 +310,9 @@ describe('toAdexStringOrNumberType', () => {
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
       'Adex DMP',
-      'using defaultValue as fallback for key',
+      'using defaultValue',
+      1337,
+      'as fallback for key',
       'channel'
     );
   });
@@ -327,7 +335,9 @@ describe('toAdexStringOrNumberType', () => {
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
       'Adex DMP',
-      'using defaultValue as fallback for key',
+      'using defaultValue',
+      '1337',
+      'as fallback for key',
       'channel'
     );
   });
@@ -346,6 +356,103 @@ describe('toAdexStringOrNumberType', () => {
       noopLogger
     );
     const expectedResult: AdexKeyValuePair = { iab_cat: 'Medical,Pregnancy' };
+    expect(result).to.deep.equal(expectedResult);
+  });
+});
+
+describe('toAdexListType', () => {
+  it('should produce an AdexList with string values out of a DfpKeyValueMap', () => {
+    const keyValues: DfpKeyValueMap = {
+      channels: ['Medical', 'Pregnancy']
+    };
+    const result = toAdexListType(
+      keyValues,
+      {
+        key: 'channels',
+        adexValueType: 'list',
+        attribute: 'iab_cat'
+      },
+      noopLogger
+    );
+    const expectedResult: AdexList = { iab_cat: { Medical: 1, Pregnancy: 1 } };
+    expect(result).to.deep.equal(expectedResult);
+  });
+
+  it("shouldn't produce anything if the value property is undefined", () => {
+    const keyValues: DfpKeyValueMap = {};
+    const result = toAdexListType(
+      keyValues,
+      {
+        key: 'channels',
+        adexValueType: 'list',
+        attribute: 'iab_cat'
+      },
+      noopLogger
+    );
+    expect(result).to.be.undefined;
+  });
+
+  it('should set the defaultValue if value is undefined', () => {
+    const warnSpy = Sinon.stub();
+    const keyValues: DfpKeyValueMap = {};
+    const result = toAdexListType(
+      keyValues,
+      {
+        key: 'channels',
+        adexValueType: 'list',
+        attribute: 'iab_cat',
+        defaultValue: ['1337']
+      },
+      { ...noopLogger, warn: warnSpy }
+    );
+    const expectedResult: AdexList = { iab_cat: { '1337': 1 } };
+    expect(result).to.deep.equal(expectedResult);
+    // should warn about default value usage
+    expect(warnSpy).to.have.been.calledOnceWithExactly(
+      'Adex DMP',
+      'using defaultValue',
+      ['1337'],
+      'as fallback for key',
+      'channels'
+    );
+  });
+
+  it('should yield undefined if the value is empty and defaultValue is an empty array', () => {
+    const warnSpy = Sinon.stub();
+    const keyValues: DfpKeyValueMap = {};
+    const result = toAdexListType(
+      keyValues,
+      {
+        key: 'channels',
+        adexValueType: 'list',
+        attribute: 'iab_cat',
+        defaultValue: []
+      },
+      { ...noopLogger, warn: warnSpy }
+    );
+    expect(result).to.be.undefined;
+    // should warn about empty value
+    expect(warnSpy).to.have.been.calledOnceWithExactly(
+      'Adex DMP',
+      `value for key "channels" was empty or number. Value:`,
+      undefined
+    );
+  });
+
+  it('should sort and join array values into an Adex list object', () => {
+    const keyValues: DfpKeyValueMap = {
+      channels: ['Pregnancy', 'Medical']
+    };
+    const result = toAdexListType(
+      keyValues,
+      {
+        key: 'channels',
+        adexValueType: 'list',
+        attribute: 'iab_cat'
+      },
+      noopLogger
+    );
+    const expectedResult: AdexList = { iab_cat: { Medical: 1, Pregnancy: 1 } };
     expect(result).to.deep.equal(expectedResult);
   });
 });
