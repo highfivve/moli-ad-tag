@@ -73,7 +73,7 @@ export const toAdexMapType = (
     return undefined;
   }
 
-  const adexTargetValue = convertToAdexTargetValue(mapValue, mappingDefinition.defaultValue);
+  const adexTargetValue = convertToAdexTargetValue(mapValue, mappingDefinition, logger);
 
   return {
     [mappingDefinition.attribute]: {
@@ -114,7 +114,7 @@ export const toAdexStringOrNumberType = (
     return undefined;
   }
 
-  const adexTargetValue = convertToAdexTargetValue(value, mappingDefinition.defaultValue);
+  const adexTargetValue = convertToAdexTargetValue(value, mappingDefinition, logger);
 
   return {
     [mappingDefinition.attribute]: adexTargetValue!
@@ -132,7 +132,8 @@ const extractStringOrNumber = (
 
 const convertToAdexTargetValue = (
   value: string | number | Array<string> | undefined,
-  defaultValue: string | number | undefined
+  mappingDefinition: MappingDefinition,
+  logger: MoliLogger
 ) =>
   // if the value is truthy, ...
   value !== undefined && !Number.isNaN(value)
@@ -143,4 +144,9 @@ const convertToAdexTargetValue = (
       : // else, just use the value itself.
         value
     : // if the value is falsy, use the default as fallback.
-      defaultValue;
+      logAndUseDefaultValue(mappingDefinition, logger);
+
+const logAndUseDefaultValue = (mappingDefinition: MappingDefinition, logger: MoliLogger) => {
+  logger.warn('Adex DMP', 'using defaultValue as fallback for key', mappingDefinition.key);
+  return mappingDefinition.defaultValue;
+};

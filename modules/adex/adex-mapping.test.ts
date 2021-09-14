@@ -1,6 +1,7 @@
 import { Moli } from '@highfivve/ad-tag';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { expect, use } from 'chai';
+import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import {
   AdexKeyValueMap,
@@ -131,6 +132,7 @@ describe('toAdexMapType', () => {
   });
 
   it('should use default if valueKey is not a number', () => {
+    const warnSpy = Sinon.stub();
     const keyValues: DfpKeyValueMap = {
       channel: 'Medical',
       subChannel: 'Pregnancy'
@@ -145,13 +147,20 @@ describe('toAdexMapType', () => {
         attribute: 'iab_cat',
         defaultValue: 1337
       },
-      noopLogger
+      { ...noopLogger, warn: warnSpy }
     );
     const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 1337 } };
     expect(result).to.deep.equal(expectedResult);
+    // should warn about default value usage
+    expect(warnSpy).to.have.been.calledOnceWithExactly(
+      'Adex DMP',
+      'using defaultValue as fallback for key',
+      'channel'
+    );
   });
 
   it('should set the defaultValue if value is undefined', () => {
+    const warnSpy = Sinon.stub();
     const keyValues: DfpKeyValueMap = {
       channel: 'Medical'
     };
@@ -165,10 +174,16 @@ describe('toAdexMapType', () => {
         attribute: 'iab_cat',
         defaultValue: 1337
       },
-      noopLogger
+      { ...noopLogger, warn: warnSpy }
     );
     const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 1337 } };
     expect(result).to.deep.equal(expectedResult);
+    // should warn about default value usage
+    expect(warnSpy).to.have.been.calledOnceWithExactly(
+      'Adex DMP',
+      'using defaultValue as fallback for key',
+      'channel'
+    );
   });
 });
 
@@ -272,6 +287,7 @@ describe('toAdexStringOrNumberType', () => {
   });
 
   it('should set the defaultValue if number value is undefined', () => {
+    const warnSpy = Sinon.stub();
     const keyValues: DfpKeyValueMap = {};
     const result = toAdexStringOrNumberType(
       keyValues,
@@ -281,13 +297,20 @@ describe('toAdexStringOrNumberType', () => {
         attribute: 'iab_cat',
         defaultValue: 1337
       },
-      noopLogger
+      { ...noopLogger, warn: warnSpy }
     );
     const expectedResult: AdexKeyValuePair = { iab_cat: 1337 };
     expect(result).to.deep.equal(expectedResult);
+    // should warn about default value usage
+    expect(warnSpy).to.have.been.calledOnceWithExactly(
+      'Adex DMP',
+      'using defaultValue as fallback for key',
+      'channel'
+    );
   });
 
   it('should set the defaultValue if string value is undefined', () => {
+    const warnSpy = Sinon.stub();
     const keyValues: DfpKeyValueMap = {};
     const result = toAdexStringOrNumberType(
       keyValues,
@@ -297,10 +320,16 @@ describe('toAdexStringOrNumberType', () => {
         attribute: 'iab_cat',
         defaultValue: '1337'
       },
-      noopLogger
+      { ...noopLogger, warn: warnSpy }
     );
     const expectedResult: AdexKeyValuePair = { iab_cat: '1337' };
     expect(result).to.deep.equal(expectedResult);
+    // should warn about default value usage
+    expect(warnSpy).to.have.been.calledOnceWithExactly(
+      'Adex DMP',
+      'using defaultValue as fallback for key',
+      'channel'
+    );
   });
 
   it('should sort and join array values into a comma separated string', () => {
