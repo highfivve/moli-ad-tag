@@ -10,5 +10,5 @@
     "rootDir": ".",
     "baseUrl": "./"
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

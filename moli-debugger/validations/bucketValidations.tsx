@@ -1,6 +1,6 @@
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { isNotNull, ModuleMeta } from '@highfivve/ad-tag';
-import { SkinModuleConfig } from 'modules/generic-skin/index';
+import { SkinModuleConfig } from '@highfivve/module-generic-skin';
 import React from 'react';
 import { Message } from '../components/globalConfig';
 
