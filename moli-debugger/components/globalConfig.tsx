@@ -1,8 +1,6 @@
 import React, { Component, Fragment } from 'react';
-
 import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
-import { SkinModuleConfig } from 'modules/generic-skin/index';
 import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 import {
   getActiveEnvironmentOverride,
@@ -30,7 +28,7 @@ import {
 import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
-import { isNotNull } from '@highfivve/ad-tag';
+import { checkBucketConfig, checkSkinConfig } from 'moli-debugger/validations/bucketValidations';
 
 declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
@@ -61,14 +59,9 @@ type IGlobalConfigState = {
   theme: Theme;
 };
 
-type Message = {
+export type Message = {
   kind: 'error' | 'warning' | 'optimization';
   text: string | JSX.Element;
-};
-
-type adSlot = {
-  id: string;
-  bucket: string;
 };
 
 const debugSidebarSelector = 'moli-debug-sidebar';
@@ -117,10 +110,10 @@ export class GlobalConfig
       }
 
       if (props.config.buckets) {
-        this.checkBucketConfig(this.state.messages, props.config.buckets, props.config.slots);
+        checkBucketConfig(this.state.messages, props.config.buckets, props.config.slots);
       }
 
-      this.checkSkinConfig(this.state.messages, props.modules, props.config.slots);
+      checkSkinConfig(this.state.messages, props.modules, props.config.slots);
 
       props.windowResizeService.register(this);
     }
@@ -862,88 +855,6 @@ export class GlobalConfig
         text: 'No prebid instance available! Either remove the prebid configuration or add prebid to the ad tag'
       });
     }
-  };
-
-  private checkBucketConfig = (
-    messages: Message[],
-    bucket: Moli.bucket.BucketConfig,
-    slots: Moli.AdSlot[]
-  ) => {
-    const hasBucket = slots.some(slot => !!slot.behaviour.bucket);
-
-    if (!hasBucket && !bucket.enabled) {
-      messages.push({
-        kind: 'optimization',
-        text: 'Buckets are not enabled!'
-      });
-    }
-
-    if (hasBucket && !bucket.enabled) {
-      messages.push({
-        kind: 'error',
-        text: 'Buckets are configured for ad slots, but buckets are disabled in the config.'
-      });
-    }
-
-    if (!hasBucket && bucket.enabled) {
-      messages.push({
-        kind: 'error',
-        text: 'Buckets are enabled in the config, but there are no ad units that have a bucket defined.'
-      });
-    }
-  };
-
-  private checkSkinConfig = (
-    messages: Message[],
-    modules: Array<ModuleMeta>,
-    slots: Moli.AdSlot[]
-  ) => {
-    const module = modules.find(module => module.name === 'skin');
-
-    if (module) {
-      const skinModule = module.config as unknown as SkinModuleConfig;
-      skinModule.configs.forEach(conf => {
-        const skinAdSlotDomId = conf.skinAdSlotDomId;
-        const blockedAdSlotDomIds = conf.blockedAdSlotDomIds;
-
-        const skinAdSlotBucket = slots.find(slot => slot.domId === skinAdSlotDomId)?.behaviour
-          .bucket;
-        const blockedAdBuckets: string[] = blockedAdSlotDomIds
-          .map(slotId => slots.find(slot => slot.domId === slotId)?.behaviour.bucket)
-          .filter(isNotNull);
-
-        if (skinAdSlotBucket) {
-          const areAllInTheSameBucket = new Set([...blockedAdBuckets, skinAdSlotBucket]).size === 1;
-          if (!areAllInTheSameBucket) {
-            messages.push({
-              kind: 'error',
-              text: this.formatSkinConfigMsg(
-                { id: skinAdSlotDomId, bucket: skinAdSlotBucket },
-                blockedAdSlotDomIds,
-                blockedAdBuckets
-              )
-            });
-          }
-        }
-      });
-    }
-  };
-
-  private formatSkinConfigMsg = (
-    skinAdSlot: adSlot,
-    blockedAdSlotsIds: Array<string>,
-    blockedAdSlotsBuckets: Array<string>
-  ) => {
-    return (
-      <div>
-        {`The SkinAdSlot ${skinAdSlot.id} in the bucket ${skinAdSlot.bucket} is not in the same bucket with the BlockedAdSlots:`}
-        <ul>
-          {blockedAdSlotsIds.map((id, index) => {
-            return <li key={index}>{`${id}: ${blockedAdSlotsBuckets[index]}`}</li>;
-          })}
-        </ul>
-      </div>
-    );
   };
 
   private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
