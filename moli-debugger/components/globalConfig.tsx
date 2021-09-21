@@ -30,9 +30,10 @@ import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
 import {
   checkBucketConfig,
-  checkSkinConfig,
-  checkAdReloadConfig
-} from 'moli-debugger/validations/bucketValidations';
+  checkSkinConfig
+} from 'moli-debugger/moli-ad-tag-debugger-validations/bucketValidations';
+import checkAdReloadConfig from '../moli-ad-tag-debugger-validations/adReloadValidations';
+import { checkSizesConfig } from '../moli-ad-tag-debugger-validations/sizesConfigValidations';
 
 declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
@@ -125,6 +126,11 @@ export class GlobalConfig
         this.props.labelConfigService.getSupportedLabels()
       );
 
+      checkSizesConfig(
+        this.state.messages,
+        props.config.slots,
+        this.props.labelConfigService.getSupportedLabels()
+      );
       props.windowResizeService.register(this);
     }
   }

@@ -17,7 +17,7 @@
     "compile:ts": "webpack",
     "compile:ts:watch": "yarn compile:ts --watch",
     "lint": "eslint ./ --ext .ts,.tsx && yarn prettier",
-    "test": "export TS_NODE_TRANSPILE_ONLY=true && mocha --require ts-node/register validations/bucketValidations.test.ts",
+    "test": "export TS_NODE_TRANSPILE_ONLY=true && mocha --require ts-node/register */*.test.ts",
     "clean": "rm -rf dist/",
     "validate": "yarn prettier && yarn compile",
     "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"**/*.ts*\"",

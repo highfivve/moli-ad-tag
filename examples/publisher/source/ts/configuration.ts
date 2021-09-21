@@ -172,7 +172,7 @@ export const adConfiguration: Moli.MoliConfig = {
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
+          sizesSupported: ['fluid', [300, 600]]
         }
       ]
     },
@@ -265,7 +265,6 @@ export const adConfiguration: Moli.MoliConfig = {
           mediaQuery: '(min-width: 768px)',
           sizesSupported: [
             [605, 165],
-            [605, 340],
             [1, 1]
           ]
         },
@@ -295,7 +294,7 @@ export const adConfiguration: Moli.MoliConfig = {
         bucket: 'TWO'
       },
       adUnitPath: '/55155651/prebid_test',
-      sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
+      sizes: ['fluid', [300, 250]],
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
@@ -327,18 +326,18 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'a9-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/55155651/amazon-tam',
-      sizes: ['fluid', [300, 250]],
+      sizes: [[300, 250]],
       a9: {
         labelAll: ['a9', 'desktop']
       },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',
-          sizesSupported: ['fluid', [605, 165]]
+          sizesSupported: ['fluid', [605, 165], [1, 1]]
         },
         {
           mediaQuery: '(max-width: 767px)',
-          sizesSupported: ['fluid', [300, 250]]
+          sizesSupported: ['fluid', [300, 250], [12, 1213]]
         }
       ]
     },

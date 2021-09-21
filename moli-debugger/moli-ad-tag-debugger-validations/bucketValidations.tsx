@@ -3,7 +3,6 @@ import { isNotNull, ModuleMeta } from '@highfivve/ad-tag';
 import { SkinModuleConfig } from '@highfivve/module-generic-skin';
 import React from 'react';
 import { Message } from '../components/globalConfig';
-import { extractPrebidAdSlotConfigs } from '../util/prebid';
 
 type AdSlotType = {
   id: string;
@@ -83,84 +82,6 @@ export const checkSkinConfig = (
   }
 };
 
-export const checkAdReloadConfig = (
-  messages: Message[],
-  modules: ModuleMeta[],
-  slots: Moli.AdSlot[],
-  labels
-) => {
-  const module = modules.find(module => module.name === 'moli-ad-reload');
-  type ReloadIssuesType = {
-    id: string;
-    reasons: string[];
-  };
-  let adReloadIssues: ReloadIssuesType[] = [{ id: '', reasons: [] }];
-
-  if (module) {
-    slots.filter((slot, index) => {
-      if (
-        slot.sizes
-          .filter(size => size !== 'fluid')
-          .every(size => String(size) === '1,1' || String(size) === '1,2')
-      ) {
-        adReloadIssues[index].id = slot.domId;
-        adReloadIssues[index].reasons.push('has no appropriate sizes');
-      }
-
-      if (slot.adUnitPath.includes('wallpaper')) {
-        adReloadIssues[index].id = slot.domId;
-        adReloadIssues[index].reasons.push('has a wallpaper path');
-      }
-
-      if (slot.prebid) {
-        const bidders = extractPrebidAdSlotConfigs(
-          {
-            keyValues: {},
-            floorPrice: undefined,
-            labels,
-            isMobile: !labels.includes('desktop')
-          },
-          slot.prebid
-        ).map(prebidConfig =>
-          prebidConfig.adUnit.bids.every(b => b.bidder === 'dspx' || b.bidder === 'justpremium')
-        );
-        if (bidders[0]) {
-          adReloadIssues[index].id = slot.domId;
-          adReloadIssues[index].reasons.push('has only dspx and/or justpremium biders');
-        }
-      }
-      adReloadIssues.push({ id: '', reasons: [] });
-    });
-
-    if (adReloadIssues.length) {
-      messages.push({
-        kind: 'error',
-        text: formatAdReloadConfigMsg(adReloadIssues.filter(issue => issue.id !== ''))
-      });
-    }
-  }
-};
-
-const formatAdReloadConfigMsg = issues => {
-  return (
-    <div>
-      AdReload should be disabled for the following reasons:
-      {issues.map((issue, index) => {
-        return (
-          <div key={index}>
-            The {issue.id}:
-            <ul>
-              {issue.reasons.map((issue, index) => {
-                return <li key={index}>{issue}</li>;
-              })}
-            </ul>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
 const formatSkinConfigMsg = (
   skinAdSlot: AdSlotType,
   blockedAdSlotsIds: Array<string>,
@@ -168,7 +89,8 @@ const formatSkinConfigMsg = (
 ) => {
   return (
     <div>
-      {`The SkinAdSlot ${skinAdSlot.id} in the bucket ${skinAdSlot.bucket} is not in the same bucket with the BlockedAdSlots:`}
+      The SkinAdSlot <strong>{skinAdSlot.id}</strong> in the bucket{' '}
+      <strong>{skinAdSlot.bucket}</strong> is not in the same bucket with the BlockedAdSlots:
       <ul>
         {blockedAdSlotsIds.map((id, index) => {
           return <li key={index}>{`${id}: ${blockedAdSlotsBuckets[index]}`}</li>;
