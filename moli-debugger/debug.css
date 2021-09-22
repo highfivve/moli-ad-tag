@@ -417,3 +417,13 @@
     position: relative;
   }
 }
+
+.size-valid-table th, .size-valid-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid;
+}
+
+.size-valid-table th {
+  background: #d9d9d9;
+}

@@ -4,7 +4,7 @@ import { Message } from '../components/globalConfig';
 import { checkBucketConfig } from './bucketValidations';
 
 const mockedSlots = (bucket?: string) => {
-  const slots: Array<Moli.AdSlot> = [
+  const slots: Moli.AdSlot[] = [
     {
       domId: 'id1',
       adUnitPath: '',

@@ -2,7 +2,6 @@ import { Message } from '../components/globalConfig';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import React from 'react';
 import { flatten } from '@highfivve/ad-tag';
-import './validations.css';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 
 type MissingSizesType = {
@@ -25,23 +24,14 @@ export const checkSizesConfig = (messages: Message[], slots: Moli.AdSlot[], labe
     const supportedSizesSet = new Set(supportedSizesAsString);
     const sizesInSlot = slot.sizes.map(size => (size === 'fluid' ? size : size.join('x')));
     const sizesInSlotSet = new Set(sizesInSlot);
-    const unsupportedSizes: string[] = [];
 
-    sizesInSlot.forEach(size => {
-      if (!supportedSizesSet.has(size)) {
-        unsupportedSizes.push(size);
-      }
-    });
-
+    const unsupportedSizes: string[] = sizesInSlot.filter(size => !supportedSizesSet.has(size));
     missingSizesInSlots.push({ slotId: slot.domId, unsupportedSizes: unsupportedSizes });
 
     // Unused supported sizes
-    const unusedSupportedSizes: string[] = [];
-    supportedSizesSet.forEach(size => {
-      if (!sizesInSlotSet.has(size)) {
-        unusedSupportedSizes.push(size);
-      }
-    });
+    const unusedSupportedSizes: string[] = supportedSizesAsString.filter(
+      size => !sizesInSlotSet.has(size)
+    );
 
     const existingSlot = missingSizesInSlots.find(missingSize => missingSize.slotId === slot.domId);
     if (existingSlot) {
@@ -125,7 +115,7 @@ const formatSizesConfigMsg = (missingSizes: MissingSizesType[]) => {
   return (
     <div>
       The following slots have sizes that need to be supported/defined:
-      <table>
+      <table className={'size-valid-table'}>
         <thead>
           <tr>
             <th>Slot ID</th>
