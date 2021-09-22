@@ -28,12 +28,9 @@ import {
 import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
 import MoliConfig = Moli.MoliConfig;
 import AdSlot = Moli.AdSlot;
-import {
-  checkBucketConfig,
-  checkSkinConfig
-} from 'moli-debugger/moli-ad-tag-debugger-validations/bucketValidations';
-import checkAdReloadConfig from '../moli-ad-tag-debugger-validations/adReloadValidations';
-import { checkSizesConfig } from '../moli-ad-tag-debugger-validations/sizesConfigValidations';
+import { checkBucketConfig, checkSkinConfig } from 'moli-debugger/validations/bucketValidations';
+import checkAdReloadConfig from '../validations/adReloadValidations';
+import { checkSizesConfig } from '../validations/sizesConfigValidations';
 
 declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
 
