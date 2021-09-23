@@ -2,6 +2,8 @@
 
 This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a modern static website generator.
 
+[infima.dev](https://infima.dev/) is the CSS framework used for the theme-classic.
+
 ## Installation
 
 ```console
