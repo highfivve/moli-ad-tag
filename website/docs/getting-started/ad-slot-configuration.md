@@ -3,7 +3,7 @@ title: Ad Slots
 ---
 
 An _ad slot_ is the most basic building block of your ad tag. It maps to a `div` element on the publisher page and
-to an [_ad unit_ in Google Ad Manager](https://support.google.com/admanager/topic/10478086). [A full API reference can be found here](../api/interfaces/moli.adslot.md).
+to an [_ad unit_ in Google Ad Manager](https://support.google.com/admanager/topic/10478086). [A full API reference can be found here](../api/interfaces/Moli.AdSlot.md).
 
 The ad slot configuration contains
 
@@ -77,7 +77,7 @@ behaviour: {
 
 ### Manual
 
-The page loads these ad slots via [the `refreshAdSlot('<dom id>')` API](../api/interfaces/moli.molitag.md#refreshadslot).
+The page loads these ad slots via [the `refreshAdSlot('<dom id>')` API](../api/interfaces/Moli.MoliTag.md#refreshadslot).
 
 :::tip Prefer manual over lazy and refreshable
 
@@ -124,7 +124,7 @@ refresh.
 
 #### Usage
 
-The [`EventTrigger`](../api/interfaces/moli.behaviour.eventtrigger.md) configures when the ad slot should be loaded.
+The [`EventTrigger`](../api/interfaces/Moli.behaviour.EventTrigger.md) configures when the ad slot should be loaded.
 
 ```js
 behaviour: {
@@ -192,7 +192,7 @@ behaviour: {
 
 ## Size Config
 
-The `sizeConfig` property configures _what_ sizes the ad tag requests It is an array of [SizeConfig entries](../api/interfaces/moli.sizeconfigentry.md).
+The `sizeConfig` property configures _what_ sizes the ad tag requests It is an array of [SizeConfig entries](../api/interfaces/Moli.SizeConfigEntry.md).
 The spec is almost identical to the [prebid sizeConfig](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#sizeConfig-How-it-Works).
 
 This is what a simple configuration might look like
@@ -209,7 +209,7 @@ sizeConfig: [{
 }]
 ```
 
-See [the responsive ads section](../configuration/size-config.md) for an in detail explanation of the size config.
+See [the responsive ads section](../features/size-config.md) for an in detail explanation of the size config.
 
 ## Labels
 
