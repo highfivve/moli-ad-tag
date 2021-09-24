@@ -151,7 +151,7 @@ function Home() {
                 <h1>Is this for me?</h1>
                 <p>
                   You are a <strong>publisher</strong> and want to take control of your
-                  monetization. Along with some IT folks this add tag requires
+                  monetization. Along with some IT folks this ad tag requires
                 </p>
                 <ul>
                   <li>Google Ad Manager as an ad server</li>
