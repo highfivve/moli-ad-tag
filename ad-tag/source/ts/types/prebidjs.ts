@@ -1155,10 +1155,56 @@ export namespace prebidjs {
           readonly returnCreative: boolean;
         };
       };
+
+      /**
+       * Targeting refers to strings which are sent to the adserver to make
+       * header bidding possible.
+       *
+       * `request.ext.prebid.targeting` is an optional property which causes
+       * Prebid Server to set these params on the response at
+       * `response.seatbid[i].bid[j].ext.prebid.targeting`.
+       */
       readonly targeting?: {
+        /**
+         * Defines how PBS quantizes bid prices into buckets
+         */
         readonly pricegranularity: {
+          /**
+           * Non-overlapping price bucket definitions
+           */
           readonly ranges: Readonly<priceGranularity.IPriceBucketConfig>;
         };
+
+        /**
+         * Whether to include targeting for the winning bids in
+         * `response.seatbid[].bid[]`.
+         *
+         * @efault false.
+         */
+        readonly includewinners?: boolean;
+
+        /**
+         * Whether to include targeting for the best bid from each bidder in
+         * `response.seatbid[].bid[]`
+         *
+         * @efault false.
+         */
+        readonly includebidderkeys?: boolean;
+
+        /**
+         * Whether to include the "hb_format" targeting key.
+         *
+         * @efault false.
+         */
+        readonly includeformat?: boolean;
+
+        /**
+         * If targeting is returned and this is true, PBS will choose the
+         * highest value deal before choosing the highest value non-deal.
+         *
+         * @default false
+         */
+        readonly preferdeals?: boolean;
       };
 
       /**
