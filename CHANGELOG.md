@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.37.8
+
+Additional types for the [`targeting`](https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#targeting) type.
+
 ## 3.37.7
 
 [GD-3437](https://jira.gutefrage.net/browse/GD-3437), [GD-3438](https://jira.gutefrage.net/browse/GD-3438): Adex module:
