@@ -40,7 +40,6 @@
  *
  * @module
  */
-
 import {
   AdPipeline,
   AdPipelineContext,
