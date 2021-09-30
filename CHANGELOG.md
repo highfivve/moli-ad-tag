@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.37.9
+
+[GD-3680](https://jira.gutefrage.net/browse/GD-3680) Add prebidjs type for Orbidder.
+
 ## 3.37.8
 
 Additional types for the [`targeting`](https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#targeting) type.
