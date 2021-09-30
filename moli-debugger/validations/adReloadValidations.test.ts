@@ -1,188 +1,134 @@
 import { expect } from 'chai';
 import { checkAdReloadConfig } from './adReloadValidations';
-import { googletag, ModuleMeta, prebidOutstreamRenderer } from '@highfivve/ad-tag';
+import { ModuleMeta } from '@highfivve/ad-tag';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import video = prebidjs.video;
 import { Message } from '../components/globalConfig';
-import { AdReload } from '@highfivve/module-moli-ad-reload';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
+import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
 
-const unrulyBid = (siteId: number, targetingUUID: string): prebidjs.IUnrulyBid => {
-  return {
-    bidder: prebidjs.Unruly,
-    params: {
-      siteId,
-      targetingUUID
-    },
-    labelAll: [prebidjs.Unruly, 'purpose-1']
-  };
-};
+describe('AdReload Validations', () => {
+  const dspxBid: prebidjs.IDSPXBid = { bidder: prebidjs.DSPX, params: { placement: 'placebo' } };
 
-const dspxBid = (placement: string): prebidjs.IDSPXBid => {
-  return {
-    bidder: prebidjs.DSPX,
-    params: {
-      placement,
-      devMode: true
-    },
-    labelAll: [prebidjs.DSPX, 'purpose-1']
-  };
-};
-
-const justPremium = (placement: string): any => {
-  return {
+  const justPremium: prebidjs.IJustPremiumBid = {
     bidder: prebidjs.JustPremium,
-    params: {
-      placement,
-      devMode: true
-    },
-    labelAll: [prebidjs.DSPX, 'purpose-1']
+    params: { zone: 'magic' }
   };
-};
 
-const mockData = (adUnitPath: string, sizes: Moli.DfpSlotSize[], bids: prebidjs.IBid[]) => {
-  const slots: Moli.AdSlot[] = [
-    {
+  const criteo: prebidjs.ICriteoBid = { bidder: prebidjs.Criteo, params: { networkId: 123 } };
+
+  const createAdSlot = (
+    adUnitPath: string,
+    sizes: Moli.DfpSlotSize[],
+    bids: prebidjs.IBid[],
+    isOutstream: boolean = false
+  ): Moli.AdSlot => {
+    return {
       position: 'in-page',
       domId: 'prebid-adslot',
-      behaviour: { loaded: 'eager', bucket: 'ONE' },
+      behaviour: { loaded: 'eager' },
       adUnitPath: adUnitPath,
-      passbackSupport: true,
       sizes: sizes,
       prebid: [
         {
           adUnit: {
-            code: 'prebid-adslot',
-            pubstack: {
-              adUnitPath: '/55155651/outstream_test'
-            },
             mediaTypes: {
-              banner: {
-                sizes: [[300, 50]]
-              },
-              video: {
-                context: 'outstream',
-                playerSize: [[605, 340]],
-                mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
-                startdelay: 1,
-                minduration: 1,
-                maxduration: 30,
-                playbackmethod: [video?.PlaybackMethod.AutoPlaySoundOff],
-                placement: video?.Placement.InBanner,
-                api: [video?.Api.VPAID_1],
-                protocols: [video?.Protocol.VAST_1],
-                skip: video?.Skip.YES,
-                // Use Moli's outstream player
-                renderer: { ...prebidOutstreamRenderer('prebid-adslot'), backupOnly: false }
-              }
+              ...(isOutstream
+                ? {
+                    video: {
+                      context: 'outstream',
+                      playerSize: [[605, 340]],
+                      mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
+                      startdelay: 1,
+                      minduration: 1,
+                      maxduration: 30,
+                      playbackmethod: [video.PlaybackMethod.AutoPlaySoundOff],
+                      placement: video.Placement.InBanner,
+                      api: [video.Api.VPAID_1],
+                      protocols: [video.Protocol.VAST_1],
+                      skip: video.Skip.YES
+                    }
+                  }
+                : {})
             },
             bids: bids
           }
         }
       ],
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [
-            [605, 165],
-            [1, 1]
-          ]
-        },
-        {
-          mediaQuery: '(min-width: 768px)',
-          sizesSupported: [[640, 480]],
-          labelAll: [prebidjs.AppNexusAst]
-        },
-        {
-          mediaQuery: '(max-width: 767px)',
-          sizesSupported: [[1, 1]]
-        }
-      ]
-    }
-  ];
-  return slots;
-};
+      sizeConfig: []
+    };
+  };
 
-const labels = ['label1, label2'];
-const messages: Message[] = [];
-const dom = createDom();
-const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-  dom.window as any;
-const adReloadModule: ModuleMeta = new AdReload(
-  {
+  const labels = ['label1, label2'];
+  const moduleConfig: AdReloadModuleConfig = {
     includeAdvertiserIds: [1],
     includeOrderIds: [1],
     excludeOrderIds: [2],
     excludeAdSlotDomIds: ['23'],
     optimizeClsScoreDomIds: ['22']
-  },
-  jsDomWindow
-);
+  };
+  const adReloadModuleMeta: ModuleMeta = {
+    moduleType: 'ad-reload',
+    name: 'test ad reload module',
+    description: 'test module',
+    config: moduleConfig
+  };
 
-describe('AdReload Validations', () => {
-  it('Should return "Is an outstream slot that should be excluded from reloading" when the slot is an outstream and AdReload is enabled and it contains wallpaper path', () => {
-    const result = checkAdReloadConfig(
-      messages,
-      [adReloadModule],
-      mockData('wallpaper', [[12, 12]], [unrulyBid(1, 'bla')]),
-      labels
-    );
-    expect(result).to.deep.contain({
-      id: 'prebid-adslot',
-      reasons: ['Is an outstream slot that should be excluded from reloading']
+  describe('wallpaper validation', () => {
+    it('should return an error when a wallpaper slot is detected by ad unit path is not excluded from ad reload ', () => {
+      const messages: Message[] = [];
+      const adSlot = createAdSlot('wallpaper', [[12, 12]], []);
+      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      expect(messages).to.have.length(1);
+      expect(messages[0].kind).to.eq('error');
+      expect(messages[0].text).to.eq(
+        `Slot ${adSlot.domId} is a wallpaper ad unit and must be excluded from the ad reload`
+      );
+    });
+
+    it('should return an error when a wallpaper slot is detected by bids config and is not excluded from ad reload', () => {
+      const messages: Message[] = [];
+      const adSlot = createAdSlot('path', [[12, 12]], [dspxBid, justPremium]);
+      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      expect(messages).to.have.length(1);
+      expect(messages[0].kind).to.eq('error');
+      expect(messages[0].text).to.eq(
+        `Slot ${adSlot.domId} is a wallpaper ad unit and must be excluded from the ad reload`
+      );
+    });
+
+    it('should return an error when a wallpaper slot is detected by sizes and is not excluded from ad reload', () => {
+      const messages: Message[] = [];
+      const adSlot = createAdSlot('path', [[1, 1]], []);
+      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      expect(messages).to.have.length(1);
+      expect(messages[0].kind).to.eq('error');
+      expect(messages[0].text).to.eq(
+        `Slot ${adSlot.domId} is a wallpaper ad unit and must be excluded from the ad reload`
+      );
+    });
+
+    it('should return no error if floor ad was accidentally detected', () => {
+      const messages: Message[] = [];
+      const adSlot = createAdSlot('floor', [[1, 1]], []);
+      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      expect(messages).to.have.length(
+        0,
+        'Got: ' + messages.map(error => `${error.kind}: ${error.text}`).join('\n')
+      );
     });
   });
 
-  it('Should also return "Is an outstream slot that should be excluded from reloading" when the slot is an outstream and AdReload is enabled and it has only PDSX and/or JustPremium bids', () => {
-    const result = checkAdReloadConfig(
-      messages,
-      [adReloadModule],
-      mockData('path', [[12, 12]], [dspxBid('bla'), justPremium('bla')]),
-      labels
-    );
-    expect(result).to.deep.contain({
-      id: 'prebid-adslot',
-      reasons: ['Is an outstream slot that should be excluded from reloading']
-    });
-  });
-
-  it('Should also return "Is an outstream slot that should be excluded from reloading" when the slot is an outstream and AdReload is enabled and it has only wallpaper sizes', () => {
-    const result = checkAdReloadConfig(
-      messages,
-      [adReloadModule],
-      mockData('path', [[1, 1]], [unrulyBid(1, 'bla')]),
-      labels
-    );
-    expect(result).to.deep.contain({
-      id: 'prebid-adslot',
-      reasons: ['Is an outstream slot that should be excluded from reloading']
-    });
-  });
-
-  it('Should not return "Is an outstream slot that should be excluded from reloading" when the slot is an outstream and AdReload is enabled and it has only wallpaper sizes but with floor path', () => {
-    const result = checkAdReloadConfig(
-      messages,
-      [adReloadModule],
-      mockData('floor', [[1, 1]], [unrulyBid(1, 'bla')]),
-      labels
-    );
-    expect(result).to.not.deep.contain({
-      id: 'prebid-adslot',
-      reasons: ['Is an outstream slot that should be excluded from reloading']
-    });
-  });
-
-  it('Should return "Is a wallpaper pixel slot that should be excluded from reloading" when the slot is a wallpaper pixel and AdReload is enabled', () => {
-    const result = checkAdReloadConfig(
-      messages,
-      [adReloadModule],
-      mockData('wallpaper_pixel', [[12, 12]], [unrulyBid(1, 'bla')]),
-      labels
-    );
-    expect(result).to.not.deep.contain({
-      id: 'prebid-adslot',
-      reasons: ['Is a wallpaper pixel slot that should be excluded from reloading']
+  describe('outstream validation', () => {
+    it('should return an error when an oustream slot is detected by prebid media type and is not excluded from ad reload', () => {
+      const messages: Message[] = [];
+      const adSlot = createAdSlot('content_2', [[300, 250]], [criteo], true);
+      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      expect(messages).to.have.length(1);
+      expect(messages[0].kind).to.eq('error');
+      expect(messages[0].text).to.eq(
+        `Slot ${adSlot.domId} is an outstream ad unit and must be excluded from the ad reload`
+      );
     });
   });
 });
