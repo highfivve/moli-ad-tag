@@ -1,16 +1,41 @@
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { ModuleMeta, prebidjs } from '@highfivve/ad-tag';
+
 import { Message } from '../components/globalConfig';
-import { ModuleMeta } from '@highfivve/ad-tag';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 import React from 'react';
-import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
+import { isNotNull } from '@highfivve/ad-tag/lib/util/arrayUtils';
 
 type ReloadIssuesType = {
   id: string;
   reasons: string[];
 };
 
-const checkAdReloadConfig = (
+const isWallpaperSlot = (
+  slot: Moli.AdSlot,
+  labels: string[],
+  prebidConfigs: Moli.headerbidding.PrebidAdSlotConfig[]
+) => {
+  const isFloorAd = slot.adUnitPath.includes('floor');
+  const hasWallpaperInAdUnitPath = slot.adUnitPath.includes('wallpaper');
+  const wallpaperSizes = new Set(['1x1', '1x2']);
+
+  const hasOnlyWallpaperSizes = slot.sizes
+    .map(size => (size === 'fluid' ? null : size.join('x')))
+    .filter(isNotNull)
+    .every(size => wallpaperSizes.has(size));
+
+  const skinBidder = new Set([prebidjs.JustPremium, prebidjs.DSPX]);
+  const hasOnlyDspxAndJustPremium = prebidConfigs.every(prebidConfig =>
+    prebidConfig.adUnit.bids.every(bid => skinBidder.has(bid.bidder))
+  );
+
+  return (
+    hasWallpaperInAdUnitPath || hasOnlyDspxAndJustPremium || (hasOnlyWallpaperSizes && !isFloorAd)
+  );
+};
+
+export const checkAdReloadConfig = (
   messages: Message[],
   modules: ModuleMeta[],
   slots: Moli.AdSlot[],
@@ -24,31 +49,10 @@ const checkAdReloadConfig = (
   }
 
   slots.forEach(slot => {
-    const reasons: string[] = [];
-
-    const adReloadConfig = module.config as AdReloadModuleConfig;
-    const wallpaperSlot = slot.adUnitPath.includes('wallpaper') ? slot : null;
-
-    if (wallpaperSlot) {
-      if (!adReloadConfig.excludeAdSlotDomIds.some(slotId => wallpaperSlot.domId === slotId)) {
-        reasons.push(
-          "Ad unit contains a wallpaper path and it's not excluded in the adReload config"
-        );
-      }
-
-      // Check wallpaper sizes
-      const wallpaperSizes = new Set(['1x1', '1x2']);
-      if (
-        slot.sizes
-          .map(size => (size === 'fluid' ? size : size.join('x')))
-          .every(size => wallpaperSizes.has(size))
-      ) {
-        reasons.push('Has no appropriate sizes (i.e., only [1x1] and/or [1x2])');
-      }
-    }
-
+    const errors: string[] = [];
+    let prebidConfigs: Moli.headerbidding.PrebidAdSlotConfig[] = [];
     if (slot.prebid) {
-      const prebidConfig = extractPrebidAdSlotConfigs(
+      prebidConfigs = extractPrebidAdSlotConfigs(
         {
           keyValues: {},
           floorPrice: undefined,
@@ -57,35 +61,31 @@ const checkAdReloadConfig = (
         },
         slot.prebid
       );
-
-      // Check for dsps and justPremium
-      const certainBiddersSet = new Set(['dspx', 'justpremium']);
-      const bidders = prebidConfig.map(prebidConfig =>
-        prebidConfig.adUnit.bids.every(bid => certainBiddersSet.has(bid.bidder))
-      );
-
-      if (bidders[0]) {
-        reasons.push('Has only dspx and/or justpremium bidders');
-      }
-
-      // Check if outstream slot
-      prebidConfig.map(prebidConfig => {
-        if (prebidConfig.adUnit.mediaTypes.video) {
-          reasons.push('Is an outstream slot that should be excluded from reloading');
-        }
-      });
     }
-    if (reasons) {
-      adReloadIssues.push({ id: slot.domId, reasons: reasons });
+
+    if (!isWallpaperSlot(slot, labels, prebidConfigs)) {
+      return;
+    }
+    if (slot.adUnitPath.includes('wallpaper_pixel')) {
+      errors.push('Is a wallpaper pixel slot that should be excluded from reloading');
+    }
+    prebidConfigs.map(prebidConfig => {
+      if (prebidConfig.adUnit.mediaTypes.video) {
+        errors.push('Is an outstream slot that should be excluded from reloading');
+      }
+    });
+
+    if (errors) {
+      adReloadIssues.push({ id: slot.domId, reasons: errors });
     }
   });
-
   if (adReloadIssues.some(issue => issue.reasons.length)) {
     messages.push({
       kind: 'error',
       text: formatAdReloadConfigMsg(adReloadIssues)
     });
   }
+  return adReloadIssues;
 };
 
 const formatAdReloadConfigMsg = issues => {

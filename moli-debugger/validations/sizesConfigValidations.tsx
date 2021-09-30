@@ -105,7 +105,7 @@ const formatSizesConfigMsg = (missingSizes: MissingSizesType[]) => {
       } else if (index === 0) {
         return size !== 'fluid' ? `[${size}],` : 'fluid,';
       } else if (index === sizes.length - 1) {
-        return size !== 'fluid' ? ` [${size}]` : 'fluid';
+        return size !== 'fluid' ? ` [${size}]` : size;
       } else {
         return size !== 'fluid' ? ` [${size}],` : ' fluid,';
       }
