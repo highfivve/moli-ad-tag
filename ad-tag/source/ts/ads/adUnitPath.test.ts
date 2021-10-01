@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 
-import { removeChildId } from './adUnitPath';
+import { removeChildId, resolvedPath, AdUnitPathVariables } from './adUnitPath';
 
 // setup sinon-chai
 use(sinonChai);
@@ -25,6 +25,23 @@ describe('ad unit path', () => {
       ].forEach(([input, expected]) => {
         expect(removeChildId(input)).to.be.equals(expected);
       });
+    });
+  });
+
+  describe('dynamic ad unit path', () => {
+    it('should return the same ad unit path when there are no variables', () => {
+      ['/1234567/Travel', '/1234567/Travel/Europe', '/1234567/Travel/Europe,Berlin'].forEach(
+        adUnitPath => {
+          expect(adUnitPath).to.be.equals(resolvedPath(adUnitPath));
+        }
+      );
+    });
+
+    it('should return "/1234567/Travel/mobile/finance" when there are device and category variables', () => {
+      const adUnitPath = '/1234567/Travel';
+      const expectedAdUnitPath = '/1234567/Travel/mobile/finance';
+      const variables = { device: 'mobile', category: 'finance' };
+      expect(expectedAdUnitPath).to.be.equals(resolvedPath(adUnitPath, variables));
     });
   });
 });
