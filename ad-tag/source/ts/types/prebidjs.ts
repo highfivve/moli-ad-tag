@@ -2204,6 +2204,7 @@ export namespace prebidjs {
   export const Recognified = 'rads';
   export const Visx = 'visx';
   export const Vlyby = 'vlyby';
+  export const Orbidder = 'orbidder';
 
   /**
    * The bidder code is used to identify the different SSPs.
@@ -2233,7 +2234,8 @@ export namespace prebidjs {
     | typeof Rubicon
     | typeof Recognified
     | typeof Visx
-    | typeof Vlyby;
+    | typeof Vlyby
+    | typeof Orbidder;
 
   /**
    * A bid object.
@@ -3394,6 +3396,39 @@ export namespace prebidjs {
   export interface IRecognifiedBid extends IBidObject<typeof Recognified, IRecognifiedParams> {}
 
   /**
+   * orbidder bid params
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/orbidder.html
+   */
+  export interface IOrbidderParams {
+    /**
+     * Orbidder Account ID.
+     * @example `"someAccount"`
+     */
+    readonly accountId: string;
+
+    /**
+     * Placement Id.
+     * @example `"somePlacement"`
+     */
+    readonly placementId: String;
+
+    /**
+     * Placement floor price.
+     * @example `1.23`
+     */
+    readonly bidfloor?: number;
+
+    /**
+     * Custom key/value object
+     * @example `{"key":"value"}`
+     */
+    readonly keyValues: { [key: string]: string };
+  }
+
+  export interface IOrbidderBid extends IBidObject<typeof Orbidder, IOrbidderParams> {}
+
+  /**
    * Supported bid object types.
    */
   export type IBid =
@@ -3418,7 +3453,8 @@ export namespace prebidjs {
     | IRubiconBid
     | IRecognifiedBid
     | IVlybyBid
-    | IVisxBid;
+    | IVisxBid
+    | IOrbidderBid;
 
   /**
    * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
