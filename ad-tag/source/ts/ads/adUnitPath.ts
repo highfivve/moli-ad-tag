@@ -28,21 +28,3 @@ export const removeChildId = (adUnitPath: string): string => {
   const [parentNetworkId, ...childIds] = networkIds.split(',');
   return childIds.length === 0 ? adUnitPath : ['', parentNetworkId, ...rest].join('/');
 };
-
-export type AdUnitPathVariables = {
-  [key: string]: string;
-};
-
-export const resolvedPath = (
-  adUnitPath: string,
-  adUnitPathVariables?: AdUnitPathVariables
-): string => {
-  if (!adUnitPathVariables) {
-    return adUnitPath;
-  }
-  let path = `${adUnitPath}/`;
-  for (const value of Object.values(adUnitPathVariables)) {
-    path = path + value + '/';
-  }
-  return path.slice(0, -1);
-};
