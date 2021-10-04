@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 
-import { removeChildId, resolvedPath, AdUnitPathVariables } from './adUnitPath';
+import { removeChildId, resolveAdUnitPath } from './adUnitPath';
 
 // setup sinon-chai
 use(sinonChai);
@@ -32,16 +32,41 @@ describe('ad unit path', () => {
     it('should return the same ad unit path when there are no variables', () => {
       ['/1234567/Travel', '/1234567/Travel/Europe', '/1234567/Travel/Europe,Berlin'].forEach(
         adUnitPath => {
-          expect(adUnitPath).to.be.equals(resolvedPath(adUnitPath));
+          expect(adUnitPath).to.be.equals(resolveAdUnitPath(adUnitPath));
         }
       );
     });
 
-    it('should return "/1234567/Travel/mobile/finance" when there are device and category variables', () => {
-      const adUnitPath = '/1234567/Travel';
-      const expectedAdUnitPath = '/1234567/Travel/mobile/finance';
-      const variables = { device: 'mobile', category: 'finance' };
-      expect(expectedAdUnitPath).to.be.equals(resolvedPath(adUnitPath, variables));
+    it('should resolve the entire path if all variables are defined', () => {
+      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}/{channel}', {
+        device: 'mobile',
+        channel: 'finance'
+      });
+      expect(resolvedPath).to.be.equals('/1234567/Travel/mobile/finance');
+    });
+
+    it('should resolve the entire path if all variables are defined and a variable is used more than once', () => {
+      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}/{device-}{channel}', {
+        device: 'mobile',
+        channel: 'finance'
+      });
+      expect(resolvedPath).to.be.equals('/1234567/Travel/mobile/mobile-finance');
+    });
+
+    it('should resolve the entire path if there are unused variables', () => {
+      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}', {
+        device: 'mobile',
+        channel: 'finance'
+      });
+      expect(resolvedPath).to.be.equals('/1234567/Travel/mobile');
+    });
+
+    it('should throw an error if a variable is not defined', () => {
+      expect(() =>
+        resolveAdUnitPath('/1234567/Travel/{device}/{channel}', {
+          device: 'mobile'
+        })
+      ).to.throw(ReferenceError, 'path variable "channel" is not defined');
     });
   });
 });

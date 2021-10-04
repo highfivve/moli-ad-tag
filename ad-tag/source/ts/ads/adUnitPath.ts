@@ -33,7 +33,7 @@ export type AdUnitPathVariables = {
   [key: string]: string;
 };
 
-export const resolvedPath = (
+export const resolveAdUnitPath = (
   adUnitPath: string,
   adUnitPathVariables?: AdUnitPathVariables
 ): string => {
