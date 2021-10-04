@@ -38,11 +38,11 @@ describe('ad unit path', () => {
     });
 
     it('should resolve the entire path if all variables are defined', () => {
-      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}/{channel}', {
+      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}/{traffic_channel}', {
         device: 'mobile',
-        channel: 'finance'
+        traffic_channel: 'organic'
       });
-      expect(resolvedPath).to.be.equals('/1234567/Travel/mobile/finance');
+      expect(resolvedPath).to.be.equals('/1234567/Travel/mobile/organic');
     });
 
     it('should resolve the entire path if all variables are defined and a variable is used more than once', () => {
