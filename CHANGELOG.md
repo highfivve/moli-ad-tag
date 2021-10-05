@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 3.38.0
+
+### 🚀 New Features
+
+- #5 Add prebid first party data module (thanks to @muuki88)
+- #4 GD-3680: Add orbidder types (thanks to @rmattis)
+
+### Contributors
+
+@bjentsch, @muuki88, @rmattis and shadi
+
 ## 3.37.9
 
 [GD-3680](https://jira.gutefrage.net/browse/GD-3680) Add prebidjs type for Orbidder.
