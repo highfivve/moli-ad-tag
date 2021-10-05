@@ -145,8 +145,8 @@ describe('Prebid First Party Data Module', () => {
       );
 
       const { moliConfig, targeting, configureStep } = initModule(module);
-      targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
-      targeting.keyValues['openrtb2_page_cat'] = ['IAB-1', 'IAB-123'];
+      targeting.keyValues.openrtb2_cat = ['IAB-1'];
+      targeting.keyValues.openrtb2_page_cat = ['IAB-1', 'IAB-123'];
 
       await configureStep(adPipelineContext(moliConfig), []);
 
@@ -172,8 +172,8 @@ describe('Prebid First Party Data Module', () => {
       it('should not set any iab categories if none is configured', async () => {
         const module = createFpdModule({});
         const { moliConfig, targeting, configureStep } = initModule(module);
-        targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
-        targeting.keyValues['openrtb2_section_cat'] = ['IAB-2'];
+        targeting.keyValues.openrtb2_cat = ['IAB-1'];
+        targeting.keyValues.openrtb2_section_cat = ['IAB-2'];
 
         await configureStep(adPipelineContext(moliConfig), []);
 
@@ -187,8 +187,8 @@ describe('Prebid First Party Data Module', () => {
           { cat: 'openrtb2_cat', sectionCat: 'openrtb2_section_cat' }
         );
         const { moliConfig, targeting, configureStep } = initModule(module);
-        targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
-        targeting.keyValues['openrtb2_section_cat'] = ['IAB-2'];
+        targeting.keyValues.openrtb2_cat = ['IAB-1'];
+        targeting.keyValues.openrtb2_section_cat = ['IAB-2'];
 
         await configureStep(adPipelineContext(moliConfig), []);
 
@@ -202,8 +202,8 @@ describe('Prebid First Party Data Module', () => {
       it('should use cat as fallback for sectioncat', async () => {
         const module = createFpdModule({}, { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat' });
         const { moliConfig, targeting, configureStep } = initModule(module);
-        targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
-        targeting.keyValues['openrtb2_page_cat'] = ['IAB-2'];
+        targeting.keyValues.openrtb2_cat = ['IAB-1'];
+        targeting.keyValues.openrtb2_page_cat = ['IAB-2'];
 
         await configureStep(adPipelineContext(moliConfig), []);
 
@@ -251,7 +251,7 @@ describe('Prebid First Party Data Module', () => {
             site: { cat: ['IAB-1'] }
           }
         });
-        targeting.keyValues['openrtb2_cat'] = ['IAB-9'];
+        targeting.keyValues.openrtb2_cat = ['IAB-9'];
 
         await configureStep(adPipelineContext(moliConfig), []);
         expect(setConfigSpy).to.have.been.calledOnce;
