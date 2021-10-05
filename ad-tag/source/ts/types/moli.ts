@@ -89,13 +89,6 @@ export namespace Moli {
     setTargeting(key: string, value: string | string[]): void;
 
     /**
-     * Set prebid first party data. Will be used by supporting bid adapters to enhance targeting
-     * for the current page.
-     * @param fpData
-     */
-    setFirstPartyData(fpData: prebidjs.firstpartydata.PrebidFirstPartyData): void;
-
-    /**
      * Adds a label to the static label list.
      * @param label to be added
      */
@@ -451,17 +444,6 @@ export namespace Moli {
       keyValues: Moli.DfpKeyValueMap;
 
       /**
-       * Prebid first party data. Will be used by supporting prebid adapters to enhance targeting
-       * for the current page. Set with
-       *
-       * @example
-       * window.moli.que.push(function(moli) => {
-       *   moli.setFirstPartyData(firstPartyData);
-       * });
-       */
-      prebidFpData: prebidjs.firstpartydata.PrebidFirstPartyData;
-
-      /**
        * Additional labels. Insert with
        *
        * @example
@@ -570,17 +552,6 @@ export namespace Moli {
        *
        */
       keyValues: Moli.DfpKeyValueMap;
-
-      /**
-       * Prebid first party data. Will be used by supporting prebid adapters to enhance targeting
-       * for the current page. Set with
-       *
-       * @example
-       * window.moli.que.push(function(moli) => {
-       *   moli.setFirstPartyData(firstPartyData);
-       * });
-       */
-      prebidFpData: prebidjs.firstpartydata.PrebidFirstPartyData;
 
       /**
        * Additional labels. Insert with

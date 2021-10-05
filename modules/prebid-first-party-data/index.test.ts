@@ -4,29 +4,30 @@ import {
   createAssetLoaderService,
   googletag,
   IAdPipelineConfiguration,
-  mkInitStep,
   Moli,
   prebidjs,
-  SlotEventService,
-  tcfapi
+  SlotEventService
 } from '@highfivve/ad-tag';
 
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
+import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { createPbjsStub, pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-
-import { PrebidFirstPartyDataModule } from './index';
-import TCData = tcfapi.responses.TCData;
+import { GptTargetingMapping, PrebidFirstPartyDataModule } from './index';
+import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
+import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
+import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
 
 use(sinonChai);
 use(chaiAsPromised);
 
-describe('The Adex DMP Module', () => {
+describe('Prebid First Party Data Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
   let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
@@ -43,10 +44,7 @@ describe('The Adex DMP Module', () => {
     requestBids: [],
     requestAds: () => Promise.resolve()
   };
-  const adPipelineContext = (
-    config: Moli.MoliConfig,
-    tcData?: Partial<TCData>
-  ): AdPipelineContext => {
+  const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -56,34 +54,14 @@ describe('The Adex DMP Module', () => {
       window: jsDomWindow,
       // no service dependencies required
       labelConfigService: null as any,
-      reportingService: null as any,
-      slotEventService: null as any,
-      tcData: {
-        gdprApplies: true,
-        vendor: {
-          consents: { '44': true }
-        },
-        purpose: {
-          consents: {
-            1: true,
-            2: true,
-            3: true,
-            4: true,
-            5: true,
-            6: true,
-            7: true,
-            8: true,
-            9: true,
-            10: true
-          }
-        },
-        ...tcData
-      } as unknown as TCData
+      reportingService,
+      slotEventService,
+      tcData: fullConsent()
     };
   };
 
   beforeEach(() => {
-    jsDomWindow.googletag = createGoogletagStub();
+    jsDomWindow.pbjs = createPbjsStub();
   });
 
   afterEach(() => {
@@ -94,24 +72,33 @@ describe('The Adex DMP Module', () => {
   });
 
   const createFpdModule = (
-    firstPartyData: prebidjs.firstpartydata.PrebidFirstPartyData
+    staticPrebidFirstPartyData: prebidjs.firstpartydata.PrebidFirstPartyData,
+    gptTargetingMappings?: GptTargetingMapping
   ): PrebidFirstPartyDataModule => {
     return new PrebidFirstPartyDataModule({
-      firstPartyData
+      staticPrebidFirstPartyData,
+      gptTargetingMappings
     });
   };
 
-  const initModule = (config: {
-    module: PrebidFirstPartyDataModule;
-    configPipeline?: Moli.pipeline.PipelineConfig;
-    moliSlot?: Moli.AdSlot;
-  }) => {
-    const { moliSlot, configPipeline, module } = config;
-    const slot = moliSlot || ({ domId: 'foo' } as Moli.AdSlot);
+  const initModule = (module: PrebidFirstPartyDataModule) => {
+    const configPipeline = {
+      initSteps: [],
+      configureSteps: [],
+      prepareRequestAdsSteps: []
+    };
+
+    const targeting: Moli.Targeting = {
+      keyValues: {}
+    };
 
     const moliConfig: Moli.MoliConfig = {
-      slots: [slot],
+      slots: [],
       pipeline: configPipeline,
+      targeting,
+      prebid: {
+        config: pbjsTestConfig
+      },
       logger: noopLogger
     };
 
@@ -125,44 +112,154 @@ describe('The Adex DMP Module', () => {
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);
 
-    return { moliConfig, adPipeline };
+    const configureStep = moliConfig.pipeline!.configureSteps[0];
+
+    return { moliConfig, adPipeline, targeting, configureStep };
   };
 
-  it('should add a configure step', () => {
-    const module = createFpdModule({});
+  describe('init', () => {
+    it('should add a configure step', () => {
+      const module = createFpdModule({}, { cat: 'openrtb2_page_cat' });
 
-    const configPipeline = {
-      initSteps: [mkInitStep('stub', _ => Promise.resolve())],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
+      const {
+        moliConfig: { pipeline }
+      } = initModule(module);
 
-    const { moliConfig } = initModule({ module, configPipeline });
-
-    expect(moliConfig.pipeline).to.be.ok;
-
-    // initialization adds one configureStep and one prepareRequestAdsStep
-    expect(moliConfig.pipeline?.initSteps).to.have.lengthOf(1);
-    expect(moliConfig.pipeline?.configureSteps).to.have.lengthOf(1);
-    expect(moliConfig.pipeline?.prepareRequestAdsSteps).to.have.lengthOf(0);
+      expect(pipeline).to.be.ok;
+      expect(pipeline?.configureSteps).to.have.lengthOf(1);
+      expect(pipeline!.configureSteps[0].name).to.be.equals('prebid-fpd-module-configure');
+    });
   });
 
-  it('should add prebid first party data targeting to moli', () => {
-    const module = createFpdModule({ user: { gender: 'O', yob: 1337, keywords: 'some,nice,guy' } });
+  describe('configure step', () => {
+    let setConfigSpy: Sinon.SinonSpy<[Partial<prebidjs.IPrebidJsConfig>], void>;
 
-    const configPipeline = {
-      initSteps: [mkInitStep('stub', _ => Promise.resolve())],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
+    beforeEach(() => {
+      setConfigSpy = sandbox.spy(jsDomWindow.pbjs, 'setConfig');
+    });
 
-    const { moliConfig } = initModule({ module, configPipeline });
+    it('should call pbjs.setConfig() with the configured first party data', async () => {
+      const module = createFpdModule(
+        { user: { gender: 'O', yob: 1337, keywords: 'some,nice,guy' } },
+        { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat' }
+      );
 
-    expect(moliConfig.pipeline).to.be.ok;
+      const { moliConfig, targeting, configureStep } = initModule(module);
+      targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
+      targeting.keyValues['openrtb2_page_cat'] = ['IAB-1', 'IAB-123'];
 
-    // initialization adds one configureStep and one prepareRequestAdsStep
-    expect(moliConfig.pipeline?.initSteps).to.have.lengthOf(1);
-    expect(moliConfig.pipeline?.configureSteps).to.have.lengthOf(1);
-    expect(moliConfig.pipeline?.prepareRequestAdsSteps).to.have.lengthOf(0);
+      await configureStep(adPipelineContext(moliConfig), []);
+
+      const expected: PrebidFirstPartyData = {
+        site: {
+          cat: ['IAB-1'],
+          sectioncat: ['IAB-1'],
+          pagecat: ['IAB-1', 'IAB-123']
+        },
+        user: {
+          gender: 'O',
+          yob: 1337,
+          keywords: 'some,nice,guy'
+        }
+      };
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+        ortb2: expected
+      });
+    });
+
+    describe('iab category fallbacks', () => {
+      it('should not set any iab categories if none is configured', async () => {
+        const module = createFpdModule({});
+        const { moliConfig, targeting, configureStep } = initModule(module);
+        targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
+        targeting.keyValues['openrtb2_section_cat'] = ['IAB-2'];
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        expect(setConfigSpy.firstCall.firstArg.ortb2.site).to.be.undefined;
+      });
+
+      it('should use cat as fallback for pagecat', async () => {
+        const module = createFpdModule(
+          {},
+          { cat: 'openrtb2_cat', sectionCat: 'openrtb2_section_cat' }
+        );
+        const { moliConfig, targeting, configureStep } = initModule(module);
+        targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
+        targeting.keyValues['openrtb2_section_cat'] = ['IAB-2'];
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-1']);
+        expect(site.pagecat).to.deep.equals(['IAB-1']);
+        expect(site.sectioncat).to.deep.equals(['IAB-2']);
+      });
+
+      it('should use cat as fallback for sectioncat', async () => {
+        const module = createFpdModule({}, { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat' });
+        const { moliConfig, targeting, configureStep } = initModule(module);
+        targeting.keyValues['openrtb2_cat'] = ['IAB-1'];
+        targeting.keyValues['openrtb2_page_cat'] = ['IAB-2'];
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-1']);
+        expect(site.sectioncat).to.deep.equals(['IAB-1']);
+        expect(site.pagecat).to.deep.equals(['IAB-2']);
+      });
+    });
+
+    describe('ortb2 merge behaviour', () => {
+      let getConfigStub: Sinon.SinonStub<[], Partial<prebidjs.IPrebidJsConfig>>;
+
+      beforeEach(() => {
+        getConfigStub = sandbox.stub(jsDomWindow.pbjs, 'getConfig');
+      });
+
+      it('should prefer key value data over static data', async () => {
+        const module = createFpdModule(
+          { user: { keywords: 'static' }, site: { cat: ['IAB-9'] } },
+          { cat: 'openrtb2_cat' }
+        );
+        const { moliConfig, configureStep } = initModule(module);
+        getConfigStub.returns({
+          ortb2: {
+            user: { keywords: 'existing' },
+            site: { cat: ['IAB-1'] }
+          }
+        });
+        await configureStep(adPipelineContext(moliConfig), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        const user = setConfigSpy.firstCall.firstArg.ortb2.user as OpenRtb2User;
+        expect(site.cat).to.deep.equals(['IAB-9', 'IAB-1']);
+        expect(user.keywords).to.be.equals('existing');
+      });
+
+      it('should prefer existing fpd data over key value data', async () => {
+        const module = createFpdModule({}, { cat: 'openrtb2_cat' });
+        const { moliConfig, targeting, configureStep } = initModule(module);
+        getConfigStub.returns({
+          ortb2: {
+            user: { keywords: 'existing' },
+            site: { cat: ['IAB-1'] }
+          }
+        });
+        targeting.keyValues['openrtb2_cat'] = ['IAB-9'];
+
+        await configureStep(adPipelineContext(moliConfig), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-9', 'IAB-1']);
+        expect(site.sectioncat).to.deep.equals(['IAB-9']);
+        expect(site.pagecat).to.deep.equals(['IAB-9']);
+      });
+    });
   });
 });
