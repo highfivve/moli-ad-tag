@@ -11,13 +11,17 @@ export function isPlainObject(object: any): boolean {
  * @see https://github.com/prebid/Prebid.js/blob/41be379034ea952a28a257784c7eb53fa5c15d95/src/utils.js#L1234-L1253
  */
 export function mergeDeep(target: object, ...sources: any[]): any {
-  if (!sources.length) return target;
+  if (!sources.length) {
+    return target;
+  }
   const source = sources.shift();
 
   if (isPlainObject(target) && isPlainObject(source)) {
     for (const key in source) {
       if (isPlainObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
+        if (!target[key]) {
+          Object.assign(target, { [key]: {} });
+        }
         mergeDeep(target[key], source[key]);
       } else if (Array.isArray(source[key])) {
         if (!target[key]) {

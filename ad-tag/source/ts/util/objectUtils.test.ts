@@ -10,7 +10,7 @@ describe('objectUtils', () => {
     });
 
     it('should return false for none objects', () => {
-      ['', 'string', 0, 1, [], [0], [1], [''], ['foo', 1], true, false, () => {}].forEach(
+      ['', 'string', 0, 1, [], [0], [1], [''], ['foo', 1], true, false, Object.is].forEach(
         something => {
           expect(isPlainObject(something)).to.be.false;
         }
@@ -46,7 +46,7 @@ describe('objectUtils', () => {
     });
 
     it('should merge all primitive types', () => {
-      const fn = () => {};
+      const fn = Object.is;
       const result = mergeDeep({ a: 1, b: 'str' }, { c: false, d: fn });
       expect(result).to.deep.equals({ a: 1, b: 'str', c: false, d: fn });
     });
