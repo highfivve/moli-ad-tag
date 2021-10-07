@@ -46,7 +46,8 @@ import {
   mkConfigureStep,
   ModuleType,
   Moli,
-  prebidjs
+  prebidjs,
+  uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
 import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
@@ -162,6 +163,20 @@ export class PrebidFirstPartyDataModule implements IModule {
         ortb2FromKeyValues,
         existingFpd
       ) as PrebidFirstPartyData;
+
+      // make site objects unique
+      if (ortb2.site) {
+        if (ortb2.site.cat) {
+          ortb2.site.cat = ortb2.site.cat.filter(uniquePrimitiveFilter);
+        }
+        if (ortb2.site.sectioncat) {
+          ortb2.site.cat = ortb2.site.sectioncat.filter(uniquePrimitiveFilter);
+        }
+        if (ortb2.site.pagecat) {
+          ortb2.site.cat = ortb2.site.pagecat.filter(uniquePrimitiveFilter);
+        }
+      }
+
       context.window.pbjs.setConfig({ ortb2 });
     }
 

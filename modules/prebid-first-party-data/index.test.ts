@@ -260,6 +260,23 @@ describe('Prebid First Party Data Module', () => {
         expect(site.sectioncat).to.deep.equals(['IAB-9']);
         expect(site.pagecat).to.deep.equals(['IAB-9']);
       });
+
+      it('should write unique values', async () => {
+        const module = createFpdModule({}, { cat: 'openrtb2_cat' });
+        const { moliConfig, targeting, configureStep } = initModule(module);
+        getConfigStub.returns({
+          ortb2: {
+            user: { keywords: 'existing' },
+            site: { cat: ['IAB-1'] }
+          }
+        });
+        targeting.keyValues.openrtb2_cat = ['IAB-1'];
+
+        await configureStep(adPipelineContext(moliConfig), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.cat).to.deep.equals(['IAB-1']);
+      });
     });
   });
 });
