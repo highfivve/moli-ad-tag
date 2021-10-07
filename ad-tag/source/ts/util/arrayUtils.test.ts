@@ -27,6 +27,11 @@ describe('flatten', () => {
 });
 
 describe('uniquePrimitiveFilter', () => {
+  it('should not alter unique arrays', () => {
+    [[1], [1, 2], ['1', 1]].forEach(arr => {
+      expect(arr.filter(uniquePrimitiveFilter)).to.deep.equal(arr);
+    });
+  });
   it('should be able to filter an array of numbers', () => {
     const uniqueArray = [20, 20, 30.05, 30.05, 5, 7, 19, 1337, 20].filter(uniquePrimitiveFilter);
 

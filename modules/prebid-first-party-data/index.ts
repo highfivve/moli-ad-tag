@@ -170,10 +170,10 @@ export class PrebidFirstPartyDataModule implements IModule {
           ortb2.site.cat = ortb2.site.cat.filter(uniquePrimitiveFilter);
         }
         if (ortb2.site.sectioncat) {
-          ortb2.site.cat = ortb2.site.sectioncat.filter(uniquePrimitiveFilter);
+          ortb2.site.sectioncat = ortb2.site.sectioncat.filter(uniquePrimitiveFilter);
         }
         if (ortb2.site.pagecat) {
-          ortb2.site.cat = ortb2.site.pagecat.filter(uniquePrimitiveFilter);
+          ortb2.site.pagecat = ortb2.site.pagecat.filter(uniquePrimitiveFilter);
         }
       }
 
