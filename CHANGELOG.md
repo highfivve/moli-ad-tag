@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.38.1
+
+- #6 Distinct IAB categories in prebid first party data module (thanks to @muuki88)
+
 ## 3.38.0
 
 ### 🚀 New Features
