@@ -46,7 +46,7 @@ describe('ad unit path', () => {
     });
 
     it('should resolve the entire path if all variables are defined and a variable is used more than once', () => {
-      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}/{device-}{channel}', {
+      const resolvedPath = resolveAdUnitPath('/1234567/Travel/{device}/{device}-{channel}', {
         device: 'mobile',
         channel: 'finance'
       });
@@ -68,5 +68,14 @@ describe('ad unit path', () => {
         })
       ).to.throw(ReferenceError, 'path variable "channel" is not defined');
     });
+
+    ['!', '-', '$', '[', ']', '/', '"', '<', '>'].forEach(invalidChar =>
+      it(`should throw an error if a variable contains char ${invalidChar}`, () => {
+        expect(() => resolveAdUnitPath(`/1234567/Travel/{${invalidChar}}`, {})).to.throw(
+          SyntaxError,
+          `invalid variable "${invalidChar}" in path`
+        );
+      })
+    );
   });
 });
