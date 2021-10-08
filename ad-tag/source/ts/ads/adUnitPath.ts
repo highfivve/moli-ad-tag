@@ -33,16 +33,59 @@ export type AdUnitPathVariables = {
   [key: string]: string;
 };
 
+/**
+ * This method finds the params in the adUnitPath and replace them with the corresponding values in the adUnitPathVariables object
+ * for example: /1234567/Travel/{device}/{channel} ==> /1234567/Travel/mobile/finance
+ * it should also consider potential nested path: /1234567/Travel/{device}/{device-}{channel} ==> /1234567/Travel/mobile/mobile-finance
+ * */
 export const resolveAdUnitPath = (
   adUnitPath: string,
   adUnitPathVariables?: AdUnitPathVariables
-): string => {
-  if (!adUnitPathVariables) {
+): void | string => {
+  // Extract all params between the curly braces
+  const paramsPattern = /[^{]+(?=})/g;
+  let extractedParams = adUnitPath.match(paramsPattern);
+
+  if (!adUnitPathVariables || !extractedParams) {
     return adUnitPath;
   }
-  let path = `${adUnitPath}/`;
-  for (const value of Object.values(adUnitPathVariables)) {
-    path = path + value + '/';
-  }
-  return path.slice(0, -1);
+
+  // Find the params that ends with '-'
+  const refactoredExtractedParams = [...extractedParams];
+  let refactoredAdUnitPathVariables = { ...adUnitPathVariables };
+  extractedParams.forEach((param, index) => {
+    if (param.endsWith('-')) {
+      refactoredExtractedParams[index] = param + refactoredExtractedParams[index + 1];
+      refactoredAdUnitPathVariables = {
+        ...adUnitPathVariables,
+        [param + refactoredExtractedParams[index + 1]]: refactoredExtractedParams[index]
+      };
+      refactoredExtractedParams.splice(index + 1, 1);
+    }
+  });
+  extractedParams = refactoredExtractedParams;
+
+  const variablesSet = new Set(Object.keys(refactoredAdUnitPathVariables));
+  extractedParams.forEach(param => {
+    if (!variablesSet.has(param)) {
+      throw new ReferenceError(`path variable "${param}" is not defined`);
+    }
+  });
+
+  const resolvedPath = adUnitPath
+    .replace(
+      new RegExp(
+        Object.keys(refactoredAdUnitPathVariables)
+          // Escape any special characters in the search key
+          .map(key => key.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'))
+          // Create the Regex pattern
+          .join('|'),
+        'g'
+      ),
+      // For each key found, replace with the appropriate value
+      match => refactoredAdUnitPathVariables[match]
+    )
+    .replace(/[\{|}]/g, '');
+
+  return resolvedPath;
 };
