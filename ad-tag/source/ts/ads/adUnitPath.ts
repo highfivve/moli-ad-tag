@@ -36,7 +36,7 @@ export type AdUnitPathVariables = {
 /**
  * This method finds the params in the adUnitPath and replace them with the corresponding values in the adUnitPathVariables object
  * for example: /1234567/Travel/{device}/{channel} ==> /1234567/Travel/mobile/finance
- * it should also consider potential nested path: /1234567/Travel/{device}/{device-}{channel} ==> /1234567/Travel/mobile/mobile-finance
+ * It also detects the special characters: '!', '-', '$', '[', ']', '/', '"', '<', '>'
  * */
 export const resolveAdUnitPath = (
   adUnitPath: string,
@@ -44,48 +44,30 @@ export const resolveAdUnitPath = (
 ): void | string => {
   // Extract all params between the curly braces
   const paramsPattern = /[^{]+(?=})/g;
-  let extractedParams = adUnitPath.match(paramsPattern);
+  const extractedParams = adUnitPath.match(paramsPattern);
+  const invalidCharacters = ['!', '-', '$', '[', ']', '/', '"', '<', '>'];
 
   if (!adUnitPathVariables || !extractedParams) {
     return adUnitPath;
   }
 
-  // Find the params that ends with '-'
-  const refactoredExtractedParams = [...extractedParams];
-  let refactoredAdUnitPathVariables = { ...adUnitPathVariables };
-  extractedParams.forEach((param, index) => {
-    if (param.endsWith('-')) {
-      refactoredExtractedParams[index] = param + refactoredExtractedParams[index + 1];
-      refactoredAdUnitPathVariables = {
-        ...adUnitPathVariables,
-        [param + refactoredExtractedParams[index + 1]]: refactoredExtractedParams[index]
-      };
-      refactoredExtractedParams.splice(index + 1, 1);
-    }
-  });
-  extractedParams = refactoredExtractedParams;
-
-  const variablesSet = new Set(Object.keys(refactoredAdUnitPathVariables));
   extractedParams.forEach(param => {
-    if (!variablesSet.has(param)) {
+    const invalidChar = invalidCharacters.find(char => param.includes(char));
+    if (invalidChar) {
+      throw new SyntaxError(`invalid variable "${invalidChar}" in path`);
+    }
+    if (!adUnitPathVariables[param]) {
       throw new ReferenceError(`path variable "${param}" is not defined`);
     }
   });
 
   const resolvedPath = adUnitPath
     .replace(
-      new RegExp(
-        Object.keys(refactoredAdUnitPathVariables)
-          // Escape any special characters in the search key
-          .map(key => key.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'))
-          // Create the Regex pattern
-          .join('|'),
-        'g'
-      ),
+      new RegExp(Object.keys(adUnitPathVariables).join('|'), 'g'),
       // For each key found, replace with the appropriate value
-      match => refactoredAdUnitPathVariables[match]
+      match => adUnitPathVariables[match]
     )
-    .replace(/[\{|}]/g, '');
+    .replace(/\{|}/g, '');
 
   return resolvedPath;
 };
