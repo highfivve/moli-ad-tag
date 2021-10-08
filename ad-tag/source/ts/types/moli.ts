@@ -39,7 +39,7 @@ export namespace Moli {
    * # Moli Ad Tag
    *
    * This defines the publisher facing API. When the ad tag is configured in _publisher mode_, which means it doesn't fire
-   * `requestAds()` immedetialy after being loaded, publishers can customize the integration.
+   * `requestAds()` immediately after being loaded, publishers can customize the integration.
    *
    *
    * ## Usage
@@ -144,7 +144,7 @@ export namespace Moli {
     /**
      * **WARNING**
      * This method is called by the ad tag and can only be called once. If the publisher calls
-     * calls `configure` then the ad configuration provided by the ad tag may not be used.
+     * `configure` then the ad configuration provided by the ad tag may not be used.
      *
      *
      * @param config the ad configuration
@@ -322,7 +322,7 @@ export namespace Moli {
    *
    * In this state the ad tag allows to call `requestAds()` multiple times. The ad tag state will
    * remain `spa` if there are no errors. Note that `requestAds()` call is only allowed if the
-   * `window.location.href` has changed. This is a saftey guard against unwanted ad fraud behaviour.
+   * `window.location.href` has changed. This is a safety guard against unwanted ad fraud behaviour.
    *
    * KeyValues and Labels are handled depending on their source:
    *
@@ -341,7 +341,7 @@ export namespace Moli {
    *
    * There are a three slot configurations we need to handle
    *
-   * 1. slots that are **server-side rendered** and never removed. Examples for this are header area slots
+   * 1. slots that are **server-side rendered** and never removed. Examples for this there are header area slots
    *    that are part of the generic page layout that does not change on any page.
    *    *Configuration:* Use the `eager` loading behaviour.
    * 2. slots that are **server-side rendered**, but may dis- and reappear in the spa context.
@@ -363,7 +363,7 @@ export namespace Moli {
    *    2. the component did mount in the DOM. Then fire the event that the refreshable slot can be loaded
    *
    * While this is the sequential order we want things to be executed, this isn't the case in reality. Mounting
-   * in the DOM can appear before the `requestAds()` call has succesfully configured all event listeners, leading
+   * in the DOM can appear before the `requestAds()` call has successfully configured all event listeners, leading
    * to events not being received and ads not being shown.
    *
    * We will provide a few examples on how to solve this in major SPA frameworks.
@@ -748,12 +748,20 @@ export namespace Moli {
    * Add targeting information from the ad tag. Usually these are static values.
    * Dynamic values should be added via the MoliTag API `setTargeting(key, value)` or `addLabel(label)`.
    */
+
+  export type AdUnitPathVariables = {
+    [key: string]: string;
+  };
+
   export interface Targeting {
     /** static or supplied key-values */
     readonly keyValues: DfpKeyValueMap;
 
     /** additional labels. Added in addition to the ones created by the sizeConfig. */
     readonly labels?: string[];
+
+    /** ad unit path variables */
+    addAdUnitPathVariables?: AdUnitPathVariables;
   }
 
   /**
