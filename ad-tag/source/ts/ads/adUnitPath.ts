@@ -36,7 +36,7 @@ export type AdUnitPathVariables = {
 /**
  * This method finds the params in the adUnitPath and replace them with the corresponding values in the adUnitPathVariables object
  * for example: /1234567/Travel/{device}/{channel} ==> /1234567/Travel/mobile/finance
- * It also detects the special characters: '!', '-', '$', '[', ']', '/', '"', '<', '>'
+ * It also detects all the special characters except the underscore.
  * */
 export const resolveAdUnitPath = (
   adUnitPath: string,
@@ -44,17 +44,16 @@ export const resolveAdUnitPath = (
 ): void | string => {
   // Extract all params between the curly braces
   const paramsPattern = /[^{]+(?=})/g;
+  const validCharactersPattern = /([A-Za-z0-9\_]+)/g;
   const extractedParams = adUnitPath.match(paramsPattern);
-  const invalidCharacters = ['!', '-', '$', '[', ']', '/', '"', '<', '>'];
-
   if (!adUnitPathVariables || !extractedParams) {
     return adUnitPath;
   }
 
   extractedParams.forEach(param => {
-    const invalidChar = invalidCharacters.find(char => param.includes(char));
-    if (invalidChar) {
-      throw new SyntaxError(`invalid variable "${invalidChar}" in path`);
+    const validParam = param.match(validCharactersPattern);
+    if (!validParam) {
+      throw new SyntaxError(`invalid variable "${param}" in path`);
     }
     if (!adUnitPathVariables[param]) {
       throw new ReferenceError(`path variable "${param}" is not defined`);
