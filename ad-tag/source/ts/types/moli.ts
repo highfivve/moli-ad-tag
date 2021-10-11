@@ -481,6 +481,11 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
+
+      /**
+       * An object of ad unit path variables
+       */
+      adUnitPathVariables: AdUnitPathVariables;
     }
 
     /**
@@ -587,7 +592,7 @@ export namespace Moli {
        * Immutable configuration. This is the same configuration returned by
        * the initialized Promise.
        */
-      readonly config: Moli.MoliConfig;
+      config: Moli.MoliConfig;
 
       /**
        * stores the information if the moli ad tag is configured yet

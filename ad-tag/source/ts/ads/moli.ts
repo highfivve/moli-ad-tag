@@ -43,7 +43,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     hooks: {
       beforeRequestAds: [],
       afterRequestAds: []
-    }
+    },
+    adUnitPathVariables: {}
   };
 
   function setTargeting(key: string, value: string | string[]): void {
@@ -92,7 +93,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         break;
       }
       case 'configured': {
-        if (state.config.targeting && state.config.targeting.labels) {
+        if (state.config.targeting?.labels) {
           state.config.targeting.labels.push(label);
         } else {
           state.config = {
@@ -115,6 +116,40 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         getLogger(state.config, window).error(
           'MoliGlobal',
           `Adding label after configure: ${label}`
+        );
+        break;
+      }
+    }
+  }
+
+  function setAdUnitPathVariables(variables: Moli.AdUnitPathVariables): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.adUnitPathVariables = variables;
+        break;
+      }
+      case 'configured':
+      case 'spa-requestAds':
+      case 'spa-finished': {
+        if (state.config.targeting?.addAdUnitPathVariables) {
+          state.config.targeting.addAdUnitPathVariables = variables;
+        } else {
+          state.config = {
+            ...state.config,
+            targeting: {
+              keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
+              labels: state.config.targeting?.labels ? [...state.config.targeting.labels] : [],
+              addAdUnitPathVariables: variables
+            }
+          };
+        }
+        break;
+      }
+
+      default: {
+        getLogger(state.config, window).error(
+          'MoliGlobal',
+          `Setting unit path variables after configuration: ${variables}`
         );
         break;
       }
@@ -729,6 +764,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     addLabel: addLabel,
     setLogger: setLogger,
     setSampleRate: setSampleRate,
+    setAdUnitPathVariables: setAdUnitPathVariables,
     addReporter: addReporter,
     beforeRequestAds: beforeRequestAds,
     afterRequestAds: afterRequestAds,
