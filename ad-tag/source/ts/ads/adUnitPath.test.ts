@@ -61,6 +61,14 @@ describe('ad unit path', () => {
       expect(resolvedPath).to.be.equals('/1234567/Travel/mobile');
     });
 
+    it('should replace only the variables in curly braces', () => {
+      const resolvedPath = resolveAdUnitPath('/1234567/device/{device}/{channel}', {
+        device: 'mobile',
+        channel: 'finance'
+      });
+      expect(resolvedPath).to.be.equals('/1234567/device/mobile/finance');
+    });
+
     it('should throw an error if a variable is not defined', () => {
       expect(() =>
         resolveAdUnitPath('/1234567/Travel/{device}/{channel}', {

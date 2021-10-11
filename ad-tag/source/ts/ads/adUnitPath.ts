@@ -60,13 +60,16 @@ export const resolveAdUnitPath = (
     }
   });
 
-  const resolvedPath = adUnitPath
-    .replace(
-      new RegExp(Object.keys(adUnitPathVariables).join('|'), 'g'),
-      // For each key found, replace with the appropriate value
-      match => adUnitPathVariables[match]
-    )
-    .replace(/\{|}/g, '');
+  const resolvedPath = adUnitPath.replace(
+    new RegExp(
+      Object.keys(adUnitPathVariables)
+        .map(key => `{${key}}`)
+        .join('|'),
+      'g'
+    ),
+    // For each key found, replace with the appropriate value
+    match => adUnitPathVariables[match.substr(1, match.length - 2)]
+  );
 
   return resolvedPath;
 };
