@@ -228,9 +228,16 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
                       )
                     : moliSlot.sizes;
 
+                  // The configured max slot depth in either the slot config or the global a9 config.
+                  const slotNameDepth = moliSlot.a9.slotNamePathDepth ?? config.slotNamePathDepth;
+
+                  const adUnitPathWithoutChildId = adUnitPath.removeChildId(moliSlot.adUnitPath);
+
                   return {
                     slotID: moliSlot.domId,
-                    slotName: adUnitPath.removeChildId(moliSlot.adUnitPath),
+                    slotName: slotNameDepth
+                      ? adUnitPath.withDepth(adUnitPathWithoutChildId, slotNameDepth)
+                      : adUnitPathWithoutChildId,
                     sizes: filterSupportedSizes(enabledSizes).filter(SizeConfigService.isFixedSize),
                     ...(config.enableFloorPrices && priceRule
                       ? // During the beta phase we need to be able to activate and deactivate floor prices
