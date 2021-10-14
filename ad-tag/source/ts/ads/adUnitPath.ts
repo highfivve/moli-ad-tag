@@ -28,3 +28,18 @@ export const removeChildId = (adUnitPath: string): string => {
   const [parentNetworkId, ...childIds] = networkIds.split(',');
   return childIds.length === 0 ? adUnitPath : ['', parentNetworkId, ...rest].join('/');
 };
+
+/**
+ * We don't want to be the adUnitPath's in a9 as granular as they're in the google adManager.
+ * For this reason, we reduce the depth of the adUnitPath in this method.
+ *
+ * E.g. `shortenWithDepth('/1234567/Travel/Germany/Berlin', 3) will result in '/1234567/Travel/Germany'`
+ *
+ * @param adUnitPath The adUnitPath that should be shortened.
+ * @param depth The maximum depth of the adUnitPath.
+ */
+export const withDepth = (adUnitPath: string, depth: number): string => {
+  const adUnitPathSegments = adUnitPath.split('/');
+
+  return adUnitPathSegments.slice(0, depth + 1).join('/');
+};

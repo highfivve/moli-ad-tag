@@ -1292,6 +1292,11 @@ export namespace Moli {
       readonly sha256Email: string;
     }
 
+    /**
+     * The maximum depth of the adUnitPath for a9 bid requests.
+     */
+    export type A9SlotNamePathDepth = 3 | 4 | 5;
+
     export interface A9Config {
       /**
        * publisher ID
@@ -1336,6 +1341,11 @@ export namespace Moli {
        * Configure the Amazon _Publisher Audiences_ feature.
        */
       readonly publisherAudience?: A9PublisherAudienceConfig;
+
+      /**
+       * Configure the maximum depth for all slotName paths in a9 requests.
+       */
+      readonly slotNamePathDepth?: A9SlotNamePathDepth;
     }
 
     /**
@@ -1358,6 +1368,8 @@ export namespace Moli {
       readonly labelAny?: string[];
       /** Optional media type (default to display) */
       readonly mediaType?: 'display' | 'video';
+      /** Optional configuration of the maximum depth for the slotName path of this adSlot. (overrides the value in the global a9 config) */
+      readonly slotNamePathDepth?: A9SlotNamePathDepth;
     }
   }
 
