@@ -1310,6 +1310,118 @@ export namespace prebidjs {
     }
   }
 
+  export namespace firstpartydata {
+    export const enum ContentQuality {
+      Unknown = 0,
+      ProfessionallyProduced = 1,
+      Prosumer = 2,
+      UGC = 3
+    }
+
+    export interface OpenRtb2Site {
+      /**
+       * Array of IAB content categories of the site.
+       */
+      cat?: string[];
+
+      /**
+       * Array of IAB content categories that describe the current section of the site.
+       */
+      sectioncat?: string[];
+
+      /**
+       * Array of IAB content categories that describe the current page or view of the site.
+       */
+      pagecat?: string[];
+
+      /**
+       * Indicates if the site has been programmed to optimize layout when viewed on mobile devices, where 0 = no, 1 = yes.
+       */
+      mobile?: 0 | 1;
+
+      /**
+       * Indicates if the site has a privacy policy, where 0 = no, 1 = yes.
+       */
+      privacypolicy?: 0 | 1;
+
+      /**
+       * Comma separated list of keywords about the site.
+       */
+      keywords?: string;
+
+      /**
+       * URL of the page where the impression will be shown.
+       */
+      page?: string;
+
+      /**
+       * Details about the Content (Section 3.2.16) within the site.
+       */
+      content?: {
+        title?: string;
+        url?: string;
+        prodq?: ContentQuality;
+
+        /**
+         * User rating of the content (e.g., number of stars, likes, etc.).
+         */
+        userrating?: number;
+
+        /**
+         * Comma separated list of keywords describing the content.
+         */
+        keywords?: string;
+
+        /**
+         * Content language using ISO-639-1-alpha-2.
+         */
+        language?: string;
+      };
+
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB
+       */
+      ext?: any;
+    }
+
+    export interface OpenRtb2User {
+      /**
+       * Year of birth as a 4-digit integer.
+       */
+      yob?: number;
+
+      /**
+       * "O" = known to be other (i.e., omitted is unknown).
+       */
+      gender?: 'M' | 'F' | 'O';
+
+      /**
+       * Comma separated list of keywords, interests, or intent.
+       */
+      keywords?: string;
+    }
+
+    export interface OpenRtb2Publisher {
+      /**
+       * Array of IAB content categories that describe the publisher.
+       */
+      cat?: string[];
+
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB
+       */
+      ext?: any;
+    }
+
+    export interface PrebidFirstPartyData {
+      site?: OpenRtb2Site;
+
+      user?: OpenRtb2User;
+
+      publisher?: OpenRtb2Publisher;
+    }
+  }
+
   /**
    * ## Global Prebid Configuration
    *
@@ -1405,6 +1517,17 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
      */
     readonly gptPreAuction?: gptPreAuction.GptPreAuctionConfig;
+
+    /**
+     * Publishers supply First Party Data (FPD) by specifying attributes as configuration.
+     *
+     * Note that supplying first party *user* data may require special consent in certain regions.
+     * Prebid.js does *not* police the passing of user data as part of its GDPR or CCPA modules.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-fpd
+     * @see https://docs.prebid.org/features/firstPartyData.html
+     */
+    readonly ortb2?: firstpartydata.PrebidFirstPartyData;
   }
 
   /**
@@ -1636,8 +1759,8 @@ export namespace prebidjs {
     readonly minduration: number;
 
     /**
-     * 	Maximum ad duration in seconds
-     * 	@see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     *  Maximum ad duration in seconds
+     *  @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
      */
     readonly maxduration: number;
 
@@ -1654,15 +1777,15 @@ export namespace prebidjs {
     readonly h?: number;
 
     /**
-     * 	Indicates the start delay in seconds for pre-roll, mid-roll, or post-roll ad placements.
+     *  Indicates the start delay in seconds for pre-roll, mid-roll, or post-roll ad placements.
      *
      *  Possible values:
-     * 	> 0 Mid-Roll (value indicates start delay in second)
-     * 	  0 Pre-Roll
-     * 	 -1 Generic Mid-Roll
-     * 	 -2, Generic Post-Roll
+     *  > 0 Mid-Roll (value indicates start delay in second)
+     *    0 Pre-Roll
+     *   -1 Generic Mid-Roll
+     *   -2, Generic Post-Roll
      *
-     * 	@see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     *  @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
      */
     readonly startdelay: number;
 
@@ -2295,7 +2418,7 @@ export namespace prebidjs {
 
     /**
      * The Adform domain
-     * @example 	'adx.adform.net'
+     * @example  'adx.adform.net'
      */
     readonly adxDomain?: string;
 
@@ -2692,7 +2815,7 @@ export namespace prebidjs {
       >;
 
       /**
-       * 	If ‘true’, user can skip ad
+       *  If ‘true’, user can skip ad
        */
       readonly skippable?: boolean;
 
@@ -2702,7 +2825,7 @@ export namespace prebidjs {
       readonly minduration?: number;
 
       /**
-       * 	Maximum ad duration in seconds
+       *  Maximum ad duration in seconds
        */
       readonly maxduration?: number;
 

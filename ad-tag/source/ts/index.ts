@@ -12,4 +12,5 @@ export * from './ads/prebid-outstream';
 export * from './ads/slotEventService';
 export * from './util/assetLoaderService';
 export * from './util/arrayUtils';
+export * from './util/objectUtils';
 export * from './util/logging';

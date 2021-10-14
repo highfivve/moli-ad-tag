@@ -10,6 +10,17 @@ export type MappingDefinition =
 
 type AdexListObject = { [key: string]: 1 };
 
+/**
+ * Adex lists are not really lists. They consist of objects with the list items as keys, and the
+ * literal 1 as value:
+ *
+ * @example
+ * {
+ *   "Automotive": 1,
+ *   "Oldtimers": 1,
+ *   "Car Repair": 1
+ * }
+ */
 export type AdexList = {
   [key: string]: AdexListObject;
 };
@@ -165,17 +176,6 @@ export const toAdexListType = (
   };
 };
 
-/**
- * Adex lists are not really lists. They consist of objects with the list items as keys, and the
- * literal 1 as value:
- *
- * @example
- * {
- *   "Automotive": 1,
- *   "Oldtimers": 1,
- *   "Car Repair": 1
- * }
- */
 const sortAndToListObject = (arr: Array<string>): AdexListObject =>
   Object.fromEntries(arr.sort().map(listValue => [listValue, 1]));
 
