@@ -128,21 +128,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         state.adUnitPathVariables = variables;
         break;
       }
-      case 'configured':
-      case 'spa-requestAds':
-      case 'spa-finished': {
-        if (state.config.targeting?.addAdUnitPathVariables) {
-          state.config.targeting.addAdUnitPathVariables = variables;
-        } else {
-          state.config = {
-            ...state.config,
-            targeting: {
-              keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
-              labels: state.config.targeting?.labels ? [...state.config.targeting.labels] : [],
-              addAdUnitPathVariables: variables
-            }
-          };
-        }
+      case 'configured': {
+        state.config = {
+          ...state.config,
+          targeting: {
+            keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
+            labels: state.config.targeting?.labels ? state.config.targeting.labels : [],
+            adUnitPathVariables: variables
+          }
+        };
         break;
       }
 
@@ -359,7 +353,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               labels: [
                 ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
                 ...state.labels
-              ]
+              ],
+              adUnitPathVariables: state.adUnitPathVariables
             },
             reporting: {
               ...config.reporting,
