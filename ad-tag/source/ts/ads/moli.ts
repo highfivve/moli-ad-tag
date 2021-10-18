@@ -139,6 +139,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         };
         break;
       }
+      case 'spa-requestAds':
+      case 'spa-finished': {
+        state.adUnitPathVariables = variables;
+        break;
+      }
 
       default: {
         getLogger(state.config, window).error(
@@ -473,6 +478,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             // initialize targeting values for next refreshAds call
             labels: [],
             keyValues: {},
+            adUnitPathVariables: {},
             hooks: state.hooks,
             // reset refresh slots array
             refreshSlots: [],
@@ -597,7 +603,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                     ? configFromAdTag.targeting.labels
                     : []),
                   ...labels
-                ]
+                ],
+                adUnitPathVariables: currentState.adUnitPathVariables
               }
             };
           })
@@ -624,6 +631,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               // reset targeting after successful refreshAds()
               labels: [],
               keyValues: {},
+              adUnitPathVariables: {},
               // reset refreshSlots
               refreshSlots: [],
               moduleMeta

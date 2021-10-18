@@ -95,6 +95,12 @@ export namespace Moli {
     addLabel(label: String): void;
 
     /**
+     * Sets new ad unit path variables.
+     * @param variables
+     */
+    setAdUnitPathVariables(variables: AdUnitPathVariables): void;
+
+    /**
      * Set a custom logger that should be used for logging.
      *
      * @param logger
@@ -570,6 +576,8 @@ export namespace Moli {
        */
       labels: string[];
 
+      adUnitPathVariables: Moli.AdUnitPathVariables;
+
       /**
        * Hooks configured by the user
        */
@@ -592,7 +600,7 @@ export namespace Moli {
        * Immutable configuration. This is the same configuration returned by
        * the initialized Promise.
        */
-      config: Moli.MoliConfig;
+      readonly config: Moli.MoliConfig;
 
       /**
        * stores the information if the moli ad tag is configured yet
@@ -766,7 +774,7 @@ export namespace Moli {
     readonly labels?: string[];
 
     /** ad unit path variables */
-    addAdUnitPathVariables?: AdUnitPathVariables;
+    readonly adUnitPathVariables?: AdUnitPathVariables;
   }
 
   /**
