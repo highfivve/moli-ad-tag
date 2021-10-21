@@ -37,13 +37,11 @@ describe('YieldOptimizationService', () => {
 
   describe('resolve ad unit paths', () => {
     [
-      { labels: ['mobile'], device: 'mobile', channel: 'direct' },
-      { labels: ['desktop'], device: 'desktop', channel: 'seo' },
-      { labels: [] as string[], device: 'mobile', channel: 'seo' }
-    ].forEach(({ labels, device, channel }) => {
-      it(`should resolve the ad unit path with ${labels.join(
-        ','
-      )}, device: ${device}, channel: ${channel}`, async () => {
+      { device: 'mobile' as const, channel: 'direct' },
+      { device: 'desktop' as const, channel: 'seo' },
+      { device: 'mobile' as const, channel: 'seo' }
+    ].forEach(({ device, channel }) => {
+      it(`should resolve the ad unit path with device: ${device}, channel: ${channel}`, async () => {
         const adUnitDynamic = '/123/pub/ad_content_1/{device}/{channel}';
         const adUnitResolved = `/123/pub/ad_content_1/${device}/${channel}`;
         const config: StaticYieldOptimizationConfig = {
@@ -59,7 +57,7 @@ describe('YieldOptimizationService', () => {
           }
         };
         const service = createService(config);
-        await service.init(labels, { channel });
+        await service.init(device, { channel });
         const rule = await service.getPriceRule(adUnitDynamic);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;
@@ -72,7 +70,7 @@ describe('YieldOptimizationService', () => {
     const service = createService(config);
 
     it('should always return undefined', async () => {
-      await service.init([], {});
+      await service.init('mobile', {});
       const rule = await service.getPriceRule('foo');
       expect(rule).to.be.undefined;
     });
@@ -82,7 +80,7 @@ describe('YieldOptimizationService', () => {
       const getAdUnitPathSpy = sandbox.spy(adSlot, 'getAdUnitPath');
       const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-      await service.init([], {});
+      await service.init('mobile', {});
       await service.setTargeting(adSlot);
       expect(getAdUnitPathSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.not.have.been.called;
@@ -95,7 +93,7 @@ describe('YieldOptimizationService', () => {
       const service = createService(config);
 
       it('should always return undefined', async () => {
-        await service.init([], {});
+        await service.init('mobile', {});
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
@@ -105,7 +103,7 @@ describe('YieldOptimizationService', () => {
         const getAdUnitPathSpy = sandbox.spy(adSlot, 'getAdUnitPath');
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-        await service.init([], {});
+        await service.init('mobile', {});
         await service.setTargeting(adSlot);
         expect(getAdUnitPathSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.not.have.been.called;
@@ -129,14 +127,14 @@ describe('YieldOptimizationService', () => {
 
       it('should return undefined if the ad slot is not configured', async () => {
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
 
       it('should return the price rule', async () => {
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
         const rule = await service.getPriceRule(adUnit);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;
@@ -182,7 +180,7 @@ describe('YieldOptimizationService', () => {
           }
         } as any);
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
 
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).not.to.be.undefined;
@@ -193,7 +191,7 @@ describe('YieldOptimizationService', () => {
         fetchStub.rejects('FetchRequestFailed');
         const service = createService(config);
 
-        await service.init([], {});
+        await service.init('mobile', {});
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.undefined;
         expect(fetchStub).to.have.been.calledThrice;
@@ -207,7 +205,7 @@ describe('YieldOptimizationService', () => {
           }
         } as any);
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
 
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.undefined;
@@ -222,7 +220,7 @@ describe('YieldOptimizationService', () => {
           }
         } as any);
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
 
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.undefined;
@@ -244,7 +242,7 @@ describe('YieldOptimizationService', () => {
         const service = createService(config);
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnitPath1);
 
-        await service.init([], {});
+        await service.init('mobile', {});
         await service.getPriceRule(adUnitPath1);
         await service.setTargeting(adSlot);
 
@@ -259,14 +257,14 @@ describe('YieldOptimizationService', () => {
 
       it('should return undefined if the ad slot is not configured', async () => {
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
 
       it('should return the price rule', async () => {
         const service = createService(config);
-        await service.init([], {});
+        await service.init('mobile', {});
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;
@@ -281,7 +279,7 @@ describe('YieldOptimizationService', () => {
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
           const service = createService(config);
-          await service.init([], {});
+          await service.init('mobile', {});
           const rule = await service.getPriceRule(adUnitPath1);
           await service.setTargeting(adSlot);
 
@@ -295,7 +293,7 @@ describe('YieldOptimizationService', () => {
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
           const service = createService(config);
-          await service.init([], {});
+          await service.init('mobile', {});
           await service.setTargeting(adSlot);
 
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'ml');
@@ -314,23 +312,18 @@ describe('YieldOptimizationService', () => {
       });
 
       // input parameters
-      [
-        { labels: [], label: 'mobile' },
-        { labels: ['mobile'], label: 'mobile' },
-        { labels: ['mobile', 'desktop'], label: 'desktop' },
-        { labels: ['desktop'], label: 'desktop' }
-      ].forEach(({ labels, label }) => {
-        it(`should use ${label} with input [${labels.join(',')}]`, async () => {
+      ['mobile' as const, 'desktop' as const].forEach(device => {
+        it(`should use ${device} in body`, async () => {
           const service = createService(config);
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
 
-          await service.init(labels, {});
+          await service.init(device, {});
           await service.getPriceRule(adUnitPath1);
           await service.setTargeting(adSlot);
 
           expect(fetchStub).to.have.been.calledOnce;
           expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-            body: `{"device":"${label}","key":"adUnitPath"}`,
+            body: `{"device":"${device}","key":"adUnitPath"}`,
             headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
             method: 'POST',
             mode: 'cors'

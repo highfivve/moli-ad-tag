@@ -203,10 +203,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
           return;
         }
 
-        const device =
-          context.labelConfigService.getSupportedLabels().indexOf('desktop') > -1
-            ? 'desktop'
-            : 'mobile';
+        const device = context.labelConfigService.getDeviceLabel();
 
         const slots = slotDefinitions
           .filter(isA9SlotDefinition)
