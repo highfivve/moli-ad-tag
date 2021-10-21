@@ -21,6 +21,7 @@ import { createTestSlots } from '../util/test-slots';
 import SlotDefinition = Moli.SlotDefinition;
 import IGoogleTag = googletag.IGoogleTag;
 import TCPurpose = tcfapi.responses.TCPurpose;
+import { resolveAdUnitPath } from './adUnitPath';
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
@@ -243,32 +244,42 @@ export const gptDefineSlots =
 
       const sizes = filterSupportedSizes(moliSlot.sizes);
 
+      // add device variable to adUnitPathVariables during resolving
+      const device: string =
+        context.labelConfigService.getSupportedLabels().indexOf('desktop') > -1
+          ? 'desktop'
+          : 'mobile';
+
+      const adUnitPathVariables = {
+        ...context.config.targeting?.adUnitPathVariables,
+        device: device
+      };
+
+      const resolvedAdUnitPath = resolveAdUnitPath(moliSlot.adUnitPath, adUnitPathVariables);
+
       // define an ad slot depending on the `position` parameter
       const defineAdSlot = (): googletag.IAdSlot | null => {
         switch (moliSlot.position) {
           case 'in-page':
-            return context.window.googletag.defineSlot(moliSlot.adUnitPath, sizes, moliSlot.domId);
+            return context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
           case 'out-of-page':
-            return context.window.googletag.defineOutOfPageSlot(
-              moliSlot.adUnitPath,
-              moliSlot.domId
-            );
+            return context.window.googletag.defineOutOfPageSlot(resolvedAdUnitPath, moliSlot.domId);
           case 'out-of-page-interstitial':
-            context.logger.debug('GAM', `defined web interstitial for ${moliSlot.adUnitPath}`);
+            context.logger.debug('GAM', `defined web interstitial for ${resolvedAdUnitPath}`);
             return context.window.googletag.defineOutOfPageSlot(
-              moliSlot.adUnitPath,
+              resolvedAdUnitPath,
               context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
             );
           case 'out-of-page-bottom-anchor':
-            context.logger.debug('GAM', `defined bottom anchor for ${moliSlot.adUnitPath}`);
+            context.logger.debug('GAM', `defined bottom anchor for ${resolvedAdUnitPath}`);
             return context.window.googletag.defineOutOfPageSlot(
-              moliSlot.adUnitPath,
+              resolvedAdUnitPath,
               context.window.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
             );
           case 'out-of-page-top-anchor':
-            context.logger.debug('GAM', `defined top anchor for ${moliSlot.adUnitPath}`);
+            context.logger.debug('GAM', `defined top anchor for ${resolvedAdUnitPath}`);
             return context.window.googletag.defineOutOfPageSlot(
-              moliSlot.adUnitPath,
+              resolvedAdUnitPath,
               context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
             );
         }
