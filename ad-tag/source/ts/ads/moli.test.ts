@@ -225,7 +225,8 @@ describe('moli', () => {
       const config = newEmptyConfig(defaultSlots);
       const targeting = {
         keyValues: { foo: 'bar' },
-        labels: ['module']
+        labels: ['module'],
+        adUnitPathVariables: {}
       };
       const configChangingModule = {
         ...fakeModule,
