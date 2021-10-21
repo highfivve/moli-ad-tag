@@ -18,8 +18,6 @@ import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
-import { gptDefineSlots } from './googleAdManager';
-import { createAssetLoaderService } from '../util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
