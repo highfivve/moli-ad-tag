@@ -60,14 +60,16 @@ export class YieldOptimizationService {
 
   /**
    *
-   * @param labels - all available labels from moli. This includes the targeting labels as well as
-   *         the `supportedLabels` from the LabelService.
-   * @param adUnitPathVariables
+   * @param device - the device label for the LabelConfigService
+   * @param adUnitPathVariables - from the config targeting object
    */
-  public init(labels: string[], adUnitPathVariables: AdUnitPathVariables): Promise<void> {
+  public init(
+    device: 'mobile' | 'desktop',
+    adUnitPathVariables: AdUnitPathVariables
+  ): Promise<void> {
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
-    this.device = labels.indexOf('desktop') > -1 ? 'desktop' : 'mobile';
+    this.device = device;
     this.adUnitPathVariables = {
       ...adUnitPathVariables,
       device: this.device

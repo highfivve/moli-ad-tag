@@ -117,7 +117,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
         const labels = context.labelConfigService.getSupportedLabels();
-        const isMobile = labels.indexOf('desktop') === -1;
+        const deviceLabel = context.labelConfigService.getDeviceLabel();
 
         const prebidAdUnits = slots
           .filter(isPrebidSlotDefinition)
@@ -139,7 +139,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                 floorPrice: floorPrice,
                 priceRule: priceRule,
                 labels: labels,
-                isMobile: isMobile
+                isMobile: deviceLabel === 'mobile'
               },
               moliSlot.prebid
             )
@@ -199,7 +199,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                   ...prebidAdSlotConfig.adUnit.pubstack,
                   adUnitPath: resolveAdUnitPath(moliSlot.adUnitPath, {
                     ...context.config.targeting?.adUnitPathVariables,
-                    device: isMobile ? 'mobile' : 'desktop'
+                    device: deviceLabel
                   })
                 };
 

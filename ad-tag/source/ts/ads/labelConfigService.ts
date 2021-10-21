@@ -92,4 +92,11 @@ export class LabelConfigService {
   public getSupportedLabels(): string[] {
     return this.supportedLabels;
   }
+
+  /**
+   * @returns the currently configured device. If no device label is found, mobile is being returned
+   */
+  public getDeviceLabel(): 'mobile' | 'desktop' {
+    return this.getSupportedLabels().indexOf('desktop') > -1 ? 'desktop' : 'mobile';
+  }
 }

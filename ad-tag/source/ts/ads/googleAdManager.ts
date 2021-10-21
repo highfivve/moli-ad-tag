@@ -172,21 +172,9 @@ export const gptLDeviceLabelKeyValue = (): PrepareRequestAdsStep =>
     LOW_PRIORITY,
     ctx =>
       new Promise<void>(resolve => {
-        const allowList = ['mobile', 'tablet', 'desktop'];
-        const deviceLabels = ctx.labelConfigService
-          .getSupportedLabels()
-          .filter(label => allowList.some(deviceLabel => deviceLabel === label));
-
-        if (deviceLabels.length === 1) {
-          ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabels);
-          ctx.window.googletag.pubads().setTargeting('device_label', deviceLabels);
-        } else {
-          ctx.logger.warn(
-            'GAM',
-            `Expected one device label, but found ${deviceLabels.length}`,
-            deviceLabels
-          );
-        }
+        const deviceLabel = ctx.labelConfigService.getDeviceLabel();
+        ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabel);
+        ctx.window.googletag.pubads().setTargeting('device_label', deviceLabel);
 
         resolve();
       })
@@ -245,14 +233,11 @@ export const gptDefineSlots =
       const sizes = filterSupportedSizes(moliSlot.sizes);
 
       // add device variable to adUnitPathVariables during resolving
-      const device: string =
-        context.labelConfigService.getSupportedLabels().indexOf('desktop') > -1
-          ? 'desktop'
-          : 'mobile';
+      const device = context.labelConfigService.getDeviceLabel();
 
       const adUnitPathVariables = {
         ...context.config.targeting?.adUnitPathVariables,
-        device: device
+        device
       };
 
       const resolvedAdUnitPath = resolveAdUnitPath(moliSlot.adUnitPath, adUnitPathVariables);

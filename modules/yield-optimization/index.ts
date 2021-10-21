@@ -186,10 +186,8 @@ export class YieldOptimization implements IModule {
 
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
-      const targetingLabels = context.config.targeting?.labels || [];
-      const labels = [...targetingLabels, ...context.labelConfigService.getSupportedLabels()];
       return yieldOptimizationService.init(
-        labels,
+        context.labelConfigService.getDeviceLabel(),
         context.config.targeting?.adUnitPathVariables || {}
       );
     });

@@ -138,4 +138,18 @@ describe('LabelConfigConfigService', () => {
       expect(sizeConfigService.filterSlot({ labelAny: ['check'] })).to.be.true;
     });
   });
+
+  describe('device labels', () => {
+    [
+      { labels: [], deviceLabel: 'mobile' },
+      { labels: ['mobile'], deviceLabel: 'mobile' },
+      { labels: ['desktop', 'mobile'], deviceLabel: 'desktop' },
+      { labels: ['desktop'], deviceLabel: 'desktop' }
+    ].forEach(({ labels, deviceLabel }) => {
+      it(`should return ${deviceLabel} if labels are [${labels.join(',')}]`, () => {
+        const sizeConfigService = newLabelConfigService([], labels);
+        expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
+      });
+    });
+  });
 });

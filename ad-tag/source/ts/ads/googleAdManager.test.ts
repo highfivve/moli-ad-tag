@@ -249,67 +249,43 @@ describe('google ad manager', () => {
       'getSupportedLabels'
     );
 
-    it('should set no device label if no valid device labels are available', () => {
+    it('should set no device label if no valid device labels are available', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       getSupportedLabelsStub.returns([]);
 
-      return step(ctxWithLabelServiceStub, []).then(() => {
-        expect(setTargetingSpy).to.have.not.been.called;
-      });
+      await step(ctxWithLabelServiceStub, []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
     });
 
-    it('should set no device label if more than one valid device labels are available', () => {
-      const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile', 'tablet']);
-
-      return step(ctxWithLabelServiceStub, []).then(() => {
-        expect(setTargetingSpy).to.have.not.been.called;
-      });
-    });
-
-    it('should set mobile as a device label', () => {
+    it('should set mobile as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       getSupportedLabelsStub.returns(['mobile']);
-      return step(ctxWithLabelServiceStub, []).then(() => {
-        expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['mobile']);
-      });
+      await step(ctxWithLabelServiceStub, []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
     });
 
-    it('should set tablet as a device label', () => {
-      const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['tablet']);
-
-      return step(ctxWithLabelServiceStub, []).then(() => {
-        expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['tablet']);
-      });
-    });
-
-    it('should set desktop as a device label', () => {
+    it('should set desktop as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       getSupportedLabelsStub.returns(['desktop']);
 
-      return step(ctxWithLabelServiceStub, []).then(() => {
-        expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['desktop']);
-      });
+      await step(ctxWithLabelServiceStub, []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'desktop');
     });
 
-    it('should filter out irrelevant labels', () => {
+    it('should filter out irrelevant labels', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       getSupportedLabelsStub.returns(['mobile', 'mobile-320', 'ix']);
 
-      return step(ctxWithLabelServiceStub, []).then(() => {
-        expect(setTargetingSpy).to.have.been.calledOnce;
-        expect(setTargetingSpy).to.have.been.calledWith('device_label', ['mobile']);
-      });
+      await step(ctxWithLabelServiceStub, []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
     });
   });
 

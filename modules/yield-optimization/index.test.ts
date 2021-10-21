@@ -61,17 +61,17 @@ describe('Yield Optimization module', () => {
       );
 
       const labelConfigService: any = {
-        getSupportedLabels(): string[] {
-          return [];
+        getDeviceLabel(): 'mobile' | 'desktop' {
+          throw new Error('not stubbed');
         }
       };
 
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
 
       // label config service returns 'desktop' as supported labels
-      const getSupportedLabelsMock = sandbox
-        .stub(labelConfigService, 'getSupportedLabels')
-        .returns(['desktop']);
+      const getDeviceLabelStub = sandbox
+        .stub(labelConfigService, 'getDeviceLabel')
+        .returns('desktop');
 
       // a config with targeting labels set
       const config: Moli.MoliConfig = {
@@ -90,9 +90,9 @@ describe('Yield Optimization module', () => {
         logger: noopLogger,
         labelConfigService: labelConfigService
       } as any);
-      expect(getSupportedLabelsMock).to.have.been.calledOnce;
+      expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly(['foo', 'desktop'], {
+      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {
         foo: 'bar'
       });
     });
