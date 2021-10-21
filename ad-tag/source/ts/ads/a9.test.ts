@@ -331,39 +331,6 @@ describe('a9', () => {
       });
     });
 
-    it('should use an ad unit path without the child network id', () => {
-      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-      const step = a9RequestBids(a9ConfigStub);
-
-      const adUnitPath = '/1234567,1234/Travel/Berlin';
-      const domId = getDomId();
-      const slot: Moli.AdSlot = {
-        ...a9Slot(domId, {}),
-        adUnitPath
-      };
-      const singleSlot = {
-        moliSlot: slot,
-        adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
-        filterSupportedSizes: sizes => sizes
-      };
-
-      return step(contextWithConsent, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: domId,
-                slotName: '/1234567/Travel/Berlin',
-                sizes: mediumRec
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
-    });
-
     it('should respect the supportedSizes configuration in the global a9 config', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids({
@@ -529,37 +496,125 @@ describe('a9', () => {
       expect(fetchBidsSpy).to.have.been.callCount(0);
     });
 
-    ['USD' as const, 'EUR' as const].forEach(currency => {
-      it(`should add floor config with configured currency ${currency}`, async () => {
-        const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
-        const step = a9RequestBids({
-          ...a9ConfigStub,
-          enableFloorPrices: true,
-          floorPriceCurrency: currency
-        });
+    describe('floor price', () => {
+      ['USD' as const, 'EUR' as const].forEach(currency => {
+        it(`should add floor config with configured currency ${currency}`, async () => {
+          const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+          const step = a9RequestBids({
+            ...a9ConfigStub,
+            enableFloorPrices: true,
+            floorPriceCurrency: currency
+          });
 
+          const domId = getDomId();
+          const singleSlot = createSlotDefinitions(domId, {});
+          singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
+
+          await step(contextWithConsent, [singleSlot]);
+          expect(fetchBidsSpy).to.have.been.calledOnce;
+          expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
+            {
+              slots: [
+                {
+                  slotID: domId,
+                  slotName: singleSlot.adSlot.getAdUnitPath(),
+                  sizes: mediumRec,
+                  floor: {
+                    value: 12, // value must be rounded up
+                    currency: currency
+                  }
+                }
+              ]
+            },
+            Sinon.match.func
+          );
+        });
+      });
+    });
+
+    describe('slotId ad unit path resolving', () => {
+      const slotWithAdUnitPath = (adUnitPath: string): Moli.SlotDefinition => {
         const domId = getDomId();
-        const singleSlot = createSlotDefinitions(domId, {});
-        singleSlot.priceRule = { floorprice: 0.1, main: false, priceRuleId: 1 };
+        const slot: Moli.AdSlot = {
+          ...a9Slot(domId, {}),
+          adUnitPath
+        };
+        return {
+          moliSlot: slot,
+          adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
+          filterSupportedSizes: sizes => sizes
+        };
+      };
+
+      it('should use an ad unit path without the child network id', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+        const step = a9RequestBids(a9ConfigStub);
+
+        const adUnitPath = '/1234567,1234/Travel/Berlin';
+        const singleSlot = slotWithAdUnitPath(adUnitPath);
 
         await step(contextWithConsent, [singleSlot]);
-        expect(fetchBidsSpy).to.have.been.calledOnce;
-        expect(fetchBidsSpy).to.have.been.calledOnceWithExactly(
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
           {
             slots: [
               {
-                slotID: domId,
-                slotName: singleSlot.adSlot.getAdUnitPath(),
-                sizes: mediumRec,
-                floor: {
-                  value: 12, // value must be rounded up
-                  currency: currency
-                }
+                slotID: singleSlot.moliSlot.domId,
+                slotName: '/1234567/Travel/Berlin',
+                sizes: mediumRec
               }
             ]
           },
           Sinon.match.func
         );
+      });
+
+      [
+        { labels: ['mobile'], device: 'mobile', channel: 'direct' },
+        { labels: ['desktop'], device: 'desktop', channel: 'seo' },
+        { labels: [] as string[], device: 'mobile', channel: 'seo' }
+      ].forEach(({ labels, device, channel }) => {
+        it(`should resolve the ad unit path with [${labels.join(
+          ','
+        )}], device: ${device}, channel: ${channel}`, async () => {
+          const ctxWithLabelServiceStub = {
+            ...adPipelineContext('production', {
+              ...emptyConfig,
+              targeting: {
+                keyValues: {},
+                adUnitPathVariables: { channel }
+              }
+            }),
+            tcData: fullConsent({ '793': true })
+          };
+          const getSupportedLabelsStub = sandbox.stub(
+            ctxWithLabelServiceStub.labelConfigService,
+            'getSupportedLabels'
+          );
+          getSupportedLabelsStub.returns(labels);
+
+          const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+          const step = a9RequestBids(a9ConfigStub);
+
+          const adUnitPath = '/1234567/pub/content_1/{device}/{channel}';
+          const singleSlot = slotWithAdUnitPath(adUnitPath);
+
+          await step(ctxWithLabelServiceStub, [singleSlot]);
+
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+            {
+              slots: [
+                {
+                  slotID: singleSlot.moliSlot.domId,
+                  slotName: `/1234567/pub/content_1/${device}/${channel}`,
+                  sizes: mediumRec
+                }
+              ]
+            },
+            Sinon.match.func
+          );
+        });
       });
     });
   });

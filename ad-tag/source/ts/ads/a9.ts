@@ -19,6 +19,7 @@ import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
+import { AdUnitPathVariables } from './adUnitPath';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -179,10 +180,22 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
     }
   );
 
+const resolveAdUnitPath = (
+  path: string,
+  slotDepth: Moli.headerbidding.A9SlotNamePathDepth | undefined,
+  variables: AdUnitPathVariables
+): string => {
+  const adUnitPathWithoutChildId = adUnitPath.removeChildId(path);
+  const truncated = slotDepth
+    ? adUnitPath.withDepth(adUnitPathWithoutChildId, slotDepth)
+    : adUnitPathWithoutChildId;
+  return adUnitPath.resolveAdUnitPath(truncated, variables);
+};
+
 export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsStep =>
   mkRequestBidsStep(
     'a9-fetch-bids',
-    (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
+    (context: AdPipelineContext, slotDefinitions: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
         if (!hasRequiredConsent(context.tcData)) {
           context.logger.debug('A9', 'Skip any due to missing consent');
@@ -190,84 +203,88 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
           return;
         }
 
-        const filteredSlots = slots.filter(isA9SlotDefinition).filter(slot => {
-          const isVideo = slot.moliSlot.a9.mediaType === 'video';
-          const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
-          const sizesNotEmpty =
-            slot.filterSupportedSizes(slot.moliSlot.sizes).filter(SizeConfigService.isFixedSize)
-              .length > 0;
-          return filterSlot && (isVideo || sizesNotEmpty);
-        });
+        const device =
+          context.labelConfigService.getSupportedLabels().indexOf('desktop') > -1
+            ? 'desktop'
+            : 'mobile';
+
+        const slots = slotDefinitions
+          .filter(isA9SlotDefinition)
+          .filter(slot => {
+            const isVideo = slot.moliSlot.a9.mediaType === 'video';
+            const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
+            const sizesNotEmpty =
+              slot.filterSupportedSizes(slot.moliSlot.sizes).filter(SizeConfigService.isFixedSize)
+                .length > 0;
+            return filterSlot && (isVideo || sizesNotEmpty);
+          })
+          .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
+            if (moliSlot.a9.mediaType === 'video') {
+              return {
+                slotID: moliSlot.domId,
+                mediaType: 'video'
+              } as apstag.IVideoSlot;
+            } else {
+              // Filter all sizes that we don't want to send requests to a9.
+              const enabledSizes = config.supportedSizes
+                ? moliSlot.sizes.filter(moliSize =>
+                    config.supportedSizes?.some(supportedSize =>
+                      isSizeEqual(supportedSize, moliSize)
+                    )
+                  )
+                : moliSlot.sizes;
+
+              // The configured max slot depth in either the slot config or the global a9 config.
+              const adUnitPath = resolveAdUnitPath(
+                moliSlot.adUnitPath,
+                moliSlot.a9.slotNamePathDepth ?? config.slotNamePathDepth,
+                {
+                  ...context.config.targeting?.adUnitPathVariables,
+                  device
+                }
+              );
+
+              return {
+                slotID: moliSlot.domId,
+                slotName: adUnitPath,
+                sizes: filterSupportedSizes(enabledSizes).filter(SizeConfigService.isFixedSize),
+                ...(config.enableFloorPrices && priceRule
+                  ? // During the beta phase we need to be able to activate and deactivate floor prices
+                    // We also need to do a currency conversion from EUR to USD (x1.19 , 08.03.2021)
+                    // THe floor price is sent in EUR, amazon requires Cents
+                    {
+                      floor: {
+                        value: Math.ceil(
+                          context.window.pbjs?.convertCurrency
+                            ? context.window.pbjs.convertCurrency(
+                                priceRule.floorprice,
+                                'EUR',
+                                config.floorPriceCurrency || 'USD'
+                              ) * 100
+                            : priceRule.floorprice * 100 * 1.19
+                        ),
+                        currency: config.floorPriceCurrency || 'USD'
+                      }
+                    }
+                  : {})
+              } as apstag.IDisplaySlot;
+            }
+          });
 
         context.logger.debug(
           'A9',
-          `Fetch '${filteredSlots.length}' A9 slots: ${filteredSlots.map(
-            slot => `[DomID] ${slot.moliSlot.domId} [AdUnitPath] ${slot.moliSlot.adUnitPath}`
-          )}`
+          `Fetch '${slots.length}' A9 slots: ${slots.map(slot => `[slotID] ${slot.slotID}`)}`
         );
 
-        if (filteredSlots.length === 0) {
+        if (slots.length === 0) {
           resolve();
         } else {
           context.reportingService.markA9fetchBids(context.requestId);
-          context.window.apstag.fetchBids(
-            {
-              slots: filteredSlots.map(({ moliSlot, priceRule, filterSupportedSizes }) => {
-                if (moliSlot.a9.mediaType === 'video') {
-                  return {
-                    slotID: moliSlot.domId,
-                    mediaType: 'video'
-                  } as apstag.IVideoSlot;
-                } else {
-                  // Filter all sizes that we don't want to send requests to a9.
-                  const enabledSizes = config.supportedSizes
-                    ? moliSlot.sizes.filter(moliSize =>
-                        config.supportedSizes?.some(supportedSize =>
-                          isSizeEqual(supportedSize, moliSize)
-                        )
-                      )
-                    : moliSlot.sizes;
-
-                  // The configured max slot depth in either the slot config or the global a9 config.
-                  const slotNameDepth = moliSlot.a9.slotNamePathDepth ?? config.slotNamePathDepth;
-
-                  const adUnitPathWithoutChildId = adUnitPath.removeChildId(moliSlot.adUnitPath);
-
-                  return {
-                    slotID: moliSlot.domId,
-                    slotName: slotNameDepth
-                      ? adUnitPath.withDepth(adUnitPathWithoutChildId, slotNameDepth)
-                      : adUnitPathWithoutChildId,
-                    sizes: filterSupportedSizes(enabledSizes).filter(SizeConfigService.isFixedSize),
-                    ...(config.enableFloorPrices && priceRule
-                      ? // During the beta phase we need to be able to activate and deactivate floor prices
-                        // We also need to do a currency conversion from EUR to USD (x1.19 , 08.03.2021)
-                        // THe floor price is sent in EUR, amazon requires Cents
-                        {
-                          floor: {
-                            value: Math.ceil(
-                              context.window.pbjs?.convertCurrency
-                                ? context.window.pbjs.convertCurrency(
-                                    priceRule.floorprice,
-                                    'EUR',
-                                    config.floorPriceCurrency || 'USD'
-                                  ) * 100
-                                : priceRule.floorprice * 100 * 1.19
-                            ),
-                            currency: config.floorPriceCurrency || 'USD'
-                          }
-                        }
-                      : {})
-                  } as apstag.IDisplaySlot;
-                }
-              })
-            },
-            (_bids: Object[]) => {
-              context.reportingService.measureAndReportA9BidsBack(context.requestId);
-              context.window.apstag.setDisplayBids();
-              resolve();
-            }
-          );
+          context.window.apstag.fetchBids({ slots }, (_bids: Object[]) => {
+            context.reportingService.measureAndReportA9BidsBack(context.requestId);
+            context.window.apstag.setDisplayBids();
+            resolve();
+          });
         }
       })
   );
