@@ -13,11 +13,13 @@ import { prebidConfigure, prebidPrepareRequestAds, prebidRequestBids } from './p
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
-import { googleAdSlotStub } from '../stubs/googletagStubs';
-import { tcData } from '../stubs/consentStubs';
+import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
+import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
+import { gptDefineSlots } from './googleAdManager';
+import { createAssetLoaderService } from '../util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -30,6 +32,7 @@ describe('prebid', () => {
   const dom = createDom();
   const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
     dom.window as any;
+
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -505,6 +508,49 @@ describe('prebid', () => {
       });
     });
 
+    describe('resolve adUnitPathVariables', () => {
+      const ctxWithLabelServiceStub = adPipelineContext();
+      const getSupportedLabelsStub = sandbox.stub(
+        ctxWithLabelServiceStub.labelConfigService,
+        'getSupportedLabels'
+      );
+      ['desktop', 'mobile'].forEach(deviceLabel => {
+        it(`should resolve adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
+          getSupportedLabelsStub.returns([deviceLabel]);
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds();
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }]),
+            pubstack: {
+              adUnitName: 'content_1',
+              adUnitPath: 'this path is being overridden'
+            }
+          };
+          // create a slot with a custom adUnitPath
+          const slot = createSlotDefinitions(domId, { adUnit });
+          const singleSlot: Moli.SlotDefinition<Moli.AdSlot> = {
+            ...slot,
+            moliSlot: {
+              ...slot.moliSlot,
+              adUnitPath: `/123/${domId}/{device}`
+            }
+          };
+
+          await step(ctxWithLabelServiceStub, [singleSlot]);
+          // check that the pubstack adUnitPath is properly resolved and adUnitName is preserved
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+            {
+              ...adUnit,
+              pubstack: {
+                adUnitName: 'content_1',
+                adUnitPath: `/123/${domId}/${deviceLabel}`
+              }
+            }
+          ]);
+        });
+      });
+    });
     describe('video playerSize consolidation', () => {
       it('should set playerSize = undefined if no video sizes are given', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');

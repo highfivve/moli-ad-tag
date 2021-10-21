@@ -14,6 +14,7 @@ import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
 import { SizeConfigService } from './sizeConfigService';
 import IPrebidJs = prebidjs.IPrebidJs;
+import { resolveAdUnitPath } from './adUnitPath';
 
 // if we forget to remove prebid from the configuration. The timeout is arbitrary
 const prebidTimeout = (window: Window) =>
@@ -115,13 +116,15 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
     LOW_PRIORITY,
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
+        const labels = context.labelConfigService.getSupportedLabels();
+        const isMobile = labels.indexOf('desktop') === -1;
+
         const prebidAdUnits = slots
           .filter(isPrebidSlotDefinition)
           .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
             const targeting = context.config.targeting;
             const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
             const floorPrice = priceRule ? priceRule.floorprice : undefined;
-            const labels = context.labelConfigService.getSupportedLabels();
             context.logger.debug(
               'Prebid',
               context.requestId,
@@ -136,7 +139,7 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                 floorPrice: floorPrice,
                 priceRule: priceRule,
                 labels: labels,
-                isMobile: labels.indexOf('desktop') === -1
+                isMobile: isMobile
               },
               moliSlot.prebid
             )
@@ -192,10 +195,19 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                     }
                   : undefined;
 
+                const pubstack: prebidjs.IPubstackConfig = {
+                  ...prebidAdSlotConfig.adUnit.pubstack,
+                  adUnitPath: resolveAdUnitPath(moliSlot.adUnitPath, {
+                    ...context.config.targeting?.adUnitPathVariables,
+                    device: isMobile ? 'mobile' : 'desktop'
+                  })
+                };
+
                 return {
                   ...prebidAdSlotConfig.adUnit,
                   // use domId if adUnit code is not defined
                   code: prebidAdSlotConfig.adUnit.code || moliSlot.domId,
+                  ...(prebidAdSlotConfig.adUnit.pubstack ? { pubstack } : {}),
                   mediaTypes: {
                     ...video,
                     ...banner,
