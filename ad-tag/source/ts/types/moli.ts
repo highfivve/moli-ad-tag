@@ -774,7 +774,7 @@ export namespace Moli {
     readonly labels?: string[];
 
     /** ad unit path variables */
-    readonly adUnitPathVariables?: AdUnitPathVariables;
+    adUnitPathVariables?: AdUnitPathVariables;
   }
 
   /**
