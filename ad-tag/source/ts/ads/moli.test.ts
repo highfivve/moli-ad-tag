@@ -225,7 +225,8 @@ describe('moli', () => {
       const config = newEmptyConfig(defaultSlots);
       const targeting = {
         keyValues: { foo: 'bar' },
-        labels: ['module']
+        labels: ['module'],
+        adUnitPathVariables: {}
       };
       const configChangingModule = {
         ...fakeModule,
@@ -439,6 +440,86 @@ describe('moli', () => {
             })
         );
       });
+    });
+  });
+
+  describe('setAdUnitPathVariables', () => {
+    it('should add adUnitPath variables to the config', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setAdUnitPathVariables({ foo: 'value' });
+      adTag.configure(defaultConfig);
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(config!.targeting!.adUnitPathVariables).to.be.deep.equals({
+        foo: 'value'
+      });
+    });
+
+    it('should override preexisting adUnitPath variables', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.setAdUnitPathVariables({ foo: 'value' });
+      adTag.configure({
+        slots: defaultSlots,
+        targeting: {
+          adUnitPathVariables: { pre: 'dismiss' },
+          keyValues: {}
+        }
+      });
+      const config = adTag.getConfig();
+      expect(config).to.be.ok;
+      expect(config!.targeting).to.be.ok;
+      expect(config!.targeting!.adUnitPathVariables).to.be.deep.equals({
+        foo: 'value'
+      });
+    });
+
+    it('should persists the variables in spa mode for all requestAd() calls', () => {
+      dom.reconfigure({
+        url: 'https://localhost/1'
+      });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.enableSinglePageApp();
+      adTag.setAdUnitPathVariables({ foo: 'value' });
+      adTag.configure({
+        slots: defaultSlots,
+        logger: noopLogger,
+        targeting: {
+          keyValues: {},
+          adUnitPathVariables: {}
+        }
+      });
+      expect(adTag.getState()).to.be.eq('configured');
+      expect(adTag.getConfig()!.targeting!.adUnitPathVariables).to.be.deep.equals({
+        foo: 'value'
+      });
+      return adTag
+        .requestAds()
+        .then(state => {
+          expect(state.state).to.be.eq('spa-finished');
+          const spaState: ISinglePageApp = state as ISinglePageApp;
+          expect(spaState.config).to.be.ok;
+          expect(spaState.adUnitPathVariables).to.be.empty;
+          dom.reconfigure({
+            url: 'https://localhost/2'
+          });
+          // set targeting for next page
+          adTag.setAdUnitPathVariables({ foo: 'value', bar: 'value2' });
+
+          expect(spaState.adUnitPathVariables).to.be.deep.equals({ foo: 'value', bar: 'value2' });
+
+          return adTag.requestAds();
+        })
+        .then(state => {
+          expect(state.state).to.be.eq('spa-finished');
+          const spaState: ISinglePageApp = state as ISinglePageApp;
+          expect(spaState.adUnitPathVariables).to.be.empty;
+          expect(spaState.config.targeting).to.be.ok;
+          expect(spaState.config.targeting!.adUnitPathVariables).to.be.deep.equals({
+            foo: 'value',
+            bar: 'value2'
+          });
+        });
     });
   });
 

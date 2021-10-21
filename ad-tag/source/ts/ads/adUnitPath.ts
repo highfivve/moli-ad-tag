@@ -29,6 +29,52 @@ export const removeChildId = (adUnitPath: string): string => {
   return childIds.length === 0 ? adUnitPath : ['', parentNetworkId, ...rest].join('/');
 };
 
+export type AdUnitPathVariables = {
+  [key: string]: string;
+};
+
+/**
+ * This method finds the params in the adUnitPath and replace them with the corresponding values in the adUnitPathVariables object
+ * for example: /1234567/Travel/{device}/{channel} ==> /1234567/Travel/mobile/finance
+ * It also detects all the special characters except the underscore.
+ * @param adUnitPath the path to resolved
+ * @param adUnitPathVariables key/value pairs to replace the adUnitPath keys with
+ * @returns {string} resolved path
+ * */
+export const resolveAdUnitPath = (
+  adUnitPath: string,
+  adUnitPathVariables?: AdUnitPathVariables
+): string => {
+  // Extract all params between the curly braces
+  const paramsPattern = /[^{]+(?=})/g;
+  const validCharactersPattern = /([A-Za-z0-9\_]+)/g;
+  const extractedParams = adUnitPath.match(paramsPattern);
+  if (!adUnitPathVariables || !extractedParams) {
+    return adUnitPath;
+  }
+
+  extractedParams.forEach(param => {
+    const validParam = param.match(validCharactersPattern);
+    if (!validParam) {
+      throw new SyntaxError(`invalid variable "${param}" in path`);
+    }
+    if (!adUnitPathVariables[param]) {
+      throw new ReferenceError(`path variable "${param}" is not defined`);
+    }
+  });
+
+  return adUnitPath.replace(
+    new RegExp(
+      Object.keys(adUnitPathVariables)
+        .map(key => `{${key}}`)
+        .join('|'),
+      'g'
+    ),
+    // For each key found, replace with the appropriate value
+    match => adUnitPathVariables[match.substr(1, match.length - 2)]
+  );
+};
+
 /**
  * We don't want to be the adUnitPath's in a9 as granular as they're in the google adManager.
  * For this reason, we reduce the depth of the adUnitPath in this method.

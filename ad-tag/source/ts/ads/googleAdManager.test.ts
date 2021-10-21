@@ -184,6 +184,64 @@ describe('google ad manager', () => {
     });
   });
 
+  describe('resolve adUnitPathVariables', () => {
+    const step = gptDefineSlots();
+    matchMediaStub.returns({ matches: true } as MediaQueryList);
+    const adSlot: Moli.AdSlot = {
+      domId: 'dom-id',
+      adUnitPath: '/123/dom-id/{device}',
+      behaviour: { loaded: 'eager' },
+      position: 'in-page',
+      sizes: [],
+      sizeConfig: []
+    };
+    const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
+    const getSupportedLabelsStub = sandbox.stub(
+      ctxWithLabelServiceStub.labelConfigService,
+      'getSupportedLabels'
+    );
+
+    it('should call googletag.defineAdSlot', async () => {
+      const defineSlotsStub = sandbox.spy(dom.window.googletag, 'defineSlot');
+      getSupportedLabelsStub.returns([]);
+      await step(ctxWithLabelServiceStub, [adSlot]);
+      expect(defineSlotsStub).to.have.been.calledOnce;
+      expect(defineSlotsStub.firstCall.args).to.have.length(3);
+    });
+
+    ['desktop', 'mobile'].forEach(deviceLabel => {
+      it(`should resolve adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
+        getSupportedLabelsStub.returns([deviceLabel]);
+        const defineSlotsStub = sandbox.spy(dom.window.googletag, 'defineSlot');
+        await step(ctxWithLabelServiceStub, [adSlot]);
+        expect(defineSlotsStub).to.have.been.calledOnce;
+        expect(defineSlotsStub.firstCall.args[0]).to.equals(`/123/dom-id/${deviceLabel}`);
+      });
+    });
+
+    it('should resolve adUnitPath with predefined adUnitPathVariables', async () => {
+      const configWithTargeting: Moli.MoliConfig = {
+        ...emptyConfig,
+        targeting: {
+          keyValues: {},
+          adUnitPathVariables: { device: 'desktop' }
+        }
+      };
+      const ctxWithLabelServiceStub = adPipelineContext('production', configWithTargeting);
+      const getSupportedLabelsStub = sandbox.stub(
+        ctxWithLabelServiceStub.labelConfigService,
+        'getSupportedLabels'
+      );
+      // supported labels override predefined adUnitPathVariables.device
+      getSupportedLabelsStub.returns(['mobile']);
+
+      const defineSlotsStub = sandbox.spy(dom.window.googletag, 'defineSlot');
+      await step(ctxWithLabelServiceStub, [adSlot]);
+      expect(defineSlotsStub).to.have.been.calledOnce;
+      expect(defineSlotsStub.firstCall.args[0]).to.equals('/123/dom-id/mobile');
+    });
+  });
+
   describe('gptLDeviceLabelKeyValue', () => {
     const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
     const getSupportedLabelsStub = sandbox.stub(
@@ -215,7 +273,6 @@ describe('google ad manager', () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       getSupportedLabelsStub.returns(['mobile']);
-
       return step(ctxWithLabelServiceStub, []).then(() => {
         expect(setTargetingSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.have.been.calledWith('device_label', ['mobile']);

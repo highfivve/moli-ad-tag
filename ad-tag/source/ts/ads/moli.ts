@@ -43,7 +43,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     hooks: {
       beforeRequestAds: [],
       afterRequestAds: []
-    }
+    },
+    adUnitPathVariables: {}
   };
 
   function setTargeting(key: string, value: string | string[]): void {
@@ -92,7 +93,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         break;
       }
       case 'configured': {
-        if (state.config.targeting && state.config.targeting.labels) {
+        if (state.config.targeting?.labels) {
           state.config.targeting.labels.push(label);
         } else {
           state.config = {
@@ -115,6 +116,39 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         getLogger(state.config, window).error(
           'MoliGlobal',
           `Adding label after configure: ${label}`
+        );
+        break;
+      }
+    }
+  }
+
+  function setAdUnitPathVariables(variables: Moli.AdUnitPathVariables): void {
+    switch (state.state) {
+      case 'configurable': {
+        state.adUnitPathVariables = variables;
+        break;
+      }
+      case 'configured': {
+        state.config = {
+          ...state.config,
+          targeting: {
+            keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
+            labels: state.config.targeting?.labels ? state.config.targeting.labels : [],
+            adUnitPathVariables: variables
+          }
+        };
+        break;
+      }
+      case 'spa-requestAds':
+      case 'spa-finished': {
+        state.adUnitPathVariables = variables;
+        break;
+      }
+
+      default: {
+        getLogger(state.config, window).error(
+          'MoliGlobal',
+          `Setting unit path variables after configuration: ${variables}`
         );
         break;
       }
@@ -324,7 +358,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               labels: [
                 ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
                 ...state.labels
-              ]
+              ],
+              adUnitPathVariables: state.adUnitPathVariables
             },
             reporting: {
               ...config.reporting,
@@ -443,6 +478,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             // initialize targeting values for next refreshAds call
             labels: [],
             keyValues: {},
+            adUnitPathVariables: {},
             hooks: state.hooks,
             // reset refresh slots array
             refreshSlots: [],
@@ -567,7 +603,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                     ? configFromAdTag.targeting.labels
                     : []),
                   ...labels
-                ]
+                ],
+                adUnitPathVariables: currentState.adUnitPathVariables
               }
             };
           })
@@ -594,6 +631,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               // reset targeting after successful refreshAds()
               labels: [],
               keyValues: {},
+              adUnitPathVariables: {},
               // reset refreshSlots
               refreshSlots: [],
               moduleMeta
@@ -729,6 +767,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     addLabel: addLabel,
     setLogger: setLogger,
     setSampleRate: setSampleRate,
+    setAdUnitPathVariables: setAdUnitPathVariables,
     addReporter: addReporter,
     beforeRequestAds: beforeRequestAds,
     afterRequestAds: afterRequestAds,
