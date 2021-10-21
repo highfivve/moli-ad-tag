@@ -3548,7 +3548,7 @@ export namespace prebidjs {
      * Custom key/value object
      * @example `{"key":"value"}`
      */
-    readonly keyValues: { [key: string]: string };
+    readonly keyValues?: { [key: string]: string };
   }
 
   export interface IOrbidderBid extends IBidObject<typeof Orbidder, IOrbidderParams> {}
