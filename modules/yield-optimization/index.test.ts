@@ -78,7 +78,10 @@ describe('Yield Optimization module', () => {
         ...emptyConfig,
         targeting: {
           keyValues: {},
-          labels: ['foo']
+          labels: ['foo'],
+          adUnitPathVariables: {
+            foo: 'bar'
+          }
         }
       };
 
@@ -89,7 +92,9 @@ describe('Yield Optimization module', () => {
       } as any);
       expect(getSupportedLabelsMock).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly(['foo', 'desktop']);
+      expect(initSpy).to.have.been.calledOnceWithExactly(['foo', 'desktop'], {
+        foo: 'bar'
+      });
     });
   });
 
