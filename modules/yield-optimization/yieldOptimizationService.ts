@@ -3,6 +3,7 @@ import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import MoliLogger = Moli.MoliLogger;
 import IAdSlot = googletag.IAdSlot;
 import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
+import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
 
 /**
  * Extended representation which adds
@@ -36,14 +37,19 @@ export class YieldOptimizationService {
   private isEnabled: boolean = false;
 
   /**
-   *
+   * The device for the current device
    */
   private device: 'mobile' | 'desktop' = 'mobile';
 
   /**
+   * Contains the device variable
+   */
+  private adUnitPathVariables = {};
+
+  /**
    *
    * @param yieldConfig the yield optimization config
-   * @param log logging
+   * @param log
    * @param window
    */
   constructor(
@@ -56,11 +62,16 @@ export class YieldOptimizationService {
    *
    * @param labels - all available labels from moli. This includes the targeting labels as well as
    *         the `supportedLabels` from the LabelService.
+   * @param adUnitPathVariables
    */
-  public init(labels: string[]): Promise<void> {
+  public init(labels: string[], adUnitPathVariables: AdUnitPathVariables): Promise<void> {
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
     this.device = labels.indexOf('desktop') > -1 ? 'desktop' : 'mobile';
+    this.adUnitPathVariables = {
+      ...adUnitPathVariables,
+      device: this.device
+    };
 
     switch (this.yieldConfig.provider) {
       case 'none':
@@ -112,7 +123,9 @@ export class YieldOptimizationService {
    * @param adUnitPath
    */
   public getPriceRule(adUnitPath: string): Promise<PriceRule | undefined> {
-    return this.adUnitPricingRuleResponse.then(response => response.rules[adUnitPath]);
+    return this.adUnitPricingRuleResponse.then(
+      response => response.rules[resolveAdUnitPath(adUnitPath, this.adUnitPathVariables)]
+    );
   }
 
   /**
@@ -131,7 +144,7 @@ export class YieldOptimizationService {
    * @param adSlot
    */
   public setTargeting(adSlot: IAdSlot): Promise<PriceRule | undefined> {
-    const adUnitPath = adSlot.getAdUnitPath();
+    const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
       if (rule) {
