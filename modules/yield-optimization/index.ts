@@ -113,6 +113,11 @@ export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
    * URL to a json config file that contains a list of AdUnitPriceRules.
    */
   readonly configEndpoint: string;
+
+  /**
+   * AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.
+   */
+  readonly excludedAdUnitPaths: string[];
 };
 
 export type PriceRules = {
@@ -186,9 +191,10 @@ export class YieldOptimization implements IModule {
 
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
+      const adUnitPaths = context.config.slots.map(slot => slot.adUnitPath);
       const targetingLabels = context.config.targeting?.labels || [];
       const labels = [...targetingLabels, ...context.labelConfigService.getSupportedLabels()];
-      return yieldOptimizationService.init(labels);
+      return yieldOptimizationService.init(labels, adUnitPaths);
     });
 
   /**

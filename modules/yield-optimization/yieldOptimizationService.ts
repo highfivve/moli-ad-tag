@@ -56,8 +56,9 @@ export class YieldOptimizationService {
    *
    * @param labels - all available labels from moli. This includes the targeting labels as well as
    *         the `supportedLabels` from the LabelService.
+   * @param adUnitPaths - all adUnitPaths from the slots configured in moli.
    */
-  public init(labels: string[]): Promise<void> {
+  public init(labels: string[], adUnitPaths: string[]): Promise<void> {
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
     this.device = labels.indexOf('desktop') > -1 ? 'desktop' : 'mobile';
@@ -78,9 +79,18 @@ export class YieldOptimizationService {
         break;
       case 'dynamic':
         this.isEnabled = true;
+
+        const excludedAdUnitPaths = this.yieldConfig.excludedAdUnitPaths;
+
+        // The list of adUnitPaths we want to get the priceRules for.
+        const filteredAdUnitPaths = adUnitPaths.filter(
+          adUnitPath => excludedAdUnitPaths.indexOf(adUnitPath) < 0
+        );
+
         this.adUnitPricingRuleResponse = this.loadConfigWithRetry(
           this.yieldConfig.configEndpoint,
-          3
+          3,
+          filteredAdUnitPaths
         )
           .then(config => {
             this.log.info(
@@ -154,6 +164,7 @@ export class YieldOptimizationService {
   private loadConfigWithRetry(
     configEndpoint: string,
     retriesLeft: number,
+    adUnitPaths: string[],
     lastError: any | null = null
   ): Promise<AdunitPriceRulesResponse> {
     if (retriesLeft <= 0) {
@@ -172,7 +183,9 @@ export class YieldOptimizationService {
         body: JSON.stringify({
           device: this.device,
           // GD-2996 - temporary migration to new key
-          key: 'adUnitPath'
+          key: 'adUnitPath',
+          // GD-3818 - alerts for misconfigured ad unit paths in the server
+          adUnitPaths: adUnitPaths
         })
       })
       .then(response => {

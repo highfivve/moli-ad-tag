@@ -40,7 +40,7 @@ describe('YieldOptimizationService', () => {
     const service = createService(config);
 
     it('should always return undefined', async () => {
-      await service.init([]);
+      await service.init([], []);
       const rule = await service.getPriceRule('foo');
       expect(rule).to.be.undefined;
     });
@@ -50,7 +50,7 @@ describe('YieldOptimizationService', () => {
       const getAdUnitPathSpy = sandbox.spy(adSlot, 'getAdUnitPath');
       const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-      await service.init([]);
+      await service.init([], []);
       await service.setTargeting(adSlot);
       expect(getAdUnitPathSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.not.have.been.called;
@@ -63,7 +63,7 @@ describe('YieldOptimizationService', () => {
       const service = createService(config);
 
       it('should always return undefined', async () => {
-        await service.init([]);
+        await service.init([], []);
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
@@ -73,7 +73,7 @@ describe('YieldOptimizationService', () => {
         const getAdUnitPathSpy = sandbox.spy(adSlot, 'getAdUnitPath');
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-        await service.init([]);
+        await service.init([], []);
         await service.setTargeting(adSlot);
         expect(getAdUnitPathSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.not.have.been.called;
@@ -97,14 +97,14 @@ describe('YieldOptimizationService', () => {
 
       it('should return undefined if the ad slot is not configured', async () => {
         const service = createService(config);
-        await service.init([]);
+        await service.init([], []);
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
 
       it('should return the price rule', async () => {
         const service = createService(config);
-        await service.init([]);
+        await service.init([], []);
         const rule = await service.getPriceRule(adUnit);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;
@@ -120,7 +120,8 @@ describe('YieldOptimizationService', () => {
     const adUnitPath2 = '/123/publisher/p_content_2';
     const config: DynamicYieldOptimizationConfig = {
       provider: 'dynamic',
-      configEndpoint: '//localhost'
+      configEndpoint: '//localhost',
+      excludedAdUnitPaths: []
     };
 
     const publisherYieldConfiguration: AdunitPriceRulesResponse = {
@@ -150,7 +151,7 @@ describe('YieldOptimizationService', () => {
           }
         } as any);
         const service = createService(config);
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
 
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).not.to.be.undefined;
@@ -161,7 +162,7 @@ describe('YieldOptimizationService', () => {
         fetchStub.rejects('FetchRequestFailed');
         const service = createService(config);
 
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.undefined;
         expect(fetchStub).to.have.been.calledThrice;
@@ -175,7 +176,7 @@ describe('YieldOptimizationService', () => {
           }
         } as any);
         const service = createService(config);
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
 
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.undefined;
@@ -190,7 +191,7 @@ describe('YieldOptimizationService', () => {
           }
         } as any);
         const service = createService(config);
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
 
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.undefined;
@@ -212,13 +213,33 @@ describe('YieldOptimizationService', () => {
         const service = createService(config);
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnitPath1);
 
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
         await service.getPriceRule(adUnitPath1);
         await service.setTargeting(adSlot);
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-          body: '{"device":"mobile","key":"adUnitPath"}',
+          body: '{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/publisher/p_content_1","/123/publisher/p_content_2"]}',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          method: 'POST',
+          mode: 'cors'
+        });
+      });
+
+      it('should respect the defined excludedAdUnits', async () => {
+        const service = createService({
+          ...config,
+          excludedAdUnitPaths: [adUnitPath1]
+        });
+        const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnitPath1);
+
+        await service.init([], [adUnitPath1, adUnitPath2]);
+        await service.getPriceRule(adUnitPath1);
+        await service.setTargeting(adSlot);
+
+        expect(fetchStub).to.have.been.calledOnce;
+        expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
+          body: '{"device":"mobile","key":"adUnitPath","adUnitPaths":["/123/publisher/p_content_2"]}',
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'POST',
           mode: 'cors'
@@ -227,14 +248,14 @@ describe('YieldOptimizationService', () => {
 
       it('should return undefined if the ad slot is not configured', async () => {
         const service = createService(config);
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
 
       it('should return the price rule', async () => {
         const service = createService(config);
-        await service.init([]);
+        await service.init([], [adUnitPath1, adUnitPath2]);
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;
@@ -249,7 +270,7 @@ describe('YieldOptimizationService', () => {
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
           const service = createService(config);
-          await service.init([]);
+          await service.init([], [adUnitPath1, adUnitPath2]);
           const rule = await service.getPriceRule(adUnitPath1);
           await service.setTargeting(adSlot);
 
@@ -263,7 +284,7 @@ describe('YieldOptimizationService', () => {
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
           const service = createService(config);
-          await service.init([]);
+          await service.init([], [adUnitPath1, adUnitPath2]);
           await service.setTargeting(adSlot);
 
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'ml');
@@ -292,13 +313,13 @@ describe('YieldOptimizationService', () => {
           const service = createService(config);
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
 
-          await service.init(labels);
+          await service.init(labels, [adUnitPath1, adUnitPath2]);
           await service.getPriceRule(adUnitPath1);
           await service.setTargeting(adSlot);
 
           expect(fetchStub).to.have.been.calledOnce;
           expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
-            body: `{"device":"${label}","key":"adUnitPath"}`,
+            body: `{"device":"${label}","key":"adUnitPath","adUnitPaths":["${adUnitPath1}","${adUnitPath2}"]}`,
             headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
             method: 'POST',
             mode: 'cors'
