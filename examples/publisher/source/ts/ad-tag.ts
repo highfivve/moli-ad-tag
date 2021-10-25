@@ -121,7 +121,8 @@ moli.registerModule(
   new YieldOptimization(
     {
       provider: 'dynamic',
-      configEndpoint: '//local.h5v.eu:9000/yield-config.json'
+      configEndpoint: '//local.h5v.eu:9000/yield-config.json',
+      excludedAdUnitPaths: []
     },
     window
   )
