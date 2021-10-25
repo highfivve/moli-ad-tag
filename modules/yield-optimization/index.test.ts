@@ -94,7 +94,7 @@ describe('Yield Optimization module', () => {
       expect(initSpy).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {
         foo: 'bar'
-      });
+      }, []);
     });
   });
 
