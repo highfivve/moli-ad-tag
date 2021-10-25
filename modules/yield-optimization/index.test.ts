@@ -92,9 +92,13 @@ describe('Yield Optimization module', () => {
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {
-        foo: 'bar'
-      }, []);
+      expect(initSpy).to.have.been.calledOnceWithExactly(
+        'desktop',
+        {
+          foo: 'bar'
+        },
+        []
+      );
     });
   });
 
