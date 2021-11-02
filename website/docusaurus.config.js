@@ -31,7 +31,7 @@ module.exports = {
           label: 'Modules',
           position: 'left'
         },
-        { to: 'blog', label: 'Blog', position: 'left' },
+        // { to: 'blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/highfivve/moli-ad-tag',
           label: 'GitHub',
@@ -94,11 +94,11 @@ module.exports = {
           // Please change this to your repo.
           editUrl: 'https://github.com/highfivve/moli-ad-tag'
         },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          editUrl: 'https://github.com/highfivve/moli-ad-tag'
-        },
+        // blog: {
+        //   showReadingTime: true,
+        //   // Please change this to your repo.
+        //   editUrl: 'https://github.com/highfivve/moli-ad-tag'
+        // },
         theme: {
           customCss: require.resolve('./src/css/custom.css')
         }
