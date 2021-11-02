@@ -20,7 +20,7 @@
     "prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"**/*.ts*\"",
     "validate": "yarn compile && yarn lint && yarn test",
     "validate:jenkins": "yarn compile && yarn lint && yarn test:junit",
-    "validate:github": "yarn compile && yarn lint && yarn test:junit"
+    "validate:github": "yarn compile && yarn lint && yarn test"
   },
   "repository": {
     "type": "git",

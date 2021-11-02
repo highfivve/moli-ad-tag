@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        module: [
+        package: [
             ad-tag,
             module-the-adex-dmp,
             module-blocklist-url,
@@ -23,6 +23,7 @@ jobs:
             module-moli-ad-reload,
             module-pubstack,
             module-prebid-google-analytics,
+            module-prebid-first-party-data,
             module-sovrn-ad-reload,
             module-yield-optimization,
             module-zeotap,
@@ -69,8 +70,8 @@ jobs:
       - name: Build Ad Tag
         run: yarn workspace @highfivve/ad-tag make:nodemodule
 
-      - name: Build ${{ matrix.module }}
-        run: yarn workspace @highfivve/${{ matrix.module }} make:nodemodule
+      - name: Build ${{ matrix.package }}
+        run: yarn workspace @highfivve/${{ matrix.package }} make:nodemodule
 
-      - name: Validate ${{ matrix.module }}
-        run: yarn workspace @highfivve/${{ matrix.module }} validate:github
+      - name: Validate ${{ matrix.package }}
+        run: yarn workspace @highfivve/${{ matrix.package }} validate:github

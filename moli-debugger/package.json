@@ -19,10 +19,10 @@
     "lint": "eslint ./ --ext .ts,.tsx && yarn prettier",
     "test": "export TS_NODE_TRANSPILE_ONLY=true && mocha --require ts-node/register */*.test.ts",
     "clean": "rm -rf dist/",
-    "validate": "yarn prettier && yarn compile",
+    "validate": "yarn prettier && yarn compile && yarn test",
     "prettier": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check \"**/*.ts*\"",
     "prettier:fix": "yarn prettier --write",
-    "validate:github": "yarn prettier && tsc --noEmit",
+    "validate:github": "yarn validate",
     "validate:jenkins": "yarn validate"
   },
   "repository": {
