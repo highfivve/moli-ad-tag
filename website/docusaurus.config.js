@@ -2,7 +2,7 @@ module.exports = {
   title: 'The Publisher Ad Tag',
   tagline: 'An open ad tag for publishers',
   url: 'https://highfivve.github.io',
-  baseUrl: '/',
+  baseUrl: '/moli-ad-tag/',
   onBrokenLinks: 'warn', // this failed on jenkins. remove once github pages works
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
