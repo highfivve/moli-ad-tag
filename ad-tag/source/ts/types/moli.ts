@@ -1777,7 +1777,7 @@ export namespace Moli {
        *
        * If none is provided `static` is used as a fallback
        */
-      readonly model?: 'static' | 'ml';
+      readonly model?: 'static' | 'ml' | 'fixed';
 
       /**
        * The floor price CPM in EUR if available.
