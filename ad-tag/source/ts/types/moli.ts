@@ -1771,8 +1771,9 @@ export namespace Moli {
       /**
        * The model used to determine the price rule
        *
-       * - `static`: fixed price rules in A/B test
+       * - `static`: price rules cohorts in A/B test
        * - `ml`: super clever machine learning
+       * - `fixed`: 100% of the traffic gets this fixed price rule
        *
        * If none is provided `static` is used as a fallback
        */
