@@ -35,6 +35,29 @@ describe('Yield Optimization module', () => {
     }
   };
 
+  const adUnit = (adUnitPath: string, labelAll: string[]): Moli.AdSlot => {
+    return {
+      domId: 'domId',
+      position: 'in-page',
+      behaviour: { loaded: 'eager' },
+      adUnitPath,
+      labelAll,
+      sizes: [],
+      sizeConfig: []
+    };
+  };
+
+  const labelServiceMock = (): any => {
+    return {
+      getDeviceLabel(): 'mobile' | 'desktop' {
+        throw new Error('getDeviceLabel: not stubbed');
+      },
+      filterSlot(): boolean {
+        throw new Error('filterSlot: not stubbed');
+      }
+    };
+  };
+
   afterEach(() => {
     dom = createDom();
     jsDomWindow = dom.window as any;
@@ -60,11 +83,7 @@ describe('Yield Optimization module', () => {
         jsDomWindow
       );
 
-      const labelConfigService: any = {
-        getDeviceLabel(): 'mobile' | 'desktop' {
-          throw new Error('not stubbed');
-        }
-      };
+      const labelConfigService: any = labelServiceMock();
 
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
 
@@ -99,6 +118,47 @@ describe('Yield Optimization module', () => {
         },
         []
       );
+    });
+
+    it('should filter ad unit paths based on labels', async () => {
+      const module = new YieldOptimization(yieldConfig, jsDomWindow);
+      const yieldOptimizationService = new YieldOptimizationService(
+        yieldConfig,
+        noopLogger,
+        jsDomWindow
+      );
+
+      const labelConfigService: any = labelServiceMock();
+
+      const initSpy = sandbox.spy(yieldOptimizationService, 'init');
+
+      // label config service returns 'desktop' as supported labels
+      const getDeviceLabelStub = sandbox
+        .stub(labelConfigService, 'getDeviceLabel')
+        .returns('desktop');
+
+      const filterSlotStub = sandbox
+        .stub(labelConfigService, 'filterSlot')
+        .onFirstCall()
+        .returns(true)
+        .onSecondCall()
+        .returns(false);
+
+      // a config with targeting labels set
+      const config: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/bar', ['mobile'])]
+      };
+
+      await module.yieldOptimizationInit(yieldOptimizationService)({
+        config: config,
+        logger: noopLogger,
+        labelConfigService: labelConfigService
+      } as any);
+      expect(getDeviceLabelStub).to.have.been.calledOnce;
+      expect(filterSlotStub).to.have.been.calledTwice;
+      expect(initSpy).to.have.been.calledOnce;
+      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {}, ['/123/foo']);
     });
   });
 
