@@ -197,10 +197,13 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
 
                 const pubstack: prebidjs.IPubstackConfig = {
                   ...prebidAdSlotConfig.adUnit.pubstack,
-                  adUnitPath: resolveAdUnitPath(moliSlot.adUnitPath, {
-                    ...context.config.targeting?.adUnitPathVariables,
-                    device: deviceLabel
-                  })
+                  adUnitPath: resolveAdUnitPath(
+                    prebidAdSlotConfig.adUnit.pubstack?.adUnitPath || moliSlot.adUnitPath,
+                    {
+                      ...context.config.targeting?.adUnitPathVariables,
+                      device: deviceLabel
+                    }
+                  )
                 };
 
                 return {

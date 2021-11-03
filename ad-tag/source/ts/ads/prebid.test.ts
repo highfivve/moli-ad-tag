@@ -513,16 +513,52 @@ describe('prebid', () => {
         'getSupportedLabels'
       );
       ['desktop', 'mobile'].forEach(deviceLabel => {
+        it(`should resolve an existing adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
+          getSupportedLabelsStub.returns([deviceLabel]);
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds();
+          const domId = getDomId();
+          const adUnitPath = `/123/${domId}/{device}`;
+          const adUnit = {
+            ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }]),
+            pubstack: {
+              adUnitName: 'content_1',
+              adUnitPath: adUnitPath
+            }
+          };
+          // create a slot with a custom adUnitPath
+          const slot = createSlotDefinitions(domId, { adUnit });
+          const singleSlot: Moli.SlotDefinition<Moli.AdSlot> = {
+            ...slot,
+            moliSlot: {
+              ...slot.moliSlot,
+              adUnitPath: adUnitPath
+            }
+          };
+
+          await step(ctxWithLabelServiceStub, [singleSlot]);
+          // check that the pubstack adUnitPath is properly resolved and adUnitName is preserved
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+            {
+              ...adUnit,
+              pubstack: {
+                adUnitName: 'content_1',
+                adUnitPath: `/123/${domId}/${deviceLabel}`
+              }
+            }
+          ]);
+        });
+
         it(`should resolve adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
           getSupportedLabelsStub.returns([deviceLabel]);
+
           const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
           const step = prebidPrepareRequestAds();
           const domId = getDomId();
           const adUnit = {
             ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }]),
             pubstack: {
-              adUnitName: 'content_1',
-              adUnitPath: 'this path is being overridden'
+              adUnitName: 'content_1'
             }
           };
           // create a slot with a custom adUnitPath
