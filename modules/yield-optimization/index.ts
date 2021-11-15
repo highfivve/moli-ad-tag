@@ -15,7 +15,7 @@
  *
  * ### Dynamic optimization
  *
- * This requires and endpoint that provides the yield config.
+ * This requires an endpoint that provides the yield config.
  *
  * ```javascript
  * import { YieldOptimization } from '@highfivve/module-yield-optimization'
@@ -72,6 +72,7 @@ import {
   PrepareRequestAdsStep
 } from '@highfivve/ad-tag';
 import { YieldOptimizationService } from './yieldOptimizationService';
+import { uniquePrimitiveFilter } from '@highfivve/ad-tag/source/ts/util/arrayUtils';
 
 export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
@@ -192,6 +193,7 @@ export class YieldOptimization implements IModule {
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
       const adUnitPaths = context.config.slots
+        .filter(uniquePrimitiveFilter)
         // remove ad units that should not be displayed
         .filter(slot => context.labelConfigService.filterSlot(slot))
         .map(slot => slot.adUnitPath);
