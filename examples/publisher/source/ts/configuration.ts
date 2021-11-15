@@ -54,12 +54,13 @@ const dspxBid = (placement: string): prebidjs.IDSPXBid => {
   };
 };
 
-const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
+const appNexusOutstream = (placementId: string, floorPrice?: number): prebidjs.IAppNexusASTBid => {
   return {
     bidder: prebidjs.AppNexusAst,
     params: {
       placementId: placementId,
-      video: { playback_method: ['auto_play_sound_off'] }
+      video: { playback_method: ['auto_play_sound_off'] },
+      ...(floorPrice ? { reserve: floorPrice } : {})
     },
     labelAll: [prebidjs.AppNexusAst, 'purpose-1']
   };
@@ -188,8 +189,8 @@ export const adConfiguration: Moli.MoliConfig = {
         [640, 480],
         [1, 1]
       ],
-      prebid: [
-        {
+      prebid: context => {
+        return {
           adUnit: {
             code: 'prebid-adslot',
             pubstack: {
@@ -255,11 +256,11 @@ export const adConfiguration: Moli.MoliConfig = {
               teadsVerticalBid(94140, 101937, ['mobile']),
               // AppNexus Test Placement - outstream only
               // see http://prebid.org/examples/video/outstream/outstream-dfp.html
-              appNexusOutstream('13232385')
+              appNexusOutstream('13232385', context.floorPrice)
             ]
           }
         }
-      ],
+      } ,
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',

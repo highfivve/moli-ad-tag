@@ -185,7 +185,7 @@ export class AdService {
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits());
       }
-      prepareRequestAds.push(prebidPrepareRequestAds());
+      prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
       requestBids.push(prebidRequestBids(config.prebid, config.targeting));
     }
 

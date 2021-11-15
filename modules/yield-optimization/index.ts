@@ -192,6 +192,9 @@ export class YieldOptimization implements IModule {
 
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
+      // empty floors object must be set to use floors on adUnit level
+      context.window.pbjs.setConfig({floors: {}});
+
       const adUnitPaths = context.config.slots
         .filter(uniquePrimitiveFilter)
         // remove ad units that should not be displayed

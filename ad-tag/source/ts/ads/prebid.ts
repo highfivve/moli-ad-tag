@@ -110,7 +110,9 @@ const extractPrebidAdSlotConfigs = (
   }
 };
 
-export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
+export const prebidPrepareRequestAds = (
+  prebidConfig: Moli.headerbidding.PrebidConfig
+): PrepareRequestAdsStep =>
   mkPrepareRequestAdsStep(
     'prebid-prepare-adunits',
     LOW_PRIORITY,
@@ -125,12 +127,27 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
             const targeting = context.config.targeting;
             const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
             const floorPrice = priceRule ? priceRule.floorprice : undefined;
+            const floors = priceRule
+              ? {
+                  floors: {
+                    currency: prebidConfig.config.currency.adServerCurrency,
+                    schema: {
+                      delimiter: '|',
+                      fields: ['mediaType']
+                    },
+                    values: {
+                      '*': priceRule.floorprice
+                    }
+                  }
+                }
+              : undefined;
             context.logger.debug(
               'Prebid',
               context.requestId,
               'Price Rule',
               priceRule,
-              moliSlot.domId
+              moliSlot.domId,
+              floors
             );
 
             return extractPrebidAdSlotConfigs(
@@ -216,7 +233,8 @@ export const prebidPrepareRequestAds = (): PrepareRequestAdsStep =>
                     ...banner,
                     ...native
                   },
-                  bids: bids
+                  bids: bids,
+                  ...floors
                 };
               })
               .filter(adUnit => {

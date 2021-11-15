@@ -1,3 +1,4 @@
+import { Moli } from '..';
 import { prebidjs } from '../types/prebidjs';
 
 export const createPbjsStub = (): prebidjs.IPrebidJs => {
@@ -71,4 +72,8 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
       }
     }
   }
+};
+
+export const moliPrebidTestConfig: Moli.headerbidding.PrebidConfig = {
+  config: pbjsTestConfig
 };
