@@ -223,7 +223,7 @@ describe('The Adex DMP Module', () => {
     expect(jsDomWindow._adexc).to.be.undefined;
   });
 
-  it("shouldn't load the script if no adex data can be produced with the given mappings", async () => {
+  it('shouldn load the script if no adex data can be produced with the given mappings', async () => {
     const module = createAdexModule(true, '123', '456', [
       { key: 'subChannel', attribute: 'iab_cat', adexValueType: 'string' }
     ]);
@@ -234,7 +234,9 @@ describe('The Adex DMP Module', () => {
       prepareRequestAdsSteps: []
     };
 
-    const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
+    const loadScriptStub = sandbox
+      .stub(assetLoaderService, 'loadScript')
+      .returns(Promise.resolve());
 
     const { moliConfig } = initModule({ module, configPipeline });
 
@@ -245,8 +247,8 @@ describe('The Adex DMP Module', () => {
       )
     ).to.eventually.be.fulfilled;
 
-    expect(loadScriptStub).to.have.not.been.called;
-    expect(jsDomWindow._adexc).to.be.undefined;
+    expect(loadScriptStub).to.have.been.called;
+    expect(jsDomWindow._adexc).to.be.ok;
   });
 
   const consentSituations: Array<{ description: string; tcData: Partial<TCData> }> = [

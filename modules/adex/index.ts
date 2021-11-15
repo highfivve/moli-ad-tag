@@ -220,9 +220,8 @@ export class AdexModule implements IModule {
       })
       .filter(isNotNull);
 
-    if (adexKeyValues.length === 0) {
-      context.logger.warn('Adex DMP', 'no Adex key/values produced, aborting');
-      return Promise.resolve();
+    if (mappingDefinitions.length === 0 && adexKeyValues.length === 0) {
+      context.logger.warn('Adex DMP', 'no Adex key/values produced');
     }
 
     this.window._adexc = this.window._adexc || [];
