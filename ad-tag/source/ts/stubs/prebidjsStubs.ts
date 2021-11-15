@@ -1,4 +1,4 @@
-import { Moli } from '..';
+import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
 
 export const createPbjsStub = (): prebidjs.IPrebidJs => {

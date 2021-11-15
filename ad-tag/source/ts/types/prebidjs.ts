@@ -4,8 +4,6 @@
  * @see https://prebid.org/dev-docs/publisher-api-reference.html
  */
 
-import { apstag } from '..';
-
 export namespace prebidjs {
   export interface IPrebidjsWindow {
     /**
