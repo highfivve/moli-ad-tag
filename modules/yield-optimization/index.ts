@@ -69,10 +69,10 @@ import {
   InitStep,
   mkInitStep,
   mkPrepareRequestAdsStep,
-  PrepareRequestAdsStep
+  PrepareRequestAdsStep,
+  uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { uniquePrimitiveFilter } from '@highfivve/ad-tag/source/ts/util/arrayUtils';
 
 export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
