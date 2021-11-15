@@ -182,7 +182,10 @@ export class YieldOptimization implements IModule {
     };
 
     // initialize the yield optimization service
-    moliConfig.pipeline.initSteps.push(this.yieldOptimizationInit(yieldOptimizationService));
+    moliConfig.pipeline.initSteps.push(
+      this.initEmptyFloors(),
+      this.yieldOptimizationInit(yieldOptimizationService)
+    );
 
     // set floor price key values
     moliConfig.pipeline.prepareRequestAdsSteps.push(
@@ -192,9 +195,6 @@ export class YieldOptimization implements IModule {
 
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
-      // empty floors object must be set to use floors on adUnit level
-      context.window.pbjs.setConfig({ floors: {} });
-
       const adUnitPaths = context.config.slots
         .filter(uniquePrimitiveFilter)
         // remove ad units that should not be displayed
@@ -205,6 +205,13 @@ export class YieldOptimization implements IModule {
         context.config.targeting?.adUnitPathVariables || {},
         adUnitPaths
       );
+    });
+
+  // empty floors object must be set to use floors on adUnit level
+  initEmptyFloors = (): InitStep =>
+    mkInitStep('yield-optimization-init-empty-floors', context => {
+      context.window.pbjs.setConfig({ floors: {} });
+      return Promise.resolve();
     });
 
   /**
