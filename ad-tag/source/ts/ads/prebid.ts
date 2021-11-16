@@ -123,12 +123,10 @@ export const prebidPrepareRequestAds = (
       new Promise<void>(resolve => {
         const labels = context.labelConfigService.getSupportedLabels();
         const deviceLabel = context.labelConfigService.getDeviceLabel();
-        console.log(slots);
 
         const prebidAdUnits = slots
           .filter(isPrebidSlotDefinition)
           .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
-            console.log(priceRule);
             const targeting = context.config.targeting;
             const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
             const floorPrice = priceRule ? priceRule.floorprice : undefined;
