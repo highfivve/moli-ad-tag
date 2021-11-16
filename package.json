@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "lerna": "^3.22.1",
-    "prebid.js": "4.38.0",
+    "prebid.js": "5.20.0",
     "prettier": "^2.3.0",
     "typescript": "^4.2.4"
   },

@@ -12,7 +12,7 @@ import { SlotEventService } from './slotEventService';
 import { prebidConfigure, prebidPrepareRequestAds, prebidRequestBids } from './prebid';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
-import { createPbjsStub, pbjsTestConfig } from '../stubs/prebidjsStubs';
+import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
@@ -89,14 +89,29 @@ describe('prebid', () => {
   const prebidAdUnit = (
     domId: string,
     bids: prebidjs.IBid[],
-    sizes: [number, number][] = mediumRec
+    sizes: [number, number][] = mediumRec,
+    floors?: prebidjs.floors.IFloors
   ): prebidjs.IAdUnit => {
     return {
       code: domId,
       mediaTypes: {
         banner: { sizes }
       },
-      bids: bids
+      bids: bids,
+      ...floors
+    };
+  };
+
+  const floors = (
+    floorPrice: number,
+    currency: string = 'EUR',
+    schemaDelimiter: string = '|',
+    schemaFields: string[] = ['mediaType']
+  ): prebidjs.floors.IFloors => {
+    return {
+      currency: currency,
+      schema: { delimiter: schemaDelimiter, fields: schemaFields },
+      values: { '*': floorPrice }
     };
   };
 
@@ -154,13 +169,15 @@ describe('prebid', () => {
 
   const createSlotDefinitions = (
     domId: string,
-    provider: Moli.headerbidding.PrebidAdSlotConfigProvider
+    provider: Moli.headerbidding.PrebidAdSlotConfigProvider,
+    floorprice?: number
   ): Moli.SlotDefinition => {
     const slot = prebidSlot(domId, provider);
     return {
       moliSlot: slot,
       adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
-      filterSupportedSizes: sizes => sizes
+      filterSupportedSizes: sizes => sizes,
+      priceRule: floorprice ? { priceRuleId: 1, floorprice: floorprice, main: true } : undefined
     };
   };
 
@@ -196,7 +213,7 @@ describe('prebid', () => {
   describe('prebid prepare request ads', () => {
     it('should add empty adunits array when the slots array is empty', () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-      const step = prebidPrepareRequestAds();
+      const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
       return step(adPipelineContext(), []).then(() => {
         expect(addAdUnitsSpy).to.have.been.calledOnce;
@@ -206,7 +223,7 @@ describe('prebid', () => {
 
     it('should use the code property if set', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-      const step = prebidPrepareRequestAds();
+      const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
       const domId = getDomId();
       const code = 'not-the-domid';
@@ -223,7 +240,7 @@ describe('prebid', () => {
 
     it('should pass along arbitrary additional properties', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-      const step = prebidPrepareRequestAds();
+      const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
       const domId = getDomId();
       const adUnit = {
@@ -249,7 +266,7 @@ describe('prebid', () => {
       };
 
       it('should have isMobile true if labels are empty', async () => {
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
         const domId = getDomId();
         const provider = stubPrebidAdSlotConfigProvider(domId);
         const singleSlot = createSlotDefinitions(domId, provider);
@@ -262,7 +279,7 @@ describe('prebid', () => {
       });
 
       it('should have isMobile false if labels contains desktop', async () => {
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
         const domId = getDomId();
         const provider = stubPrebidAdSlotConfigProvider(domId);
         const singleSlot = createSlotDefinitions(domId, provider);
@@ -281,7 +298,7 @@ describe('prebid', () => {
     describe('labels', () => {
       it('should remove labelAll', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = prebidAdUnit(domId, [
@@ -301,7 +318,7 @@ describe('prebid', () => {
 
       it('should remove labelAny', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = prebidAdUnit(domId, [
@@ -323,7 +340,7 @@ describe('prebid', () => {
     describe('static ad slot config provider', () => {
       it('should add empty adunits array when the static prebid config provider is an empty array', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const singleSlot = createSlotDefinitions(domId, []);
@@ -336,7 +353,7 @@ describe('prebid', () => {
 
       it('should add a single adunit when the static prebid config provider returns a single bid', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = prebidAdUnit(domId, [
@@ -352,7 +369,7 @@ describe('prebid', () => {
 
       it('should add a single adunit when the static prebid config provider returns a single bid array', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = prebidAdUnit(domId, [
@@ -368,7 +385,7 @@ describe('prebid', () => {
 
       it('should add a two adunits when the static prebid config provider returns a two bids', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit1 = prebidAdUnit(domId, [
@@ -387,7 +404,7 @@ describe('prebid', () => {
 
       it('should add a single adunit when the static prebid config provider returns a two bids but one is filtered', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit1 = prebidAdUnit(domId, [
@@ -411,7 +428,7 @@ describe('prebid', () => {
     describe('dynamic ad slot config provider', () => {
       it('should add empty adunits array when the dynamic prebid config provider is an empty array', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const singleSlot = createSlotDefinitions(domId, () => []);
@@ -424,7 +441,7 @@ describe('prebid', () => {
 
       it('should add a single adunit when the dynamic prebid config provider returns a single bid', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = prebidAdUnit(domId, [
@@ -442,7 +459,7 @@ describe('prebid', () => {
 
       it('should add a single adunit when the dynamic prebid config provider returns a single bid array', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = prebidAdUnit(domId, [
@@ -460,7 +477,7 @@ describe('prebid', () => {
 
       it('should add a two adunits when the dynamic prebid config provider returns a two bids', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit1 = prebidAdUnit(domId, [
@@ -482,7 +499,7 @@ describe('prebid', () => {
 
       it('should add a single adunit when the dynamic prebid config provider returns a two bids but one is filtered', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit1 = prebidAdUnit(domId, [
@@ -516,7 +533,7 @@ describe('prebid', () => {
         it(`should resolve an existing adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
           getSupportedLabelsStub.returns([deviceLabel]);
           const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-          const step = prebidPrepareRequestAds();
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
           const domId = getDomId();
           const adUnitPath = `/123/${domId}/{device}`;
           const adUnit = {
@@ -553,7 +570,7 @@ describe('prebid', () => {
           getSupportedLabelsStub.returns([deviceLabel]);
 
           const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-          const step = prebidPrepareRequestAds();
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
           const domId = getDomId();
           const adUnit = {
             ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }]),
@@ -588,7 +605,7 @@ describe('prebid', () => {
     describe('video playerSize consolidation', () => {
       it('should set playerSize = undefined if no video sizes are given', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = {
@@ -609,7 +626,7 @@ describe('prebid', () => {
 
       it('should set playerSize and w+h properties from a single size', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = {
@@ -634,7 +651,7 @@ describe('prebid', () => {
 
       it('should set playerSize and w+h properties from multiple sizes', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = {
@@ -662,7 +679,7 @@ describe('prebid', () => {
 
       it('should not overwrite w+h properties if set in adUnit', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds();
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const adUnit = {
@@ -688,6 +705,48 @@ describe('prebid', () => {
             }
           }
         ]);
+      });
+    });
+    describe('floors', () => {
+      it('should not be filled if priceRule is not set', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
+      });
+
+      it('should be filled if priceRule is set', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit }, 0.2);
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }],
+            floors: floors(0.2)
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
       });
     });
   });

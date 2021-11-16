@@ -1,36 +1,31 @@
 {
   "rules": {
-    "eager-loading-adslot": {
+    "/55155651/test-ad-unit": {
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": true
     },
-    "prebid-adslot": {
+    "/55155651/outstream_test": {
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": true
     },
-    "prebid-adslot-2": {
+    "/55155651/prebid_test": {
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": true
     },
-    "a9-adslot": {
+    "/55155651/amazon-tam": {
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": true
     },
-    "appNexus-multiformat-adSlot": {
-      "priceRuleId": 39837386,
-      "floorprice": 0.20,
-      "main": true
-    },
-    "appnexus-native-example-1": {
+    "/55155651/prebid_native_1": {
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": false
     },
-    "appnexus-native-example-2": {
+    "/55155651/prebid_native_2": {
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": true

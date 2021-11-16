@@ -4305,25 +4305,25 @@ core-js-compat@^3.9.0, core-js-compat@^3.9.1:
     browserslist "^4.16.6"
     semver "7.0.0"
 
-core-js-pure@^3.6.5:
-  version "3.8.1"
-  resolved "https://registry.yarnpkg.com/core-js-pure/-/core-js-pure-3.8.1.tgz#23f84048f366fdfcf52d3fd1c68fec349177d119"
-  integrity sha512-Se+LaxqXlVXGvmexKGPvnUIYC1jwXu1H6Pkyb3uBM5d8/NELMYCHs/4/roD7721NxrTLyv7e5nXd5/QLBO+10g==
+core-js-pure@^3.13.0:
+  version "3.19.1"
+  resolved "https://registry.yarnpkg.com/core-js-pure/-/core-js-pure-3.19.1.tgz#edffc1fc7634000a55ba05e95b3f0fe9587a5aa4"
+  integrity sha512-Q0Knr8Es84vtv62ei6/6jXH/7izKmOrtrxH9WJTHLCMAVeU+8TF8z8Nr08CsH4Ot0oJKzBzJJL9SJBYIv7WlfQ==
 
 core-js@^2.4.0:
   version "2.6.11"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.11.tgz#38831469f9922bded8ee21c9dc46985e0399308c"
   integrity sha512-5wjnpaT/3dV+XB4borEsnAYQchn00XSgTAWKDkEqv+K8KevjbzmofK6hfJ9TZIlpj2N0xQpazy7PiRQiWHqzWg==
 
-core-js@^3.0.0:
-  version "3.8.1"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.8.1.tgz#f51523668ac8a294d1285c3b9db44025fda66d47"
-  integrity sha512-9Id2xHY1W7m8hCl8NkhQn5CufmF/WuR30BTRewvCXc1aZd3kMECwNZ69ndLbekKfakw9Rf2Xyc+QR6E7Gg+obg==
-
 core-js@^3.12.1:
   version "3.12.1"
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.12.1.tgz#6b5af4ff55616c08a44d386f1f510917ff204112"
   integrity sha512-Ne9DKPHTObRuB09Dru5AjwKjY4cJHVGu+y5f7coGn1E9Grkc3p2iBwE9AI/nJzsE29mQF7oq+mhYYRqOMFN1Bw==
+
+core-js@^3.13.0:
+  version "3.19.1"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.19.1.tgz#f6f173cae23e73a7d88fa23b6e9da329276c6641"
+  integrity sha512-Tnc7E9iKd/b/ff7GFbhwPVzJzPztGrChB8X8GLqoYGdEOG8IpLnK1xPyo3ZoO3HsK6TodJS58VGPOxA+hLHQMg==
 
 core-js@^3.6.5:
   version "3.6.5"
@@ -7477,11 +7477,6 @@ jsdom@17.0.0:
     ws "^8.0.0"
     xml-name-validator "^3.0.0"
 
-jsencrypt@^3.0.0-rc.1:
-  version "3.0.0-rc.1"
-  resolved "https://registry.yarnpkg.com/jsencrypt/-/jsencrypt-3.0.0-rc.1.tgz#0e0a4744ba43cc557fb5cf62fe8646bceb561b1c"
-  integrity sha512-gcvGaqerlUJy1Kq6tNgPYteVEoWNemu+9hBe2CdsCIz4rVcwjoTQ72iD1W76/PRMlnkzG0yVh7nwOOMOOUfKmg==
-
 jsesc@^2.5.1:
   version "2.5.2"
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-2.5.2.tgz#80564d2e483dacf6e8ef209650a67df3f0c283a4"
@@ -10023,21 +10018,20 @@ postcss@^8.1.6, postcss@^8.2.10, postcss@^8.2.15:
     nanoid "^3.1.23"
     source-map "^0.6.1"
 
-prebid.js@4.38.0:
-  version "4.38.0"
-  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-4.38.0.tgz#be827a4b20b5884122f9b5ccae396ae5b06fdcf6"
-  integrity sha512-Sg82RxA6xncm2Y0r4r97mi69jWp/WVI0rivR5sMJPiaKGmhIV/fl56c1zJnkhVVXH2Y0Gf+I9KpwifFWlRHbfw==
+prebid.js@5.20.0:
+  version "5.20.0"
+  resolved "https://registry.yarnpkg.com/prebid.js/-/prebid.js-5.20.0.tgz#e079b20d1821ed0948d5cc7b268e6bba872d18ee"
+  integrity sha512-2B2/X/qHr1DWgzzjy5awG9u3coy8KZrDpdjePHAS29fNBGXCcWeP5vg2pshV/g95BeT/h1XH4FlwwnSXlc4Auw==
   dependencies:
     babel-plugin-transform-object-assign "^6.22.0"
-    core-js "^3.0.0"
-    core-js-pure "^3.6.5"
+    core-js "^3.13.0"
+    core-js-pure "^3.13.0"
     criteo-direct-rsa-validate "^1.1.0"
     crypto-js "^3.3.0"
     dlv "1.1.3"
     dset "2.0.1"
     express "^4.15.4"
     fun-hooks "^0.9.9"
-    jsencrypt "^3.0.0-rc.1"
     just-clone "^1.0.2"
     live-connect-js "2.0.0"
 

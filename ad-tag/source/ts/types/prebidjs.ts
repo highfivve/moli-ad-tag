@@ -1528,6 +1528,8 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/features/firstPartyData.html
      */
     readonly ortb2?: firstpartydata.PrebidFirstPartyData;
+
+    readonly floors?: floors.IFloors;
   }
 
   /**
@@ -2241,6 +2243,11 @@ export namespace prebidjs {
      * with a prebid server auction call.
      */
     readonly ortb2Imp?: IOrtb2Imp;
+
+    /**
+     * Floors configuration over prebid priceFloor module.
+     */
+    readonly floors?: floors.IFloors;
   }
 
   export interface IPubstackConfig {
@@ -3784,5 +3791,21 @@ export namespace prebidjs {
      * @param bidResponse returns the key value value. May be undefined, e.g. for `dealId` if not set
      */
     val(bidResponse: IBidResponse): string | undefined;
+  }
+
+  export namespace floors {
+    /**
+     * IFloor module for adUnit.
+     * @see https://docs.prebid.org/dev-docs/modules/floors.html
+     */
+    export interface IFloors {
+      currency?: string;
+      schema?: {
+        delimiter: string;
+        fields: string[];
+      };
+      values?: Object;
+      default?: number;
+    }
   }
 }

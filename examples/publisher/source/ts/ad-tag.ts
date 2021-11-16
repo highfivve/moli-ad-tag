@@ -17,6 +17,7 @@ import 'prebid.js/modules/dspxBidAdapter';
 import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
+import 'prebid.js/modules/priceFloors';
 
 import { googletag, initAdTag, prebidjs } from '@highfivve/ad-tag';
 import { Confiant } from '@highfivve/module-confiant';
@@ -121,7 +122,7 @@ moli.registerModule(
   new YieldOptimization(
     {
       provider: 'dynamic',
-      configEndpoint: '//local.h5v.eu:9000/yield-config.json',
+      configEndpoint: '/yield-config.json',
       excludedAdUnitPaths: []
     },
     window
