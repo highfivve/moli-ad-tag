@@ -73,9 +73,6 @@ describe('Yield Optimization module', () => {
       expect(config.pipeline).to.be.ok;
       expect(config.pipeline?.initSteps).to.be.ok;
       expect(config.pipeline?.initSteps?.map(e => e.name)).to.include('yield-optimization-init');
-      expect(config.pipeline?.initSteps?.map(e => e.name)).to.include(
-        'yield-optimization-init-empty-floors'
-      );
     });
 
     it('should call init on the yield optimization service', async () => {
@@ -121,23 +118,6 @@ describe('Yield Optimization module', () => {
         },
         []
       );
-    });
-
-    it('should call init empty floors', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
-      const pbjs = {
-        setConfig(any: any): void {
-          return;
-        }
-      };
-      const setConfigSpy = sandbox.spy(pbjs, 'setConfig');
-
-      await module.initEmptyFloors()({
-        window: {
-          pbjs: pbjs
-        }
-      } as any);
-      expect(setConfigSpy).to.have.been.calledOnce;
     });
 
     it('should filter ad unit paths based on labels', async () => {

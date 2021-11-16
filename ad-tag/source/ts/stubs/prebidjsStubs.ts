@@ -71,7 +71,8 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
         EUR: 0.812
       }
     }
-  }
+  },
+  floors: {}
 };
 
 export const moliPrebidTestConfig: Moli.headerbidding.PrebidConfig = {

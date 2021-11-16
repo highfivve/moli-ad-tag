@@ -89,14 +89,29 @@ describe('prebid', () => {
   const prebidAdUnit = (
     domId: string,
     bids: prebidjs.IBid[],
-    sizes: [number, number][] = mediumRec
+    sizes: [number, number][] = mediumRec,
+    floors?: prebidjs.floors.IFloors
   ): prebidjs.IAdUnit => {
     return {
       code: domId,
       mediaTypes: {
         banner: { sizes }
       },
-      bids: bids
+      bids: bids,
+      ...floors
+    };
+  };
+
+  const floors = (
+    floorPrice: number,
+    currency: string = 'EUR',
+    schemaDelimiter: string = '|',
+    schemaFields: string[] = ['mediaType']
+  ): prebidjs.floors.IFloors => {
+    return {
+      currency: currency,
+      schema: { delimiter: schemaDelimiter, fields: schemaFields },
+      values: { '*': floorPrice }
     };
   };
 
@@ -154,13 +169,15 @@ describe('prebid', () => {
 
   const createSlotDefinitions = (
     domId: string,
-    provider: Moli.headerbidding.PrebidAdSlotConfigProvider
+    provider: Moli.headerbidding.PrebidAdSlotConfigProvider,
+    floorprice?: number
   ): Moli.SlotDefinition => {
     const slot = prebidSlot(domId, provider);
     return {
       moliSlot: slot,
       adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
-      filterSupportedSizes: sizes => sizes
+      filterSupportedSizes: sizes => sizes,
+      priceRule: floorprice ? { priceRuleId: 1, floorprice: floorprice, main: true } : undefined
     };
   };
 
@@ -688,6 +705,48 @@ describe('prebid', () => {
             }
           }
         ]);
+      });
+    });
+    describe('floors', () => {
+      it('should not be filled if priceRule is not set', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
+      });
+
+      it('should be filled if priceRule is set', () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, { adUnit }, 0.2);
+
+        return step(adPipelineContext(), [singleSlot]).then(() => {
+          const expectedAdUnit: prebidjs.IAdUnit = {
+            ...adUnit,
+            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }],
+            floors: floors(0.2)
+          };
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
+        });
       });
     });
   });

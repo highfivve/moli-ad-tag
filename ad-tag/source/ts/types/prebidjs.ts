@@ -3796,7 +3796,7 @@ export namespace prebidjs {
   export namespace floors {
     /**
      * IFloor module for adUnit.
-     * See https://docs.prebid.org/dev-docs/modules/floors.html for more information.
+     * @see https://docs.prebid.org/dev-docs/modules/floors.html
      */
     export interface IFloors {
       currency?: string;
