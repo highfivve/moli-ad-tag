@@ -132,7 +132,7 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'eager-loading-adslot',
       position: 'in-page',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '/55155651/test-ad-unit',
+      adUnitPath: '/55155651/test-ad-unit/{device}-{category}',
       sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
       passbackSupport: true,
       sizeConfig: [
@@ -259,8 +259,8 @@ export const adConfiguration: Moli.MoliConfig = {
               appNexusOutstream('13232385', context.floorPrice)
             ]
           }
-        }
-      } ,
+        };
+      },
       sizeConfig: [
         {
           mediaQuery: '(min-width: 768px)',

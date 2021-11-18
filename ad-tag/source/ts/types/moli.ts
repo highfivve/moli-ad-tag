@@ -514,6 +514,11 @@ export namespace Moli {
       config: Moli.MoliConfig;
 
       /**
+       * Contains the list of modules that need to be initialized
+       */
+      modules: IModule[];
+
+      /**
        * Add hooks on specific state changes.
        */
       hooks: IHooks;

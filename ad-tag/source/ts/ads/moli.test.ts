@@ -209,18 +209,19 @@ describe('moli', () => {
 
     const initSpy = sandbox.spy(fakeModule, 'init');
 
-    it('should init modules in the configure call', () => {
+    it('should init modules in the requestAds call', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
 
       adTag.registerModule(fakeModule);
       adTag.configure(config);
+      await adTag.requestAds();
 
       expect(initSpy).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledWithMatch(config, adTag.getAssetLoaderService());
     });
 
-    it('should init modules and use the changed config', () => {
+    it('should init modules and use the changed config', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
       const targeting = {
@@ -238,13 +239,14 @@ describe('moli', () => {
 
       adTag.registerModule(configChangingModule);
       adTag.configure(config);
+      const state = await adTag.requestAds();
 
       expect(configChangingInitSpy).to.have.been.calledOnce;
       expect(configChangingInitSpy).to.have.been.calledWithMatch(
         config,
         adTag.getAssetLoaderService()
       );
-      expect(adTag.getState()).to.be.eq('configured');
+      expect(adTag.getState()).to.be.eq(state.state);
       const newConfig = adTag.getConfig()!;
       expect(newConfig).to.be.ok;
 

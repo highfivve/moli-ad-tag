@@ -330,18 +330,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           setEnvironmentOverrideInStorage(envOverride.environment, window.sessionStorage);
         }
 
-        // initialize modules with the config from the ad tag. There is no external configuration support for modules.
-        // the config will be altered by this call
-        modules.forEach(module => {
-          const log = getLogger(config, window);
-          log.debug(
-            'MoliGlobal',
-            `initialize ${module.moduleType} module ${module.name}`,
-            module.config()
-          );
-          module.init(config, assetLoaderService, adService.getAdPipeline);
-        });
-
         state = {
           state: 'configured',
           configFromAdTag: config,
@@ -375,6 +363,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             },
             logger: state.logger || config.logger
           },
+          modules: modules,
           moduleMeta: modules.map(metaFromModule),
           hooks: state.hooks,
           isSinglePageApp: state.isSinglePageApp,
@@ -456,6 +445,19 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'configured': {
         setABtestTargeting();
         const config = state.config;
+
+        // initialize modules with the config from the ad tag.
+        // the config will be altered by this call
+        const modules = state.modules;
+        modules.forEach(module => {
+          const log = getLogger(config, window);
+          log.debug(
+            'MoliGlobal',
+            `initialize ${module.moduleType} module ${module.name}`,
+            module.config()
+          );
+          module.init(config, assetLoaderService, adService.getAdPipeline);
+        });
 
         // call the configured hooks
         if (state.hooks && state.hooks.beforeRequestAds) {
