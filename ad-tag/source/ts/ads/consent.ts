@@ -16,6 +16,12 @@ const allPurposes: tcfapi.responses.TCPurpose[] = [
   tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
 ];
 
+/**
+ * This method returns false as soon as there's at least one purpose where
+ * legitimate interest is available, but consent is not.
+ *
+ * @param tcData
+ */
 export const missingPurposeConsent = (tcData: tcfapi.responses.TCData): boolean => {
   return (
     // gdpr must apply
