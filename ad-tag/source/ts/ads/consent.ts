@@ -3,6 +3,28 @@ import { tcfapi } from '../types/tcfapi';
 import EventStatus = tcfapi.status.EventStatus;
 import CmpStatus = tcfapi.status.CmpStatus;
 
+const allPurposes: tcfapi.responses.TCPurpose[] = [
+  tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
+  tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
+  tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+  tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS,
+  tcfapi.responses.TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
+  tcfapi.responses.TCPurpose.SELECT_PERSONALISED_CONTENT,
+  tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
+  tcfapi.responses.TCPurpose.MEASURE_CONTENT_PERFORMANCE,
+  tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
+  tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+];
+
+export const missingPurposeConsent = (tcData: tcfapi.responses.TCData): boolean => {
+  return (
+    // gdpr must apply
+    !!tcData.gdprApplies &&
+    // for all purposes
+    allPurposes.some(p => !tcData.purpose.consents[p] && tcData.purpose.legitimateInterests[p])
+  );
+};
+
 /**
  * Returns a promise with the received consent. There are two ways this can happen
  *
@@ -14,11 +36,13 @@ import CmpStatus = tcfapi.status.CmpStatus;
  * The Promise is rejected if the `__tcfapi` is not present or the `cmpStatus`
  * is `error`.
  *
+ * @param consentConfig - customize consentReady
  * @param window access `__tcfapi` API
  * @param log logging output
  * @param env test environment requires no CMP
  */
 export const consentReady = (
+  consentConfig: Moli.consent.ConsentConfig,
   window: Window & tcfapi.TCFApiWindow,
   log: Moli.MoliLogger,
   env: Moli.Environment | undefined
@@ -44,7 +68,13 @@ export const consentReady = (
           tcData.eventStatus === 'tcloaded'
         ) {
           log.debug('Consent', 'consent ready', tcData);
-          resolve(tcData);
+
+          if (consentConfig.disableLegitimateInterest && missingPurposeConsent(tcData)) {
+            reject('user consent is missing for some purposes');
+          } else {
+            resolve(tcData);
+          }
+
           if (tcData.listenerId) {
             window.__tcfapi!(
               'removeEventListener',
