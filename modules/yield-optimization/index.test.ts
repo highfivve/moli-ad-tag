@@ -65,8 +65,9 @@ describe('Yield Optimization module', () => {
   });
 
   describe('init step', () => {
+    const module = new YieldOptimization(yieldConfig, jsDomWindow);
+
     it('should add yield-optimization optimization step', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
       const config = newEmptyConfig();
       await module.init(config, assetLoader);
 
@@ -76,7 +77,6 @@ describe('Yield Optimization module', () => {
     });
 
     it('should call init on the yield optimization service', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
       const yieldOptimizationService = new YieldOptimizationService(
         yieldConfig,
         noopLogger,
@@ -84,7 +84,6 @@ describe('Yield Optimization module', () => {
       );
 
       const labelConfigService: any = labelServiceMock();
-
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
 
       // label config service returns 'desktop' as supported labels
@@ -121,7 +120,6 @@ describe('Yield Optimization module', () => {
     });
 
     it('should filter ad unit paths based on labels', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
       const yieldOptimizationService = new YieldOptimizationService(
         yieldConfig,
         noopLogger,
@@ -129,7 +127,6 @@ describe('Yield Optimization module', () => {
       );
 
       const labelConfigService: any = labelServiceMock();
-
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
 
       // label config service returns 'desktop' as supported labels
@@ -157,6 +154,41 @@ describe('Yield Optimization module', () => {
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(filterSlotStub).to.have.been.calledTwice;
+      expect(initSpy).to.have.been.calledOnce;
+      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {}, ['/123/foo']);
+    });
+
+    it('should filter out duplicated adUnitPaths before initializing yieldOptimizationService', async () => {
+      const yieldOptimizationService = new YieldOptimizationService(
+        yieldConfig,
+        noopLogger,
+        jsDomWindow
+      );
+
+      const labelConfigService: any = labelServiceMock();
+      const initSpy = sandbox.spy(yieldOptimizationService, 'init');
+
+      // label config service returns 'desktop' as supported labels
+      sandbox.stub(labelConfigService, 'getDeviceLabel').returns('desktop');
+
+      sandbox
+        .stub(labelConfigService, 'filterSlot')
+        .onFirstCall()
+        .returns(true)
+        .onSecondCall()
+        .returns(true);
+
+      // a config with targeting labels set
+      const config: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/foo', ['desktop'])]
+      };
+
+      await module.yieldOptimizationInit(yieldOptimizationService)({
+        config: config,
+        logger: noopLogger,
+        labelConfigService: labelConfigService
+      } as any);
       expect(initSpy).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {}, ['/123/foo']);
     });
