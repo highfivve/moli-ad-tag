@@ -193,10 +193,10 @@ export class YieldOptimization implements IModule {
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
       const adUnitPaths = context.config.slots
+        .filter(uniquePrimitiveFilter)
         // remove ad units that should not be displayed
         .filter(slot => context.labelConfigService.filterSlot(slot))
-        .map(slot => slot.adUnitPath)
-        .filter(uniquePrimitiveFilter);
+        .map(slot => slot.adUnitPath);
       return yieldOptimizationService.init(
         context.labelConfigService.getDeviceLabel(),
         context.config.targeting?.adUnitPathVariables || {},
