@@ -70,16 +70,12 @@ export class LabelConfigService {
     let labelsMatching = true;
 
     // filtering by labels is only done if any labels were configured.
-    if (this.supportedLabels.length > 0 && slot.labelAll && slot.labelAll.length > 0) {
+    if (this.supportedLabels.length && slot.labelAll?.length) {
       labelsMatching = slot.labelAll.every(label => this.supportedLabels.indexOf(label) > -1);
     }
 
     // if labelAll was already evaluated, labelAny will be ignored.
-    if (
-      this.supportedLabels.length > 0 &&
-      slot.labelAny &&
-      !(slot.labelAll && slot.labelAll.length > 0)
-    ) {
+    if (this.supportedLabels.length && slot.labelAny && !slot.labelAll?.length) {
       labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
     }
 
