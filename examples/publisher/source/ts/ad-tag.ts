@@ -90,7 +90,9 @@ moli.registerModule(
       ],
       includeOrderIds: [2690210604, 2690917340, 2674536678],
       excludeOrderIds: [],
-      includeAdvertiserIds: [4693931408 /* AppNexus */, 4868030566]
+      includeAdvertiserIds: [
+        4693931408 /* AppNexus */, 4868030566, 4858511198 /* gutefrage-intern */
+      ]
     },
     window
   )

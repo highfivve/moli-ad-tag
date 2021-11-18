@@ -78,6 +78,9 @@
     moliAdTag.setTargeting('isAdultContent', 'false');
     // allows targeting for user agents
     moliAdTag.setTargeting('supportedUserAgent', 'true');
+
+    // resolve paths
+    moliAdTag.setAdUnitPathVariables({ category: 'seo' });
   });
 
   // hooks
