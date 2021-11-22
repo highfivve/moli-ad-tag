@@ -737,6 +737,8 @@ export namespace Moli {
      */
     labelSizeConfig?: LabelSizeConfigEntry[];
 
+    consent?: consent.ConsentConfig;
+
     /** optional prebid configuration */
     readonly prebid?: headerbidding.PrebidConfig;
 
@@ -973,6 +975,20 @@ export namespace Moli {
      * This may be added by some step in the prepareRequestAds phase.
      */
     priceRule?: yield_optimization.PriceRule;
+  }
+
+  /** consent configuration namespace */
+  export namespace consent {
+    /**
+     * Configuration additional consent configuration
+     */
+    export interface ConsentConfig {
+      /**
+       * If set to `true` ad requests will be aborted when there's only
+       * legitimate interest established for at least one purpose.
+       */
+      readonly disableLegitimateInterest?: boolean;
+    }
   }
 
   /** slot behaviour namespace */

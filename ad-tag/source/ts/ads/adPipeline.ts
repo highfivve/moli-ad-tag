@@ -298,9 +298,10 @@ export class AdPipeline {
     );
 
     // fetch the consent data when ready
+    const consentConfig: Moli.consent.ConsentConfig = config.consent || {};
     this.tcData = this.tcData
       ? this.tcData
-      : consentReady(this.window, this.logger, config.environment);
+      : consentReady(consentConfig, this.window, this.logger, config.environment);
 
     return this.tcData.then(consentData => {
       const extraLabels = [...(config.targeting?.labels || [])];

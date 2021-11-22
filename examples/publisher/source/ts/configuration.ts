@@ -127,6 +127,9 @@ const rubiconBid = (
 };
 
 export const adConfiguration: Moli.MoliConfig = {
+  consent: {
+    disableLegitimateInterest: true
+  },
   slots: [
     {
       domId: 'eager-loading-adslot',
