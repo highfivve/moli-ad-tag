@@ -21,6 +21,7 @@
  *       formatFilter: [
  *         { bidder: 'justpremium', format: 'wp' },
  *         { bidder: 'dspx' },
+ *         { bidder: 'visx' }
  *       ],
  *       skinAdSlotDomId: 'my_header',
  *       hideSkinAdSlot: false,
@@ -112,7 +113,11 @@ export type DSPXFormatFilter = {
   readonly bidder: typeof prebidjs.DSPX;
 };
 
-export type FormatFilter = JustPremiumFormatFilter | DSPXFormatFilter;
+export type VisxFormatFilter = {
+  readonly bidder: typeof prebidjs.Visx;
+};
+
+export type FormatFilter = JustPremiumFormatFilter | DSPXFormatFilter | VisxFormatFilter;
 
 export type SkinConfig = {
   /**
@@ -200,6 +205,8 @@ export class Skin implements IModule {
             return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
           case 'dspx':
             return bid.bidder === prebidjs.DSPX;
+          case 'visx':
+            return bid.bidder === prebidjs.Visx;
           default:
             return false;
         }
