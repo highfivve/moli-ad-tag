@@ -56,6 +56,18 @@ describe('Skin Module', () => {
     };
   };
 
+  const visxBidResponse = (cpm: number): prebidjs.IGenericBidResponse => {
+    return {
+      bidder: prebidjs.Visx,
+      cpm: cpm,
+      adId: '',
+      height: 1,
+      width: 1,
+      mediaType: 'banner',
+      source: 'client'
+    };
+  };
+
   const bidWithCpmOf = (cpm: number): prebidjs.IGenericBidResponse => ({
     bidder: prebidjs.AppNexus,
     cpm,
@@ -342,6 +354,27 @@ describe('Skin Module', () => {
         });
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
+      });
+    });
+
+    describe('visx', () => {
+      const config: SkinConfig = {
+        formatFilter: [{ bidder: 'visx' }],
+        skinAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: ['sky-slot'],
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false,
+        enableCpmComparison: false
+      };
+
+      it('should return `BlockOtherSlots` if a visx response was found', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'wp-slot': {
+            bids: [visxBidResponse(10.0)]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
       });
     });
 
