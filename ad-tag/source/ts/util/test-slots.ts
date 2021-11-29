@@ -166,7 +166,7 @@ const testSlotContent = (slot: Moli.SlotDefinition): HTMLElement => {
     hideButton.innerText = 'hide';
     hideButton.title =
       'Once hidden, it can only be restored using the moli console (or by clearing local storage manually)';
-    hideButton.style.cssText = `font-size: 10px; background: #656565; color: white; border: ${defaultButtonBorder};`;
+    hideButton.style.cssText = `font-size: 10px; background: #656565; color: white; width: auto important!; border: ${defaultButtonBorder};`;
     hideButton.addEventListener('click', () => updateSize('hidden', hideButton));
 
     const buttons = [
@@ -176,7 +176,7 @@ const testSlotContent = (slot: Moli.SlotDefinition): HTMLElement => {
         const button = document.createElement('button');
 
         button.innerText = `${width}x${height}`;
-        button.style.cssText = `font-size: 10px; background: #00a4a6; color: white; border: ${
+        button.style.cssText = `font-size: 10px; background: #00a4a6; color: white; width: auto important!; border: ${
           isActiveSize ? activeButtonBorder : defaultButtonBorder
         };`;
         button.addEventListener('click', () => updateSize(buttonSize, button));
