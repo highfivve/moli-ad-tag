@@ -53,8 +53,11 @@ import {
   ModuleType,
   mkConfigureStep,
   mkInitStep,
-  Moli
+  Moli,
+  tcfapi
 } from '@highfivve/ad-tag';
+import TCDataNoGDPR = tcfapi.responses.TCDataNoGDPR;
+import TCDataWithGDPR = tcfapi.responses.TCDataWithGDPR;
 
 /**
  * Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the
@@ -145,6 +148,8 @@ export class Zeotap implements IModule {
   private assetLoaderService: IAssetLoaderService | undefined;
   private logger: Moli.MoliLogger | undefined;
 
+  private gvlid: number = 301;
+
   /**
    * Keeps track of how often the script was loaded. Used to prevent reloading the script in default mode.
    */
@@ -172,7 +177,9 @@ export class Zeotap implements IModule {
     if (this.moduleConfig.mode === 'default') {
       config.pipeline.initSteps.push(
         mkInitStep(this.name, context => {
-          this.loadScript(context.config);
+          if (this.hasConsent(context.tcData)) {
+            this.loadScript(context.config);
+          }
 
           return Promise.resolve();
         })
@@ -187,6 +194,23 @@ export class Zeotap implements IModule {
       );
     }
   }
+
+  private hasConsent = (tcData: TCDataNoGDPR | TCDataWithGDPR): boolean => {
+    if (tcData.gdprApplies) {
+      return (
+        tcData.vendor.consents[this.gvlid] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.SELECT_PERSONALISED_CONTENT] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH] &&
+        tcData.purpose.consents[tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS]
+      );
+    }
+    return true;
+  };
 
   /**
    * Let the asset loader load the script (again).
