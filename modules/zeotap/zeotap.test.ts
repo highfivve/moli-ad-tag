@@ -15,6 +15,7 @@ import {
 
 import { Zeotap } from './zeotap';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -47,7 +48,7 @@ describe('Zeotap Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       slotEventService: null as any,
-      tcData: null as any
+      tcData: fullConsent({ 301: true })
     };
   };
 
@@ -258,6 +259,36 @@ describe('Zeotap Module', () => {
     );
 
     await moliConfig.pipeline?.initSteps[0](adPipelineContext(moliConfig));
+
+    expect(loadScriptStub).to.not.have.been.called;
+  });
+
+  it("shouldn't load the script if consent is missing", async () => {
+    const module = new Zeotap(
+      {
+        assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
+        mode: 'default',
+        dataKeyValues: [],
+        exclusionKeyValues: [{ keyValueKey: 'subChannel', disableOnValue: 'Pornography' }]
+      },
+      jsDomWindow
+    );
+
+    const moliConfig = initModule(
+      module,
+      {
+        channel: 'NonStandardContent',
+        subChannel: 'Pornography'
+      },
+      emptyConfigPipeline()
+    );
+
+    const context: AdPipelineContext = {
+      ...adPipelineContext(moliConfig),
+      tcData: fullConsent()
+    };
+
+    await moliConfig.pipeline?.initSteps[0](context);
 
     expect(loadScriptStub).to.not.have.been.called;
   });
