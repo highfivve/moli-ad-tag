@@ -23,6 +23,7 @@ const additionalHandlebarsConfig = {
  * @param {('production'|'development')} options.mode the mode (production|development) that the current build runs in.
  * @param {string[]} [options.chunks=['moli']] chunks that should be included. By default `moli`
  * @param {boolean} [options.es5Mode=false] this will be the legacy es5 demo page. By default false
+ * @param {boolean} [options.inject=false] inject the chunks on the html pages
  * @return {[HtmlWebpackPlugin, HandlebarsPlugin, HandlebarsPlugin]}
  */
 const makeDocsPages = options => {
@@ -32,7 +33,8 @@ const makeDocsPages = options => {
     basePath,
     mode,
     chunks = ['moli'],
-    es5Mode = false
+    es5Mode = false,
+    inject = false
   } = options;
 
   return [
@@ -44,7 +46,7 @@ const makeDocsPages = options => {
       chunks: chunks,
       // minification breaks handlebars
       minify: false,
-      inject: false
+      inject: inject
     }),
     es5Mode
       ? // no overview page in es5 mode. it will be generated in the es6 bundle routine.
