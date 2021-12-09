@@ -52,6 +52,8 @@ export const createTestSlots = (
 ): TestSlot[] => {
   const testSlots = createBlankTestSlots(context, slots);
   testSlots.forEach(({ slot, container }) => {
+    // clear previous slot contents
+    container.innerHTML = '';
     container.appendChild(testSlotContent(slot));
   });
   return testSlots;
