@@ -7,6 +7,17 @@
   <title>AdTag Overview - {{publisher}}</title>
 
   {{> partials/head }}
+
+  {{#each releases.versions}}
+    {{var "isCurrentVersion" (equals version ../releases.currentVersion)}}
+    {{#if isCurrentVersion}}
+  <meta property="og:site_name" content="Highfivve {{../publisher}} ad tag"/>
+  <meta property="og:title" content="{{../publisher}} ad tag (latest: v{{version}})">
+  <meta property="og:description" content="Changes in v{{version}}:
+    {{#unless (empty changelog) ~}}{{~#each changelog ~}}{{~ this}}
+    {{/each ~}}{{~/unless}}">
+    {{/if}}
+  {{/each}}
 </head>
 
 <body>
