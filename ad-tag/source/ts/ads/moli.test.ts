@@ -524,6 +524,36 @@ describe('moli', () => {
         });
     });
   });
+  describe('resolveAdUnitPath', () => {
+    describe('configure state', () => {
+      it('should resolve without variables being set', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        expect(adTag.resolveAdUnitPath('/foo/bar')).to.be.equals('/foo/bar');
+      });
+      it('should resolve with variables being set', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        adTag.setAdUnitPathVariables({ foo: 'value' });
+        expect(adTag.resolveAdUnitPath('/foo/{foo}')).to.be.equals('/foo/value');
+      });
+      it('should throw an error when using undefined variables', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        expect(() => adTag.resolveAdUnitPath('/foo/{foo}')).to.throw(
+          Error,
+          'path variable "foo" is not defined'
+        );
+      });
+    });
+
+    describe('all other states', () => {
+      it('should resolve from the config.targeting.adUnitPathVariables', () => {
+        const adTag = createMoliTag(jsDomWindow);
+        adTag.setAdUnitPathVariables({ foo: 'value' });
+        adTag.configure(defaultConfig);
+
+        expect(adTag.resolveAdUnitPath('/foo/{foo}')).to.be.equals('/foo/value');
+      });
+    });
+  });
 
   describe('setTargeting()', () => {
     it('should add key-values to the config', () => {

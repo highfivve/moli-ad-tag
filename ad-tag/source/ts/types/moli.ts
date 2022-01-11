@@ -101,6 +101,15 @@ export namespace Moli {
     setAdUnitPathVariables(variables: AdUnitPathVariables): void;
 
     /**
+     * Resolves an ad unit path by replacing the ad unit path variables.
+     * Optionally the networkChildId can be removed.
+     *
+     * @param adUnitPath the ad unit path that may contain variables in the form of {variable name}
+     * @param options configure resolving behaviour
+     */
+    resolveAdUnitPath(adUnitPath: string, options?: ResolveAdUnitPathOptions): string;
+
+    /**
      * Set a custom logger that should be used for logging.
      *
      * @param logger
@@ -771,6 +780,29 @@ export namespace Moli {
 
   export type AdUnitPathVariables = {
     [key: string]: string;
+  };
+
+  /**
+   * Parameters to configure the resolve function
+   */
+  export type ResolveAdUnitPathOptions = {
+    /**
+     * If set to true then the networkChildId will be removed from the ad unit path.
+     * E.g.
+     *
+     * ```
+     * /123,456/content_1`
+     * ```
+     *
+     *
+     *
+     * ```
+     * /123/content_1`
+     * ```
+     *
+     * default: `false`
+     */
+    readonly removeNetworkChildId?: boolean;
   };
 
   export interface Targeting {

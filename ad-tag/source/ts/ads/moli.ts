@@ -18,6 +18,7 @@ import {
   setEnvironmentOverrideInStorage
 } from '../util/environmentOverride';
 import { packageJson } from '../gen/packageJson';
+import * as adUnitPath from './adUnitPath';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -153,6 +154,30 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         break;
       }
     }
+  }
+
+  function getAdUnitPathVariables(): adUnitPath.AdUnitPathVariables | undefined {
+    switch (state.state) {
+      case 'configurable':
+        return state.adUnitPathVariables;
+      case 'configured':
+      case 'requestAds':
+      case 'spa-requestAds':
+      case 'spa-finished':
+      case 'finished':
+      case 'error':
+        return state.config.targeting?.adUnitPathVariables;
+    }
+  }
+
+  function resolveAdUnitPath(
+    adUnitPathParam: string,
+    options?: Moli.ResolveAdUnitPathOptions
+  ): string {
+    const opts = options || {};
+    const removeNetworkChildId: boolean = opts.removeNetworkChildId || false;
+    const resolvedPath = adUnitPath.resolveAdUnitPath(adUnitPathParam, getAdUnitPathVariables());
+    return removeNetworkChildId ? adUnitPath.removeChildId(resolvedPath) : resolvedPath;
   }
 
   function setLogger(logger: Moli.MoliLogger): void {
@@ -770,6 +795,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     setLogger: setLogger,
     setSampleRate: setSampleRate,
     setAdUnitPathVariables: setAdUnitPathVariables,
+    resolveAdUnitPath: resolveAdUnitPath,
     addReporter: addReporter,
     beforeRequestAds: beforeRequestAds,
     afterRequestAds: afterRequestAds,
