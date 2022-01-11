@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-prebuilt-ad-tag",
-  "version": "3.41.4",
+  "version": "3.41.5",
   "description": "prebuilt ad tag for testing",
   "main": "index.ts",
   "scripts": {
@@ -29,6 +29,6 @@
     "webpack-manifest-plugin": "^3.1.1"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.41.4"
+    "@highfivve/ad-tag": "^3.41.5"
   }
 }
