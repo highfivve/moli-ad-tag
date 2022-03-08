@@ -515,6 +515,11 @@ export const adConfiguration: Moli.MoliConfig = {
         timeout: 500,
         allowAuctionWithoutConsent: true
       },
+      floors: {
+        enforcement: {
+          enforceJS: false
+        }
+      },
       userSync: {
         syncDelay: 6000,
         filterSettings: {
