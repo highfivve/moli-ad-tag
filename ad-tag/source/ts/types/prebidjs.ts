@@ -911,8 +911,13 @@ export namespace prebidjs {
   }
 
   export namespace currency {
+    /**
+     * All supported currencies
+     */
+    export type ICurrency = 'EUR' | 'USD' | 'GBP';
+
     export type IBidderCurrencyDefault = {
-      [bidder in BidderCode]: 'EUR' | 'USD' | 'GBP';
+      [bidder in BidderCode]: ICurrency;
     };
 
     export interface ICurrencyConfig {
@@ -920,7 +925,7 @@ export namespace prebidjs {
        * ISO 4217 3-letter currency code.
        * If this value is present, the currency conversion feature is activated.
        */
-      readonly adServerCurrency: 'EUR' | 'USD' | 'GBP';
+      readonly adServerCurrency: ICurrency;
 
       /**
        * How much to scale the price granularity calculations. Defaults to 1.
@@ -1529,6 +1534,13 @@ export namespace prebidjs {
      */
     readonly ortb2?: firstpartydata.PrebidFirstPartyData;
 
+    /**
+     * Optional floors for the ad unit.
+     *
+     * Requires the prebid floor price module to be enabled
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/floors.html#floors-defined-in-the-adunit
+     */
     readonly floors?: floors.IFloors;
   }
 
@@ -3795,17 +3807,53 @@ export namespace prebidjs {
 
   export namespace floors {
     /**
+     * ## Floor price schema
+     *
+     * Configure under what conditions which floor price applies. This can be
+     * arbitrarily complex or super simple.
+     */
+    export interface IFloorSchema {
+      /**
+       * configure the delimiter that separates the keys in the values
+       * properties and converts them into fields.
+       *
+       * @example `|` is usually used
+       */
+      readonly delimiter: string;
+
+      /**
+       * A list of fields tha appear in the `values` key. Allows to configure
+       * floor prices on different dimensions.
+       *
+       * Examples:
+       * - mediaType
+       * - size
+       */
+      readonly fields: string[];
+    }
+
+    /**
+     * ## Floor values
+     *
+     * The values are a map from "condition" to "floor price".
+     * Conditions are configured in the `schema`. The key must be separated by the
+     * `separator` property value.
+     *
+     * `*` is a special key that acts as a wildcard as is used in case no schema
+     * matches.
+     */
+    export interface IFloorValues {
+      [key: string]: number;
+    }
+    /**
      * IFloor module for adUnit.
      * @see https://docs.prebid.org/dev-docs/modules/floors.html
      */
     export interface IFloors {
-      currency?: string;
-      schema?: {
-        delimiter: string;
-        fields: string[];
-      };
-      values?: Object;
-      default?: number;
+      readonly currency?: currency.ICurrency;
+      readonly schema?: IFloorSchema;
+      readonly values?: IFloorValues;
+      readonly default?: number;
     }
   }
 }
