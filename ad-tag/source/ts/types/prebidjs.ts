@@ -1535,13 +1535,13 @@ export namespace prebidjs {
     readonly ortb2?: firstpartydata.PrebidFirstPartyData;
 
     /**
-     * Optional floors for the ad unit.
+     * Floor price configuration
      *
      * Requires the prebid floor price module to be enabled
      *
      * @see https://docs.prebid.org/dev-docs/modules/floors.html#floors-defined-in-the-adunit
      */
-    readonly floors?: floors.IFloors;
+    readonly floors?: floors.IFloorConfig;
   }
 
   /**
@@ -2259,7 +2259,7 @@ export namespace prebidjs {
     /**
      * Floors configuration over prebid priceFloor module.
      */
-    readonly floors?: floors.IFloors;
+    readonly floors?: floors.IFloorsData;
   }
 
   export interface IPubstackConfig {
@@ -3806,6 +3806,125 @@ export namespace prebidjs {
   }
 
   export namespace floors {
+    export interface IFloorConfig {
+      /**
+       * Configure the  floor price enforcement behaviour.
+       */
+      readonly enforcement?: IFloorEnforcementConfig;
+
+      /**
+       * 	The mimimum CPM floor used by the Price Floors Module (as of 4.13).
+       * 	The Price Floors Module will take the greater of floorMin and the
+       * 	matched rule CPM when evaluating `getFloor()` and enforcing floors.
+       */
+      readonly floorMin?: number;
+
+      /**
+       * Optional atribute (as of prebid version 4.1) used to signal to the Floor Provider’s Analytics adapter their
+       * floors are being applied. They can opt to log only floors that are applied when they are the provider.
+       * If floorProvider is supplied in both the top level of the floors object and within the data object,
+       * the data object’s configuration shall prevail.
+       */
+      readonly floorProvider?: string;
+
+      /**
+       * 	`skipRate` is a random function whose input value is any integer 0 through 100 to determine when to skip all
+       * 	floor logic, where 0 is always use floor data and 100 is always skip floor data. The use case is for
+       * 	publishers or floor providers to learn bid behavior when floors are applied or skipped. Analytics adapters
+       * 	will have access to model version (if defined) when skipped is true to signal the Price Floors Module is in
+       * 	floors mode. If skipRate is supplied in both the root level of the floors object and within the data object,
+       * 	the skipRate configuration within the data object shall prevail.
+       * @default 0
+       */
+      readonly skipRate?: number;
+
+      /**
+       * ## Package-Level Floors
+       *
+       * This approach is intended for scenarios where the Publisher or their Prebid managed service provider
+       * periodically appends updated floor data to the Prebid.js package. In this model, there could be more floor
+       * data present to cover AdUnits across many pages.
+       *
+       * By defining floor data with setConfig, the Price Floors Module will map GPT ad slots to AdUnits as needed.
+       * It does this in the same way as the `setTargetingForGPTAsync()` function – first looking for an `AdUnit.code`
+       * that matches the slot name, then looking for an `AdUnit.code` that matches the div id of the named GPT slot.
+       */
+      readonly data?: IFloorsData;
+    }
+
+    export interface IFloorEnforcementConfig {
+      /**
+       * Disable floor price module
+       *
+       * @default true
+       */
+      readonly enabled?: boolean;
+
+      /**
+       * If an endpoint URL (a Dynamic Floor) is defined, the Price Floors Module will attempt to fetch floor data from
+       * the Floor Provider’s endpoint. When requestBids is called, the Price Floors Module will delay the auction up
+       * to the supplied amount of time in floors.auctionDelay or as soon as the dynamic endpoint returns data,
+       * whichever is first
+       *
+       * @default 0
+       */
+      readonly auctionDelay?: number;
+
+      /**
+       * The mimimum CPM floor used by the Price Floors Module (as of 4.13). The Price Floors Module will take the
+       * greater of floorMin and the matched rule CPM when evaluating getFloor() and enforcing floors.
+       */
+      readonly floorMin?: number;
+      /**
+       * Enforce floors for deal bid requests.
+       * @default false
+       */
+      readonly floorDeals?: boolean;
+
+      /**
+       * If `true`, the Price Floors Module will use the bidAdjustment function to adjust the floor per bidder.
+       * If `false` (or no bidAdjustment function is provided), floors will not be adjusted. Note: Setting this
+       * parameter to false may have unexpected results, such as signaling a gross floor when expecting net or vice versa.
+       *
+       * @default true
+       */
+      readonly bidAdjustment?: boolean;
+
+      /**
+       * If set to `true`, the Price Floors Module will provide floors to bid adapters for bid request matched rules and
+       * suppress any bids not exceeding a matching floor. If set to `false`, the Price Floors Module will still provide
+       * floors for bid adapters, there will be no floor enforcement.
+       *
+       * @default true
+       */
+      readonly enforceJS?: boolean;
+
+      /**
+       * If set to `true`, the Price Floors Module will signal to Prebid Server to pass floors to it’s bid adapters and
+       * enforce floors. If set to `false`, the pbjs should still pass matched bid request floor data to PBS, however no
+       * enforcement will take place.
+       *
+       * @default false
+       */
+      readonly enforcePBS?: boolean;
+
+      /**
+       * Controls behavior for dynamically retrieving floors.
+       *
+       * Make sure to set an `auctionDelay` if you use a floor price provider.
+       */
+      readonly endpoint?: IFloorEndpoint;
+    }
+
+    export interface IFloorEndpoint {
+      /**
+       * URL of endpoint to retrieve dynamic floor data.
+       */
+      readonly url: string;
+    }
+
+    export type IFloorSchemaFields = 'gptSlot' | 'adUnitCode' | 'mediaType' | 'size' | 'domain';
+
     /**
      * ## Floor price schema
      *
@@ -3817,7 +3936,7 @@ export namespace prebidjs {
        * configure the delimiter that separates the keys in the values
        * properties and converts them into fields.
        *
-       * @example `|` is usually used
+       * @default `|`
        */
       readonly delimiter: string;
 
@@ -3825,11 +3944,9 @@ export namespace prebidjs {
        * A list of fields tha appear in the `values` key. Allows to configure
        * floor prices on different dimensions.
        *
-       * Examples:
-       * - mediaType
-       * - size
+       * Supported values are: `gptSlot`, `adUnitCode`, `mediaType`, `size`, `domain`
        */
-      readonly fields: string[];
+      readonly fields: IFloorSchemaFields[];
     }
 
     /**
@@ -3843,16 +3960,74 @@ export namespace prebidjs {
      * matches.
      */
     export interface IFloorValues {
+      /**
+       * key: Delimited field of attribute values that define a floor.
+       * value: The floor value for this key.
+       */
       [key: string]: number;
     }
     /**
      * IFloor module for adUnit.
      * @see https://docs.prebid.org/dev-docs/modules/floors.html
      */
-    export interface IFloors {
+    export interface IFloorsData {
+      /**
+       * Optional atribute (as of prebid version 4.2) used to signal to the Floor Provider’s Analytics adapter their
+       * floors are being applied. They can opt to log only floors that are applied when they are the provider.
+       * If floorProvider is supplied in both the top level of the floors object and within the data object,
+       * the data object’s configuration shall prevail.
+       */
+      readonly floorProvider?: string;
+
+      /**
+       * Used by floor providers to train on model version performance.
+       * The expectation is a floor provider’s analytics adapter will pass the
+       * model verson back for algorithm training.
+       */
+      readonly modelVersion?: string;
+
+      /**
+       * The module supports two versions of the data schema. Version 1 allows for only one model to be applied in a
+       * given data set, whereas Version 2 allows you to sample multiple models selected by supplied weights.
+       * If no schema version is provided, the module will assume version 1 for the sake of backwards compatibility.
+       *
+       * @default 1
+       */
+      readonly floorsSchemaVersion?: 1 | 2;
+
+      /**
+       * `skipRate` is a random function whose input value is any integer 0 through 100 to determine when to skip all
+       * floor logic, where 0 is always use floor data and 100 is always skip floor data. The use case is for publishers
+       * or floor providers to learn bid behavior when floors are applied or skipped. Analytics adapters will have
+       * access to model version (if defined) when skipped is true to signal the Price Floors Module is in floors mode.
+       *
+       * If `skipRate` is supplied in both the root level of the floors object and within the data object, the skipRate
+       * configuration within the data object shall prevail.
+       *
+       * @ðefault 0
+       */
+      readonly skipRate?: number;
+
+      /**
+       * 	Currency of floor data. Floor Module will convert currency where
+       * 	necessary. See Currency section for more details.
+       */
       readonly currency?: currency.ICurrency;
+
+      /**
+       * allows for flexible definition of how floor data is formatted.
+       */
       readonly schema?: IFloorSchema;
+
+      /**
+       * A series of attributes representing a hash of floor data in a format
+       * defined by the schema object.
+       */
       readonly values?: IFloorValues;
+
+      /**
+       * Floor used if no matching rules are found.
+       */
       readonly default?: number;
     }
   }

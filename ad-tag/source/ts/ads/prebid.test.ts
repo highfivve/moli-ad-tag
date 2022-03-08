@@ -90,7 +90,7 @@ describe('prebid', () => {
     domId: string,
     bids: prebidjs.IBid[],
     sizes: [number, number][] = mediumRec,
-    floors?: prebidjs.floors.IFloors
+    floors?: prebidjs.floors.IFloorsData
   ): prebidjs.IAdUnit => {
     return {
       code: domId,
@@ -106,8 +106,8 @@ describe('prebid', () => {
     floorPrice: number,
     currency: prebidjs.currency.ICurrency = 'EUR',
     schemaDelimiter: string = '|',
-    schemaFields: string[] = ['mediaType']
-  ): prebidjs.floors.IFloors => {
+    schemaFields: prebidjs.floors.IFloorSchemaFields[] = ['mediaType']
+  ): prebidjs.floors.IFloorsData => {
     return {
       currency: currency,
       schema: { delimiter: schemaDelimiter, fields: schemaFields },
