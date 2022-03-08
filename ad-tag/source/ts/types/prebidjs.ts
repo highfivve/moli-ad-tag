@@ -4004,7 +4004,7 @@ export namespace prebidjs {
        * If `skipRate` is supplied in both the root level of the floors object and within the data object, the skipRate
        * configuration within the data object shall prevail.
        *
-       * @ðefault 0
+       * @default 0
        */
       readonly skipRate?: number;
 
