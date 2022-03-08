@@ -130,7 +130,7 @@ export const prebidPrepareRequestAds = (
             const targeting = context.config.targeting;
             const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
             const floorPrice = priceRule ? priceRule.floorprice : undefined;
-            const floors = priceRule
+            const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
               ? {
                   floors: {
                     currency: prebidConfig.config.currency.adServerCurrency,
@@ -143,7 +143,7 @@ export const prebidPrepareRequestAds = (
                     }
                   }
                 }
-              : undefined;
+              : null;
             context.logger.debug(
               'Prebid',
               context.requestId,
