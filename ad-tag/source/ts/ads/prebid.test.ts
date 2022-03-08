@@ -104,7 +104,7 @@ describe('prebid', () => {
 
   const floors = (
     floorPrice: number,
-    currency: prebidjs.currency.ICurrency = 'EUR',
+    currency: string = 'EUR',
     schemaDelimiter: string = '|',
     schemaFields: string[] = ['mediaType']
   ): prebidjs.floors.IFloors => {
