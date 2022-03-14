@@ -82,7 +82,8 @@ import {
   getLogger,
   IAssetLoaderService,
   flatten,
-  isNotNull
+  isNotNull,
+  uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
 
 export type SkinModuleConfig = {
@@ -372,7 +373,9 @@ export class Skin implements IModule {
           // money and improve reporting
           this.skinModuleConfig.configs
             .filter(skinConfig => skinConfig.destroySkinSlot)
-            .forEach(skinConfig => this.destroyAdSlot(slotDefinitions)(skinConfig.skinAdSlotDomId));
+            .map(skinConfig => skinConfig.skinAdSlotDomId)
+            .filter(uniquePrimitiveFilter)
+            .forEach(this.destroyAdSlot(slotDefinitions));
         }
       }
     };

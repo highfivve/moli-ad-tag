@@ -47,7 +47,7 @@ describe('Skin Module', () => {
     });
   };
 
-  const dpsxBidResponse = (cpm: number): prebidjs.IGenericBidResponse => {
+  const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse => {
     return {
       bidder: prebidjs.DSPX,
       cpm: cpm,
@@ -342,7 +342,7 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots` if a dspx response was found', () => {
         const skinConfigEffect = module.getConfigEffect(config, {
           'wp-slot': {
-            bids: [dpsxBidResponse(10.0)]
+            bids: [dspxBidResponse(10.0)]
           }
         });
 
@@ -352,7 +352,7 @@ describe('Skin Module', () => {
       it('should return `NoBlocking` if a dspx response was found but with cpm 0', () => {
         const skinConfigEffect = module.getConfigEffect(config, {
           'wp-slot': {
-            bids: [dpsxBidResponse(0)]
+            bids: [dspxBidResponse(0)]
           }
         });
 
@@ -449,7 +449,7 @@ describe('Skin Module', () => {
 
         const skinConfigEffect = configuredModule.getConfigEffect(config, {
           'wp-slot': {
-            bids: [dpsxBidResponse(1.5), bidWithCpmOf(1)]
+            bids: [dspxBidResponse(1.5), bidWithCpmOf(1)]
           },
           'sky-slot': {
             bids: [bidWithCpmOf(0.5), bidWithCpmOf(0.49)]
@@ -542,7 +542,7 @@ describe('Skin Module', () => {
           'wp-slot': {
             bids: [
               { ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 },
-              dpsxBidResponse(1.52)
+              dspxBidResponse(1.52)
             ]
           },
           'sky-slot': {
@@ -645,12 +645,121 @@ describe('Skin Module', () => {
         expect(destroyAdSlotSpy).to.have.not.been.called;
       });
 
+      it('should not destroy the skin ad slot if set to true for a bidder and the other delivers', () => {
+        const module = new Skin(
+          {
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.Visx }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true
+              },
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true
+              }
+            ]
+          },
+          jsDomWindow
+        );
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+
+        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        module.init(config, assetLoaderService);
+
+        expect(config.prebid?.listener).to.be.ok;
+
+        const preSetTargetingForGPTAsync = (
+          config.prebid!.listener as Moli.headerbidding.PrebidListener
+        ).preSetTargetingForGPTAsync!;
+
+        preSetTargetingForGPTAsync(
+          {
+            'wp-slot': {
+              bids: [dspxBidResponse(1)]
+            }
+          },
+          false,
+          slotDefinitions
+        );
+
+        // only the sky slot should be destroyed
+        expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
+          Sinon.match.array.deepEquals(
+            slotDefinitions
+              .filter(slot => slot.moliSlot.domId === 'sky-slot')
+              .map(slot => slot.adSlot)
+          )
+        );
+      });
+
       it('should destroy the skin ad slot if set to true', () => {
         const module = new Skin(
           {
             configs: [
               {
                 formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true
+              }
+            ]
+          },
+          jsDomWindow
+        );
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+
+        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        module.init(config, assetLoaderService);
+
+        expect(config.prebid?.listener).to.be.ok;
+
+        const preSetTargetingForGPTAsync = (
+          config.prebid!.listener as Moli.headerbidding.PrebidListener
+        ).preSetTargetingForGPTAsync!;
+
+        preSetTargetingForGPTAsync({}, false, slotDefinitions);
+        expect(destroyAdSlotSpy).to.have.been.calledOnce;
+        expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
+          Sinon.match.array.deepEquals(
+            slotDefinitions
+              .filter(slot => slot.moliSlot.domId === 'wp-slot')
+              .map(slot => slot.adSlot)
+          )
+        );
+      });
+
+      it('should destroy the skin ad slot only once', () => {
+        const module = new Skin(
+          {
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true
+              },
+              {
+                formatFilter: [{ bidder: prebidjs.Visx }],
                 skinAdSlotDomId: 'wp-slot',
                 blockedAdSlotDomIds: ['sky-slot'],
                 hideSkinAdSlot: false,
