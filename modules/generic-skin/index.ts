@@ -82,7 +82,8 @@ import {
   getLogger,
   IAssetLoaderService,
   flatten,
-  isNotNull
+  isNotNull,
+  uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
 
 export type SkinModuleConfig = {
@@ -159,6 +160,15 @@ export type SkinConfig = {
    * if the other slots have a higher combined cpm.
    */
   readonly enableCpmComparison: boolean;
+
+  /**
+   * If set to true the ad slot that would load the skin is being destroyed.
+   * This is useful only for ad slots that serve as a special "skin ad slot"
+   * and have otherwise no other function.
+   *
+   * @default false
+   */
+  readonly destroySkinSlot?: boolean;
 };
 
 export enum SkinConfigEffect {
@@ -357,6 +367,15 @@ export class Skin implements IModule {
 
             this.destroyAdSlot(slotDefinitions)(skinConfig.skinAdSlotDomId);
           }
+        } else {
+          // there's no matching configuration so we check if there are any
+          // slots that should not be part of the ad request to save bandwidth,
+          // money and improve reporting
+          this.skinModuleConfig.configs
+            .filter(skinConfig => skinConfig.destroySkinSlot)
+            .map(skinConfig => skinConfig.skinAdSlotDomId)
+            .filter(uniquePrimitiveFilter)
+            .forEach(this.destroyAdSlot(slotDefinitions));
         }
       }
     };
