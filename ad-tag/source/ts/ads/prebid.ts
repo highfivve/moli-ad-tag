@@ -85,7 +85,7 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
           }
           context.window.pbjs.setConfig({
             ...prebidConfig.config,
-            floors: {} // for module priceFloors
+            ...{ floors: prebidConfig.config.floors || {} } // for module priceFloors
           });
           resolve();
         });
