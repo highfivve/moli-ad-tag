@@ -9,6 +9,7 @@ import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 
 import { Skin, SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
+import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -17,10 +18,12 @@ describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
   let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  jsDomWindow.googletag = createGoogletagStub();
 
   afterEach(() => {
     dom = createDom();
     jsDomWindow = dom.window as any;
+    jsDomWindow.googletag = createGoogletagStub();
     sandbox.reset();
   });
 
@@ -556,6 +559,131 @@ describe('Skin Module', () => {
         expect(skinConfig?.skinConfig).to.equal(config);
         expect(skinConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
         expect(trackSkinCpmLow).to.not.have.been.called;
+      });
+    });
+
+    describe('destroySkinSlot', () => {
+      const assetLoaderService = createAssetLoaderService(jsDomWindow);
+      let slots: Moli.AdSlot[] = [];
+      let slotDefinitions: Moli.SlotDefinition[] = [];
+
+      beforeEach(() => {
+        slots = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
+        slotDefinitions = slots.map(slot => ({
+          moliSlot: slot,
+          adSlot: {
+            getSlotElementId: () => slot.domId
+          } as googletag.IAdSlot,
+          filterSupportedSizes: () => []
+        }));
+      });
+
+      it('should not destroy the skin ad slot if unset', () => {
+        const module = new Skin(
+          {
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false
+              }
+            ]
+          },
+          jsDomWindow
+        );
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+
+        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        module.init(config, assetLoaderService);
+
+        expect(config.prebid?.listener).to.be.ok;
+
+        const preSetTargetingForGPTAsync = (
+          config.prebid!.listener as Moli.headerbidding.PrebidListener
+        ).preSetTargetingForGPTAsync!;
+
+        preSetTargetingForGPTAsync({}, false, slotDefinitions);
+        expect(destroyAdSlotSpy).to.have.not.been.called;
+      });
+
+      it('should not destroy the skin ad slot if set to false', () => {
+        const module = new Skin(
+          {
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: false
+              }
+            ]
+          },
+          jsDomWindow
+        );
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+
+        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        module.init(config, assetLoaderService);
+
+        expect(config.prebid?.listener).to.be.ok;
+
+        const preSetTargetingForGPTAsync = (
+          config.prebid!.listener as Moli.headerbidding.PrebidListener
+        ).preSetTargetingForGPTAsync!;
+
+        preSetTargetingForGPTAsync({}, false, slotDefinitions);
+        expect(destroyAdSlotSpy).to.have.not.been.called;
+      });
+
+      it('should destroy the skin ad slot if set to true', () => {
+        const module = new Skin(
+          {
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true
+              }
+            ]
+          },
+          jsDomWindow
+        );
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+
+        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        module.init(config, assetLoaderService);
+
+        expect(config.prebid?.listener).to.be.ok;
+
+        const preSetTargetingForGPTAsync = (
+          config.prebid!.listener as Moli.headerbidding.PrebidListener
+        ).preSetTargetingForGPTAsync!;
+
+        preSetTargetingForGPTAsync({}, false, slotDefinitions);
+        expect(destroyAdSlotSpy).to.have.been.calledOnce;
+        expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
+          Sinon.match.array.deepEquals(
+            slotDefinitions
+              .filter(slot => slot.moliSlot.domId === 'wp-slot')
+              .map(slot => slot.adSlot)
+          )
+        );
       });
     });
   });
