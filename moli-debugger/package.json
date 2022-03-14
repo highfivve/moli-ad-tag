@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-debugger",
-  "version": "3.42.0",
+  "version": "3.42.1",
   "description": "Moli debugging tools. This module contains only one file, moli-debug.min.js. You can host it somewhereand then start debugging moli using the `moli.openConsole(<moliDebugUrl>)` command in the console.",
   "main": "./lib/moli-debug.min.js",
   "files": [
@@ -66,8 +66,8 @@
     "webpack-cli": "^4.7.0"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.42.0",
-    "@highfivve/module-generic-skin": "^3.42.0",
+    "@highfivve/ad-tag": "^3.42.1",
+    "@highfivve/module-generic-skin": "^3.42.1",
     "@iabtcf/core": "^1.2.1",
     "core-js": "^3.12.1",
     "react": "^17.0.2",

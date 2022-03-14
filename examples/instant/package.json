@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-instant-mode",
-  "version": "3.42.0",
+  "version": "3.42.1",
   "description": "Demonstrating the instant mode",
   "main": "index.ts",
   "private": true,
@@ -28,6 +28,6 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.42.0"
+    "@highfivve/ad-tag": "^3.42.1"
   }
 }
