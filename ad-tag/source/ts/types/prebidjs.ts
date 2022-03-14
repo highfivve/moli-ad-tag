@@ -3808,6 +3808,13 @@ export namespace prebidjs {
   export namespace floors {
     export interface IFloorConfig {
       /**
+       * Disable floor price module
+       *
+       * @default true
+       */
+      readonly enabled?: boolean;
+
+      /**
        * Configure the  floor price enforcement behaviour.
        */
       readonly enforcement?: IFloorEnforcementConfig;
@@ -3853,13 +3860,6 @@ export namespace prebidjs {
     }
 
     export interface IFloorEnforcementConfig {
-      /**
-       * Disable floor price module
-       *
-       * @default true
-       */
-      readonly enabled?: boolean;
-
       /**
        * If an endpoint URL (a Dynamic Floor) is defined, the Price Floors Module will attempt to fetch floor data from
        * the Floor Provider’s endpoint. When requestBids is called, the Price Floors Module will delay the auction up
