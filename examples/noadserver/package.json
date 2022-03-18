@@ -1,0 +1,39 @@
+{
+  "name": "@highfivve/example-noadserver",
+  "version": "3.42.2",
+  "description": "Demonstrating prebid client-side rendering",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "setup": "yarn",
+    "build": "yarn build:es6 && yarn build:es5",
+    "build:es6": "webpack --mode=production",
+    "build:es5": "webpack --config webpack.config.es5.js --mode=production",
+    "start": "webpack serve",
+    "validate": "yarn build",
+    "release": "rm -rf dist && moli-release",
+    "lint": "echo 'we good'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git"
+  },
+  "keywords": [
+    "publisher"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "handlebars-webpack-plugin": "^2.2.1",
+    "html-webpack-plugin": "^5.3.1",
+    "ts-loader": "^9.2.1",
+    "typescript": "^4.2.4",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^4.7.0",
+    "webpack-dev-server": "^3.11.2",
+    "webpack-manifest-plugin": "^3.1.1"
+  },
+  "dependencies": {
+    "@highfivve/ad-tag": "^3.42.2"
+  }
+}

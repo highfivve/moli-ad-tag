@@ -157,6 +157,28 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/enrichmentFpdModule.html
      */
     refreshFpd?();
+
+    /**
+     * Use this method to retrieve an array of winning bids.
+     *
+     * with no argument, returns an array of winning bid objects for each ad unit on page.
+     * when passed an ad unit code, returns an array with the winning bid object for that ad unit
+     *
+     * @param adUnitCode - optional filter for the given ad unit code
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getHighestCpmBids.html
+     */
+    getHighestCpmBids(adUnitCode?: string): event.BidWonEvent[];
+
+    /**
+     * This function will render the ad (based on params) in the given iframe document passed through.
+     *
+     * Note that doc SHOULD NOT be the parent document page as we can’t doc.write() asynchronously.
+     * This function is usually used in the ad server’s creative.
+     *
+     * @param iframeDocument
+     * @param adId - bid id to locate the ad
+     */
+    renderAd(iframeDocument: Document, adId: string): void;
   }
 
   /**

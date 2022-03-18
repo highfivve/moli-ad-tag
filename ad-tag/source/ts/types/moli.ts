@@ -8,6 +8,8 @@ import { apstag } from './apstag';
 export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
 
+  export type AdServer = 'gam' | 'prebidjs';
+
   /**
    * KeyValue map. Last insert wins.
    */
@@ -730,6 +732,11 @@ export namespace Moli {
      * @see [[Environment]]
      */
     readonly environment?: Environment;
+
+    /**
+     * default is `gam`
+     */
+    readonly adServer?: AdServer;
 
     /** all possible ad slots */
     readonly slots: AdSlot[];

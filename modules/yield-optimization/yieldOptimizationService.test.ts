@@ -81,7 +81,7 @@ describe('YieldOptimizationService', () => {
       const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
       await service.init('mobile', {}, []);
-      await service.setTargeting(adSlot);
+      await service.setTargeting(adSlot, 'gam');
       expect(getAdUnitPathSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.not.have.been.called;
     });
@@ -104,7 +104,7 @@ describe('YieldOptimizationService', () => {
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
         await service.init('mobile', {}, []);
-        await service.setTargeting(adSlot);
+        await service.setTargeting(adSlot, 'gam');
         expect(getAdUnitPathSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.not.have.been.called;
       });
@@ -245,7 +245,7 @@ describe('YieldOptimizationService', () => {
 
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2]);
         await service.getPriceRule(adUnitPath1);
-        await service.setTargeting(adSlot);
+        await service.setTargeting(adSlot, 'gam');
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
@@ -265,7 +265,7 @@ describe('YieldOptimizationService', () => {
 
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2]);
         await service.getPriceRule(adUnitPath1);
-        await service.setTargeting(adSlot);
+        await service.setTargeting(adSlot, 'gam');
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
@@ -282,7 +282,7 @@ describe('YieldOptimizationService', () => {
 
         await service.init('mobile', { device: 'mobile' }, ['/123/pub/ad_content_1/{device}']);
         await service.getPriceRule(adUnitPath1);
-        await service.setTargeting(adSlot);
+        await service.setTargeting(adSlot, 'gam');
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
@@ -319,7 +319,7 @@ describe('YieldOptimizationService', () => {
           const service = createService(config);
           await service.init('mobile', {}, [adUnitPath1, adUnitPath2]);
           const rule = await service.getPriceRule(adUnitPath1);
-          await service.setTargeting(adSlot);
+          await service.setTargeting(adSlot, 'gam');
 
           expect(setTargetingSpy).has.been.calledWith('upr_id', rule!.priceRuleId.toFixed(0));
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'static');
@@ -332,7 +332,7 @@ describe('YieldOptimizationService', () => {
 
           const service = createService(config);
           await service.init('mobile', {}, [adUnitPath1, adUnitPath2]);
-          await service.setTargeting(adSlot);
+          await service.setTargeting(adSlot, 'gam');
 
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'ml');
         });
@@ -357,7 +357,7 @@ describe('YieldOptimizationService', () => {
 
           await service.init(device, {}, []);
           await service.getPriceRule(adUnitPath1);
-          await service.setTargeting(adSlot);
+          await service.setTargeting(adSlot, 'gam');
 
           expect(fetchStub).to.have.been.calledOnce;
           expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {

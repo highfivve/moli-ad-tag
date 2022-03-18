@@ -160,22 +160,24 @@ export class YieldOptimizationService {
    *
    * @param adSlot
    */
-  public setTargeting(adSlot: IAdSlot): Promise<PriceRule | undefined> {
+  public setTargeting(adSlot: IAdSlot, adserver: Moli.AdServer): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
-      if (rule) {
-        this.log.debug(
-          'YieldOptimizationService',
-          `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
-        );
-        adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
-        adSlot.setTargeting('upr_model', rule.model || 'static');
-        if (rule.main) {
-          adSlot.setTargeting('upr_main', 'true');
+      if (adserver === 'gam') {
+        if (rule) {
+          this.log.debug(
+            'YieldOptimizationService',
+            `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+          );
+          adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+          adSlot.setTargeting('upr_model', rule.model || 'static');
+          if (rule.main) {
+            adSlot.setTargeting('upr_main', 'true');
+          }
+        } else if (this.isEnabled) {
+          this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
         }
-      } else if (this.isEnabled) {
-        this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
       }
       return rule;
     });

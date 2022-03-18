@@ -29,9 +29,11 @@ import {
 import domready from '../util/domready';
 import {
   prebidConfigure,
+  prebidDefineSlots,
   prebidInit,
   prebidPrepareRequestAds,
   prebidRemoveAdUnits,
+  prebidRenderAds,
   prebidRequestBids
 } from './prebid';
 import {
@@ -136,44 +138,54 @@ export class AdService {
     isSinglePageApp: boolean
   ): Promise<Readonly<Moli.MoliConfig>> => {
     const env = AdService.getEnvironment(config);
+    const adServer = config.adServer || 'gam';
+    const isGam = adServer === 'gam';
     // 1. setup all services
     this.logger.setLogger(getLogger(config, this.window));
-    this.logger.debug('AdService', `Initializing with environment ${env}`);
-
-    // always create performance marks and metrics even without a config
-    const reportingConfig: Moli.reporting.ReportingConfig = config.reporting || {
-      reporters: [],
-      sampleRate: 0
-    };
-    const reportingService = new ReportingService(
-      createPerformanceService(this.window),
-      this.slotEventService,
-      reportingConfig,
-      this.logger,
-      env,
-      this.window as Window & googletag.IGoogleTagWindow
+    this.logger.debug(
+      'AdService',
+      `Initializing with environment ${env} and ad server ${adServer}`
     );
 
+    // only create performance marks if configured
+    const reportingService =
+      isGam && config.reporting
+        ? new ReportingService(
+            createPerformanceService(this.window),
+            this.slotEventService,
+            config.reporting,
+            this.logger,
+            env,
+            this.window as Window & googletag.IGoogleTagWindow
+          )
+        : noopReportingService;
+
     // 2. build the AdPipeline
-    const init: InitStep[] = [gptInit(this.assetService)];
+    const init: InitStep[] = isGam ? [gptInit(this.assetService)] : [];
 
-    const configure: ConfigureStep[] = [
-      gptConfigure(config),
-      slotEventServiceConfigure(this.slotEventService)
-    ];
+    const configure: ConfigureStep[] = isGam
+      ? [gptConfigure(config), slotEventServiceConfigure(this.slotEventService)]
+      : [];
 
-    if (isSinglePageApp) {
+    if (isGam && isSinglePageApp) {
       configure.push(gptDestroyAdSlots(), gptResetTargeting());
     }
 
-    const prepareRequestAds: PrepareRequestAdsStep[] = [
-      reportingPrepareRequestAds(reportingService),
-      passbackPrepareRequestAds(
-        new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
-      ),
-      gptLDeviceLabelKeyValue(),
-      gptConsentKeyValue()
-    ];
+    const prepareRequestAds: PrepareRequestAdsStep[] = [];
+    if (isGam) {
+      prepareRequestAds.push(
+        gptLDeviceLabelKeyValue(),
+        gptConsentKeyValue(),
+        passbackPrepareRequestAds(
+          new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
+        )
+      );
+    }
+
+    // only add reporting if there's a reporter
+    if (config.reporting) {
+      prepareRequestAds.push(reportingPrepareRequestAds(reportingService));
+    }
 
     const requestBids: RequestBidsStep[] = [];
 
@@ -186,11 +198,13 @@ export class AdService {
         configure.push(prebidRemoveAdUnits());
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
-      requestBids.push(prebidRequestBids(config.prebid, config.targeting));
+      requestBids.push(
+        prebidRequestBids(config.prebid, config.adServer || 'gam', config.targeting)
+      );
     }
 
     // amazon a9
-    if (config.a9 && env === 'production') {
+    if (config.a9 && env === 'production' && isGam) {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9));
       configure.push(a9PublisherAudiences(config.a9));
@@ -217,10 +231,10 @@ export class AdService {
       {
         init,
         configure,
-        defineSlots: gptDefineSlots(),
+        defineSlots: isGam ? gptDefineSlots() : prebidDefineSlots(),
         prepareRequestAds,
         requestBids,
-        requestAds: gptRequestAds()
+        requestAds: isGam ? gptRequestAds() : prebidRenderAds()
       },
       this.logger,
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
