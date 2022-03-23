@@ -228,14 +228,15 @@ describe('Yield Optimization module', () => {
 
       await module.yieldOptimizationPrepareRequestAds(yieldOptimizationService)(
         {
-          logger: noopLogger
+          logger: noopLogger,
+          config: {}
         } as any,
         [slot]
       );
       expect(slot.priceRule).to.be.ok;
       expect(slot.priceRule).to.be.deep.equals(yieldConfig.config.rules[adUnitId]);
       expect(setTargetingStub).to.have.been.calledOnce;
-      expect(setTargetingStub).to.have.been.calledOnceWithExactly(adSlot);
+      expect(setTargetingStub).to.have.been.calledOnceWithExactly(adSlot, 'gam');
     });
 
     it('sets the browser returned by getBrowser', async () => {
@@ -256,6 +257,7 @@ describe('Yield Optimization module', () => {
         {
           env: 'production',
           logger: noopLogger,
+          config: {},
           window: {
             googletag: {
               pubads: () => {

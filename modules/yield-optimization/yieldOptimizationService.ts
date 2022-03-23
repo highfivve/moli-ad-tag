@@ -159,12 +159,13 @@ export class YieldOptimizationService {
    * not be loaded yet.
    *
    * @param adSlot
+   * @param adServer
    */
-  public setTargeting(adSlot: IAdSlot, adserver: Moli.AdServer): Promise<PriceRule | undefined> {
+  public setTargeting(adSlot: IAdSlot, adServer: Moli.AdServer): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
-      if (adserver === 'gam') {
+      if (adServer === 'gam') {
         if (rule) {
           this.log.debug(
             'YieldOptimizationService',

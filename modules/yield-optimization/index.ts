@@ -218,15 +218,16 @@ export class YieldOptimization implements IModule {
       HIGH_PRIORITY,
       (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => {
         context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
+        const adServer = context.config.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
-            .setTargeting(slot.adSlot, context.config.adServer || 'gam')
+            .setTargeting(slot.adSlot, adServer)
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)
           .then(() => yieldOptimizationService.getBrowser())
           .then(browser => {
-            if (context.env === 'production' && context.config.adServer === 'gam') {
+            if (context.env === 'production' && adServer === 'gam') {
               context.window.googletag.pubads().setTargeting('upr_browser', browser);
             }
           });
