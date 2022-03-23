@@ -6,9 +6,7 @@
   "private": true,
   "scripts": {
     "setup": "yarn",
-    "build": "yarn build:es6 && yarn build:es5",
-    "build:es6": "webpack --mode=production",
-    "build:es5": "webpack --config webpack.config.es5.js --mode=production",
+    "build": "webpack --mode=production",
     "start": "webpack serve",
     "validate": "yarn build",
     "release": "rm -rf dist && moli-release",
