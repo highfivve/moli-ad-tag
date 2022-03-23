@@ -59,7 +59,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     getHighestCpmBids(adUnitCode?: string): prebidjs.event.BidWonEvent[] {
       return [];
     },
-    renderAd(iframeDocument: Document, adId: string) {}
+    renderAd(iframeDocument: Document, adId: string): void {
+      return;
+    }
   };
 };
 
