@@ -1,6 +1,7 @@
 import {
   AdPipelineContext,
   ConfigureStep,
+  DefineSlotsStep,
   InitStep,
   LOW_PRIORITY,
   mkConfigureStep,
@@ -8,6 +9,7 @@ import {
   mkPrepareRequestAdsStep,
   mkRequestBidsStep,
   PrepareRequestAdsStep,
+  RequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
 import { Moli } from '../types/moli';
@@ -15,6 +17,9 @@ import { prebidjs } from '../types/prebidjs';
 import { SizeConfigService } from './sizeConfigService';
 import IPrebidJs = prebidjs.IPrebidJs;
 import { resolveAdUnitPath } from './adUnitPath';
+import { googletag } from '../types/googletag';
+import { createTestSlots } from '../util/test-slots';
+import { isNotNull } from '../util/arrayUtils';
 
 // if we forget to remove prebid from the configuration. The timeout is arbitrary
 const prebidTimeout = (window: Window) =>
@@ -270,6 +275,7 @@ export const prebidPrepareRequestAds = (
 
 export const prebidRequestBids = (
   prebidConfig: Moli.headerbidding.PrebidConfig,
+  adServer: Moli.AdServer,
   targeting: Moli.Targeting | undefined
 ): RequestBidsStep =>
   mkRequestBidsStep(
@@ -337,27 +343,29 @@ export const prebidRequestBids = (
               adserverRequestSent = true;
               context.reportingService.measureAndReportPrebidBidsBack(context.requestId);
 
-              // execute listener
-              if (prebidConfig.listener) {
-                const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-                const prebidListener =
-                  typeof prebidConfig.listener === 'function'
-                    ? prebidConfig.listener({ keyValues: keyValues })
-                    : prebidConfig.listener;
-                if (prebidListener.preSetTargetingForGPTAsync) {
-                  try {
-                    prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut, slots);
-                  } catch (e) {
-                    context.logger.error(
-                      'Prebid',
-                      `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`
-                    );
+              if (adServer === 'gam') {
+                // execute listener
+                if (prebidConfig.listener) {
+                  const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
+                  const prebidListener =
+                    typeof prebidConfig.listener === 'function'
+                      ? prebidConfig.listener({ keyValues: keyValues })
+                      : prebidConfig.listener;
+                  if (prebidListener.preSetTargetingForGPTAsync) {
+                    try {
+                      prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut, slots);
+                    } catch (e) {
+                      context.logger.error(
+                        'Prebid',
+                        `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`
+                      );
+                    }
                   }
                 }
-              }
 
-              // set key-values for DFP to target the correct line items
-              context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
+                // set key-values for DFP to target the correct line items
+                context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
+              }
 
               adUnitCodes.forEach(adUnitPath => {
                 const bidResponse = bidResponses[adUnitPath];
@@ -389,6 +397,86 @@ export const prebidRequestBids = (
         });
       })
   );
+
+export const prebidDefineSlots =
+  (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
+    const slotDefinitions = slots.map(moliSlot => {
+      const sizeConfigService = new SizeConfigService(
+        moliSlot.sizeConfig,
+        context.labelConfigService.getSupportedLabels(),
+        context.window
+      );
+      const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
+
+      // filter slots that shouldn't be displayed
+      if (
+        !(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))
+      ) {
+        return Promise.resolve(null);
+      }
+
+      // fake it - otherwise the prebid-only support would be a huge refactoring
+      const adSlot: googletag.IAdSlot = {
+        getAdUnitPath: (): string => moliSlot.adUnitPath
+      } as any;
+      switch (context.env) {
+        case 'production':
+          return Promise.resolve<Moli.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+        case 'test':
+          return Promise.resolve<Moli.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+        default:
+          return Promise.reject(`invalid environment: ${context.config.environment}`);
+      }
+    });
+    return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
+  };
+
+export const prebidRenderAds =
+  (): RequestAdsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => {
+    return new Promise((resolve, reject) => {
+      context.logger.debug('Prebid', 'start rendering');
+      try {
+        switch (context.env) {
+          case 'test':
+            context.logger.debug('Prebid', 'No test slot support yet');
+            break;
+          case 'production':
+            context.window.pbjs
+              .getHighestCpmBids()
+              .filter(bid => bid && bid.adId)
+              .forEach(winningBid => {
+                const adSlotDiv = context.window.document.getElementById(winningBid.adUnitCode);
+                if (adSlotDiv) {
+                  const iframe = document.createElement('iframe');
+                  iframe.scrolling = 'no';
+                  iframe.style.setProperty('border', '0');
+                  iframe.style.setProperty('margin', '0');
+                  iframe.style.setProperty('overflow', 'hidden');
+                  adSlotDiv.appendChild(iframe);
+                  const iframeDoc = iframe.contentWindow?.document;
+                  if (iframeDoc) {
+                    context.window.pbjs.renderAd(iframeDoc, winningBid.adId);
+                  } else {
+                    context.logger.error(
+                      'Prebid',
+                      `No access to iframe contentWindow for ad unit${winningBid.adUnitCode}`
+                    );
+                  }
+                } else {
+                  context.logger.error(
+                    'Prebid',
+                    `Could not locate ad slot with id ${winningBid.adUnitCode}`
+                  );
+                }
+              });
+            break;
+        }
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
 
 /**
  * Filters video player sizes according to the sizeConfig;

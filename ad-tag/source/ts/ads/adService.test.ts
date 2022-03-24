@@ -289,8 +289,21 @@ describe('AdService', () => {
     });
 
     describe('reporting', () => {
-      it('should add the reporting-enabled step', () => {
+      it('should not add the reporting-enabled step if no reporter is set', () => {
         return initialize().then(pipeline => {
+          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+          expect(stepNames).to.not.contain('reporting-enabled');
+        });
+      });
+
+      it('should add the reporting-enabled step if reporting config is set', () => {
+        return initialize({
+          ...emptyConfig,
+          reporting: {
+            sampleRate: 1,
+            reporters: []
+          }
+        }).then(pipeline => {
           const stepNames = pipeline.prepareRequestAds.map(step => step.name);
           expect(stepNames).to.contain('reporting-enabled');
         });
