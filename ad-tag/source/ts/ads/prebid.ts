@@ -447,12 +447,32 @@ export const prebidRenderAds =
               .forEach(winningBid => {
                 const adSlotDiv = context.window.document.getElementById(winningBid.adUnitCode);
                 if (adSlotDiv) {
+                  const innerDiv = document.createElement('div');
+                  innerDiv.style.setProperty('border', '0pt none');
+
+                  // most of the settings are taken from the iframe created by gpt.js
                   const iframe = document.createElement('iframe');
                   iframe.scrolling = 'no';
+                  iframe.frameBorder = '0';
+                  iframe.marginHeight = '0';
+                  iframe.marginHeight = '0';
+                  iframe.name = `prebid_ads_iframe_${winningBid.adUnitCode}`;
+                  iframe.title = '3rd party ad content';
+                  iframe.sandbox.add(
+                    'allow-forms',
+                    'allow-popups',
+                    'allow-popups-to-escape-sandbox',
+                    'allow-same-origin',
+                    'allow-scripts',
+                    'allow-top-navigation-by-user-activation'
+                  );
+                  iframe.setAttribute('aria-label', 'Advertisment');
                   iframe.style.setProperty('border', '0');
                   iframe.style.setProperty('margin', '0');
                   iframe.style.setProperty('overflow', 'hidden');
-                  adSlotDiv.appendChild(iframe);
+
+                  innerDiv.appendChild(iframe);
+                  adSlotDiv.appendChild(innerDiv);
                   const iframeDoc = iframe.contentWindow?.document;
                   if (iframeDoc) {
                     context.window.pbjs.renderAd(iframeDoc, winningBid.adId);
