@@ -52,7 +52,7 @@ const makeDocsPages = options => {
       }),
     ...chunks.flatMap((chunk) => {
       // Map the default chunk (moli) to index to receive an index.html without further configuration
-      const outputFileName = chunk === 'moli' || 'moli_es5' ? 'index' : chunk;
+      const outputFileName = (chunk === 'moli' || chunk === 'moli_es5') ? 'index' : chunk;
 
       const demoPartial = `demo.${chunk}${es5Mode ? '.es5' : ''}`;
 
