@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HandlebarsPlugin = require('handlebars-webpack-plugin');
-const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
+const {WebpackManifestPlugin} = require('webpack-manifest-plugin');
 
 const overviewTemplatePath = path.join(__dirname, '..', 'overview.hbs');
 const demoTemplatePath = path.join(__dirname, '..', 'demo.hbs');
@@ -38,44 +38,54 @@ const makeDocsPages = options => {
   } = options;
 
   return [
-    new HtmlWebpackPlugin({
-      template: path.join(basePath, 'demo', 'index.hbs'),
-      filename: path.join(basePath, 'dist', `demo${es5Mode ? '.es5' : ''}.hbs`),
-      scriptLoading: 'defer',
-      // only include the main asset
-      chunks: chunks,
-      // minification breaks handlebars
-      minify: false,
-      inject: inject
-    }),
+    // Create overview page only once and only in es5 mode.
     es5Mode
-      ? // no overview page in es5 mode. it will be generated in the es6 bundle routine.
-        undefined
+      ? undefined
       : new HandlebarsPlugin({
-          entry: overviewTemplatePath,
-          output: path.join(basePath, 'dist', 'overview.html'),
+        entry: overviewTemplatePath,
+        output: path.join(basePath, 'dist', 'overview.html'),
+        data: {
+          publisher: publisherName,
+          releases: require(path.join(basePath, 'releases.json'))
+        },
+        ...additionalHandlebarsConfig
+      }),
+    ...chunks.flatMap((chunk) => {
+      // Map the default chunk (moli) to index to receive an index.html without further configuration
+      const outputFileName = chunk === 'moli' || 'moli_es5' ? 'index' : chunk;
+
+      const demoPartial = `demo.${chunk}${es5Mode ? '.es5' : ''}`;
+
+      return [
+        new HtmlWebpackPlugin({
+          template: path.join(basePath, 'demo', 'index.hbs'),
+          filename: path.join(basePath, 'dist', `${demoPartial}.hbs`),
+          scriptLoading: 'defer',
+          // only include the main asset
+          chunks: [chunk],
+          // minification breaks handlebars
+          minify: false,
+          inject: inject
+        }),
+        new HandlebarsPlugin({
+          htmlWebpackPlugin: {
+            enabled: true,
+            prefix: 'html',
+            HtmlWebpackPlugin
+          },
+          entry: demoTemplatePath,
+          output: path.join(process.cwd(), 'dist', `${outputFileName}${es5Mode ? '.es5' : ''}.html`),
           data: {
             publisher: publisherName,
-            releases: require(path.join(basePath, 'releases.json'))
+            currentFilename,
+            es5Mode,
+            production: mode === 'production',
+            demoPartial: `html/${demoPartial}`
           },
-          ...additionalHandlebarsConfig
-        }),
-    new HandlebarsPlugin({
-      htmlWebpackPlugin: {
-        enabled: true,
-        prefix: 'html',
-        HtmlWebpackPlugin
-      },
-      entry: demoTemplatePath,
-      output: path.join(process.cwd(), 'dist', `index${es5Mode ? '.es5' : ''}.html`),
-      data: {
-        publisher: publisherName,
-        currentFilename,
-        es5Mode,
-        production: mode === 'production'
-      },
-      ...additionalHandlebarsConfig,
-      partials: [...additionalHandlebarsConfig.partials, 'html/*.hbs']
+          ...additionalHandlebarsConfig,
+          partials: [...additionalHandlebarsConfig.partials, 'html/*.hbs']
+        })
+      ];
     })
   ].filter(val => !!val);
 };

@@ -1,5 +1,1 @@
-{{#if es5Mode}}
-{{> html/demo.es5 }}
-{{else}}
-{{> html/demo }}
-{{/if}}
+{{> (lookup . 'demoPartial') }}
