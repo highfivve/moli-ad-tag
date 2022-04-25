@@ -149,7 +149,7 @@ export class AdService {
 
     // only create performance marks if configured
     const reportingService =
-      isGam && config.reporting
+      isGam && config.reporting && config.reporting.sampleRate > 0
         ? new ReportingService(
             createPerformanceService(this.window),
             this.slotEventService,
