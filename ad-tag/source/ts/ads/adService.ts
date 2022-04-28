@@ -199,7 +199,7 @@ export class AdService {
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
       requestBids.push(
-        prebidRequestBids(config.prebid, config.adServer || 'gam', config.targeting)
+        prebidRequestBids(config.prebid, adServer, config.targeting)
       );
     }
 
