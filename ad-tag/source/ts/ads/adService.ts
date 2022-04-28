@@ -198,9 +198,7 @@ export class AdService {
         configure.push(prebidRemoveAdUnits());
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
-      requestBids.push(
-        prebidRequestBids(config.prebid, adServer, config.targeting)
-      );
+      requestBids.push(prebidRequestBids(config.prebid, adServer, config.targeting));
     }
 
     // amazon a9
