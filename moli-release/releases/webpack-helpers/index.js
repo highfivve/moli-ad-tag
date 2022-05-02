@@ -38,7 +38,7 @@ const makeDocsPages = options => {
   } = options;
 
   return [
-    // Create overview page only once and only in es5 mode.
+    // Create overview page only once and only in es6 mode.
     es5Mode
       ? undefined
       : new HandlebarsPlugin({
