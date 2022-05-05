@@ -1,8 +1,6 @@
 name: Github Pages Deployment
 
 on:
-  pull_request:
-    branches: [ master ]
   push:
     tags:
       - 'v*'
