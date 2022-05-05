@@ -67,7 +67,7 @@ jobs:
           yarn install
           yarn build
           cp lib/* ../website/build/assets/js/
-          cp dist/* ../website/build/assets/js/${{ env.RELEASE_VERSION }}/
+          cp lib/* ../website/build/assets/js/${{ env.RELEASE_VERSION }}/
 
       # Deploy website
       - name: Deploy
