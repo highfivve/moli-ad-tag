@@ -47,6 +47,10 @@ jobs:
           yarn install
           yarn build
 
+      - name: create versioned asset directory
+        run: |
+          mkdir -p website/build/assets/js/${{ env.RELEASE_VERSION }}
+
       # Build prebuilt ad-tag
       - name: build adtag
         working-directory: ./prebuilt/ad-tag
