@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      - name: Get release version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
       # Yarn cache
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -49,6 +52,16 @@ jobs:
           yarn install
           yarn build
           cp dist/* ../../website/build/assets/js/
+          cp dist/* ../../website/build/assets/js/${{ env.RELEASE_VERSION }}/
+
+      # Build ad tag console
+      - name: build ad tag console / debugger
+        working-directory: ./prebuilt/ad-tag
+        run: |
+          yarn install
+          yarn build
+          cp lib/* ../../website/build/assets/js/
+          cp dist/* ../../website/build/assets/js/${{ env.RELEASE_VERSION }}/
 
       # Deploy website
       - name: Deploy

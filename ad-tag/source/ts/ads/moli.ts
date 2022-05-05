@@ -751,7 +751,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       }
       default: {
         assetLoaderService.loadScript({
-          assetUrl: path || 'https://ad-tag-console.h5v.eu/moli-debug.min.js',
+          assetUrl: path || 'https://highfivve.github.io/moli-ad-tag/assets/js/moli-debug.min.js',
           loadMethod: AssetLoadMethod.TAG,
           name: 'moli-debugger'
         });
