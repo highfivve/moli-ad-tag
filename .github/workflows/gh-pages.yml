@@ -62,7 +62,7 @@ jobs:
 
       # Build ad tag console
       - name: build ad tag console / debugger
-        working-directory: ./prebuilt/moli-debugger
+        working-directory: ./moli-debugger
         run: |
           yarn install
           yarn build
