@@ -452,6 +452,38 @@ export namespace prebidjs {
     }
   }
 
+  /**
+   * ## Auction options
+   *
+   * The `auctionOptions` object controls aspects related to auctions.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#auction-options
+   */
+  export namespace auctionOptions {
+    /**
+     * ## Auction options
+     *
+     * The `auctionOptions` object controls aspects related to auctions.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#auction-options
+     */
+    export interface IAuctionOptionsConfig {
+      /**
+       * Specifies bidders that the Prebid auction will no longer wait for before determining the auction has completed.
+       * This may be helpful if you find there are a number of low performing and/or high timeout bidders in your page’s rotation.
+       */
+      readonly secondaryBidders?: BidderCode[];
+
+      /**
+       * When true, prevents banner bids from being rendered more than once.
+       * It should only be enabled after auto-refreshing is implemented correctly.
+       *
+       * @default `false`
+       */
+      readonly suppressStaleRender?: boolean;
+    }
+  }
+
   export namespace userSync {
     /**
      * ## Configure User Syncing
@@ -498,6 +530,8 @@ export namespace prebidjs {
 
       /**
        * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
+       *
+       * @default 5
        */
       readonly syncsPerBidder?: number;
 
@@ -1475,6 +1509,118 @@ export namespace prebidjs {
     readonly bidderTimeout?: number;
 
     /**
+     * Prebid core adds a timeout on XMLHttpRequest request to terminate the request once auction is timedout.
+     * Since Prebid is ignoring all the bids after timeout it does not make sense to continue the request after timeout.
+     * However, you have the option to disable this by using
+     *
+     * @example
+     * ```js
+     * pbjs.setConfig({ disableAjaxTimeout: true });
+     * ```
+     */
+    readonly disableAjaxTimeout?: boolean;
+
+    /**
+     * Prebid core adds a timeout buffer to extend the time that bidders have to return a bid after the auction closes.
+     * This buffer is used to offset the “time slippage” of the setTimeout behavior in browsers. Prebid.js sets the
+     * default value to *400ms*.
+     *
+     * You can change this value by setting `timeoutBuffer` to the amount of time you want to use. The following example
+     * sets the buffer to 300ms.
+     *
+     * ```js
+     * pbjs.setConfig({ timeoutBuffer: 300 });
+     * ```
+     *
+     *
+     * @default `400` ms
+     */
+    readonly timeoutBuffer?: number;
+
+    /**
+     * You can prevent Prebid.js from reading or writing cookies or HTML localstorage by setting this flag:
+     *
+     * ```js
+     * pbjs.setConfig({ deviceAccess: false });
+     * ```
+     *
+     * This can be useful in GDPR, CCPA, COPPA or other privacy scenarios where a publisher has determined that
+     * header bidding should not read from or write the user’s device.
+     *
+     */
+    readonly deviceAccess?: boolean;
+
+    /**
+     * Since browsers have a limit of how many requests they will allow to a specific domain before they block,
+     * Prebid.js will queue auctions that would cause requests to a specific origin to exceed that limit.
+     * The limit is different for each browser. Prebid.js defaults to a max of *4* requests per origin.
+     *
+     * @example most browsers allow at least 6 requests, but your results may vary for your user base.  Sometimes using all
+     * `6` requests can impact performance negatively for users with poor internet connections.
+     * ```js
+     * pbjs.setConfig({ maxRequestsPerOrigin: 6 });
+     * ```
+     *
+     * @example to emulate pre 1-x behavior and have all auctions queue (no concurrent auctions), you can set it to `1`.
+     * ```js
+     * pbjs.setConfig({ maxRequestsPerOrigin: 1 });
+     * ```
+     */
+    readonly maxRequestsPerOrigin?:
+      | 1
+      | 2
+      | 3
+      | 4
+      | 5
+      | 6
+      | 7
+      | 8
+      | 9
+      | 10
+      | 11
+      | 12
+      | 13
+      | 14
+      | 15
+      | 16
+      | 17
+      | 18;
+
+    /**
+     * Prebid.js will loop upward through nested iframes to find the top-most referrer. This setting limits how many
+     * iterations it will attempt before giving up and not setting referrer.
+     *
+     * @example
+     * ```js
+     * pbjs.setConfig({
+     *   maxNestedIframes: 5   // default is 10
+     * );
+     * ```
+     *
+     * @default `10`
+     */
+    readonly maxNestedIframes?:
+      | 1
+      | 2
+      | 3
+      | 4
+      | 5
+      | 6
+      | 7
+      | 8
+      | 9
+      | 10
+      | 10
+      | 11
+      | 12
+      | 13
+      | 14
+      | 15
+      | 16
+      | 17
+      | 18;
+
+    /**
      * After this method is called, Prebid.js will generate bid keywords for all bids, instead of the default behavior
      * of only sending the top winning bid to the ad server.
      *
@@ -1492,9 +1638,35 @@ export namespace prebidjs {
     readonly enableSendAllBids?: boolean;
 
     /**
+     * Prebid.js currently allows for caching and reusing bids in  [a very narrowly defined scope](https://docs.prebid.org/dev-docs/faq.html#does-prebidjs-cache-bids).
+     *
+     * However, if you’d like, you can disable this feature and prevent Prebid.js from using anything but the latest bids for a given auction.
+     * @see https://docs.prebid.org/dev-docs/faq.html#does-prebidjs-cache-bids
+     * @default false
+     */
+    readonly useBidCache?: boolean;
+
+    /**
+     * Set the order in which bidders are called.
+     *
+     * @default `'random'`
+     */
+    readonly bidderSequence?: 'random' | 'fixed';
+
+    /**
      * Set the publisher's domain where Prebid is running, for cross-domain iframe communication
      */
     readonly publisherDomain?: string;
+
+    /**
+     * Override the Prebid.js page referrer for some bidders.
+     *
+     * @example
+     * ```js
+     * pbjs.setConfig({ pageUrl: "https://example.com/index.html" })
+     * ```
+     */
+    readonly pageUrl?: string;
 
     /**
      * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
