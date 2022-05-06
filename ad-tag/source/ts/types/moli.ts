@@ -1329,19 +1329,6 @@ export namespace Moli {
 
       /** optional listener for prebid events */
       listener?: PrebidListenerProvider;
-
-      /**
-       * Configure the user sync behaviour of prebid. Note that you always need to configure
-       * the prebid `userSync.enableOverride` to `true` otherwise this won't have any effect
-       * and the default prebid behaviour will be used instead.       *
-       *
-       * - 'all-ads-loaded' - triggers the user sync after all instantly loaded prebid ads are rendered
-       *
-       * default: prebid defaults (after 6 seconds delay)
-       *
-       * http://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-User-Syncing
-       */
-      readonly userSync?: 'all-ads-loaded';
     }
 
     /**

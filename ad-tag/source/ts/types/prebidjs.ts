@@ -452,6 +452,41 @@ export namespace prebidjs {
     }
   }
 
+  /**
+   * ## Auction options
+   * 
+   * The `auctionOptions` object controls aspects related to auctions.
+   * 
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#auction-options
+   */
+  export namespace auctionOptions {
+
+    /**
+     * ## Auction options
+     * 
+     * The `auctionOptions` object controls aspects related to auctions.
+     * 
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#auction-options
+     */
+    export interface IAuctionOptionsConfig {
+
+        /**
+         * Specifies bidders that the Prebid auction will no longer wait for before determining the auction has completed. 
+         * This may be helpful if you find there are a number of low performing and/or high timeout bidders in your page’s rotation.
+         */
+        readonly secondaryBidders?: BidderCode[];
+
+        /**
+         * When true, prevents banner bids from being rendered more than once. 
+         * It should only be enabled after auto-refreshing is implemented correctly. 
+         * 
+         * @default `false`
+         */
+        readonly suppressStaleRender?: boolean;
+    }
+
+  }
+
   export namespace userSync {
     /**
      * ## Configure User Syncing
@@ -498,6 +533,8 @@ export namespace prebidjs {
 
       /**
        * Number of registered syncs allowed per adapter. Default: 5. To allow all, set to 0.
+       * 
+       * @default 5
        */
       readonly syncsPerBidder?: number;
 
@@ -629,12 +666,12 @@ export namespace prebidjs {
      * @see http://prebid.org/dev-docs/modules/userId.html#unified-id
      */
     export interface IUnifiedIdProvider
-      extends IParameterizedUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> {}
+      extends IParameterizedUserIdProvider<IUnifiedIdProviderParams, 'unifiedId'> { }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#criteo-id-for-exchanges
      */
-    export interface ICriteoProvider extends IUserIdProvider<'criteo'> {}
+    export interface ICriteoProvider extends IUserIdProvider<'criteo'> { }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#digitrust
@@ -652,7 +689,7 @@ export namespace prebidjs {
      * @see https://console.id5.io/docs/public/prebid
      */
     export interface IDigitTrustProvider
-      extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {}
+      extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> { }
 
     export interface IID5ProviderParams {
       /**
@@ -679,7 +716,7 @@ export namespace prebidjs {
      * @see http://prebid.org/dev-docs/modules/userId.html#id5-universal-id
      */
     export interface IID5Provider
-      extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> {}
+      extends IParameterizedUserIdProvider<IID5ProviderParams, 'id5Id'> { }
 
     export interface IIdentityLinkProviderParams {
       /**
@@ -696,12 +733,12 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/userId.html#identitylink
      */
     export interface IIdentityLinkProvider
-      extends IParameterizedUserIdProvider<IIdentityLinkProviderParams, 'identityLink'> {}
+      extends IParameterizedUserIdProvider<IIdentityLinkProviderParams, 'identityLink'> { }
 
     /**
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
      */
-    export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {}
+    export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> { }
 
     /**
      * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
@@ -710,7 +747,7 @@ export namespace prebidjs {
      *
      * @see https://docs.prebid.org/dev-docs/modules/userId.html#id
      */
-    export interface IZeotapIdPlusIdProvider extends IUserIdProvider<'zeotapIdPlus'> {}
+    export interface IZeotapIdPlusIdProvider extends IUserIdProvider<'zeotapIdPlus'> { }
 
     export interface IFilterSettingsConfig {
       /**
@@ -1145,28 +1182,28 @@ export namespace prebidjs {
      */
     export type BidSource =
       | {
-          /**
-           * a number between 0 and 100
-           */
-          readonly client: number;
+        /**
+         * a number between 0 and 100
+         */
+        readonly client: number;
 
-          /**
-           * a number between 0 and 100
-           */
-          readonly server: number;
-        }
+        /**
+         * a number between 0 and 100
+         */
+        readonly server: number;
+      }
       | {
-          /**
-           * if client should have 100% of the traffic, no server share is necessary
-           */
-          readonly client: 100;
-        }
+        /**
+         * if client should have 100% of the traffic, no server share is necessary
+         */
+        readonly client: 100;
+      }
       | {
-          /**
-           * if server should have 100% of the traffic, no server share is necessary
-           */
-          readonly server: 100;
-        };
+        /**
+         * if server should have 100% of the traffic, no server share is necessary
+         */
+        readonly server: 100;
+      };
 
     /**
      * Arguments will be added to resulting OpenRTB payload to Prebid Server in every impression
@@ -1462,8 +1499,8 @@ export namespace prebidjs {
    */
   export interface IPrebidJsConfig
     extends IImproveDigitalConfig,
-      IRubiconConfig,
-      IIndexExchangeConfig {
+    IRubiconConfig,
+    IIndexExchangeConfig {
     /**
      * Turn on debugging
      */
@@ -1473,6 +1510,81 @@ export namespace prebidjs {
      * global bidder timeout
      */
     readonly bidderTimeout?: number;
+
+    /**
+     * Prebid core adds a timeout on XMLHttpRequest request to terminate the request once auction is timedout. 
+     * Since Prebid is ignoring all the bids after timeout it does not make sense to continue the request after timeout. 
+     * However, you have the option to disable this by using
+     * 
+     * @example
+     * ```js
+     * pbjs.setConfig({ disableAjaxTimeout: true });
+     * ```
+     */
+    readonly disableAjaxTimeout?: boolean;
+
+    /**
+     * Prebid core adds a timeout buffer to extend the time that bidders have to return a bid after the auction closes.
+     * This buffer is used to offset the “time slippage” of the setTimeout behavior in browsers. Prebid.js sets the
+     * default value to *400ms*. 
+     * 
+     * You can change this value by setting `timeoutBuffer` to the amount of time you want to use. The following example
+     * sets the buffer to 300ms.
+     * 
+     * ```js
+     * pbjs.setConfig({ timeoutBuffer: 300 });
+     * ```
+     * 
+     * 
+     * @default `400` ms
+     */
+    readonly timeoutBuffer?: number;
+
+    /**
+     * You can prevent Prebid.js from reading or writing cookies or HTML localstorage by setting this flag:
+     * 
+     * ```js
+     * pbjs.setConfig({ deviceAccess: false });
+     * ```
+     * 
+     * This can be useful in GDPR, CCPA, COPPA or other privacy scenarios where a publisher has determined that
+     * header bidding should not read from or write the user’s device.
+     * 
+     */
+    readonly deviceAccess?: boolean;
+
+    /**
+     * Since browsers have a limit of how many requests they will allow to a specific domain before they block,
+     * Prebid.js will queue auctions that would cause requests to a specific origin to exceed that limit.
+     * The limit is different for each browser. Prebid.js defaults to a max of *4* requests per origin.
+     * 
+     * @example most browsers allow at least 6 requests, but your results may vary for your user base.  Sometimes using all
+     * `6` requests can impact performance negatively for users with poor internet connections.
+     * ```js
+     * pbjs.setConfig({ maxRequestsPerOrigin: 6 });
+     * ```
+     * 
+     * @example to emulate pre 1-x behavior and have all auctions queue (no concurrent auctions), you can set it to `1`.
+     * ```js
+     * pbjs.setConfig({ maxRequestsPerOrigin: 1 });
+     * ```
+     */
+    readonly maxRequestsPerOrigin?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
+
+    /**
+     * Prebid.js will loop upward through nested iframes to find the top-most referrer. This setting limits how many
+     * iterations it will attempt before giving up and not setting referrer.
+     * 
+     * @example
+     * ```js
+     * pbjs.setConfig({
+     *   maxNestedIframes: 5   // default is 10
+     * );
+     * ```
+     * 
+     * @default `10`
+     */
+    readonly maxNestedIframes?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18;
 
     /**
      * After this method is called, Prebid.js will generate bid keywords for all bids, instead of the default behavior
@@ -1492,9 +1604,35 @@ export namespace prebidjs {
     readonly enableSendAllBids?: boolean;
 
     /**
+     * Prebid.js currently allows for caching and reusing bids in  [a very narrowly defined scope](https://docs.prebid.org/dev-docs/faq.html#does-prebidjs-cache-bids). 
+     * 
+     * However, if you’d like, you can disable this feature and prevent Prebid.js from using anything but the latest bids for a given auction.
+     * @see https://docs.prebid.org/dev-docs/faq.html#does-prebidjs-cache-bids
+     * @default false
+     */
+    readonly useBidCache?: boolean;
+
+    /**
+     * Set the order in which bidders are called.
+     * 
+     * @default `'random'`
+     */
+    readonly bidderSequence?: 'random' | 'fixed';
+
+    /**
      * Set the publisher's domain where Prebid is running, for cross-domain iframe communication
      */
     readonly publisherDomain?: string;
+
+    /**
+     * Override the Prebid.js page referrer for some bidders.
+     * 
+     * @example
+     * ```js
+     * pbjs.setConfig({ pageUrl: "https://example.com/index.html" })
+     * ```
+     */
+    readonly pageUrl?: string;
 
     /**
      * This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword.
@@ -2502,7 +2640,7 @@ export namespace prebidjs {
     readonly url?: string;
   }
 
-  export interface IAdformBid extends IBidObject<typeof Adform, IAdformParams> {}
+  export interface IAdformBid extends IBidObject<typeof Adform, IAdformParams> { }
 
   /**
    * AdUp Technology bid params
@@ -2534,7 +2672,7 @@ export namespace prebidjs {
     readonly adtest?: boolean;
   }
 
-  export interface IAdUpBid extends IBidObject<typeof AdUp, IAdUpParams> {}
+  export interface IAdUpBid extends IBidObject<typeof AdUp, IAdUpParams> { }
 
   /**
    * Criteo bid parameters. There is no public available documentation. All information was
@@ -2559,7 +2697,7 @@ export namespace prebidjs {
     readonly publisherSubId?: string;
   }
 
-  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
+  export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> { }
 
   export interface IAppNexusASTKeyword {
     [key: string]: string[];
@@ -2663,7 +2801,7 @@ export namespace prebidjs {
    * AppNexus bid object.
    */
   export interface IAppNexusASTBid
-    extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {}
+    extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> { }
 
   /**
    * ImproveDigital bid parameters.
@@ -2699,7 +2837,7 @@ export namespace prebidjs {
    * ImproveDigital bid object.
    */
   export interface IImproveDigitalBid
-    extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> {}
+    extends IBidObject<typeof ImproveDigital, IImproveDigitalParams> { }
 
   /**
    * IndexExchange bid parameters.
@@ -2740,7 +2878,7 @@ export namespace prebidjs {
    * IndexExchange bid object.
    */
   export interface IIndexExchangeBid
-    extends IBidObject<typeof IndexExchange, IIndexExchangeParams> {}
+    extends IBidObject<typeof IndexExchange, IIndexExchangeParams> { }
 
   // ----- JustPremium ----- //
 
@@ -2804,7 +2942,7 @@ export namespace prebidjs {
     readonly exclude?: Array<JustPremiumFormat>;
   }
 
-  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
+  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> { }
 
   export interface IPubMaticParams {
     /**
@@ -2950,7 +3088,7 @@ export namespace prebidjs {
     };
   }
 
-  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
+  export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> { }
 
   /**
    * NanoInteractive bid parameters.
@@ -2976,7 +3114,7 @@ export namespace prebidjs {
    * NanoInteractive bid object.
    */
   export interface INanoInteractiveBid
-    extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
+    extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> { }
 
   /**
    * OpenX bid parameters
@@ -3010,7 +3148,7 @@ export namespace prebidjs {
   /**
    * OpenX bid object
    */
-  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> {}
+  export interface IOpenxBid extends IBidObject<typeof OpenX, IOpenxParams> { }
 
   /**
    * Smart bid parameters
@@ -3123,9 +3261,9 @@ export namespace prebidjs {
    */
   export interface ISmartAdServerBid
     extends IBidObject<
-      typeof SmartAdServer,
-      ISmartAdServerParams | ISmartAdServerPrebidServerParams
-    > {}
+    typeof SmartAdServer,
+    ISmartAdServerParams | ISmartAdServerPrebidServerParams
+    > { }
 
   /**
    * Unruly bid parameters
@@ -3149,7 +3287,7 @@ export namespace prebidjs {
   /**
    * Unruly bid object
    */
-  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
+  export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> { }
 
   /**
    * Teads bid parameters
@@ -3171,7 +3309,7 @@ export namespace prebidjs {
   /**
    * Teads bid object
    */
-  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
+  export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> { }
 
   export interface IYieldlabParams {
     /**
@@ -3204,7 +3342,7 @@ export namespace prebidjs {
   /**
    * Yieldlab bid object
    */
-  export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> {}
+  export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> { }
 
   /**
    * Spotx bid parameters.
@@ -3316,7 +3454,7 @@ export namespace prebidjs {
   /**
    * SpotX bid object.
    */
-  export interface ISpotXBid extends IBidObject<typeof Spotx, ISpotxParams> {}
+  export interface ISpotXBid extends IBidObject<typeof Spotx, ISpotxParams> { }
 
   export interface IShowHeroesParams {
     /**
@@ -3340,7 +3478,7 @@ export namespace prebidjs {
    *
    * @see [[http://prebid.org/dev-docs/bidders/showheroes.html]]
    */
-  export interface IShowHeroesBid extends IBidObject<typeof ShowHeroes, IShowHeroesParams> {}
+  export interface IShowHeroesBid extends IBidObject<typeof ShowHeroes, IShowHeroesParams> { }
 
   export interface IXaxisParams {
     /**
@@ -3373,7 +3511,7 @@ export namespace prebidjs {
    *
    * @see [[http://prebid.org/dev-docs/bidders/xaxis.html]]
    */
-  export interface IXaxisBid extends IBidObject<typeof Xaxis, IXaxisParams> {}
+  export interface IXaxisBid extends IBidObject<typeof Xaxis, IXaxisParams> { }
 
   export interface IDSPXParams {
     /**
@@ -3416,7 +3554,7 @@ export namespace prebidjs {
    *
    * @see [[https://prebid.org/dev-docs/bidders/dspx.html]]
    */
-  export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> {}
+  export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> { }
 
   /**
    * @see http://prebid.org/dev-docs/bidders/rubicon.html
@@ -3503,7 +3641,7 @@ export namespace prebidjs {
   /**
    * @see http://prebid.org/dev-docs/bidders/rubicon.html
    */
-  export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> {}
+  export interface IRubiconBid extends IBidObject<typeof Rubicon, IRubiconParams> { }
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/vlyby
@@ -3523,7 +3661,7 @@ export namespace prebidjs {
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/visx.html
    */
-  export interface IVlybyBid extends IBidObject<typeof Vlyby, IVlybyParams> {}
+  export interface IVlybyBid extends IBidObject<typeof Vlyby, IVlybyParams> { }
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/visx.html
@@ -3543,7 +3681,7 @@ export namespace prebidjs {
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/visx.html
    */
-  export interface IVisxBid extends IBidObject<typeof Visx, IVisxParams> {}
+  export interface IVisxBid extends IBidObject<typeof Visx, IVisxParams> { }
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/rads.html
@@ -3559,7 +3697,7 @@ export namespace prebidjs {
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/rads.html
    */
-  export interface IRecognifiedBid extends IBidObject<typeof Recognified, IRecognifiedParams> {}
+  export interface IRecognifiedBid extends IBidObject<typeof Recognified, IRecognifiedParams> { }
 
   /**
    * orbidder bid params
@@ -3592,7 +3730,7 @@ export namespace prebidjs {
     readonly keyValues?: { [key: string]: string };
   }
 
-  export interface IOrbidderBid extends IBidObject<typeof Orbidder, IOrbidderParams> {}
+  export interface IOrbidderBid extends IBidObject<typeof Orbidder, IOrbidderParams> { }
 
   /**
    * Supported bid object types.
@@ -3675,13 +3813,13 @@ export namespace prebidjs {
      * The adUnit code, e.g. 'ad-presenter-desktop'
      */
     [adUnitCode: string]:
-      | {
-          /**
-           * The bids that were returned by prebid
-           */
-          bids: prebidjs.BidResponse[];
-        }
-      | undefined;
+    | {
+      /**
+       * The bids that were returned by prebid
+       */
+      bids: prebidjs.BidResponse[];
+    }
+    | undefined;
   }
 
   /**
