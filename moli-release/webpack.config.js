@@ -6,7 +6,7 @@ module.exports = (env, argv) => ({
   mode: 'development',
   target: 'node',
   devtool: argv.mode === 'production' ? false : 'inline-source-map',
-  entry: './src/index.ts',
+  entry: './src/slack/index.ts',
   output: {
     path: path.resolve(__dirname, 'lib'),
     filename: 'moli-release.js'
