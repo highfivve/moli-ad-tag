@@ -2741,7 +2741,7 @@ export namespace prebidjs {
    * AppNexus prebid server keyword object.
    */
   export interface IAppNexusASTPrebidServerKeyword {
-    readonly key: number;
+    readonly key: string;
 
     readonly value: string[];
   }
