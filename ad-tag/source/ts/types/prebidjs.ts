@@ -2750,7 +2750,7 @@ export namespace prebidjs {
      * The placement ID from AppNexus. You may identify a placement using the `invCode`
      * and `member` instead of a placement ID.
      */
-    readonly placementId: string;
+    readonly placementId: string | number;
 
     /**
      * If true, ads smaller than the values in your ad unit's sizes array will be allowed to serve.
