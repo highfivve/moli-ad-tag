@@ -2738,6 +2738,16 @@ export namespace prebidjs {
   }
 
   /**
+   * AppNexus prebid server keyword object.
+   */
+  export interface IAppNexusASTPrebidServerKeyword {
+
+    readonly key: number;
+
+    readonly value: string[];
+  }
+
+  /**
    * AppNexusAST bid parameters.
    *
    * The type definition may not be complete as only the actually used (or tested)
@@ -2765,8 +2775,10 @@ export namespace prebidjs {
      * Example:
      *
      * keywords: { genre: ['rock', 'pop'] }
+     *
+     * for prebid server: keywords: [ { key: 'genre', value: ['rock', 'pop'] } ]
      */
-    readonly keywords?: IAppNexusASTKeyword;
+    readonly keywords?: IAppNexusASTKeyword | IAppNexusASTPrebidServerKeyword[];
 
     /**
      * Sets a floor price for the bid that is returned.
