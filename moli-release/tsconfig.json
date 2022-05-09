@@ -15,7 +15,8 @@
     "src/index.ts"
   ],
   "include": [
-    "src/*"
+    "src/types",
+    "src/slack"
   ],
   "exclude": [
     "node_modules"

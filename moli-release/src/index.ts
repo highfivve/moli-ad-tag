@@ -2,13 +2,14 @@
 
 import program = require('commander');
 
-import inquirer, { DistinctQuestion, QuestionCollection } from 'inquirer';
+import inquirer from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as child from 'child_process';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
+import { sendSlackMessage } from './slack';
 
 const CYAN_ESC = '\x1b[36m%s\x1b[0m';
 
@@ -17,11 +18,13 @@ program
   .description('Create a release for moli ad tag')
   .option('-D, --dry', 'Dry run not creating a commit', false)
   .option('-P, --publishername [publishername]', 'Publisher name')
+  .option('-S, --slack [channel name]', 'Name of the slack channel with the publisher')
   .parse(process.argv);
 
 const options = program.opts();
 const dryRun: boolean = options.dry;
 const publisherNameFromArgs: string | undefined = options.publishername;
+const slackChannelFromArgs: string | undefined = options.slack;
 
 // Parse releases.json (optional) and package.json (required)
 let releasesJson: IReleasesJson;
@@ -131,7 +134,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
   await inquirer
     .prompt(questions)
-    .then((answers: { version: number; changes: string; push: any }) => {
+    .then(async (answers: { version: number; changes: string; push: any }) => {
       version = answers.version;
 
       // run lint before releasing
@@ -163,7 +166,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         version: version,
         filename: filename,
         filenameEs5: filenameEs5,
-        changelog: answers.changes.split('\n').filter(element => element != '')
+        changelog: answers.changes.split('\n').filter(element => element !== '')
       };
 
       versions.unshift(change);
@@ -199,12 +202,17 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
         const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
 
-        child.exec(
+        await child.exec(
           `git add package.json releases.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
-          (err, _stdout, _stderr) => {
+          async (err, _stdout, _stderr) => {
             if (err) {
               console.log(err);
             } else {
+              await sendSlackMessage({
+                release: change,
+                publisherName: releasesJson.publisherName,
+                slackChannel: slackChannelFromArgs
+              });
               console.log('Successfully released new version');
             }
           }

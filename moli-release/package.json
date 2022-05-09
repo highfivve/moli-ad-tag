@@ -43,6 +43,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
+    "@slack/webhook": "^6.1.0",
     "commander": "^6.2.0",
     "inquirer": "^7.3.3"
   },
