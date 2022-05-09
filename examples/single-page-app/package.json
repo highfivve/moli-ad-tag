@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-single-page-app",
-  "version": "3.44.0",
+  "version": "3.44.1",
   "description": "Publisher bootstrap template",
   "main": "index.ts",
   "private": true,
@@ -32,7 +32,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.44.0",
+    "@highfivve/ad-tag": "^3.44.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router": "^5.2.0",
