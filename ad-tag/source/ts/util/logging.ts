@@ -155,7 +155,7 @@ export function getDefaultLogger(): Moli.MoliLogger {
 export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.MoliLogger {
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
-  } else if (config?.logger) {
+  } else if (config && config.logger) {
     return config.logger;
   } else {
     return getNoopLogger();
