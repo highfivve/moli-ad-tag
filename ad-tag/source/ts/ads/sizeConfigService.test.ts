@@ -158,11 +158,12 @@ describe('SizeConfigService', () => {
 
   describe('additional label filtering', () => {
     const sizes: DfpSlotSize[] = [[300, 250], 'fluid'];
-    const newSizeConfigEntry = (labelAll?: string[]): SizeConfigEntry => {
+    const newSizeConfigEntry = (labelAll?: string[], labelNone?: string[]): SizeConfigEntry => {
       return {
         sizesSupported: sizes,
         mediaQuery: 'min-width: 300px',
-        labelAll: labelAll
+        labelAll,
+        labelNone
       };
     };
 
@@ -171,8 +172,13 @@ describe('SizeConfigService', () => {
       expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
     });
 
-    it('should accept supported sizes if all labels is empty', () => {
+    it('should accept supported sizes if labelAll is empty', () => {
       const sizeConfigService = newSizeConfigService([newSizeConfigEntry([])]);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
+    it('should accept supported sizes if labelAll and labelNone is empty', () => {
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry([], [])]);
       expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
     });
 
@@ -182,9 +188,36 @@ describe('SizeConfigService', () => {
       expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
     });
 
+    it('should accept supported sizes if all labels are included in the supported labels and labelsNone is empty', () => {
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels, [])], labels);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
+    it('should accept supported sizes if all labels are not set and labelsNone has no intersection with supported labels', () => {
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService(
+        [newSizeConfigEntry(undefined, ['foo'])],
+        labels
+      );
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
+    it('should accept supported sizes if labelAll and labelNone conditions are met', () => {
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels, ['foo'])], labels);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal(sizes);
+    });
+
     it('should filter supported sizes if not all labels are included in the supported labels', () => {
       const labels = ['page-x'];
       const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels)], []);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
+    });
+
+    it('should filter supported sizes if not all labels are included in the supported labels and labelNone is empty', () => {
+      const labels = ['page-x'];
+      const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels, [])], []);
       expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
     });
 

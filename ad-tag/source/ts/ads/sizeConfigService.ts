@@ -51,10 +51,7 @@ export class SizeConfigService {
               // media query must match
               window.matchMedia(conf.mediaQuery).matches &&
               // if labelAll is defined, all labels must be part of the supportedLabels array
-              (!conf.labelAll ||
-                conf.labelAll.every(label =>
-                  supportedLabels.some(supportedLabel => supportedLabel === label)
-                ))
+              this.areLabelsMatching(conf, supportedLabels)
           )
         : [];
 
@@ -111,5 +108,21 @@ export class SizeConfigService {
             }
           })
         );
+  };
+
+  private areLabelsMatching = (conf: Moli.SizeConfigEntry, supportedLabels: string[]): boolean => {
+    return (
+      // either labelAll is not set or _all_ labels must be present
+      (!conf.labelAll ||
+        conf.labelAll.every(label =>
+          supportedLabels.some(supportedLabel => supportedLabel === label)
+        )) &&
+      // and either labelNone is not set or none of should be present
+      (!conf.labelNone ||
+        // false as soon as one of the supported labels is part of the labelNone set
+        !conf.labelNone.some(label =>
+          supportedLabels.some(supportedLabel => supportedLabel === label)
+        ))
+    );
   };
 }

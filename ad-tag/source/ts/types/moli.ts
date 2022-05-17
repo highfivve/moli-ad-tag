@@ -842,17 +842,38 @@ export namespace Moli {
    * ```typescript
    * [{
    *   // mobile devices support a medium rectangle
-   *   mediaQuery: (max-width: 767px)
+   *   mediaQuery: (max-width: 767px),
    *   sizesSupported: [[300,250]]
    * }, {
    *   // desktop sidebar supports medium rectangle
-   *   mediaQuery: (min-width: 768px)
+   *   mediaQuery: (min-width: 768px),
    *   sizesSupported: [[300,250]]
    * }]
    * ```
    *
    * This result in `[[300,250]]` being always supported, which may not be something you want.
    *
+   * ### Using labels
+   *
+   * If you have the same slot on different page types with a different layout you can differentation size configs
+   * via two properites
+   *
+   * - `labelAll` - all labels need to be present if this size config should be applied
+   * - `labelNone` - none of the labels must be present if this size config should be applied
+   *
+   * ```typescript
+   * [{
+   *   // mobile devices support a medium rectangle
+   *   mediaQuery: (max-width: 767px),
+   *   labelAll: ['homepage'],
+   *   sizesSupported: [[728,90]]
+   * }, {
+   *   // desktop sidebar supports medium rectangle
+   *   mediaQuery: (min-width: 768px)
+   *   labelNone: ['homepage']
+   *   sizesSupported: [[728,90], [900,250]]
+   * }]
+   * ```
    *
    * ## Prebid API
    *
@@ -872,6 +893,9 @@ export namespace Moli {
 
     /** optional array of labels. All labels must be present if the sizes should be applied */
     readonly labelAll?: string[];
+
+    /** optional array of labels. All labels must **not** be present if the sizes should be applied */
+    readonly labelNone?: string[];
 
     /** static sizes that are support if the media query matches */
     readonly sizesSupported: DfpSlotSize[];
