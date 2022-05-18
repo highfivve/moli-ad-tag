@@ -427,19 +427,25 @@ export class GlobalConfig
                         <div className="MoliDebug-tagContainer">
                           <TagLabel>allowAuctionWithoutConsent</TagLabel>
                           <Tag>
-                            {(!!config.prebid.config.consentManagement
-                              .allowAuctionWithoutConsent).toString()}
+                            {(
+                              !!config.prebid.config.consentManagement.gdpr
+                                ?.allowAuctionWithoutConsent ?? 'true'
+                            ).toString()}
                           </Tag>
                         </div>
-                        {config.prebid.config.consentManagement.cmpApi && (
+                        {config.prebid.config.consentManagement.gdpr?.cmpApi && (
                           <div className="MoliDebug-tagContainer">
                             <TagLabel>CMP API</TagLabel>
-                            <Tag>{config.prebid.config.consentManagement.cmpApi}</Tag>
+                            <Tag>
+                              {config.prebid.config.consentManagement.gdpr?.cmpApi ?? 'iab'}
+                            </Tag>
                           </div>
                         )}
                         <div className="MoliDebug-tagContainer">
                           <TagLabel>CMP timeout</TagLabel>
-                          <Tag>{`${config.prebid.config.consentManagement.timeout}ms`}</Tag>
+                          <Tag>{`${
+                            config.prebid.config.consentManagement.gdpr?.timeout ?? 10000
+                          }ms`}</Tag>
                         </div>
                       </div>
                     )}

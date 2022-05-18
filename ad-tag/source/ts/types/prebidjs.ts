@@ -336,9 +336,11 @@ export namespace prebidjs {
       readonly cmpApi?: 'iab';
 
       /**
-       * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process. Default is 10000
+       * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process.
+       *
+       * @default `10000` ms
        */
-      readonly timeout: number;
+      readonly timeout?: number;
 
       /**
        * A setting to determine what will happen when obtaining consent information from the CMP fails;
@@ -347,9 +349,18 @@ export namespace prebidjs {
       readonly allowAuctionWithoutConsent?: boolean;
 
       /**
+       * Defines what the gdprApplies flag should be when the CMP doesn’t respond in time or the static
+       * data doesn’t supply. D
+       *
+       * @default `false`
+       */
+      readonly defaultGdprScope?: boolean;
+
+      /**
+       * Lets the publisher override the default behavior.
        * @see https://docs.prebid.org/dev-docs/modules/gdprEnforcement.html
        */
-      readonly rules: IGdprConfigRule[];
+      readonly rules?: IGdprConfigRule[];
     }
 
     export interface IGdprConfigRule {
