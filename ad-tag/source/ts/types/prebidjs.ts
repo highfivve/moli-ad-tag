@@ -313,6 +313,24 @@ export namespace prebidjs {
   export namespace consent {
     export interface IConsentManagementConfig {
       /**
+       * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+       */
+      readonly gdpr?: IGdprConfig;
+
+      /**
+       * @see https://docs.prebid.org/dev-docs/modules/consentManagementUsp.html
+       */
+      readonly usp?: IUspConfig;
+    }
+
+    /**
+     * A page needs to define configuration rules about how Prebid.js should enforce each in-scope activity
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/consentManagement.html
+     * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+     */
+    export interface IGdprConfig {
+      /**
        * The ID for the CMP in use on the page. Default is 'iab'
        */
       readonly cmpApi?: 'iab';
@@ -329,17 +347,8 @@ export namespace prebidjs {
       readonly allowAuctionWithoutConsent?: boolean;
 
       /**
-       * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+       * @see https://docs.prebid.org/dev-docs/modules/gdprEnforcement.html
        */
-      readonly gdpr?: IGdprConfig;
-    }
-
-    /**
-     * A page needs to define configuration rules about how Prebid.js should enforce each in-scope activity
-     *
-     * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
-     */
-    export interface IGdprConfig {
       readonly rules: IGdprConfigRule[];
     }
 
@@ -378,6 +387,29 @@ export namespace prebidjs {
        */
       readonly vendorExceptions?: string[];
     }
+  }
+
+  /**
+   * This consent management module is designed to support the California Consumer Privacy Act (CCPA). The IAB has
+   * generalized these guidelines to cover future regulations, referring to the feature as "US Privacy".
+   *
+   * @see https://docs.prebid.org/dev-docs/modules/consentManagementUsp.html
+   */
+  export interface IUspConfig {
+    /**
+     * The USP-API interface that is in use. Supported values are `iab` or `static`.
+     * Static allows integrations where IAB-formatted strings are provided in a non-standard way.
+     *
+     * @default `iab`
+     */
+    readonly cmpApi: 'iab';
+
+    /**
+     * Length of time (in milliseconds) to allow the USP-API to obtain the CCPA string.
+     *
+     * @default 50
+     */
+    readonly timeout?: number;
   }
 
   /**
