@@ -1690,6 +1690,23 @@ export namespace prebidjs {
     readonly useBidCache?: boolean;
 
     /**
+     * When Bid Caching is turned on, a custom Filter Function can be defined to gain more granular control over which
+     * “cached” bids can be used. This function will only be called for “cached” bids from previous auctions, not
+     * “current” bids from the most recent auction. The function should take a single bid object argument, and return
+     * true to use the cached bid, or false to not use the cached bid. For Example, to turn on Bid Caching, but exclude
+     * cached video bids, you could do this:
+     *
+     * @example
+     * ```javascript
+     * pbjs.setConfig({
+     *     useBidCache: true,
+     *     bidCacheFilterFunction: bid => bid.mediaType !== 'video'
+     * });
+     * ```
+     */
+    readonly bidCacheFilterFunction?: (bid: any) => boolean;
+
+    /**
      * Set the order in which bidders are called.
      *
      * @default `'random'`
@@ -1698,6 +1715,7 @@ export namespace prebidjs {
 
     /**
      * Set the publisher's domain where Prebid is running, for cross-domain iframe communication
+     * @deprecated This API is deprecated. Please use ‘pageUrl’ instead.
      */
     readonly publisherDomain?: string;
 
