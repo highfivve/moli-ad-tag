@@ -313,14 +313,34 @@ export namespace prebidjs {
   export namespace consent {
     export interface IConsentManagementConfig {
       /**
+       * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+       */
+      readonly gdpr?: IGdprConfig;
+
+      /**
+       * @see https://docs.prebid.org/dev-docs/modules/consentManagementUsp.html
+       */
+      readonly usp?: IUspConfig;
+    }
+
+    /**
+     * A page needs to define configuration rules about how Prebid.js should enforce each in-scope activity
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/consentManagement.html
+     * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+     */
+    export interface IGdprConfig {
+      /**
        * The ID for the CMP in use on the page. Default is 'iab'
        */
       readonly cmpApi?: 'iab';
 
       /**
-       * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process. Default is 10000
+       * Length of time (in milliseconds) to allow the CMP to perform its tasks before aborting the process.
+       *
+       * @default `10000` ms
        */
-      readonly timeout: number;
+      readonly timeout?: number;
 
       /**
        * A setting to determine what will happen when obtaining consent information from the CMP fails;
@@ -329,18 +349,18 @@ export namespace prebidjs {
       readonly allowAuctionWithoutConsent?: boolean;
 
       /**
-       * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
+       * Defines what the gdprApplies flag should be when the CMP doesn’t respond in time or the static
+       * data doesn’t supply. D
+       *
+       * @default `false`
        */
-      readonly gdpr?: IGdprConfig;
-    }
+      readonly defaultGdprScope?: boolean;
 
-    /**
-     * A page needs to define configuration rules about how Prebid.js should enforce each in-scope activity
-     *
-     * @see http://prebid.org/dev-docs/modules/gdprEnforcement.html
-     */
-    export interface IGdprConfig {
-      readonly rules: IGdprConfigRule[];
+      /**
+       * Lets the publisher override the default behavior.
+       * @see https://docs.prebid.org/dev-docs/modules/gdprEnforcement.html
+       */
+      readonly rules?: IGdprConfigRule[];
     }
 
     export interface IGdprConfigRule {
@@ -378,6 +398,29 @@ export namespace prebidjs {
        */
       readonly vendorExceptions?: string[];
     }
+  }
+
+  /**
+   * This consent management module is designed to support the California Consumer Privacy Act (CCPA). The IAB has
+   * generalized these guidelines to cover future regulations, referring to the feature as "US Privacy".
+   *
+   * @see https://docs.prebid.org/dev-docs/modules/consentManagementUsp.html
+   */
+  export interface IUspConfig {
+    /**
+     * The USP-API interface that is in use. Supported values are `iab` or `static`.
+     * Static allows integrations where IAB-formatted strings are provided in a non-standard way.
+     *
+     * @default `iab`
+     */
+    readonly cmpApi: 'iab';
+
+    /**
+     * Length of time (in milliseconds) to allow the USP-API to obtain the CCPA string.
+     *
+     * @default 50
+     */
+    readonly timeout?: number;
   }
 
   /**

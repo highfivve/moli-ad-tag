@@ -202,8 +202,10 @@ export const adConfiguration: Moli.MoliConfig = {
     config: {
       bidderTimeout: 1000,
       consentManagement: {
-        timeout: 500,
-        allowAuctionWithoutConsent: true
+        gdpr: {
+          timeout: 500,
+          allowAuctionWithoutConsent: true
+        }
       },
       userSync: {
         syncDelay: 6000,
