@@ -132,16 +132,68 @@ export const adConfiguration: Moli.MoliConfig = {
   },
   slots: [
     {
+      domId: 'ad-mobile-sticky',
+      adUnitPath: '/55155651/mobile-sticky/{device}-{category}',
+      position: 'in-page',
+      behaviour: { loaded: 'eager' },
+      labelAll: ['mobile'],
+      sizes: ['fluid', [300, 50], [320, 50]],
+      sizeConfig: [
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: ['fluid', [300, 50], [320, 50]]
+        }
+      ]
+    },
+    {
+      domId: 'ad-floorad',
+      adUnitPath: '/55155651/floorad/{device}-{category}',
+      position: 'in-page',
+      behaviour: { loaded: 'eager' },
+      labelAll: ['desktop'],
+      sizes: [
+        [728, 90],
+        [800, 250],
+        [900, 250],
+        [970, 250]
+      ],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 767px)',
+          sizesSupported: [[728, 90]]
+        },
+        {
+          mediaQuery: '(min-width: 800px)',
+          sizesSupported: [[800, 250]]
+        },
+        {
+          mediaQuery: '(min-width: 900px)',
+          sizesSupported: [[900, 250]]
+        },
+        {
+          mediaQuery: '(min-width: 970px)',
+          sizesSupported: [[970, 250]]
+        }
+      ]
+    },
+    {
       domId: 'eager-loading-adslot',
       position: 'in-page',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/55155651/test-ad-unit/{device}-{category}',
-      sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
-      passbackSupport: true,
+      sizes: ['fluid', [300, 250], [300, 600], [728, 90], [970, 250]],
       sizeConfig: [
         {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: ['fluid', [300, 250], [300, 600]]
+        },
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: ['fluid', [728, 90]]
+        },
+        {
+          mediaQuery: '(min-width: 970px)',
+          sizesSupported: ['fluid', [970, 250]]
         }
       ]
     },
@@ -172,7 +224,6 @@ export const adConfiguration: Moli.MoliConfig = {
       },
       adUnitPath: '/55155651/test-ad-unit',
       sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
-      passbackSupport: true,
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
@@ -185,7 +236,6 @@ export const adConfiguration: Moli.MoliConfig = {
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager', bucket: 'ONE' },
       adUnitPath: '/55155651/outstream_test',
-      passbackSupport: true,
       sizes: [
         [605, 165],
         [605, 340],
@@ -305,7 +355,6 @@ export const adConfiguration: Moli.MoliConfig = {
           sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
         }
       ],
-      passbackSupport: true,
       prebid: context => {
         return {
           adUnit: {

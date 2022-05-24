@@ -35,6 +35,9 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
     ): googletag.IPubAdsService => {
       return stub;
     },
+    removeEventListener: (_eventType: string, _listener: (event: any) => void) => {
+      return false;
+    },
     setPrivacySettings: (_options: googletag.IPrivacySettingsConfig): googletag.IPubAdsService => {
       return stub;
     },
@@ -55,6 +58,9 @@ export const contentServiceStub: googletag.IContentService = {
     _listener: (event: any) => void
   ): googletag.IContentService => {
     return contentServiceStub;
+  },
+  removeEventListener: (_eventType: string, _listener: (event: any) => void) => {
+    return false;
   },
   setContent(slot: googletag.IAdSlot, content: string): void {
     return;
@@ -86,6 +92,9 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     },
     addService: (_service: googletag.IService<any>): void => {
       return;
+    },
+    getResponseInformation: (): googletag.IResponseInformation | null => {
+      return null;
     }
   };
   return stub;

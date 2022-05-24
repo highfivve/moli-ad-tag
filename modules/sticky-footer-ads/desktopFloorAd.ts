@@ -1,0 +1,112 @@
+import { googletag, Moli } from '@highfivve/ad-tag';
+
+const containerDataRefSelector = '[data-ref=h5-footer-ad-container]';
+const closeButtonDataRefSelector = '[data-ref=footer-ad-close-button]';
+
+/**
+ * This wraps functionality to show and hide an interactive desktop footer ad component with a close
+ * button depending on some parameters.
+ *
+ *
+ * @see https://developers.google.com/publisher-tag/reference#googletag.events.slotrenderendedevent
+ * @param window
+ * @param floorAdDomId
+ * @param disallowedAdvertiserIds
+ * @param log
+ */
+const renderFooterAd =
+  (
+    window: Window & googletag.IGoogleTagWindow,
+    floorAdDomId: string,
+    disallowedAdvertiserIds: number[],
+    log: Moli.MoliLogger
+  ) =>
+  (event: googletag.events.ISlotRenderEndedEvent) => {
+    const slot = event.slot;
+    const footerAdContainerElement = window.document.body.querySelector(containerDataRefSelector);
+    const footerAdElement = window.document.getElementById(floorAdDomId);
+
+    const removeFooterAd = () => {
+      if (slot.getSlotElementId() === floorAdDomId && footerAdContainerElement) {
+        window.googletag.destroySlots([slot]);
+        footerAdContainerElement.remove();
+      }
+    };
+
+    if (
+      !footerAdContainerElement ||
+      !footerAdElement ||
+      slot.getSlotElementId() !== floorAdDomId ||
+      // don't render anything if slot render returns empty
+      event.isEmpty ||
+      // don't render for excluded advertiser ids
+      (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) ||
+      // minimum is 768px width - h5_footer_ad only on desktop!
+      window.matchMedia('(max-width: 767px)').matches
+    ) {
+      log.debug('[footer-ad]', 'remove footer ad container');
+      // remove the container, it could interfere with the rest of the page
+      removeFooterAd();
+
+      return;
+    }
+
+    // add close button only once - that's enough. Happens on ad reload
+    if (window.document.body.querySelector(closeButtonDataRefSelector)) {
+      return;
+    }
+
+    const footerAdElementClose = document.createElement('button');
+    footerAdElementClose.classList.add('h5-footer-ad-close');
+    footerAdElementClose.setAttribute('aria-label', 'Anzeige entfernen');
+    footerAdElementClose.setAttribute('data-ref', 'footer-ad-close-button');
+
+    footerAdElement.classList.add('h5-footer-ad');
+
+    // for the combination of high ad (> 200px) and low vertical screen resolution, we shift the ad 70px
+    // to the bottom.
+    if (
+      Array.isArray(event.size) &&
+      event.size[1] > 200 &&
+      window.matchMedia('(max-height: 800px)').matches
+    ) {
+      footerAdElement.classList.add('is-shifted-bottom');
+    }
+
+    footerAdContainerElement.classList.add('h5-footer-ad-container');
+    footerAdContainerElement.appendChild(footerAdElementClose);
+
+    footerAdElementClose.addEventListener('click', () => removeFooterAd());
+  };
+
+export const setupFooterAdListener = (
+  window: Window & googletag.IGoogleTagWindow,
+  env: Moli.Environment,
+  log: Moli.MoliLogger,
+  floorAdDomId: string,
+  disallowedAdvertiserIds: number[]
+): void => {
+  if (env === 'production') {
+    window.googletag
+      .pubads()
+      .addEventListener(
+        'slotRenderEnded',
+        renderFooterAd(window, floorAdDomId, disallowedAdvertiserIds, log)
+      );
+  } else {
+    // fake a render event
+    renderFooterAd(
+      window,
+      floorAdDomId,
+      disallowedAdvertiserIds,
+      log
+    )({
+      advertiserId: 1,
+      size: [728, 90],
+      isEmpty: false,
+      slot: {
+        getSlotElementId: (): string => floorAdDomId
+      }
+    } as any);
+  }
+};

@@ -87,6 +87,60 @@ export namespace googletag {
     ): T;
 
     /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'slotRenderEnded',
+      listener: (event: events.ISlotRenderEndedEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'impressionViewable',
+      listener: (event: events.IImpressionViewableEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'slotOnload',
+      listener: (event: events.ISlotOnloadEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'slotRequested',
+      listener: (event: events.ISlotRequestedEvent) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'slotResponseReceived',
+      listener: (event: events.ISlotResponseReceived) => void
+    ): boolean;
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Service_removeEventListener
+     * @return Whether existing event listener was removed.
+     */
+    removeEventListener(
+      eventType: 'slotVisibilityChanged',
+      listener: (event: events.ISlotVisibilityChangedEvent) => void
+    ): boolean;
+
+    /**
      * Get the list of slots associated with this service.
      */
     getSlots(): Array<IAdSlot>;
@@ -484,6 +538,49 @@ export namespace googletag {
      * @see https://developers.google.com/doubleclick-gpt/reference#googletag.Slot_clearTargeting
      */
     clearTargeting(key?: string): void;
+
+    /**
+     * Returns the ad response information. This is based on the last ad response for the slot.
+     * If this is called when the slot has no ad
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Slot_getResponseInformation
+     * @return The latest ad response information, or null if the slot has no ad.
+     */
+    getResponseInformation(): null | IResponseInformation;
+  }
+
+  export interface IResponseInformation {
+    /**
+     * Advertiser ID of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
+     *
+     * Viewable in ad manager: https://admanager.google.com/33559401#admin/companyDetail/id=[advertiserId]
+     */
+    readonly advertiserId: null | number;
+
+    /**
+     * Campaign ID (Order ID) of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
+     *
+     * Viewable in ad manager: https://admanager.google.com/33559401#delivery/OrderDetail/orderId=[campaignId]
+     */
+    readonly campaignId?: number;
+
+    /**
+     * Line item ID of the rendered reservation ad. Value is null for empty slots, backfill ads or creatives rendered
+     * by services other than pubads service.
+     *
+     * Viewable in ad manager: https://admanager.google.com/33559401#delivery/LineItemDetail/orderId=[campaignId]&lineItemId=[lineItemId}
+     */
+    readonly lineItemId?: number;
+
+    /**
+     * Creative ID of the rendered reservation ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
+     */
+    readonly creativeId?: number;
+
+    /**
+     * Creative template ID if the creative is based upon a template
+     */
+    readonly creativeTemplateId: null | number;
   }
 
   /**
