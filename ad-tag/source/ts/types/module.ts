@@ -11,7 +11,8 @@ export type ModuleType =
   | 'policy'
   | 'identity'
   | 'dmp'
-  | 'yield';
+  | 'yield'
+  | 'creatives';
 
 export interface IModule {
   readonly name: string;

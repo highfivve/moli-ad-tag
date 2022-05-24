@@ -27,6 +27,7 @@ import { Skin } from '@highfivve/module-generic-skin';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { adConfiguration } from './configuration';
+import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
 
 prebid.processQueue();
 
@@ -129,6 +130,15 @@ moli.registerModule(
     },
     window
   )
+);
+
+// footer ads
+moli.registerModule(
+  new StickyFooterAds({
+    mobileStickyDomId: 'ad-mobile-sticky',
+    desktopFloorAdDomId: 'ad-floorad',
+    disallowedAdvertiserIds: []
+  })
 );
 
 // init moli
