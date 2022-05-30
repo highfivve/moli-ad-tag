@@ -29,7 +29,13 @@
  *
  * @module
  */
-import { Moli, IModule, ModuleType, mkInitStep, IAssetLoaderService } from '@highfivve/ad-tag';
+import {
+  Moli,
+  IModule,
+  ModuleType,
+  IAssetLoaderService,
+  mkConfigureStepOnce
+} from '@highfivve/ad-tag';
 import { setupFooterAdListener } from './desktopFloorAd';
 import { initAdSticky } from './mobileSticky';
 
@@ -80,8 +86,8 @@ export class StickyFooterAds implements IModule {
       prepareRequestAdsSteps: []
     };
 
-    config.pipeline.initSteps.push(
-      mkInitStep(this.name, ctx => {
+    config.pipeline.configureSteps.push(
+      mkConfigureStepOnce(this.name, ctx => {
         if (this.stickyFooterAdConfig.mobileStickyDomId) {
           initAdSticky(
             ctx.window,
