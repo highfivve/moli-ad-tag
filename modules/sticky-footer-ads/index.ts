@@ -10,7 +10,7 @@
  * In your `index.ts` import and register the module.
  *
  * ```js
- * import { Pubstack } from '@highfivve/module-sticky-footer-ads';
+ * import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
  * moli.registerModule(new StickyFooterAds({
  *   mobileStickyDomId: 'ad-mobile-sticky',
  *   desktopFloorAdDomId: 'ad-floorad',
@@ -81,7 +81,7 @@ export class StickyFooterAds implements IModule {
     };
 
     config.pipeline.initSteps.push(
-      mkInitStep('pubstack', ctx => {
+      mkInitStep(this.name, ctx => {
         if (this.stickyFooterAdConfig.mobileStickyDomId) {
           initAdSticky(
             ctx.window,
