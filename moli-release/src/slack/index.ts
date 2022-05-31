@@ -26,7 +26,7 @@ export const sendSlackMessage = async (config: {
       channel: 'ads-releases',
       username: 'Ad-Tag Releases',
       icon_emoji: ':moneybag:',
-      blocks: createBlocks(publisherName, release, true)
+      blocks: createBlocks(publisherName, release)
     });
 
     // Send slack notification in slack channel with the publisher.
@@ -35,7 +35,7 @@ export const sendSlackMessage = async (config: {
         channel: slackChannel,
         username: 'Ad-Tag Release',
         icon_emoji: ':moneybag:',
-        blocks: createBlocks(publisherName, release, false)
+        blocks: createBlocks(publisherName, release)
       });
     }
   } else {
@@ -49,23 +49,18 @@ export const sendSlackMessage = async (config: {
  * Creates the blocks for the release message for a new ad-tag.
  * @param publisher The name of the publisher.
  * @param release All information for this release.
- * @param addPublisherName Whether to include publisher name in the message.
  */
-const createBlocks = (
-  publisher: string,
-  release: IAdTagRelease,
-  addPublisherName: boolean
-): (KnownBlock | Block)[] => {
+const createBlocks = (publisher: string, release: IAdTagRelease): (KnownBlock | Block)[] => {
   const changes = release.changelog.map(value => `\n- ${value}`).join('');
 
-  const releaseUrl = `https://${publisher}.h5v.eu/${release.version}`;
+  const releaseUrl = `https://${publisher}.h5v.eu/${release.version}/`;
 
   return [
     {
       type: 'header',
       text: {
         type: 'plain_text',
-        text: `Neues Ad-Tag${addPublisherName ? ` für ${publisher}` : ''}`
+        text: `Neues Ad-Tag für ${publisher}`
       }
     },
     {
