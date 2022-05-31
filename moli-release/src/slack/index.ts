@@ -21,14 +21,12 @@ export const sendSlackMessage = async (config: {
   if (webhookUrl) {
     const webhook = new IncomingWebhook(webhookUrl);
 
-    const adsReleasesBlocks = createBlocks(publisherName, release, !!slackChannel);
-
     // Send slack notification in #ads-releases
     await webhook.send({
       channel: 'ads-releases',
       username: 'Ad-Tag Releases',
       icon_emoji: ':moneybag:',
-      blocks: adsReleasesBlocks
+      blocks: createBlocks(publisherName, release, true)
     });
 
     // Send slack notification in slack channel with the publisher.
@@ -37,7 +35,7 @@ export const sendSlackMessage = async (config: {
         channel: slackChannel,
         username: 'Ad-Tag Release',
         icon_emoji: ':moneybag:',
-        blocks: adsReleasesBlocks
+        blocks: createBlocks(publisherName, release, false)
       });
     }
   } else {
@@ -51,12 +49,12 @@ export const sendSlackMessage = async (config: {
  * Creates the blocks for the release message for a new ad-tag.
  * @param publisher The name of the publisher.
  * @param release All information for this release.
- * @param publisherSlackChannel Whether this set of blocks will be published in the #ads-releases or in a publisher slack channel.
+ * @param addPublisherName Whether to include publisher name in the message.
  */
 const createBlocks = (
   publisher: string,
   release: IAdTagRelease,
-  publisherSlackChannel: boolean
+  addPublisherName: boolean
 ): (KnownBlock | Block)[] => {
   const changes = release.changelog.map(value => `\n- ${value}`).join('');
 
@@ -67,7 +65,7 @@ const createBlocks = (
       type: 'header',
       text: {
         type: 'plain_text',
-        text: `Neues Ad-Tag ${!publisherSlackChannel ? `für ${publisher}` : ''}`
+        text: `Neues Ad-Tag${addPublisherName ? ` für ${publisher}` : ''}`
       }
     },
     {
