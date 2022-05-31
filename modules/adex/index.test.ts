@@ -24,7 +24,7 @@ import { MappingDefinition } from './adex-mapping';
 
 import { AdexModule, ITheAdexWindow } from './index';
 import TCData = tcfapi.responses.TCData;
-import TCPurpose = tcfapi.responses.TCPurpose;
+import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -46,10 +46,7 @@ describe('The Adex DMP Module', () => {
     requestBids: [],
     requestAds: () => Promise.resolve()
   };
-  const adPipelineContext = (
-    config: Moli.MoliConfig,
-    tcData?: Partial<TCData>
-  ): AdPipelineContext => {
+  const adPipelineContext = (config: Moli.MoliConfig, tcData?: TCData): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -61,27 +58,7 @@ describe('The Adex DMP Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       slotEventService: null as any,
-      tcData: {
-        gdprApplies: true,
-        vendor: {
-          consents: { '44': true }
-        },
-        purpose: {
-          consents: {
-            1: true,
-            2: true,
-            3: true,
-            4: true,
-            5: true,
-            6: true,
-            7: true,
-            8: true,
-            9: true,
-            10: true
-          }
-        },
-        ...tcData
-      } as unknown as TCData
+      tcData: tcData ?? fullConsent({ '44': true })
     };
   };
 
@@ -196,7 +173,7 @@ describe('The Adex DMP Module', () => {
       moliConfig.pipeline?.configureSteps[0](
         adPipelineContext(
           { ...moliConfig, targeting: { keyValues: { channel: 'Medical' } } },
-          { gdprApplies: true, vendor: { consents: {}, legitimateInterests: {} } }
+          fullConsent({ '44': false })
         ),
         []
       )
@@ -251,30 +228,11 @@ describe('The Adex DMP Module', () => {
     expect(jsDomWindow._adexc).to.be.ok;
   });
 
-  const consentSituations: Array<{ description: string; tcData: Partial<TCData> }> = [
-    { description: 'no GDPR applies', tcData: { gdprApplies: false } },
+  const consentSituations: Array<{ description: string; tcData: TCData }> = [
+    { description: 'no GDPR applies', tcData: tcDataNoGdpr },
     {
       description: 'GDPR applies and consent is given',
-      tcData: {
-        gdprApplies: true,
-        vendor: {
-          consents: { '44': true }
-        },
-        purpose: {
-          consents: {
-            [TCPurpose.STORE_INFORMATION_ON_DEVICE]: true,
-            [TCPurpose.SELECT_BASIC_ADS]: true,
-            [TCPurpose.CREATE_PERSONALISED_ADS_PROFILE]: true,
-            [TCPurpose.SELECT_PERSONALISED_ADS]: true,
-            [TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE]: true,
-            [TCPurpose.SELECT_PERSONALISED_CONTENT]: true,
-            [TCPurpose.MEASURE_AD_PERFORMANCE]: true,
-            [TCPurpose.MEASURE_CONTENT_PERFORMANCE]: true,
-            [TCPurpose.APPLY_MARKET_RESEARCH]: true,
-            [TCPurpose.DEVELOP_IMPROVE_PRODUCTS]: true
-          }
-        }
-      } as unknown as TCData
+      tcData: fullConsent({ '44': true })
     }
   ];
 
@@ -308,7 +266,7 @@ describe('The Adex DMP Module', () => {
 
       expect(loadScriptStub).to.have.been.calledOnceWithExactly({
         name: 'the-adex-dmp',
-        assetUrl: '//dmp.theadex.com/d/123/456/s/adex.js',
+        assetUrl: 'https://dmp.theadex.com/d/123/456/s/adex.js',
         loadMethod: AssetLoadMethod.TAG
       });
 
@@ -336,24 +294,21 @@ describe('The Adex DMP Module', () => {
 
     await expect(
       moliConfig.pipeline?.configureSteps[0](
-        adPipelineContext({ ...moliConfig, targeting: { keyValues: { channel: 'Medical' } } }, {}),
+        adPipelineContext({ ...moliConfig, targeting: { keyValues: { channel: 'Medical' } } }),
         []
       )
     ).to.eventually.be.fulfilled;
 
     await expect(
       moliConfig.pipeline?.configureSteps[0](
-        adPipelineContext(
-          { ...moliConfig, targeting: { keyValues: { channel: 'Automotive' } } },
-          {}
-        ),
+        adPipelineContext({ ...moliConfig, targeting: { keyValues: { channel: 'Automotive' } } }),
         []
       )
     ).to.eventually.be.fulfilled;
 
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
       name: 'the-adex-dmp',
-      assetUrl: '//dmp.theadex.com/d/123/456/s/adex.js',
+      assetUrl: 'https://dmp.theadex.com/d/123/456/s/adex.js',
       loadMethod: AssetLoadMethod.TAG
     });
 
