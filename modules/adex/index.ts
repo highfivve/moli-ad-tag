@@ -246,7 +246,7 @@ export class AdexModule implements IModule {
       : assetLoaderService
           .loadScript({
             name: this.name,
-            assetUrl: `//dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
+            assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
             loadMethod: AssetLoadMethod.TAG
           })
           .then(_ => {
