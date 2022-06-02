@@ -208,7 +208,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
 
         await child.exec(
-          `git add package.json releases.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
+          `git add package.json releases.json version.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
           async (err, _stdout, _stderr) => {
             if (err) {
               console.log(err);
