@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-noadserver",
-  "version": "3.46.4",
+  "version": "3.47.0",
   "description": "Demonstrating prebid client-side rendering",
   "main": "index.ts",
   "private": true,
@@ -32,6 +32,6 @@
     "webpack-manifest-plugin": "^3.1.1"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.46.4"
+    "@highfivve/ad-tag": "^3.47.0"
   }
 }
