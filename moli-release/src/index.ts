@@ -180,10 +180,11 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         versions: versions
       };
 
-      packageJson.version = answers.version + '.0.0';
+      packageJson.version = version + '.0.0';
 
       const packageJsonNewContents = JSON.stringify(packageJson, null, 2);
       const releasesJsonNewContents = JSON.stringify(releasesJsonContent, null, 2);
+      const versionJsonNewContents = JSON.stringify({ currentVersion: version }, null, 2);
 
       // The tagName for the commit including the name of the publisher and the version.
       const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
@@ -194,12 +195,15 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         console.log(packageJsonNewContents);
         console.log(CYAN_ESC, 'Projected releases.json contents:');
         console.log(releasesJsonNewContents);
+        console.log(CYAN_ESC, 'Projected version.json contents:');
+        console.log(versionJsonNewContents);
         console.log(CYAN_ESC, 'Projected git tag name:');
         console.log(tagName);
         console.log(CYAN_ESC, '>>> DRY RUN FINISHED <<<');
       } else {
         fs.writeFileSync('package.json', packageJsonNewContents);
         fs.writeFileSync('releases.json', releasesJsonNewContents);
+        fs.writeFileSync('version.json', versionJsonNewContents);
 
         const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
 
@@ -240,7 +244,7 @@ async function getGitCommitMessages(numberOfCommits: number = 10): Promise<strin
         if (stderr) {
           reject(stderr);
         }
-        stdout = stdout.replace(/([\n\t])/g, ' ');
+        stdout = stdout.replace(/(\r\n|\r|\n|\t)/g, ' ');
         const consoleOutput = `[${stdout.slice(0, -1)}]`;
 
         // This regex escapes double quotes in the console output:
