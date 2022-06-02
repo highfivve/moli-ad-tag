@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-release",
-  "version": "3.47.1",
+  "version": "3.47.2",
   "license": "Apache-2.0",
   "description": "Moli release tools",
   "bin": {
@@ -43,7 +43,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@highfivve/utils-send-slack-message": "^3.47.1",
+    "@highfivve/utils-send-slack-message": "^3.47.2",
     "@slack/webhook": "^6.1.0",
     "commander": "^6.2.0",
     "inquirer": "^7.3.3"

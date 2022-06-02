@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/utils-send-slack-message",
-  "version": "3.47.1",
+  "version": "3.47.2",
   "license": "Apache-2.0",
   "description": "Util package for sending a slack message to internal and publisher channels",
   "main": "./lib/index.js",
