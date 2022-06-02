@@ -9,7 +9,8 @@ import * as child from 'child_process';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
-import { sendSlackMessage } from './slack';
+
+import { sendSlackMessage } from '@highfivve/utils-send-slack-message';
 
 const CYAN_ESC = '\x1b[36m%s\x1b[0m';
 

@@ -1318,6 +1318,19 @@ export namespace prebidjs {
        * @see https://docs.prebid.org/prebid-server/features/pbs-storedreqs-go.html
        */
       readonly storedrequest?: StoredRequest;
+
+      /**
+       * Custom properties that will be passed to analytics adapters.
+       */
+      readonly analytics?: {
+        /**
+         * Meta info about the versions of moli and of the publisher ad tag in use.
+         */
+        h5v: {
+          moliVersion: string;
+          adTagVersion: string | undefined;
+        };
+      };
     };
 
     /**

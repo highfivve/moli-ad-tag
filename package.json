@@ -7,7 +7,8 @@
     "moli-release",
     "modules/*",
     "examples/*",
-    "prebuilt/*"
+    "prebuilt/*",
+    "utils/*"
   ],
   "scripts": {
     "setup:all": "yarn workspaces run setup",

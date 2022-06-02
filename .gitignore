@@ -15,6 +15,7 @@ moli-debugger/lib
 moli-release/lib
 modules/*/lib
 modules/*/temp
+utils/*/lib
 tsconfig.tsbuildinfo
 website/.docusaurus
 website/build

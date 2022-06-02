@@ -28,7 +28,8 @@ jobs:
             module-yield-optimization,
             module-zeotap,
             moli-debugger,
-            moli-release
+            moli-release,
+            utils-send-slack-message
         ]
 
     steps:

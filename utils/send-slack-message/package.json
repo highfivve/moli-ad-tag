@@ -1,22 +1,18 @@
 {
-  "name": "@highfivve/moli-release",
+  "name": "@highfivve/utils-send-slack-message",
   "version": "3.46.4",
   "license": "Apache-2.0",
-  "description": "Moli release tools",
-  "bin": {
-    "moli-release": "./lib/moli-release.js"
-  },
-  "main": "./lib/moli-release.js",
+  "description": "Util package for sending a slack message to internal and publisher channels",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
-    "lib",
-    "releases"
+    "lib"
   ],
   "scripts": {
     "setup": "yarn",
-    "make:nodemodule": "yarn build:prod && yarn build:prependbashenv",
+    "make:nodemodule": "yarn build:prod",
     "build": "yarn clean && yarn compile",
     "build:prod": "yarn clean && yarn compile --mode=production",
-    "build:prependbashenv": "echo '#!/usr/bin/env node\n' | cat - lib/moli-release.js > temp && mv temp lib/moli-release.js",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
     "compile": "yarn compile:ts",
@@ -25,11 +21,10 @@
     "lint": "eslint ./src --ext .ts,.tsx && yarn prettier",
     "clean": "rm -rf lib/**",
     "validate": "yarn prettier && yarn compile",
-    "prettier": "prettier --config ../.prettierrc --check \"**/*.ts*\"",
+    "prettier": "prettier --config ../../.prettierrc --check \"src/*.ts\"",
     "prettier:fix": "yarn prettier --write",
     "validate:github": "yarn validate",
-    "validate:jenkins": "yarn validate",
-    "test:release": "yarn make:nodemodule && chmod +x lib/moli-release.js && cd demo-data/ && moli-release -D -P demo-publisher"
+    "validate:jenkins": "yarn validate"
   },
   "repository": {
     "type": "git",
@@ -43,17 +38,10 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@slack/webhook": "^6.1.0",
-    "commander": "^6.2.0",
-    "inquirer": "^7.3.3",
-    "@highfivve/utils-send-slack-message": "3.46.4"
+    "@slack/webhook": "^6.1.0"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.11",
-    "@types/inquirer": "^7.3.1",
-    "@types/node": "^15.3.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.4",
-    "webpack-manifest-plugin": "^3.1.1"
+    "typescript": "^4.2.4"
   }
 }
