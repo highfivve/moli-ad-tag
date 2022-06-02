@@ -7,6 +7,5 @@
     "declaration": true,
     "noEmitOnError": true
   },
-
   "exclude": ["node_modules", "dist", "lib"]
 }

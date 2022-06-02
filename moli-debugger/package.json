@@ -67,7 +67,6 @@
   },
   "dependencies": {
     "@highfivve/ad-tag": "^3.47.0",
-    "@highfivve/module-generic-skin": "^3.47.0",
     "@iabtcf/core": "^1.2.1",
     "core-js": "^3.12.1",
     "react": "^17.0.2",
