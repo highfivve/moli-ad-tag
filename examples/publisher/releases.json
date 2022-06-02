@@ -1,9 +1,17 @@
 {
-  "currentVersion": 5,
-  "currentFilename": "moli_faafcbab9e256bb787c4.mjs",
-  "currentFilenameEs5": "moli_es5_cb709a194628868a68b7.js",
+  "currentVersion": 6,
+  "currentFilename": "moli_a827e47e962d6e72b963.mjs",
+  "currentFilenameEs5": "moli_es5_82033cd944fbba960dea.js",
   "publisherName": "publisher-mode-example-publisher",
   "versions": [
+    {
+      "version": 6,
+      "filename": "moli_a827e47e962d6e72b963.mjs",
+      "filenameEs5": "moli_es5_82033cd944fbba960dea.js",
+      "changelog": [
+        "Test release with new version.json revision"
+      ]
+    },
     {
       "version": 5,
       "filename": "moli_faafcbab9e256bb787c4.mjs",

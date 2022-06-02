@@ -184,7 +184,11 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 
       const packageJsonNewContents = JSON.stringify(packageJson, null, 2);
       const releasesJsonNewContents = JSON.stringify(releasesJsonContent, null, 2);
-      const versionJsonNewContents = JSON.stringify({ currentVersion: version }, null, 2);
+      const versionJsonNewContents = JSON.stringify(
+        { currentVersion: version, nextVersion: version + 1 },
+        null,
+        2
+      );
 
       // The tagName for the commit including the name of the publisher and the version.
       const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
