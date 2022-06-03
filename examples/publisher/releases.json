@@ -1,9 +1,17 @@
 {
-  "currentVersion": 6,
-  "currentFilename": "moli_a827e47e962d6e72b963.mjs",
-  "currentFilenameEs5": "moli_es5_82033cd944fbba960dea.js",
+  "currentVersion": 7,
+  "currentFilename": "moli_6a4a0df5b52da9a15f3e.mjs",
+  "currentFilenameEs5": "moli_es5_f8e8fe2864147405124d.js",
   "publisherName": "publisher-mode-example-publisher",
   "versions": [
+    {
+      "version": 7,
+      "filename": "moli_6a4a0df5b52da9a15f3e.mjs",
+      "filenameEs5": "moli_es5_f8e8fe2864147405124d.js",
+      "changelog": [
+        "GD-4723: write version.json before build"
+      ]
+    },
     {
       "version": 6,
       "filename": "moli_a827e47e962d6e72b963.mjs",

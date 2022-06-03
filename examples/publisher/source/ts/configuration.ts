@@ -2,7 +2,7 @@ import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@h
 import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
 
-const { nextVersion } = require('../../version.json');
+const { currentVersion } = require('../../version.json');
 
 const teadsVerticalBid = (
   placementId: number,
@@ -572,7 +572,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           analytics: {
             h5v: {
               moliVersion: moliVersion,
-              adTagVersion: extractAdTagVersion({ currentVersion: nextVersion })
+              adTagVersion: extractAdTagVersion({ currentVersion })
             }
           }
         }
