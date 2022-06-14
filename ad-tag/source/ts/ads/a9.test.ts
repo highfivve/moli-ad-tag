@@ -192,17 +192,7 @@ describe('a9', () => {
           gdpr: {
             cmpTimeout: a9ConfigStub.cmpTimeout
           },
-          schain: {
-            complete: 1,
-            ver: '1.0',
-            node: [
-              {
-                asi: 'highfivve.com',
-                sid: '3569',
-                hp: 1
-              }
-            ]
-          }
+          schain: dummySchainConfig
         });
       });
     });
