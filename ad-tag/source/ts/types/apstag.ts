@@ -146,6 +146,51 @@ export namespace apstag {
     params?: {
       [key: string]: string | string[];
     };
+
+    /**
+     * Supply chain object to be passed in the bid request.
+     */
+    schain: {
+      /**
+       * Integer 1 or 0 indicating if all preceding nodes are complete
+       */
+      complete: 0 | 1;
+      /**
+       *  Version of the spec used
+       */
+      ver: '1.0';
+      /**
+       * Can be empty if the owner of the site is creating this request
+       */
+      node: [
+        {
+          /**
+           * Populate with the canonical domain of the advertising system where the seller.JSON file is hosted
+           */
+          asi: string;
+          /**
+           * The identifier associated with the seller or reseller account within your advertising system
+           */
+          sid: string;
+          /**
+           * 1 or 0, whether this node is involved in the payment flow
+           */
+          hp: 0 | 1;
+          /**
+           * The request ID  (optional)
+           */
+          rid?: string;
+          /**
+           * Name of the company paid for inventory under seller ID  (optional)
+           */
+          name?: string;
+          /**
+           * Business domain of this node  (optional)
+           */
+          domain?: string;
+        }
+      ];
+    };
   }
 
   /**

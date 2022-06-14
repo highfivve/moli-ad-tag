@@ -112,6 +112,11 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
           bidTimeout: config.timeout,
           gdpr: {
             cmpTimeout: config.cmpTimeout
+          },
+          schain: {
+            complete: 1,
+            ver: '1.0',
+            node: [config.schainNode]
           }
         });
         resolve();
