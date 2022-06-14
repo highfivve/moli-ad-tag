@@ -6,3 +6,7 @@ export const dummySupplyChainNode: SupplyChainObject.ISupplyChainNode = {
   sid: '42',
   hp: 1
 };
+
+export const dummySchainConfig: Moli.schain.SupplyChainConfig = {
+  supplyChainStartNode: dummySupplyChainNode
+};

@@ -193,7 +193,7 @@ export class AdService {
     if (config.prebid && env === 'production') {
       init.push(prebidInit());
 
-      configure.push(prebidConfigure(config.prebid));
+      configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits());
       }

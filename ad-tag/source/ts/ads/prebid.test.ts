@@ -18,6 +18,7 @@ import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
+import { dummySchainConfig } from '../stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -197,7 +198,7 @@ describe('prebid', () => {
 
   describe('prebid configure step', () => {
     it('should set the prebid config', () => {
-      const step = prebidConfigure(moliPrebidTestConfig);
+      const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
       const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
 
       return step(adPipelineContext(), []).then(() => {

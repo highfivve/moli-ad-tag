@@ -100,7 +100,10 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
      */
     setBidderConfig(
-      configAndBidders: { readonly bidders: BidderCode[]; readonly config: IPrebidJs },
+      configAndBidders: {
+        readonly bidders: BidderCode[];
+        readonly config: Partial<IPrebidJsConfig>;
+      },
       mergeFlag?: boolean
     ): void;
 
