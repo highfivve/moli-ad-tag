@@ -10,6 +10,7 @@ import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { Skin, SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
 import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
+import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -109,7 +110,8 @@ describe('Skin Module', () => {
       const config: Moli.MoliConfig = {
         slots: slots,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig }
+        prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+        schain: dummySchainConfig
       };
 
       module.init(config, assetLoaderService);
@@ -147,7 +149,8 @@ describe('Skin Module', () => {
       const config: Moli.MoliConfig = {
         slots: slots,
         logger: noopLogger,
-        prebid: { config: pbjsTestConfig }
+        prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+        schain: dummySchainConfig
       };
 
       module.init(config, assetLoaderService);
@@ -596,9 +599,16 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+          config: pbjsTestConfig,
+          schain: { nodes: [] }
+        };
 
-        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        const config: Moli.MoliConfig = {
+          slots: slots,
+          prebid: prebidConfig,
+          schain: dummySchainConfig
+        };
         module.init(config, assetLoaderService);
 
         expect(config.prebid?.listener).to.be.ok;
@@ -630,9 +640,16 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+          config: pbjsTestConfig,
+          schain: { nodes: [] }
+        };
 
-        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        const config: Moli.MoliConfig = {
+          slots: slots,
+          prebid: prebidConfig,
+          schain: dummySchainConfig
+        };
         module.init(config, assetLoaderService);
 
         expect(config.prebid?.listener).to.be.ok;
@@ -673,9 +690,16 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+          config: pbjsTestConfig,
+          schain: { nodes: [] }
+        };
 
-        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        const config: Moli.MoliConfig = {
+          slots: slots,
+          prebid: prebidConfig,
+          schain: dummySchainConfig
+        };
         module.init(config, assetLoaderService);
 
         expect(config.prebid?.listener).to.be.ok;
@@ -723,9 +747,16 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+          config: pbjsTestConfig,
+          schain: { nodes: [] }
+        };
 
-        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        const config: Moli.MoliConfig = {
+          slots: slots,
+          prebid: prebidConfig,
+          schain: dummySchainConfig
+        };
         module.init(config, assetLoaderService);
 
         expect(config.prebid?.listener).to.be.ok;
@@ -773,9 +804,16 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = { config: pbjsTestConfig };
+        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+          config: pbjsTestConfig,
+          schain: { nodes: [] }
+        };
 
-        const config: Moli.MoliConfig = { slots: slots, prebid: prebidConfig };
+        const config: Moli.MoliConfig = {
+          slots: slots,
+          prebid: prebidConfig,
+          schain: dummySchainConfig
+        };
         module.init(config, assetLoaderService);
 
         expect(config.prebid?.listener).to.be.ok;

@@ -16,6 +16,7 @@ import {
 import { Zeotap } from './zeotap';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
+import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -63,7 +64,8 @@ describe('Zeotap Module', () => {
       logger: noopLogger,
       targeting: {
         keyValues
-      }
+      },
+      schain: dummySchainConfig
     };
 
     module.init(moliConfig, assetLoaderService);

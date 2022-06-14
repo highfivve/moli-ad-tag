@@ -15,13 +15,14 @@ import {
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { MappingDefinition } from './adex-mapping';
 
+import { MappingDefinition } from './adex-mapping';
 import { AdexModule, ITheAdexWindow } from './index';
 import TCData = tcfapi.responses.TCData;
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
@@ -102,7 +103,8 @@ describe('The Adex DMP Module', () => {
     const moliConfig: Moli.MoliConfig = {
       slots: [slot],
       pipeline: configPipeline,
-      logger: noopLogger
+      logger: noopLogger,
+      schain: dummySchainConfig
     };
 
     const adPipeline = new AdPipeline(
