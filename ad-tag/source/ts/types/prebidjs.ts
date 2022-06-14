@@ -85,6 +85,25 @@ export namespace prebidjs {
     setConfig(config: Partial<IPrebidJsConfig>): void;
 
     /**
+     * This function is similar to setConfig, but is designed to support certain bidder-specific scenarios.
+     *
+     * Configuration provided through the setConfig function is globally available to all bidder adapters.
+     * This makes sense because most of these settings are global in nature. However, there are use cases where
+     * different bidders require different data, or where certain parameters apply only to a given bidder.
+     * Use `setBidderConfig` when you need to support these cases.
+     *
+     * Note if you would like to add to existing config you can pass `true` for the optional second mergeFlag argument
+     * like `setBidderConfig(options, true)`. If not passed, this argument defaults to false and setBidderConfig replaces
+     * all values for specified bidders.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+     */
+    setBidderConfig(
+      configAndBidders: { readonly bidders: BidderCode[]; readonly config: IPrebidJs },
+      mergeFlag?: boolean
+    ): void;
+
+    /**
      * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
      */
     requestBids(requestParam?: IRequestObj): void;

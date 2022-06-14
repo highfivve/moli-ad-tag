@@ -37,6 +37,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {
       return;
     },
+    setBidderConfig: (): void => {
+      return;
+    },
     setTargetingForGPTAsync: (_adUnits: string[]): void => {
       return;
     },
