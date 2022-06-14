@@ -181,18 +181,22 @@ describe('a9', () => {
   describe('a9 configure step', () => {
     it('should set the a9 config', () => {
       const step = a9Configure(a9ConfigStub, dummySchainConfig);
-      const setConfigSpy = sandbox.spy(dom.window.apstag, 'init');
+      const apstagInitSpy = sandbox.spy(dom.window.apstag, 'init');
 
       return step(adPipelineContext(), []).then(() => {
-        expect(setConfigSpy).to.have.been.calledOnce;
-        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+        expect(apstagInitSpy).to.have.been.calledOnce;
+        expect(apstagInitSpy).to.have.been.calledOnceWithExactly({
           pubID: a9ConfigStub.pubID,
           adServer: 'googletag',
           bidTimeout: a9ConfigStub.timeout,
           gdpr: {
             cmpTimeout: a9ConfigStub.cmpTimeout
           },
-          schain: dummySchainConfig
+          schain: {
+            complete: 1,
+            ver: '1.0',
+            nodes: [dummySchainConfig.supplyChainStartNode, a9ConfigStub.schainNode]
+          }
         });
       });
     });
