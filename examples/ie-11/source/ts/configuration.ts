@@ -267,6 +267,9 @@ export const adConfiguration: Moli.MoliConfig = {
   ],
   prebid: {
     // bidderSettings: bidderSettings,
+    schain: {
+      nodes: []
+    },
     config: {
       bidderTimeout: 1000,
       consentManagement: {
@@ -317,6 +320,13 @@ export const adConfiguration: Moli.MoliConfig = {
         singleRequest: true,
         usePrebidSizes: true
       }
+    }
+  },
+  schain: {
+    supplyChainStartNode: {
+      asi: 'highfivve.com',
+      sid: '2001',
+      hp: 1
     }
   },
   reporting: {

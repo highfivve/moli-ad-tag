@@ -556,8 +556,18 @@ export const adConfiguration: Moli.MoliConfig = {
   buckets: {
     enabled: false
   },
+  schain: {
+    supplyChainStartNode: {
+      asi: 'highfivve.com',
+      sid: '2001',
+      hp: 1
+    }
+  },
   prebid: {
     // bidderSettings: bidderSettings,
+    schain: {
+      nodes: []
+    },
     config: {
       bidderTimeout: 1000,
       consentManagement: {
@@ -621,7 +631,12 @@ export const adConfiguration: Moli.MoliConfig = {
   a9: {
     timeout: 1000,
     cmpTimeout: 500,
-    pubID: 'test'
+    pubID: 'test',
+    schainNode: {
+      asi: 'highfivve.com',
+      sid: '1111111',
+      hp: 1
+    }
   },
   reporting: {
     // report everything

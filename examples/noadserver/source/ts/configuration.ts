@@ -203,8 +203,18 @@ export const adConfiguration: Moli.MoliConfig = {
   buckets: {
     enabled: false
   },
+  schain: {
+    supplyChainStartNode: {
+      asi: 'highfivve.com',
+      sid: '2001',
+      hp: 1
+    }
+  },
   prebid: {
     // bidderSettings: bidderSettings,
+    schain: {
+      nodes: []
+    },
     config: {
       bidderTimeout: 1000,
       consentManagement: {
