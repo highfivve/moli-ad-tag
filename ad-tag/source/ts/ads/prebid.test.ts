@@ -13,8 +13,8 @@ import { prebidConfigure, prebidPrepareRequestAds, prebidRequestBids } from './p
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
-import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
-import { tcData, tcfapiFunction } from '../stubs/consentStubs';
+import { googleAdSlotStub } from '../stubs/googletagStubs';
+import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
@@ -197,10 +197,7 @@ describe('prebid', () => {
 
   describe('prebid configure step', () => {
     it('should set the prebid config', () => {
-      const prebidConfig: Moli.headerbidding.PrebidConfig = {
-        config: pbjsTestConfig
-      };
-      const step = prebidConfigure(prebidConfig);
+      const step = prebidConfigure(moliPrebidTestConfig);
       const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
 
       return step(adPipelineContext(), []).then(() => {
@@ -752,13 +749,9 @@ describe('prebid', () => {
   });
 
   describe('prebid request bids', () => {
-    const prebidConfig: Moli.headerbidding.PrebidConfig = {
-      config: pbjsTestConfig
-    };
-
     it('should not call requestBids if slots are empty', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(prebidConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
 
       await step(adPipelineContext(), []);
       expect(requestBidsSpy).to.have.not.been.called;
@@ -766,7 +759,7 @@ describe('prebid', () => {
 
     it('should not call requestBids if all slots are filtered', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(prebidConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
       const slot = createAdSlot('none-prebid');
 
       await step(adPipelineContext(), [
@@ -781,7 +774,7 @@ describe('prebid', () => {
 
     it('should call requestBids with the ad unit code', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(prebidConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
 
       const domId = 'prebid-slot';
       const adUnit = prebidAdUnit(domId, [

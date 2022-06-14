@@ -18,7 +18,6 @@ import { SizeConfigService } from './sizeConfigService';
 import IPrebidJs = prebidjs.IPrebidJs;
 import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
-import { createTestSlots } from '../util/test-slots';
 import { isNotNull } from '../util/arrayUtils';
 
 // if we forget to remove prebid from the configuration. The timeout is arbitrary
@@ -92,6 +91,8 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
             ...prebidConfig.config,
             ...{ floors: prebidConfig.config.floors || {} } // for module priceFloors
           });
+          // TODO schain config
+
           resolve();
         });
       }
