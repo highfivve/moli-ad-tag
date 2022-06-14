@@ -28,6 +28,7 @@ import { tcfapi } from '../types/tcfapi';
 import { apstag } from '../types/apstag';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
+import { dummySchainConfig } from '../stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -179,7 +180,7 @@ describe('a9', () => {
 
   describe('a9 configure step', () => {
     it('should set the a9 config', () => {
-      const step = a9Configure(a9ConfigStub);
+      const step = a9Configure(a9ConfigStub, dummySchainConfig);
       const setConfigSpy = sandbox.spy(dom.window.apstag, 'init');
 
       return step(adPipelineContext(), []).then(() => {
