@@ -1,3 +1,5 @@
+import { SupplyChainObject } from './supplyChainObject';
+
 export namespace apstag {
   export interface IApsTag {
     /**
@@ -146,6 +148,11 @@ export namespace apstag {
     params?: {
       [key: string]: string | string[];
     };
+
+    /**
+     * Supply chain object to be passed in the bid request.
+     */
+    schain: SupplyChainObject.ISupplyChainObject;
   }
 
   /**

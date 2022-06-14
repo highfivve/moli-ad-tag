@@ -100,7 +100,10 @@ export const a9Init = (
       })
   );
 
-export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep =>
+export const a9Configure = (
+  config: Moli.headerbidding.A9Config,
+  schainConfig: Moli.schain.SupplyChainConfig
+): ConfigureStep =>
   mkConfigureStep(
     'a9-configure',
     (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
@@ -112,6 +115,11 @@ export const a9Configure = (config: Moli.headerbidding.A9Config): ConfigureStep 
           bidTimeout: config.timeout,
           gdpr: {
             cmpTimeout: config.cmpTimeout
+          },
+          schain: {
+            complete: 1,
+            ver: '1.0',
+            nodes: [schainConfig.supplyChainStartNode, config.schainNode]
           }
         });
         resolve();

@@ -11,12 +11,13 @@ import {
 
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
+import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { createPbjsStub, pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
 import { expect, use } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 
+import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { GptTargetingMapping, PrebidFirstPartyDataModule } from './index';
@@ -97,8 +98,10 @@ describe('Prebid First Party Data Module', () => {
       pipeline: configPipeline,
       targeting,
       prebid: {
-        config: pbjsTestConfig
+        config: pbjsTestConfig,
+        schain: { nodes: [] }
       },
+      schain: dummySchainConfig,
       logger: noopLogger
     };
 

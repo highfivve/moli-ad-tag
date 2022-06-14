@@ -37,6 +37,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {
       return;
     },
+    setBidderConfig: (): void => {
+      return;
+    },
     setTargetingForGPTAsync: (_adUnits: string[]): void => {
       return;
     },
@@ -82,5 +85,8 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
 };
 
 export const moliPrebidTestConfig: Moli.headerbidding.PrebidConfig = {
-  config: pbjsTestConfig
+  config: pbjsTestConfig,
+  schain: {
+    nodes: []
+  }
 };

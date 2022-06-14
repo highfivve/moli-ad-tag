@@ -153,7 +153,17 @@ export const adConfiguration: Moli.MoliConfig = {
       mediaQuery: '(min-width: 768px)'
     }
   ],
+  schain: {
+    supplyChainStartNode: {
+      asi: 'highfivve.com',
+      sid: '2001',
+      hp: 1
+    }
+  },
   prebid: {
+    schain: {
+      nodes: []
+    },
     config: {
       bidderTimeout: 1000,
       consentManagement: {
@@ -196,6 +206,11 @@ export const adConfiguration: Moli.MoliConfig = {
   a9: {
     timeout: 1000,
     cmpTimeout: 500,
-    pubID: 'test'
+    pubID: 'test',
+    schainNode: {
+      asi: 'highfivve.com',
+      sid: '1111111',
+      hp: 1
+    }
   }
 };

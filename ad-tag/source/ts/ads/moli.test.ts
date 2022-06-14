@@ -18,6 +18,7 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
+import { dummySupplyChainNode } from '../stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -466,6 +467,9 @@ describe('moli', () => {
         targeting: {
           adUnitPathVariables: { pre: 'dismiss' },
           keyValues: {}
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       const config = adTag.getConfig();
@@ -489,6 +493,9 @@ describe('moli', () => {
         targeting: {
           keyValues: {},
           adUnitPathVariables: {}
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       expect(adTag.getState()).to.be.eq('configured');
@@ -581,6 +588,9 @@ describe('moli', () => {
             pre: 'dismiss',
             post: 'dismiss'
           }
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       adTag.setTargeting('post', 'configure2');
@@ -646,6 +656,9 @@ describe('moli', () => {
         targeting: {
           keyValues: { keyFromAdConfig: 'value' },
           labels: []
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       adTag.setTargeting('dynamicKeyValuePost', 'value');
@@ -718,6 +731,9 @@ describe('moli', () => {
         targeting: {
           keyValues: {},
           labels: ['pre-existing']
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       adTag.addLabel('post');
@@ -741,6 +757,9 @@ describe('moli', () => {
         targeting: {
           keyValues: {},
           labels: ['a9']
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       adTag.addLabel('dynamicLabelPost');
@@ -1207,6 +1226,9 @@ describe('moli', () => {
             persists: 'available'
           },
           labels: ['pre-existing']
+        },
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
         }
       });
       adTag.addLabel('post');

@@ -5,6 +5,7 @@ import { PrebidGoogleAnalytics } from './index';
 import { Moli, createAssetLoaderService } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
+import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 
 // setup sinon-chai
@@ -14,7 +15,8 @@ describe('Prebid Google Analytics Module', () => {
   const config: Moli.MoliConfig = {
     slots: [],
     logger: newNoopLogger(),
-    prebid: { config: pbjsTestConfig }
+    prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+    schain: dummySchainConfig
   };
 
   const sandbox = Sinon.createSandbox();

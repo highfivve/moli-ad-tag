@@ -4,6 +4,7 @@ import { IModule, ModuleMeta } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 import { apstag } from './apstag';
+import { SupplyChainObject } from './supplyChainObject';
 
 export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
@@ -741,6 +742,9 @@ export namespace Moli {
     /** all possible ad slots */
     readonly slots: AdSlot[];
 
+    /** supply chain object */
+    readonly schain: schain.SupplyChainConfig;
+
     /** optional key-value targeting for DFP */
     targeting?: Targeting;
 
@@ -1344,12 +1348,23 @@ export namespace Moli {
       readonly keyValues: DfpKeyValueMap;
     }
 
+    export type BidderSupplyChainNode = {
+      readonly bidder: prebidjs.BidderCode;
+      readonly node: SupplyChainObject.ISupplyChainNode;
+    };
+
     export interface PrebidConfig {
       /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
       readonly config: prebidjs.IPrebidJsConfig;
 
       /** optional bidder settings */
       readonly bidderSettings?: prebidjs.IBidderSettings;
+
+      /** prebid bidder supply chain configuration */
+      readonly schain: {
+        /** supply chain node for each bidder */
+        readonly nodes: BidderSupplyChainNode[];
+      };
 
       /** optional listener for prebid events */
       listener?: PrebidListenerProvider;
@@ -1438,6 +1453,11 @@ export namespace Moli {
        * Configure the maximum depth for all slotName paths in a9 requests.
        */
       readonly slotNamePathDepth?: A9SlotNamePathDepth;
+
+      /**
+       * Supply Chain Object for Amazon TAM
+       */
+      readonly schainNode: SupplyChainObject.ISupplyChainNode;
     }
 
     /**
@@ -1462,6 +1482,22 @@ export namespace Moli {
       readonly mediaType?: 'display' | 'video';
       /** Optional configuration of the maximum depth for the slotName path of this adSlot. (overrides the value in the global a9 config) */
       readonly slotNamePathDepth?: A9SlotNamePathDepth;
+    }
+  }
+
+  /**
+   * Global schain configuration for the ad tag
+   */
+  export namespace schain {
+    /**
+     * Config object for the supply chain
+     */
+    export interface SupplyChainConfig {
+      /**
+       * All supply chain object node arrays will start with this node.
+       * This should be the saleshouse or publisher that triggers the bid requests.
+       */
+      readonly supplyChainStartNode: SupplyChainObject.ISupplyChainNode;
     }
   }
 

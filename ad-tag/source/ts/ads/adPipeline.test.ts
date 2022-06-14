@@ -25,6 +25,7 @@ import { LabelConfigService } from './labelConfigService';
 import { noopReportingService } from './reportingService';
 import MoliConfig = Moli.MoliConfig;
 import SlotDefinition = Moli.SlotDefinition;
+import { dummySupplyChainNode } from '../stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -174,7 +175,10 @@ describe('AdPipeline', () => {
       });
 
       const config: MoliConfig = {
-        slots: [adSlot]
+        slots: [adSlot],
+        schain: {
+          supplyChainStartNode: dummySupplyChainNode
+        }
       };
 
       await expect(pipeline.run([adSlot], config, 1)).to.eventually.be.fulfilled;

@@ -24,7 +24,14 @@ export const noopLogger: Moli.MoliLogger = newNoopLogger();
 export const newEmptyConfig = (slots: Moli.AdSlot[] = []): Moli.MoliConfig => {
   return {
     slots: slots,
-    logger: newNoopLogger()
+    logger: newNoopLogger(),
+    schain: {
+      supplyChainStartNode: {
+        asi: 'highfivve.com',
+        sid: '1000',
+        hp: 1
+      }
+    }
   };
 };
 

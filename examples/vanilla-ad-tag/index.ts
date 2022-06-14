@@ -14,10 +14,15 @@ const config: Moli.MoliConfig = {
       position: 'in-page',
       behaviour: { loaded: 'eager' },
       sizes: [[300, 250]],
-      sizeConfig: [
-        { mediaQuery: '(min-width: 0px)', sizesSupported: [[300, 250]] }
-      ]
+      sizeConfig: [{ mediaQuery: '(min-width: 0px)', sizesSupported: [[300, 250]] }]
     }
   ],
-  environment: 'test'
-}
+  environment: 'test',
+  schain: {
+    supplyChainStartNode: {
+      asi: 'highfivve.com',
+      sid: '2001',
+      hp: 1
+    }
+  }
+};

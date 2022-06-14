@@ -12,6 +12,7 @@ import * as lazyLoaderModule from '../../../source/ts/ads/lazyLoading';
 import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
+import { dummySupplyChainNode } from '../stubs/schainStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -36,6 +37,9 @@ describe('AdService', () => {
           },
           granularityMultiplier: 1
         }
+      },
+      schain: {
+        nodes: []
       }
     }
   };
@@ -45,7 +49,8 @@ describe('AdService', () => {
     a9: {
       cmpTimeout: 500,
       timeout: 1000,
-      pubID: '0000'
+      pubID: '0000',
+      schainNode: dummySupplyChainNode
     }
   };
 

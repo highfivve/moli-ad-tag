@@ -4,6 +4,7 @@ import sinonChai from 'sinon-chai';
 
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
+import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
@@ -99,7 +100,8 @@ describe('Moli Ad Reload Module', () => {
     const moliConfig: Moli.MoliConfig = {
       slots: [slot],
       pipeline: configPipeline,
-      logger: noopLogger
+      logger: noopLogger,
+      schain: dummySchainConfig
     };
 
     const adPipeline = new AdPipeline(

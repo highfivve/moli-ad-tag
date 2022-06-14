@@ -18,7 +18,6 @@ import { SizeConfigService } from './sizeConfigService';
 import IPrebidJs = prebidjs.IPrebidJs;
 import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
-import { createTestSlots } from '../util/test-slots';
 import { isNotNull } from '../util/arrayUtils';
 
 // if we forget to remove prebid from the configuration. The timeout is arbitrary
@@ -77,7 +76,10 @@ export const prebidRemoveAdUnits = (): ConfigureStep =>
       })
   );
 
-export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep => {
+export const prebidConfigure = (
+  prebidConfig: Moli.headerbidding.PrebidConfig,
+  schainConfig: Moli.schain.SupplyChainConfig
+): ConfigureStep => {
   let result: Promise<void>;
 
   return mkConfigureStep(
@@ -92,6 +94,22 @@ export const prebidConfigure = (prebidConfig: Moli.headerbidding.PrebidConfig): 
             ...prebidConfig.config,
             ...{ floors: prebidConfig.config.floors || {} } // for module priceFloors
           });
+          prebidConfig.schain.nodes.forEach(({ bidder, node }) => {
+            context.window.pbjs.setBidderConfig({
+              bidders: [bidder],
+              config: {
+                schain: {
+                  validation: 'relaxed',
+                  config: {
+                    ver: '1.0',
+                    complete: 1,
+                    nodes: [schainConfig.supplyChainStartNode, node]
+                  }
+                }
+              }
+            });
+          });
+
           resolve();
         });
       }

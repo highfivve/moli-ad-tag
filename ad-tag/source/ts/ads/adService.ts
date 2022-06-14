@@ -193,7 +193,7 @@ export class AdService {
     if (config.prebid && env === 'production') {
       init.push(prebidInit());
 
-      configure.push(prebidConfigure(config.prebid));
+      configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits());
       }
@@ -204,7 +204,7 @@ export class AdService {
     // amazon a9
     if (config.a9 && env === 'production' && isGam) {
       init.push(a9Init(config.a9, this.assetService));
-      configure.push(a9Configure(config.a9));
+      configure.push(a9Configure(config.a9, config.schain));
       configure.push(a9PublisherAudiences(config.a9));
       prepareRequestAds.push(a9ClearTargetingStep());
       requestBids.push(a9RequestBids(config.a9));

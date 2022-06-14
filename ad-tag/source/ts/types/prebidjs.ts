@@ -3,6 +3,7 @@
  *
  * @see https://prebid.org/dev-docs/publisher-api-reference.html
  */
+import { SupplyChainObject } from './supplyChainObject';
 
 export namespace prebidjs {
   export interface IPrebidjsWindow {
@@ -83,6 +84,28 @@ export namespace prebidjs {
      * @param {prebidjs.IPrebidJsConfig} config
      */
     setConfig(config: Partial<IPrebidJsConfig>): void;
+
+    /**
+     * This function is similar to setConfig, but is designed to support certain bidder-specific scenarios.
+     *
+     * Configuration provided through the setConfig function is globally available to all bidder adapters.
+     * This makes sense because most of these settings are global in nature. However, there are use cases where
+     * different bidders require different data, or where certain parameters apply only to a given bidder.
+     * Use `setBidderConfig` when you need to support these cases.
+     *
+     * Note if you would like to add to existing config you can pass `true` for the optional second mergeFlag argument
+     * like `setBidderConfig(options, true)`. If not passed, this argument defaults to false and setBidderConfig replaces
+     * all values for specified bidders.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+     */
+    setBidderConfig(
+      configAndBidders: {
+        readonly bidders: BidderCode[];
+        readonly config: Partial<IPrebidJsConfig>;
+      },
+      mergeFlag?: boolean
+    ): void;
 
     /**
      * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
@@ -1666,7 +1689,6 @@ export namespace prebidjs {
       | 8
       | 9
       | 10
-      | 10
       | 11
       | 12
       | 13
@@ -1810,6 +1832,13 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/floors.html#floors-defined-in-the-adunit
      */
     readonly floors?: floors.IFloorConfig;
+
+    /**
+     * ## Supply Chain Object Module Config
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/schain.html
+     */
+    readonly schain?: schain.ISupplyChainConfig;
   }
 
   /**
@@ -1821,6 +1850,34 @@ export namespace prebidjs {
      * Hint: Some SSPs handles only the first size, so keep that in mind.
      */
     readonly sizes: [number, number][];
+  }
+
+  /**
+   * ## Supply Chain Object
+   *
+   * All supply chobject related types.
+   *
+   * @see https://docs.prebid.org/dev-docs/modules/schain.html
+   */
+  export namespace schain {
+    export interface ISupplyChainConfig {
+      /**
+       * 'strict': In this mode, schain object will not be passed to adapters if it is invalid. Errors are thrown for
+       * invalid schain object. 'relaxed': Errors are thrown for an invalid schain object but the invalid schain object
+       * is still passed to adapters. 'off': No validations are performed and schain object is passed as-is to adapters.
+       *
+       * The default value is 'strict'
+       */
+      readonly validation: 'strict' | 'relaxed' | 'off';
+
+      /**
+       * This is the full Supply Chain object sent to bidders conforming to
+       * the IAB OpenRTB SupplyChain Object Specification.
+       *
+       * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/master/supplychainobject.md
+       */
+      readonly config: SupplyChainObject.ISupplyChainObject;
+    }
   }
 
   export namespace video {
