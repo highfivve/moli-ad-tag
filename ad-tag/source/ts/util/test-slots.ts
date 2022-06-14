@@ -124,7 +124,7 @@ const testSlotContent = (slot: Moli.SlotDefinition): HTMLElement => {
       position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
       width: ${width}px; height: ${height}px; padding: 6px; border: 2px dotted gray; background-color: #fff;
       background-image: linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px), linear-gradient(#eee .1em, transparent .1em);
-      background-size: 100% 1.2em;
+      background-size: 100% 1.2em; box-sizing: border-box;
     `;
 
     // Description

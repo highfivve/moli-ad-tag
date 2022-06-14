@@ -1,0 +1,46 @@
+{
+  "name": "@highfivve/utils-send-slack-message",
+  "version": "3.47.5",
+  "license": "Apache-2.0",
+  "description": "Util package for sending a slack message to internal and publisher channels",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "setup": "yarn",
+    "make:nodemodule": "yarn build:prod",
+    "build": "yarn clean && yarn compile",
+    "build:prod": "yarn clean && yarn compile",
+    "start": "yarn watch",
+    "watch": "yarn compile:ts:watch",
+    "compile": "yarn compile:ts",
+    "compile:ts": "tsc -p tsconfig.build.json",
+    "compile:ts:watch": "yarn compile:ts --watch",
+    "lint": "eslint ./src --ext .ts,.tsx && yarn prettier",
+    "clean": "rm -rf lib/**",
+    "validate": "yarn prettier && yarn compile --noEmit",
+    "prettier": "prettier --config ../../.prettierrc --check \"src/*.ts\"",
+    "prettier:fix": "yarn prettier --write",
+    "validate:github": "yarn validate",
+    "validate:jenkins": "yarn validate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
+    "directory": "moli-release"
+  },
+  "keywords": [
+    "release"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "dependencies": {
+    "@slack/webhook": "^6.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  }
+}

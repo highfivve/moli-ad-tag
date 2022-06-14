@@ -5,9 +5,10 @@
     "moli-release",
     "modules/*",
     "examples/*",
-    "prebuilt/*"
+    "prebuilt/*",
+    "utils/*"
   ],
-  "version": "3.46.1",
+  "version": "3.47.5",
   "npmClient": "yarn",
   "useWorkspaces": true,
   "command": {

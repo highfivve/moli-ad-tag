@@ -1,6 +1,8 @@
-import { Moli, prebidjs, prebidOutstreamRenderer } from '@highfivve/ad-tag';
+import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
+
+const { currentVersion } = require('../../version.json');
 
 const teadsVerticalBid = (
   placementId: number,
@@ -126,7 +128,7 @@ const rubiconBid = (
   };
 };
 
-export const adConfiguration: Moli.MoliConfig = {
+export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   consent: {
     disableLegitimateInterest: true
   },
@@ -569,6 +571,23 @@ export const adConfiguration: Moli.MoliConfig = {
       nodes: []
     },
     config: {
+      s2sConfig: {
+        accountId: 'publisher-mode-example',
+        adapter: 'prebidServer',
+        endpoint: { p1Consent: 'https://prebid-server.h5v.eu/openrtb2/auction' },
+        syncEndpoint: { p1Consent: 'https://prebid-server.h5v.eu/cookie_sync' },
+        bidders: [],
+        enabled: true,
+        timeout: 1800,
+        extPrebid: {
+          analytics: {
+            h5v: {
+              moliVersion: moliVersion,
+              adTagVersion: extractAdTagVersion({ currentVersion })
+            }
+          }
+        }
+      },
       bidderTimeout: 1000,
       consentManagement: {
         gdpr: {
@@ -644,4 +663,4 @@ export const adConfiguration: Moli.MoliConfig = {
     adUnitRegex: /\/\d*\/gf\//i,
     reporters: [consoleLogReporter]
   }
-};
+});

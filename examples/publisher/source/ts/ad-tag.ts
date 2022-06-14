@@ -142,4 +142,4 @@ moli.registerModule(
 );
 
 // init moli
-moli.configure(adConfiguration);
+moli.configure(adConfiguration(moli.version));

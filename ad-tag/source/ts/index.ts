@@ -14,3 +14,4 @@ export * from './util/assetLoaderService';
 export * from './util/arrayUtils';
 export * from './util/objectUtils';
 export * from './util/logging';
+export * from './util/extractAdTagVersion';

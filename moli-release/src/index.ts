@@ -9,7 +9,8 @@ import * as child from 'child_process';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
-import { sendSlackMessage } from './slack';
+
+import { sendSlackMessage } from '@highfivve/utils-send-slack-message';
 
 const CYAN_ESC = '\x1b[36m%s\x1b[0m';
 
@@ -140,6 +141,16 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       // run lint before releasing
       child.execSync('yarn lint');
 
+      const versionJsonNewContents = JSON.stringify({ currentVersion: version }, null, 2);
+
+      if (dryRun) {
+        console.log(CYAN_ESC, '>>> DRY RUN <<<');
+        console.log(CYAN_ESC, 'Projected version.json temp file contents:');
+        console.log(versionJsonNewContents);
+      } else {
+        fs.writeFileSync('version.json', versionJsonNewContents);
+      }
+
       // run build to generate manifest.json and check if build works
       child.execSync('yarn build');
 
@@ -179,7 +190,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         versions: versions
       };
 
-      packageJson.version = answers.version + '.0.0';
+      packageJson.version = version + '.0.0';
 
       const packageJsonNewContents = JSON.stringify(packageJson, null, 2);
       const releasesJsonNewContents = JSON.stringify(releasesJsonContent, null, 2);
@@ -188,7 +199,6 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
       const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
 
       if (dryRun) {
-        console.log(CYAN_ESC, '>>> DRY RUN <<<');
         console.log(CYAN_ESC, 'Projected package.json contents:');
         console.log(packageJsonNewContents);
         console.log(CYAN_ESC, 'Projected releases.json contents:');
@@ -203,7 +213,7 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
         const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
 
         await child.exec(
-          `git add package.json releases.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
+          `git add package.json releases.json version.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
           async (err, _stdout, _stderr) => {
             if (err) {
               console.log(err);
@@ -239,7 +249,7 @@ async function getGitCommitMessages(numberOfCommits: number = 10): Promise<strin
         if (stderr) {
           reject(stderr);
         }
-        stdout = stdout.replace(/([\n\t])/g, ' ');
+        stdout = stdout.replace(/(\r\n|\r|\n|\t)/g, ' ');
         const consoleOutput = `[${stdout.slice(0, -1)}]`;
 
         // This regex escapes double quotes in the console output:

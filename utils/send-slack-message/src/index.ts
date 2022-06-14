@@ -1,16 +1,30 @@
 import { IncomingWebhook } from '@slack/webhook';
-import { IAdTagRelease } from '../types/releasesJson';
 import { Block, KnownBlock } from '@slack/types';
+
+/**
+ * Minimal type definition for a release of the ad tag.
+ */
+type AdTagRelease = {
+  /**
+   * The version of this ad tag release.
+   */
+  readonly version: number;
+
+  /**
+   * The changes for the version of this ad tag.
+   */
+  readonly changelog: string[];
+};
 
 /**
  * Send slack notifications when a new ad-tag is released.
  * @param {object} config The config object for the slack notifications.
- * @param {IAdTagRelease} config.release The release object containing the changes, version, ...
+ * @param {AdTagRelease} config.release The release object containing the changes, version, ...
  * @param {string} config.publisherName The name of the publisher the ad-tag is for.
  * @param {string?} config.slackChannel The name of the slack channel with the publisher (if existing).
  */
 export const sendSlackMessage = async (config: {
-  release: IAdTagRelease;
+  release: AdTagRelease;
   publisherName: string;
   slackChannel?: string;
 }): Promise<void> => {
@@ -21,14 +35,12 @@ export const sendSlackMessage = async (config: {
   if (webhookUrl) {
     const webhook = new IncomingWebhook(webhookUrl);
 
-    const adsReleasesBlocks = createBlocks(publisherName, release, !!slackChannel);
-
     // Send slack notification in #ads-releases
     await webhook.send({
       channel: 'ads-releases',
       username: 'Ad-Tag Releases',
       icon_emoji: ':moneybag:',
-      blocks: adsReleasesBlocks
+      blocks: createBlocks(publisherName, release)
     });
 
     // Send slack notification in slack channel with the publisher.
@@ -37,7 +49,7 @@ export const sendSlackMessage = async (config: {
         channel: slackChannel,
         username: 'Ad-Tag Release',
         icon_emoji: ':moneybag:',
-        blocks: adsReleasesBlocks
+        blocks: createBlocks(publisherName, release)
       });
     }
   } else {
@@ -51,23 +63,18 @@ export const sendSlackMessage = async (config: {
  * Creates the blocks for the release message for a new ad-tag.
  * @param publisher The name of the publisher.
  * @param release All information for this release.
- * @param publisherSlackChannel Whether this set of blocks will be published in the #ads-releases or in a publisher slack channel.
  */
-const createBlocks = (
-  publisher: string,
-  release: IAdTagRelease,
-  publisherSlackChannel: boolean
-): (KnownBlock | Block)[] => {
+const createBlocks = (publisher: string, release: AdTagRelease): (KnownBlock | Block)[] => {
   const changes = release.changelog.map(value => `\n- ${value}`).join('');
 
-  const releaseUrl = `https://${publisher}.h5v.eu/${release.version}`;
+  const releaseUrl = `https://${publisher}.h5v.eu/${release.version}/`;
 
   return [
     {
       type: 'header',
       text: {
         type: 'plain_text',
-        text: `Neues Ad-Tag ${!publisherSlackChannel ? `für ${publisher}` : ''}`
+        text: `Neues Ad-Tag für ${publisher}`
       }
     },
     {
