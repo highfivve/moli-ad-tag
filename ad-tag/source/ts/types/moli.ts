@@ -1350,7 +1350,16 @@ export namespace Moli {
 
     export type BidderSupplyChainNode = {
       readonly bidder: prebidjs.BidderCode;
+
+      /**
+       * The bidder specific supply chain node
+       */
       readonly node: SupplyChainObject.ISupplyChainNode;
+
+      /**
+       * if true the `node` will be added to the supply chain configuration.
+       */
+      readonly appendNode: boolean;
     };
 
     export interface PrebidConfig {

@@ -94,7 +94,11 @@ export const prebidConfigure = (
             ...prebidConfig.config,
             ...{ floors: prebidConfig.config.floors || {} } // for module priceFloors
           });
-          prebidConfig.schain.nodes.forEach(({ bidder, node }) => {
+          prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
+            const nodes = [schainConfig.supplyChainStartNode];
+            if (appendNode) {
+              nodes.push(node);
+            }
             context.window.pbjs.setBidderConfig({
               bidders: [bidder],
               config: {
@@ -103,7 +107,7 @@ export const prebidConfigure = (
                   config: {
                     ver: '1.0',
                     complete: 1,
-                    nodes: [schainConfig.supplyChainStartNode, node]
+                    nodes
                   }
                 }
               }
