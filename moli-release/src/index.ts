@@ -10,8 +10,6 @@ import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
 
-import { sendSlackMessage } from '@highfivve/utils-send-slack-message';
-
 const CYAN_ESC = '\x1b[36m%s\x1b[0m';
 
 program
@@ -19,13 +17,11 @@ program
   .description('Create a release for moli ad tag')
   .option('-D, --dry', 'Dry run not creating a commit', false)
   .option('-P, --publishername [publishername]', 'Publisher name')
-  .option('-S, --slack [channel name]', 'Name of the slack channel with the publisher')
   .parse(process.argv);
 
 const options = program.opts();
 const dryRun: boolean = options.dry;
 const publisherNameFromArgs: string | undefined = options.publishername;
-const slackChannelFromArgs: string | undefined = options.slack;
 
 // Parse releases.json (optional) and package.json (required)
 let releasesJson: IReleasesJson;
@@ -218,11 +214,6 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
             if (err) {
               console.log(err);
             } else {
-              await sendSlackMessage({
-                release: change,
-                publisherName: releasesJson.publisherName,
-                slackChannel: slackChannelFromArgs
-              });
               console.log('Successfully released new version');
             }
           }

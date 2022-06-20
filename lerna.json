@@ -5,8 +5,7 @@
     "moli-release",
     "modules/*",
     "examples/*",
-    "prebuilt/*",
-    "utils/*"
+    "prebuilt/*"
   ],
   "version": "3.48.1",
   "npmClient": "yarn",

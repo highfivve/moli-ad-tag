@@ -44,8 +44,6 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
-    "@highfivve/utils-send-slack-message": "^3.48.1",
-    "@slack/webhook": "^6.1.0",
     "commander": "^6.2.0",
     "inquirer": "^7.3.3"
   },
