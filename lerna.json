@@ -7,7 +7,7 @@
     "examples/*",
     "prebuilt/*"
   ],
-  "version": "3.48.1",
+  "version": "3.49.0",
   "npmClient": "yarn",
   "useWorkspaces": true,
   "command": {
