@@ -4,6 +4,7 @@ export * from './types/module';
 export * from './types/moli';
 export * from './types/prebidjs';
 export * from './types/tcfapi';
+export * from './types/supplyChainObject';
 export * from './ads/moliGlobal';
 export * from './ads/moli';
 export * from './ads/adPipeline';
