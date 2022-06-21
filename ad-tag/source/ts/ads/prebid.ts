@@ -19,6 +19,7 @@ import IPrebidJs = prebidjs.IPrebidJs;
 import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
+import { SupplyChainObject } from '../types/supplyChainObject';
 
 // if we forget to remove prebid from the configuration. The timeout is arbitrary
 const prebidTimeout = (window: Window) =>
@@ -82,6 +83,17 @@ export const prebidConfigure = (
 ): ConfigureStep => {
   let result: Promise<void>;
 
+  const mkSupplyChainConfig = (
+    nodes: SupplyChainObject.ISupplyChainNode[]
+  ): prebidjs.schain.ISupplyChainConfig => ({
+    validation: 'relaxed',
+    config: {
+      ver: '1.0',
+      complete: 1,
+      nodes
+    }
+  });
+
   return mkConfigureStep(
     'prebid-configure',
     (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
@@ -92,7 +104,10 @@ export const prebidConfigure = (
           }
           context.window.pbjs.setConfig({
             ...prebidConfig.config,
-            ...{ floors: prebidConfig.config.floors || {} } // for module priceFloors
+            // global schain configuration
+            ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
+            // for module priceFloors
+            ...{ floors: prebidConfig.config.floors || {} }
           });
           prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
             const nodes = [schainConfig.supplyChainStartNode];
@@ -101,16 +116,7 @@ export const prebidConfigure = (
             }
             context.window.pbjs.setBidderConfig({
               bidders: [bidder],
-              config: {
-                schain: {
-                  validation: 'relaxed',
-                  config: {
-                    ver: '1.0',
-                    complete: 1,
-                    nodes
-                  }
-                }
-              }
+              config: { schain: mkSupplyChainConfig(nodes) }
             });
           });
 

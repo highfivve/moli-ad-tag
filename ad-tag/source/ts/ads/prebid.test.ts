@@ -203,7 +203,19 @@ describe('prebid', () => {
 
       return step(adPipelineContext(), []).then(() => {
         expect(setConfigSpy).to.have.been.calledOnce;
-        expect(setConfigSpy).to.have.been.calledOnceWithExactly(pbjsTestConfig);
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+          ...pbjsTestConfig,
+          ...{
+            schain: {
+              validation: 'relaxed',
+              config: {
+                ver: '1.0',
+                complete: 1,
+                nodes: [dummySchainConfig.supplyChainStartNode]
+              }
+            }
+          }
+        });
       });
     });
   });
