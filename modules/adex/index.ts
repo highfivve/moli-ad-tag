@@ -241,17 +241,19 @@ export class AdexModule implements IModule {
     ]);
 
     // load script if consent is given
-    return !this.hasRequiredConsent(context.tcData) || this.isLoaded
-      ? Promise.resolve()
-      : assetLoaderService
-          .loadScript({
-            name: this.name,
-            assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
-            loadMethod: AssetLoadMethod.TAG
-          })
-          .then(_ => {
-            this.isLoaded = true;
-          });
+    if (this.hasRequiredConsent(context.tcData) || this.isLoaded) {
+      assetLoaderService
+        .loadScript({
+          name: this.name,
+          assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
+          loadMethod: AssetLoadMethod.TAG
+        })
+        .then(_ => {
+          this.isLoaded = true;
+        });
+    }
+
+    return Promise.resolve();
   }
 
   hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
