@@ -2956,7 +2956,7 @@ export namespace prebidjs {
     /**
      * Indicates the type of supply for this placement. Possible values are web, mobile_web, mobile_app
      */
-    readonly supplyType: 'web' | 'mobile_web' | 'mobile_app';
+    readonly supplyType?: 'web' | 'mobile_web' | 'mobile_app';
 
     /**
      * Optional configuration for video placements
