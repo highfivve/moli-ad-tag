@@ -114,10 +114,10 @@ export const prebidConfigure = (
             if (appendNode) {
               nodes.push(node);
             }
-            context.window.pbjs.setBidderConfig({
-              bidders: [bidder],
-              config: { schain: mkSupplyChainConfig(nodes) }
-            });
+            context.window.pbjs.setBidderConfig(
+              { bidders: [bidder], config: { schain: mkSupplyChainConfig(nodes) } },
+              true
+            );
           });
 
           resolve();
