@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-publisher-mode",
-  "version": "3.49.3",
+  "version": "3.49.4",
   "description": "Demonstrating the publisher mode",
   "main": "index.ts",
   "private": true,
@@ -34,6 +34,6 @@
     "webpack-manifest-plugin": "^3.1.1"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.49.3"
+    "@highfivve/ad-tag": "^3.49.4"
   }
 }

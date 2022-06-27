@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-blocklist-url",
-  "version": "3.49.3",
+  "version": "3.49.4",
   "license": "Apache-2.0",
   "description": "Handles blocklisted urls",
   "main": "./lib/index.js",
@@ -52,6 +52,6 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.49.3"
+    "@highfivve/ad-tag": "^3.49.4"
   }
 }
