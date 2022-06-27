@@ -28,12 +28,15 @@ const configureTargeting = (
   targeting: Moli.Targeting | undefined
 ): void => {
   const keyValueMap = targeting ? targeting.keyValues : {};
-  Object.keys(keyValueMap).forEach(key => {
-    const value = keyValueMap[key];
-    if (value) {
-      window.googletag.pubads().setTargeting(key, value);
-    }
-  });
+  const excludes = targeting?.adManagerExcludes ?? [];
+  Object.keys(keyValueMap)
+    .filter(key => !excludes.includes(key))
+    .forEach(key => {
+      const value = keyValueMap[key];
+      if (value) {
+        window.googletag.pubads().setTargeting(key, value);
+      }
+    });
 };
 
 /**

@@ -825,7 +825,7 @@ export namespace Moli {
      * This setting is not yet configurable via API as this should be static
      * and defined in the ad tag.
      */
-    readonly adManagerExcludes: string[];
+    readonly adManagerExcludes?: string[];
 
     /** additional labels. Added in addition to the ones created by the sizeConfig. */
     readonly labels?: string[];
