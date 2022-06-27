@@ -820,6 +820,13 @@ export namespace Moli {
     /** static or supplied key-values */
     readonly keyValues: DfpKeyValueMap;
 
+    /**
+     * A list of key-value keys that should not be sent to the ad manager.
+     * This setting is not yet configurable via API as this should be static
+     * and defined in the ad tag.
+     */
+    readonly adManagerExcludes?: string[];
+
     /** additional labels. Added in addition to the ones created by the sizeConfig. */
     readonly labels?: string[];
 

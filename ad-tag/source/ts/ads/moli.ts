@@ -63,7 +63,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             targeting: {
               keyValues: {
                 [key]: value
-              }
+              },
+              adManagerExcludes: []
             }
           };
         }
@@ -101,6 +102,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             ...state.config,
             targeting: {
               keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
+              adManagerExcludes: state.config.targeting
+                ? state.config.targeting.adManagerExcludes
+                : [],
               labels: [label]
             }
           };
@@ -135,7 +139,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           targeting: {
             keyValues: state.config.targeting ? state.config.targeting.keyValues : {},
             labels: state.config.targeting?.labels ? state.config.targeting.labels : [],
-            adUnitPathVariables: variables
+            adUnitPathVariables: variables,
+            adManagerExcludes: state.config.targeting
+              ? state.config.targeting.adManagerExcludes
+              : []
           }
         };
         break;
@@ -372,7 +379,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                 ...(config.targeting && config.targeting.labels ? config.targeting.labels : []),
                 ...state.labels
               ],
-              adUnitPathVariables: state.adUnitPathVariables
+              adUnitPathVariables: state.adUnitPathVariables,
+              adManagerExcludes: config.targeting ? config.targeting.adManagerExcludes : []
             },
             reporting: {
               ...config.reporting,
@@ -631,7 +639,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
                     : []),
                   ...labels
                 ],
-                adUnitPathVariables: currentState.adUnitPathVariables
+                adUnitPathVariables: currentState.adUnitPathVariables,
+                adManagerExcludes: configFromAdTag.targeting
+                  ? configFromAdTag.targeting.adManagerExcludes
+                  : []
               }
             };
           })

@@ -1524,6 +1524,14 @@ export namespace prebidjs {
       ext?: any;
     }
 
+    /**
+     * Criteo specific extension for the OpenRTB User object
+     */
+    export interface CriteoOpenRtb2UserExt {
+      deviceidtype: 'gaid' | 'idfa';
+      deviceid: string;
+    }
+
     export interface OpenRtb2User {
       /**
        * Year of birth as a 4-digit integer.
@@ -1539,6 +1547,8 @@ export namespace prebidjs {
        * Comma separated list of keywords, interests, or intent.
        */
       keywords?: string;
+
+      ext?: any & CriteoOpenRtb2UserExt;
     }
 
     export interface OpenRtb2Publisher {
@@ -2868,6 +2878,34 @@ export namespace prebidjs {
     [key: string]: string[];
   }
 
+  type AppNexusASTAppDeviceId =
+    | { readonly idfa: string }
+    | { readonly aaid: string }
+    | { readonly md5udid: string }
+    | { readonly shad1udid: string }
+    | { readonly windowsadid: string };
+
+  export interface IAppNexusASTApp {
+    /**
+     * The App ID.
+     * @example 'B1O2W3M4AN.com.prebid.webview'
+     */
+    readonly id?: string;
+
+    /**
+     * Object that contains the advertising identifiers of the user (idfa, aaid, md5udid, sha1udid, or windowsadid).
+     */
+    readonly device_id: AppNexusASTAppDeviceId;
+
+    /**
+     * Object that contains the latitude (lat) and longitude (lng) of the user.
+     */
+    readonly geo?: {
+      readonly lat: number;
+      readonly lng: number;
+    };
+  }
+
   /**
    * AppNexus prebid server keyword object.
    */
@@ -2914,6 +2952,11 @@ export namespace prebidjs {
      * Sets a floor price for the bid that is returned.
      */
     readonly reserve?: number;
+
+    /**
+     * Indicates the type of supply for this placement. Possible values are web, mobile_web, mobile_app
+     */
+    readonly supplyType?: 'web' | 'mobile_web' | 'mobile_app';
 
     /**
      * Optional configuration for video placements
@@ -2971,6 +3014,12 @@ export namespace prebidjs {
        */
       readonly frameworks?: Array<0 | 1 | 2 | 3 | 4 | 5>;
     };
+
+    /**
+     * AppNexus supports using prebid within a mobile app’s webview.
+     * If you are interested in using an SDK, please see Prebid Mobile instead.
+     */
+    readonly app?: IAppNexusASTApp;
   }
 
   /**

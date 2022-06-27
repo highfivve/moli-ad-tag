@@ -15,7 +15,8 @@ import {
   gptDestroyAdSlots,
   gptInit,
   gptLDeviceLabelKeyValue,
-  gptResetTargeting
+  gptResetTargeting,
+  gptConfigure
 } from './googleAdManager';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
@@ -109,6 +110,52 @@ describe('google ad manager', () => {
         // a second init call should resolve without processing the cmd queue
         return init.then(() => step(adPipelineContext()));
       });
+    });
+  });
+
+  describe('gptConfigure', () => {
+    it('setTargeting should not be called if targeting is empty', async () => {
+      const step = gptConfigure(emptyConfig);
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+
+      await step(adPipelineContext(), []);
+      expect(setTargetingSpy).to.have.not.been.called;
+    });
+
+    it('setTargeting should be called if targeting contains key-values', async () => {
+      const step = gptConfigure({
+        ...emptyConfig,
+        targeting: {
+          keyValues: {
+            foo: 'bar',
+            tags: ['one', 'two']
+          }
+        }
+      });
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+
+      await step(adPipelineContext(), []);
+      expect(setTargetingSpy).to.have.been.calledTwice;
+      expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
+      expect(setTargetingSpy).to.have.been.calledWith('tags', ['one', 'two']);
+    });
+
+    it('setTargeting should not be called if targeting key-value is excluded', async () => {
+      const step = gptConfigure({
+        ...emptyConfig,
+        targeting: {
+          keyValues: {
+            foo: 'bar',
+            sensitive: 'chocolate'
+          },
+          adManagerExcludes: ['sensitive']
+        }
+      });
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+
+      await step(adPipelineContext(), []);
+      expect(setTargetingSpy).to.have.been.calledOnce;
+      expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
     });
   });
 
