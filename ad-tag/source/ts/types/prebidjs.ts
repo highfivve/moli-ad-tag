@@ -4159,7 +4159,7 @@ export namespace prebidjs {
     /**
      * Define which key/value pairs are sent to the ad server.
      */
-    readonly adserverTargeting: IAdServerTargeting[];
+    readonly adserverTargeting?: IAdServerTargeting[];
 
     /**
      * Some bidders return gross prices instead of the net prices (what the publisher will actually get paid).
@@ -4168,6 +4168,42 @@ export namespace prebidjs {
      * Otherwise, this bidder's gross price will unfairly win over your other demand sources who report the real price.
      */
     readonly bidCpmAdjustment?: (bidCpm: number, bid: IBidResponse) => number;
+
+    /**
+     * If adapter-specific targeting is specified, can be used to suppress the standard targeting for that adapter.
+     * @default true
+     */
+    readonly sendStandardTargeting?: boolean;
+
+    /**
+     * 	If custom adserverTargeting functions are specified that may generate empty keys, this can be used to suppress them.
+     * 	@default false
+     */
+    readonly suppressEmptyKeys?: boolean;
+
+    /**
+     * Would allow bids with a 0 CPM to be accepted by Prebid.js and could be passed to the ad server.
+     * @default false
+     */
+    readonly allowZeroCpmBids?: boolean;
+
+    /**
+     * Allow use of cookies and local storage.
+     * @default false (since prebid 7)
+     */
+    readonly storageAllowed?: boolean;
+
+    /**
+     * Allow adapters to bid with alternate bidder codes.
+     * @default false (since prebid 7)
+     */
+    readonly allowAlternateBidderCodes?: boolean;
+
+    /**
+     *  Array of bidder codes for which an adapter can bid.
+     * undefined or ['*'] will allow adapter to bid with any bidder code.
+     */
+    readonly allowedAlternateBidderCodes?: BidderCode[] | ['*'];
   }
 
   /**
