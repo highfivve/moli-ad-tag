@@ -1,7 +1,15 @@
 import { googletag, Moli } from '@highfivve/ad-tag';
 
+const closeButtonDataRef = 'footer-ad-close-button';
 const containerDataRefSelector = '[data-ref=h5-footer-ad-container]';
-const closeButtonDataRefSelector = '[data-ref=footer-ad-close-button]';
+const closeButtonDataRefSelector = `[data-ref=${closeButtonDataRef}]`;
+
+const css = {
+  adSlot: 'h5-footer-ad',
+  container: 'h5-footer-ad-container',
+  footerAdClose: 'h5-footer-ad-close',
+  isShiftedBottom: 'is-shifted-bottom'
+};
 
 /**
  * This wraps functionality to show and hide an interactive desktop footer ad component with a close
@@ -23,7 +31,8 @@ const renderFooterAd =
   ) =>
   (event: googletag.events.ISlotRenderEndedEvent) => {
     const slot = event.slot;
-    const footerAdContainerElement = window.document.body.querySelector(containerDataRefSelector);
+    const footerAdContainerElement =
+      window.document.body.querySelector<HTMLElement>(containerDataRefSelector);
     const footerAdElement = window.document.getElementById(floorAdDomId);
 
     const removeFooterAd = () => {
@@ -57,11 +66,11 @@ const renderFooterAd =
     }
 
     const footerAdElementClose = document.createElement('button');
-    footerAdElementClose.classList.add('h5-footer-ad-close');
+    footerAdElementClose.classList.add(css.footerAdClose);
     footerAdElementClose.setAttribute('aria-label', 'Anzeige entfernen');
-    footerAdElementClose.setAttribute('data-ref', 'footer-ad-close-button');
+    footerAdElementClose.setAttribute('data-ref', closeButtonDataRef);
 
-    footerAdElement.classList.add('h5-footer-ad');
+    footerAdElement.classList.add(css.adSlot);
 
     // for the combination of high ad (> 200px) and low vertical screen resolution, we shift the ad 70px
     // to the bottom.
@@ -70,10 +79,11 @@ const renderFooterAd =
       event.size[1] > 200 &&
       window.matchMedia('(max-height: 800px)').matches
     ) {
-      footerAdElement.classList.add('is-shifted-bottom');
+      footerAdElement.classList.add(css.isShiftedBottom);
     }
 
-    footerAdContainerElement.classList.add('h5-footer-ad-container');
+    footerAdContainerElement.classList.add(css.container);
+    footerAdContainerElement.style.setProperty('display', 'block');
     footerAdContainerElement.appendChild(footerAdElementClose);
 
     footerAdElementClose.addEventListener('click', () => removeFooterAd());

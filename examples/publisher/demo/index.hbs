@@ -96,6 +96,7 @@
   <!-- floor ad -->
   <style>
     .h5-footer-ad-container {
+      display: none;
       bottom: 0;
       margin-left: auto;
       margin-right: auto;
@@ -105,6 +106,16 @@
       left: 50%;
       transform: translate(-50%, 0);
       z-index: 900; /* set this to a value that enables the footer ad to overlap any other elements on the page. */
+    }
+
+    @media (min-width: 1000px) {
+      .h5-footer-ad-close {
+        border-radius: 0 12px 12px 0;
+        height: 60px;
+        width: 24px;
+        right: -24px;
+        top: 0
+      }
     }
 
     .h5-footer-ad-close {
