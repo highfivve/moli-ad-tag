@@ -2658,6 +2658,7 @@ export namespace prebidjs {
   }
 
   // Supported SSPs
+  export const AdaptMx = 'amx';
   export const Adform = 'adf';
   export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
@@ -2689,6 +2690,7 @@ export namespace prebidjs {
    * The bidder code is used to identify the different SSPs.
    */
   export type BidderCode =
+    | typeof AdaptMx
     | typeof AdUp
     | typeof Adform
     | typeof Criteo
@@ -2760,6 +2762,30 @@ export namespace prebidjs {
      */
     readonly bidSource?: server.BidSource;
   }
+
+  /**
+   * Adapt.mx bid params
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/amx.html
+   */
+  export interface IAdaptMxParams {
+    /**
+     * @example 'cHJlYmlkLm9yZw'
+     */
+    readonly tagId: string;
+
+    /**
+     * Activate 100% fill ads
+     */
+    readonly testMode?: boolean;
+
+    /**
+     * Ad Unit ID used in reporting. Will default to bid.adUnitCode
+     */
+    readonly adUnitId?: string;
+  }
+
+  export interface IAdaptMxBid extends IBidObject<typeof AdaptMx, IAdaptMxParams> {}
 
   /**
    * Adform bid params
@@ -3961,6 +3987,7 @@ export namespace prebidjs {
    * Supported bid object types.
    */
   export type IBid =
+    | IAdaptMxBid
     | IAdformBid
     | IAdUpBid
     | ICriteoBid
