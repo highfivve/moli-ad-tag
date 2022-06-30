@@ -49,24 +49,6 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
   return stub;
 };
 
-export const contentServiceStub: googletag.IContentService = {
-  getSlots: (): googletag.IAdSlot[] => {
-    return [];
-  },
-  addEventListener: (
-    _eventType: string,
-    _listener: (event: any) => void
-  ): googletag.IContentService => {
-    return contentServiceStub;
-  },
-  removeEventListener: (_eventType: string, _listener: (event: any) => void) => {
-    return false;
-  },
-  setContent(slot: googletag.IAdSlot, content: string): void {
-    return;
-  }
-};
-
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
   const stub: googletag.IAdSlot = {
     clearTargeting(_key?: string): void {
@@ -138,7 +120,6 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
     enableServices: (): void => {
       return;
     },
-    pubads: (): googletag.IPubAdsService => pubAdsStub,
-    content: (): googletag.IContentService => contentServiceStub
+    pubads: (): googletag.IPubAdsService => pubAdsStub
   };
 };

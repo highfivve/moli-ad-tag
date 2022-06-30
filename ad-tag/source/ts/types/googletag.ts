@@ -259,34 +259,6 @@ export namespace googletag {
     setCookieOptions(options: 0 | 1): IPubAdsService;
   }
 
-  /**
-   * ## Content Service
-   *
-   * The content service. This service is used to set the content of a slot manually.
-   *
-   * @see {@link https://developers.google.com/doubleclick-gpt/reference#googletagcontentservice}
-   */
-  export interface IContentService extends IService<IContentService> {
-    /**
-     * Fills a slot with the given content. If services are not yet enabled,
-     * stores the content and fills it in when services are enabled.
-     *
-     * @example
-     * ```javascript
-     * var slot = googletag.defineSlot('/1234567/sports', [728, 90], 'div-1').
-     * addService(googletag.content());
-     * googletag.enableServices();
-     *
-     * var content = '<a href="www.mydestinationsite.com"><img src="www.mysite.com/img.png"></img></a>';
-     * googletag.content().setContent(slot, content);
-     * ```
-     *
-     * @param slot - The slot to be filled.
-     * @param content - The HTML content for the slot.
-     */
-    setContent(slot: IAdSlot, content: string): void;
-  }
-
   export namespace events {
     export interface IImpressionViewableEvent extends Event {
       serviceName: string;
@@ -397,11 +369,6 @@ export namespace googletag {
      * @returns a reference to the pubads service.
      */
     pubads(): IPubAdsService;
-
-    /**
-     * @return a reference to the content service.
-     */
-    content(): IContentService;
 
     /**
      * Constructs an ad slot with a given ad unit path and size and associates it with the ID of a div element
