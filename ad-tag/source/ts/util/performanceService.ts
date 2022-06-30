@@ -23,13 +23,13 @@ export interface IPerformanceMeasurementService {
    * @param name the name of the measurement
    * @returns the first measurement taken or undefined
    */
-  getMeasure(name: string): PerformanceMeasure | undefined;
+  getMeasure(name: string): PerformanceEntry | undefined;
 
   /**
    * @param name the name of the mark
    * @returns the first mark taken or undefined
    */
-  getMark(name: string): PerformanceMark | undefined;
+  getMark(name: string): PerformanceEntry | undefined;
 }
 
 /**
@@ -56,12 +56,12 @@ class PerformanceMeasurementService implements IPerformanceMeasurementService {
     performance.measure(name, startMarkName, endMarkName);
   }
 
-  public getMeasure(name: string): PerformanceMeasure | undefined {
+  public getMeasure(name: string): PerformanceEntry | undefined {
     const entries = performance.getEntriesByName(name, 'measure');
     return entries[0];
   }
 
-  public getMark(name: string): PerformanceMark | undefined {
+  public getMark(name: string): PerformanceEntry | undefined {
     const entries = performance.getEntriesByName(name, 'mark');
     return entries[0];
   }

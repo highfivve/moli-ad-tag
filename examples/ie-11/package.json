@@ -21,10 +21,10 @@
   "devDependencies": {
     "html-webpack-plugin": "^5.3.1",
     "ts-loader": "^9.2.1",
-    "typescript": "^4.2.4",
+    "typescript": "^4.7.4",
     "webpack": "^5.37.1",
     "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2",
+    "webpack-dev-server": "^4.9.3",
     "whatwg-fetch": "^3.6.2"
   },
   "dependencies": {
