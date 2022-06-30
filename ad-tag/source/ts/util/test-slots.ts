@@ -69,6 +69,16 @@ export const removeTestSlotSizeFromLocalStorage = (slot: Moli.AdSlot) =>
  * Sets a blank div as the content of every given slot, which can later be altered.
  * @returns the created DOM elements along with their respective slots.
  */
+
+const setContent = (adSlot, content) => {
+  const adSlotId = adSlot.getSlotElementId();
+  const slotToFill = document.getElementById(adSlotId);
+
+  if (slotToFill) {
+    slotToFill.innerHTML = content;
+  }
+};
+
 const createBlankTestSlots = (
   context: AdPipelineContext,
   slots: Moli.SlotDefinition[]
@@ -86,7 +96,8 @@ const createBlankTestSlots = (
     }
 
     // render test creative
-    context.window.googletag.content().setContent(adSlot, div.outerHTML);
+    setContent(adSlot, div.outerHTML);
+
     context.logger.debug(
       'GAM',
       `Set content for slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
