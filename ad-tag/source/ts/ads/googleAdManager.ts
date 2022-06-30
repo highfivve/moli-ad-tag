@@ -150,9 +150,6 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             resolve();
             return;
           case 'test':
-            // Note that this call is actually important to initialize the content service. Otherwise
-            // the service won't be enabled with the `googletag.enableServices()`.
-            context.window.googletag.content().getSlots();
             context.window.googletag.enableServices();
             resolve();
             return;
@@ -284,10 +281,7 @@ export const gptDefineSlots =
       };
 
       // lookup existing slots and use those if already present. This makes defineSlots idempotent
-      const allSlots =
-        context.env === 'production'
-          ? context.window.googletag.pubads().getSlots()
-          : context.window.googletag.content().getSlots();
+      const allSlots = context.window.googletag.pubads().getSlots();
       const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
 
       // define and display ad slot if doesn't exist yet
@@ -297,7 +291,6 @@ export const gptDefineSlots =
 
       if (adSlot) {
         adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
-
         switch (context.env) {
           case 'production':
             adSlot.addService(context.window.googletag.pubads());
@@ -307,8 +300,6 @@ export const gptDefineSlots =
             );
             return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
           case 'test':
-            context.logger.warn('GAM', `Enabling content service on ${adSlot.getSlotElementId()}`);
-            adSlot.addService(context.window.googletag.content());
             return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
           default:
             return Promise.reject(`invalid environment: ${context.config.environment}`);
