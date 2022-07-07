@@ -3384,6 +3384,13 @@ export namespace prebidjs {
      * @example '2c4d61d0-90aa-0139-0cda-0242ac120004'
      */
     readonly adUnitId: string;
+
+    /**
+     * Undocumented parameter
+     *
+     * @default false
+     */
+    readonly skipSizeCheck?: boolean;
   }
 
   /**
