@@ -9,6 +9,9 @@
 
   {{> partials/head }}
 
+  <!-- partytown -->
+  <script src="/~partytown/partytown.js"></script>
+
   <!-- sourcepoint stub -->
   <script type="text/javascript">
     //@formatter:off
@@ -386,10 +389,12 @@
 </script>
 
 {{#if es5Mode }}
-  <script defer src="{{#if production}}{{currentFilename}}{{else}}moli.es5.js{{/if}}"></script>
+  <script defer src="{{#if production}}{{currentFilename}}{{else}}<%= htmlWebpackPlugin.files.js[0] %>{{/if}}"></script>
 {{else}}
-  <script defer type="module" src="{{#if production}}{{currentFilename}}{{else}}moli.mjs{{/if}}"></script>
+  <script defer type="module" src="{{#if production}}{{currentFilename}}{{else}}<%= htmlWebpackPlugin.files.js[0] %>{{/if}}"></script>
 {{/if}}
+
+  <script defer type="module" src="prebid.mjs"></script>
 
 {{> partials/foot }}
 

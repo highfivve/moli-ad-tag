@@ -10,4 +10,4 @@ import 'core-js/es/array/from';
 import 'core-js/es/array/find';
 import 'core-js/es/array/includes';
 
-import './source/ts/ad-tag';
+import './index';
