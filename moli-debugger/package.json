@@ -42,7 +42,7 @@
     "last 2 versions"
   ],
   "devDependencies": {
-    "@types/node": "^15.3.0",
+    "@types/node": "^18.0.3",
     "css-loader": "^5.2.4",
     "cssnano": "^5.0.2",
     "postcss": "^8.2.15",
