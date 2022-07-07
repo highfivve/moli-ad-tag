@@ -3,7 +3,6 @@ import React, { Component, Fragment } from 'react';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from '@highfivve/ad-tag/source/ts/ads/sizeConfigService';
-import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
 
 import { classList } from '../util/stringUtils';
 
@@ -61,7 +60,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
   }
 
   render(): JSX.Element {
-    const { labelConfigService, slot, reportingConfig, parentElement } = this.props;
+    const { labelConfigService, slot, parentElement } = this.props;
     const { dimensions, showGeneral, showA9, showPrebid, showSizeConfig } = this.state;
     const slotValid = labelConfigService.filterSlot(slot);
     const slotElementExists = !!document.getElementById(slot.domId);
@@ -69,12 +68,6 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
 
     const prebidValid = this.isVisiblePrebid();
     const a9Valid = slotVisible && this.isVisibleA9();
-
-    // This code is duplicated from the ReportingService as sharing makes things more complicated
-    // and if something breaks this is nothing serious and easy to fix.
-    const adUnitRegex = (reportingConfig && reportingConfig.adUnitRegex) || /\/\d*\//i;
-    const measureName = `${slot.adUnitPath.replace(adUnitRegex, '')}_content_loaded_total`;
-    const contentLoadTime = createPerformanceService(window).getMeasure(measureName);
 
     return (
       <div
@@ -186,8 +179,6 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
               </div>
             )}
             <div className="MoliDebug-tagContainer">{this.labelConfig(slot)}</div>
-            {contentLoadTime && this.adSlotLoadStart(contentLoadTime)}
-            {contentLoadTime && this.performance('Content Loaded', contentLoadTime)}
           </div>
         )}
         {showA9 && slot.a9 && (
@@ -304,28 +295,6 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
           </div>
         }
         <div className="MoliDebug-tagContainer">{this.labelConfig(a9)}</div>
-      </div>
-    );
-  };
-
-  private adSlotLoadStart = (measure: PerformanceMeasure): JSX.Element => {
-    const color: 'green' | 'yellow' | 'red' =
-      measure.duration > 2000 ? 'red' : measure.duration > 1000 ? 'yellow' : 'green';
-    return (
-      <div className="MoliDebug-tagContainer">
-        <span className="MoliDebug-tagLabel">Load started</span>
-        <Tag variant={color}>{measure.startTime.toFixed(0)} ms</Tag>
-      </div>
-    );
-  };
-
-  private performance = (name: string, measure: PerformanceMeasure): JSX.Element => {
-    const color: 'green' | 'yellow' | 'red' =
-      measure.duration > 5000 ? 'red' : measure.duration > 2000 ? 'yellow' : 'green';
-    return (
-      <div className="MoliDebug-tagContainer">
-        <span className="MoliDebug-tagLabel">{name}</span>
-        <Tag variant={color}>{measure.duration.toFixed(0)} ms</Tag>
       </div>
     );
   };
