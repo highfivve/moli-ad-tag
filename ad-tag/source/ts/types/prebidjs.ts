@@ -2670,6 +2670,7 @@ export namespace prebidjs {
   export const NanoInteractive = 'nanointeractive';
   export const JustPremium = 'justpremium';
   export const PubMatic = 'pubmatic';
+  export const Ogury = 'ogury';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
   export const Unruly = 'unruly';
@@ -2702,6 +2703,7 @@ export namespace prebidjs {
     | typeof JustPremium
     | typeof NanoInteractive
     | typeof PubMatic
+    | typeof Ogury
     | typeof OpenX
     | typeof SmartAdServer
     | typeof Unruly
@@ -3368,6 +3370,28 @@ export namespace prebidjs {
     extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
+   */
+  export interface IOguryParams {
+    /**
+     * The asset key provided by Ogury
+     * @example 'OGY-CA41D116484F'
+     */
+    readonly assetKey: string;
+
+    /**
+     * Your ad unit id configured with Ogury
+     * @example '2c4d61d0-90aa-0139-0cda-0242ac120004'
+     */
+    readonly adUnitId: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
+   */
+  export interface IOguryBid extends IBidObject<typeof Ogury, IOguryParams> {}
+
+  /**
    * OpenX bid parameters
    *
    * @see https://prebid.org/dev-docs/bidders/openx.html
@@ -3997,6 +4021,7 @@ export namespace prebidjs {
     | IJustPremiumBid
     | INanoInteractiveBid
     | IPubMaticBid
+    | IOguryBid
     | IOpenxBid
     | ISmartAdServerBid
     | IUnrulyBid
