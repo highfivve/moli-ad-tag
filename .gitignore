@@ -9,6 +9,7 @@ lerna-debug.log
 
 # output
 dist/
+public/
 ad-tag/lib
 ad-tag/source/ts/gen
 moli-debugger/lib

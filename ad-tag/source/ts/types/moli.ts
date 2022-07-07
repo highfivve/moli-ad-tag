@@ -1748,7 +1748,7 @@ export namespace Moli {
       /**
        * The measurement provided by the metric `type`
        */
-      readonly measurement: PerformanceMeasure;
+      readonly measurement: PerformanceEntry;
     }
 
     /**
@@ -1820,23 +1820,23 @@ export namespace Moli {
       /**
        * Performance mark when the ad slot is refreshed.
        */
-      readonly refresh: PerformanceMark;
+      readonly refresh: PerformanceEntry;
 
       /**
        * Performance measure from `requestAds` until the adslot is rendered.
        */
-      readonly rendered: PerformanceMeasure;
+      readonly rendered: PerformanceEntry;
 
       /**
        * Performance measure from `requestAds` until the adslot is fully loaded.
        */
-      readonly loaded: PerformanceMeasure;
+      readonly loaded: PerformanceEntry;
 
       /**
        * Performance measure from `adSlot rendered` to `adSlot loaded`. This give
        * represents the time the creative needed to be fully visible.
        */
-      readonly rendering: PerformanceMeasure;
+      readonly rendering: PerformanceEntry;
     }
   }
 
