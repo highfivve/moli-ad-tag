@@ -612,6 +612,17 @@ export namespace prebidjs {
       readonly enableOverride?: boolean;
 
       readonly userIds?: UserIdProvider[];
+
+      /**
+       * Google now supports Encrypted Signals for Publishers(ESP), a program that allows publishers can explicitly
+       * share encrypted signals on bid requests with third-party bidders. User ID modules now support code which will
+       * register the signal sources and encrypted signal are created and is sent to GAM request in a3p parameter.
+       * ‘encryptedSignal’ configuration under userSync Module will help to configure signal sources.
+       *
+       * @see https://docs.prebid.org/dev-docs/modules/userId.html#esp-configurations
+       * @see https://support.google.com/admanager/answer/10488752?hl=en
+       */
+      readonly encryptedSignalSources?: IEncryptedSignalSourcesConfig;
     }
 
     /**
@@ -840,6 +851,81 @@ export namespace prebidjs {
       readonly bidders: BidderCode[] | '*';
 
       readonly filter: 'include' | 'exclude';
+    }
+
+    /**
+     * Google now supports Encrypted Signals for Publishers(ESP), a program that allows publishers can explicitly
+     * share encrypted signals on bid requests with third-party bidders. User ID modules now support code which will
+     * register the signal sources and encrypted signal are created and is sent to GAM request in a3p parameter.
+     * ‘encryptedSignal’ configuration under userSync Module will help to configure signal sources.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#esp-configurations
+     * @see https://support.google.com/admanager/answer/10488752?hl=en
+     */
+    export interface IEncryptedSignalSourcesConfig {
+      /**
+       * An array of Object consist of sources list and encryption flag
+       */
+      readonly sources: IEncryptedSignalSource[];
+
+      /**
+       * The amount of time (in seconds) after which registering of signals will happen.
+       * Default value 0 is considered if ‘registerDelay’ is not provided.
+       */
+      readonly registerDelay?: number;
+    }
+
+    /**
+     * @see https://github.com/prebid/Prebid.js/blob/master/modules/userId/eids.md
+     */
+    export type EIDSource =
+      | '33across.com'
+      | 'trustpid.com'
+      | 'adserver.org'
+      | 'navegg.com'
+      | 'justtag.com'
+      | 'id5-sync.com'
+      | 'flashtalking.com'
+      | 'parrable.com'
+      | 'liveramp.com'
+      | 'liveintent.com'
+      | 'merkleinc.com'
+      | 'britepool.com'
+      | 'hcn.health'
+      | 'criteo.com'
+      | 'netid.de'
+      | 'zeotap.com'
+      | 'audigent.com'
+      | 'quantcast.com'
+      | 'verizonmedia.com'
+      | 'mediawallahscript.com'
+      | 'tapad.com'
+      | 'novatiq.com'
+      | 'uidapi.com'
+      | 'admixer.net'
+      | 'deepintent.com'
+      | 'kpuid.com'
+      | 'yahoo.com'
+      | 'thenewco.it'
+      | 'pubcid.org';
+
+    export interface IEncryptedSignalSource {
+      /**
+       * An array of sources for which signals needs to be registered
+       * @see https://github.com/prebid/Prebid.js/blob/master/modules/userId/eids.md
+       */
+      readonly source: EIDSource[];
+
+      /**
+       * Should be set to false by default.
+       */
+      readonly encrypt: boolean;
+
+      /**
+       * This function will be defined for custom sources only and called which
+       * will return the custom data set from the page
+       */
+      readonly customFunc?: () => any;
     }
   }
 
