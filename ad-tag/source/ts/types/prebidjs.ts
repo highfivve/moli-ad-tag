@@ -309,6 +309,9 @@ export namespace prebidjs {
       | 'price'
       | 'salePrice';
 
+    /**
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#configure-targeting-controls
+     */
     export interface ITargetingControls {
       /**
        * Specifies the maximum number of characters the system can add to ad server targeting.
@@ -325,6 +328,16 @@ export namespace prebidjs {
        * Selects supported default targeting keys.
        */
       readonly allowTargetingKeys?: TargetingKeys[];
+
+      /**
+       * Selects targeting keys to be supported in addition to the default ones
+       */
+      readonly addTargetingKeys?: TargetingKeys[];
+
+      /**
+       * Selects supported default targeting keys.
+       */
+      readonly allowSendAllBidsTargetingKeys?: TargetingKeys[];
     }
   }
 
