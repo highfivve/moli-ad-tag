@@ -1215,6 +1215,12 @@ export namespace prebidjs {
       readonly defaultVendor?: BidderCode;
 
       /**
+       * Allow Prebid Server to bid on behalf of bidders that are not explicitly listed in the adUnit.
+       * @default false
+       */
+      readonly allowUnknownBidderCodes?: boolean;
+
+      /**
        * Enables this s2sConfig block - defaults to false
        */
       readonly enabled: boolean;
@@ -1249,6 +1255,20 @@ export namespace prebidjs {
        * PBS will execute all userSync URLs included in the request.
        */
       readonly userSyncLimit?: number;
+
+      /**
+       * Maximum number of milliseconds allowed for each server-side userSync to load.
+       * @default is 1000.
+       */
+      readonly syncTimeout?: number;
+
+      /**
+       * Whether or not PBS is allowed to perform “cooperative syncing” for bidders not on this page.
+       * Publishers help each other improve match rates by allowing this.
+       *
+       * @default is true.
+       */
+      readonly coopSync?: boolean;
 
       /**
        * Configures the default TTL in the Prebid Server adapter to use when Prebid Server
