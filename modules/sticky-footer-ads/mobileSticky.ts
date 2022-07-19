@@ -4,6 +4,54 @@ const adStickyContainerDataRef = '[data-ref=sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
 
 /**
+ * empty: mobile sticky load was empty
+ * disallowed: an advertiser that brings its own creative was rendered
+ * standard: a regular creative was loaded
+ */
+type RenderEventResult = 'empty' | 'disallowed' | 'standard';
+
+const stickyRenderedEvent = (
+  mobileStickyDomId: string,
+  disallowedAdvertiserIds: number[],
+  window: Window & googletag.IGoogleTagWindow
+): Promise<RenderEventResult> =>
+  new Promise(resolve => {
+    const listener = (event: googletag.events.ISlotRenderEndedEvent): void => {
+      if (event.slot.getSlotElementId() !== mobileStickyDomId) {
+        return;
+      }
+
+      if (event.isEmpty) {
+        resolve('empty');
+        window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
+      } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+        resolve('disallowed');
+        window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
+      } else {
+        resolve('standard');
+      }
+    };
+
+    window.googletag.pubads().addEventListener('slotRenderEnded', listener);
+  });
+
+const stickyOnLoadEvent = (
+  mobileStickyDomId: string,
+  window: Window & googletag.IGoogleTagWindow
+): Promise<void> =>
+  new Promise(resolve => {
+    const listener = (event: googletag.events.ISlotOnloadEvent): void => {
+      if (event.slot.getSlotElementId() !== mobileStickyDomId) {
+        return;
+      }
+      resolve();
+      window.googletag.pubads().removeEventListener('slotOnload', listener);
+    };
+
+    window.googletag.pubads().addEventListener('slotOnload', listener);
+  });
+
+/**
  * ## Ad Sticky
  *
  * Initializes the close button for the sticky ad.
@@ -45,27 +93,22 @@ export const initAdSticky = (
 
     // hide mobile sticky for advertiser with custom mobile sticky creative
     if (env === 'production') {
-      const listener = (event: googletag.events.ISlotRenderEndedEvent): void => {
-        if (event.slot.getSlotElementId() !== mobileStickyDomId) {
-          return;
-        }
-
-        if (
-          event.isEmpty ||
-          // don't render for excluded advertiser ids
-          (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId))
-        ) {
-          window.googletag.destroySlots([event.slot]);
+      // wait for the slot render ended
+      Promise.all([
+        stickyRenderedEvent(mobileStickyDomId, disallowedAdvertiserIds, window),
+        stickyOnLoadEvent(mobileStickyDomId, window)
+      ]).then(([renderResult]) => {
+        // false means that the slot should not be destroyed. If it's not false,
+        // we receive the renderEndedEvent, which grants us access to the slot
+        // that should be destroyed
+        log.debug('mobile-sticky-ad', `result ${renderResult}`);
+        if (renderResult === 'disallowed') {
+          log.debug('mobile-sticky-ad', 'hide mobile sticky container');
           if (adSticky) {
-            // change the id to make sure it will not be reloaded
-            adSticky.setAttribute('id', `removed_${Math.round(Math.random() * 100000)}`);
             adSticky.style.setProperty('display', 'none');
           }
-          window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
         }
-      };
-
-      window.googletag.pubads().addEventListener('slotRenderEnded', listener);
+      });
     }
   } else {
     log.warn(

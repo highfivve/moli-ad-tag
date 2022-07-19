@@ -656,11 +656,5 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       sid: '1111111',
       hp: 1
     }
-  },
-  reporting: {
-    // report everything
-    sampleRate: 1,
-    adUnitRegex: /\/\d*\/gf\//i,
-    reporters: [consoleLogReporter]
   }
 });

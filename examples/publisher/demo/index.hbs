@@ -9,9 +9,6 @@
 
   {{> partials/head }}
 
-  <!-- partytown -->
-  <script src="/~partytown/partytown.js"></script>
-
   <!-- sourcepoint stub -->
   <script type="text/javascript">
     //@formatter:off
@@ -23,11 +20,12 @@
       config: {
         accountId: 270,
         baseEndpoint: 'https://cdn.privacy-mgmt.com',
-        propertyHref: 'https://local.h5v.eu'
+        propertyHref: 'https://local.h5v.eu',
+        gdpr: { }
       }
     }
   </script>
-  <script async src="https://cdn.privacy-mgmt.com/wrapperMessagingWithoutDetection.js"></script>
+  <script async src="https://cdn.privacy-mgmt.com/unified/wrapperMessagingWithoutDetection.js"></script>
 
   <style>
     body {
@@ -249,7 +247,7 @@
     });</code></pre>
 
     <h3>Consent Management</h3>
-    <button class="btn btn-secondary" onclick="window._sp_.loadPrivacyManagerModal(167759)">Sourcepoint privacy
+    <button class="btn btn-secondary" onclick="window._sp_.gdpr.loadPrivacyManagerModal(167759)">Sourcepoint privacy
       manager
     </button>
 
@@ -393,8 +391,6 @@
 {{else}}
   <script defer type="module" src="{{#if production}}{{currentFilename}}{{else}}<%= htmlWebpackPlugin.files.js[0] %>{{/if}}"></script>
 {{/if}}
-
-  <script defer type="module" src="prebid.mjs"></script>
 
 {{> partials/foot }}
 
