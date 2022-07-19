@@ -57,7 +57,9 @@ export const initAdSticky = (
         ) {
           window.googletag.destroySlots([event.slot]);
           if (adSticky) {
-            adSticky.remove();
+            // change the id to make sure it will not be reloaded
+            adSticky.setAttribute('id', `removed_${Math.round(Math.random() * 100000)}`);
+            adSticky.style.setProperty('display', 'none');
           }
           window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
         }
