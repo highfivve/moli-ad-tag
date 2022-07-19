@@ -78,28 +78,39 @@ module.exports = (_, argv) => ({
   // local development
   devServer: {
     https: true,
-    contentBase: [
-      path.join(__dirname, 'dist'),
-      path.join(__dirname, 'yield-config'),
-      // always use the latest moli-debugger
-      '../../moli-debugger/lib'
+    static: [
+      {
+        directory: path.resolve(__dirname, 'dist'),
+        watch: false
+      },
+      {
+        directory: path.resolve(__dirname, '../../moli-debugger/lib'),
+        watch: true
+      }
     ],
     compress: true,
     port: 9000,
     allowedHosts: ['localhost', '.gutefrage.net', '.h5v.eu'],
-    writeToDisk: true,
-    // configure a mock yield config server
-    before: app => {
-      // parse the req body as json
-      const bodyParser = require('body-parser');
-      app.use(bodyParser.json());
+    devMiddleware: {
+      writeToDisk: true
+    },
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false
+      }
+    },
+    // mock yield config response
+    setupMiddlewares: (middlewares, devServer) => {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined');
+      }
 
-      // yield config endpoint
-      app.post('/yield-config.json', (req, res) => {
-        res.sendFile(`yield-config.${req.body.device}.json`, {
-          root: path.join(__dirname, 'yield-config')
-        });
+      devServer.app.post('/yield-config.json', (_, response) => {
+        response.sendFile(path.resolve(__dirname, 'yield-config', 'yield-config.json'));
       });
+
+      return middlewares;
     }
   },
   plugins: [
