@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-zeotap",
-  "version": "3.49.8",
+  "version": "3.50.0",
   "license": "Apache-2.0",
   "description": "Zeotap integration",
   "main": "./lib/zeotap.js",
@@ -50,6 +50,6 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "^3.49.8"
+    "@highfivve/ad-tag": "^3.50.0"
   }
 }
