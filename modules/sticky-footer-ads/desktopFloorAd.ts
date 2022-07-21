@@ -54,8 +54,6 @@ const renderFooterAd =
       window.matchMedia('(max-width: 767px)').matches
     ) {
       log.debug('[footer-ad]', 'remove footer ad container');
-      // remove the container, it could interfere with the rest of the page
-      removeFooterAd();
 
       return;
     }
