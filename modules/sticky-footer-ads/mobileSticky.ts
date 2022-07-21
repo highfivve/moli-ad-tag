@@ -93,7 +93,7 @@ export const initAdSticky = (
 
     // hide mobile sticky for advertiser with custom mobile sticky creative
     if (env === 'production') {
-      const onRenderResult = ([renderResult]: [RenderEventResult, void]) => {
+      const onRenderResult = ([renderResult]: [RenderEventResult, void]): Promise<void> => {
         // false means that the slot should not be destroyed. If it's not false,
         // we receive the renderEndedEvent, which grants us access to the slot
         // that should be destroyed
@@ -103,6 +103,7 @@ export const initAdSticky = (
           if (adSticky) {
             adSticky.style.setProperty('display', 'none');
           }
+          return Promise.resolve();
         } else if (renderResult === 'standard') {
           // if it's a standard render then create a new listener set and
           // wait for the results
@@ -111,6 +112,7 @@ export const initAdSticky = (
             stickyOnLoadEvent(mobileStickyDomId, window)
           ]).then(onRenderResult);
         }
+        return Promise.resolve();
       };
 
       // wait for the slot render ended
