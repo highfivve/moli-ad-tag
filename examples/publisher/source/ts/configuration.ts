@@ -1,6 +1,7 @@
 import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
+import { getPageViewCount } from './pageViewTargeting';
 
 const { currentVersion } = require('../../version.json');
 
@@ -137,7 +138,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       domId: 'ad-mobile-sticky',
       adUnitPath: '/55155651/mobile-sticky/{device}-{category}',
       position: 'in-page',
-      behaviour: { loaded: 'eager' },
+      behaviour: { loaded: 'manual' },
       labelAll: ['mobile'],
       sizes: ['fluid', [300, 50], [320, 50]],
       sizeConfig: [
@@ -539,7 +540,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   // -----------------------------
   targeting: {
     keyValues: {
-      static: 'from-config'
+      static: 'from-config',
+      pageview: '1' // getPageViewCount()
     },
     labels: [
       // activate teads, spotx, appNexus and/or unruly via the label query param

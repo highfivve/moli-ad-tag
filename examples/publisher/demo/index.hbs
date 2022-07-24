@@ -264,6 +264,14 @@
     <p>Or if you are a developer, type this into the javascript console:</p>
     <pre><code class="html hljs xml">moli.openConsole()</code></pre>
 
+    <h3>Mobile Sticky</h3>
+    <p>
+      <button class="btn btn-primary" onclick="moli.refreshAdSlot('ad-mobile-sticky')">Load sticky</button>
+    </p>
+    <p>Trigger a campaing that runs on the second page view</p>
+    <pre><code>googletag.pubads()
+  .setTargeting('pageview', '2');</code></pre>
+
     <h3>Outstream</h3>
     <p>Activate one or more outstream partners by adding them to a <code>label</code> query parameter. Examples</p>
 

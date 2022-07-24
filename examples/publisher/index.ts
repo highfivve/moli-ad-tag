@@ -131,7 +131,10 @@ moli.registerModule(
   new StickyFooterAds({
     mobileStickyDomId: 'ad-mobile-sticky',
     desktopFloorAdDomId: 'ad-floorad',
-    disallowedAdvertiserIds: [4858511198]
+    disallowedAdvertiserIds: [
+      /*4858511198*/
+      // gutefrage-intern
+    ]
   })
 );
 
