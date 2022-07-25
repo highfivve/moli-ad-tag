@@ -7,21 +7,17 @@ export type UserActivityLevelControl =
   | { level: 'strict' }
   | { level: 'moderate' }
   | { level: 'lax' }
-  | {
-      level: 'custom';
-      readonly userActivityDuration: number;
-      readonly userBecomingInactiveDuration: number;
-    };
+  | ({ level: 'custom' } & UserActivityParameters);
 
 export type UserActivityParameters = {
   /**
-   * The duration the page is considered to be "actively used" after the last user action. Changes to page visibility
+   * The duration in milliseconds the page is considered to be "actively used" after the last user action. Changes to page visibility
    * always directly set the state to inactive.
    */
   readonly userActivityDuration: number;
 
   /**
-   * The duration after that we start listening for new user actions to keep the "active" state. This was introduced
+   * The duration in milliseconds after that we start listening for new user actions to keep the "active" state. This was introduced
    * such that we don't keep up expensive listeners on all user actions all the time.
    *
    * Must be smaller than userActivityDuration.
@@ -60,18 +56,7 @@ export class UserActivityService implements UserActivityParameters {
    */
   static readonly observedEvents = ['mousemove', 'touchstart', 'scroll', 'keypress'];
 
-  /**
-   * The duration the page is considered to be "actively used" after the last user action. Changes to page visibility
-   * always directly set the state to inactive.
-   */
   readonly userActivityDuration: number;
-
-  /**
-   * The duration after that we start listening for new user actions to keep the "active" state. This was introduced
-   * such that we don't keep up expensive listeners on all user actions all the time.
-   *
-   * Must be smaller than userActivityDuration.
-   */
   readonly userBecomingInactiveDuration: number;
 
   private isActive: boolean = true;
