@@ -2315,6 +2315,26 @@ export namespace prebidjs {
    */
   export interface IMediaTypeNative {
     /**
+     * Defines whether or not to send the hb_native_ASSET targeting keys to the ad server. Defaults to `true` for now,
+     * though we recommend setting this to `false` and utilizing one of the ways to define a native template.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     */
+    readonly sendTargetingKeys?: boolean;
+
+    /**
+     * Used in the ‘AdUnit-Defined Creative Scenario’, this value controls the Native template right in the page.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     */
+    readonly adTemplate?: string;
+
+    /**
+     * Used in the ‘Custom Renderer Scenario’, this points to javascript code that will produce the Native template.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     * @example ‘https://host/path.js’
+     */
+    readonly rendererUrl?: string;
+
+    /**
      * Prebid.js defines “types” of native ad for you as a convenience. This way you have less code to maintain,
      * that is hopefully more descriptive of your intent.
      *
