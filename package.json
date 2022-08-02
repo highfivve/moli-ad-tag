@@ -19,7 +19,7 @@
     "clean:node_modules": "rm -rf node_modules ad-tag/node_modules modules/**/node_modules utils/**/node_modules moli-release/node_modules moli-debugger/node_modules",
     "clean:lib": "rm -rf ad-tag/lib modules/**/lib utils/**/lib moli-release/lib moli-debugger/lib",
     "clean": "yarn clean:node_modules && yarn clean:lib",
-    "github:publish": "yarn clean && yarn lerna run make:nodemodule && yarn lerna publish from-package --registry https://npm.pkg.github.com/",
+    "github:publish": "yarn clean:lib && yarn lerna run make:nodemodule && yarn lerna publish from-package --registry https://npm.pkg.github.com/",
     "postpublish": "yarn clean:lib"
   },
   "devDependencies": {
