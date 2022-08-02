@@ -12,7 +12,7 @@
     "setup": "yarn && yarn codeGen && tsc --composite false",
     "make:nodemodule": "tsc -p tsconfig.build.json",
     "start": "yarn watch",
-    "watch": "yarn compile:ts:watch",
+    "watch": "tsc --composite false --watch",
     "compile": "yarn compile:ts",
     "compile:ts": "tsc --noEmit",
     "compile:ts:watch": "tsc --noEmit --watch",
