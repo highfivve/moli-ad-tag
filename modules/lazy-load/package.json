@@ -15,6 +15,8 @@
     "lint:ts": "eslint ./ --ext .ts,.tsx && yarn prettier",
     "lint:ts:fix": "eslint ./ --ext .ts,.tsx --fix && yarn prettier --write",
     "prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"**/*.ts*\"",
+    "test": "mocha --require ts-node/register *.test.ts",
+    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register *.test.ts",
     "validate": "yarn compile && yarn lint && yarn test",
     "validate:github": "yarn compile && yarn lint && yarn test",
     "validate:jenkins": "yarn compile && yarn lint && yarn test:junit"
