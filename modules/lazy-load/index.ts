@@ -1,49 +1,5 @@
 /**
  * Moli's own Lazy Reload solution to lazy loading specific ad slots.
- *
- * ## Integration
- *
- * In your `index.ts`, import AdReload and register the module.
- *
- * ```js
- * import { AdReload } from '@highfivve/module-moli-ad-reload';
- *
- * moli.registerModule(new AdReload({
- *    excludeAdSlotDomIds: [ ... ],
- *    optimizeClsScoreDomIds: [ ... ],
- *    includeAdvertiserIds: [ ... ],
- *    includeOrderIds: [ ... ],
- *    excludeOrderIds: [ ... ],
- *    refreshIntervalMs: 20000,
- *    userActivityLevelControl: { level: 'moderate' }
- *  })
- * );
- *  ```
- *
- * Configure the module with:
- *
- * * the DOM IDs you want to **exclude** from being reloaded
- * * the DOM IDs that have an influence on content positioning, e.g. header or content positions - the module
- *   will make sure that reloading these slots will not negatively impact CLS scores
- * * the order ids ("campaign ids" in Google's terminology) you want to **include** for reloading
- * * the advertiser ids ("company ids" in Google's terminology) you want to **include** for reloading
- * * the order ids ("campaign ids" in Google's terminology) you want to **exclude** from reloading;
- *   this option **overrides the includes**!
- * **[optional]** the refresh interval that the reload module should wait before reloading a slot. The interval
- * specifies the minimum time in which the ad has to be visible before refreshing it.
- * * **[optional]** the strictness of checking user activity. The strictness levels are defined like this:
- *   * strict:
- *     * userActivityDuration: 10 seconds
- *     * userBecomingInactiveDuration: 5 seconds
- *   * moderate:
- *     * userActivityDuration: 12 seconds
- *     * userBecomingInactiveDuration: 8 seconds
- *   * lax:
- *     * userActivityDuration: 15 seconds
- *     * userBecomingInactiveDuration: 12 seconds
- *   * custom:
- *     * userActivityDuration: configurable
- *     * userBecomingInactiveDuration: configurable
  * @module
  */
 import {
@@ -103,7 +59,6 @@ export class LazyLoad implements IModule {
   public readonly name: string = 'moli-lazy-load';
   public readonly description: string = 'Moli implementation of an ad lazy load module.';
   public readonly moduleType: ModuleType = 'lazy-load';
-
   private logger?: Moli.MoliLogger;
 
   /**
@@ -121,7 +76,6 @@ export class LazyLoad implements IModule {
   }
 
   init(moliConfig: Moli.MoliConfig): void {
-
     this.logger = getLogger(moliConfig, this.window);
     this.initialize(moliConfig, this.moduleConfig, this.window);
   }
@@ -135,7 +89,6 @@ export class LazyLoad implements IModule {
       return;
     }
     this.initialized = true;
-
     this.logger?.debug(this.name, 'initialize moli lazy load module');
 
     const slotsConfig = lazyModuleConfig.slots;
@@ -144,39 +97,30 @@ export class LazyLoad implements IModule {
 
     slotsConfig.forEach(config => {
 
-      let observer = null as any;
-if(typeof window.document !== undefined) {
+      const observer = new window.IntersectionObserver(
+        entries => {
+          entries.forEach((entry: IntersectionObserverEntry) => {
+            if (entry.isIntersecting) {
+              this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
+              this.window.moli.refreshAdSlot(entry.target.id);
 
-   observer = new IntersectionObserver(
-    entries => {
-      entries.forEach((entry: IntersectionObserverEntry) => {
-
-        if (entry.isIntersecting) {
-          console.log("entry: " + entry.target.id);
-
-          this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
-          this.window.moli.refreshAdSlot(entry.target.id);
-
-          observer.unobserve(entry.target);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          root: config.options.rootId ? window.document.getElementById(config.options.rootId) : null,
+          threshold: config.options.threshold,
+          rootMargin: config.options.rootMargin
         }
-      });
-    },
-    {
-      root: config.options.rootId ? window.document.getElementById(config.options.rootId) : null,
-      threshold: config.options.threshold,
-      rootMargin: config.options.rootMargin
-    }
-  );
-}
+      );
 
-
-      config.domIds.forEach(domId => {
-        if(moliConfig.slots.some(slot => slot.domId === domId && slot.behaviour.loaded === 'manual')) {
-          const elementToObserve = window.document.querySelector(`#${domId}`);
-          elementToObserve && observer.observe(elementToObserve);
-      }});
-
-    });
+    config.domIds.forEach(domId => {
+      if(moliConfig.slots.some(slot => slot.domId === domId && slot.behaviour.loaded === 'manual')) {
+        const elementToObserve = window.document.querySelector(`#${domId}`);
+        elementToObserve && observer.observe(elementToObserve);
+    }});
+  });
 
   };
 }

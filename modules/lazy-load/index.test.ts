@@ -1,5 +1,5 @@
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { Moli } from '@highfivve/ad-tag';
+import {createMoliTag, Moli} from '@highfivve/ad-tag';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { expect, use } from 'chai';
@@ -7,6 +7,7 @@ import * as Sinon from 'sinon';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { LazyLoad } from './index';
 import sinonChai from 'sinon-chai';
+import {SinonSpy} from "sinon";
 
 const createAdSlots = (window: Window, domIds: string[]): Moli.AdSlot[] => {
   return domIds.map(domId => {
@@ -80,40 +81,72 @@ describe('Lazy-load Module', () => {
   let dom = createDom();
   let jsDomWindow = dom.window as any;
 
-  jsDomWindow.IntersectionObserver = mockIntersectionObserver;
+  beforeEach(() => {
+    sandbox.restore();
+    dom = createDom();
+    jsDomWindow = dom.window;
+    jsDomWindow.IntersectionObserver = MockIntersectionObserver;
+    jsDomWindow.moli = createMoliTag(jsDomWindow);
+  });
 
-  describe('Intersection Observer', () => {
-    it('when scroll down then request ads', () => {
-      const noopLogger = newNoopLogger();
-      const module = new LazyLoad(
-        {
-          slots: [
-            {
-              domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2', 'lazy-loading-adslot-3'],
-              options: { threshold: 0.5 }
-            }
-          ],
-          buckets: []
-        },
-        jsDomWindow
-      );
+  it('Refreshes adSlot when it is intersected', () => {
+    // const callbackStub = sandbox.stub();
+    // intersectionObserverStub.returns(new mockIntersectionObserver(callbackStub, {}));
+    // const ioStub = sandbox.createStubInstance(jsDomWindow.IntersectionObserver, {
+    //   getCallback: callbackStub
+    // });
 
-      const slots = createAdSlots(jsDomWindow, ['lazy-loading-adslot-1', 'lazy-loading-adslot-2']);
+    const intersectionObserverConstructorSpy = sandbox.spy(jsDomWindow, 'IntersectionObserver');
 
-      const initSpy = sandbox.spy(module, 'init');
-      const errorLogSpy = sandbox.spy(noopLogger, 'error');
+    const noopLogger = newNoopLogger();
+    const module = new LazyLoad(
+      {
+        slots: [
+          {
+            domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'],
+            options: { threshold: 0.5 }
+          },
+          {
+            domIds: ['lazy-loading-adslot-3'],
+            options: { threshold: 0.2, rootMargin: '10px' }
+          }
+        ],
+        buckets: []
+      },
+      jsDomWindow
+    );
 
-      const config: Moli.MoliConfig = {
-        slots: slots,
-        logger: noopLogger,
-        prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
-        schain: dummySchainConfig
-      };
+    const moliSlot = { domId: 'lazy-loading-adslot-1', sizes: [ [300, 600]], behaviour: {loaded: 'manual'} } as Moli.AdSlot;
+    const slots = createAdSlots(jsDomWindow, ['lazy-loading-adslot-1', 'lazy-loading-adslot-2', 'lazy-loading-adslot-3']);
 
-      module.init(config);
+    const config: Moli.MoliConfig = {
+      slots: slots,
+      logger: noopLogger,
+      prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+      schain: dummySchainConfig
+    };
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config);
-      expect(errorLogSpy).to.have.not.been.called;
-    });
+    const initSpy = sandbox.spy(module, 'init');
+    const errorLogSpy = sandbox.spy(noopLogger, 'error');
+
+    // expect(dom.window.document.getElementById('lazy-loading-adslot-2')).not.to.be.ok;
+    module.init(config);
+    expect(initSpy).to.have.been.called;
+    expect(errorLogSpy).to.have.not.been.called;
+    expect(intersectionObserverConstructorSpy).to.have.been.calledTwice;
+
+
+
+    const [callback, options] = intersectionObserverConstructorSpy.firstCall.args;
+    expect(options).to.eql({ root: null, threshold: 0.5, rootMargin: undefined });
+    const [callback2, options2] = intersectionObserverConstructorSpy.secondCall.args;
+    expect(options2).to.eql({ root: null, threshold: 0.2, rootMargin: '10px' });
+
+
+    // this is the scrolling thing!!
+    callback([]);
+
+    expect(refreshAdSlotsStub).to.have.not.been.called;
+
   });
 });
