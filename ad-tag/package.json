@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "setup": "yarn && yarn codeGen",
+    "setup": "yarn && yarn codeGen && tsc --composite false",
     "make:nodemodule": "tsc -p tsconfig.build.json",
     "start": "yarn watch",
     "watch": "yarn compile:ts:watch",
