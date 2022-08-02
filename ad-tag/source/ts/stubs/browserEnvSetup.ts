@@ -1,4 +1,4 @@
-import jsdom = require('jsdom');
+import jsdom from 'jsdom';
 
 export const createDom = (): jsdom.JSDOM => {
   const dom = new jsdom.JSDOM('', {
