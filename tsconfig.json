@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
-    "module": "ES6",
+    "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,
     "noImplicitAny": false,
