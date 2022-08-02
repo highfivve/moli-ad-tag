@@ -67,9 +67,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Build Ad Tag
-        run: yarn workspace @highfivve/ad-tag make:nodemodule
-
       - name: Build ${{ matrix.package }}
         run: yarn workspace @highfivve/${{ matrix.package }} make:nodemodule
 
