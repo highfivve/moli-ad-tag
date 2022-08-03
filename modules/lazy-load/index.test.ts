@@ -1,5 +1,5 @@
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import {createMoliTag, Moli} from '@highfivve/ad-tag';
+import { createMoliTag, Moli } from '@highfivve/ad-tag';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { expect, use } from 'chai';
@@ -7,7 +7,6 @@ import * as Sinon from 'sinon';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { LazyLoad } from './index';
 import sinonChai from 'sinon-chai';
-import {SinonSpy} from "sinon";
 
 const createAdSlots = (window: Window, domIds: string[]): Moli.AdSlot[] => {
   return domIds.map(domId => {
@@ -34,43 +33,19 @@ const createAdSlots = (window: Window, domIds: string[]): Moli.AdSlot[] => {
   });
 };
 
-export const mockIntersectionObserver = class {
-  readonly root: Element | Document | null;
-  readonly rootMargin: string;
-  readonly thresholds: ReadonlyArray<number>;
-  public viewPort: Element | Document | null;
-  public entries: any[];
+const MockIntersectionObserver = class {
+  constructor(private readonly callback, private readonly options) {}
 
-  constructor(callback, options) {
-    this.root = options.root;
-    this.rootMargin = options.rootMargin;
-    this.thresholds = options.thresholds;
-    (this.viewPort = options.root),
-      (this.entries = []),
-      this.viewPort?.addEventListener('scroll', () => {
-        this.entries.map(entry => {
-          entry.isIntersecting = this.isInViewPort(entry.target);
-        });
-        callback(this.entries, this);
-      });
+  observe() {
+    return;
   }
 
-  takeRecords = () => [];
-
-  isInViewPort(target) {
-    return true;
-  }
-
-  observe(target) {
-    this.entries.push({ isIntersecting: false, target });
-  }
-
-  unobserve(target) {
-    this.entries = this.entries.filter(ob => ob.target !== target);
+  unobserve() {
+    return;
   }
 
   disconnect() {
-    this.entries = [];
+    return;
   }
 };
 
@@ -81,6 +56,9 @@ describe('Lazy-load Module', () => {
   let dom = createDom();
   let jsDomWindow = dom.window as any;
 
+  jsDomWindow.moli = createMoliTag(jsDomWindow);
+  let refreshAdSlotsStub = sandbox.stub(jsDomWindow.moli, 'refreshAdSlot');
+
   beforeEach(() => {
     sandbox.restore();
     dom = createDom();
@@ -90,11 +68,6 @@ describe('Lazy-load Module', () => {
   });
 
   it('Refreshes adSlot when it is intersected', () => {
-    // const callbackStub = sandbox.stub();
-    // intersectionObserverStub.returns(new mockIntersectionObserver(callbackStub, {}));
-    // const ioStub = sandbox.createStubInstance(jsDomWindow.IntersectionObserver, {
-    //   getCallback: callbackStub
-    // });
 
     const intersectionObserverConstructorSpy = sandbox.spy(jsDomWindow, 'IntersectionObserver');
 
@@ -116,8 +89,16 @@ describe('Lazy-load Module', () => {
       jsDomWindow
     );
 
-    const moliSlot = { domId: 'lazy-loading-adslot-1', sizes: [ [300, 600]], behaviour: {loaded: 'manual'} } as Moli.AdSlot;
-    const slots = createAdSlots(jsDomWindow, ['lazy-loading-adslot-1', 'lazy-loading-adslot-2', 'lazy-loading-adslot-3']);
+    const moliSlot = {
+      domId: 'lazy-loading-adslot-1',
+      sizes: [[300, 600]],
+      behaviour: { loaded: 'manual' }
+    } as Moli.AdSlot;
+    const slots = createAdSlots(jsDomWindow, [
+      'lazy-loading-adslot-1',
+      'lazy-loading-adslot-2',
+      'lazy-loading-adslot-3'
+    ]);
 
     const config: Moli.MoliConfig = {
       slots: slots,
@@ -135,18 +116,14 @@ describe('Lazy-load Module', () => {
     expect(errorLogSpy).to.have.not.been.called;
     expect(intersectionObserverConstructorSpy).to.have.been.calledTwice;
 
-
-
     const [callback, options] = intersectionObserverConstructorSpy.firstCall.args;
     expect(options).to.eql({ root: null, threshold: 0.5, rootMargin: undefined });
     const [callback2, options2] = intersectionObserverConstructorSpy.secondCall.args;
     expect(options2).to.eql({ root: null, threshold: 0.2, rootMargin: '10px' });
 
-
     // this is the scrolling thing!!
     callback([]);
 
     expect(refreshAdSlotsStub).to.have.not.been.called;
-
   });
 });

@@ -2,14 +2,8 @@
  * Moli's own Lazy Reload solution to lazy loading specific ad slots.
  * @module
  */
-import {
-  IModule,
-  ModuleType,
-  Moli,
-  getLogger
-} from '@highfivve/ad-tag';
+import { IModule, ModuleType, Moli, getLogger } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
-import {mockIntersectionObserver} from "./index.test";
 
 type LazyLoadModuleOptionsType = {
   /**
@@ -36,7 +30,6 @@ type LazyLoadModuleOptionsType = {
    * A value of 1.0 means that the threshold isn't considered passed until every pixel is visible.
    */
   readonly threshold?: number;
-
 };
 
 export type LazyLoadModulePerKeyConfig = {
@@ -52,6 +45,17 @@ export type LazyLoadModuleConfig = {
   readonly buckets: Array<LazyLoadModulePerKeyConfig>;
 };
 
+export type LazyLoadWindow = Window &
+  MoliWindow & {
+    IntersectionObserver: {
+      prototype: IntersectionObserver;
+      new (
+        callback: IntersectionObserverCallback,
+        options?: IntersectionObserverInit
+      ): IntersectionObserver;
+    };
+  };
+
 /**
  * This module can be used to refresh ads based on slot visibility.
  */
@@ -60,6 +64,7 @@ export class LazyLoad implements IModule {
   public readonly description: string = 'Moli implementation of an ad lazy load module.';
   public readonly moduleType: ModuleType = 'lazy-load';
   private logger?: Moli.MoliLogger;
+  private window: LazyLoadWindow;
 
   /**
    * Prevents multiple initialization, which would ap pend multiple googletag event listeners.
@@ -68,8 +73,12 @@ export class LazyLoad implements IModule {
 
   constructor(
     private readonly moduleConfig: LazyLoadModuleConfig,
-    private readonly window: Window & MoliWindow
-  ) {}
+    private readonly _window: Window & MoliWindow
+  ) {
+    // typescript does not yet have the IntersectionObserver on the lib.dom.ts
+    // @see https://github.com/Microsoft/TypeScript/issues/16255
+    this.window = _window as LazyLoadWindow;
+  }
 
   config(): LazyLoadModuleConfig {
     return this.moduleConfig;
@@ -83,7 +92,7 @@ export class LazyLoad implements IModule {
   private initialize = (
     moliConfig: Moli.MoliConfig,
     lazyModuleConfig: LazyLoadModuleConfig,
-    window: Window & MoliWindow
+    window: LazyLoadWindow
   ) => {
     if (this.initialized) {
       return;
@@ -94,9 +103,7 @@ export class LazyLoad implements IModule {
     const slotsConfig = lazyModuleConfig.slots;
     const bucketsConfig = lazyModuleConfig.buckets;
 
-
     slotsConfig.forEach(config => {
-
       const observer = new window.IntersectionObserver(
         entries => {
           entries.forEach((entry: IntersectionObserverEntry) => {
@@ -109,18 +116,22 @@ export class LazyLoad implements IModule {
           });
         },
         {
-          root: config.options.rootId ? window.document.getElementById(config.options.rootId) : null,
+          root: config.options.rootId
+            ? window.document.getElementById(config.options.rootId)
+            : null,
           threshold: config.options.threshold,
           rootMargin: config.options.rootMargin
         }
       );
 
-    config.domIds.forEach(domId => {
-      if(moliConfig.slots.some(slot => slot.domId === domId && slot.behaviour.loaded === 'manual')) {
-        const elementToObserve = window.document.querySelector(`#${domId}`);
-        elementToObserve && observer.observe(elementToObserve);
-    }});
-  });
-
+      config.domIds.forEach(domId => {
+        if (
+          moliConfig.slots.some(slot => slot.domId === domId && slot.behaviour.loaded === 'manual')
+        ) {
+          const elementToObserve = window.document.querySelector(`#${domId}`);
+          elementToObserve && observer.observe(elementToObserve);
+        }
+      });
+    });
   };
 }
