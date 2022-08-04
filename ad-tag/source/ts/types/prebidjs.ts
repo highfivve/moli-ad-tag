@@ -3510,6 +3510,7 @@ export namespace prebidjs {
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
+   * @see https://ogury-ltd.gitbook.io/mobile-web/header-bidding/ogury-prebid.js-adapter-integration
    */
   export interface IOguryParams {
     /**
@@ -3530,6 +3531,66 @@ export namespace prebidjs {
      * @default false
      */
     readonly skipSizeCheck?: boolean;
+
+    /**
+     * The area based on which the thumbnail will be positioned.
+     *
+     * This value is ignored if the gravity is set to `CENTER`, `TOP_CENTER` or `BOTTOM_CENTER`
+     *
+     * @default `BOTTOM_CENTER`
+     * @see https://ogury-ltd.gitbook.io/mobile-web/header-bidding/ogury-prebid.js-adapter-integration#customize-thumbnail-ad-position
+     */
+    readonly gravity?:
+      | 'TOP_LEFT'
+      | 'TOP_RIGHT'
+      | 'TOP_CENTER'
+      | 'BOTTOM_LEFT'
+      | 'BOTTOM_RIGHT'
+      | 'BOTTOM_CENTER'
+      | 'CENTER';
+
+    /**
+     * distance on the x axis from the gravity area to thumbnail. Value must be in px.
+     * @default 20
+     */
+    readonly xMargin?: number;
+
+    /**
+     * distance on the y axis from the gravity corner to thumbnail. Value must be in px.
+     *
+     * This value is ignored if the gravity is set to `CENTER`
+     *
+     * @default 20
+     */
+    readonly yMargin?: number;
+
+    /**
+     *
+     * The headerSelector param has to be set with the identifier of your page's header. For example, if your header is defined by
+     *
+     * ```html
+     * <header id="page-header-id" class="page-header-class">My Home page</header>
+     * ```
+     *
+     * @example '#page-header-id'
+     * @see https://ogury-ltd.gitbook.io/mobile-web/header-bidding/ogury-prebid.js-adapter-integration#customize-header-ad-position
+     */
+    readonly headerSelector?: string;
+
+    /**
+     * The headerStickiness param has to be set with the header type of your page. For the moment we supported only
+     * two types of header `STICKY` or `NON_STICKY`.
+     *
+     * @default `STICKY`
+     * @see https://ogury-ltd.gitbook.io/mobile-web/header-bidding/ogury-prebid.js-adapter-integration#customize-header-ad-position
+     */
+    readonly headerStickiness?: 'STICKY' | 'NON_STICKY';
+
+    /**
+     * You may choose to initially embed the header ad inside a predefined ad slot
+     * @see https://ogury-ltd.gitbook.io/mobile-web/header-bidding/ogury-prebid.js-adapter-integration#customize-header-ad-position
+     */
+    readonly adSlotSelector?: string;
   }
 
   /**
