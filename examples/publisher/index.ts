@@ -17,7 +17,7 @@ import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
 
-import { googletag, initAdTag, prebidjs } from '@highfivve/ad-tag';
+import {googletag, initAdTag, Moli, prebidjs} from '@highfivve/ad-tag';
 import { Confiant } from '@highfivve/module-confiant';
 
 import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
@@ -25,13 +25,15 @@ import { Skin } from '@highfivve/module-generic-skin';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
+import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
+import MoliWindow = Moli.MoliWindow;
 
 prebid.processQueue();
 
 const moli = initAdTag(window);
 
-declare const window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
+declare const window: Window & googletag.IGoogleTagWindow & MoliWindow & prebidjs.IPrebidjsWindow;
 
 // ad fraud protection
 moli.registerModule(
@@ -44,7 +46,13 @@ moli.registerModule(
   )
 );
 
-// blacklist urls
+// Add lazy loading module
+moli.registerModule(new LazyLoad({
+  slots: [{domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5}}],
+  buckets: []
+}, window));
+
+// blocklist urls
 moli.registerModule(
   new BlocklistedUrls(
     {

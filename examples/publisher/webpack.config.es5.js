@@ -59,8 +59,7 @@ module.exports = (_, argv) => {
       ]
     },
     resolve: {
-      extensions: ['.ts', '.js', '.json']
-    },
+      extensions: ['.ts', '.js', '.json']},
     plugins: [
       ...makeDocsPages({
         publisherName: publisherName,
