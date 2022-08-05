@@ -110,7 +110,6 @@ export class LazyLoad implements IModule {
             if (entry.isIntersecting) {
               this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
               this.window.moli.refreshAdSlot(entry.target.id);
-
               observer.unobserve(entry.target);
             }
           });
