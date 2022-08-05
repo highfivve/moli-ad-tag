@@ -122,7 +122,7 @@ describe('Lazy-load Module', () => {
   });
 
 
-  it('Unobserve already observed slots, thus no ad-slot refresh again', () => {
+  it('Unobserve already observed and intersected slots, thus no ad-slot refresh again', () => {
 
     const observer = new MockIntersectionObserver(callbackSpy, {});
     const intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
