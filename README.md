@@ -45,13 +45,17 @@ If you have already checkout this repository you may want to clean things before
 yarn clean && yarn setup
 ```
 
+This will build all required modules as *CommonJS* modules! That allows you to run all the tests,
+but **not** the examples!
+
 
 ## Examples
 
-Unless you haven't just executed `yarn setup`, you need to build the ad tag and all modules first in order to run the examples.
+In order to run the examples you must create a production build of the modules.
 
 ```bash
-yarn workspaces run make:nodemodule
+# the clean step is important to remove any commonjs module that were setup with "yarn setup"
+yarn clean:lib && yarn workspaces run make:nodemodule
 ```
 
 ### Testing with examples

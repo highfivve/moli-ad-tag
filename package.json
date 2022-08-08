@@ -13,14 +13,13 @@
   "scripts": {
     "setup:all": "yarn workspaces run setup",
     "setup": "yarn && yarn clean:lib && lerna bootstrap && yarn setup:all",
-    "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts && yarn prepare:libs",
-    "preversion": "yarn workspaces run validate",
+    "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts",
+    "preversion": "yarn setup && yarn workspaces run validate",
     "postversion": "git push && git push --tags",
-    "prepare:libs": "yarn workspace @highfivve/ad-tag codeGen && yarn workspace @highfivve/ad-tag make:nodemodule",
     "clean:node_modules": "rm -rf node_modules ad-tag/node_modules modules/**/node_modules utils/**/node_modules moli-release/node_modules moli-debugger/node_modules",
     "clean:lib": "rm -rf ad-tag/lib modules/**/lib utils/**/lib moli-release/lib moli-debugger/lib",
     "clean": "yarn clean:node_modules && yarn clean:lib",
-    "github:publish": "yarn lerna run make:nodemodule && yarn lerna publish from-package --registry https://npm.pkg.github.com/",
+    "github:publish": "yarn clean:lib && yarn lerna run make:nodemodule && yarn lerna publish from-package --registry https://npm.pkg.github.com/",
     "postpublish": "yarn clean:lib"
   },
   "devDependencies": {

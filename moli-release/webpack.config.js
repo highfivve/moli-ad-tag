@@ -20,7 +20,7 @@ module.exports = (env, argv) => ({
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',
-        options: { allowTsInNodeModules: true }
+        options: { allowTsInNodeModules: false }
       }
     ]
   },

@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-release",
-  "version": "3.50.3",
+  "version": "4.0.0-alpha.1",
   "license": "Apache-2.0",
   "description": "Moli release tools",
   "bin": {
@@ -12,7 +12,7 @@
     "releases"
   ],
   "scripts": {
-    "setup": "yarn",
+    "setup": "yarn && yarn build:prod",
     "make:nodemodule": "yarn build:prod && yarn build:prependbashenv",
     "make:runnable": "chmod +x lib/moli-release.js",
     "build": "yarn clean && yarn compile",
