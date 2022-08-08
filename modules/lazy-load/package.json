@@ -27,7 +27,7 @@
     "directory": "modules/lazy-load"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "3.50.3",
+    "@highfivve/ad-tag": "^4.0.0-alpha.1",
     "@types/chai": "4.2.18",
     "@types/jsdom": "16.2.10",
     "@types/mocha": "8.2.2",
