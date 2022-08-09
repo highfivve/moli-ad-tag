@@ -50,25 +50,31 @@ describe('Lazy-load Module', () => {
   let jsDomWindow = dom.window as any;
 
   jsDomWindow.moli = createMoliTag(jsDomWindow);
+  jsDomWindow.IntersectionObserver = MockIntersectionObserver;
   let noopLogger = newNoopLogger();
   let errorLogSpy = sandbox.spy(noopLogger, 'error');
   let refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
   let callbackSpy = sandbox.spy();
-
+  let observer = new MockIntersectionObserver(callbackSpy, {});
+  let intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
+  intersectionObserverConstructorStub.returns(observer);
   beforeEach(() => {
     sandbox = Sinon.createSandbox();
     dom = createDom();
     jsDomWindow = dom.window;
-    jsDomWindow.IntersectionObserver = MockIntersectionObserver;
     jsDomWindow.moli = createMoliTag(jsDomWindow);
+    jsDomWindow.IntersectionObserver = MockIntersectionObserver;
     noopLogger = newNoopLogger();
     errorLogSpy = sandbox.spy(noopLogger, 'error');
     refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
     callbackSpy = sandbox.spy();
-
+    observer = new MockIntersectionObserver(callbackSpy, {});
+    intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
+    intersectionObserverConstructorStub.returns(observer);
   });
 
   afterEach(() => {
+    intersectionObserverConstructorStub.reset();
     sandbox.restore();
   });
 
@@ -81,12 +87,8 @@ describe('Lazy-load Module', () => {
     };};
 
   it('Observe only domIds that are in the module config, i.e., lazy-1', () => {
-    const observer = new MockIntersectionObserver(callbackSpy, {});
+
     const oberserveSpy = sandbox.spy(observer, 'observe');
-
-    const intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
-    intersectionObserverConstructorStub.returns(observer);
-
     const slots = createAdSlots(jsDomWindow, [
       'lazy-1',
       'lazy-2'
@@ -127,10 +129,6 @@ describe('Lazy-load Module', () => {
 
 
   it('Unobserve already observed and intersected slots, thus no ad-slot refresh again', () => {
-
-    const observer = new MockIntersectionObserver(callbackSpy, {});
-    const intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
-    intersectionObserverConstructorStub.returns(observer);
     const oberserveSpy = sandbox.spy(observer, 'observe');
     const unOberserveSpy = sandbox.spy(observer, 'unobserve');
 
@@ -171,7 +169,6 @@ describe('Lazy-load Module', () => {
 
     callbackSpy.call([intersected, unIntersected]);
     callback([intersected, unIntersected]);
-
     const firstCallArgs = unOberserveSpy.getCall(0).args;
 
     expect(errorLogSpy).to.have.not.been.called;
@@ -185,12 +182,7 @@ describe('Lazy-load Module', () => {
 
 
   it('Observe only slots that have a manual behaviour', () => {
-
-    const observer = new MockIntersectionObserver(callbackSpy, {});
-    const intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
-    intersectionObserverConstructorStub.returns(observer);
     const oberserveSpy = sandbox.spy(observer, 'observe');
-
     const eagerSlot = createAdSlots(jsDomWindow, [
       'lazy-1'
     ], 'manual');
@@ -235,10 +227,6 @@ describe('Lazy-load Module', () => {
 
 
   it('Every slot should consider its own observer options', () => {
-
-    const observer = new MockIntersectionObserver(callbackSpy, {});
-    const intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
-    intersectionObserverConstructorStub.returns(observer);
 
     const slots = createAdSlots(jsDomWindow, [
       'lazy-1',
