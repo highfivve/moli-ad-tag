@@ -1,5 +1,27 @@
 /**
- * Moli's own Lazy Reload solution to lazy loading specific ad slots.
+ * Moli's own Lazy Reload solution to lazy loading specific ad slot.
+ *
+ * This module allows us to configure some slots with lazy loading behaviour, thus refresh adSlot only
+ * when the adSlot is intersected (seen) on the viewport.
+ *
+ * ## Integration
+ *
+ * In your `index.ts` import the lazy-load module and register it.
+ *
+ *
+ * ```javascript
+ * import { LazyLoad } from '@highfivve/module-moli-lazy-load';
+ *
+ * moli.registerModule(new LazyLoad({
+ *   // Provide an array of domIds that should have lazy-loading behaviour,
+ *   // and assign desired options to each group of domIds if required.
+ *
+ *   slots: [{domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5}},
+ *            {domIds: ['lazy-loading-adslot-3'], options: {rootMargin: '20px'}}],
+ *   buckets: [TO DO...]
+ * }, window));
+ *
+ *
  * @module
  */
 import { IModule, ModuleType, Moli, getLogger } from '@highfivve/ad-tag';
@@ -36,15 +58,19 @@ export type LazyLoadModulePerKeyConfig = {
   /**
    * DomIds that should be observed for lazy loading
    */
-  readonly domIds: Array<string>;
+  readonly domIds: string[];
   readonly options: LazyLoadModuleOptionsType;
 };
 
 export type LazyLoadModuleConfig = {
-  readonly slots: Array<LazyLoadModulePerKeyConfig>;
-  readonly buckets: Array<LazyLoadModulePerKeyConfig>;
+  readonly slots: LazyLoadModulePerKeyConfig[];
+  readonly buckets: LazyLoadModulePerKeyConfig[];
 };
 
+/**
+ * To solve the Intersection Observer API typescript error
+ * @see https://github.com/microsoft/TypeScript/issues/16255
+ */
 export type LazyLoadWindow = Window &
   MoliWindow & {
     IntersectionObserver: {
@@ -124,9 +150,14 @@ export class LazyLoad implements IModule {
       );
 
       config.domIds.forEach(domId => {
-        if (
-          moliConfig.slots.some(slot => slot.domId === domId && slot.behaviour.loaded === 'manual')
-        ) {
+        const slot = moliConfig.slots.find(slot => slot.domId === domId);
+        if(!slot) {
+          this.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
+        }
+        else if (slot.behaviour.loaded !== 'manual') {
+          this.logger?.warn(this.name, `Lazy-load configured for slot without manual loading behaviour. ${domId}`);
+        }
+        else if (slot.behaviour.loaded === 'manual'){
           const elementToObserve = window.document.querySelector(`#${domId}`);
           elementToObserve && observer.observe(elementToObserve);
         }
