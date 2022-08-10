@@ -134,6 +134,7 @@ module.exports = {
           '../modules/generic-skin/index.ts',
           '../modules/identitylink/index.ts',
           '../modules/identitylink/types/identitylink.d.ts',
+          '../modules/lazy-load/index.ts',
           '../modules/prebid-google-analytics/index.ts',
           '../modules/prebid-first-party-data/index.ts',
           '../modules/pubstack/index.ts',

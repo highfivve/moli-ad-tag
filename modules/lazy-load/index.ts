@@ -16,11 +16,13 @@
  *   // Provide an array of domIds that should have lazy-loading behaviour,
  *   // and assign desired options to each group of domIds if required.
  *
- *   slots: [{domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5}},
- *            {domIds: ['lazy-loading-adslot-3'], options: {rootMargin: '20px'}}],
- *   buckets: [TO DO...]
+ *   slots: [
+ *     { domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5} },
+ *     { domIds: ['lazy-loading-adslot-3'], options: {rootMargin: '20px'} }
+ *   ],
+ *   buckets: []
  * }, window));
- *
+ * ```
  *
  * @module
  */
