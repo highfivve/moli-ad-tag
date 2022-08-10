@@ -64,6 +64,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     renderAd(iframeDocument: Document, adId: string): void {
       return;
+    },
+    registerSignalSources(): void {
+      return;
     }
   };
 };
