@@ -202,6 +202,14 @@ export namespace prebidjs {
      * @param adId - bid id to locate the ad
      */
     renderAd(iframeDocument: Document, adId: string): void;
+
+    /**
+     * Registers the encrypted signal providers with googletag.
+     *
+     * @see https://github.com/prebid/Prebid.js/issues/8532
+     * @see https://github.com/prebid/prebid.github.io/issues/3830
+     */
+    registerSignalSources(): void;
   }
 
   /**
