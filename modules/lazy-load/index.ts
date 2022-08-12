@@ -134,6 +134,7 @@ export class LazyLoad implements IModule {
     slotsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
         entries => {
+          console.log('called with', entries);
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
               this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
@@ -153,13 +154,14 @@ export class LazyLoad implements IModule {
 
       config.domIds.forEach(domId => {
         const slot = moliConfig.slots.find(slot => slot.domId === domId);
-        if(!slot) {
+        if (!slot) {
           this.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
-        }
-        else if (slot.behaviour.loaded !== 'manual') {
-          this.logger?.warn(this.name, `Lazy-load configured for slot without manual loading behaviour. ${domId}`);
-        }
-        else if (slot.behaviour.loaded === 'manual'){
+        } else if (slot.behaviour.loaded !== 'manual') {
+          this.logger?.warn(
+            this.name,
+            `Lazy-load configured for slot without manual loading behaviour. ${domId}`
+          );
+        } else if (slot.behaviour.loaded === 'manual') {
           const elementToObserve = window.document.querySelector(`#${domId}`);
           elementToObserve && observer.observe(elementToObserve);
         }
