@@ -661,7 +661,15 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
               expires: 60 // cookie can last for 60 days
             }
           }
-        ]
+        ],
+        encryptedSignalSources: {
+          sources: [
+            {
+              source: ["adserver.org", "id5-sync.com", "criteo.com","liveramp.com"],
+              encrypt: false
+            }
+          ]
+        }
       },
       currency: {
         adServerCurrency: 'EUR',

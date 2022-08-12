@@ -23,6 +23,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
+    "babel-loader": "^8.2.5",
     "body-parser": "^1.19.0",
     "handlebars-webpack-plugin": "^2.2.1",
     "html-webpack-plugin": "^5.3.1",
