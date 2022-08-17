@@ -44,7 +44,9 @@ const MockIntersectionObserver = class MockIntersectionObserver implements Inter
     return;
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    return;
+  }
 
   takeRecords(): IntersectionObserverEntry[] {
     return [];
@@ -66,7 +68,9 @@ describe('Lazy-load Module', () => {
   const noopLogger = newNoopLogger();
   const errorLogSpy = sandbox.spy(noopLogger, 'error');
   let refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
-  let observer: IntersectionObserver = new MockIntersectionObserver(() => {}, {});
+  let observer: IntersectionObserver = new MockIntersectionObserver(() => {
+    return;
+  }, {});
   let intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
 
   const getIntersectionObserverCallback = (call: number): IntersectionObserverCallback => {
@@ -92,7 +96,9 @@ describe('Lazy-load Module', () => {
     jsDomWindow.moli = createMoliTag(jsDomWindow);
     jsDomWindow.IntersectionObserver = MockIntersectionObserver;
     refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
-    observer = new MockIntersectionObserver(() => {}, {});
+    observer = new MockIntersectionObserver(() => {
+      return;
+    }, {});
     intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
     intersectionObserverConstructorStub.returns(observer);
   });
