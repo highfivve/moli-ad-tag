@@ -644,6 +644,22 @@ export namespace prebidjs {
        * @see https://support.google.com/admanager/answer/10488752?hl=en
        */
       readonly encryptedSignalSources?: IEncryptedSignalSourcesConfig;
+
+      /**
+       * Publishers using Google AdManager may want to sync one of the identifiers as their Google PPID for frequency
+       * capping or reporting. The PPID in GAM (which is unrelated to the PPID UserId Submodule) has strict rules;
+       * refer to [Google AdManager documentation](https://support.google.com/admanager/answer/2880055?hl=en) for them.
+       * Please note, Prebid uses a [GPT command](https://developers.google.com/publisher-tag/reference#googletag.PubAdsService) to sync identifiers
+       * for publisher convenience. It doesn’t currently work for instream video requests, as Prebid typically interacts
+       * with the player, which in turn may interact with IMA. IMA does have [a similar method](https://developers.google.com/interactive-media-ads/docs/sdks/html5/client-side/reference/js/google.ima.ImaSdkSettings#setPpid) as GPT, but IMA does not
+       * gather this ID from GPT.
+       *
+       * Must be a source from the `pbjs.getUserIdsAsEids()` array.
+       * @example `pubcid.org`
+       * @see https://docs.prebid.org/dev-docs/modules/userId.html#basic-configuration
+       * @see https://support.google.com/admanager/answer/2880055?hl=en
+       */
+      readonly ppid?: EIDSource;
     }
 
     /**
