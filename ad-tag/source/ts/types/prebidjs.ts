@@ -1671,14 +1671,18 @@ export namespace prebidjs {
      * Criteo specific extension for the OpenRTB User object
      */
     export interface CriteoOpenRtb2UserExt {
-      deviceidtype: 'gaid' | 'idfa';
-      deviceid: string;
+      readonly deviceidtype?: 'gaid' | 'idfa';
+
+      /**
+       * always set `deviceidtype` along.
+       */
+      readonly deviceid?: string;
 
       /**
        * @see https://publisherdocs.criteotilt.com/prebid/#hashed-emails
        */
-      data?: {
-        eids: CriteoOpenRtb2UserExtEids[];
+      readonly data?: {
+        readonly eids: CriteoOpenRtb2UserExtEids[];
       };
     }
 
