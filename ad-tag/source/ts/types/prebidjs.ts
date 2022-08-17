@@ -1673,6 +1673,44 @@ export namespace prebidjs {
     export interface CriteoOpenRtb2UserExt {
       deviceidtype: 'gaid' | 'idfa';
       deviceid: string;
+
+      /**
+       * @see https://publisherdocs.criteotilt.com/prebid/#hashed-emails
+       */
+      data?: {
+        eids: CriteoOpenRtb2UserExtEids[];
+      };
+    }
+
+    export interface CriteoOpenRtb2UserExtEids {
+      /** domain here  */
+      readonly source: string;
+
+      readonly uids: CriteoOpenRtb2UserExtUid[];
+    }
+
+    export interface CriteoOpenRtb2UserExtUid {
+      /**
+       * hashed email value.
+       *
+       * ## Example
+       *
+       * Original Email: [john.doe@gmail.com]
+       *
+       * - `SHA256`: 375320dd9ae7ed408002f3768e16cb5f28c861062fd50dff9a3bff62e9dce4ef
+       * - `MD5`: e13743a7f1db7f4246badd6fd6ff54ff
+       * - `SHA256 of MD5`: 000e3171a5110c35c69d060112bd0ba55d9631c7c2ec93f1840e4570095b263a
+       * */
+      readonly id: string;
+      /** always 3 */
+      readonly atype: 3;
+
+      readonly ext: {
+        /**
+         * hashing algorithm for the id (email)
+         */
+        readonly stype: 'cleartextemail' | 'hemsha256' | 'hemmd5' | 'hemsha256md5';
+      };
     }
 
     export interface OpenRtb2User {
