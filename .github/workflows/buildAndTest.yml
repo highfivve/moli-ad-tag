@@ -21,7 +21,7 @@ jobs:
             module-confiant,
             module-generic-skin,
             module-identitylink,
-            module-lazy-load,
+            module-moli-lazy-load,
             module-pubstack,
             module-prebid-google-analytics,
             module-prebid-first-party-data,
