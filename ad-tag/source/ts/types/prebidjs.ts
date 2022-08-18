@@ -3842,7 +3842,7 @@ export namespace prebidjs {
   // ----- Smartx (smartclip) ----- //
 
   /**
-   * Smartx bid parameters
+   * Smartx (smartclip) bid parameters
    *
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/smartxBidAdapter.js
    * @see Documentation https://docs.prebid.org/dev-docs/bidders/smartx.html
@@ -3865,13 +3865,15 @@ export namespace prebidjs {
 
     /**
      * Value of Bidfloor.
+     * This is optional because this defaults to prebid.js's price floors module.
      */
-    readonly bidfloor: number;
+    readonly bidfloor?: number;
 
     /**
      * Used Currency. (e.g. EUR, USD etc.)
+     * This is optional because this defaults to 'EUR'.
      */
-    readonly bidfloorcur: currency.ICurrency;
+    readonly bidfloorcur?: currency.ICurrency;
 
     /**
      * Token that describes which context to play: ‘instream’ or ‘outstream’
