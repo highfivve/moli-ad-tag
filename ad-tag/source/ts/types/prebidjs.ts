@@ -2872,6 +2872,7 @@ export namespace prebidjs {
   export const EmxDigital = 'emx_digital';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
+  export const Invibes = 'invibes';
   export const NanoInteractive = 'nanointeractive';
   export const JustPremium = 'justpremium';
   export const PubMatic = 'pubmatic';
@@ -2905,6 +2906,7 @@ export namespace prebidjs {
     | typeof EmxDigital
     | typeof ImproveDigital
     | typeof IndexExchange
+    | typeof Invibes
     | typeof JustPremium
     | typeof NanoInteractive
     | typeof PubMatic
@@ -3300,8 +3302,8 @@ export namespace prebidjs {
   /**
    * IndexExchange bid parameters.
    *
-   * @see https://github.com/prebid/Prebid.js/blob/master/modules/indexExchangeBidAdapter.js
-   * @see Documentation https://prebid.org/dev-docs/bidders/indexExchange.html
+   * @see https://github.com/prebid/Prebid.js/blob/master/modules/ixBidAdapter.js
+   * @see Documentation https://docs.prebid.org/dev-docs/bidders/ix.html
    */
   export interface IIndexExchangeParams {
     /**
@@ -3337,6 +3339,28 @@ export namespace prebidjs {
    */
   export interface IIndexExchangeBid
     extends IBidObject<typeof IndexExchange, IIndexExchangeParams> {}
+
+  // ----- Invibes ----- //
+
+  /**
+   * Invibes bid parameters.
+   *
+   * @see https://github.com/prebid/Prebid.js/blob/master/modules/invibesBidAdapter.js
+   * @see Documentation https://docs.prebid.org/dev-docs/bidders/invibes.html
+   */
+  export interface IInvibesParams {
+    /**
+     * The Invibes placement ID
+     */
+    readonly placementId: string;
+
+    /**
+     * Id of domain
+     */
+    readonly domainId?: number;
+  }
+
+  export interface IInvibesBid extends IBidObject<typeof Invibes, IInvibesParams> {}
 
   // ----- JustPremium ----- //
 
@@ -4291,6 +4315,7 @@ export namespace prebidjs {
     | IAppNexusASTBid
     | IImproveDigitalBid
     | IIndexExchangeBid
+    | IInvibesBid
     | IJustPremiumBid
     | INanoInteractiveBid
     | IPubMaticBid
