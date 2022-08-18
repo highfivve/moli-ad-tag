@@ -2879,6 +2879,7 @@ export namespace prebidjs {
   export const Ogury = 'ogury';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
+  export const Smartx = 'smartx';
   export const Unruly = 'unruly';
   export const Teads = 'teads';
   export const Triplelift = 'triplelift';
@@ -2913,6 +2914,7 @@ export namespace prebidjs {
     | typeof Ogury
     | typeof OpenX
     | typeof SmartAdServer
+    | typeof Smartx
     | typeof Unruly
     | typeof Teads
     | typeof Triplelift
@@ -3837,10 +3839,132 @@ export namespace prebidjs {
       ISmartAdServerParams | ISmartAdServerPrebidServerParams
     > {}
 
+  // ----- Smartx (smartclip) ----- //
+
+  /**
+   * Smartx (smartclip) bid parameters
+   *
+   * @see https://github.com/prebid/Prebid.js/blob/master/modules/smartxBidAdapter.js
+   * @see Documentation https://docs.prebid.org/dev-docs/bidders/smartx.html
+   */
+  export interface ISmartxParams {
+    /**
+     * A unique ID.
+     */
+    readonly tagId: string;
+
+    /**
+     * A unique PublisherID.
+     */
+    readonly publisherId: string;
+
+    /**
+     * A unique SiteID.
+     */
+    readonly siteId: string;
+
+    /**
+     * Value of Bidfloor.
+     * This is optional because this defaults to prebid.js's price floors module.
+     */
+    readonly bidfloor?: number;
+
+    /**
+     * Used Currency. (e.g. EUR, USD etc.)
+     * This is optional because this defaults to 'EUR'.
+     */
+    readonly bidfloorcur?: currency.ICurrency;
+
+    /**
+     * Token that describes which context to play: ‘instream’ or ‘outstream’
+     */
+    readonly context?: string;
+
+    /**
+     * Object to set options on the smartx renderer. (Only required when setting mediaType.video.context = ‘outstream’)
+     */
+    readonly outstream_options?: {
+      /**
+       * ID of element that video ad should be rendered into.
+       */
+      readonly slot: string;
+
+      /**
+       * If the visible area is narrower than this size, no ad will be requested. The value is given in pixels. Default is 280.
+       */
+      readonly minAdWidth?: number;
+
+      /**
+       * The player will fill the whole width of the element it gets, to have it narrower a different maximum width can be defined in pixels. Default is 800.
+       */
+      readonly maxAdWidth?: number;
+
+      /**
+       * The player can show a freely definable text, a macro [remainingTime] in this string will be replaced with the remaining play time of the ad in seconds.
+       */
+      readonly title?: string;
+
+      /**
+       * In order to enable skipping from the start set the delay to 0, to show the skip button after 5 seconds set it to 5. Setting a general skipOffset is discouraged. Note that linear creatives carrying a skipsoffet attribute will override the general player setting. By default the player does not set a general skipoffset, so a skip button will only be shown, if an ad has a specific skipoffset attached.
+       */
+      readonly skipOffset?: number;
+
+      /**
+       * Per default the player will start fully expanded, if a valid ad can be played. Setting this option to false will trigger an expand animation instead once the player comes into view. Default is true.
+       */
+      readonly startOpen?: string;
+
+      /**
+       * By default the player will not close, but show the ending screen when an advertisement is complete (last frame of the ad and a replay button, if an advertisment comes with an endcard that will be shown). If set to false the player will collapse. Some VPAID creatives can cause issues with ending screen or replay behaviour. Default is true.
+       */
+      readonly endingScreen?: string;
+
+      /**
+       * You can specify a target bitrate for the creative, higher values will increase video quality but will cost bandwidth. Value is given in kpbs. Default is 700
+       */
+      readonly desiredBitrate?: string;
+
+      /**
+       * Defines the percentage of the player which has to be in the visible area to play and pause the advertisment. The default is 50.
+       */
+      readonly visibilityThreshold?: string;
+    };
+
+    /**
+     * Boolean identifying whether the requests should be https or not (used to override the protocol if the page isn’t secure).
+     */
+    readonly secure?: boolean;
+
+    /**
+     * List of MIME types to allow in ad.
+     */
+    readonly mimes?: string[];
+
+    /**
+     * Set the current channel price floor in real time.
+     */
+    readonly price_floor?: number;
+
+    /**
+     * Minimum video ad duration in seconds
+     */
+    readonly min_duration?: number;
+
+    /**
+     * Maximum video ad duration in seconds
+     */
+    readonly max_duration?: number;
+  }
+
+  /**
+   * Smartx bid object
+   */
+  export interface ISmartxBid extends IBidObject<typeof Smartx, ISmartxParams> {}
+
   /**
    * Unruly bid parameters
    *
-   * @see https://prebid.org/dev-docs/bidders#unruly
+   * @see https://docs.prebid.org/dev-docs/bidders/unruly.html
    */
   export interface IUnrulyParams {
     /**
@@ -4322,6 +4446,7 @@ export namespace prebidjs {
     | IOguryBid
     | IOpenxBid
     | ISmartAdServerBid
+    | ISmartxBid
     | IUnrulyBid
     | ITeadsBid
     | IYieldlabBid
