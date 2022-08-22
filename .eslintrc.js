@@ -30,7 +30,7 @@ module.exports = {
     '@typescript-eslint/no-empty-function': 'error',
     '@typescript-eslint/no-parameter-properties': 'off',
     '@typescript-eslint/no-unused-expressions': 'off',
-    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-var-requires': 'error',
     '@typescript-eslint/quotes': [
       'off',
       'single',
