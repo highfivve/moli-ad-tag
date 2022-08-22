@@ -653,12 +653,26 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           {
             name: 'unifiedId',
             params: {
-              partner: 'myTpId'
+              partner: 'myTpId',
             },
             storage: {
               type: 'cookie',
               name: 'pbjs-unifiedid', // create a cookie with this name
-              expires: 60 // cookie can last for 60 days
+              expires: 60 // cookie can last for 60 days,
+
+            }
+          },
+          {
+            name: "sharedId",
+            params: {
+              create: true,
+              pixelUrl: '',
+              extend: false
+            },
+            storage: {
+              expires: 60,
+              name: '_pubcid',
+              type: 'cookie',
             }
           }
         ],

@@ -672,7 +672,8 @@ export namespace prebidjs {
       | IID5Provider
       | IIdentityLinkProvider
       | IPubCommonIdProvider
-      | IZeotapIdPlusIdProvider;
+      | IZeotapIdPlusIdProvider
+      | ISharedIdProvider;
 
     interface IUserIdProvider<N extends string> {
       /**
@@ -696,6 +697,7 @@ export namespace prebidjs {
        * provider specific params
        */
       readonly params: P;
+
     }
 
     export interface IUserIdStorage {
@@ -721,6 +723,7 @@ export namespace prebidjs {
       readonly expires: number;
 
       /**
+       * NOT APPLICABLE FOR SharedId
        * The amount of time (in **seconds**) the user ID should be cached in storage before calling the provider again
        * to retrieve a potentially updated value for their user ID. If set, this value should equate to a time period
        * less than the number of days defined in `storage.expires`.
@@ -730,6 +733,7 @@ export namespace prebidjs {
       readonly refreshInSeconds?: number;
 
       /**
+       * NOT APPLICABLE FOR SharedId
        * Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the
        * values to be sent to the adapters.
        *
@@ -963,6 +967,28 @@ export namespace prebidjs {
        * will return the custom data set from the page
        */
       readonly customFunc?: () => any;
+    }
+
+    export interface ISharedIdProvider
+      extends IParameterizedUserIdProvider<ISharedIdParams, 'sharedId'> {}
+
+
+      export interface ISharedIdParams {
+        /**
+         * For publisher server support only. If true, the publisher’s server will create the (pubcid) cookie.
+         * Default is true.
+         */
+        readonly create?: boolean;
+        /**
+         * For publisher server support only. Where to call out to for a server cookie – see Prebid Identity for more information.
+         */
+        readonly pixelUrl?: string;
+        /**
+         * If true, the expiration time of the stored IDs will be refreshed during each page load. Default is false.
+         */
+        readonly extend?: boolean;
+
+
     }
   }
 
