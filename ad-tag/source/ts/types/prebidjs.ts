@@ -697,7 +697,6 @@ export namespace prebidjs {
        * provider specific params
        */
       readonly params: P;
-
     }
 
     export interface IUserIdStorage {
@@ -972,23 +971,20 @@ export namespace prebidjs {
     export interface ISharedIdProvider
       extends IParameterizedUserIdProvider<ISharedIdParams, 'sharedId'> {}
 
-
-      export interface ISharedIdParams {
-        /**
-         * For publisher server support only. If true, the publisher’s server will create the (pubcid) cookie.
-         * Default is true.
-         */
-        readonly create?: boolean;
-        /**
-         * For publisher server support only. Where to call out to for a server cookie – see Prebid Identity for more information.
-         */
-        readonly pixelUrl?: string;
-        /**
-         * If true, the expiration time of the stored IDs will be refreshed during each page load. Default is false.
-         */
-        readonly extend?: boolean;
-
-
+    export interface ISharedIdParams {
+      /**
+       * For publisher server support only. If true, the publisher’s server will create the (pubcid) cookie.
+       * Default is true.
+       */
+      readonly create?: boolean;
+      /**
+       * For publisher server support only. Where to call out to for a server cookie – see Prebid Identity for more information.
+       */
+      readonly pixelUrl?: string;
+      /**
+       * If true, the expiration time of the stored IDs will be refreshed during each page load. Default is false.
+       */
+      readonly extend?: boolean;
     }
   }
 
