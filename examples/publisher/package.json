@@ -23,7 +23,12 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "babel-loader": "^8.2.5",
+    "babel-loader": "^8.2.4",
+    "@babel/core": "^7.17.8",
+    "@babel/preset-env": "^7.16.11",
+    "@types/babel__core": "^7.1.19",
+    "@types/babel__preset-env": "^7.9.2",
+    "@types/webpack": "^5.28.0",
     "body-parser": "^1.19.0",
     "handlebars-webpack-plugin": "^2.2.1",
     "html-webpack-plugin": "^5.3.1",
