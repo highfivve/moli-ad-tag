@@ -723,7 +723,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // until the next requestAds() call arrives
       case 'spa-finished':
         if (state.href === window.location.href) {
-          // user hasn't navigated yet so we directly refresh the slot
+          // user hasn't navigated yet, so we directly refresh the slot
           return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
@@ -745,6 +745,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         return Promise.reject(`not allowed in state ${state.state}`);
       }
     }
+  }
+
+  function refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'> {
+    return Promise.reject(`not allowed in state`);
   }
 
   function getState(): Moli.state.States {
@@ -816,6 +820,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     enableSinglePageApp: enableSinglePageApp,
     requestAds: requestAds,
     refreshAdSlot: refreshAdSlot,
+    refreshBucket: refreshBucket,
     getModuleMeta: getModuleMeta,
     getState: getState,
     openConsole: openConsole,

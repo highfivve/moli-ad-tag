@@ -104,15 +104,20 @@ export const a9Configure = (
   config: Moli.headerbidding.A9Config,
   schainConfig: Moli.schain.SupplyChainConfig
 ): ConfigureStep =>
-  mkConfigureStep(
+ mkConfigureStep(
     'a9-configure',
-    (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
-      new Promise<void>(resolve => {
+    (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+      let timeout = 0;
+      if (context.config?.buckets?.enabled && context.config.buckets.buckets) {
+        const buckets = Object.values(context.config.buckets.buckets);
+        timeout = Math.max(...buckets.map(bucket => bucket.timeout));
+      }
+      return new Promise<void>(resolve => {
         context.window.apstag.init({
           pubID: config.pubID,
           adServer: 'googletag',
           // videoAdServer: '', TODO: Add video ad server
-          bidTimeout: config.timeout,
+          bidTimeout: timeout > config.timeout ? timeout : config.timeout,
           gdpr: {
             cmpTimeout: config.cmpTimeout
           },
@@ -123,8 +128,9 @@ export const a9Configure = (
           }
         });
         resolve();
-      })
-  );
+      });
+    });
+
 
 export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
   mkConfigureStepOnce(

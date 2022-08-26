@@ -21,17 +21,24 @@ import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
 
-// if we forget to remove prebid from the configuration. The timeout is arbitrary
-const prebidTimeout = (window: Window) =>
-  new Promise<void>((_, reject) => {
-    window.setTimeout(
+// if we forget to remove prebid from the configuration.
+// the timeout is the longest timeout in buckets if available, or arbitrary otherwise
+const prebidTimeout = (context: AdPipelineContext) => {
+  let timeout = 0;
+  if(context.config.buckets?.enabled && context.config.buckets.buckets) {
+    const buckets = Object.values(context.config.buckets.buckets);
+    timeout = Math.max(...buckets.map(bucket => bucket.timeout));
+  }
+  return new Promise<void>((_, reject) => {
+    context.window.setTimeout(
       () =>
         reject(
           'Prebid did not resolve in time. Maybe you forgot to import the prebid distribution in the ad tag'
         ),
-      5000
+      timeout > 5000 ? timeout : 5000
     );
   });
+};
 
 const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
   new Promise<void>(resolve => {
@@ -58,8 +65,8 @@ const isAdUnitDefined = (
 };
 
 export const prebidInit = (): InitStep =>
-  mkInitStep('prebid-init', context =>
-    Promise.race([prebidInitAndReady(context.window), prebidTimeout(context.window)])
+  mkInitStep('prebid-init', (context) =>
+    Promise.race([prebidInitAndReady(context.window), prebidTimeout(context)])
   );
 
 export const prebidRemoveAdUnits = (): ConfigureStep =>

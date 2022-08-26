@@ -11,7 +11,7 @@ type AdSlotType = {
 
 export const checkBucketConfig = (
   messages: Message[],
-  bucket: Moli.bucket.BucketConfig,
+  bucket: Moli.bucket.GlobalBucketConfig,
   slots: Moli.AdSlot[]
 ) => {
   const hasBucket = slots.some(slot => !!slot.behaviour.bucket);

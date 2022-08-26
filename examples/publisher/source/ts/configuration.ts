@@ -1,7 +1,6 @@
 import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
-import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
-import { getPageViewCount } from './pageViewTargeting';
+
 
 const { currentVersion } = require('../../version.json');
 
@@ -591,7 +590,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
     }
   ],
   buckets: {
-    enabled: false
+    enabled: false,
+    buckets: {page: {timeout: 1000}, content: {timeout: 2}}
   },
   schain: {
     supplyChainStartNode: {
@@ -712,6 +712,6 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       asi: 'highfivve.com',
       sid: '1111111',
       hp: 1
-    }
+    },
   }
 });
