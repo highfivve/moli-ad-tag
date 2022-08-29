@@ -290,7 +290,7 @@ export class AdService {
 
             // if the slot should be lazy loaded don't return it
             return slot.behaviour.lazy ? null : slot;
-          } else if (this.isManualSlot(slot)) {
+          } else if (this.isManualSlot(slot) || this.isInfiniteSlot(slot)) {
             // only load the slot immediately if it's available in the refreshSlots array
             return refreshSlots.some(domId => domId === slot.domId) ? slot : null;
           } else {
@@ -354,6 +354,16 @@ export class AdService {
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
   }
 
+  public refreshInfiniteAdSlots(domIds: string[], config: Moli.MoliConfig): Promise<void> {
+    if (domIds.length === 0) {
+      return Promise.resolve();
+    }
+    const infiniteSlots = config.slots.filter(slot => slot.behaviour.loaded === 'infinite');
+
+    this.logger.debug('AdService', 'refresh ad slots', infiniteSlots, config.targeting);
+    return this.adPipeline.run(infiniteSlots, config, this.requestAdsCalls);
+  }
+
   /**
    * Returns the underlying ad pipeline.
    */
@@ -382,6 +392,10 @@ export class AdService {
   ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Manual } => {
     return slot.behaviour.loaded === 'manual';
   };
+
+  private isInfiniteSlot = (slot: Moli.AdSlot): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Infinite } => {
+    return slot.behaviour.loaded === 'infinite';
+  }
 
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
     return (

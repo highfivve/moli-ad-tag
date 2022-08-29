@@ -223,6 +223,8 @@ export namespace Moli {
      */
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
+    refreshInfiniteAdSlot(domId: string, name: string): Promise<'queued' | 'refreshed'>;
+
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
      * If you need to access the final configuration use the `beforeRequestAds` method to configure
@@ -1108,7 +1110,7 @@ export namespace Moli {
      *
      */
     export interface ISlotLoading {
-      readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual';
+      readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual' | 'infinite';
 
       /**
        * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
@@ -1139,6 +1141,14 @@ export namespace Moli {
      */
     export interface Manual extends ISlotLoading {
       readonly loaded: 'manual';
+    }
+
+    /**
+     * An ad slot which must be triggered via the `moli.refreshInfiniteAdSlot` API.
+     */
+    export interface Infinite extends ISlotLoading {
+      readonly loaded: 'infinite';
+      readonly name: string;
     }
 
     /**
@@ -1186,7 +1196,7 @@ export namespace Moli {
     /**
      * all available slot loading behaviours.
      */
-    export type SlotLoading = Eager | Manual | Lazy | Refreshable;
+    export type SlotLoading = Eager | Manual | Lazy | Refreshable | Infinite;
 
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;
