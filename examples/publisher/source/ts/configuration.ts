@@ -607,7 +607,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       position: 'in-page',
       behaviour: {
         loaded: 'infinite',
-        selector: '.ad-infinite'
+        name: 'home'
       },
       adUnitPath: '/55155651/prebid_test',
       sizes: [[300, 300]],
@@ -618,7 +618,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           sizesSupported: [[300, 300]]
         }
       ]
-    }
+    },
   ],
 
   // -----------------------------
