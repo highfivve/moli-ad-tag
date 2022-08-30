@@ -64,9 +64,15 @@ export type LazyLoadModulePerKeyConfig = {
   readonly options: LazyLoadModuleOptionsType;
 };
 
+export type InfiniteSlotsSelector = {
+  readonly selector: string;
+  readonly options: LazyLoadModuleOptionsType;
+}
+
 export type LazyLoadModuleConfig = {
   readonly slots: LazyLoadModulePerKeyConfig[];
   readonly buckets: LazyLoadModulePerKeyConfig[];
+  readonly infiniteSlots?: InfiniteSlotsSelector[];
 };
 
 /**
@@ -130,6 +136,7 @@ export class LazyLoad implements IModule {
 
     const slotsConfig = lazyModuleConfig.slots;
     const bucketsConfig = lazyModuleConfig.buckets;
+    const infiniteSlotsConfig = lazyModuleConfig.infiniteSlots;
 
     slotsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
@@ -167,5 +174,41 @@ export class LazyLoad implements IModule {
         }
       });
     });
+
+
+    if (infiniteSlotsConfig) {
+    infiniteSlotsConfig.forEach((config, index) => {
+      const infiniteElements = document.querySelectorAll(config.selector)
+      const slots = moliConfig.slots.filter(slot => slot.behaviour.loaded === 'infinite');
+      const observer = new window.IntersectionObserver(
+        entries => {
+          entries.forEach((entry: IntersectionObserverEntry, index) => {
+            if (entry.isIntersecting) {
+              const slotNumber = Array.from(infiniteElements).findIndex(element => element.id === entry.target.id);
+              const createdDomId = `infinite-ad-slot-${slotNumber + 1}`;
+              entry.target.setAttribute('id', createdDomId);
+              this.logger?.debug(this.name, `Trigger ad slot with newly created DOM ID ${createdDomId}`);
+              this.window.moli.refreshInfiniteAdSlot(createdDomId, 'home', config.selector);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          root: config.options.rootId
+            ? window.document.getElementById(config.options.rootId)
+            : null,
+          threshold: config.options.threshold,
+          rootMargin: config.options.rootMargin
+        }
+      );
+
+        const originalInfiniteSlot = moliConfig.slots.find(slot => slot.behaviour.loaded === 'infinite');
+        if (originalInfiniteSlot) {
+          const elementsToObserve = window.document.querySelectorAll(config.selector);
+          elementsToObserve.forEach(element => element && observer.observe(element));
+        }
+    });
+
+    }
   };
 }

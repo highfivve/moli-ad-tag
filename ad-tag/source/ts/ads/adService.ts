@@ -337,11 +337,16 @@ export class AdService {
       return Promise.resolve();
     }
     const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlots = manualSlots.filter(slot => domIds.some(domId => domId === slot.domId));
+    const availableManualSlots = manualSlots.filter(slot => domIds.some(domId => domId === slot.domId));
+
+    const infiniteSlots = config.slots.filter(this.isInfiniteSlot);
+    const availableInfiniteSlots = infiniteSlots.filter(slot => domIds.some(domId => domId === slot.domId));
+
+    const availableSlots = [...availableManualSlots, ...availableInfiniteSlots];
 
     if (domIds.length !== availableSlots.length) {
       const unavailableSlots = domIds.filter(
-        domId => !manualSlots.some(slot => slot.domId === domId)
+        domId => !availableSlots.some(slot => slot.domId === domId)
       );
       this.logger.warn(
         'AdService',
@@ -352,16 +357,6 @@ export class AdService {
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
-  }
-
-  public refreshInfiniteAdSlots(domIds: string[], config: Moli.MoliConfig): Promise<void> {
-    if (domIds.length === 0) {
-      return Promise.resolve();
-    }
-    const infiniteSlots = config.slots.filter(slot => slot.behaviour.loaded === 'infinite');
-
-    this.logger.debug('AdService', 'refresh ad slots', infiniteSlots, config.targeting);
-    return this.adPipeline.run(infiniteSlots, config, this.requestAdsCalls);
   }
 
   /**
