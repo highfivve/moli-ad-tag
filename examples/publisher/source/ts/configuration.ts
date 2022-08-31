@@ -584,7 +584,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           sizesSupported: [[300, 300]]
         }
       ]
-    },
+    }
   ],
 
   // -----------------------------
@@ -672,7 +672,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           {
             name: 'unifiedId',
             params: {
-              partner: 'myTpId',
+              partner: 'myTpId'
             },
             storage: {
               type: 'cookie',
@@ -691,7 +691,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
             storage: {
               expires: 60,
               name: '_pubcid',
-              type: 'cookie',
+              type: 'cookie'
             }
           }
         ],

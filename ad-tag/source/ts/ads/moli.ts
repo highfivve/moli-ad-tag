@@ -45,7 +45,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       beforeRequestAds: [],
       afterRequestAds: []
     },
-    adUnitPathVariables: {},
+    adUnitPathVariables: {}
   };
 
   function setTargeting(key: string, value: string | string[]): void {
@@ -770,9 +770,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         if (state.href === window.location.href) {
           const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === nameOfConfiguredSlot);
           if (configuredInfiniteAdSlot) {
-            const newAdSlot = {...configuredInfiniteAdSlot}
-            newAdSlot.domId = domId
-            const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]}
+            const newAdSlot = {...configuredInfiniteAdSlot};
+            newAdSlot.domId = domId;
+            const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]};
             return adService.refreshAdSlots(domIds, newConfig).then(() => 'refreshed');
           }
         } else {
@@ -786,15 +786,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'requestAds': {
         const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === nameOfConfiguredSlot);
         if (configuredInfiniteAdSlot) {
-          const newAdSlot = {...configuredInfiniteAdSlot, domId}
-          const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]}
+          const newAdSlot = {...configuredInfiniteAdSlot, domId};
+          const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]};
           return adService.refreshAdSlots(domIds, newConfig).then(() => 'refreshed');
         } else {
           getLogger(state.config, window).error(
             'MoliGlobal',
             `no infinite ad slot configured!`,
             state.config
-          )
+          );
         }
       }
       default: {
