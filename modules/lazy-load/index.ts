@@ -26,7 +26,7 @@
  *
  * @module
  */
-import { IModule, ModuleType, Moli, getLogger } from '@highfivve/ad-tag';
+import {IModule, ModuleType, Moli, getLogger} from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
 
 type LazyLoadModuleOptionsType = {
@@ -67,7 +67,7 @@ export type LazyLoadModulePerKeyConfig = {
 export type InfiniteSlotsSelector = {
   readonly selector: string;
   readonly options: LazyLoadModuleOptionsType;
-}
+};
 
 export type LazyLoadModuleConfig = {
   readonly slots: LazyLoadModulePerKeyConfig[];
@@ -81,14 +81,14 @@ export type LazyLoadModuleConfig = {
  */
 export type LazyLoadWindow = Window &
   MoliWindow & {
-    IntersectionObserver: {
-      prototype: IntersectionObserver;
-      new (
-        callback: IntersectionObserverCallback,
-        options?: IntersectionObserverInit
-      ): IntersectionObserver;
-    };
+  IntersectionObserver: {
+    prototype: IntersectionObserver;
+    new(
+      callback: IntersectionObserverCallback,
+      options?: IntersectionObserverInit
+    ): IntersectionObserver;
   };
+};
 
 /**
  * This module can be used to refresh ads based on slot visibility.
@@ -175,40 +175,60 @@ export class LazyLoad implements IModule {
       });
     });
 
-
     if (infiniteSlotsConfig) {
-    infiniteSlotsConfig.forEach((config, index) => {
-      const infiniteElements = document.querySelectorAll(config.selector)
-      const slots = moliConfig.slots.filter(slot => slot.behaviour.loaded === 'infinite');
-      const observer = new window.IntersectionObserver(
-        entries => {
-          entries.forEach((entry: IntersectionObserverEntry, index) => {
-            if (entry.isIntersecting) {
-              const slotNumber = Array.from(infiniteElements).findIndex(element => element.id === entry.target.id);
-              const createdDomId = `infinite-ad-slot-${slotNumber + 1}`;
-              entry.target.setAttribute('id', createdDomId);
-              this.logger?.debug(this.name, `Trigger ad slot with newly created DOM ID ${createdDomId}`);
-              this.window.moli.refreshInfiniteAdSlot(createdDomId, 'home', config.selector);
-              observer.unobserve(entry.target);
+      infiniteSlotsConfig.forEach((config, index) => {
+          const infiniteElements = document.querySelectorAll(config.selector);
+          const configuredInfiniteSlot = moliConfig.slots.find(slot => slot.behaviour.loaded === 'infinite');
+          if (configuredInfiniteSlot) {
+            const observer = new window.IntersectionObserver(
+              entries => {
+                console.log('called with', entries);
+                entries.forEach((entry: IntersectionObserverEntry, index) => {
+                  if (entry.isIntersecting) {
+                    const slotIndex = Array.from(infiniteElements).findIndex(
+                      element => element.id === entry.target.id
+                    );
+                    const createdDomId = `${configuredInfiniteSlot.domId}-${slotIndex + 1}`;
+                    entry.target.setAttribute('id', createdDomId);
+                    this.logger?.debug(
+                      this.name,
+                      `Trigger ad slot with newly created DOM ID ${createdDomId}`
+                    );
+                    this.window.moli.refreshInfiniteAdSlot(
+                      createdDomId,
+                      configuredInfiniteSlot.domId,
+                      config.selector
+                    );
+                    observer.unobserve(entry.target);
+                  }
+                });
+              },
+              {
+                root: config.options.rootId
+                  ? window.document.getElementById(config.options.rootId)
+                  : null,
+                threshold: config.options.threshold,
+                rootMargin: config.options.rootMargin
+              }
+            );
+
+            const elementsToObserve = window.document.querySelectorAll(config.selector);
+            elementsToObserve.forEach(element => element && observer.observe(element));
+          } else {
+            {
+              this.logger?.warn(
+                this.name,
+                `No infinite-scrolling slot configured!`
+              )
             }
-          });
-        },
-        {
-          root: config.options.rootId
-            ? window.document.getElementById(config.options.rootId)
-            : null,
-          threshold: config.options.threshold,
-          rootMargin: config.options.rootMargin
+          }
         }
       );
-
-        const originalInfiniteSlot = moliConfig.slots.find(slot => slot.behaviour.loaded === 'infinite');
-        if (originalInfiniteSlot) {
-          const elementsToObserve = window.document.querySelectorAll(config.selector);
-          elementsToObserve.forEach(element => element && observer.observe(element));
-        }
-    });
-
+    } else {
+      this.logger?.debug(
+        this.name,
+        `No CSS selector for infinite-scrolling slots entered`
+      )
     }
   };
 }

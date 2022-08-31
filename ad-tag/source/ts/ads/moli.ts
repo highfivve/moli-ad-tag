@@ -810,7 +810,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     return Promise.reject(`no slots in buckets found`);
   }
 
-  function refreshInfiniteAdSlot(domId: string, name: string, infiniteSlotSelector: string): Promise<'queued' | 'refreshed'> {
+  function refreshInfiniteAdSlot(domId: string, nameOfConfiguredSlot: string, infiniteSlotSelector: string): Promise<'queued' | 'refreshed'> {
     const domIds = [domId];
     switch (state.state) {
       case 'configurable': {
@@ -831,7 +831,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'spa-finished':
         // user hasn't navigated yet so we directly refresh the slot
         if (state.href === window.location.href) {
-          const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === 'infinite-loading-adslot');
+          const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === nameOfConfiguredSlot);
           if (configuredInfiniteAdSlot) {
             const newAdSlot = {...configuredInfiniteAdSlot}
             newAdSlot.domId = domId
@@ -847,10 +847,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === 'infinite-loading-adslot');
+        const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === nameOfConfiguredSlot);
         if (configuredInfiniteAdSlot) {
-          const newAdSlot = {...configuredInfiniteAdSlot}
-          newAdSlot.domId = domId
+          const newAdSlot = {...configuredInfiniteAdSlot, domId}
           const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]}
           return adService.refreshAdSlots(domIds, newConfig).then(() => 'refreshed');
         } else {
