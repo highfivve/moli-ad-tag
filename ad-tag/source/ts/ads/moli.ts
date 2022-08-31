@@ -770,8 +770,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         if (state.href === window.location.href) {
           const configuredInfiniteAdSlot = state.config.slots.find(slot => slot.domId === nameOfConfiguredSlot);
           if (configuredInfiniteAdSlot) {
-            const newAdSlot = {...configuredInfiniteAdSlot};
-            newAdSlot.domId = domId;
+            const newAdSlot = {...configuredInfiniteAdSlot, domId};
             const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]};
             return adService.refreshAdSlots(domIds, newConfig).then(() => 'refreshed');
           }
