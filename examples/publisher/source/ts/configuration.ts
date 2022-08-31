@@ -618,7 +618,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           sizesSupported: [[300, 300]]
         }
       ]
-    },
+    }
   ],
 
   // -----------------------------

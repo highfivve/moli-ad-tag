@@ -219,7 +219,7 @@ export class LazyLoad implements IModule {
               this.logger?.warn(
                 this.name,
                 `No infinite-scrolling slot configured!`
-              )
+              );
             }
           }
         }
@@ -228,7 +228,7 @@ export class LazyLoad implements IModule {
       this.logger?.debug(
         this.name,
         `No CSS selector for infinite-scrolling slots entered`
-      )
+      );
     }
   };
 }
