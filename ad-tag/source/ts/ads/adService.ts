@@ -354,27 +354,15 @@ export class AdService {
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
   }
 
-  public refreshBucket(buckets: string[], config: Moli.MoliConfig): Promise<void> {
+  public refreshBuckets(buckets: string[], config: Moli.MoliConfig): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
     const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlotsBuckets = manualSlots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+    const availableInSlotsBuckets = manualSlots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
 
-    if (buckets.length !== availableSlotsBuckets.length) {
-      const bucketsWithoutSlots = buckets.filter(
-        bucket => !manualSlots.some(slot => slot.behaviour.bucket === bucket)
-      );
-
-      this.logger.warn(
-        'AdService',
-        "Trying to refresh buckets that don't have any slots.",
-        bucketsWithoutSlots
-      );
-    }
-
-    this.logger.debug('AdService', 'refresh ad buckets', availableSlotsBuckets, config.targeting);
-    return this.adPipeline.run(availableSlotsBuckets, config, this.requestAdsCalls);
+    this.logger.debug('AdService', 'refresh ad buckets', availableInSlotsBuckets, config.targeting);
+    return this.adPipeline.run(availableInSlotsBuckets, config, this.requestAdsCalls);
   }
 
   /**

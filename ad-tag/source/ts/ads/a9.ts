@@ -108,8 +108,8 @@ export const a9Configure = (
     'a9-configure',
     (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
       let timeout = 0;
-      if (context.config?.buckets?.enabled && context.config.buckets.buckets) {
-        const buckets = Object.values(context.config.buckets.buckets);
+      if (context.config?.buckets?.enabled && context.config.buckets.bucket) {
+        const buckets = Object.values(context.config.buckets.bucket);
         timeout = Math.max(...buckets.map(bucket => bucket.timeout));
       }
       return new Promise<void>(resolve => {

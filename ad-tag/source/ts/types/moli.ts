@@ -984,7 +984,7 @@ export namespace Moli {
      * Size configuration to support "responsive" ads.
      *
      * The implementation matches the prebid.js specification for responsive ads.
-     * However this information is not passed to prebid. The ad tag already takes
+     * However, this information is not passed to prebid. The ad tag already takes
      * care of filtering sizes.
      *
      * @see [prebid configure responsive ads](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-Responsive-Ads)
@@ -1888,7 +1888,7 @@ export namespace Moli {
       /**
        * to customize the timeout per bucket, which overrides the Prebid's/A9 timeout.
        */
-      readonly buckets?: BucketConfig;
+      readonly bucket?: BucketConfig;
     };
 
     export type BucketConfig = {

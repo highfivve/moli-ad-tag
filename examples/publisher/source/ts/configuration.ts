@@ -555,12 +555,48 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
+
+    // Buckets
+    {
+      domId: 'same-bucket1',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'bucket-one'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 250]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 250]]
+        }
+      ]
+    },
+    {
+      domId: 'same-bucket2',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'bucket-one'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 250]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 250]]
+        }
+      ]
+    },
     // web interstitial
     {
       domId: 'unused',
       position: 'out-of-page-interstitial',
       behaviour: {
-        loaded: 'eager'
+        loaded: 'eager',
       },
       adUnitPath: '/6355419/Travel/Europe/France/Paris',
       sizes: [],
@@ -590,8 +626,10 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
     }
   ],
   buckets: {
-    enabled: false,
-    buckets: {page: {timeout: 1000}, content: {timeout: 2}}
+    enabled: true,
+    bucket: {
+      'bucket-one': {timeout: 5000},
+    }
   },
   schain: {
     supplyChainStartNode: {

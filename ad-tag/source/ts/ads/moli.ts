@@ -748,7 +748,53 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   }
 
   function refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'> {
-    return Promise.reject(`not allowed in state`);
+    const buckets = typeof bucket === 'string' ? [bucket] : bucket;
+
+    const slotsInBuckets = moliWindow.moli.getConfig()?.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+    const domIds = slotsInBuckets?.map(slot => slot.domId);
+    if(domIds?.length){
+      switch (state.state) {
+        case 'configurable': {
+          state.refreshSlots.push(...domIds);
+          return Promise.resolve('queued');
+        }
+        case 'configured': {
+          state.refreshSlots.push(...domIds);
+          return Promise.resolve('queued');
+        }
+        // if requestAds is currently called we batch the refreshAdSlot calls until
+        // we hit the 'spa-finished' state
+        case 'spa-requestAds':
+          state.refreshSlots.push(...domIds);
+          return Promise.resolve('queued');
+        // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
+        // until the next requestAds() call arrives
+        case 'spa-finished':
+          if (state.href === window.location.href) {
+            // user hasn't navigated yet, so we directly refresh the slot
+            return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
+          } else {
+            // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
+            state.refreshSlots.push(...domIds);
+            return Promise.resolve('queued');
+          }
+        // if the ad tag is currently requesting ads or already finished doesn't matter
+        // slots can be refreshed immediately
+        case 'finished':
+        case 'requestAds': {
+          return adService.refreshBuckets(buckets, state.config).then(() => 'refreshed');
+        }
+        default: {
+          getLogger(state.config, window).error(
+            'MoliGlobal',
+            `refreshAdSlot is not allowed in state ${state.state}`,
+            state.config
+          );
+          return Promise.reject(`not allowed in state ${state.state}`);
+        }
+      }
+    }
+    return Promise.reject(`no slots in buckets found`);
   }
 
   function getState(): Moli.state.States {

@@ -156,3 +156,5 @@ window.pbjs.que.push(() => {
 
 // init moli
 moli.configure(adConfiguration(moli.version));
+
+window.moli.que.push((adTag) => adTag.refreshBucket('bucket-one'));
