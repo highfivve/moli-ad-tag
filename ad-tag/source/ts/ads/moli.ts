@@ -747,21 +747,20 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshInfiniteAdSlot(domId: string, nameOfConfiguredSlot: string, infiniteSlotSelector: string): Promise<'queued' | 'refreshed'> {
-    const domIds = [domId];
+  function refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string, infiniteSlotSelector: string): Promise<'queued' | 'refreshed'> {
     switch (state.state) {
       case 'configurable': {
-        state.refreshSlots.push(...domIds);
+        state.refreshSlots.push(domId);
         return Promise.resolve('queued');
       }
       case 'configured': {
-        state.refreshSlots.push(...domIds);
+        state.refreshSlots.push(domId);
         return Promise.resolve('queued');
       }
       // if requestAds is currently called we batch the refreshAdSlot calls until
       // we hit the 'spa-finished' state
       case 'spa-requestAds':
-        state.refreshSlots.push(...domIds);
+        state.refreshSlots.push(domId);
         return Promise.resolve('queued');
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
       // until the next requestAds() call arrives
@@ -772,11 +771,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           if (configuredInfiniteAdSlot) {
             const newAdSlot = {...configuredInfiniteAdSlot, domId};
             const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]};
-            return adService.refreshAdSlots(domIds, newConfig).then(() => 'refreshed');
+            return adService.refreshAdSlots([domId], newConfig).then(() => 'refreshed');
           }
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.refreshSlots.push(...domIds);
+          state.refreshSlots.push(domId);
           return Promise.resolve('queued');
         }
       // if the ad tag is currently requesting ads or already finished doesn't matter
@@ -787,15 +786,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         if (configuredInfiniteAdSlot) {
           const newAdSlot = {...configuredInfiniteAdSlot, domId};
           const newConfig: Moli.MoliConfig = {...state.config, slots: [...state.config.slots, newAdSlot]};
-          return adService.refreshAdSlots(domIds, newConfig).then(() => 'refreshed');
+          return adService.refreshAdSlots([domId], newConfig).then(() => 'refreshed');
         } else {
           getLogger(state.config, window).error(
             'MoliGlobal',
             `no infinite ad slot configured!`,
             state.config
           );
-        }
-      }
+
+      }}
       default: {
         getLogger(state.config, window).error(
           'MoliGlobal',
