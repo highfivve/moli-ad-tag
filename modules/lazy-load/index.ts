@@ -177,7 +177,7 @@ export class LazyLoad implements IModule {
 
     if (infiniteSlotsConfig) {
       infiniteSlotsConfig.forEach((config, index) => {
-          const infiniteElements = document.querySelectorAll(config.selector);
+          const infiniteElements = window.document.querySelectorAll(config.selector);
           const configuredInfiniteSlot = moliConfig.slots.find(slot => slot.behaviour.loaded === 'infinite');
           if (configuredInfiniteSlot) {
             const observer = new window.IntersectionObserver(
@@ -185,10 +185,8 @@ export class LazyLoad implements IModule {
                 console.log('called with', entries);
                 entries.forEach((entry: IntersectionObserverEntry, index) => {
                   if (entry.isIntersecting) {
-                    const slotIndex = Array.from(infiniteElements).findIndex(
-                      element => element.id === entry.target.id
-                    );
-                    const createdDomId = `${configuredInfiniteSlot.domId}-${slotIndex + 1}`;
+                    const serialNumber = entry.target.attributes?.getNamedItem('serialnumber')?.value;
+                    const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
                     entry.target.setAttribute('id', createdDomId);
                     this.logger?.debug(
                       this.name,
@@ -212,8 +210,9 @@ export class LazyLoad implements IModule {
               }
             );
 
-            const elementsToObserve = window.document.querySelectorAll(config.selector);
-            elementsToObserve.forEach(element => element && observer.observe(element));
+            infiniteElements.forEach((element, index) => {
+              element.setAttribute('serialnumber', `${index + 1}`)
+              element && observer.observe(element)});
           } else {
             {
               this.logger?.warn(

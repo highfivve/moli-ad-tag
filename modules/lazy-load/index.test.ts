@@ -32,31 +32,26 @@ const createAdSlots = (
   });
 };
 
-// Caution: although the infinite scrolling module is able to handle different selectors, the test infinite slots do always use a class as identifier
-const createInfiniteAdSlotInDOM = (
+const createInfiniteAdSlot = (
   window: Window,
-  infiniteSlotClassSelector: string,
-  serialNumber: number
-): void => {
-  const div = window.document.createElement('div');
-  div.id = `infinite-loading-adslot-${serialNumber}`;
-  // Selector without the '.' at the beginning
-  div.className = infiniteSlotClassSelector.slice(1);
-  window.document.body.appendChild(div);
-};
+  infiniteSlotSelector: string,
+): Moli.AdSlot => {
+    const div = window.document.createElement('div');
+    div.id = 'infinite-loading-adslot';
+    div.className = infiniteSlotSelector;
+    window.document.body.appendChild(div);
 
-const createInfiniteAdSlotinConfig = (infiniteSlotClassSelector: string) => {
-  const slot: Moli.AdSlot = {
-    domId: 'infinite-loading-adslot',
-    adUnitPath: 'infinite-loading-adslot',
-    position: 'in-page',
-    sizes: [],
-    behaviour: { loaded: 'infinite', selector: infiniteSlotClassSelector },
-    labelAll: [],
-    labelAny: [],
-    sizeConfig: []
-  };
-  return slot;
+    const slot: Moli.AdSlot = {
+      domId: 'infinite-loading-adslot',
+      adUnitPath:'infinite-loading-adslot',
+      position: 'in-page',
+      sizes: [],
+      behaviour: { loaded: 'infinite', name: 'home'},
+      labelAll: [],
+      labelAny: [],
+      sizeConfig: []
+    };
+    return slot;
 };
 
 const MockIntersectionObserver = class MockIntersectionObserver implements IntersectionObserver {
@@ -89,7 +84,7 @@ describe('Lazy-load Module', () => {
 
   const domId1 = 'lazy-1';
   const domId2 = 'lazy-2';
-  const infiniteSelector1 = '.ad-infinite';
+  const infiniteSelector1 = 'ad-infinite'
 
   jsDomWindow.moli = createMoliTag(jsDomWindow);
   jsDomWindow.IntersectionObserver = MockIntersectionObserver;
@@ -173,43 +168,6 @@ describe('Lazy-load Module', () => {
     expect(args).to.equal(jsDomWindow.document.getElementById('lazy-1'));
   });
 
-  it('Observe only infinite ad slots that have the correct className which identifies them as such infinite slots, i.e. ad-infinite', () => {
-    const oberserveSpy = sandbox.spy(observer, 'observe');
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
-    const infiniteSlot = createInfiniteAdSlotinConfig(infiniteSelector1);
-    createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
-    createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
-
-    const module = new LazyLoad(
-      {
-        slots: [{ domIds: [], options: {} }],
-        buckets: [],
-        infiniteSlots: [{ selector: infiniteSelector1, options: {} }]
-      },
-      jsDomWindow
-    );
-
-    const initSpy = sandbox.spy(module, 'init');
-    module.init(config([...slots, infiniteSlot]));
-
-    // trigger an intersection event
-    const callback = getIntersectionObserverCallback(0);
-    callback([createIntersectionObserverEntry(true, 'infinite-loading-adSlot-1')], observer);
-    callback([createIntersectionObserverEntry(true, 'infinite-loading-adSlot-2')], observer);
-
-    const argsCall1 = oberserveSpy.firstCall.firstArg;
-    const argsCall2 = oberserveSpy.secondCall.firstArg;
-
-    const infiniteSlotsInDom = jsDomWindow.document.querySelectorAll(infiniteSelector1);
-
-    expect(errorLogSpy).to.have.not.been.called;
-    expect(initSpy).to.have.been.calledOnce;
-    expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
-    expect(oberserveSpy).to.have.been.calledTwice;
-    expect(argsCall1).to.equal(infiniteSlotsInDom[0]);
-    expect(argsCall2).to.equal(infiniteSlotsInDom[1]);
-  });
-
   it('Unobserve already observed and intersected slots, thus no ad-slot refresh again', () => {
     const oberserveSpy = sandbox.spy(observer, 'observe');
     const unOberserveSpy = sandbox.spy(observer, 'unobserve');
@@ -248,14 +206,13 @@ describe('Lazy-load Module', () => {
     const observeSpy = sandbox.spy(observer, 'observe');
     const manualSlot = createAdSlots(jsDomWindow, [domId1], 'manual');
     const eagerSlot = createAdSlots(jsDomWindow, [domId2], 'eager');
-    const infiniteSlot = createInfiniteAdSlotinConfig(infiniteSelector1);
-    createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
+    const infiniteSlot = createInfiniteAdSlot(jsDomWindow, infiniteSelector1);
 
     const module = new LazyLoad(
       {
         slots: [{ domIds: [domId1, domId2], options: {} }],
         buckets: [],
-        infiniteSlots: [{ selector: infiniteSelector1, options: {} }]
+        infiniteSlots: [{selector: '.' + infiniteSelector1, options: {}}]
       },
       jsDomWindow
     );
@@ -266,12 +223,8 @@ describe('Lazy-load Module', () => {
     expect(errorLogSpy).to.have.not.been.called;
     expect(initSpy).to.have.been.calledOnce;
     expect(observeSpy).to.have.been.calledWith(jsDomWindow.document.querySelector(`#${domId1}`));
-    expect(observeSpy).to.have.been.calledWith(
-      jsDomWindow.document.querySelector(infiniteSelector1)
-    );
-    expect(observeSpy).to.have.not.been.calledWith(
-      jsDomWindow.document.querySelector(`#${domId2}`)
-    );
+    expect(observeSpy).to.have.been.calledWith(jsDomWindow.document.querySelector(`.${infiniteSelector1}`));
+    expect(observeSpy).to.have.not.been.calledWith(jsDomWindow.document.querySelector(`#${domId2}`));
   });
 
   it('Every slot should consider its own observer options', () => {
