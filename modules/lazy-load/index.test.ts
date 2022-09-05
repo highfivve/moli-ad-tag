@@ -32,6 +32,28 @@ const createAdSlots = (
   });
 };
 
+const createInfiniteAdSlot = (
+  window: Window,
+  infiniteSlotSelector: string,
+): Moli.AdSlot => {
+    const div = window.document.createElement('div');
+    div.id = 'infinite-loading-adslot';
+    div.className = infiniteSlotSelector;
+    window.document.body.appendChild(div);
+
+    const slot: Moli.AdSlot = {
+      domId: 'infinite-loading-adslot',
+      adUnitPath:'infinite-loading-adslot',
+      position: 'in-page',
+      sizes: [],
+      behaviour: { loaded: 'infinite', name: 'home'},
+      labelAll: [],
+      labelAny: [],
+      sizeConfig: []
+    };
+    return slot;
+};
+
 const MockIntersectionObserver = class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '0';
@@ -62,12 +84,13 @@ describe('Lazy-load Module', () => {
 
   const domId1 = 'lazy-1';
   const domId2 = 'lazy-2';
+  const infiniteSelector1 = 'ad-infinite'
 
   jsDomWindow.moli = createMoliTag(jsDomWindow);
   jsDomWindow.IntersectionObserver = MockIntersectionObserver;
   const noopLogger = newNoopLogger();
   const errorLogSpy = sandbox.spy(noopLogger, 'error');
-  let refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+  let refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
   let observer: IntersectionObserver = new MockIntersectionObserver(() => {
     return;
   }, {});
@@ -95,7 +118,7 @@ describe('Lazy-load Module', () => {
     jsDomWindow = dom.window;
     jsDomWindow.moli = createMoliTag(jsDomWindow);
     jsDomWindow.IntersectionObserver = MockIntersectionObserver;
-    refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+    refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
     observer = new MockIntersectionObserver(() => {
       return;
     }, {});
@@ -117,7 +140,7 @@ describe('Lazy-load Module', () => {
     };
   };
 
-  it('Observe only domIds that are in the module config, i.e., lazy-1', () => {
+  it('Observe only domIds that are in the module config for manual slots, i.e., lazy-1', () => {
     const oberserveSpy = sandbox.spy(observer, 'observe');
     const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
@@ -176,30 +199,32 @@ describe('Lazy-load Module', () => {
     expect(unOberserveSpy).to.have.been.calledOnce;
     expect(unOberserveSpy).to.have.been.calledOnceWithExactly({ id: 'lazy-1' });
     expect(firstCallArgs).to.deep.contain({ id: 'lazy-1' });
-    expect(refreshAdSlotsSpy).to.have.been.calledOnceWithExactly('lazy-1');
+    expect(refreshAdSlotSpy).to.have.been.calledOnceWithExactly('lazy-1');
   });
 
-  it('Observe only slots that have a manual behaviour', () => {
-    const oberserveSpy = sandbox.spy(observer, 'observe');
-    const eagerSlot = createAdSlots(jsDomWindow, [domId1], 'manual');
-    const manualSlot = createAdSlots(jsDomWindow, [domId2], 'eager');
+  it('Observe only slots that have a manual or infinite behaviour', () => {
+    const observeSpy = sandbox.spy(observer, 'observe');
+    const manualSlot = createAdSlots(jsDomWindow, [domId1], 'manual');
+    const eagerSlot = createAdSlots(jsDomWindow, [domId2], 'eager');
+    const infiniteSlot = createInfiniteAdSlot(jsDomWindow, infiniteSelector1);
 
     const module = new LazyLoad(
       {
         slots: [{ domIds: [domId1, domId2], options: {} }],
-        buckets: []
+        buckets: [],
+        infiniteSlots: [{selector: '.' + infiniteSelector1, options: {}}]
       },
       jsDomWindow
     );
 
     const initSpy = sandbox.spy(module, 'init');
-    module.init(config([...manualSlot, ...eagerSlot]));
+    module.init(config([...manualSlot, ...eagerSlot, infiniteSlot]));
 
     expect(errorLogSpy).to.have.not.been.called;
     expect(initSpy).to.have.been.calledOnce;
-    expect(oberserveSpy).to.have.been.calledOnceWithExactly(
-      jsDomWindow.document.getElementById('lazy-1')
-    );
+    expect(observeSpy).to.have.been.calledWith(jsDomWindow.document.querySelector(`#${domId1}`));
+    expect(observeSpy).to.have.been.calledWith(jsDomWindow.document.querySelector(`.${infiniteSelector1}`));
+    expect(observeSpy).to.have.not.been.calledWith(jsDomWindow.document.querySelector(`#${domId2}`));
   });
 
   it('Every slot should consider its own observer options', () => {
