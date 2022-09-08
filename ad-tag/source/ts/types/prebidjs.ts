@@ -2908,6 +2908,7 @@ export namespace prebidjs {
   export const Yieldlab = 'yieldlab';
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
+  export const StroeerCore = 'stroeerCore';
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
   export const Rubicon = 'rubicon';
@@ -2943,6 +2944,7 @@ export namespace prebidjs {
     | typeof Yieldlab
     | typeof Spotx
     | typeof ShowHeroes
+    | typeof StroeerCore
     | typeof Xaxis
     | typeof DSPX
     | typeof Rubicon
@@ -4451,6 +4453,21 @@ export namespace prebidjs {
   export interface IOrbidderBid extends IBidObject<typeof Orbidder, IOrbidderParams> {}
 
   /**
+   * Stroeer Core bid params
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/stroeerCore.html
+   */
+  export interface IStroeerParams {
+    /**
+     * Slot ID
+     * @example `'06b782cc-091b-4f53-9cd2-0291679aa1ac'`
+     */
+    readonly sid: string;
+  }
+
+  export interface IStroeerCoreBid extends IBidObject<typeof StroeerCore, IStroeerParams> {}
+
+  /**
    * Supported bid object types.
    */
   export type IBid =
@@ -4474,6 +4491,7 @@ export namespace prebidjs {
     | IYieldlabBid
     | ISpotXBid
     | IShowHeroesBid
+    | IStroeerCoreBid
     | IXaxisBid
     | IDSPXBid
     | IRubiconBid
