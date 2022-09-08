@@ -4463,7 +4463,6 @@ export namespace prebidjs {
      * @example `'06b782cc-091b-4f53-9cd2-0291679aa1ac'`
      */
     readonly sid: string;
-
   }
 
   export interface IStroeerCoreBid extends IBidObject<typeof StroeerCore, IStroeerParams> {}
