@@ -242,16 +242,7 @@ export namespace prebidjs {
     };
   }
 
-  interface IIndexExchangeConfig {
-    /**
-     * the IX bid adapter bids on all banner sizes available in an ad unit, if IX is configured for at least one
-     * banner size in that ad unit. This default behavior if not required, can be turned off by using the
-     * `detectMissingSizes` flag
-     *
-     * @see https://github.com/prebid/Prebid.js/pull/5856
-     */
-    readonly detectMissingSizes?: boolean;
-  }
+  interface IIndexExchangeConfig { }
 
   /**
    * ## Global Rubicon configuration
