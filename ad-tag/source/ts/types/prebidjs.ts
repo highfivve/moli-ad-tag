@@ -242,7 +242,7 @@ export namespace prebidjs {
     };
   }
 
-  interface IIndexExchangeConfig { }
+  interface IIndexExchangeConfig {}
 
   /**
    * ## Global Rubicon configuration
