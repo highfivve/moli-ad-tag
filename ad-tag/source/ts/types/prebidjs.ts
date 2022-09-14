@@ -77,6 +77,14 @@ export namespace prebidjs {
     getConfig(): IPrebidJsConfig;
 
     /**
+     * Outputs a clone of the current prebid config.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/readConfig.html
+     * @return {prebidjs.IPrebidJsConfig}
+     */
+    readConfig(): IPrebidJsConfig;
+
+    /**
      *
      * supports a number of advanced configuration options
      *
