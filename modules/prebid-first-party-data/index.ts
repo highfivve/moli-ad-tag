@@ -213,7 +213,9 @@ export class PrebidFirstPartyDataModule implements IModule {
 
           site.content = {
             ...site.content,
-            data: [...(site.content?.data ?? []), publisherContentData]
+            data: [...(site.content?.data ?? []), publisherContentData].filter(
+              uniquePrimitiveFilter
+            )
           };
         }
 
@@ -234,7 +236,9 @@ export class PrebidFirstPartyDataModule implements IModule {
 
           site.content = {
             ...site.content,
-            data: [...(site.content?.data ?? []), publisherContentData]
+            data: [...(site.content?.data ?? []), publisherContentData].filter(
+              uniquePrimitiveFilter
+            )
           };
         }
 
