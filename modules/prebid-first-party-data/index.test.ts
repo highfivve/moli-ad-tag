@@ -258,6 +258,47 @@ describe('Prebid First Party Data Module', () => {
       });
     });
 
+    describe('site.content.data merge behaviour', () => {
+      it('should filter duplicates', async () => {
+        const module = createFpdModule({}, { iabV3: 'iab_v3' }, 'test.com');
+
+        const { moliConfig, targeting, configureStep } = initModule(module);
+        targeting.keyValues.iab_v3 = ['123', '456'];
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        const expected: PrebidFirstPartyData = {
+          site: {
+            content: {
+              data: [
+                {
+                  name: 'test.com',
+                  ext: {
+                    segtax: 7
+                  },
+                  segment: [
+                    {
+                      id: '123'
+                    },
+                    {
+                      id: '456'
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        };
+
+        await configureStep(adPipelineContext(moliConfig), []);
+
+        expect(setConfigSpy).to.have.been.calledTwice;
+        expect(setConfigSpy).to.have.been.calledWithExactly({
+          ortb2: expected
+        });
+      });
+    });
+
     describe('ortb2 merge behaviour', () => {
       let getConfigStub: Sinon.SinonStub<[], Partial<prebidjs.IPrebidJsConfig>>;
 
