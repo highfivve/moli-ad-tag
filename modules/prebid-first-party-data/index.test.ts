@@ -74,12 +74,17 @@ describe('Prebid First Party Data Module', () => {
 
   const createFpdModule = (
     staticPrebidFirstPartyData: prebidjs.firstpartydata.PrebidFirstPartyData,
-    gptTargetingMappings?: GptTargetingMapping
+    gptTargetingMappings?: GptTargetingMapping,
+    iabDataProviderName?: string
   ): PrebidFirstPartyDataModule => {
-    return new PrebidFirstPartyDataModule({
-      staticPrebidFirstPartyData,
-      gptTargetingMappings
-    });
+    return new PrebidFirstPartyDataModule(
+      {
+        staticPrebidFirstPartyData,
+        gptTargetingMappings,
+        iabDataProviderName
+      },
+      jsDomWindow
+    );
   };
 
   const initModule = (module: PrebidFirstPartyDataModule) => {
@@ -144,12 +149,15 @@ describe('Prebid First Party Data Module', () => {
     it('should call pbjs.setConfig() with the configured first party data', async () => {
       const module = createFpdModule(
         { user: { gender: 'O', yob: 1337, keywords: 'some,nice,guy' } },
-        { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat' }
+        { cat: 'openrtb2_cat', pageCat: 'openrtb2_page_cat', iabV3: 'iab_v3', iabV2: 'iab_v2' },
+        'test.com'
       );
 
       const { moliConfig, targeting, configureStep } = initModule(module);
       targeting.keyValues.openrtb2_cat = ['IAB-1'];
       targeting.keyValues.openrtb2_page_cat = ['IAB-1', 'IAB-123'];
+      targeting.keyValues.iab_v3 = ['123', '456'];
+      targeting.keyValues.iab_v2 = ['111', '222'];
 
       await configureStep(adPipelineContext(moliConfig), []);
 
@@ -157,7 +165,39 @@ describe('Prebid First Party Data Module', () => {
         site: {
           cat: ['IAB-1'],
           sectioncat: ['IAB-1'],
-          pagecat: ['IAB-1', 'IAB-123']
+          pagecat: ['IAB-1', 'IAB-123'],
+          content: {
+            data: [
+              {
+                name: 'test.com',
+                ext: {
+                  segtax: 6
+                },
+                segment: [
+                  {
+                    id: '111'
+                  },
+                  {
+                    id: '222'
+                  }
+                ]
+              },
+              {
+                name: 'test.com',
+                ext: {
+                  segtax: 7
+                },
+                segment: [
+                  {
+                    id: '123'
+                  },
+                  {
+                    id: '456'
+                  }
+                ]
+              }
+            ]
+          }
         },
         user: {
           gender: 'O',

@@ -40,6 +40,7 @@
 import {
   AdPipeline,
   AdPipelineContext,
+  getLogger,
   IAssetLoaderService,
   IModule,
   mergeDeep,
@@ -51,6 +52,7 @@ import {
 } from '@highfivve/ad-tag';
 import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
+import OpenRtb2Data = prebidjs.firstpartydata.OpenRtb2Data;
 
 export type GptTargetingMapping = {
   /**
@@ -69,12 +71,28 @@ export type GptTargetingMapping = {
   readonly sectionCat?: string;
 
   /**
-   * The `key` in the targeting map that contains the `sectionCat` values.
+   * The `key` in the targeting map that contains the `pageCat` values.
    *
    * The targeting values should be an array of IAB content categories that describe the current page or view of
    * the site. if not defined, `cat` will be used as a fallback
    */
   readonly pageCat?: string;
+
+  /**
+   * The `key` in the targeting map that contains the `iabV2` segment values.
+   *
+   * The targeting values should be an array of IABV2 content category ids that describe the current page or view of
+   * the site. if not defined, we'll not set the data object.
+   */
+  readonly iabV2?: string;
+
+  /**
+   * The `key` in the targeting map that contains the `iabV3` segment values.
+   *
+   * The targeting values should be an array of IABV3 content category ids that describe the current page or view of
+   * the site. if not defined, we'll not set the data object.
+   */
+  readonly iabV3?: string;
 };
 
 export type PrebidFirstPartyDataModuleConfig = {
@@ -91,6 +109,14 @@ export type PrebidFirstPartyDataModuleConfig = {
    * Use this to extract dynamic values set via `moli.setTargeting()`.
    */
   readonly gptTargetingMappings?: GptTargetingMapping;
+
+  /**
+   * Name of the provider that is used in the site.content.data segments as provider name.
+   * Usually, this is the name/domain of the publisher.
+   *
+   * https://docs.prebid.org/features/firstPartyData.html#segments-and-taxonomy
+   */
+  readonly iabDataProviderName?: string;
 };
 
 export class PrebidFirstPartyDataModule implements IModule {
@@ -98,7 +124,12 @@ export class PrebidFirstPartyDataModule implements IModule {
   readonly moduleType: ModuleType = 'prebid';
   readonly name = 'prebid-first-party-data';
 
-  constructor(private readonly moduleConfig: PrebidFirstPartyDataModuleConfig) {}
+  private log?: Moli.MoliLogger;
+
+  constructor(
+    private readonly moduleConfig: PrebidFirstPartyDataModuleConfig,
+    private readonly window: Window
+  ) {}
 
   config(): PrebidFirstPartyDataModuleConfig {
     return this.moduleConfig;
@@ -109,6 +140,9 @@ export class PrebidFirstPartyDataModule implements IModule {
     assetLoaderService: IAssetLoaderService,
     getAdPipeline: () => AdPipeline
   ): void {
+    const log = getLogger(moliConfig, this.window);
+    this.log = log;
+
     // init additional pipeline steps if not already defined
     moliConfig.pipeline = moliConfig.pipeline || {
       initSteps: [],
@@ -118,14 +152,15 @@ export class PrebidFirstPartyDataModule implements IModule {
 
     moliConfig.pipeline.configureSteps.push(
       mkConfigureStep('prebid-fpd-module-configure', context =>
-        PrebidFirstPartyDataModule.setPrebidFpdConfig(context, this.config())
+        PrebidFirstPartyDataModule.setPrebidFpdConfig(context, this.config(), log)
       )
     );
   }
 
   private static setPrebidFpdConfig(
     context: AdPipelineContext,
-    config: PrebidFirstPartyDataModuleConfig
+    config: PrebidFirstPartyDataModuleConfig,
+    log: Moli.MoliLogger
   ): Promise<void> {
     if (context.config.prebid) {
       const keyValues = context.config.targeting?.keyValues || {};
@@ -153,6 +188,56 @@ export class PrebidFirstPartyDataModule implements IModule {
             keyValues
           );
         }
+
+        if (!config.iabDataProviderName && (gptTargeting.iabV2 || gptTargeting.iabV3)) {
+          log.error(
+            'PrebidFirstPartyDataModule',
+            'Targeting for iabV2 or iabV3 was defined, but iabDataProviderName was not configured. Data Segments will not be set.'
+          );
+        }
+
+        // Set site.content.data objects with the publisher as data provider and the iab v2 segments for this page.
+        if (gptTargeting.iabV2 && config.iabDataProviderName) {
+          const iabV2Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
+            gptTargeting.iabV2,
+            keyValues
+          );
+
+          const publisherContentData: OpenRtb2Data = {
+            name: config.iabDataProviderName,
+            ext: {
+              segtax: 6 // Segtax version for IAB Tech Lab Content Taxonomy 2.2
+            },
+            segment: iabV2Ids.map(iabV2Id => ({ id: iabV2Id })).filter(uniquePrimitiveFilter)
+          };
+
+          site.content = {
+            ...site.content,
+            data: [...(site.content?.data ?? []), publisherContentData]
+          };
+        }
+
+        // Set site.content.data objects with the publisher as data provider and the iab v3 segments for this page.
+        if (gptTargeting.iabV3 && config.iabDataProviderName) {
+          const iabV3Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
+            gptTargeting.iabV3,
+            keyValues
+          );
+
+          const publisherContentData: OpenRtb2Data = {
+            name: config.iabDataProviderName,
+            ext: {
+              segtax: 7 // Segtax version for IAB Tech Lab Content Taxonomy 3
+            },
+            segment: iabV3Ids.map(iabV3Id => ({ id: iabV3Id })).filter(uniquePrimitiveFilter)
+          };
+
+          site.content = {
+            ...site.content,
+            data: [...(site.content?.data ?? []), publisherContentData]
+          };
+        }
+
         ortb2FromKeyValues.site = site;
       }
 
