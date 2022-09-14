@@ -259,18 +259,66 @@ describe('Prebid First Party Data Module', () => {
     });
 
     describe('site.content.data merge behaviour', () => {
-      it('should filter duplicates', async () => {
+      let readConfigStub: Sinon.SinonStub<[], Partial<prebidjs.IPrebidJsConfig>>;
+
+      beforeEach(() => {
+        readConfigStub = sandbox.stub(jsDomWindow.pbjs, 'readConfig');
+      });
+
+      it('should filter all data rows from configured iabDataProviderName to avoid duplicates', async () => {
         const module = createFpdModule({}, { iabV3: 'iab_v3' }, 'test.com');
 
         const { moliConfig, targeting, configureStep } = initModule(module);
         targeting.keyValues.iab_v3 = ['123', '456'];
 
+        readConfigStub.returns({
+          ortb2: {
+            site: {
+              content: {
+                data: [
+                  {
+                    name: 'test2.com',
+                    ext: {
+                      segtax: 7
+                    },
+                    segment: [
+                      {
+                        id: 'xxx'
+                      },
+                      {
+                        id: 'yyy'
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        });
+
         await configureStep(adPipelineContext(moliConfig), []);
 
         const expected: PrebidFirstPartyData = {
           site: {
+            cat: [],
+            sectioncat: [],
+            pagecat: [],
             content: {
               data: [
+                {
+                  name: 'test2.com',
+                  ext: {
+                    segtax: 7
+                  },
+                  segment: [
+                    {
+                      id: 'xxx'
+                    },
+                    {
+                      id: 'yyy'
+                    }
+                  ]
+                },
                 {
                   name: 'test.com',
                   ext: {
@@ -290,20 +338,18 @@ describe('Prebid First Party Data Module', () => {
           }
         };
 
-        await configureStep(adPipelineContext(moliConfig), []);
-
-        expect(setConfigSpy).to.have.been.calledTwice;
-        expect(setConfigSpy).to.have.been.calledWithExactly({
+        expect(setConfigSpy).to.have.been.calledOnce;
+        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
           ortb2: expected
         });
       });
     });
 
     describe('ortb2 merge behaviour', () => {
-      let getConfigStub: Sinon.SinonStub<[], Partial<prebidjs.IPrebidJsConfig>>;
+      let readConfigStub: Sinon.SinonStub<[], Partial<prebidjs.IPrebidJsConfig>>;
 
       beforeEach(() => {
-        getConfigStub = sandbox.stub(jsDomWindow.pbjs, 'getConfig');
+        readConfigStub = sandbox.stub(jsDomWindow.pbjs, 'readConfig');
       });
 
       it('should prefer key value data over static data', async () => {
@@ -312,7 +358,7 @@ describe('Prebid First Party Data Module', () => {
           { cat: 'openrtb2_cat' }
         );
         const { moliConfig, configureStep } = initModule(module);
-        getConfigStub.returns({
+        readConfigStub.returns({
           ortb2: {
             user: { keywords: 'existing' },
             site: { cat: ['IAB-1'] }
@@ -329,7 +375,7 @@ describe('Prebid First Party Data Module', () => {
       it('should prefer existing fpd data over key value data', async () => {
         const module = createFpdModule({}, { cat: 'openrtb2_cat' });
         const { moliConfig, targeting, configureStep } = initModule(module);
-        getConfigStub.returns({
+        readConfigStub.returns({
           ortb2: {
             user: { keywords: 'existing' },
             site: { cat: ['IAB-1'] }
@@ -340,7 +386,7 @@ describe('Prebid First Party Data Module', () => {
         await configureStep(adPipelineContext(moliConfig), []);
         expect(setConfigSpy).to.have.been.calledOnce;
         const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
-        expect(site.cat).to.deep.equals(['IAB-9', 'IAB-1']);
+        expect(site.cat).to.deep.equals(['IAB-1', 'IAB-9']);
         expect(site.sectioncat).to.deep.equals(['IAB-9']);
         expect(site.pagecat).to.deep.equals(['IAB-9']);
       });
@@ -348,7 +394,7 @@ describe('Prebid First Party Data Module', () => {
       it('should write unique values', async () => {
         const module = createFpdModule({}, { cat: 'openrtb2_cat' });
         const { moliConfig, targeting, configureStep } = initModule(module);
-        getConfigStub.returns({
+        readConfigStub.returns({
           ortb2: {
             user: { keywords: 'existing' },
             site: { cat: ['IAB-1'] }
