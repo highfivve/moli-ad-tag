@@ -1672,10 +1672,62 @@ export namespace prebidjs {
          * Content language using ISO-639-1-alpha-2.
          */
         language?: string;
+
+        /**
+         * Additional content data. Each object represents a different data source.
+         */
+        data?: OpenRtb2Data[];
       };
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
+       */
+      ext?: any;
+    }
+
+    /**
+     * Data segment that allos additional data about the related object (e.g. content).
+     */
+    export interface OpenRtb2Data {
+      /**
+       * Exchange-specific ID for the data provider.
+       */
+      id?: string;
+
+      /**
+       * Exchange-specific name for the data provider.
+       */
+      name: string;
+
+      /**
+       * Array of OpenRtb2Segment objects that contain the actual data values.
+       */
+      segment: OpenRtb2Segment[];
+
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB.
+       */
+      ext?: any;
+    }
+
+    /**
+     * Segment objects are essentially key-value pairs that convey specific units of data.
+     */
+    export interface OpenRtb2Segment {
+      /**
+       * ID of the data segment specific to the data provider.
+       */
+      id?: string;
+      /**
+       * Name of the data segment specific to the data provider.
+       */
+      name?: string;
+      /**
+       * String representation of the data segment value.
+       */
+      value?: string;
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB.
        */
       ext?: any;
     }
@@ -4682,8 +4734,8 @@ export namespace prebidjs {
     readonly sendStandardTargeting?: boolean;
 
     /**
-     * 	If custom adserverTargeting functions are specified that may generate empty keys, this can be used to suppress them.
-     * 	@default false
+     *  If custom adserverTargeting functions are specified that may generate empty keys, this can be used to suppress them.
+     *  @default false
      */
     readonly suppressEmptyKeys?: boolean;
 
@@ -4747,9 +4799,9 @@ export namespace prebidjs {
       readonly enforcement?: IFloorEnforcementConfig;
 
       /**
-       * 	The mimimum CPM floor used by the Price Floors Module (as of 4.13).
-       * 	The Price Floors Module will take the greater of floorMin and the
-       * 	matched rule CPM when evaluating `getFloor()` and enforcing floors.
+       *  The mimimum CPM floor used by the Price Floors Module (as of 4.13).
+       *  The Price Floors Module will take the greater of floorMin and the
+       *  matched rule CPM when evaluating `getFloor()` and enforcing floors.
        */
       readonly floorMin?: number;
 
@@ -4762,12 +4814,12 @@ export namespace prebidjs {
       readonly floorProvider?: string;
 
       /**
-       * 	`skipRate` is a random function whose input value is any integer 0 through 100 to determine when to skip all
-       * 	floor logic, where 0 is always use floor data and 100 is always skip floor data. The use case is for
-       * 	publishers or floor providers to learn bid behavior when floors are applied or skipped. Analytics adapters
-       * 	will have access to model version (if defined) when skipped is true to signal the Price Floors Module is in
-       * 	floors mode. If skipRate is supplied in both the root level of the floors object and within the data object,
-       * 	the skipRate configuration within the data object shall prevail.
+       *  `skipRate` is a random function whose input value is any integer 0 through 100 to determine when to skip all
+       *  floor logic, where 0 is always use floor data and 100 is always skip floor data. The use case is for
+       *  publishers or floor providers to learn bid behavior when floors are applied or skipped. Analytics adapters
+       *  will have access to model version (if defined) when skipped is true to signal the Price Floors Module is in
+       *  floors mode. If skipRate is supplied in both the root level of the floors object and within the data object,
+       *  the skipRate configuration within the data object shall prevail.
        * @default 0
        */
       readonly skipRate?: number;
@@ -4893,6 +4945,7 @@ export namespace prebidjs {
        */
       [key: string]: number;
     }
+
     /**
      * IFloor module for adUnit.
      * @see https://docs.prebid.org/dev-docs/modules/floors.html
@@ -4936,8 +4989,8 @@ export namespace prebidjs {
       readonly skipRate?: number;
 
       /**
-       * 	Currency of floor data. Floor Module will convert currency where
-       * 	necessary. See Currency section for more details.
+       *  Currency of floor data. Floor Module will convert currency where
+       *  necessary. See Currency section for more details.
        */
       readonly currency?: currency.ICurrency;
 
