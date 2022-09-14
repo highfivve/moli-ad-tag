@@ -166,15 +166,25 @@ export class PrebidFirstPartyDataModule implements IModule {
       const keyValues = context.config.targeting?.keyValues || {};
       const gptTargeting = config.gptTargetingMappings;
 
-      const existingFpd = context.window.pbjs.getConfig().ortb2 || {};
+      const existingFpd = context.window.pbjs.readConfig().ortb2 || {};
+
       // extract key-values from gpt targeting
-      const ortb2FromKeyValues: PrebidFirstPartyData = {};
+      const ortb2FromKeyValues = mergeDeep({}, config.staticPrebidFirstPartyData, existingFpd);
       if (gptTargeting) {
-        const site: OpenRtb2Site = {};
+        const site: OpenRtb2Site = {
+          cat: [],
+          sectioncat: [],
+          pagecat: [],
+          ...ortb2FromKeyValues.site
+        };
         if (gptTargeting.cat) {
-          site.cat = PrebidFirstPartyDataModule.extractKeyValueArray(gptTargeting.cat, keyValues);
-          site.pagecat = site.cat;
-          site.sectioncat = site.cat;
+          const keyValueData = PrebidFirstPartyDataModule.extractKeyValueArray(
+            gptTargeting.cat,
+            keyValues
+          );
+          site.cat?.push(...keyValueData);
+          site.pagecat?.push(...keyValueData);
+          site.sectioncat?.push(...keyValueData);
         }
         if (gptTargeting.sectionCat) {
           site.sectioncat = PrebidFirstPartyDataModule.extractKeyValueArray(
@@ -189,12 +199,31 @@ export class PrebidFirstPartyDataModule implements IModule {
           );
         }
 
+        if (site.cat) {
+          site.cat = site.cat.filter(uniquePrimitiveFilter);
+        }
+
+        if (site.sectioncat) {
+          site.sectioncat = site.sectioncat.filter(uniquePrimitiveFilter);
+        }
+
+        if (site.pagecat) {
+          site.pagecat = site.pagecat.filter(uniquePrimitiveFilter);
+        }
+
         if (!config.iabDataProviderName && (gptTargeting.iabV2 || gptTargeting.iabV3)) {
           log.error(
             'PrebidFirstPartyDataModule',
             'Targeting for iabV2 or iabV3 was defined, but iabDataProviderName was not configured. Data Segments will not be set.'
           );
         }
+
+        // Clear all data objects with the same name as the configured iabDataProviderName as we'll add them again anyway.
+        // This prevents duplicated entries in the site.content.data array.
+        site.content = {
+          ...site.content,
+          data: site.content?.data?.filter(data => data.name !== config.iabDataProviderName) ?? []
+        };
 
         // Set site.content.data objects with the publisher as data provider and the iab v2 segments for this page.
         if (gptTargeting.iabV2 && config.iabDataProviderName) {
@@ -211,12 +240,7 @@ export class PrebidFirstPartyDataModule implements IModule {
             segment: iabV2Ids.map(iabV2Id => ({ id: iabV2Id })).filter(uniquePrimitiveFilter)
           };
 
-          site.content = {
-            ...site.content,
-            data: [...(site.content?.data ?? []), publisherContentData].filter(
-              uniquePrimitiveFilter
-            )
-          };
+          site.content.data?.push(publisherContentData);
         }
 
         // Set site.content.data objects with the publisher as data provider and the iab v3 segments for this page.
@@ -234,39 +258,13 @@ export class PrebidFirstPartyDataModule implements IModule {
             segment: iabV3Ids.map(iabV3Id => ({ id: iabV3Id })).filter(uniquePrimitiveFilter)
           };
 
-          site.content = {
-            ...site.content,
-            data: [...(site.content?.data ?? []), publisherContentData].filter(
-              uniquePrimitiveFilter
-            )
-          };
+          site.content.data?.push(publisherContentData);
         }
 
         ortb2FromKeyValues.site = site;
       }
 
-      // preserve preexisting ortb2 data (e.g. from the fpd enrichment module)
-      const ortb2 = mergeDeep(
-        {},
-        config.staticPrebidFirstPartyData,
-        ortb2FromKeyValues,
-        existingFpd
-      ) as PrebidFirstPartyData;
-
-      // make site objects unique
-      if (ortb2.site) {
-        if (ortb2.site.cat) {
-          ortb2.site.cat = ortb2.site.cat.filter(uniquePrimitiveFilter);
-        }
-        if (ortb2.site.sectioncat) {
-          ortb2.site.sectioncat = ortb2.site.sectioncat.filter(uniquePrimitiveFilter);
-        }
-        if (ortb2.site.pagecat) {
-          ortb2.site.pagecat = ortb2.site.pagecat.filter(uniquePrimitiveFilter);
-        }
-      }
-
-      context.window.pbjs.setConfig({ ortb2 });
+      context.window.pbjs.setConfig({ ortb2: ortb2FromKeyValues });
     }
 
     return Promise.resolve();

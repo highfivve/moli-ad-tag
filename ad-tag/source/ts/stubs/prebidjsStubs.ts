@@ -34,6 +34,13 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
         defaultRates: { USD: { EUR: 1 } }
       }
     }),
+    readConfig: (): prebidjs.IPrebidJsConfig => ({
+      currency: {
+        adServerCurrency: 'EUR',
+        granularityMultiplier: 1,
+        defaultRates: { USD: { EUR: 1 } }
+      }
+    }),
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {
       return;
     },
