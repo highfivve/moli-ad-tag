@@ -810,7 +810,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     return Promise.reject(`no slots in buckets found`);
   }
 
-  function refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string, infiniteSlotSelector: string): Promise<'queued' | 'refreshed'> {
+  function refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string): Promise<'queued' | 'refreshed'> {
     switch (state.state) {
       case 'configurable': {
         state.refreshSlots.push(domId);

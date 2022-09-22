@@ -223,7 +223,7 @@ export namespace Moli {
      */
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
-    refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string, infiniteSlotSelector: string): Promise<'queued' | 'refreshed'>;
+    refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string): Promise<'queued' | 'refreshed'>;
 
     /**
      * Refresh the given bucket as soon as possible.
