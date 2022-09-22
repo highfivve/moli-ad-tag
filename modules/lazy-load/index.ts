@@ -177,6 +177,7 @@ export class LazyLoad implements IModule {
 
     if (infiniteSlotsConfig) {
       infiniteSlotsConfig.forEach((config, index) => {
+          const serialNumberLabel = 'data-h5-serial-number';
           const infiniteElements = window.document.querySelectorAll(config.selector);
           const configuredInfiniteSlot = moliConfig.slots.find(slot => slot.behaviour.loaded === 'infinite');
           if (configuredInfiniteSlot) {
@@ -185,7 +186,7 @@ export class LazyLoad implements IModule {
                 console.log('called with', entries);
                 entries.forEach((entry: IntersectionObserverEntry, index) => {
                   if (entry.isIntersecting) {
-                    const serialNumber = entry.target.attributes?.getNamedItem('serialnumber')?.value;
+                    const serialNumber = entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
                     const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
                     entry.target.setAttribute('id', createdDomId);
                     this.logger?.debug(
@@ -194,8 +195,7 @@ export class LazyLoad implements IModule {
                     );
                     this.window.moli.refreshInfiniteAdSlot(
                       createdDomId,
-                      configuredInfiniteSlot.domId,
-                      config.selector
+                      configuredInfiniteSlot.domId
                     );
                     observer.unobserve(entry.target);
                   }
@@ -211,7 +211,7 @@ export class LazyLoad implements IModule {
             );
 
             infiniteElements.forEach((element, index) => {
-              element.setAttribute('serialnumber', `${index + 1}`)
+              element.setAttribute(serialNumberLabel, `${index + 1}`)
               element && observer.observe(element)});
           } else {
             {
