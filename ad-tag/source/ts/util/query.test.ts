@@ -1,9 +1,8 @@
 import { expect } from 'chai';
-import { parseQueryString } from "./query";
+import { parseQueryString } from './query';
 
 describe('query parameter utility', () => {
   describe('parseQueryString', () => {
-
     it('should parse an empty string to an empty map', () => {
       const result = parseQueryString('');
       expect(result).to.be.deep.equals(new Map());
@@ -38,6 +37,5 @@ describe('query parameter utility', () => {
       const result = parseQueryString('?utm_source=verm%f6gensmagazin&utm_medium=redirect');
       expect(result).to.be.deep.equals(new Map());
     });
-
   });
 });
