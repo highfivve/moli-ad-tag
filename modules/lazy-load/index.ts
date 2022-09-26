@@ -184,7 +184,7 @@ export class LazyLoad implements IModule {
             const observer = new window.IntersectionObserver(
               entries => {
                 console.log('called with', entries);
-                entries.forEach((entry: IntersectionObserverEntry, index) => {
+                entries.forEach((entry: IntersectionObserverEntry) => {
                   if (entry.isIntersecting) {
                     const serialNumber = entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
                     const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
