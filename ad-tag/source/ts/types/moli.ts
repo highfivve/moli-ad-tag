@@ -1148,7 +1148,7 @@ export namespace Moli {
      */
     export interface Infinite extends ISlotLoading {
       readonly loaded: 'infinite';
-      readonly name: string;
+      readonly selector: string;
     }
 
     /**

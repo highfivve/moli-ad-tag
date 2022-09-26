@@ -59,6 +59,16 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     }
   }
 
+  setSlotVisibilityIcon(slotVisible, loadingBehaviour) {
+    if (slotVisible) {
+      return '✔'
+    } else if (!slotVisible && loadingBehaviour === 'infinite'){
+      return '?'
+    } else {
+      return 'x'
+    }
+  }
+
   render(): JSX.Element {
     const { labelConfigService, slot, parentElement } = this.props;
     const { dimensions, showGeneral, showA9, showPrebid, showSizeConfig } = this.state;
@@ -75,22 +85,24 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
           'MoliDebug-adSlot',
           [!!parentElement, 'MoliDebug-adSlot--overlay'],
           [!parentElement && slotVisible, 'is-rendered'],
-          [!parentElement && !slotVisible, 'is-notRendered']
+          [!parentElement && !slotVisible, 'is-notRendered'],
+          [slot.behaviour.loaded === 'infinite', 'is-infinite']
         )}
         style={dimensions}
       >
         <div className="MoliDebug-adSlot-buttons">
           {!parentElement && (
             <button
-              title={`Slot ${slotVisible ? '' : 'not '}rendered`}
+              title={slot.behaviour.loaded === "infinite" ? `Configuration only used to copy on slots with infinite selector` :`Slot ${slotVisible ? '' : 'not '}rendered`}
               className={classList(
                 'MoliDebug-adSlot-button',
                 [slotVisible, 'is-rendered'],
-                [!slotVisible, 'is-notRendered']
+                [!slotVisible, 'is-notRendered'],
+                [slot.behaviour.loaded === 'infinite', 'is-infinite']
               )}
               onClick={this.toggleGeneral}
             >
-              {slotVisible ? '✔' : '×'}
+              {this.setSlotVisibilityIcon(slotVisible, slot.behaviour.loaded)}
             </button>
           )}
           <button
@@ -128,7 +140,6 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
               pb
             </button>
           )}
-
           {slot.sizeConfig && (
             <button
               title="Show sizeConfig"
@@ -141,6 +152,9 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
               onClick={this.toggleSizeConfig}
             />
           )}
+          {slot.behaviour.loaded === 'infinite' &&
+            (<p>{`Found ${window.document.querySelectorAll(slot.behaviour.selector).length} slots with infinite selector ${slot.behaviour.selector}`}</p>)
+          }
         </div>
         {showGeneral && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">

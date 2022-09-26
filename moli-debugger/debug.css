@@ -180,6 +180,10 @@
       border-left: 4px solid var(--MoliDebug-red);
     }
 
+    &.is-infinite {
+       border-left: 4px solid var(--MoliDebug-yellow);
+     }
+
     &--overlay {
       border: 1px solid black;
       border-radius: var(--MoliDebug-border-radius);
@@ -227,6 +231,10 @@
       &.is-notRendered {
         background: var(--MoliDebug-red);
       }
+
+      &.is-infinite {
+         background: var(--MoliDebug-yellow);
+       }
 
       &--sizeConfig::before {
         content: '\01F4D0';
