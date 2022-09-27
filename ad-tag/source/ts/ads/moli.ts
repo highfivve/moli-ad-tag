@@ -750,34 +750,47 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'> {
     const buckets = typeof bucket === 'string' ? [bucket] : bucket;
 
-    const slotsInBuckets = moliWindow.moli.getConfig()?.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
-    const domIds = slotsInBuckets?.map(slot => slot.domId);
-    if(domIds?.length){
+    function getBucketsDomIds(config: Moli.MoliConfig ): string[] {
+      const slotsInBuckets = config.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+      return slotsInBuckets?.map(slot => slot.domId);
+    }
+
+    if(buckets?.length){
       switch (state.state) {
         case 'configurable': {
-          state.refreshSlots.push(...domIds);
-          return Promise.resolve('queued');
+          const slotsInBuckets = moliWindow.moli.getConfig()?.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+          const domIds = slotsInBuckets?.map(slot => slot.domId);
+          if (domIds?.length) {
+            state.refreshSlots.push(...domIds);
+            return Promise.resolve('queued');
+          }
+          return Promise.reject('no configurable domIds for buckets');
         }
         case 'configured': {
+          const domIds = getBucketsDomIds(state.config);
           state.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
         }
         // if requestAds is currently called we batch the refreshAdSlot calls until
         // we hit the 'spa-finished' state
-        case 'spa-requestAds':
+        case 'spa-requestAds': {
+          const domIds = getBucketsDomIds(state.config);
           state.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
+        }
         // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
         // until the next requestAds() call arrives
-        case 'spa-finished':
+        case 'spa-finished': {
           if (state.href === window.location.href) {
             // user hasn't navigated yet, so we directly refresh the slot
-            return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
+            return adService.refreshBuckets(buckets, state.config).then(() => 'refreshed');
           } else {
+            const domIds = getBucketsDomIds(state.config);
             // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
             state.refreshSlots.push(...domIds);
             return Promise.resolve('queued');
           }
+        }
         // if the ad tag is currently requesting ads or already finished doesn't matter
         // slots can be refreshed immediately
         case 'finished':

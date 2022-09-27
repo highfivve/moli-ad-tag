@@ -20,6 +20,7 @@ import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
+import {getMaxBucketTimeout} from "../util/maxBucketsTimeout";
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -107,11 +108,8 @@ export const a9Configure = (
  mkConfigureStep(
     'a9-configure',
     (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
-      let timeout = 0;
-      if (context.config?.buckets?.enabled && context.config.buckets.bucket) {
-        const buckets = Object.values(context.config.buckets.bucket);
-        timeout = Math.max(...buckets.map(bucket => bucket.timeout));
-      }
+      const timeout = getMaxBucketTimeout(context);
+
       return new Promise<void>(resolve => {
         context.window.apstag.init({
           pubID: config.pubID,

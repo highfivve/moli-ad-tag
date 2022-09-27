@@ -20,15 +20,12 @@ import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
+import {getMaxBucketTimeout} from "../util/maxBucketsTimeout";
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
 const prebidTimeout = (context: AdPipelineContext) => {
-  let timeout = 0;
-  if(context.config.buckets?.enabled && context.config.buckets.bucket) {
-    const buckets = Object.values(context.config.buckets.bucket);
-    timeout = Math.max(...buckets.map(bucket => bucket.timeout));
-  }
+  const timeout = getMaxBucketTimeout(context);
   return new Promise<void>((_, reject) => {
     context.window.setTimeout(
       () =>

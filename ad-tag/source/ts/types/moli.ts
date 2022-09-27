@@ -1888,13 +1888,18 @@ export namespace Moli {
       /**
        * to customize the timeout per bucket, which overrides the Prebid's/A9 timeout.
        */
-      readonly bucket?: BucketConfig;
+      readonly bucket?: BucketConfigMap;
     };
 
-    export type BucketConfig = {
-      [key: string]: {
-        timeout: number;
-      };
+    export interface BucketConfig {
+      /**
+       * timeout used for prebid / a9 requests in this bucket
+       */
+      readonly timeout: number;
+    }
+
+    export type BucketConfigMap = {
+      readonly [bucketName: string]: BucketConfig;
     };
   }
 
