@@ -3997,12 +3997,12 @@ export namespace prebidjs {
       /**
        * You can specify a target bitrate for the creative, higher values will increase video quality but will cost bandwidth. Value is given in kpbs. Default is 700
        */
-      readonly desiredBitrate?: string;
+      readonly desiredBitrate?: number;
 
       /**
        * Defines the percentage of the player which has to be in the visible area to play and pause the advertisment. The default is 50.
        */
-      readonly visibilityThreshold?: string;
+      readonly visibilityThreshold?: number;
     };
 
     /**
