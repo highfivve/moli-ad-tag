@@ -750,15 +750,19 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'> {
     const buckets = typeof bucket === 'string' ? [bucket] : bucket;
 
-    function getBucketsDomIds(config: Moli.MoliConfig ): string[] {
-      const slotsInBuckets = config.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+    function getBucketsDomIds(config: Moli.MoliConfig): string[] {
+      const slotsInBuckets = config.slots.filter(slot =>
+        buckets.some(bucket => bucket === slot.behaviour.bucket)
+      );
       return slotsInBuckets?.map(slot => slot.domId);
     }
 
-    if(buckets?.length){
+    if (buckets?.length) {
       switch (state.state) {
         case 'configurable': {
-          const slotsInBuckets = moliWindow.moli.getConfig()?.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+          const slotsInBuckets = moliWindow.moli
+            .getConfig()
+            ?.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
           const domIds = slotsInBuckets?.map(slot => slot.domId);
           if (domIds?.length) {
             state.refreshSlots.push(...domIds);

@@ -20,7 +20,7 @@ import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
-import {getMaxBucketTimeout} from "../util/maxBucketsTimeout";
+import { getMaxBucketTimeout } from '../util/maxBucketsTimeout';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -62,7 +62,7 @@ const isAdUnitDefined = (
 };
 
 export const prebidInit = (): InitStep =>
-  mkInitStep('prebid-init', (context) =>
+  mkInitStep('prebid-init', context =>
     Promise.race([prebidInitAndReady(context.window), prebidTimeout(context)])
   );
 

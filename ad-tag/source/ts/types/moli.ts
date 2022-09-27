@@ -235,7 +235,6 @@ export namespace Moli {
      */
     refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'>;
 
-
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
      * If you need to access the final configuration use the `beforeRequestAds` method to configure
@@ -1889,7 +1888,7 @@ export namespace Moli {
        * to customize the timeout per bucket, which overrides the Prebid's/A9 timeout.
        */
       readonly bucket?: BucketConfigMap;
-    };
+    }
 
     export interface BucketConfig {
       /**

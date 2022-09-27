@@ -359,7 +359,9 @@ export class AdService {
       return Promise.resolve();
     }
     const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableInSlotsBuckets = manualSlots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
+    const availableInSlotsBuckets = manualSlots.filter(slot =>
+      buckets.some(bucket => bucket === slot.behaviour.bucket)
+    );
 
     this.logger.debug('AdService', 'refresh ad buckets', availableInSlotsBuckets, config.targeting);
     return this.adPipeline.run(availableInSlotsBuckets, config, this.requestAdsCalls);

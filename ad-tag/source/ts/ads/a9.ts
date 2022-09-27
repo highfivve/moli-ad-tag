@@ -20,7 +20,7 @@ import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
-import {getMaxBucketTimeout} from "../util/maxBucketsTimeout";
+import { getMaxBucketTimeout } from '../util/maxBucketsTimeout';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -105,30 +105,27 @@ export const a9Configure = (
   config: Moli.headerbidding.A9Config,
   schainConfig: Moli.schain.SupplyChainConfig
 ): ConfigureStep =>
- mkConfigureStep(
-    'a9-configure',
-    (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
-      const timeout = getMaxBucketTimeout(context);
+  mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+    const timeout = getMaxBucketTimeout(context);
 
-      return new Promise<void>(resolve => {
-        context.window.apstag.init({
-          pubID: config.pubID,
-          adServer: 'googletag',
-          // videoAdServer: '', TODO: Add video ad server
-          bidTimeout: timeout > config.timeout ? timeout : config.timeout,
-          gdpr: {
-            cmpTimeout: config.cmpTimeout
-          },
-          schain: {
-            complete: 1,
-            ver: '1.0',
-            nodes: [schainConfig.supplyChainStartNode, config.schainNode]
-          }
-        });
-        resolve();
+    return new Promise<void>(resolve => {
+      context.window.apstag.init({
+        pubID: config.pubID,
+        adServer: 'googletag',
+        // videoAdServer: '', TODO: Add video ad server
+        bidTimeout: timeout > config.timeout ? timeout : config.timeout,
+        gdpr: {
+          cmpTimeout: config.cmpTimeout
+        },
+        schain: {
+          complete: 1,
+          ver: '1.0',
+          nodes: [schainConfig.supplyChainStartNode, config.schainNode]
+        }
       });
+      resolve();
     });
-
+  });
 
 export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
   mkConfigureStepOnce(
