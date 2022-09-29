@@ -1,23 +1,23 @@
-import { Moli } from '../types/moli';
-import { parseQueryString } from '../util/query';
+import {Moli} from '../types/moli';
+import {parseQueryString} from '../util/query';
 import {
   createAssetLoaderService,
   AssetLoadMethod,
   IAssetLoaderService
 } from '../util/assetLoaderService';
-import { getLogger } from '../util/logging';
+import {getLogger} from '../util/logging';
 import IStateMachine = Moli.state.IStateMachine;
 import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
-import { IModule, metaFromModule, ModuleMeta } from '../types/module';
-import { AdService } from './adService';
+import {IModule, metaFromModule, ModuleMeta} from '../types/module';
+import {AdService} from './adService';
 import {
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
 } from '../util/environmentOverride';
-import { packageJson } from '../gen/packageJson';
+import {packageJson} from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
@@ -367,7 +367,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           configFromAdTag: config,
           config: {
             ...config,
-            ...(envOverride && { environment: envOverride.environment }),
+            ...(envOverride && {environment: envOverride.environment}),
             targeting: {
               keyValues: {
                 ...(config.targeting && config.targeting.keyValues
@@ -387,8 +387,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               sampleRate: state.reporting.sampleRate
                 ? state.reporting.sampleRate
                 : config.reporting && config.reporting.sampleRate
-                ? config.reporting.sampleRate
-                : 0,
+                  ? config.reporting.sampleRate
+                  : 0,
               reporters: [
                 ...(config.reporting ? config.reporting.reporters : []),
                 ...state.reporting.reporters
@@ -499,7 +499,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
         const afterRequestAds = state.hooks.afterRequestAds;
 
-        const { moduleMeta, isSinglePageApp, refreshSlots } = state;
+        const {moduleMeta, isSinglePageApp, refreshSlots} = state;
         // handle single page application case
         if (isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
@@ -595,12 +595,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // create new ABTest values
         setABtestTargeting();
 
-        const { hooks, moduleMeta } = state;
+        const {hooks, moduleMeta} = state;
         const afterRequestAds = state.hooks.afterRequestAds;
         const beforeRequestAds = state.hooks.beforeRequestAds;
 
         const currentState = state;
-        const { initialized, href, keyValues, labels, configFromAdTag } = state;
+        const {initialized, href, keyValues, labels, configFromAdTag} = state;
         // we can only use the preexisting refreshSlots array if the previous requestAds call finished in time
         const refreshSlots = state.state === 'spa-finished' ? state.refreshSlots : [];
         state = {
@@ -793,8 +793,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             `no infinite ad slot configured!`,
             state.config
           );
-
-      }}
+        }
+      }
       default: {
         getLogger(state.config, window).error(
           'MoliGlobal',

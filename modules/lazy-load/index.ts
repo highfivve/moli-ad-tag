@@ -226,7 +226,7 @@ export class LazyLoad implements IModule {
     } else {
       this.logger?.debug(
         this.name,
-        `No CSS selector for infinite-scrolling slots entered`
+        `No selector for infinite-scrolling slots provided in module`
       );
     }
   };
