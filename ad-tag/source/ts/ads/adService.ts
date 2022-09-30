@@ -354,17 +354,15 @@ export class AdService {
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
   }
 
-  public refreshBuckets(buckets: string[], config: Moli.MoliConfig): Promise<void> {
+  public refreshBucket(bucket: string, config: Moli.MoliConfig): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
     const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableInSlotsBuckets = manualSlots.filter(slot =>
-      buckets.some(bucket => bucket === slot.behaviour.bucket)
-    );
+    const availableSlotsInBucket = manualSlots.filter(slot => slot.behaviour.bucket === bucket);
 
-    this.logger.debug('AdService', 'refresh ad buckets', availableInSlotsBuckets, config.targeting);
-    return this.adPipeline.run(availableInSlotsBuckets, config, this.requestAdsCalls);
+    this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
+    return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);
   }
 
   /**

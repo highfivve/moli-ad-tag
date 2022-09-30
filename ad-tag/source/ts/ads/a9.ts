@@ -20,7 +20,6 @@ import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
-import { getMaxBucketTimeout } from '../util/maxBucketsTimeout';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -106,14 +105,12 @@ export const a9Configure = (
   schainConfig: Moli.schain.SupplyChainConfig
 ): ConfigureStep =>
   mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
-    const timeout = getMaxBucketTimeout(context);
-
     return new Promise<void>(resolve => {
       context.window.apstag.init({
         pubID: config.pubID,
         adServer: 'googletag',
         // videoAdServer: '', TODO: Add video ad server
-        bidTimeout: timeout > config.timeout ? timeout : config.timeout,
+        bidTimeout: config.timeout,
         gdpr: {
           cmpTimeout: config.cmpTimeout
         },
@@ -286,11 +283,14 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
           resolve();
         } else {
           context.reportingService.markA9fetchBids(context.requestId);
-          context.window.apstag.fetchBids({ slots }, (_bids: Object[]) => {
-            context.reportingService.measureAndReportA9BidsBack(context.requestId);
-            context.window.apstag.setDisplayBids();
-            resolve();
-          });
+          context.window.apstag.fetchBids(
+            { slots, ...(context.bucket?.timeout && { bidTimeout: context.bucket.timeout }) },
+            (_bids: Object[]) => {
+              context.reportingService.measureAndReportA9BidsBack(context.requestId);
+              context.window.apstag.setDisplayBids();
+              resolve();
+            }
+          );
         }
       })
   );

@@ -20,19 +20,17 @@ import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
-import { getMaxBucketTimeout } from '../util/maxBucketsTimeout';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
 const prebidTimeout = (context: AdPipelineContext) => {
-  const timeout = getMaxBucketTimeout(context);
   return new Promise<void>((_, reject) => {
     context.window.setTimeout(
       () =>
         reject(
           'Prebid did not resolve in time. Maybe you forgot to import the prebid distribution in the ad tag'
         ),
-      timeout > 5000 ? timeout : 5000
+      5000
     );
   });
 };
@@ -344,6 +342,7 @@ export const prebidRequestBids = (
 
         context.window.pbjs.requestBids({
           adUnitCodes: adUnitCodes,
+          timeout: context.bucket?.timeout,
           bidsBackHandler: (
             bidResponses: prebidjs.IBidResponsesMap | undefined,
             timedOut: boolean,

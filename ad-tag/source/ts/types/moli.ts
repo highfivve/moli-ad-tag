@@ -231,9 +231,9 @@ export namespace Moli {
      * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
-     * @param bucket - identifies the bucket/buckets
+     * @param bucket - identifies the bucket
      */
-    refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'>;
+    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!

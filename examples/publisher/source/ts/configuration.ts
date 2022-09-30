@@ -1,7 +1,6 @@
 import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
 import video = prebidjs.video;
 
-
 const { currentVersion } = require('../../version.json');
 
 const teadsVerticalBid = (
@@ -596,7 +595,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       domId: 'unused',
       position: 'out-of-page-interstitial',
       behaviour: {
-        loaded: 'eager',
+        loaded: 'eager'
       },
       adUnitPath: '/6355419/Travel/Europe/France/Paris',
       sizes: [],
@@ -628,7 +627,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   buckets: {
     enabled: true,
     bucket: {
-      'bucket-one': {timeout: 5000},
+      'bucket-one': { timeout: 5000 }
     }
   },
   schain: {
@@ -691,17 +690,16 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           {
             name: 'unifiedId',
             params: {
-              partner: 'myTpId',
+              partner: 'myTpId'
             },
             storage: {
               type: 'cookie',
               name: 'pbjs-unifiedid', // create a cookie with this name
               expires: 60 // cookie can last for 60 days,
-
             }
           },
           {
-            name: "sharedId",
+            name: 'sharedId',
             params: {
               create: true,
               pixelUrl: '',
@@ -710,14 +708,14 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
             storage: {
               expires: 60,
               name: '_pubcid',
-              type: 'cookie',
+              type: 'cookie'
             }
           }
         ],
         encryptedSignalSources: {
           sources: [
             {
-              source: ["adserver.org", "id5-sync.com", "criteo.com","liveramp.com"],
+              source: ['adserver.org', 'id5-sync.com', 'criteo.com', 'liveramp.com'],
               encrypt: false
             }
           ]
@@ -750,6 +748,6 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       asi: 'highfivve.com',
       sid: '1111111',
       hp: 1
-    },
+    }
   }
 });

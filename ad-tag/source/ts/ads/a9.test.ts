@@ -623,6 +623,22 @@ describe('a9', () => {
         });
       });
     });
+
+    it('should exploit the timeout in the adPipeline context', () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids(a9ConfigStub);
+      const contextWithConsentWithTimeout: AdPipelineContext = {
+        ...contextWithConsent,
+        bucket: { timeout: 3000 }
+      };
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+
+      return step(contextWithConsentWithTimeout, [singleSlot]).then(() => {
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWith(Sinon.match.has('bidTimeout', 3000));
+      });
+    });
   });
 
   describe('a9 clear targeting', () => {

@@ -804,5 +804,20 @@ describe('prebid', () => {
         Sinon.match.has('bidsBackHandler', Sinon.match.func)
       );
     });
+
+    it('should call requestBids with the timeout in adPipeline context', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+
+      const domId = 'prebid-slot';
+      const adUnit = prebidAdUnit(domId, [
+        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+      ]);
+      const slotDef = createSlotDefinitions(domId, { adUnit });
+
+      await step({ ...adPipelineContext(), bucket: { timeout: 3000 } }, [slotDef]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      expect(requestBidsSpy).to.have.been.calledWith(Sinon.match.has('timeout', 3000));
+    });
   });
 });

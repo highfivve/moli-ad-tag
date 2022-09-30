@@ -525,7 +525,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             .then(() => adService.requestAds(config, refreshSlots))
             .then(() => {
               // check if we are still on the same page and in the spa-requestAds state
-              // if not the user has already navigated to another page and we discard everything here
+              // if not the user has already navigated to another page, and we discard everything here
               if (state.state === 'spa-requestAds' && state.href === window.location.href) {
                 adService.refreshAdSlots(state.refreshSlots, state.config);
                 afterRequestAds.forEach(hook => hook('spa-finished'));
@@ -747,70 +747,66 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshBucket(bucket: string | string[]): Promise<'queued' | 'refreshed'> {
-    const buckets = typeof bucket === 'string' ? [bucket] : bucket;
-
-    function getBucketsDomIds(config: Moli.MoliConfig): string[] {
-      const slotsInBuckets = config.slots.filter(slot =>
-        buckets.some(bucket => bucket === slot.behaviour.bucket)
-      );
-      return slotsInBuckets?.map(slot => slot.domId);
+  function refreshBucket(bucket: string): Promise<'queued' | 'refreshed'> {
+    // A helper function to retrieve domIds that belong to buckets.
+    function getBucketDomIds(config: Moli.MoliConfig): string[] {
+      const slotsInBucket = config.slots.filter(slot => slot.behaviour.bucket === bucket);
+      return slotsInBucket?.map(slot => slot.domId);
     }
 
-    if (buckets?.length) {
-      switch (state.state) {
-        case 'configurable': {
-          const slotsInBuckets = moliWindow.moli
-            .getConfig()
-            ?.slots.filter(slot => buckets.some(bucket => bucket === slot.behaviour.bucket));
-          const domIds = slotsInBuckets?.map(slot => slot.domId);
-          if (domIds?.length) {
-            state.refreshSlots.push(...domIds);
-            return Promise.resolve('queued');
-          }
-          return Promise.reject('no configurable domIds for buckets');
-        }
-        case 'configured': {
-          const domIds = getBucketsDomIds(state.config);
+    switch (state.state) {
+      case 'configurable': {
+        const slotsInBucket = moliWindow.moli
+          .getConfig()
+          ?.slots.filter(slot => slot.behaviour.bucket === bucket);
+        const domIds = slotsInBucket?.map(slot => slot.domId);
+        if (domIds?.length) {
           state.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
         }
-        // if requestAds is currently called we batch the refreshAdSlot calls until
-        // we hit the 'spa-finished' state
-        case 'spa-requestAds': {
-          const domIds = getBucketsDomIds(state.config);
+        return Promise.reject('no configurable domIds for buckets');
+      }
+      case 'configured': {
+        const domIds = getBucketDomIds(state.config);
+        state.refreshSlots.push(...domIds);
+        return Promise.resolve('queued');
+      }
+      // if requestAds is currently called we batch the refreshAdSlot calls until
+      // we hit the 'spa-finished' state
+      case 'spa-requestAds': {
+        const domIds = getBucketDomIds(state.config);
+        state.refreshSlots.push(...domIds);
+        return Promise.resolve('queued');
+      }
+      // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
+      // until the next requestAds() call arrives
+      case 'spa-finished': {
+        if (state.href === window.location.href) {
+          // user hasn't navigated yet, so we directly refresh the slot
+          return adService.refreshBucket(bucket, state.config).then(() => 'refreshed');
+        } else {
+          const domIds = getBucketDomIds(state.config);
+          // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
           state.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
-        }
-        // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
-        // until the next requestAds() call arrives
-        case 'spa-finished': {
-          if (state.href === window.location.href) {
-            // user hasn't navigated yet, so we directly refresh the slot
-            return adService.refreshBuckets(buckets, state.config).then(() => 'refreshed');
-          } else {
-            const domIds = getBucketsDomIds(state.config);
-            // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-            state.refreshSlots.push(...domIds);
-            return Promise.resolve('queued');
-          }
-        }
-        // if the ad tag is currently requesting ads or already finished doesn't matter
-        // slots can be refreshed immediately
-        case 'finished':
-        case 'requestAds': {
-          return adService.refreshBuckets(buckets, state.config).then(() => 'refreshed');
-        }
-        default: {
-          getLogger(state.config, window).error(
-            'MoliGlobal',
-            `refreshAdSlot is not allowed in state ${state.state}`,
-            state.config
-          );
-          return Promise.reject(`not allowed in state ${state.state}`);
         }
       }
+      // if the ad tag is currently requesting ads or already finished doesn't matter
+      // slots can be refreshed immediately
+      case 'finished':
+      case 'requestAds': {
+        return adService.refreshBucket(bucket, state.config).then(() => 'refreshed');
+      }
+      default: {
+        getLogger(state.config, window).error(
+          'MoliGlobal',
+          `refreshAdSlot is not allowed in state ${state.state}`,
+          state.config
+        );
+        return Promise.reject(`not allowed in state ${state.state}`);
+      }
     }
+
     return Promise.reject(`no slots in buckets found`);
   }
 

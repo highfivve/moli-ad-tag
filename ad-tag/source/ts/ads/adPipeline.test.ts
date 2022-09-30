@@ -122,6 +122,54 @@ describe('AdPipeline', () => {
       });
     });
 
+    it('should use the proper timeout', () => {
+      let timeout: number | undefined = 0;
+      const initSteps: InitStep[] = [
+        context => {
+          timeout = context.bucket?.timeout;
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
+      pipeline
+        .run(
+          [adSlot],
+          {
+            ...emptyConfig,
+            buckets: { enabled: true, bucket: { one: { timeout: 3000 }, two: { timeout: 1500 } } }
+          },
+          1,
+          'one'
+        )
+        .then(() => {
+          expect(timeout).to.be.equals(3000);
+        });
+    });
+
+    it('should use the default timeout', () => {
+      let timeout: number | undefined = 0;
+      const initSteps: InitStep[] = [
+        context => {
+          timeout = context.bucket?.timeout;
+          return Promise.resolve();
+        }
+      ];
+      const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
+      pipeline
+        .run(
+          [adSlot],
+          {
+            ...emptyConfig,
+            buckets: { enabled: true, bucket: { one: { timeout: 3000 } } }
+          },
+          1,
+          'bla'
+        )
+        .then(() => {
+          expect(timeout).not.to.equals(3000);
+        });
+    });
+
     it('should fail if the init phase fails', () => {
       const pipeline = newAdPipeline({
         ...emptyPipelineConfig,
