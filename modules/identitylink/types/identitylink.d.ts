@@ -108,7 +108,9 @@ export namespace ATS {
    * about the structure of the envelope, except for the fuzzy description on the "IdentityLink in RTB"
    * [github page](https://github.com/Advertising-ID-Consortium/IdentityLink-in-RTB):
    *
+   * ```json
    * {"envelope":"AjfowMv4ZHZQJFM8TpiUnYEyA81Vdgg"}
+   * ```
    *
    * This could either mean that the envelope is an object that contains an "envelope" field with the initialization
    * vector as string, or that "envelope" is an alias for the initialization vector string itself.

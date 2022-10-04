@@ -63,7 +63,7 @@ Prebid won't be called before the consent state is ready. The `cmpTimeout` setti
 
 ## Ad Slot
 
-You enable prebid for a single ad slot by setting the [`prebid`](.../api/interfaces/Moli.AdSlot#prebid) property.
+You enable prebid for a single ad slot by setting the [`prebid`](../api/interfaces/Moli.AdSlot#prebid) property.
 The value is a [`PrebidAdSlotConfigProvider`](../api/namespaces/Moli.headerbidding#prebidadslotconfigprovider), which can be
 either a static value or function that allows more dynamic behaviour.
 
@@ -177,12 +177,12 @@ to ad slot specific properties.
         }
       },
       bids: [
-        { 
+        {
           bidder: 'appNexus' ,
-          params: { 
-            placmenentId: 123, 
+          params: {
+            placmenentId: 123,
             // highlight-start
-            keywords: { iab1: context.keyValues.iab1 ?? 'none'} 
+            keywords: { iab1: context.keyValues.iab1 ?? 'none'}
             // highlight-end
           }
         }

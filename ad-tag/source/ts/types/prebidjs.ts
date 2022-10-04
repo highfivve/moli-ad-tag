@@ -3252,11 +3252,16 @@ export namespace prebidjs {
      * A set of key-value pairs applied to all ad slots on the page.
      * Mapped to query string segments for buy-side targeting.
      *
-     * Example:
+     * **Example:**
      *
+     * ```js
      * keywords: { genre: ['rock', 'pop'] }
+     * ```
      *
-     * for prebid server: keywords: [ { key: 'genre', value: ['rock', 'pop'] } ]
+     * for prebid server: keywords:
+     * ```js
+     * [ { key: 'genre', value: ['rock', 'pop'] } ]
+     * ``
      */
     readonly keywords?: IAppNexusASTKeyword | IAppNexusASTPrebidServerKeyword[];
 
@@ -4261,9 +4266,11 @@ export namespace prebidjs {
      * A set of key-value pairs applied to all ad slots on the page.
      * Mapped to query string segments for buy-side targeting.
      *
-     * Example:
+     * **Example:**
      *
+     * ```js
      * keywords: { genre: ['rock', 'pop'] }
+     * ```
      */
     readonly keywords?: IAppNexusASTKeyword;
 
