@@ -224,6 +224,18 @@ export namespace Moli {
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
     /**
+     * Refresh the given bucket as soon as possible.
+     *
+     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
+     *
+     * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
+     * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
+     *
+     * @param bucket - identifies the bucket
+     */
+    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
+
+    /**
      * Returns the  current state of the configuration. This configuration may not be final!
      * If you need to access the final configuration use the `beforeRequestAds` method to configure
      * a callback.
@@ -778,7 +790,7 @@ export namespace Moli {
     /**
      * Configure bucketing behaviour
      */
-    buckets?: bucket.BucketConfig;
+    buckets?: bucket.GlobalBucketConfig;
 
     /** configurable logger */
     logger?: MoliLogger;
@@ -971,7 +983,7 @@ export namespace Moli {
      * Size configuration to support "responsive" ads.
      *
      * The implementation matches the prebid.js specification for responsive ads.
-     * However this information is not passed to prebid. The ad tag already takes
+     * However, this information is not passed to prebid. The ad tag already takes
      * care of filtering sizes.
      *
      * @see [prebid configure responsive ads](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-Responsive-Ads)
@@ -1229,6 +1241,7 @@ export namespace Moli {
 
   /** header bidding types */
   export namespace headerbidding {
+    import GlobalBucketConfig = Moli.bucket.GlobalBucketConfig;
     /**
      * A `PrebidAdSlotConfig` can either be created
      *
@@ -1858,11 +1871,11 @@ export namespace Moli {
      *
      * ### Above and below the fold
      *
-     * It possible to bucket ad slots with higher priority.
+     * It's possible to bucket ad slots with higher priority.
      * NOTE: there's no feature for delay or prioritization yet!
      *
      */
-    export interface BucketConfig {
+    export interface GlobalBucketConfig {
       /**
        * if set to true, ad slots will be loaded in buckets as specified in the
        * ad slot configuration.
@@ -1870,13 +1883,29 @@ export namespace Moli {
        * Default: false
        */
       readonly enabled: boolean;
+
+      /**
+       * to customize the timeout per bucket, which overrides the Prebid's/A9 timeout.
+       */
+      readonly bucket?: BucketConfigMap;
     }
+
+    export interface BucketConfig {
+      /**
+       * timeout used for prebid / a9 requests in this bucket
+       */
+      readonly timeout: number;
+    }
+
+    export type BucketConfigMap = {
+      readonly [bucketName: string]: BucketConfig;
+    };
   }
 
   /**
    * == Yield Optimization ==
    *
-   * The systems is designed to work with Google Ad Managers _Unified Pricing Rules_. The general idea is that
+   * The system is designed to work with Google Ad Managers _Unified Pricing Rules_. The general idea is that
    * key values are being used to target specific pricing rules per ad unit. The configuration when a pricing rule
    * should be applied can be fetched from an external system to allow dynamic floor price optimizations.
    *

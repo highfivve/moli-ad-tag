@@ -271,6 +271,51 @@ describe('moli', () => {
     });
   });
 
+  describe('refreshBucket()', () => {
+    it('should refresh slots that belong to the same bucket', async () => {
+      const slots: Moli.AdSlot[] = [
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } },
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'two' } },
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } }
+      ];
+      const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+      adTag.configure({
+        ...defaultConfig,
+        slots: slots
+      });
+
+      await adTag.refreshBucket('one');
+      await adTag.requestAds();
+      // refresh after requestAds has been called
+      expect(adTag.getState()).to.be.eq('finished');
+      const domIds = (refreshSpy.firstCall.args[0] || []).map(slot => slot.getSlotElementId());
+      expect(domIds).to.have.length(2);
+      expect(domIds[0]).to.be.eq(slots[0].domId);
+      expect(domIds[1]).to.be.eq(slots[2].domId);
+    });
+
+    it("should refresh no slots when the bucket doesn't exist", async () => {
+      const slots: Moli.AdSlot[] = [
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } }
+      ];
+      const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+      adTag.configure({
+        ...defaultConfig,
+        slots: slots
+      });
+
+      await adTag.refreshBucket('two');
+      await adTag.requestAds();
+      // refresh after requestAds has been called
+      expect(adTag.getState()).to.be.eq('finished');
+      expect(refreshSpy).to.have.not.been.called;
+    });
+  });
+
   describe('refreshAds()', () => {
     describe('server side application mode', () => {
       it('should batch slots until requestAds is called', () => {

@@ -1,7 +1,5 @@
 import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
-import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
-import { getPageViewCount } from './pageViewTargeting';
 
 const { currentVersion } = require('../../version.json');
 
@@ -556,6 +554,42 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
+
+    // Buckets
+    {
+      domId: 'same-bucket1',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'bucket-one'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 250]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 250]]
+        }
+      ]
+    },
+    {
+      domId: 'same-bucket2',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'bucket-one'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 250]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 250]]
+        }
+      ]
+    },
     // web interstitial
     {
       domId: 'unused',
@@ -591,7 +625,10 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
     }
   ],
   buckets: {
-    enabled: false
+    enabled: true,
+    bucket: {
+      'bucket-one': { timeout: 5000 }
+    }
   },
   schain: {
     supplyChainStartNode: {
@@ -653,17 +690,16 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           {
             name: 'unifiedId',
             params: {
-              partner: 'myTpId',
+              partner: 'myTpId'
             },
             storage: {
               type: 'cookie',
               name: 'pbjs-unifiedid', // create a cookie with this name
               expires: 60 // cookie can last for 60 days,
-
             }
           },
           {
-            name: "sharedId",
+            name: 'sharedId',
             params: {
               create: true,
               pixelUrl: '',
@@ -672,14 +708,14 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
             storage: {
               expires: 60,
               name: '_pubcid',
-              type: 'cookie',
+              type: 'cookie'
             }
           }
         ],
         encryptedSignalSources: {
           sources: [
             {
-              source: ["adserver.org", "id5-sync.com", "criteo.com","liveramp.com"],
+              source: ['adserver.org', 'id5-sync.com', 'criteo.com', 'liveramp.com'],
               encrypt: false
             }
           ]
