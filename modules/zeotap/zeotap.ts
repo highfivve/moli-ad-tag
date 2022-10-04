@@ -66,10 +66,12 @@ import TCDataWithGDPR = tcfapi.responses.TCDataWithGDPR;
  * For example, if you want to transfer a key/value pair with the key `xyz` to Zeotap under the name `abc`, the
  * respective DataKeyValue object would be:
  *
+ * ```ts
  * const transferXyz: DataKeyValue = {
  *   keyValueKey: 'xyz',
  *   parameterKey: 'abc'
  * }
+ * ```ts
  */
 export type DataKeyValue = {
   keyValueKey: string;
@@ -82,10 +84,12 @@ export type DataKeyValue = {
  * For example, if you want to disable data collection on sensitive content like medical content, the respective
  * ExclusionKeyValue object could look like this:
  *
+ * ```ts
  * const excludeMedical: ExclusionKeyValue = {
  *   keyValueKey: 'contentType',
  *   disableOnValue: 'MedicalTopic'
  * }
+ * ```
  */
 export type ExclusionKeyValue = {
   keyValueKey: string;

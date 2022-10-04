@@ -301,7 +301,7 @@ export namespace googletag {
        * Line item ID of the rendered reservation ad. Value is null for empty slots, backfill ads or creatives rendered
        * by services other than pubads service.
        *
-       * Viewable in ad manager: https://admanager.google.com/33559401#delivery/LineItemDetail/orderId=[campaignId]&lineItemId=[lineItemId}
+       * Viewable in ad manager: https://admanager.google.com/33559401#delivery/LineItemDetail/orderId=[campaignId]&lineItemId=[lineItemId]
        */
       lineItemId?: number;
 
@@ -535,7 +535,7 @@ export namespace googletag {
      * Line item ID of the rendered reservation ad. Value is null for empty slots, backfill ads or creatives rendered
      * by services other than pubads service.
      *
-     * Viewable in ad manager: https://admanager.google.com/33559401#delivery/LineItemDetail/orderId=[campaignId]&lineItemId=[lineItemId}
+     * Viewable in ad manager: https://admanager.google.com/33559401#delivery/LineItemDetail/orderId=[campaignId]&lineItemId=[lineItemId]
      */
     readonly lineItemId?: number;
 

@@ -16,5 +16,5 @@ You can implement a module by reusing one of the existing modules. Modules are a
 yarn workspace as `modules/*` is used as a workspace glob pattern. Things that are important
 
 1. You should only have a single `index.ts` file that contains everything
-2. Your `package.json` must contain a `validate` and `validate:jenkins` script
-3. The module needs to be added in the [Jenkinsfile](../Jenkinsfile) in the `stage('Modules')`
+2. Your `package.json` must contain a `validate` and `validate:github` script
+3. The module entrypoint needs to be added in the `docusaurus.config.js` to the _modules_ `entryPoints` property

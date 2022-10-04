@@ -14,7 +14,7 @@ This section highlights some of Moli's features.
 * Google Ad Manager integration
 * [Prebid integration](features/prebid)
 * [Amazon TAM integration](features/tam)
-* [Responsive size configuration](features/responsive-ads)
+* [Responsive size configuration](features/size-config)
 * [Module system](modules/index)
 * [TCF 2 integration](features/consent)
 * [Rich debugging console](features/debugging)
@@ -44,5 +44,5 @@ screen sizes. Moli gives you various options to specify if and with what sizes a
 be mattered based on _media queries_ and _labels_ that can be defined anywhere.
 
 Defining your ad setup is the crucial part. From there on you setup a javascript project the
-way you want, add moli as an npm dependency, intialize the ad tag as described [in the setup guide](getting-started/setup)
+way you want, add moli as an npm dependency, intialize the ad tag as described [in the setup guide](getting-started/quick-start)
 deploy the javascript bundle somewhere public and integrated it on your page.
