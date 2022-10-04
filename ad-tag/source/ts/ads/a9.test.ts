@@ -624,7 +624,7 @@ describe('a9', () => {
       });
     });
 
-    it('should exploit the timeout in the adPipeline context', () => {
+    it('should use the timeout in the adPipeline context', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
       const contextWithConsentWithTimeout: AdPipelineContext = {
@@ -634,10 +634,9 @@ describe('a9', () => {
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
 
-      return step(contextWithConsentWithTimeout, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWith(Sinon.match.has('bidTimeout', 3000));
-      });
+      await step(contextWithConsentWithTimeout, [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWith(Sinon.match.has('bidTimeout', 3000));
     });
   });
 
