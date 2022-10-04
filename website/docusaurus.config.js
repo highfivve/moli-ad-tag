@@ -115,10 +115,7 @@ module.exports = {
         tsconfig: '../ad-tag/tsconfig.json',
         out: 'api',
         disableSources: true,
-        excludeInternal: true,
-        sidebar: {
-          sidebarFile: 'ad-tag-typedoc-sidebar.js'
-        }
+        excludeInternal: true
       }
     ],
     [
@@ -147,11 +144,7 @@ module.exports = {
         tsconfig: '../modules/tsconfig.docs.json',
         out: 'modules',
         disableSources: true,
-        excludeInternal: true,
-        sidebar: {
-          categoryLabel: 'Modules',
-          sidebarFile: 'modules-typedoc-sidebar.js'
-        }
+        excludeInternal: true
       }
     ]
   ]

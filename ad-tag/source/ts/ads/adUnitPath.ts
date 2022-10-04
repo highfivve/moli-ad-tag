@@ -35,7 +35,7 @@ export type AdUnitPathVariables = {
 
 /**
  * This method finds the params in the adUnitPath and replace them with the corresponding values in the adUnitPathVariables object
- * for example: /1234567/Travel/{device}/{channel} ==> /1234567/Travel/mobile/finance
+ * for example: `/1234567/Travel/{device}/{channel} ==> /1234567/Travel/mobile/finance`
  * It also detects all the special characters except the underscore.
  * @param adUnitPath the path to resolved
  * @param adUnitPathVariables key/value pairs to replace the adUnitPath keys with

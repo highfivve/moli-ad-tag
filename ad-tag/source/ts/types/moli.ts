@@ -107,7 +107,7 @@ export namespace Moli {
      * Resolves an ad unit path by replacing the ad unit path variables.
      * Optionally the networkChildId can be removed.
      *
-     * @param adUnitPath the ad unit path that may contain variables in the form of {variable name}
+     * @param adUnitPath the ad unit path that may contain variables in the form of `{variable name}`
      * @param options configure resolving behaviour
      */
     resolveAdUnitPath(adUnitPath: string, options?: ResolveAdUnitPathOptions): string;
