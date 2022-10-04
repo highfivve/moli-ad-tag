@@ -104,27 +104,25 @@ export const a9Configure = (
   config: Moli.headerbidding.A9Config,
   schainConfig: Moli.schain.SupplyChainConfig
 ): ConfigureStep =>
-  mkConfigureStep(
-    'a9-configure',
-    (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
-      new Promise<void>(resolve => {
-        context.window.apstag.init({
-          pubID: config.pubID,
-          adServer: 'googletag',
-          // videoAdServer: '', TODO: Add video ad server
-          bidTimeout: config.timeout,
-          gdpr: {
-            cmpTimeout: config.cmpTimeout
-          },
-          schain: {
-            complete: 1,
-            ver: '1.0',
-            nodes: [schainConfig.supplyChainStartNode, config.schainNode]
-          }
-        });
-        resolve();
-      })
-  );
+  mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+    return new Promise<void>(resolve => {
+      context.window.apstag.init({
+        pubID: config.pubID,
+        adServer: 'googletag',
+        // videoAdServer: '', TODO: Add video ad server
+        bidTimeout: config.timeout,
+        gdpr: {
+          cmpTimeout: config.cmpTimeout
+        },
+        schain: {
+          complete: 1,
+          ver: '1.0',
+          nodes: [schainConfig.supplyChainStartNode, config.schainNode]
+        }
+      });
+      resolve();
+    });
+  });
 
 export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
   mkConfigureStepOnce(
@@ -285,11 +283,14 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
           resolve();
         } else {
           context.reportingService.markA9fetchBids(context.requestId);
-          context.window.apstag.fetchBids({ slots }, (_bids: Object[]) => {
-            context.reportingService.measureAndReportA9BidsBack(context.requestId);
-            context.window.apstag.setDisplayBids();
-            resolve();
-          });
+          context.window.apstag.fetchBids(
+            { slots, ...(context.bucket?.timeout && { bidTimeout: context.bucket.timeout }) },
+            (_bids: Object[]) => {
+              context.reportingService.measureAndReportA9BidsBack(context.requestId);
+              context.window.apstag.setDisplayBids();
+              resolve();
+            }
+          );
         }
       })
   );

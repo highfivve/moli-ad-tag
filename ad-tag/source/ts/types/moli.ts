@@ -224,31 +224,16 @@ export namespace Moli {
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
     /**
-     * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
-     * Refresh the created ad slot as soon as possible afterwards.
+     * Refresh the given bucket as soon as possible.
      *
-     * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
-     * ad server if the `refreshInfiniteAdSlot` calls are before the ad tag is loaded.
+     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
      *
-     * -----------------------------------------------------------------------------------------------------------------
+     * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
+     * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
-     * This API is mostly used in combination with the lazy-loading module that identifies slots
-     * which should be treated as infinite ad units with the help of a given CSS selector.
-     *
-     * The publisher needs to make sure:
-     * - all infinite ad units are already in the DOM
-     * - all infinite ad units in the DOM have the same CSS class/attribute (no domId needed, it will be set automatically in a sequential order)
-     * - the corresponding CSS selector is used as `selector` in the configuration of the one ad slot that has an `infinite` laading behavior
-     * - the same CSS selector is used in the lazy-loading module
-     *
-     * @param domId - the domId of the newly created ad slot
-     * @param idOfConfiguredSlot - the domId of the configured ad slot with an `infinite` loading behaviour whose config should be copied
+     * @param bucket - identifies the bucket
      */
-
-    refreshInfiniteAdSlot(
-      domId: string,
-      idOfConfiguredSlot: string
-    ): Promise<'queued' | 'refreshed'>;
+    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
@@ -449,11 +434,6 @@ export namespace Moli {
       | 'finished'
       | 'error';
 
-    export type IRefreshInfiniteSlots = {
-      readonly artificialDomId: string;
-      readonly idOfConfiguredSlot: string;
-    }[];
-
     /**
      * Base interface for all states.
      */
@@ -533,11 +513,6 @@ export namespace Moli {
       readonly refreshSlots: string[];
 
       /**
-       * A list of infinite ad slots that should be refreshed
-       */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
-
-      /**
        * An object of ad unit path variables
        */
       adUnitPathVariables: AdUnitPathVariables;
@@ -582,11 +557,6 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
-
-      /**
-       * A list of infinite ad slots that should be refreshed
-       */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
     }
 
     /**
@@ -646,11 +616,6 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
-
-      /**
-       * A list of infinite ad slots that should be refreshed
-       */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
 
       /**
        * The original configuration from the ad tag itself. We can use this configuration to
@@ -825,7 +790,7 @@ export namespace Moli {
     /**
      * Configure bucketing behaviour
      */
-    buckets?: bucket.BucketConfig;
+    buckets?: bucket.GlobalBucketConfig;
 
     /** configurable logger */
     logger?: MoliLogger;
@@ -1018,7 +983,7 @@ export namespace Moli {
      * Size configuration to support "responsive" ads.
      *
      * The implementation matches the prebid.js specification for responsive ads.
-     * However this information is not passed to prebid. The ad tag already takes
+     * However, this information is not passed to prebid. The ad tag already takes
      * care of filtering sizes.
      *
      * @see [prebid configure responsive ads](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-Responsive-Ads)
@@ -1155,7 +1120,7 @@ export namespace Moli {
      *
      */
     export interface ISlotLoading {
-      readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual' | 'infinite';
+      readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual';
 
       /**
        * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
@@ -1186,33 +1151,6 @@ export namespace Moli {
      */
     export interface Manual extends ISlotLoading {
       readonly loaded: 'manual';
-    }
-
-    /**
-     * The one infinite ad slot whose configuration will be copied if the `moli.refreshInfiniteAdSlot` API is triggered.
-     *
-     * This is mainly the case in combination with the lazy-loading module which needs a CSS selector
-     * to identify the ad slots in the document that should be lazily loaded PLUS get an automatic sequential numbering.
-     *
-     * Therefore, the `selector` configured here needs to be used in the lazy-loading module.
-     * Also, it manages the moli debugger's display of how many infinite slots with the given selector are rendered at the moment.
-     *
-     * Valid examples (every CSS selector can be used):
-     *
-     * {
-     *   loaded: 'infinite,
-     *   selector: '.ad-infinite'
-     * }
-     *
-     * {
-     *   loaded: 'infinite,
-     *   selector: '[data-js="ad-infinite"]'
-     * }
-     *
-     */
-    export interface Infinite extends ISlotLoading {
-      readonly loaded: 'infinite';
-      readonly selector: string;
     }
 
     /**
@@ -1260,7 +1198,7 @@ export namespace Moli {
     /**
      * all available slot loading behaviours.
      */
-    export type SlotLoading = Eager | Manual | Lazy | Refreshable | Infinite;
+    export type SlotLoading = Eager | Manual | Lazy | Refreshable;
 
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;
@@ -1303,6 +1241,7 @@ export namespace Moli {
 
   /** header bidding types */
   export namespace headerbidding {
+    import GlobalBucketConfig = Moli.bucket.GlobalBucketConfig;
     /**
      * A `PrebidAdSlotConfig` can either be created
      *
@@ -1932,11 +1871,11 @@ export namespace Moli {
      *
      * ### Above and below the fold
      *
-     * It possible to bucket ad slots with higher priority.
+     * It's possible to bucket ad slots with higher priority.
      * NOTE: there's no feature for delay or prioritization yet!
      *
      */
-    export interface BucketConfig {
+    export interface GlobalBucketConfig {
       /**
        * if set to true, ad slots will be loaded in buckets as specified in the
        * ad slot configuration.
@@ -1944,13 +1883,29 @@ export namespace Moli {
        * Default: false
        */
       readonly enabled: boolean;
+
+      /**
+       * to customize the timeout per bucket, which overrides the Prebid's/A9 timeout.
+       */
+      readonly bucket?: BucketConfigMap;
     }
+
+    export interface BucketConfig {
+      /**
+       * timeout used for prebid / a9 requests in this bucket
+       */
+      readonly timeout: number;
+    }
+
+    export type BucketConfigMap = {
+      readonly [bucketName: string]: BucketConfig;
+    };
   }
 
   /**
    * == Yield Optimization ==
    *
-   * The systems is designed to work with Google Ad Managers _Unified Pricing Rules_. The general idea is that
+   * The system is designed to work with Google Ad Managers _Unified Pricing Rules_. The general idea is that
    * key values are being used to target specific pricing rules per ad unit. The configuration when a pricing rule
    * should be applied can be fetched from an external system to allow dynamic floor price optimizations.
    *

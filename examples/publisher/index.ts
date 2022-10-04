@@ -1,6 +1,19 @@
 /**
  * ES6 bundle: no polyfills.
  */
+
+
+import {googletag, initAdTag, Moli, prebidjs} from '@highfivve/ad-tag';
+import { Confiant } from '@highfivve/module-confiant';
+
+import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
+import { Skin } from '@highfivve/module-generic-skin';
+import { AdReload } from '@highfivve/module-moli-ad-reload';
+import { YieldOptimization } from '@highfivve/module-yield-optimization';
+import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
+import { LazyLoad } from '@highfivve/module-moli-lazy-load';
+import { adConfiguration } from './source/ts/configuration';
+import MoliWindow = Moli.MoliWindow;
 import prebid from 'prebid.js';
 import 'prebid.js/modules/consentManagement';
 import 'prebid.js/modules/currency';
@@ -17,17 +30,6 @@ import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
 
-import {googletag, initAdTag, Moli, prebidjs} from '@highfivve/ad-tag';
-import { Confiant } from '@highfivve/module-confiant';
-
-import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
-import { Skin } from '@highfivve/module-generic-skin';
-import { AdReload } from '@highfivve/module-moli-ad-reload';
-import { YieldOptimization } from '@highfivve/module-yield-optimization';
-import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
-import { LazyLoad } from '@highfivve/module-moli-lazy-load';
-import { adConfiguration } from './source/ts/configuration';
-import MoliWindow = Moli.MoliWindow;
 
 prebid.processQueue();
 
@@ -158,3 +160,5 @@ window.pbjs.que.push(() => {
 
 // init moli
 moli.configure(adConfiguration(moli.version));
+
+window.moli.que.push((adTag) => adTag.refreshBucket('bucket-one'));

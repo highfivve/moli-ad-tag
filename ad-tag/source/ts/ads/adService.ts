@@ -100,7 +100,7 @@ export class AdService {
    *
    * @param assetService
    * @param window
-   * @param adPipelineConfig only for testing purpose at this point. This configuration will be overriden by
+   * @param adPipelineConfig only for testing purpose at this point. This configuration will be overridden by
    *        a call to initialize. This should not be the API for extending the pipeline!
    */
   constructor(
@@ -371,6 +371,17 @@ export class AdService {
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
+  }
+
+  public refreshBucket(bucket: string, config: Moli.MoliConfig): Promise<void> {
+    if (!config.buckets?.enabled) {
+      return Promise.resolve();
+    }
+    const manualSlots = config.slots.filter(this.isManualSlot);
+    const availableSlotsInBucket = manualSlots.filter(slot => slot.behaviour.bucket === bucket);
+
+    this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
+    return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);
   }
 
   /**

@@ -72,6 +72,11 @@ export type AdPipelineContext = {
    * consent data
    */
   readonly tcData: tcfapi.responses.TCData;
+
+  /**
+   * bucket config
+   */
+  readonly bucket?: Moli.bucket.BucketConfig | null;
 };
 
 /**
@@ -282,7 +287,12 @@ export class AdPipeline {
   /**
    * run the pipeline
    */
-  run(slots: Moli.AdSlot[], config: Moli.MoliConfig, requestAdsCalls: number): Promise<void> {
+  run(
+    slots: Moli.AdSlot[],
+    config: Moli.MoliConfig,
+    requestAdsCalls: number,
+    bucketName?: string
+  ): Promise<void> {
     if (slots.length === 0) {
       return Promise.resolve();
     }
@@ -322,6 +332,12 @@ export class AdPipeline {
         extraLabels,
         this.window
       );
+
+      const bucketConfig =
+        bucketName && config.buckets?.bucket && config.buckets.bucket[bucketName]
+          ? config.buckets.bucket[bucketName]
+          : null;
+
       // the context is based on the consent data
       const context: AdPipelineContext = {
         requestId: currentRequestId,
@@ -333,7 +349,8 @@ export class AdPipeline {
         reportingService: this.reportingService,
         slotEventService: this.slotEventService,
         window: this.window,
-        tcData: consentData
+        tcData: consentData,
+        bucket: bucketConfig
       };
 
       this.init = this.init
@@ -364,7 +381,6 @@ export class AdPipeline {
             this.logStage('prepareRequestAds', currentRequestId)
               .then(() => this.runPrepareRequestAds(context, definedSlots))
               .then(() => this.logStage('requestBids', currentRequestId))
-              // TODO add a general timeout for the requestBids call
               // TODO add a catch call to not break the request chain
               .then(() =>
                 Promise.all(this.config.requestBids.map(step => step(context, definedSlots)))
