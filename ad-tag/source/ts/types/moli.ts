@@ -223,7 +223,6 @@ export namespace Moli {
      */
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
-
     /**
      * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
      * Refresh the created ad slot as soon as possible afterwards.
@@ -246,7 +245,10 @@ export namespace Moli {
      * @param idOfConfiguredSlot - the domId of the configured ad slot with an `infinite` loading behaviour whose config should be copied
      */
 
-    refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string): Promise<'queued' | 'refreshed'>;
+    refreshInfiniteAdSlot(
+      domId: string,
+      idOfConfiguredSlot: string
+    ): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
@@ -447,6 +449,11 @@ export namespace Moli {
       | 'finished'
       | 'error';
 
+    export type IRefreshInfiniteSlots = {
+      readonly artificialDomId: string;
+      readonly idOfConfiguredSlot: string;
+    }[];
+
     /**
      * Base interface for all states.
      */
@@ -526,6 +533,11 @@ export namespace Moli {
       readonly refreshSlots: string[];
 
       /**
+       * A list of infinite ad slots that should be refreshed
+       */
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
+
+      /**
        * An object of ad unit path variables
        */
       adUnitPathVariables: AdUnitPathVariables;
@@ -570,6 +582,11 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
+
+      /**
+       * A list of infinite ad slots that should be refreshed
+       */
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
     }
 
     /**
@@ -629,6 +646,11 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
+
+      /**
+       * A list of infinite ad slots that should be refreshed
+       */
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
 
       /**
        * The original configuration from the ad tag itself. We can use this configuration to
