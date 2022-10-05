@@ -180,7 +180,7 @@
       border-left: 4px solid var(--MoliDebug-red);
     }
 
-    &.is-infinite {
+    &.is-configuredInfinite {
        border-left: 4px solid var(--MoliDebug-yellow);
      }
 
@@ -232,7 +232,7 @@
         background: var(--MoliDebug-red);
       }
 
-      &.is-infinite {
+      &.is-configuredInfinite {
          background: var(--MoliDebug-yellow);
        }
 
