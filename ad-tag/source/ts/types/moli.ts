@@ -223,7 +223,32 @@ export namespace Moli {
      */
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
-    refreshInfiniteAdSlot(domId: string, idOfConfiguredSlot: string): Promise<'queued' | 'refreshed'>;
+    /**
+     * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
+     * Refresh the created ad slot as soon as possible afterwards.
+     *
+     * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
+     * ad server if the `refreshInfiniteAdSlot` calls are before the ad tag is loaded.
+     *
+     * -----------------------------------------------------------------------------------------------------------------
+     *
+     * This API is mostly used in combination with the lazy-loading module that identifies slots
+     * which should be treated as infinite ad units with the help of a given CSS selector.
+     *
+     * The publisher needs to make sure:
+     * - all infinite ad units are already in the DOM
+     * - all infinite ad units in the DOM have the same CSS class/attribute (no domId needed, it will be set automatically in a sequential order)
+     * - the corresponding CSS selector is used as `selector` in the configuration of the one ad slot that has an `infinite` laading behavior
+     * - the same CSS selector is used in the lazy-loading module
+     *
+     * @param domId - the domId of the newly created ad slot
+     * @param idOfConfiguredSlot - the domId of the configured ad slot with an `infinite` loading behaviour whose config should be copied
+     */
+
+    refreshInfiniteAdSlot(
+      domId: string,
+      idOfConfiguredSlot: string
+    ): Promise<'queued' | 'refreshed'>;
 
     /**
      * Refresh the given bucket as soon as possible.
@@ -436,6 +461,11 @@ export namespace Moli {
       | 'finished'
       | 'error';
 
+    export type IRefreshInfiniteSlots = {
+      readonly artificialDomId: string;
+      readonly idOfConfiguredSlot: string;
+    }[];
+
     /**
      * Base interface for all states.
      */
@@ -515,6 +545,11 @@ export namespace Moli {
       readonly refreshSlots: string[];
 
       /**
+       * A list of infinite ad slots that should be refreshed
+       */
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
+
+      /**
        * An object of ad unit path variables
        */
       adUnitPathVariables: AdUnitPathVariables;
@@ -559,6 +594,11 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
+
+      /**
+       * A list of infinite ad slots that should be refreshed
+       */
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
     }
 
     /**
@@ -618,6 +658,11 @@ export namespace Moli {
        * A list of ad slots that should be refreshed
        */
       readonly refreshSlots: string[];
+
+      /**
+       * A list of infinite ad slots that should be refreshed
+       */
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
 
       /**
        * The original configuration from the ad tag itself. We can use this configuration to
@@ -1156,11 +1201,30 @@ export namespace Moli {
     }
 
     /**
-     * An ad slot which must be triggered via the `moli.refreshInfiniteAdSlot` API.
+     * The one infinite ad slot whose configuration will be copied if the `moli.refreshInfiniteAdSlot` API is triggered.
+     *
+     * This is mainly the case in combination with the lazy-loading module which needs a CSS selector
+     * to identify the ad slots in the document that should be lazily loaded PLUS get an automatic sequential numbering.
+     *
+     * Therefore, the `selector` configured here needs to be used in the lazy-loading module.
+     * Also, it manages the moli debugger's display of how many infinite slots with the given selector are rendered at the moment.
+     *
+     * Valid examples (every CSS selector can be used):
+     *
+     * {
+     *   loaded: 'infinite,
+     *   selector: '.ad-infinite'
+     * }
+     *
+     * {
+     *   loaded: 'infinite,
+     *   selector: '[data-js="ad-infinite"]'
+     * }
+     *
      */
     export interface Infinite extends ISlotLoading {
       readonly loaded: 'infinite';
-      readonly name: string;
+      readonly selector: string;
     }
 
     /**

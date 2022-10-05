@@ -178,13 +178,12 @@ export class LazyLoad implements IModule {
     if (infiniteSlotsConfig) {
       infiniteSlotsConfig.forEach((config, index) => {
           const serialNumberLabel = 'data-h5-serial-number';
-          const infiniteElements = window.document.querySelectorAll(config.selector);
           const configuredInfiniteSlot = moliConfig.slots.find(slot => slot.behaviour.loaded === 'infinite');
           if (configuredInfiniteSlot) {
             const observer = new window.IntersectionObserver(
               entries => {
                 console.log('called with', entries);
-                entries.forEach((entry: IntersectionObserverEntry, index) => {
+                entries.forEach((entry: IntersectionObserverEntry) => {
                   if (entry.isIntersecting) {
                     const serialNumber = entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
                     const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
@@ -210,6 +209,7 @@ export class LazyLoad implements IModule {
               }
             );
 
+            const infiniteElements = window.document.querySelectorAll(config.selector);
             infiniteElements.forEach((element, index) => {
               element.setAttribute(serialNumberLabel, `${index + 1}`)
               element && observer.observe(element)});
@@ -217,16 +217,11 @@ export class LazyLoad implements IModule {
             {
               this.logger?.warn(
                 this.name,
-                `No infinite-scrolling slot configured!`
+                `No infinite-scrolling slots configured!`
               );
             }
           }
         }
-      );
-    } else {
-      this.logger?.debug(
-        this.name,
-        `No CSS selector for infinite-scrolling slots entered`
       );
     }
   };
