@@ -606,7 +606,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       domId: 'infinite-loading-adslot',
       position: 'in-page',
       behaviour: {
-        loaded: 'infinite'
+        loaded: 'infinite',
+        selector: '.ad-infinite'
       },
       adUnitPath: '/55155651/prebid_test',
       sizes: [[300, 300]],
