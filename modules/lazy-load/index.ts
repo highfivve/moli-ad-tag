@@ -159,7 +159,7 @@ export class LazyLoad implements IModule {
         }
       );
 
-      config.domIds.forEach((domId) => {
+      config.domIds.forEach(domId => {
         const slot = moliConfig.slots.find(slot => slot.domId === domId);
         if (!slot) {
           this.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
@@ -176,7 +176,7 @@ export class LazyLoad implements IModule {
     });
 
     if (infiniteSlotsConfig) {
-      infiniteSlotsConfig.forEach((config) => {
+      infiniteSlotsConfig.forEach(config => {
         const serialNumberLabel = 'data-h5-serial-number';
         const configuredInfiniteSlot = moliConfig.slots.find(
           slot => slot.behaviour.loaded === 'infinite'
