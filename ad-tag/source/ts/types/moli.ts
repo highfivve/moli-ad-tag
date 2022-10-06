@@ -238,6 +238,8 @@ export namespace Moli {
      * The publisher needs to make sure:
      * - all infinite ad units are already in the DOM
      * - all infinite ad units in the DOM have the same CSS class/attribute (no domId needed, it will be set automatically in a sequential order)
+     *
+     * Requirements in the ad tag:
      * - the corresponding CSS selector is used as `selector` in the configuration of the one ad slot that has an `infinite` laading behavior
      * - the same CSS selector is used in the lazy-loading module
      *
@@ -1216,20 +1218,23 @@ export namespace Moli {
      * The one infinite ad slot whose configuration will be copied if the `moli.refreshInfiniteAdSlot` API is triggered.
      *
      * This is mainly the case in combination with the lazy-loading module which needs a CSS selector
-     * to identify the ad slots in the document that should be lazily loaded PLUS get an automatic sequential numbering.
+     * to identify the ad slots that should be lazily loaded PLUS get an automatic sequential numbering.
      *
-     * Therefore, the `selector` configured here needs to be used in the lazy-loading module.
+     * Therefore, the `selector` configured here needs to be used in the lazy-loading module configuration. The module
+     * looks for fitting HTML elements in the whole document of the browser window and refreshes them lazily using the
+     * configuration of the 'infinite' slot.
+     *
      * Also, it manages the moli debugger's display of how many infinite slots with the given selector are rendered at the moment.
      *
      * Valid examples (every CSS selector can be used):
      *
      * {
-     *   loaded: 'infinite,
+     *   loaded: 'infinite',
      *   selector: '.ad-infinite'
      * }
      *
      * {
-     *   loaded: 'infinite,
+     *   loaded: 'infinite',
      *   selector: '[data-js="ad-infinite"]'
      * }
      *
