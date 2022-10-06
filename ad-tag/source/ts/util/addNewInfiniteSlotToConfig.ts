@@ -1,6 +1,11 @@
 import { getLogger } from './logging';
+import { Moli } from '../types/moli';
 
-export const addNewInfiniteSlotToConfig = (config, idOfConfiguredSlot, artificialIdOfNewSlot) => {
+export const addNewInfiniteSlotToConfig = (
+  config: Moli.MoliConfig,
+  idOfConfiguredSlot: string,
+  artificialIdOfNewSlot: string
+): Moli.MoliConfig => {
   let newConfig = config;
 
   const configuredInfiniteAdSlot = config.slots.find(
