@@ -590,6 +590,59 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
+
+    // Lazy buckets
+    {
+      domId: 'lazy-bucket1',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'lazy-bucket'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
+    },
+    {
+      domId: 'lazy-bucket2',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'lazy-bucket'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
+    },
+    {
+      domId: 'lazy-bucket3',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'lazy-bucket'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
+    },
     // web interstitial
     {
       domId: 'unused',
@@ -627,7 +680,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   buckets: {
     enabled: true,
     bucket: {
-      'bucket-one': { timeout: 5000 }
+      'bucket-one': { timeout: 5000 },
+      'lazy-bucket': { timeout: 3000 }
     }
   },
   schain: {

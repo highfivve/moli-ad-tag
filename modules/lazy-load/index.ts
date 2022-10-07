@@ -56,7 +56,7 @@ type LazyLoadModuleOptionsType = {
   readonly threshold?: number;
 };
 
-export type LazyLoadModulePerKeyConfig = {
+export type LazyLoadModuleSlotsConfig = {
   /**
    * DomIds that should be observed for lazy loading
    */
@@ -64,9 +64,17 @@ export type LazyLoadModulePerKeyConfig = {
   readonly options: LazyLoadModuleOptionsType;
 };
 
+export type LazyLoadModuleBucketsConfig = {
+  /**
+   * Buckets that should be observed for lazy loading
+   */
+  readonly buckets: string[];
+  readonly options: LazyLoadModuleOptionsType;
+};
+
 export type LazyLoadModuleConfig = {
-  readonly slots: LazyLoadModulePerKeyConfig[];
-  readonly buckets: LazyLoadModulePerKeyConfig[];
+  readonly slots: LazyLoadModuleSlotsConfig[];
+  readonly buckets: LazyLoadModuleBucketsConfig[];
 };
 
 /**
@@ -164,6 +172,66 @@ export class LazyLoad implements IModule {
         } else if (slot.behaviour.loaded === 'manual') {
           const elementToObserve = window.document.querySelector(`#${domId}`);
           elementToObserve && observer.observe(elementToObserve);
+        }
+      });
+    });
+
+    bucketsConfig.forEach(config => {
+      const observer = new window.IntersectionObserver(
+        entries => {
+          console.log('lazy-load buckets called with slot', entries);
+          // if more than one entry was intersected at the same exact moment, observe only one
+          (entries.length > 1 ? [entries[0]] : entries).forEach(
+            (entry: IntersectionObserverEntry) => {
+              if (entry.isIntersecting) {
+                this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
+
+                // find the bucket that holds the target domId, then refresh it
+                const correspondingBucket = moliConfig.slots.find(
+                  slot => slot.domId === entry.target.id
+                )?.behaviour.bucket;
+
+                if (!correspondingBucket) {
+                  // this can't happen
+                  this.logger?.debug(this.name, `${entry.target.id} doesn't belong to any bucket`);
+                } else {
+                  // once one slot within a bucket was refreshed, unobserve all the bucket slots
+                  // to avoid re-refreshing the bucket at every slot intersection.
+                  const domIdsInCorrespondingBucket = moliConfig.slots
+                    .filter(slot => slot.behaviour.bucket === correspondingBucket)
+                    .map(slot => slot.domId);
+                  const restOfSlotsEntries = domIdsInCorrespondingBucket.map(domId =>
+                    window.document.querySelector(`#${domId}`)
+                  );
+                  restOfSlotsEntries.forEach(entry => entry && observer.unobserve(entry));
+                  this.window.moli.refreshBucket(correspondingBucket);
+                }
+              }
+            }
+          );
+        },
+        {
+          root: config.options.rootId
+            ? window.document.getElementById(config.options.rootId)
+            : null,
+          threshold: config.options.threshold,
+          rootMargin: config.options.rootMargin
+        }
+      );
+
+      config.buckets.forEach(bucketName => {
+        if (!moliConfig.buckets?.enabled) {
+          this.logger?.warn(this.name, "GlobalBucket config isn't enabled");
+        }
+        const bucket = moliConfig.buckets?.bucket && moliConfig.buckets.bucket[bucketName];
+        if (!bucket) {
+          this.logger?.warn(this.name, `Lazy-load non-existing bucket with name ${bucketName}`);
+        } else {
+          // find all the slots that belong to the bucket, then observe all the corresponding DOMs
+          const slots = moliConfig.slots.filter(slot => slot.behaviour.bucket === bucketName);
+          const domIds = slots.map(slot => slot.domId);
+          const elementsToObserve = domIds.map(domId => window.document.querySelector(`#${domId}`));
+          elementsToObserve.forEach(element => element && observer.observe(element));
         }
       });
     });
