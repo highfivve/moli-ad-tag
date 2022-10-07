@@ -160,7 +160,7 @@ export class LazyLoad implements IModule {
         }
       );
 
-      config.domIds.forEach((domId, index) => {
+      config.domIds.forEach(domId => {
         const slot = moliConfig.slots.find(slot => slot.domId === domId);
         if (!slot) {
           this.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
@@ -180,35 +180,32 @@ export class LazyLoad implements IModule {
       const observer = new window.IntersectionObserver(
         entries => {
           console.log('lazy-load buckets called with slot', entries);
-          // if more than one entry was intersected at the same exact moment, observe only one
-          (entries.length > 1 ? [entries[0]] : entries).forEach(
-            (entry: IntersectionObserverEntry) => {
-              if (entry.isIntersecting) {
-                this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
+          // refresh only one slot at a time, which will cause refreshing the rest slots of the same bucket
+          const entry = entries[0];
+          if (entry.isIntersecting) {
+            this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
 
-                // find the bucket that holds the target domId, then refresh it
-                const correspondingBucket = moliConfig.slots.find(
-                  slot => slot.domId === entry.target.id
-                )?.behaviour.bucket;
+            // find the bucket that holds the target domId, then refresh it
+            const correspondingBucket = moliConfig.slots.find(
+              slot => slot.domId === entry.target.id
+            )?.behaviour.bucket;
 
-                if (!correspondingBucket) {
-                  // this can't happen
-                  this.logger?.debug(this.name, `${entry.target.id} doesn't belong to any bucket`);
-                } else {
-                  // once one slot within a bucket was refreshed, unobserve all the bucket slots
-                  // to avoid re-refreshing the bucket at every slot intersection.
-                  const domIdsInCorrespondingBucket = moliConfig.slots
-                    .filter(slot => slot.behaviour.bucket === correspondingBucket)
-                    .map(slot => slot.domId);
-                  const restOfSlotsEntries = domIdsInCorrespondingBucket.map(domId =>
-                    window.document.querySelector(`#${domId}`)
-                  );
-                  restOfSlotsEntries.forEach(entry => entry && observer.unobserve(entry));
-                  this.window.moli.refreshBucket(correspondingBucket);
-                }
-              }
+            if (!correspondingBucket) {
+              // this can't happen
+              this.logger?.debug(this.name, `${entry.target.id} doesn't belong to any bucket`);
+            } else {
+              // once one slot within a bucket was refreshed, unobserve all the bucket slots
+              // to avoid re-refreshing the bucket at every slot intersection.
+              const domIdsInCorrespondingBucket = moliConfig.slots
+                .filter(slot => slot.behaviour.bucket === correspondingBucket)
+                .map(slot => slot.domId);
+              const restOfSlotsEntries = domIdsInCorrespondingBucket.map(domId =>
+                window.document.querySelector(`#${domId}`)
+              );
+              restOfSlotsEntries.forEach(entry => entry && observer.unobserve(entry));
+              this.window.moli.refreshBucket(correspondingBucket);
             }
-          );
+          }
         },
         {
           root: config.options.rootId
