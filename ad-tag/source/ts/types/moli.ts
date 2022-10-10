@@ -475,10 +475,23 @@ export namespace Moli {
       | 'finished'
       | 'error';
 
-    export type IRefreshInfiniteSlots = {
+    /**
+     * Models `refreshInifiniteAdSlot` calls before ads are being requested
+     */
+    export type IRefreshInfiniteSlot = {
+      /**
+       * the newly created domID by the infinite slot loading behaviour.
+       * This ID can be used to reference the ad slot in the config in the
+       * ad pipeline context config.
+       */
       readonly artificialDomId: string;
+
+      /**
+       * the domID that references the slot configuration in the original
+       * config.
+       */
       readonly idOfConfiguredSlot: string;
-    }[];
+    };
 
     /**
      * Base interface for all states.
@@ -498,7 +511,7 @@ export namespace Moli {
 
       /**
        * If set to true, initializes the ad tag as soon as the ad configuration has been set.
-       * If set to false, nothing will initialize until moli.initialize is called
+       * If set to false, nothing will initialize until `moli.initialize` is called
        */
       initialize: boolean;
 
@@ -561,7 +574,7 @@ export namespace Moli {
       /**
        * A list of infinite ad slots that should be refreshed
        */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
 
       /**
        * An object of ad unit path variables
@@ -612,7 +625,7 @@ export namespace Moli {
       /**
        * A list of infinite ad slots that should be refreshed
        */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
     }
 
     /**
@@ -676,7 +689,7 @@ export namespace Moli {
       /**
        * A list of infinite ad slots that should be refreshed
        */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlots;
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlot;
 
       /**
        * The original configuration from the ad tag itself. We can use this configuration to
@@ -799,7 +812,7 @@ export namespace Moli {
     /**
      * Configure the environment the ad tag should use.
      *
-     * The default environment is `production` as a we have a very conservative way of deploying
+     * The default environment is `production` as we have a very conservative way of deploying
      * applications.
      *
      * default: 'production'
@@ -961,7 +974,7 @@ export namespace Moli {
    *
    * ## Prebid API
    *
-   * The API is identical to the Prebid size config feature. However we do not pass the
+   * The API is identical to the Prebid size config feature. However, we do not pass the
    * size config down to prebid as we already apply the logic at a higher level. We only
    * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
    *
@@ -1332,7 +1345,6 @@ export namespace Moli {
 
   /** header bidding types */
   export namespace headerbidding {
-    import GlobalBucketConfig = Moli.bucket.GlobalBucketConfig;
     /**
      * A `PrebidAdSlotConfig` can either be created
      *

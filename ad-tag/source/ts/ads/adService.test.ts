@@ -13,7 +13,7 @@ import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import IRefreshInfiniteSlots = Moli.state.IRefreshInfiniteSlots;
+import IRefreshInfiniteSlots = Moli.state.IRefreshInfiniteSlot;
 
 // setup sinon-chai
 use(sinonChai);

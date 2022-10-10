@@ -1,7 +1,7 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
 import { Moli } from '../types/moli';
-import IRefreshInfiniteSlots = Moli.state.IRefreshInfiniteSlots;
+import IRefreshInfiniteSlots = Moli.state.IRefreshInfiniteSlot;
 import {
   AdPipeline,
   ConfigureStep,
