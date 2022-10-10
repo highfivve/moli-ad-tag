@@ -25,7 +25,7 @@ jobs:
       ## type declarations need to be present for docs to work properly
       - name: setup project
         run: npm setup
-<
+
       # Build website
       - name: build website
         working-directory: ./website
