@@ -13,7 +13,6 @@ import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import IRefreshInfiniteSlots = Moli.state.IRefreshInfiniteSlot;
 
 // setup sinon-chai
 use(sinonChai);
@@ -85,7 +84,7 @@ describe('AdService', () => {
     it.skip('should wait until the dom is initialized', () => {
       const documentLoadedSpy = sandbox.spy(dom.window.document, 'addEventListener');
 
-      return initialize().then(pipeline => {
+      return initialize().then(() => {
         expect(documentLoadedSpy).to.have.been.calledOnce;
         expect(documentLoadedSpy).to.have.been.calledOnceWithExactly('DOMContentLoaded');
       });
@@ -368,7 +367,7 @@ describe('AdService', () => {
     const requestAds = (
       slots: Moli.AdSlot[],
       refreshSlots: string[] = [],
-      refreshInfiniteSlots: IRefreshInfiniteSlots,
+      refreshInfiniteSlots: Moli.state.IRefreshInfiniteSlot[],
       logger: MoliLogger = noopLogger
     ): Promise<Moli.AdSlot[]> => {
       const adService = makeAdService();
