@@ -125,7 +125,11 @@ export type XandrFormatFilter = {
   readonly bidder: typeof prebidjs.AppNexusAst | typeof prebidjs.AppNexus;
 };
 
-export type FormatFilter = JustPremiumFormatFilter | DSPXFormatFilter | VisxFormatFilter | XandrFormatFilter;
+export type FormatFilter =
+  | JustPremiumFormatFilter
+  | DSPXFormatFilter
+  | VisxFormatFilter
+  | XandrFormatFilter;
 
 export type SkinConfig = {
   /**
