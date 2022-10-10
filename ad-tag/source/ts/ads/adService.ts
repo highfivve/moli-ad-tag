@@ -1,7 +1,6 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
 import { Moli } from '../types/moli';
-import IRefreshInfiniteSlots = Moli.state.IRefreshInfiniteSlot;
 import {
   AdPipeline,
   ConfigureStep,
@@ -260,7 +259,7 @@ export class AdService {
   public requestAds = (
     config: Readonly<Moli.MoliConfig>,
     refreshSlots: string[],
-    refreshInfiniteSlots: IRefreshInfiniteSlots
+    refreshInfiniteSlots: Moli.state.IRefreshInfiniteSlot[]
   ): Promise<Moli.AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
     this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);

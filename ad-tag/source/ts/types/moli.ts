@@ -689,7 +689,7 @@ export namespace Moli {
       /**
        * A list of infinite ad slots that should be refreshed
        */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlot;
+      readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
 
       /**
        * The original configuration from the ad tag itself. We can use this configuration to
