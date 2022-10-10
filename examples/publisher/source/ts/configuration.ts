@@ -681,7 +681,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
     enabled: true,
     bucket: {
       'bucket-one': { timeout: 5000 },
-      'lazy-bucket': { timeout: 3000 }
+      'lazy-bucket': { timeout: 3000 },
+      'lazy-bucket-2': { timeout: 3000 }
     }
   },
   schain: {

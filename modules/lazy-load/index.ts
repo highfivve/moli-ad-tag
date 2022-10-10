@@ -142,7 +142,9 @@ export class LazyLoad implements IModule {
     slotsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
         entries => {
-          console.log('lazy-load slots called with', entries);
+          console.log('lazy-load slots called with:');
+          console.table(entries, ['index', 'isIntersecting', 'target']);
+
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
               this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
@@ -179,7 +181,8 @@ export class LazyLoad implements IModule {
     bucketsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
         entries => {
-          console.log('lazy-load buckets called with slot', entries);
+          console.log('lazy-load buckets called with slot:');
+          console.table(entries, ['index', 'isIntersecting', 'target']);
           // refresh only one slot at a time, which will cause refreshing the rest slots of the same bucket
           const entry = entries[0];
           if (entry.isIntersecting) {
