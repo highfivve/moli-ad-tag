@@ -600,8 +600,27 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       adUnitPath: '/6355419/Travel/Europe/France/Paris',
       sizes: [],
       sizeConfig: []
+    },
+    // infinite loading
+    {
+      domId: 'infinite-loading-adslot',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'infinite',
+        selector: '.ad-infinite'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
     }
   ],
+
   // -----------------------------
   // ----- standard config -------
   // -----------------------------

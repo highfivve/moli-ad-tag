@@ -64,9 +64,15 @@ export type LazyLoadModulePerKeyConfig = {
   readonly options: LazyLoadModuleOptionsType;
 };
 
+export type InfiniteSlotsSelector = {
+  readonly selector: string;
+  readonly options: LazyLoadModuleOptionsType;
+};
+
 export type LazyLoadModuleConfig = {
   readonly slots: LazyLoadModulePerKeyConfig[];
   readonly buckets: LazyLoadModulePerKeyConfig[];
+  readonly infiniteSlots?: InfiniteSlotsSelector[];
 };
 
 /**
@@ -130,6 +136,7 @@ export class LazyLoad implements IModule {
 
     const slotsConfig = lazyModuleConfig.slots;
     const bucketsConfig = lazyModuleConfig.buckets;
+    const infiniteSlotsConfig = lazyModuleConfig.infiniteSlots;
 
     slotsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
@@ -152,7 +159,7 @@ export class LazyLoad implements IModule {
         }
       );
 
-      config.domIds.forEach((domId, index) => {
+      config.domIds.forEach(domId => {
         const slot = moliConfig.slots.find(slot => slot.domId === domId);
         if (!slot) {
           this.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
@@ -167,5 +174,55 @@ export class LazyLoad implements IModule {
         }
       });
     });
+
+    if (infiniteSlotsConfig) {
+      infiniteSlotsConfig.forEach(config => {
+        const serialNumberLabel = 'data-h5-serial-number';
+        const configuredInfiniteSlot = moliConfig.slots.find(
+          slot => slot.behaviour.loaded === 'infinite'
+        );
+        if (configuredInfiniteSlot) {
+          const observer = new window.IntersectionObserver(
+            entries => {
+              console.log('called with', entries);
+              entries.forEach((entry: IntersectionObserverEntry) => {
+                if (entry.isIntersecting) {
+                  const serialNumber =
+                    entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
+                  const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
+                  entry.target.setAttribute('id', createdDomId);
+                  this.logger?.debug(
+                    this.name,
+                    `Trigger ad slot with newly created DOM ID ${createdDomId}`
+                  );
+                  this.window.moli.refreshInfiniteAdSlot(
+                    createdDomId,
+                    configuredInfiniteSlot.domId
+                  );
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            {
+              root: config.options.rootId
+                ? window.document.getElementById(config.options.rootId)
+                : null,
+              threshold: config.options.threshold,
+              rootMargin: config.options.rootMargin
+            }
+          );
+
+          const infiniteElements = window.document.querySelectorAll(config.selector);
+          infiniteElements.forEach((element, index) => {
+            element.setAttribute(serialNumberLabel, `${index + 1}`);
+            element && observer.observe(element);
+          });
+        } else {
+          {
+            this.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
+          }
+        }
+      });
+    }
   };
 }

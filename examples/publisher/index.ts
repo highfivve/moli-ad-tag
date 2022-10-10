@@ -51,7 +51,8 @@ moli.registerModule(
 // Add lazy loading module
 moli.registerModule(new LazyLoad({
   slots: [{domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5}}],
-  buckets: []
+  buckets: [],
+  infiniteSlots: [{selector: '.ad-infinite', options: {threshold: .5}}]
 }, window));
 
 // blocklist urls
@@ -85,7 +86,8 @@ moli.registerModule(
         'refreshable-adslot',
         'manual-adslot',
         'a9-adslot',
-        'eager-loading-adslot-not-in-dom'
+        'eager-loading-adslot-not-in-dom',
+        'infinite-loading-adslot'
       ],
       optimizeClsScoreDomIds: [
         'appnexus-native-example-2',
