@@ -118,7 +118,18 @@ export type VisxFormatFilter = {
   readonly bidder: typeof prebidjs.Visx;
 };
 
-export type FormatFilter = JustPremiumFormatFilter | DSPXFormatFilter | VisxFormatFilter;
+/**
+ * Partners buying skin demand via the Xandr platform
+ */
+export type XandrFormatFilter = {
+  readonly bidder: typeof prebidjs.AppNexusAst | typeof prebidjs.AppNexus;
+};
+
+export type FormatFilter =
+  | JustPremiumFormatFilter
+  | DSPXFormatFilter
+  | VisxFormatFilter
+  | XandrFormatFilter;
 
 export type SkinConfig = {
   /**
