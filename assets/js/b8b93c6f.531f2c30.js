@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[2007],{6118:a=>{a.exports=JSON.parse('{"label":"hola","permalink":"/moli-ad-tag/blog/tags/hola","allTagsPath":"/moli-ad-tag/blog/tags","count":1}')}}]);

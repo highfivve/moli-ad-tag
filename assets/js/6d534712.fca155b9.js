@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[5660],{7274:function(e){e.exports=JSON.parse('{"permalink":"/moli-ad-tag/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":3,"previousPage":null,"nextPage":null,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);

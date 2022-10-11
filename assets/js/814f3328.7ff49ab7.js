@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[2535],{5641:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Welcome","permalink":"/moli-ad-tag/blog/welcome"},{"title":"Hello","permalink":"/moli-ad-tag/blog/hello-world"},{"title":"Hola","permalink":"/moli-ad-tag/blog/hola"}]}')}}]);

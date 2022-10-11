@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[3143],{3091:function(a){a.exports=JSON.parse('{"allTagsPath":"/moli-ad-tag/blog/tags","slug":"/moli-ad-tag/blog/tags/facebook","name":"facebook","count":1,"permalink":"/moli-ad-tag/blog/tags/facebook"}')}}]);
