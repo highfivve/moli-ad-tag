@@ -184,7 +184,6 @@ export class LazyLoad implements IModule {
         if (configuredInfiniteSlot) {
           const observer = new window.IntersectionObserver(
             entries => {
-              console.log('called with', entries);
               entries.forEach((entry: IntersectionObserverEntry) => {
                 if (entry.isIntersecting) {
                   const serialNumber =
