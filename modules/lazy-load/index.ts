@@ -219,7 +219,7 @@ export class LazyLoad implements IModule {
       }
 
       if (!(moliConfig.buckets?.bucket && moliConfig.buckets.bucket[config.bucket])) {
-        this.logger?.warn(this.name, `Lazy-load non-existing bucket with name ${config.bucket}`);
+        this.logger?.error(this.name, `Lazy-load non-existing bucket with name ${config.bucket}`);
       } else {
         const elementToObserve = window.document.querySelector(`#${config.observedDomId}`);
         elementToObserve && observer.observe(elementToObserve);
