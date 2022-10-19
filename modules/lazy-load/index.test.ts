@@ -247,14 +247,14 @@ describe('Lazy-load Module', () => {
     const domId3 = 'lazy-3';
     const htmlElement = (id: string) => jsDomWindow.document.getElementById(id);
 
-    it('Observe all slots in corresponding bucket that is in the module config, i.e., lazy_bucket', () => {
+    it("Should not observe domId that doesn't belong to the bucket in config, i.e., lazy_3", () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
-      const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3], 'manual', 'lazy_bucket');
+      const slots = createAdSlots(jsDomWindow, [domId1, domId2], 'manual', 'lazy_bucket');
 
       const module = new LazyLoad(
         {
           slots: [],
-          buckets: [{ buckets: ['lazy_bucket'], options: {} }]
+          buckets: [{ bucket: 'lazy_bucket', observedDomId: domId3, options: {} }]
         },
         jsDomWindow
       );
@@ -264,57 +264,21 @@ describe('Lazy-load Module', () => {
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
-      callback([createIntersectionObserverEntry(true, domId2)], observer);
+      callback([createIntersectionObserverEntry(true, domId3)], observer);
 
       expect(errorLogSpy).to.have.not.been.called;
       expect(initSpy).to.have.been.calledOnce;
       expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
-      expect(oberserveSpy).to.have.been.calledThrice;
-      expect(oberserveSpy.firstCall).calledWithExactly(htmlElement(domId1));
-      expect(oberserveSpy.secondCall).calledWithExactly(htmlElement(domId2));
-      expect(oberserveSpy.thirdCall).calledWithExactly(htmlElement(domId3));
-      expect(refreshBucketSpy).to.have.been.calledOnce;
-    });
 
-    it('Unobserve already observed and intersected slots, and all the slots that belong to the same bucket', () => {
-      const oberserveSpy = sandbox.spy(observer, 'observe');
-      const unOberserveSpy = sandbox.spy(observer, 'unobserve');
-
-      const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3], 'manual', 'lazy_bucket');
-
-      const module = new LazyLoad(
-        {
-          slots: [],
-          buckets: [{ buckets: ['lazy_bucket'], options: {} }]
-        },
-        jsDomWindow
-      );
-
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config(slots));
-
-      const callback = getIntersectionObserverCallback(0);
-
-      const intersected = createIntersectionObserverEntry(true, domId1);
-      const unIntersected = createIntersectionObserverEntry(false, domId2);
-      const unIntersected2 = createIntersectionObserverEntry(false, domId3);
-
-      callback([intersected, unIntersected, unIntersected2], observer);
-
-      expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
-      expect(oberserveSpy).to.have.been.calledThrice;
-      expect(unOberserveSpy).to.have.been.calledThrice;
-      expect(unOberserveSpy.firstCall).calledWithExactly(htmlElement(domId1));
-      expect(unOberserveSpy.secondCall).calledWithExactly(htmlElement(domId2));
-      expect(unOberserveSpy.thirdCall).calledWithExactly(htmlElement(domId3));
-      expect(refreshBucketSpy).to.have.been.calledOnce;
+      expect(oberserveSpy).to.have.not.been.called;
     });
 
     it('Should observe multiple buckets and refresh buckets as expected', () => {
       const domId4 = 'lazy-4-in-another-bucket';
 
       const oberserveSpy = sandbox.spy(observer, 'observe');
+      const unOberserveSpy = sandbox.spy(observer, 'unobserve');
+
       const slots = [
         ...createAdSlots(jsDomWindow, [domId1, domId2, domId3], 'manual', 'lazy_bucket'),
         ...createAdSlots(jsDomWindow, [domId4], 'manual', 'another_lazy_bucket')
@@ -324,8 +288,8 @@ describe('Lazy-load Module', () => {
         {
           slots: [],
           buckets: [
-            { buckets: ['lazy_bucket'], options: {} },
-            { buckets: ['another_lazy_bucket'], options: {} }
+            { bucket: 'lazy_bucket', observedDomId: domId3, options: {} },
+            { bucket: 'another_lazy_bucket', observedDomId: domId4, options: {} }
           ]
         },
         jsDomWindow
@@ -336,19 +300,28 @@ describe('Lazy-load Module', () => {
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
-      callback([createIntersectionObserverEntry(true, domId1)], observer);
-      callback([createIntersectionObserverEntry(true, domId4)], observer);
+      const callback2 = getIntersectionObserverCallback(1);
+
+      callback([createIntersectionObserverEntry(true, domId3)], observer);
+      callback2([createIntersectionObserverEntry(true, domId4)], observer);
 
       expect(errorLogSpy).to.have.not.been.called;
       expect(initSpy).to.have.been.calledOnce;
       expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
-      expect(oberserveSpy).callCount(4);
-      expect(oberserveSpy.firstCall).calledWithExactly(htmlElement(domId1));
-      expect(oberserveSpy.secondCall).calledWithExactly(htmlElement(domId2));
-      expect(oberserveSpy.thirdCall).calledWithExactly(htmlElement(domId3));
-      expect(oberserveSpy.lastCall.calledWithExactly(htmlElement(domId4)));
+
+      expect(oberserveSpy).callCount(2);
+      expect(oberserveSpy.firstCall).calledWithExactly(htmlElement(domId3));
+      expect(oberserveSpy.secondCall).calledWithExactly(htmlElement(domId4));
+
+      expect(unOberserveSpy).to.have.been.calledTwice;
+      expect(unOberserveSpy.firstCall).to.have.been.calledWith({ id: 'lazy-3' });
+      expect(unOberserveSpy.secondCall).to.have.been.calledWith({
+        id: 'lazy-4-in-another-bucket'
+      });
 
       expect(refreshBucketSpy).to.have.been.calledTwice;
+      expect(refreshBucketSpy.firstCall).to.have.been.calledWith('lazy_bucket');
+      expect(refreshBucketSpy.secondCall).to.have.been.calledWith('another_lazy_bucket');
     });
   });
 });

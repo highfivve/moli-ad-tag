@@ -53,7 +53,9 @@ moli.registerModule(
       slots: [
         { domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: { threshold: 0.5 } }
       ],
-      buckets: [{ buckets: ['lazy-bucket'], options: { threshold: 0.5 } }]
+      buckets: [
+        { bucket: 'lazy-bucket', observedDomId: 'lazy-bucket3', options: { threshold: 0.2 } }
+      ]
     },
     window
   )
