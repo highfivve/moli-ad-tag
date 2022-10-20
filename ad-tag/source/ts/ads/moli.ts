@@ -489,7 +489,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             config = addNewInfiniteSlotToConfig(
               config,
               slot.idOfConfiguredSlot,
-              slot.artificialDomId
+              slot.artificialDomId,
+              window
             );
           });
         }
@@ -799,7 +800,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         if (state.href === window.location.href) {
           state = {
             ...state,
-            config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId)
+            config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)
           };
           return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
         } else {
@@ -816,7 +817,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'requestAds': {
         state = {
           ...state,
-          config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId)
+          config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)
         };
         return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
       }
