@@ -1291,7 +1291,7 @@ describe('moli', () => {
   });
 
   describe('refreshInfiniteAdSlots()', () => {
-    it('should add a new infinite slot to the config', () => {
+    it('should add a new infinite slot to the config', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const slots: Moli.AdSlot[] = [
         ...defaultSlots,
@@ -1303,18 +1303,12 @@ describe('moli', () => {
         slots: slots
       });
 
-      return adTag.requestAds().then(state =>
-        adTag
-          .refreshInfiniteAdSlot('infinite-adslot-1', 'dom-id-2')
-          .then(() => state)
-          .then(state => {
-            expect(adTag.getState()).to.be.equal('finished');
-            expect(adTag.getConfig()?.slots).to.have.length(3);
-            expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include(
-              'infinite-adslot-1'
-            );
-          })
-      );
+      await adTag.requestAds();
+      await adTag.refreshInfiniteAdSlot('infinite-adslot-1', 'dom-id-2');
+
+      expect(adTag.getState()).to.be.equal('finished');
+      expect(adTag.getConfig()?.slots).to.have.length(3);
+      expect(adTag.getConfig()?.slots.map(slot => slot.domId)).to.include('infinite-adslot-1');
     });
 
     it('should refresh the new infinite adslot if given configured slot id is available in the config', async () => {
