@@ -8,24 +8,20 @@ import { Moli } from '../types/moli';
  * @param artificialIdOfNewSlot the artificial domId for the added newly added infinite slot
  * @param window
  */
-
 export const addNewInfiniteSlotToConfig = (
   config: Moli.MoliConfig,
   idOfConfiguredSlot: string,
   artificialIdOfNewSlot: string,
   window: Window
 ): Moli.MoliConfig => {
-  let newConfig = config;
-
   const configuredInfiniteAdSlot = config.slots.find(
     configSlot => configSlot.domId === idOfConfiguredSlot
   );
   if (configuredInfiniteAdSlot) {
     const newAdSlot = { ...configuredInfiniteAdSlot, domId: artificialIdOfNewSlot };
-    newConfig = { ...config, slots: [...config.slots, newAdSlot] };
+    return { ...config, slots: [...config.slots, newAdSlot] };
   } else {
     getLogger(config, window).error('MoliGlobal', `no infinite ad slot configured!`, config);
+    return config;
   }
-
-  return newConfig;
 };

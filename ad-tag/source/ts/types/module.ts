@@ -32,6 +32,7 @@ export interface IModule {
    * - alter the config in place
    * - set values in global scope
    * - use the ad pipeline to execute moli commands
+   * - access a fully rendered DOM
    *
    * @param config
    * @param assetLoaderService

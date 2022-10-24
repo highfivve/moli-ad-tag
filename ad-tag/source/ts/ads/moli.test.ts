@@ -64,6 +64,8 @@ describe('moli', () => {
 
     dom.window.googletag = createGoogletagStub();
     dom.window.__tcfapi = tcfapiFunction(tcData);
+    sandbox.stub(dom.window.document, 'readyState')
+      .get(() => 'complete');
   });
 
   after(() => {

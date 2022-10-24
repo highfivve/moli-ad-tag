@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { Moli } from "../types/moli";
 import { parseQueryString } from '../util/query';
 import {
   createAssetLoaderService,
@@ -498,21 +498,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // initialize modules with the config from the ad tag.
         // the config will be altered by this call
         const modules = state.modules;
-        modules.forEach(module => {
-          const log = getLogger(config, window);
-          log.debug(
-            'MoliGlobal',
-            `initialize ${module.moduleType} module ${module.name}`,
-            module.config()
-          );
-          module.init(config, assetLoaderService, adService.getAdPipeline);
-        });
-
-        // call the configured hooks
-        if (state.hooks && state.hooks.beforeRequestAds) {
-          state.hooks.beforeRequestAds.forEach(hook => hook(config));
-        }
-
+        const beforeRequestAds = state.hooks.beforeRequestAds;
         const afterRequestAds = state.hooks.afterRequestAds;
 
         // handle single page application case
@@ -538,6 +524,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           state = spaRequestAdsState;
 
           return initialized
+            // ensures that modules are only initialized if DOM is ready
+            .then((config) => initializeModules(config, modules, beforeRequestAds))
             .then(() => adService.requestAds(config, refreshSlots, refreshInfiniteSlots))
             .then(() => {
               // check if we are still on the same page and in the spa-requestAds state
@@ -573,6 +561,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           };
           return adService
             .initialize(config, isSinglePageApp)
+            .then((config) => initializeModules(config, modules, beforeRequestAds))
             .then(config => adService.requestAds(config, refreshSlots, refreshInfiniteSlots))
             .then(() => {
               state = {
@@ -783,6 +772,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           artificialDomId: domId,
           idOfConfiguredSlot: idOfConfiguredSlot
         });
+        getLogger(state.config, window).debug(
+          'MoliGlobal',
+          `refreshInfiniteAdSlot queue up artificial DOM ID '${domId}' for ad slot ${idOfConfiguredSlot} to be refreshed`,
+          state.config.slots
+        );
         return Promise.resolve('queued');
       }
       // if requestAds is currently called we batch the refreshAdSlot calls until
@@ -819,6 +813,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           ...state,
           config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)
         };
+        getLogger(state.config, window).debug(
+          'MoliGlobal',
+          `refreshInfiniteAdSlot with artificial DOM ID '${domId}' for ad slot ${idOfConfiguredSlot}`,
+          state.config.slots
+        );
         return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
       }
       default: {
@@ -938,6 +937,22 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   function getAssetLoaderService(): IAssetLoaderService {
     return assetLoaderService;
+  }
+
+  function initializeModules(config: Moli.MoliConfig, modules: IModule[], beforeRequestAds: Moli.state.BeforeRequestAdsHook[]): Moli.MoliConfig {
+    modules.forEach(module => {
+      const log = getLogger(config, window);
+      log.debug(
+        'MoliGlobal',
+        `initialize ${module.moduleType} module ${module.name}`,
+        module.config()
+      );
+      module.init(config, assetLoaderService, adService.getAdPipeline);
+    });
+
+    // call the configured hooks
+    beforeRequestAds.forEach(hook => hook(config));
+    return config;
   }
 
   const que = {
