@@ -216,7 +216,7 @@ export class LazyLoad implements IModule {
           element && observer.observe(element);
         });
       } else {
-          this.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
+        this.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
       }
     });
   };
