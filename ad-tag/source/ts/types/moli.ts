@@ -763,6 +763,12 @@ export namespace Moli {
       'finished' | 'error' | 'spa-finished'
     >;
 
+    /**
+     * Callback function executed before ads are being requested.
+     * DOM is ready at this point.
+     */
+    export type BeforeRequestAdsHook = (config: Moli.MoliConfig) => void;
+
     export interface IHooks {
       /**
        * This function is triggered before the state changes to `requestAds`.
@@ -773,7 +779,7 @@ export namespace Moli {
        *
        * @param config - the final [[Moli.MoliConfig]]
        */
-      readonly beforeRequestAds: Array<(config: Moli.MoliConfig) => void>;
+      readonly beforeRequestAds: BeforeRequestAdsHook[];
 
       /**
        * This function is triggered after `requestAds()` is being called and the ad tag
