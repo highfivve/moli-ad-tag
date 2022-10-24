@@ -18,7 +18,7 @@
  *
  *   slots: [
  *     { domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5} },
- *     { domIds: ['lazy-loading-adslot-3'], options: {rootMargin: '20px'} }
+ *     { domIds: ["lazy-loading-adslot-3"], options: {rootMargin: '20px'} }
  *   ],
  *   buckets: []
  * }, window));
@@ -26,7 +26,7 @@
  *
  * @module
  */
-import { IModule, ModuleType, Moli, getLogger } from '@highfivve/ad-tag';
+import { IModule, ModuleType, Moli, getLogger, mkInitStep } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
 
 type LazyLoadModuleOptionsType = {
@@ -101,7 +101,7 @@ export class LazyLoad implements IModule {
   public readonly description: string = 'Moli implementation of an ad lazy load module.';
   public readonly moduleType: ModuleType = 'lazy-load';
   private logger?: Moli.MoliLogger;
-  private window: LazyLoadWindow;
+  private readonly window: LazyLoadWindow;
 
   /**
    * Prevents multiple initialization, which would ap pend multiple googletag event listeners.
@@ -121,30 +121,38 @@ export class LazyLoad implements IModule {
     return this.moduleConfig;
   }
 
-  init(moliConfig: Moli.MoliConfig): void {
-    this.logger = getLogger(moliConfig, this.window);
-    this.initialize(moliConfig, this.moduleConfig, this.window);
+  init(config: Moli.MoliConfig): void {
+    this.logger = getLogger(config, this.window);
+
+    // init additional pipeline steps if not already defined
+    config.pipeline = config.pipeline || {
+      initSteps: [],
+      configureSteps: [],
+      prepareRequestAdsSteps: []
+    };
+
+    config.pipeline.initSteps.push(
+      mkInitStep(this.name, () => {
+        this.registerIntersectionObservers(config);
+        return Promise.resolve();
+      })
+    );
   }
 
-  private initialize = (
-    moliConfig: Moli.MoliConfig,
-    lazyModuleConfig: LazyLoadModuleConfig,
-    window: LazyLoadWindow
-  ) => {
+  registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
     if (this.initialized) {
       return;
     }
     this.initialized = true;
     this.logger?.debug(this.name, 'initialize moli lazy load module');
 
-    const slotsConfig = lazyModuleConfig.slots;
-    const bucketsConfig = lazyModuleConfig.buckets;
-    const infiniteSlotsConfig = lazyModuleConfig.infiniteSlots;
+    const slotsConfig = this.moduleConfig.slots;
+    const infiniteSlotsConfig = this.moduleConfig.infiniteSlots;
 
     slotsConfig.forEach(config => {
-      const observer = new window.IntersectionObserver(
+      const observer = new this.window.IntersectionObserver(
         entries => {
-          console.log('lazy-load slots called with', entries);
+          this.logger?.debug(this.name, 'lazy-load slots called with', entries);
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
               this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
@@ -155,7 +163,7 @@ export class LazyLoad implements IModule {
         },
         {
           root: config.options.rootId
-            ? window.document.getElementById(config.options.rootId)
+            ? this.window.document.getElementById(config.options.rootId)
             : null,
           threshold: config.options.threshold,
           rootMargin: config.options.rootMargin
@@ -172,7 +180,7 @@ export class LazyLoad implements IModule {
             `Lazy-load configured for slot without manual loading behaviour. ${domId}`
           );
         } else if (slot.behaviour.loaded === 'manual') {
-          const elementToObserve = window.document.querySelector(`#${domId}`);
+          const elementToObserve = this.window.document.querySelector(`#${domId}`);
           elementToObserve && observer.observe(elementToObserve);
         }
       });
@@ -184,7 +192,7 @@ export class LazyLoad implements IModule {
         slot => slot.behaviour.loaded === 'infinite'
       );
       if (configuredInfiniteSlot) {
-        const observer = new window.IntersectionObserver(
+        const observer = new this.window.IntersectionObserver(
           entries => {
             entries.forEach((entry: IntersectionObserverEntry) => {
               if (entry.isIntersecting) {
@@ -203,14 +211,14 @@ export class LazyLoad implements IModule {
           },
           {
             root: config.options.rootId
-              ? window.document.getElementById(config.options.rootId)
+              ? this.window.document.getElementById(config.options.rootId)
               : null,
             threshold: config.options.threshold,
             rootMargin: config.options.rootMargin
           }
         );
 
-        const infiniteElements = window.document.querySelectorAll(config.selector);
+        const infiniteElements = this.window.document.querySelectorAll(config.selector);
         infiniteElements.forEach((element, index) => {
           element.setAttribute(serialNumberLabel, `${index + 1}`);
           element && observer.observe(element);

@@ -498,7 +498,21 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // initialize modules with the config from the ad tag.
         // the config will be altered by this call
         const modules = state.modules;
-        const beforeRequestAds = state.hooks.beforeRequestAds;
+        modules.forEach(module => {
+          const log = getLogger(config, window);
+          log.debug(
+            'MoliGlobal',
+            `initialize ${module.moduleType} module ${module.name}`,
+            module.config()
+          );
+          module.init(config, assetLoaderService, adService.getAdPipeline);
+        });
+
+        // call the configured hooks
+        if (state.hooks && state.hooks.beforeRequestAds) {
+          state.hooks.beforeRequestAds.forEach(hook => hook(config));
+        }
+
         const afterRequestAds = state.hooks.afterRequestAds;
 
         // handle single page application case
@@ -523,38 +537,34 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           };
           state = spaRequestAdsState;
 
-          return (
-            initialized
-              // ensures that modules are only initialized if DOM is ready
-              .then(config => initializeModules(config, modules, beforeRequestAds))
-              .then(() => adService.requestAds(config, refreshSlots, refreshInfiniteSlots))
-              .then(() => {
-                // check if we are still on the same page and in the spa-requestAds state
-                // if not the user has already navigated to another page, and we discard everything here
-                if (state.state === 'spa-requestAds' && state.href === window.location.href) {
-                  adService.refreshAdSlots(state.refreshSlots, state.config);
-                  afterRequestAds.forEach(hook => hook('spa-finished'));
-                  const finishedState: ISinglePageApp = {
-                    ...state,
-                    state: 'spa-finished',
-                    // reset refresh slots as they were already requested
-                    refreshSlots: []
-                  };
-                  state = finishedState;
-                  return finishedState;
-                } else if (state.state === 'spa-finished' || state.state === 'spa-requestAds') {
-                  // this means that a subsequent requestAds call has finished before the previous one.
-                  // nothing to do here
-                  getLogger(state.config, window).debug(
-                    'MoliGlobal',
-                    'A previous requestAds() was slower than the following requestAds() call'
-                  );
-                  return state;
-                } else {
-                  return Promise.reject(`reached invalid state [${state.state}]`);
-                }
-              })
-          );
+          return initialized
+            .then(() => adService.requestAds(config, refreshSlots, refreshInfiniteSlots))
+            .then(() => {
+              // check if we are still on the same page and in the spa-requestAds state
+              // if not the user has already navigated to another page, and we discard everything here
+              if (state.state === 'spa-requestAds' && state.href === window.location.href) {
+                adService.refreshAdSlots(state.refreshSlots, state.config);
+                afterRequestAds.forEach(hook => hook('spa-finished'));
+                const finishedState: ISinglePageApp = {
+                  ...state,
+                  state: 'spa-finished',
+                  // reset refresh slots as they were already requested
+                  refreshSlots: []
+                };
+                state = finishedState;
+                return finishedState;
+              } else if (state.state === 'spa-finished' || state.state === 'spa-requestAds') {
+                // this means that a subsequent requestAds call has finished before the previous one.
+                // nothing to do here
+                getLogger(state.config, window).debug(
+                  'MoliGlobal',
+                  'A previous requestAds() was slower than the following requestAds() call'
+                );
+                return state;
+              } else {
+                return Promise.reject(`reached invalid state [${state.state}]`);
+              }
+            });
         } else {
           state = {
             state: 'requestAds',
@@ -563,7 +573,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           };
           return adService
             .initialize(config, isSinglePageApp)
-            .then(config => initializeModules(config, modules, beforeRequestAds))
             .then(config => adService.requestAds(config, refreshSlots, refreshInfiniteSlots))
             .then(() => {
               state = {
@@ -774,11 +783,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           artificialDomId: domId,
           idOfConfiguredSlot: idOfConfiguredSlot
         });
-        getLogger(state.config, window).debug(
-          'MoliGlobal',
-          `refreshInfiniteAdSlot queue up artificial DOM ID '${domId}' for ad slot ${idOfConfiguredSlot} to be refreshed`,
-          state.config.slots
-        );
         return Promise.resolve('queued');
       }
       // if requestAds is currently called we batch the refreshAdSlot calls until
@@ -815,11 +819,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           ...state,
           config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)
         };
-        getLogger(state.config, window).debug(
-          'MoliGlobal',
-          `refreshInfiniteAdSlot with artificial DOM ID '${domId}' for ad slot ${idOfConfiguredSlot}`,
-          state.config.slots
-        );
         return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
       }
       default: {
@@ -939,26 +938,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   function getAssetLoaderService(): IAssetLoaderService {
     return assetLoaderService;
-  }
-
-  function initializeModules(
-    config: Moli.MoliConfig,
-    modules: IModule[],
-    beforeRequestAds: Moli.state.BeforeRequestAdsHook[]
-  ): Moli.MoliConfig {
-    modules.forEach(module => {
-      const log = getLogger(config, window);
-      log.debug(
-        'MoliGlobal',
-        `initialize ${module.moduleType} module ${module.name}`,
-        module.config()
-      );
-      module.init(config, assetLoaderService, adService.getAdPipeline);
-    });
-
-    // call the configured hooks
-    beforeRequestAds.forEach(hook => hook(config));
-    return config;
   }
 
   const que = {

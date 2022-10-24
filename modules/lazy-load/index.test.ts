@@ -136,7 +136,7 @@ describe('Lazy-load Module', () => {
     sandbox.restore();
   });
 
-  const config = (slots): Moli.MoliConfig => {
+  const mkConfig = (slots): Moli.MoliConfig => {
     return {
       slots: slots,
       logger: noopLogger,
@@ -144,6 +144,17 @@ describe('Lazy-load Module', () => {
       schain: dummySchainConfig
     };
   };
+
+  it('Add init pipeline step', () => {
+    const module = new LazyLoad({ slots: [], buckets: [] }, jsDomWindow);
+    const config = mkConfig([]);
+    module.init(config);
+
+    expect(config.pipeline).to.be.ok;
+    expect(config.pipeline?.initSteps).length(1);
+    const initStep = config.pipeline?.initSteps[0];
+    expect(initStep?.name).to.be.eq('moli-lazy-load');
+  });
 
   it('Observe only domIds that are in the module config for manual slots, i.e., lazy-1', () => {
     const oberserveSpy = sandbox.spy(observer, 'observe');
@@ -157,8 +168,7 @@ describe('Lazy-load Module', () => {
       jsDomWindow
     );
 
-    const initSpy = sandbox.spy(module, 'init');
-    module.init(config(slots));
+    module.registerIntersectionObservers(mkConfig(slots));
 
     // trigger an intersection event
     const callback = getIntersectionObserverCallback(0);
@@ -167,7 +177,6 @@ describe('Lazy-load Module', () => {
     const args = oberserveSpy.firstCall.firstArg;
 
     expect(errorLogSpy).to.have.not.been.called;
-    expect(initSpy).to.have.been.calledOnce;
     expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
     expect(oberserveSpy).to.have.been.calledOnce;
     expect(args).to.equal(jsDomWindow.document.getElementById('lazy-1'));
@@ -189,8 +198,7 @@ describe('Lazy-load Module', () => {
       jsDomWindow
     );
 
-    const initSpy = sandbox.spy(module, 'init');
-    module.init(config([...slots, infiniteSlot]));
+    module.registerIntersectionObservers(mkConfig([...slots, infiniteSlot]));
 
     // trigger an intersection event
     const callback = getIntersectionObserverCallback(0);
@@ -203,7 +211,6 @@ describe('Lazy-load Module', () => {
     const infiniteSlotsInDom = jsDomWindow.document.querySelectorAll(infiniteSelector1);
 
     expect(errorLogSpy).to.have.not.been.called;
-    expect(initSpy).to.have.been.calledOnce;
     expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
     expect(oberserveSpy).to.have.been.calledTwice;
     expect(argsCall1).to.equal(infiniteSlotsInDom[0]);
@@ -224,8 +231,7 @@ describe('Lazy-load Module', () => {
       jsDomWindow
     );
 
-    const initSpy = sandbox.spy(module, 'init');
-    module.init(config(slots));
+    module.registerIntersectionObservers(mkConfig(slots));
 
     const callback = getIntersectionObserverCallback(0);
 
@@ -236,7 +242,6 @@ describe('Lazy-load Module', () => {
     const firstCallArgs = unOberserveSpy.firstCall.args;
 
     expect(errorLogSpy).to.have.not.been.called;
-    expect(initSpy).to.have.been.calledOnce;
     expect(oberserveSpy).to.have.been.calledTwice;
     expect(unOberserveSpy).to.have.been.calledOnce;
     expect(unOberserveSpy).to.have.been.calledOnceWithExactly({ id: 'lazy-1' });
@@ -260,11 +265,9 @@ describe('Lazy-load Module', () => {
       jsDomWindow
     );
 
-    const initSpy = sandbox.spy(module, 'init');
-    module.init(config([...manualSlot, ...eagerSlot, infiniteSlot]));
+    module.registerIntersectionObservers(mkConfig([...manualSlot, ...eagerSlot, infiniteSlot]));
 
     expect(errorLogSpy).to.have.not.been.called;
-    expect(initSpy).to.have.been.calledOnce;
     expect(observeSpy).to.have.been.calledWith(jsDomWindow.document.querySelector(`#${domId1}`));
     expect(observeSpy).to.have.been.calledWith(
       jsDomWindow.document.querySelector(infiniteSelector1)
@@ -294,8 +297,7 @@ describe('Lazy-load Module', () => {
       jsDomWindow
     );
 
-    const initSpy = sandbox.spy(module, 'init');
-    module.init(config(slots));
+    module.registerIntersectionObservers(mkConfig(slots));
 
     const callback = getIntersectionObserverCallback(0);
     const options = getIntersectionObserverArgs(0);
@@ -303,7 +305,6 @@ describe('Lazy-load Module', () => {
     callback([createIntersectionObserverEntry(true, domId1)], observer);
 
     expect(errorLogSpy).to.have.not.been.called;
-    expect(initSpy).to.have.been.calledOnce;
     expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
     expect(options).to.eql({ root: null, threshold: 0.5, rootMargin: undefined });
   });
