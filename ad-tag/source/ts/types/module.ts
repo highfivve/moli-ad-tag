@@ -32,11 +32,16 @@ export interface IModule {
    * - alter the config in place
    * - set values in global scope
    * - use the ad pipeline to execute moli commands
-   * - access a fully rendered DOM
+   *
+   * **Important**: If you want to access any elements in the DOM you must do this
+   *                in an ad pipeline step as the DOM may not be ready, when the
+   *                `init` method is called!
    *
    * @param config
    * @param assetLoaderService
-   * @param getAdPipeline
+   * @param getAdPipeline this method returns the current ad pipeline. When you
+   *                      call it in the `init` method, it will return an empty
+   *                      pipeline as the ad tag is not yet initialized.
    */
   init(
     config: Moli.MoliConfig,
