@@ -55,11 +55,13 @@ moli.registerModule(
       ],
       buckets: [
         { bucket: 'lazy-bucket', observedDomId: 'lazy-bucket3', options: { threshold: 0.2 } }
-      ]
+      ],
+        infiniteSlots: [{selector: '.ad-infinite', options: {threshold: .5}}]
     },
     window
   )
 );
+
 
 // blocklist urls
 moli.registerModule(
@@ -92,7 +94,8 @@ moli.registerModule(
         'refreshable-adslot',
         'manual-adslot',
         'a9-adslot',
-        'eager-loading-adslot-not-in-dom'
+        'eager-loading-adslot-not-in-dom',
+        'infinite-loading-adslot'
       ],
       optimizeClsScoreDomIds: [
         'appnexus-native-example-2',
