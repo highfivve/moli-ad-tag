@@ -68,7 +68,14 @@ export type LazyLoadModuleBucketsConfig = {
   /**
    * Buckets that should be observed for lazy loading
    */
-  readonly buckets: string[];
+  readonly bucket: string;
+
+  /**
+   * This ID identifies the DOM element that should be observed
+   * by the intersection observer.
+   */
+  readonly observedDomId: string;
+
   readonly options: LazyLoadModuleOptionsType;
 };
 
@@ -179,7 +186,7 @@ export class LazyLoad implements IModule {
       const observer = new window.IntersectionObserver(
         entries => {
           entries.forEach((entry: IntersectionObserverEntry) => {
-            if (entry.isIntersecting) {
+            if (entry.isIntersecting && entry.target.id === config.observedDomId) {
               // sanity check
               const correspondingBucket = moliConfig.slots.find(
                 slot => slot.domId === config.observedDomId
