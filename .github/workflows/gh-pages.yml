@@ -24,15 +24,14 @@ jobs:
 
       ## type declarations need to be present for docs to work properly
       - name: setup project
-
-        run: npm run setup
+        run: npm setup
 
       # Build website
       - name: build website
         working-directory: ./website
         run: |
           npm install
-          npm run build
+          npm build
 
       - name: create versioned asset directory
         run: |
@@ -43,7 +42,7 @@ jobs:
         working-directory: ./prebuilt/ad-tag
         run: |
           npm install
-          npm run build
+          npm build
           cp dist/* ../../website/build/assets/js/
           cp dist/* ../../website/build/assets/js/${{ env.RELEASE_VERSION }}/
 
@@ -52,7 +51,7 @@ jobs:
         working-directory: ./moli-debugger
         run: |
           npm install
-          npm run build
+          npm build
           cp lib/* ../website/build/assets/js/
           cp lib/* ../website/build/assets/js/${{ env.RELEASE_VERSION }}/
 

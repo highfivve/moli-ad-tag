@@ -18,7 +18,7 @@
  *
  *   slots: [
  *     { domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5} },
- *     { domIds: ["lazy-loading-adslot-3"], options: {rootMargin: '20px'} }
+ *     { domIds: ['lazy-loading-adslot-3'], options: {rootMargin: '20px'} }
  *   ],
  *   buckets: []
  * }, window));
@@ -26,7 +26,7 @@
  *
  * @module
  */
-import { IModule, ModuleType, Moli, getLogger, mkInitStep } from '@highfivve/ad-tag';
+import { IModule, ModuleType, Moli, getLogger } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
 
 type LazyLoadModuleOptionsType = {
@@ -69,19 +69,12 @@ export type LazyLoadModuleBucketsConfig = {
    * Buckets that should be observed for lazy loading
    */
   readonly buckets: string[];
-
-  export type InfiniteSlotsSelector = {
-  /**
-   * CSS selector for divs in the document that should be considered as infinite loading slots
-   */
-  readonly selector: string;
   readonly options: LazyLoadModuleOptionsType;
 };
 
 export type LazyLoadModuleConfig = {
   readonly slots: LazyLoadModuleSlotsConfig[];
   readonly buckets: LazyLoadModuleBucketsConfig[];
-  readonly infiniteSlots?: InfiniteSlotsSelector[];
 };
 
 /**
@@ -107,7 +100,7 @@ export class LazyLoad implements IModule {
   public readonly description: string = 'Moli implementation of an ad lazy load module.';
   public readonly moduleType: ModuleType = 'lazy-load';
   private logger?: Moli.MoliLogger;
-  private readonly window: LazyLoadWindow;
+  private window: LazyLoadWindow;
 
   /**
    * Prevents multiple initialization, which would ap pend multiple googletag event listeners.
@@ -127,39 +120,28 @@ export class LazyLoad implements IModule {
     return this.moduleConfig;
   }
 
-  init(config: Moli.MoliConfig): void {
-    this.logger = getLogger(config, this.window);
-
-    // init additional pipeline steps if not already defined
-    config.pipeline = config.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
-
-    config.pipeline.initSteps.push(
-      mkInitStep(this.name, () => {
-        this.registerIntersectionObservers(config);
-        return Promise.resolve();
-      })
-    );
+  init(moliConfig: Moli.MoliConfig): void {
+    this.logger = getLogger(moliConfig, this.window);
+    this.initialize(moliConfig, this.moduleConfig, this.window);
   }
 
-  registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
+  private initialize = (
+    moliConfig: Moli.MoliConfig,
+    lazyModuleConfig: LazyLoadModuleConfig,
+    window: LazyLoadWindow
+  ) => {
     if (this.initialized) {
       return;
     }
     this.initialized = true;
     this.logger?.debug(this.name, 'initialize moli lazy load module');
 
-    const slotsConfig = this.moduleConfig.slots;
-    const infiniteSlotsConfig = this.moduleConfig.infiniteSlots;
+    const slotsConfig = lazyModuleConfig.slots;
+    const bucketsConfig = lazyModuleConfig.buckets;
 
     slotsConfig.forEach(config => {
-      const observer = new this.window.IntersectionObserver(
+      const observer = new window.IntersectionObserver(
         entries => {
-
-          this.logger?.debug(this.name, 'lazy-load slots called with', entries);
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
               this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
@@ -170,7 +152,7 @@ export class LazyLoad implements IModule {
         },
         {
           root: config.options.rootId
-            ? this.window.document.getElementById(config.options.rootId)
+            ? window.document.getElementById(config.options.rootId)
             : null,
           threshold: config.options.threshold,
           rootMargin: config.options.rootMargin
@@ -187,7 +169,7 @@ export class LazyLoad implements IModule {
             `Lazy-load configured for slot without manual loading behaviour. ${domId}`
           );
         } else if (slot.behaviour.loaded === 'manual') {
-          const elementToObserve = this.window.document.querySelector(`#${domId}`);
+          const elementToObserve = window.document.querySelector(`#${domId}`);
           elementToObserve && observer.observe(elementToObserve);
         }
       });
@@ -241,46 +223,6 @@ export class LazyLoad implements IModule {
       } else {
         const elementToObserve = window.document.querySelector(`#${config.observedDomId}`);
         elementToObserve && observer.observe(elementToObserve);
-
-        (infiniteSlotsConfig ?? []).forEach(config => {
-      const serialNumberLabel = 'data-h5-serial-number';
-      const configuredInfiniteSlot = moliConfig.slots.find(
-        slot => slot.behaviour.loaded === 'infinite'
-      );
-      if (configuredInfiniteSlot) {
-        const observer = new this.window.IntersectionObserver(
-          entries => {
-            entries.forEach((entry: IntersectionObserverEntry) => {
-              if (entry.isIntersecting) {
-                const serialNumber =
-                  entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
-                const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
-                entry.target.setAttribute('id', createdDomId);
-                this.logger?.debug(
-                  this.name,
-                  `Trigger ad slot with newly created DOM ID ${createdDomId}`
-                );
-                this.window.moli.refreshInfiniteAdSlot(createdDomId, configuredInfiniteSlot.domId);
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          {
-            root: config.options.rootId
-              ? this.window.document.getElementById(config.options.rootId)
-              : null,
-            threshold: config.options.threshold,
-            rootMargin: config.options.rootMargin
-          }
-        );
-
-        const infiniteElements = this.window.document.querySelectorAll(config.selector);
-        infiniteElements.forEach((element, index) => {
-          element.setAttribute(serialNumberLabel, `${index + 1}`);
-          element && observer.observe(element);
-        });
-      } else {
-        this.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
       }
     });
   };
