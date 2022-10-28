@@ -18,7 +18,7 @@
  *
  *   slots: [
  *     { domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5} },
- *     { domIds: ["lazy-loading-adslot-3"], options: {rootMargin: '20px'} }
+ *     { domIds: ['lazy-loading-adslot-3'], options: {rootMargin: '20px'} }
  *   ],
  *   buckets: []
  * }, window));
@@ -56,11 +56,25 @@ type LazyLoadModuleOptionsType = {
   readonly threshold?: number;
 };
 
-export type LazyLoadModulePerKeyConfig = {
+export type LazyLoadModuleSlotsConfig = {
   /**
    * DomIds that should be observed for lazy loading
    */
   readonly domIds: string[];
+  readonly options: LazyLoadModuleOptionsType;
+};
+
+export type LazyLoadModuleBucketsConfig = {
+  /**
+   * Buckets that should be observed for lazy loading
+   */
+  readonly bucket: string;
+
+  /**
+   * This ID identifies the DOM element that should be observed
+   * by the intersection observer.
+   */
+  readonly observedDomId: string;
   readonly options: LazyLoadModuleOptionsType;
 };
 
@@ -73,8 +87,8 @@ export type InfiniteSlotsSelector = {
 };
 
 export type LazyLoadModuleConfig = {
-  readonly slots: LazyLoadModulePerKeyConfig[];
-  readonly buckets: LazyLoadModulePerKeyConfig[];
+  readonly slots: LazyLoadModuleSlotsConfig[];
+  readonly buckets: LazyLoadModuleBucketsConfig[];
   readonly infiniteSlots?: InfiniteSlotsSelector[];
 };
 
@@ -123,7 +137,6 @@ export class LazyLoad implements IModule {
 
   init(config: Moli.MoliConfig): void {
     this.logger = getLogger(config, this.window);
-
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
       initSteps: [],
@@ -147,6 +160,7 @@ export class LazyLoad implements IModule {
     this.logger?.debug(this.name, 'initialize moli lazy load module');
 
     const slotsConfig = this.moduleConfig.slots;
+    const bucketsConfig = this.moduleConfig.buckets;
     const infiniteSlotsConfig = this.moduleConfig.infiniteSlots;
 
     slotsConfig.forEach(config => {
@@ -186,7 +200,58 @@ export class LazyLoad implements IModule {
       });
     });
 
-    (infiniteSlotsConfig ?? []).forEach(config => {
+    bucketsConfig.forEach(config => {
+      const observer = new this.window.IntersectionObserver(
+        entries => {
+          entries.forEach((entry: IntersectionObserverEntry) => {
+            if (entry.isIntersecting && entry.target.id === config.observedDomId) {
+              // sanity check
+              const correspondingBucket = moliConfig.slots.find(
+                slot => slot.domId === config.observedDomId
+              )?.behaviour.bucket;
+
+              if (correspondingBucket !== config.bucket) {
+                this.logger?.warn(
+                  this.name,
+                  `${config.observedDomId} doesn't belong to ${config.bucket}`
+                );
+              } else {
+                const domIdsInCorrespondingBucket = moliConfig.slots
+                  .filter(slot => slot.behaviour.bucket === config.bucket)
+                  .map(slot => slot.domId);
+                this.logger?.debug(
+                  `Refresh ${config.bucket}`,
+                  `Trigger ad slots with DOM IDs [${domIdsInCorrespondingBucket.join(', ')}]`
+                );
+                this.window.moli.refreshBucket(config.bucket);
+
+                observer.unobserve(entry.target);
+              }
+            }
+          });
+        },
+        {
+          root: config.options.rootId
+            ? window.document.getElementById(config.options.rootId)
+            : null,
+          threshold: config.options.threshold,
+          rootMargin: config.options.rootMargin
+        }
+      );
+
+      if (!moliConfig.buckets?.enabled) {
+        this.logger?.warn(this.name, "GlobalBucket config isn't enabled");
+      }
+
+      if (!(moliConfig.buckets?.bucket && moliConfig.buckets.bucket[config.bucket])) {
+        this.logger?.error(this.name, `Lazy-load non-existing bucket with name ${config.bucket}`);
+      } else {
+        const elementToObserve = this.window.document.querySelector(`#${config.observedDomId}`);
+        elementToObserve && observer.observe(elementToObserve);
+      }
+    });
+
+    (infiniteSlotsConfig || []).forEach(config => {
       const serialNumberLabel = 'data-h5-serial-number';
       const configuredInfiniteSlot = moliConfig.slots.find(
         slot => slot.behaviour.loaded === 'infinite'

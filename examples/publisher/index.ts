@@ -2,8 +2,7 @@
  * ES6 bundle: no polyfills.
  */
 
-
-import {googletag, initAdTag, Moli, prebidjs} from '@highfivve/ad-tag';
+import { googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { Confiant } from '@highfivve/module-confiant';
 
 import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
@@ -30,7 +29,6 @@ import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
 
-
 prebid.processQueue();
 
 const moli = initAdTag(window);
@@ -49,11 +47,20 @@ moli.registerModule(
 );
 
 // Add lazy loading module
-moli.registerModule(new LazyLoad({
-  slots: [{domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: {threshold: .5}}],
-  buckets: [],
-  infiniteSlots: [{selector: '.ad-infinite', options: {threshold: .5}}]
-}, window));
+moli.registerModule(
+  new LazyLoad(
+    {
+      slots: [
+        { domIds: ['lazy-loading-adslot-1', 'lazy-loading-adslot-2'], options: { threshold: 0.5 } }
+      ],
+      buckets: [
+        { bucket: 'lazy-bucket', observedDomId: 'lazy-bucket3', options: { threshold: 0.2 } }
+      ],
+      infiniteSlots: [{ selector: '.ad-infinite', options: { threshold: 0.5 } }]
+    },
+    window
+  )
+);
 
 // blocklist urls
 moli.registerModule(
@@ -161,4 +168,5 @@ window.pbjs.que.push(() => {
 // init moli
 moli.configure(adConfiguration(moli.version));
 
-window.moli.que.push((adTag) => adTag.refreshBucket('bucket-one'));
+// make sure that 'bucket-one' isn't configured as lazy bucket
+window.moli.que.push(adTag => adTag.refreshBucket('bucket-one'));

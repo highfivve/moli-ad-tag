@@ -590,17 +590,60 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
-    // web interstitial
+
+    // Lazy buckets
     {
-      domId: 'unused',
-      position: 'out-of-page-interstitial',
+      domId: 'lazy-bucket1',
+      position: 'in-page',
       behaviour: {
-        loaded: 'eager'
+        loaded: 'manual',
+        bucket: 'lazy-bucket'
       },
-      adUnitPath: '/6355419/Travel/Europe/France/Paris',
-      sizes: [],
-      sizeConfig: []
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
     },
+    {
+      domId: 'lazy-bucket2',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'lazy-bucket'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
+    },
+    {
+      domId: 'lazy-bucket3',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual',
+        bucket: 'lazy-bucket'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
+    },
+
     // infinite loading
     {
       domId: 'infinite-loading-adslot',
@@ -618,9 +661,20 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           sizesSupported: [[300, 300]]
         }
       ]
+    },
+
+    // web interstitial
+    {
+      domId: 'unused',
+      position: 'out-of-page-interstitial',
+      behaviour: {
+        loaded: 'eager'
+      },
+      adUnitPath: '/6355419/Travel/Europe/France/Paris',
+      sizes: [],
+      sizeConfig: []
     }
   ],
-
   // -----------------------------
   // ----- standard config -------
   // -----------------------------
@@ -646,7 +700,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   buckets: {
     enabled: true,
     bucket: {
-      'bucket-one': { timeout: 5000 }
+      'bucket-one': { timeout: 5000 },
+      'lazy-bucket': { timeout: 3000 }
     }
   },
   schain: {
