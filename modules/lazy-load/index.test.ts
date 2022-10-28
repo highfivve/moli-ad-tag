@@ -33,6 +33,33 @@ const createAdSlots = (
   });
 };
 
+// Caution: although the infinite scrolling module is able to handle different selectors, the test infinite slots do always use a class as identifier
+const createInfiniteAdSlotInDOM = (
+  window: Window,
+  infiniteSlotClassSelector: string,
+  serialNumber: number
+): void => {
+  const div = window.document.createElement('div');
+  div.id = `infinite-loading-adslot-${serialNumber}`;
+  // Selector without the '.' at the beginning
+  div.className = infiniteSlotClassSelector.slice(1);
+  window.document.body.appendChild(div);
+};
+
+const createInfiniteAdSlotinConfig = (infiniteSlotClassSelector: string) => {
+  const slot: Moli.AdSlot = {
+    domId: 'infinite-loading-adslot',
+    adUnitPath: 'infinite-loading-adslot',
+    position: 'in-page',
+    sizes: [],
+    behaviour: { loaded: 'infinite', selector: infiniteSlotClassSelector },
+    labelAll: [],
+    labelAny: [],
+    sizeConfig: []
+  };
+  return slot;
+};
+
 const MockIntersectionObserver = class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '0';
@@ -108,7 +135,7 @@ describe('Lazy-load Module', () => {
     sandbox.restore();
   });
 
-  const config = (slots): Moli.MoliConfig => {
+  const mkConfig = (slots): Moli.MoliConfig => {
     return {
       slots: slots,
       buckets: {
@@ -120,9 +147,23 @@ describe('Lazy-load Module', () => {
       schain: dummySchainConfig
     };
   };
+
   const domId1 = 'lazy-1';
   const domId2 = 'lazy-2';
+  const infiniteSelector1 = '.ad-infinite';
+
   describe('Lazy-slots', () => {
+    it('Add init pipeline step', () => {
+      const module = new LazyLoad({ slots: [], buckets: [] }, jsDomWindow);
+      const config = mkConfig([]);
+      module.init(config);
+
+      expect(config.pipeline).to.be.ok;
+      expect(config.pipeline?.initSteps).length(1);
+      const initStep = config.pipeline?.initSteps[0];
+      expect(initStep?.name).to.be.eq('moli-lazy-load');
+    });
+
     it('Observe only domIds that are in the module config, i.e., lazy-1', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
@@ -135,8 +176,8 @@ describe('Lazy-load Module', () => {
         jsDomWindow
       );
 
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config(slots));
+      module.init(mkConfig(slots));
+      module.registerIntersectionObservers(mkConfig(slots));
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
@@ -145,7 +186,6 @@ describe('Lazy-load Module', () => {
       const args = oberserveSpy.firstCall.firstArg;
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
       expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
       expect(oberserveSpy).to.have.been.calledOnce;
       expect(args).to.equal(jsDomWindow.document.getElementById('lazy-1'));
@@ -165,8 +205,8 @@ describe('Lazy-load Module', () => {
         jsDomWindow
       );
 
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config(slots));
+      module.init(mkConfig(slots));
+      module.registerIntersectionObservers(mkConfig(slots));
 
       const callback = getIntersectionObserverCallback(0);
 
@@ -177,7 +217,6 @@ describe('Lazy-load Module', () => {
       const firstCallArgs = unOberserveSpy.firstCall.args;
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
       expect(oberserveSpy).to.have.been.calledTwice;
       expect(unOberserveSpy).to.have.been.calledOnce;
       expect(unOberserveSpy).to.have.been.calledOnceWithExactly({ id: 'lazy-1' });
@@ -187,8 +226,6 @@ describe('Lazy-load Module', () => {
 
     it('Observe only slots that have a manual behaviour', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
-      const eagerSlot = createAdSlots(jsDomWindow, [domId1], 'manual');
-      const manualSlot = createAdSlots(jsDomWindow, [domId2], 'eager');
 
       const module = new LazyLoad(
         {
@@ -198,13 +235,15 @@ describe('Lazy-load Module', () => {
         jsDomWindow
       );
 
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config([...manualSlot, ...eagerSlot]));
+      const eagerSlot = createAdSlots(jsDomWindow, [domId1], 'eager');
+      const manualSlot = createAdSlots(jsDomWindow, [domId2], 'manual');
+
+      module.registerIntersectionObservers(mkConfig([...manualSlot, ...eagerSlot]));
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
+      expect(oberserveSpy).to.have.been.calledOnce;
       expect(oberserveSpy).to.have.been.calledOnceWithExactly(
-        jsDomWindow.document.getElementById('lazy-1')
+        jsDomWindow.document.getElementById('lazy-2')
       );
     });
 
@@ -228,8 +267,8 @@ describe('Lazy-load Module', () => {
         jsDomWindow
       );
 
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config(slots));
+      module.init(mkConfig(slots));
+      module.registerIntersectionObservers(mkConfig(slots));
 
       const callback = getIntersectionObserverCallback(0);
       const options = getIntersectionObserverArgs(0);
@@ -237,7 +276,6 @@ describe('Lazy-load Module', () => {
       callback([createIntersectionObserverEntry(true, domId1)], observer);
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
       expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
       expect(options).to.eql({ root: null, threshold: 0.5, rootMargin: undefined });
     });
@@ -259,21 +297,27 @@ describe('Lazy-load Module', () => {
         jsDomWindow
       );
 
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config(slots));
+      module.init(mkConfig(slots));
+      module.registerIntersectionObservers(mkConfig(slots));
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
       callback([createIntersectionObserverEntry(true, domId3)], observer);
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
       expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
 
       expect(oberserveSpy).to.have.not.been.called;
     });
 
     it('Should observe multiple buckets and refresh buckets as expected', () => {
+      /*
+      const oberserveSpy = sandbox.spy(observer, 'observe');
+      const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
+      const infiniteSlot = createInfiniteAdSlotinConfig(infiniteSelector1);
+      createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
+      createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
+      */
       const domId4 = 'lazy-4-in-another-bucket';
 
       const oberserveSpy = sandbox.spy(observer, 'observe');
@@ -295,8 +339,7 @@ describe('Lazy-load Module', () => {
         jsDomWindow
       );
 
-      const initSpy = sandbox.spy(module, 'init');
-      module.init(config(slots));
+      module.registerIntersectionObservers(mkConfig(slots));
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
@@ -306,7 +349,6 @@ describe('Lazy-load Module', () => {
       callback2([createIntersectionObserverEntry(true, domId4)], observer);
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(initSpy).to.have.been.calledOnce;
       expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
 
       expect(oberserveSpy).callCount(2);
@@ -322,6 +364,43 @@ describe('Lazy-load Module', () => {
       expect(refreshBucketSpy).to.have.been.calledTwice;
       expect(refreshBucketSpy.firstCall).to.have.been.calledWith('lazy_bucket');
       expect(refreshBucketSpy.secondCall).to.have.been.calledWith('another_lazy_bucket');
+    });
+  });
+
+  describe('Infinite ad slots', () => {
+    it('Observe only infinite ad slots that have the correct className which identifies them as such infinite slots, i.e. ad-infinite', () => {
+      const oberserveSpy = sandbox.spy(observer, 'observe');
+      const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
+      const infiniteSlot = createInfiniteAdSlotinConfig(infiniteSelector1);
+      createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
+      createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
+
+      const module = new LazyLoad(
+        {
+          slots: [{ domIds: [], options: {} }],
+          buckets: [],
+          infiniteSlots: [{ selector: infiniteSelector1, options: {} }]
+        },
+        jsDomWindow
+      );
+
+      module.registerIntersectionObservers(mkConfig([...slots, infiniteSlot]));
+
+      // trigger an intersection event
+      const callback = getIntersectionObserverCallback(0);
+      callback([createIntersectionObserverEntry(true, 'infinite-loading-adSlot-1')], observer);
+      callback([createIntersectionObserverEntry(true, 'infinite-loading-adSlot-2')], observer);
+
+      const argsCall1 = oberserveSpy.firstCall.firstArg;
+      const argsCall2 = oberserveSpy.secondCall.firstArg;
+
+      const infiniteSlotsInDom = jsDomWindow.document.querySelectorAll(infiniteSelector1);
+
+      expect(errorLogSpy).to.have.not.been.called;
+      expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
+      expect(oberserveSpy).to.have.been.calledTwice;
+      expect(argsCall1).to.equal(infiniteSlotsInDom[0]);
+      expect(argsCall2).to.equal(infiniteSlotsInDom[1]);
     });
   });
 });
