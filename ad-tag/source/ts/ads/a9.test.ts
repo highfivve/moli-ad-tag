@@ -7,7 +7,6 @@ import { Moli } from '../types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { SlotEventService } from './slotEventService';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
@@ -58,7 +57,6 @@ describe('a9', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger),
       tcData: tcData
     };
   };

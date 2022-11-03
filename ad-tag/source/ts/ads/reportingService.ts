@@ -1,7 +1,6 @@
 import { Moli } from '../types/moli';
 import { googletag } from '../types/googletag';
 import { IPerformanceMeasurementService } from '../util/performanceService';
-import { SlotEventService } from './slotEventService';
 import { HIGH_PRIORITY, mkPrepareRequestAdsStep, PrepareRequestAdsStep } from './adPipeline';
 
 /**
@@ -121,7 +120,6 @@ export class ReportingService implements IReportingService {
 
   constructor(
     private readonly performanceService: IPerformanceMeasurementService,
-    private readonly slotEventService: SlotEventService,
     private readonly config: Moli.reporting.ReportingConfig,
     private readonly logger: Moli.MoliLogger,
     private readonly env: Moli.Environment,
@@ -150,11 +148,6 @@ export class ReportingService implements IReportingService {
     this.measureAndReportFirstAdRenderTime();
     this.measureAndReportFirstAdLoadTime();
     this.initAdSlotMetrics();
-
-    this.slotEventService
-      .awaitAllAdSlotsRendered(adSlots)
-      .then(renderedEvents => this.reportAdSlotsMetric(renderedEvents))
-      .then(() => this.measureAndReportDfpLoadTime());
   }
 
   public markRefreshed(adSlot: Moli.AdSlot): void {
@@ -329,36 +322,6 @@ export class ReportingService implements IReportingService {
       case 'test':
         this.logger.warn('In test environment no time-to-first-loads will be reported');
         break;
-    }
-  }
-
-  private awaitAdSlotContentLoaded(
-    event: googletag.events.ISlotRenderEndedEvent
-  ): Promise<googletag.events.ISlotOnloadEvent> {
-    // no ad on this slot this time. sad panda.
-    if (event.isEmpty || !event.slot) {
-      return Promise.resolve(event);
-    }
-
-    return new Promise<googletag.events.ISlotOnloadEvent>(resolve => {
-      this.window.googletag.pubads().addEventListener('slotOnload', onLoadEvent => {
-        if (onLoadEvent.slot.getAdUnitPath() === event.slot.getAdUnitPath()) {
-          resolve(onLoadEvent);
-        }
-      });
-    });
-  }
-
-  private measureAndReportDfpLoadTime(): void {
-    const measure = ReportingService.getSingleMeasurementMetricMeasureName('dfpLoad');
-    this.performanceService.measure(measure, 'dfp_load_start', 'dfp_load_end');
-    const dfpLoad = this.performanceService.getMeasure(measure);
-    if (dfpLoad) {
-      this.report({
-        type: 'dfpLoad',
-        pageRequestId: this.pageRequestId,
-        measurement: dfpLoad
-      });
     }
   }
 

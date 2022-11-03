@@ -8,8 +8,6 @@ import { createAssetLoaderService } from '../util/assetLoaderService';
 import { IAdPipelineConfiguration } from './adPipeline';
 import { AdService } from './adService';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
-import * as lazyLoaderModule from '../../../source/ts/ads/lazyLoading';
-import * as refreshableAdsModule from '../../../source/ts/ads/refreshAd';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
@@ -135,13 +133,6 @@ describe('AdService', () => {
       return initialize().then(pipeline => {
         const stepNames = pipeline.configure.map(step => step.name);
         expect(stepNames).to.contain('gpt-configure');
-      });
-    });
-
-    it('should add the slot-event-service-configure step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('slot-event-service-configure');
       });
     });
 
@@ -397,19 +388,6 @@ describe('AdService', () => {
       };
     };
 
-    const refreshableAdSlot = (
-      lazy: boolean
-    ): Moli.AdSlot & { behaviour: Moli.behaviour.Refreshable } => {
-      return {
-        ...eagerAdSlot(),
-        behaviour: { loaded: 'refreshable', trigger: eventTrigger, lazy }
-      };
-    };
-
-    const lazyAdSlot = (): Moli.AdSlot & { behaviour: Moli.behaviour.Lazy } => {
-      return { ...eagerAdSlot(), behaviour: { loaded: 'lazy', trigger: eventTrigger } };
-    };
-
     const manualAdSlot = (): Moli.AdSlot => {
       return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
     };
@@ -445,59 +423,18 @@ describe('AdService', () => {
       return expect(requestAds(slots, [], [])).to.eventually.be.deep.equals(slots);
     });
 
-    it('should return all refreshable non-lazy loaded slots that are available in the DOM', () => {
-      const slots = [refreshableAdSlot(false), eagerAdSlot()];
-      addToDom(slots);
-      return expect(requestAds(slots, [], [])).to.eventually.be.deep.equals(slots);
-    });
-
-    it('should filter all refreshable lazy slots that are available in the DOM', () => {
-      const filteredSlots = [refreshableAdSlot(true)];
-      const expectedSlots = [eagerAdSlot()];
-      const allSlots = [...expectedSlots, ...filteredSlots];
-      addToDom(allSlots);
-      return expect(requestAds(allSlots, [], [])).to.eventually.be.deep.equals(expectedSlots);
-    });
-
-    it('should filter all lazy slots that are available in the DOM', () => {
-      const filteredSlots = [lazyAdSlot()];
-      const expectedSlots = [eagerAdSlot()];
-      const allSlots = [...expectedSlots, ...filteredSlots];
-      addToDom(allSlots);
-      return expect(requestAds(allSlots, [], [])).to.eventually.be.deep.equals(expectedSlots);
-    });
-
-    it('should only refresh manual slots that are defined in the refreshSlots array', () => {
-      const adSlot = manualAdSlot();
-      const filteredSlots = [lazyAdSlot(), manualAdSlot()];
-      const expectedSlots = [eagerAdSlot(), adSlot];
-      const allSlots = [...expectedSlots, ...filteredSlots];
-      addToDom(allSlots);
-      return expect(requestAds(allSlots, [adSlot.domId], [])).to.eventually.be.deep.equals(
-        expectedSlots
-      );
-    });
-
     describe('slot buckets', () => {
       const eagerAdSlot1: Moli.AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager', bucket: 'bucket1' }
       };
-      const refreshableAdSlot2: Moli.AdSlot & { behaviour: Moli.behaviour.Refreshable } = {
-        ...refreshableAdSlot(false),
-        behaviour: {
-          loaded: 'refreshable',
-          lazy: false,
-          trigger: eventTrigger,
-          bucket: 'bucket2'
-        }
-      };
+
       const eagerAdSlot3: Moli.AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager' }
       };
 
-      const allSlots = [eagerAdSlot1, refreshableAdSlot2, eagerAdSlot3];
+      const allSlots = [eagerAdSlot1, eagerAdSlot3];
 
       it('should load ad slots in specified buckets', async () => {
         const adService = makeAdService();
@@ -518,21 +455,9 @@ describe('AdService', () => {
           []
         );
 
-        expect(runSpy).to.have.been.calledThrice;
+        expect(runSpy).to.have.been.calledTwice;
         expect(runSpy.firstCall).to.have.been.calledWith(
           Sinon.match.array.deepEquals([eagerAdSlot1]),
-          Sinon.match.any,
-          Sinon.match.number
-        );
-
-        expect(runSpy.secondCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals([refreshableAdSlot2]),
-          Sinon.match.any,
-          Sinon.match.number
-        );
-
-        expect(runSpy.thirdCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals([eagerAdSlot3]),
           Sinon.match.any,
           Sinon.match.number
         );
@@ -542,11 +467,7 @@ describe('AdService', () => {
           `running bucket bucket1, slots:`,
           [eagerAdSlot1]
         );
-        expect(debugStub).to.have.been.calledWithExactly(
-          'AdPipeline',
-          `running bucket bucket2, slots:`,
-          [refreshableAdSlot2]
-        );
+
         expect(debugStub).to.have.been.calledWithExactly(
           'AdPipeline',
           `running bucket default, slots:`,
@@ -601,39 +522,6 @@ describe('AdService', () => {
           Sinon.match.any,
           Sinon.match.number
         );
-      });
-    });
-
-    describe('lazy slots', () => {
-      const createLazyLoaderSpy = sandbox.spy(lazyLoaderModule, 'createLazyLoader');
-
-      it('should create a lazy loader for lazy slots', () => {
-        const lazySlot = lazyAdSlot();
-        return requestAds([lazySlot], [], []).then(() => {
-          expect(createLazyLoaderSpy).to.have.been.calledOnce;
-          expect(createLazyLoaderSpy).to.have.been.calledOnceWith(
-            Sinon.match.same(lazySlot.behaviour.trigger),
-            Sinon.match.any,
-            Sinon.match.same(dom.window)
-          );
-        });
-      });
-    });
-
-    describe('refreshable slots', () => {
-      const createRefreshListenerSpy = sandbox.spy(refreshableAdsModule, 'createRefreshListener');
-
-      it('should create a refreshable listener for refreshable slots', () => {
-        const lazySlot = refreshableAdSlot(true);
-        return requestAds([lazySlot], [], []).then(() => {
-          expect(createRefreshListenerSpy).to.have.been.calledOnce;
-          expect(createRefreshListenerSpy).to.have.been.calledOnceWith(
-            Sinon.match.same(lazySlot.behaviour.trigger),
-            Sinon.match.same(undefined),
-            Sinon.match.any,
-            Sinon.match.same(dom.window)
-          );
-        });
       });
     });
   });

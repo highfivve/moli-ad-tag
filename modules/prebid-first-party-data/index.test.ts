@@ -5,8 +5,7 @@ import {
   googletag,
   IAdPipelineConfiguration,
   Moli,
-  prebidjs,
-  SlotEventService
+  prebidjs
 } from '@highfivve/ad-tag';
 
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
@@ -36,7 +35,6 @@ describe('Prebid First Party Data Module', () => {
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
-  const slotEventService = new SlotEventService(noopLogger);
   const emptyPipelineConfig: IAdPipelineConfiguration = {
     init: [],
     configure: [],
@@ -56,7 +54,6 @@ describe('Prebid First Party Data Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService,
-      slotEventService,
       tcData: fullConsent()
     };
   };
@@ -114,8 +111,7 @@ describe('Prebid First Party Data Module', () => {
       emptyPipelineConfig,
       noopLogger,
       jsDomWindow,
-      reportingService,
-      slotEventService
+      reportingService
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);

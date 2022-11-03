@@ -7,7 +7,6 @@ import { Moli } from '../types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { SlotEventService } from './slotEventService';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
   gptConsentKeyValue,
@@ -54,7 +53,6 @@ describe('google ad manager', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger),
       tcData: tcData
     };
   };

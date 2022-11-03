@@ -89,8 +89,6 @@ moli.registerModule(
         'appnexus-native-example-1': 40000
       },
       excludeAdSlotDomIds: [
-        'lazy-adslot',
-        'refreshable-adslot',
         'manual-adslot',
         'a9-adslot',
         'eager-loading-adslot-not-in-dom',
@@ -99,34 +97,12 @@ moli.registerModule(
       optimizeClsScoreDomIds: [
         'appnexus-native-example-2',
         'appnexus-native-example-1',
-        'eager-loading-adslot',
-        'prebid-adslot-2'
+        'eager-loading-adslot'
       ],
       includeOrderIds: [2690210604, 2690917340, 2674536678],
       excludeOrderIds: [],
       includeAdvertiserIds: [
         4693931408 /* AppNexus */, 4868030566, 4858511198 /* gutefrage-intern */
-      ]
-    },
-    window
-  )
-);
-
-moli.registerModule(
-  new Skin(
-    {
-      trackSkinCpmLow: (cpms, skinConfig, skinBid) => {
-        console.log('[SKIN]', cpms, skinConfig, skinBid);
-      },
-      configs: [
-        {
-          formatFilter: [{ bidder: 'justpremium', format: 'wp' }, { bidder: 'dspx' }],
-          skinAdSlotDomId: 'prebid-adslot-2',
-          hideSkinAdSlot: false,
-          hideBlockedSlots: false,
-          enableCpmComparison: false,
-          blockedAdSlotDomIds: ['prebid-adslot', 'appnexus-native-example-1']
-        }
       ]
     },
     window

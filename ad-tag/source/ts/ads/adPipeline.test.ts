@@ -17,7 +17,6 @@ import {
   PrepareRequestAdsStep
 } from './adPipeline';
 import { reportingServiceStub } from '../stubs/reportingServiceStub';
-import { SlotEventService } from './slotEventService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
@@ -58,11 +57,10 @@ describe('AdPipeline', () => {
   const sandbox = Sinon.createSandbox();
 
   const reportingService = reportingServiceStub();
-  const slotEventService = new SlotEventService(noopLogger);
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(config, noopLogger, jsDomWindow, reportingService, slotEventService);
+    return new AdPipeline(config, noopLogger, jsDomWindow, reportingService);
   };
 
   const adPipelineContext = (
@@ -80,7 +78,6 @@ describe('AdPipeline', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger),
       tcData: tcData
     };
   };

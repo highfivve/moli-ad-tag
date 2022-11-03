@@ -67,7 +67,6 @@ function getSourceLabelStyle(
     | 'Prebid'
     | 'Faktor CMP'
     | 'MoliGlobal'
-    | 'SlotEventService'
     | 'AdVisibilityService'
     | 'UserActivityService'
     | 'Adex DMP'
@@ -81,8 +80,6 @@ function getSourceLabelStyle(
       return getLabelStyle('#9374C6');
     case 'MoliGlobal':
       return getLabelStyle('#403073');
-    case 'SlotEventService':
-      return getLabelStyle('#4357AD');
     case 'Prebid':
       return getLabelStyle('#4357AD');
     case 'AdVisibilityService':

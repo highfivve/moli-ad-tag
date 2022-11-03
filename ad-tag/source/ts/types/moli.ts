@@ -1200,7 +1200,7 @@ export namespace Moli {
      *
      */
     export interface ISlotLoading {
-      readonly loaded: 'eager' | 'lazy' | 'refreshable' | 'manual' | 'infinite';
+      readonly loaded: 'eager' | 'refreshable' | 'manual' | 'infinite';
 
       /**
        * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
@@ -1263,27 +1263,27 @@ export namespace Moli {
       readonly selector: string;
     }
 
-    /**
+    /*
      * An ad slot which is requested lazily.
      * DFP offers a similar implementation, but only for "load when in view port"
-     */
+
     export interface Lazy extends ISlotLoading {
       readonly loaded: 'lazy';
 
-      /** what triggers the loading */
+      /** what triggers the loading
       readonly trigger: Trigger;
     }
-
-    /**
+*/
+    /*
      * An ad slot which can be refreshed.
      * Useful for
      * - sorting lists that contain ads
      * - Single page applications (SPA)
-     */
+
     export interface Refreshable extends ISlotLoading {
       readonly loaded: 'refreshable';
 
-      /** what triggers the loading */
+      /** what triggers the loading
       readonly trigger: Trigger;
 
       /**
@@ -1293,7 +1293,7 @@ export namespace Moli {
        *    the ad slot is refreshed instantly, acting like an eager loading slot
        * - `true`
        *    the ad slot is refreshed (requested) when the first event is fired, acting like a lazy loading slot
-       */
+
       readonly lazy?: boolean;
 
       /**
@@ -1301,14 +1301,13 @@ export namespace Moli {
        *
        * The slot can be refresh at most once in the specified throttle time (seconds).
        * If no `throttle` duration is specified the slot can be unconditionally refreshed.
-       */
-      readonly throttle?: number;
-    }
 
+      readonly throttle?: number;
+    }*/
     /**
      * all available slot loading behaviours.
      */
-    export type SlotLoading = Eager | Manual | Lazy | Refreshable | Infinite;
+    export type SlotLoading = Eager | Manual | Infinite;
 
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;
