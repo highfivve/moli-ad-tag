@@ -8,7 +8,72 @@
 
     <!-- sourcepoint stub -->
     <script type="text/javascript">
-      !function () { var e = function () { var e, t = "__tcfapiLocator", a = [], n = window; for (; n;) { try { if (n.frames[t]) { e = n; break } } catch (e) { } if (n === window.top) break; n = n.parent } e || (!function e() { var a = n.document, r = !!n.frames[t]; if (!r) if (a.body) { var i = a.createElement("iframe"); i.style.cssText = "display:none", i.name = t, a.body.appendChild(i) } else setTimeout(e, 5); return !r }(), n.__tcfapi = function () { for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)n[r] = arguments[r]; if (!n.length) return a; if ("setGdprApplies" === n[0]) n.length > 3 && 2 === parseInt(n[1], 10) && "boolean" == typeof n[3] && (e = n[3], "function" == typeof n[2] && n[2]("set", !0)); else if ("ping" === n[0]) { var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: "stub" }; "function" == typeof n[2] && n[2](i) } else a.push(n) }, n.addEventListener("message", (function (e) { var t = "string" == typeof e.data, a = {}; try { a = t ? JSON.parse(e.data) : e.data } catch (e) { } var n = a.__tcfapiCall; n && window.__tcfapi(n.command, n.version, (function (a, r) { var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } }; t && (i = JSON.stringify(i)), e.source.postMessage(i, "*") }), n.parameter) }), !1)) }; "undefined" != typeof module ? module.exports = e : e() }();
+      !(function () {
+        var e = function () {
+          var e,
+            t = '__tcfapiLocator',
+            a = [],
+            n = window;
+          for (; n; ) {
+            try {
+              if (n.frames[t]) {
+                e = n;
+                break;
+              }
+            } catch (e) {}
+            if (n === window.top) break;
+            n = n.parent;
+          }
+          e ||
+            (!(function e() {
+              var a = n.document,
+                r = !!n.frames[t];
+              if (!r)
+                if (a.body) {
+                  var i = a.createElement('iframe');
+                  (i.style.cssText = 'display:none'), (i.name = t), a.body.appendChild(i);
+                } else setTimeout(e, 5);
+              return !r;
+            })(),
+            (n.__tcfapi = function () {
+              for (var e, t = arguments.length, n = new Array(t), r = 0; r < t; r++)
+                n[r] = arguments[r];
+              if (!n.length) return a;
+              if ('setGdprApplies' === n[0])
+                n.length > 3 &&
+                  2 === parseInt(n[1], 10) &&
+                  'boolean' == typeof n[3] &&
+                  ((e = n[3]), 'function' == typeof n[2] && n[2]('set', !0));
+              else if ('ping' === n[0]) {
+                var i = { gdprApplies: e, cmpLoaded: !1, cmpStatus: 'stub' };
+                'function' == typeof n[2] && n[2](i);
+              } else a.push(n);
+            }),
+            n.addEventListener(
+              'message',
+              function (e) {
+                var t = 'string' == typeof e.data,
+                  a = {};
+                try {
+                  a = t ? JSON.parse(e.data) : e.data;
+                } catch (e) {}
+                var n = a.__tcfapiCall;
+                n &&
+                  window.__tcfapi(
+                    n.command,
+                    n.version,
+                    function (a, r) {
+                      var i = { __tcfapiReturn: { returnValue: a, success: r, callId: n.callId } };
+                      t && (i = JSON.stringify(i)), e.source.postMessage(i, '*');
+                    },
+                    n.parameter
+                  );
+              },
+              !1
+            ));
+        };
+        'undefined' != typeof module ? (module.exports = e) : e();
+      })();
     </script>
     <script>
       window._sp_ = {
@@ -108,51 +173,8 @@
 
     <hr />
 
-    <h1>Refreshable AdSlot</h1>
-    <script>
-      function refresh() {
-        console.log('slot.refresh fired');
-        var event = document.createEvent('Event');
-        event.initEvent('slot.refresh', true, true);
-        window.dispatchEvent(event);
-      }
-    </script>
-    <div id="refreshable-adslot"></div>
-    <button class="u-mtm" onclick="refresh()">Refresh the slot</button>
-
-    <hr />
-
-    <h1>Lazy AdSlot</h1>
-    <script>
-      var timeoutSteps = 5;
-      function tick() {
-        window.setTimeout(function () {
-          timeoutSteps--;
-          document.getElementById('countdown').innerText = timeoutSteps;
-          if (timeoutSteps) {
-            tick();
-          } else {
-            console.log('timer.complete fired');
-            var event = document.createEvent('Event');
-            event.initEvent('timer.complete', true, true);
-            window.dispatchEvent(event);
-          }
-        }, 1000);
-      }
-      tick();
-    </script>
-    <div id="lazy-adslot"></div>
-    <div class="u-mtm">Slot triggering in <span id="countdown">5</span> seconds</div>
-
-    <hr />
-
     <h1>Prebid AdSlot</h1>
     <div id="prebid-adslot"></div>
-
-    <hr />
-
-    <h1>Amazon A9 AdSlot</h1>
-    <div id="a9-adslot"></div>
 
     <hr />
 

@@ -402,59 +402,19 @@ export namespace Moli {
    *   for the next `requestAds()` call and will be cleaned afterwards.
    *
    *
-   * Supported loading behaviours are `eager` and `lazy-refreshable`. You should use `lazy refreshable`
-   * for slots that are part of a component that is rendered after the dom is ready.
+   * Supported loading behaviours is `eager`.
    *
    * #### Integration
    *
    * Single page applications are quite more complex than purely server-side-rendered websites. We have
    * a set of APIs at our disposal to deal with that.
-   *
-   * There are a three slot configurations we need to handle
-   *
-   * 1. slots that are **server-side rendered** and never removed. Examples for this there are header area slots
+   **
+   * Slots that are **server-side rendered** and never removed. Examples for this there are header area slots
    *    that are part of the generic page layout that does not change on any page.
    *    *Configuration:* Use the `eager` loading behaviour.
-   * 2. slots that are **server-side rendered**, but may dis- and reappear in the spa context.
-   *    *Configuration:* Use the `lazy refreshable` loading behaviour.
-   * 3. slots that are rendered by the SPA.
-   *    *Configuration:* Use the `lazy refreshable` loading behaviour.
-   *
    *
    * Eager slots (configuration 1) don't need any special handling as the DOM element is present when the
    * site is being delivered and everything works as if it weren't a single page app.
-   *
-   * The `lazy refreshable` slots need a deeper integration. Conceptually the necessary calls look like this
-   *
-   * 1. Initial page load
-   *    1. configure moli anywhere you want. Call `moli.requestAds()`
-   *    2. the component did mount in the DOM. Then fire the event that the refreshable slot can be loaded
-   * 2. Page navigation
-   *    1. after navigation change call `moli.requestAds()`
-   *    2. the component did mount in the DOM. Then fire the event that the refreshable slot can be loaded
-   *
-   * While this is the sequential order we want things to be executed, this isn't the case in reality. Mounting
-   * in the DOM can appear before the `requestAds()` call has successfully configured all event listeners, leading
-   * to events not being received and ads not being shown.
-   *
-   * We will provide a few examples on how to solve this in major SPA frameworks.
-   *
-   * ##### React Example
-   *
-   * Dependencies
-   * - [react](https://reactjs.org/) as SPA framework
-   * - [react-router](https://reacttraining.com/react-router/web/guides/quick-start) for routing
-   * - [history](https://github.com/ReactTraining/history) for browser history management
-   *
-   * The idea:
-   * - Provide a [React Context](https://reactjs.org/docs/context.html), e.g. `RequestAdsContext`, that contains a
-   *   flag if requestAds has already finished
-   * - use the `history.listen` method to `requestAds()` on navigation changes and update the `RequestAdsContext`
-   * - use the `moli.afterRequestAds(hook)` hook to react when the ad tag has configured everything and update the `RequestAdsContext`
-   * - managed the trigger event firing in each component
-   *
-   * If you need example source code, just ask :)
-   *
    *
    * ### Finished state
    *
@@ -1181,34 +1141,16 @@ export namespace Moli {
      *
      * [DFP also offers a lazy loading feature](https://developers.google.com/doubleclick-gpt/reference#googletag.PubAdsService_enableLazyLoad), which
      * only covers the first use case.
-     *
-     * @see [[LazyAdSlot]]
-     *
-     * ## Refreshable
-     *
-     * This allows an ad slot to be requested multiple times. A `trigger` configures when the slot is refreshed.
-     * Use cases for this setting:
-     *
-     *  1. Sort or filter listings and reload the ad slots
-     *  2. Layout changes (e.g. card listing vs. row based listing)
-     *  3. Single Page Applications (not tested yet)
-     *
-     * A refreshable slot can also be _lazy_, which means that the first trigger also triggers the first ad request.
-     * The default behaviour is _not lazy_.
-     *
-     * @see [[RefreshableAdSlot]]
-     *
      */
     export interface ISlotLoading {
-      readonly loaded: 'eager' | 'refreshable' | 'manual' | 'infinite';
+      readonly loaded: 'eager' | 'manual' | 'infinite';
 
       /**
        * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
        * slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners
        * that bid poorly if too many placements are requested at once.
        *
-       * Even though this property is available on all loading behaviours only `eager` and `refreshable` with
-       * `lazy: false` have an effect as these are loaded immediately.
+       * Even though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.
        *
        * All lazy slots are loaded in a separate auction anyway.
        *
@@ -1263,47 +1205,6 @@ export namespace Moli {
       readonly selector: string;
     }
 
-    /*
-     * An ad slot which is requested lazily.
-     * DFP offers a similar implementation, but only for "load when in view port"
-
-    export interface Lazy extends ISlotLoading {
-      readonly loaded: 'lazy';
-
-      /** what triggers the loading
-      readonly trigger: Trigger;
-    }
-*/
-    /*
-     * An ad slot which can be refreshed.
-     * Useful for
-     * - sorting lists that contain ads
-     * - Single page applications (SPA)
-
-    export interface Refreshable extends ISlotLoading {
-      readonly loaded: 'refreshable';
-
-      /** what triggers the loading
-      readonly trigger: Trigger;
-
-      /**
-       * Configure the refresh behaviour.
-       *
-       * - `false` (default)
-       *    the ad slot is refreshed instantly, acting like an eager loading slot
-       * - `true`
-       *    the ad slot is refreshed (requested) when the first event is fired, acting like a lazy loading slot
-
-      readonly lazy?: boolean;
-
-      /**
-       * Option throttle delay in seconds.
-       *
-       * The slot can be refresh at most once in the specified throttle time (seconds).
-       * If no `throttle` duration is specified the slot can be unconditionally refreshed.
-
-      readonly throttle?: number;
-    }*/
     /**
      * all available slot loading behaviours.
      */

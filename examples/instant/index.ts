@@ -45,8 +45,6 @@ moli.registerModule(
     {
       refreshIntervalMs: 10000,
       excludeAdSlotDomIds: [
-        'lazy-adslot',
-        'refreshable-adslot',
         'manual-adslot',
         'a9-adslot',
         'prebid-adslot-2',
