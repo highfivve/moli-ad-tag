@@ -3433,13 +3433,21 @@ export namespace prebidjs {
   export interface IInvibesParams {
     /**
      * The Invibes placement ID
+     * @example `'1234567'`
      */
     readonly placementId: string;
 
     /**
      * Id of domain
+     * @example `1001`
      */
     readonly domainId?: number;
+
+    /**
+     * Custom test domain
+     * @example https://bid.videostep.com/Bid/VideoAdContent
+     */
+    readonly customEndpoint?: number;
   }
 
   export interface IInvibesBid extends IBidObject<typeof Invibes, IInvibesParams> {}
