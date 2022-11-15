@@ -9,7 +9,6 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
-import { SlotEventService, slotEventServiceConfigure } from './slotEventService';
 import {
   noopReportingService,
   reportingPrepareRequestAds,
@@ -44,8 +43,6 @@ import {
   a9PublisherAudiences
 } from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
-import { createLazyLoader } from './lazyLoading';
-import { createRefreshListener } from './refreshAd';
 import { passbackPrepareRequestAds } from './passback';
 import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
@@ -60,11 +57,6 @@ export class AdService {
    * Access to a logger
    */
   private readonly logger: ProxyLogger;
-
-  /**
-   * Slot event management
-   */
-  private readonly slotEventService: SlotEventService;
 
   /**
    * increments with every call to requestAds
@@ -87,8 +79,7 @@ export class AdService {
     },
     getDefaultLogger(),
     this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-    noopReportingService,
-    new SlotEventService(getDefaultLogger())
+    noopReportingService
   );
 
   private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
@@ -109,14 +100,12 @@ export class AdService {
   ) {
     // initialize the logger with a default one
     this.logger = new ProxyLogger(getDefaultLogger());
-    this.slotEventService = new SlotEventService(this.logger);
     if (adPipelineConfig) {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
         window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-        noopReportingService,
-        this.slotEventService
+        noopReportingService
       );
     }
   }
@@ -152,7 +141,6 @@ export class AdService {
       isGam && config.reporting && config.reporting.sampleRate > 0
         ? new ReportingService(
             createPerformanceService(this.window),
-            this.slotEventService,
             config.reporting,
             this.logger,
             env,
@@ -163,9 +151,7 @@ export class AdService {
     // 2. build the AdPipeline
     const init: InitStep[] = isGam ? [gptInit(this.assetService)] : [];
 
-    const configure: ConfigureStep[] = isGam
-      ? [gptConfigure(config), slotEventServiceConfigure(this.slotEventService)]
-      : [];
+    const configure: ConfigureStep[] = isGam ? [gptConfigure(config)] : [];
 
     if (isGam && isSinglePageApp) {
       configure.push(gptDestroyAdSlots(), gptResetTargeting());
@@ -236,8 +222,7 @@ export class AdService {
       },
       this.logger,
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-      reportingService,
-      this.slotEventService
+      reportingService
     );
 
     return new Promise<Readonly<Moli.MoliConfig>>(resolve => {
@@ -266,34 +251,7 @@ export class AdService {
     try {
       const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
         .map(slot => {
-          if (this.isLazySlot(slot)) {
-            this.logger.debug('AdService', `create lazy loader for ${slot.domId}`, slot);
-            // initialize lazy slot
-            createLazyLoader(slot.behaviour.trigger, this.slotEventService, this.window)
-              .onLoad()
-              .then(() => {
-                if (this.isSlotAvailable(slot)) {
-                  return Promise.resolve();
-                }
-                const message = `lazy slot dom element not available: ${slot.adUnitPath} / ${slot.domId}`;
-                this.logger.error('AdService', message);
-                return Promise.reject(message);
-              })
-              .then(() => this.adPipeline.run([slot], config, this.requestAdsCalls));
-            return null;
-          } else if (this.isRefreshableAdSlot(slot)) {
-            this.logger.debug('AdService', `create refresh listener for ${slot.domId}`, slot);
-            // initialize lazy refreshable slot
-            createRefreshListener(
-              slot.behaviour.trigger,
-              slot.behaviour.throttle,
-              this.slotEventService,
-              this.window
-            ).addAdRefreshListener(() => this.adPipeline.run([slot], config, this.requestAdsCalls));
-
-            // if the slot should be lazy loaded don't return it
-            return slot.behaviour.lazy ? null : slot;
-          } else if (this.isManualSlot(slot)) {
+          if (this.isManualSlot(slot)) {
             // only load the slot immediately if it's available in the refreshSlots array
             return refreshSlots.some(domId => domId === slot.domId) ? slot : null;
           } else if (this.isInfiniteSlot(slot)) {
@@ -392,18 +350,6 @@ export class AdService {
 
   public setLogger = (logger: Moli.MoliLogger): void => {
     this.logger.setLogger(logger);
-  };
-
-  private isLazySlot = (
-    slot: Moli.AdSlot
-  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Lazy } => {
-    return slot.behaviour.loaded === 'lazy';
-  };
-
-  private isRefreshableAdSlot = (
-    slot: Moli.AdSlot
-  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Refreshable } => {
-    return slot.behaviour.loaded === 'refreshable';
   };
 
   private isManualSlot = (

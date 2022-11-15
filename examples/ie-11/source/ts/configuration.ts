@@ -47,61 +47,6 @@ export const adConfiguration: Moli.MoliConfig = {
     },
     {
       position: 'in-page',
-      domId: 'refreshable-adslot',
-      behaviour: {
-        loaded: 'refreshable',
-        trigger: {
-          name: 'event',
-          event: 'slot.refresh',
-          source: window
-        }
-      },
-      adUnitPath: '/33559401/gf/fragen/RelatedContentStream2',
-      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
-      sizeConfig: []
-    },
-    {
-      position: 'in-page',
-      domId: 'lazy-adslot',
-      behaviour: {
-        loaded: 'lazy',
-        trigger: {
-          name: 'event',
-          event: 'timer.complete',
-          source: window
-        }
-      },
-      adUnitPath: '/33559401/gf/fragen/BusinessProfil_300x250',
-      sizes: ['fluid', [300, 250], [1, 1]],
-      sizeConfig: [],
-      // example for a dynamic prebid configuration
-      prebid: context => {
-        return {
-          adUnit: {
-            code: 'lazy-adslot',
-            mediaTypes: {
-              banner: {
-                sizes: [[300, 250]]
-              }
-            },
-            bids: [
-              {
-                bidder: prebidjs.ImproveDigital,
-                placementCode: 'sidebar-2',
-                params: {
-                  placementId: 1160064,
-                  keyValues: {
-                    category: asArray(context.keyValues.channel, [''])
-                  }
-                }
-              }
-            ]
-          }
-        };
-      }
-    },
-    {
-      position: 'in-page',
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager' },
       adUnitPath: '/33559401/gf/fragen/pos2',
@@ -171,22 +116,6 @@ export const adConfiguration: Moli.MoliConfig = {
           ]
         }
       }
-    },
-    {
-      position: 'in-page',
-      domId: 'a9-adslot',
-      behaviour: {
-        loaded: 'lazy',
-        trigger: {
-          name: 'event',
-          event: '',
-          source: window
-        }
-      },
-      adUnitPath: '/33559401/gf/fragen/RelatedContentStream3',
-      sizes: ['fluid', [605, 165], [605, 340], [1, 1]],
-      sizeConfig: [],
-      a9: {}
     },
     // -------------------------
     // AppNexus Test Placements

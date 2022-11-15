@@ -15,8 +15,7 @@ import {
   AdPipelineContext,
   IAdPipelineConfiguration,
   mkInitStep,
-  createAssetLoaderService,
-  SlotEventService
+  createAssetLoaderService
 } from '@highfivve/ad-tag';
 
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
@@ -33,7 +32,6 @@ describe('Moli Ad Reload Module', () => {
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
-  const slotEventService = new SlotEventService(noopLogger);
   const emptyPipelineConfig: IAdPipelineConfiguration = {
     init: [],
     configure: [],
@@ -53,7 +51,6 @@ describe('Moli Ad Reload Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
-      slotEventService: null as any,
       tcData: null as any
     };
   };
@@ -108,8 +105,7 @@ describe('Moli Ad Reload Module', () => {
       emptyPipelineConfig,
       noopLogger,
       jsDomWindow,
-      reportingService,
-      slotEventService
+      reportingService
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);

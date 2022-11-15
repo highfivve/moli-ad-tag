@@ -8,7 +8,6 @@ import { prebidjs } from '../types/prebidjs';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { SlotEventService } from './slotEventService';
 import { prebidConfigure, prebidPrepareRequestAds, prebidRequestBids } from './prebid';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
@@ -46,7 +45,6 @@ describe('prebid', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      slotEventService: new SlotEventService(noopLogger),
       tcData: tcData
     };
   };

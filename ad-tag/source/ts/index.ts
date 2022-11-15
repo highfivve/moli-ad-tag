@@ -10,7 +10,6 @@ export * from './ads/moli';
 export * from './ads/adPipeline';
 export * from './ads/adUnitPath';
 export * from './ads/prebid-outstream';
-export * from './ads/slotEventService';
 export * from './util/assetLoaderService';
 export * from './util/arrayUtils';
 export * from './util/objectUtils';

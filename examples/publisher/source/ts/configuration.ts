@@ -212,27 +212,6 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       ]
     },
     {
-      domId: 'refreshable-adslot',
-      position: 'in-page',
-      behaviour: {
-        lazy: true,
-        loaded: 'refreshable',
-        trigger: {
-          name: 'event',
-          event: 'ads.refreshable-adslot-2',
-          source: window
-        }
-      },
-      adUnitPath: '/55155651/test-ad-unit',
-      sizes: ['fluid', [300, 250], [300, 600], [970, 250]],
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: ['fluid', [300, 600]]
-        }
-      ]
-    },
-    {
       position: 'in-page',
       domId: 'prebid-adslot',
       behaviour: { loaded: 'eager', bucket: 'ONE' },
@@ -335,46 +314,6 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       ]
     },
 
-    /* prebid banner slot*/
-    {
-      position: 'in-page',
-      domId: 'prebid-adslot-2',
-      behaviour: {
-        loaded: 'refreshable',
-        trigger: {
-          name: 'event',
-          event: 'ads.refreshable-adslot-2',
-          source: window
-        },
-        bucket: 'TWO'
-      },
-      adUnitPath: '/55155651/prebid_test',
-      sizes: ['fluid', [300, 250]],
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: ['fluid', [300, 250], [300, 600], [970, 250]]
-        }
-      ],
-      prebid: context => {
-        return {
-          adUnit: {
-            code: 'prebid-adslot-2',
-            mediaTypes: {
-              banner: {
-                sizes: [[300, 250]]
-              }
-            },
-            bids: [
-              dspxBid('101'),
-              ixBid('0', [300, 250], context.floorPrice),
-              rubiconBid('14062', '70608', '498816', context.floorPrice)
-            ]
-          }
-        };
-      }
-    },
-
     {
       position: 'in-page',
       domId: 'a9-adslot',
@@ -455,50 +394,6 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         {
           mediaQuery: '(min-width: 0px)',
           sizesSupported: [[1, 1], [300, 250], [300, 600], 'fluid']
-        }
-      ]
-    },
-
-    /* lazy & refreshable */
-    {
-      domId: 'lazy-adslot',
-      position: 'in-page',
-      behaviour: {
-        loaded: 'lazy',
-        trigger: {
-          name: 'event',
-          event: 'ads.lazy-adslot',
-          source: window
-        }
-      },
-      adUnitPath: '/55155651/prebid_test',
-      sizes: [[300, 250]],
-      passbackSupport: true,
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: [[300, 250]]
-        }
-      ]
-    },
-    {
-      domId: 'refreshable-adslot-3',
-      position: 'in-page',
-      behaviour: {
-        loaded: 'refreshable',
-        trigger: {
-          name: 'event',
-          event: 'ads.refreshable-adslot',
-          source: window
-        }
-      },
-      adUnitPath: '/55155651/prebid_test',
-      sizes: [[300, 250]],
-      passbackSupport: true,
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: [[300, 250]]
         }
       ]
     },

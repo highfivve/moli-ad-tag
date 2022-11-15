@@ -8,7 +8,6 @@ import {
   mkInitStep,
   Moli,
   prebidjs,
-  SlotEventService,
   tcfapi
 } from '@highfivve/ad-tag';
 
@@ -38,7 +37,6 @@ describe('The Adex DMP Module', () => {
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
-  const slotEventService = new SlotEventService(noopLogger);
   const emptyPipelineConfig: IAdPipelineConfiguration = {
     init: [],
     configure: [],
@@ -58,7 +56,6 @@ describe('The Adex DMP Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
-      slotEventService: null as any,
       tcData: tcData ?? fullConsent({ '44': true })
     };
   };
@@ -111,8 +108,7 @@ describe('The Adex DMP Module', () => {
       emptyPipelineConfig,
       noopLogger,
       jsDomWindow,
-      reportingService,
-      slotEventService
+      reportingService
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);
