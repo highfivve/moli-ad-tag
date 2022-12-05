@@ -54,6 +54,7 @@ type IGlobalConfigState = {
     performance: boolean;
     consent: boolean;
     yieldOptimization: boolean;
+    supplyChain: boolean;
   };
   messages: Message[];
   browserResized: boolean;
@@ -86,7 +87,8 @@ export class GlobalConfig
         labelSizeConfig: false,
         performance: false,
         consent: false,
-        yieldOptimization: false
+        yieldOptimization: false,
+        supplyChain: false
       },
       messages: [],
       browserResized: false,
@@ -582,6 +584,22 @@ export class GlobalConfig
               </div>
             }
 
+            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
+              <h4>
+                {this.collapseToggle('supplyChain')}
+                Supply Chain
+              </h4>
+
+              {expandSection.supplyChain && (
+                <div className="MoliDebug-tagContainer">
+                  <TagLabel>Seller ID</TagLabel>
+                  <Tag variant={config.schain.supplyChainStartNode.sid ? 'blue' : 'red'}>
+                    {config.schain.supplyChainStartNode.sid}
+                  </Tag>
+                </div>
+              )}
+            </div>
+
             <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
               <h4>Moli configuration issues and warnings</h4>
               {this.state.messages.map((message, index) => (
@@ -786,6 +804,7 @@ export class GlobalConfig
       | 'labelSizeConfig'
       | 'performance'
       | 'consent'
+      | 'supplyChain'
     >
   ): JSX.Element => {
     const toggleValue = (
@@ -800,6 +819,7 @@ export class GlobalConfig
         | 'labelSizeConfig'
         | 'performance'
         | 'consent'
+        | 'supplyChain'
       >
     ) => {
       const oldVal = this.state.expandSection[section];
