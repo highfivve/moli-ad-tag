@@ -60,6 +60,7 @@ type IGlobalConfigState = {
   browserResized: boolean;
   showOnlyRenderedSlots: boolean;
   theme: Theme;
+  adstxtEntry: string[];
 };
 
 export type Message = {
@@ -93,7 +94,8 @@ export class GlobalConfig
       messages: [],
       browserResized: false,
       showOnlyRenderedSlots: false,
-      theme: props.themingService.currentTheme()
+      theme: props.themingService.currentTheme(),
+      adstxtEntry: []
     };
 
     if (!props.config) {
@@ -134,9 +136,34 @@ export class GlobalConfig
     }
   }
 
+  async fetchAdsTxtEntries() {
+    // if locally started, use speisekarte hostname as test case
+    const host = window.location.hostname.startsWith('www')
+      ? window.location.hostname
+      : 'www.speisekarte.de';
+
+    try {
+      const response = await fetch(`https://${host}/ads.txt`);
+      return await response.text();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async componentDidMount() {
+    const adstxtEntries = (await this.fetchAdsTxtEntries()) ?? '';
+    // Split the entries string on each new line and comma
+    const entriesArray = adstxtEntries.split(/\r?\n/).map(entry => entry.split(','));
+    const publisherEntry = entriesArray
+      // filter out lines that don't carry relevant info e.g. header of the ads.txt
+      .filter(entry => entry.length > 1)
+      .find(entry => entry[0] === 'highfivve.com');
+    this.setState({ adstxtEntry: publisherEntry ?? [] });
+  }
+
   render(): JSX.Element {
     const { config, modules, labelConfigService } = this.props;
-    const { sidebarHidden, showOnlyRenderedSlots, expandSection, theme } = this.state;
+    const { sidebarHidden, showOnlyRenderedSlots, expandSection, theme, adstxtEntry } = this.state;
     const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
@@ -591,12 +618,16 @@ export class GlobalConfig
               </h4>
 
               {expandSection.supplyChain && (
-                <div className="MoliDebug-tagContainer">
-                  <TagLabel>Seller ID</TagLabel>
-                  <Tag variant={config.schain.supplyChainStartNode.sid ? 'blue' : 'red'}>
-                    {config.schain.supplyChainStartNode.sid}
-                  </Tag>
-                </div>
+                <>
+                  <div className="MoliDebug-tagContainer">
+                    <TagLabel>Seller ID</TagLabel>
+                    <Tag variant={adstxtEntry[1] ? 'blue' : 'red'}>{adstxtEntry[1]}</Tag>
+                  </div>
+                  <div className="MoliDebug-tagContainer">
+                    <TagLabel>Status</TagLabel>
+                    <Tag variant={adstxtEntry[2] ? 'blue' : 'red'}>{adstxtEntry[2]}</Tag>
+                  </div>
+                </>
               )}
             </div>
 
@@ -774,6 +805,7 @@ export class GlobalConfig
   ): JSX.Element => {
     const measure = ReportingService.getSingleMeasurementMetricMeasureName(name);
     const entry = createPerformanceService(window).getMeasure(measure);
+
     if (entry) {
       const color: 'green' | 'yellow' | 'red' =
         entry.duration > 5000 ? 'red' : entry.duration > 2000 ? 'yellow' : 'green';
