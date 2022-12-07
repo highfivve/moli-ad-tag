@@ -9,7 +9,6 @@ export const Tag = (props: {
   variant?: TagVariant;
   title?: string;
   spacing?: TagSpacing;
-  key?: string | number;
 }): JSX.Element => (
   <div
     className={classList(

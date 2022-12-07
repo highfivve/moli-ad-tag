@@ -197,7 +197,7 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
               {this.state.tcModel &&
                 Array.from(this.state.tcModel.purposeConsents).map(([id, accepted]) => {
                   return (
-                    <Tag variant={accepted ? 'green' : 'red'}>
+                    <Tag key={id} variant={accepted ? 'green' : 'red'}>
                       {id.toString()}: {accepted ? 'accepted' : 'denied'}
                     </Tag>
                   );
