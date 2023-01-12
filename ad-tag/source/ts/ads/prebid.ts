@@ -20,6 +20,7 @@ import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
+import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -265,8 +266,28 @@ export const prebidPrepareRequestAds = (
                   )
                 };
 
+                const storedRequest =
+                  prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid?.storedrequest;
+                const apexDomain = extractDomainFromHostname(window.location.hostname);
+
+                const storedRequestWithSolvedId = storedRequest &&
+                  storedRequest.id &&
+                  apexDomain && {
+                    ...storedRequest,
+                    id: resolveAdUnitPath(storedRequest.id, {
+                      ...context.config.targeting?.adUnitPathVariables,
+                      device: deviceLabel,
+                      domain: apexDomain
+                    })
+                  };
+
                 return {
-                  ...prebidAdSlotConfig.adUnit,
+                  ...(storedRequestWithSolvedId
+                    ? {
+                        ...prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid,
+                        storedRequest: storedRequestWithSolvedId
+                      }
+                    : prebidAdSlotConfig.adUnit),
                   // use domId if adUnit code is not defined
                   code: prebidAdSlotConfig.adUnit.code || moliSlot.domId,
                   ...(prebidAdSlotConfig.adUnit.pubstack ? { pubstack } : {}),
