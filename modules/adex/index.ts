@@ -50,8 +50,8 @@ import {
   mkConfigureStep,
   mkInitStep,
   ModuleType,
-  Moli,
-  tcfapi
+  tcfapi,
+  Moli
 } from '@highfivve/ad-tag';
 import {
   AdexKeyValues,
@@ -61,6 +61,7 @@ import {
   toAdexStringOrNumberType
 } from './adex-mapping';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import { sendAdvertisingID } from './sendAdvertisingId';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -133,6 +134,16 @@ interface IUserTrackPluginKeyValueConfiguration {
     [1]: 0 | 1;
   };
 }
+
+export interface AdexAppConfig {
+  // key within the moli key/values in which the client type is defined
+  clientTypeKey: string;
+  // key within the moli key/values in which the advertising id can be found
+  advertiserIdKey: string;
+  // extra tag id for the mobile endpoint data if distinction is wanted/necessary
+  adexMobileTagId?: string;
+}
+
 type AdexModuleConfig = {
   // Customer and tag id are provided by The Adex.
   adexCustomerId: string;
@@ -142,6 +153,8 @@ type AdexModuleConfig = {
   spaMode: boolean;
   // extraction and conversion rules to produce Adex compatible data from key/value targeting.
   mappingDefinitions: Array<MappingDefinition>;
+  // If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
+  appConfig?: AdexAppConfig;
 };
 
 /**
@@ -200,7 +213,7 @@ export class AdexModule implements IModule {
     context: AdPipelineContext,
     assetLoaderService: IAssetLoaderService
   ): Promise<void> {
-    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions } = this.config();
+    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions, appConfig } = this.config();
     const dfpKeyValues = context.config.targeting?.keyValues;
     if (!dfpKeyValues) {
       context.logger.warn('Adex DMP', 'targeting key/values are empty');
@@ -240,14 +253,38 @@ export class AdexModule implements IModule {
       ]
     ]);
 
-    // load script if consent is given
+    // load script or make request (appMode) if consent is given
     if (this.hasRequiredConsent(context.tcData) && !this.isLoaded) {
       this.isLoaded = true;
-      assetLoaderService.loadScript({
-        name: this.name,
-        assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
-        loadMethod: AssetLoadMethod.TAG
-      });
+
+      // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
+      if (
+        appConfig &&
+        (dfpKeyValues[appConfig.clientTypeKey] === 'android' ||
+          dfpKeyValues[appConfig.clientTypeKey] === 'ios')
+      ) {
+        let consentString;
+        context.window.__tcfapi('getTCData', 2, (tcData, success) => {
+          if (success && 'tcString' in tcData) {
+            consentString = tcData.tcString;
+          }
+        });
+
+        sendAdvertisingID(
+          adexCustomerId,
+          appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
+          dfpKeyValues[appConfig.advertiserIdKey] ?? '',
+          adexKeyValues,
+          dfpKeyValues[appConfig.clientTypeKey] ?? '',
+          consentString ?? ''
+        );
+      } else {
+        assetLoaderService.loadScript({
+          name: this.name,
+          assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
+          loadMethod: AssetLoadMethod.TAG
+        });
+      }
     }
 
     return Promise.resolve();

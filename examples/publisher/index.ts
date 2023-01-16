@@ -6,7 +6,7 @@ import { googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { Confiant } from '@highfivve/module-confiant';
 
 import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
-import { Skin } from '@highfivve/module-generic-skin';
+import { AdexModule } from '@highfivve/module-the-adex-dmp';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
@@ -131,6 +131,60 @@ moli.registerModule(
       // gutefrage-intern
     ]
   })
+);
+
+moli.setTargeting('advertising_id', 'a5f670e6-5afe-4bb2-9e9b-22f49b6efcbc');
+moli.setTargeting('gf_clientType', 'android');
+
+moli.registerModule(
+  new AdexModule(
+    {
+      mappingDefinitions: [
+        {
+          adexValueType: 'map',
+          attribute: 'gf_iab_cat',
+          key: 'channel',
+          valueKey: 'subChannel',
+          defaultValue: 'None',
+          valueType: 'string'
+        },
+        {
+          adexValueType: 'string',
+          attribute: 'gf_device_type',
+          key: 'device_type'
+        },
+        {
+          adexValueType: 'string',
+          attribute: 'gf_page_searchterm',
+          key: 'page_searchterm'
+        },
+        {
+          adexValueType: 'string',
+          attribute: 'gf_page_tag',
+          key: 'page_tag'
+        },
+        {
+          adexValueType: 'string',
+          attribute: 'gf_target_audience_gender',
+          key: 'target_audience_gender'
+        },
+        {
+          adexValueType: 'list',
+          attribute: 'gf_iab_v3',
+          key: 'iab_v3'
+        }
+      ],
+      spaMode: false,
+      adexCustomerId: '808',
+      adexTagId: '3280',
+      appConfig: {
+        clientTypeKey: 'gf_clientType',
+        advertiserIdKey: 'advertising_id',
+        adexMobileTagId: '7484'
+      }
+    },
+    window
+  )
 );
 
 //
