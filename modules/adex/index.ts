@@ -263,12 +263,7 @@ export class AdexModule implements IModule {
         (dfpKeyValues[appConfig.clientTypeKey] === 'android' ||
           dfpKeyValues[appConfig.clientTypeKey] === 'ios')
       ) {
-        let consentString;
-        context.window.__tcfapi('getTCData', 2, (tcData, success) => {
-          if (success && 'tcString' in tcData) {
-            consentString = tcData.tcString;
-          }
-        });
+        const consentString = 'tcString' in context.tcData ? context.tcData.tcString : undefined;
 
         sendAdvertisingID(
           adexCustomerId,
@@ -276,7 +271,7 @@ export class AdexModule implements IModule {
           dfpKeyValues[appConfig.advertiserIdKey] ?? '',
           adexKeyValues,
           dfpKeyValues[appConfig.clientTypeKey] ?? '',
-          consentString ?? ''
+          consentString
         );
       } else {
         assetLoaderService.loadScript({

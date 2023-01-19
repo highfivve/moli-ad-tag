@@ -21,7 +21,7 @@ export const sendAdvertisingID = (
   const ifaType = getAdvertisingIdIFAType(
     typeof clientType === 'string' ? clientType : clientType[0]
   );
-  const attributesJSONString: string = adexAttributes.reduce(
+  const keyValuesJSONString: string = adexAttributes.reduce(
     (accumulator, currentValue) => accumulator + JSON.stringify(currentValue),
     ''
   );
@@ -29,7 +29,7 @@ export const sendAdvertisingID = (
 
   try {
     fetch(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}&attributes=${attributesJSONString}${consentParameter}`
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}&kv=${keyValuesJSONString}${consentParameter}`
     );
   } catch (error) {
     console.error(error);
