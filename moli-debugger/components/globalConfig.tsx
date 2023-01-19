@@ -136,22 +136,23 @@ export class GlobalConfig
     }
   }
 
-  async fetchAdsTxtEntries() {
-    // if locally started, use speisekarte hostname as test case
-    const host = window.location.hostname.startsWith('www')
-      ? window.location.hostname
-      : 'www.speisekarte.de';
-
+  async fetchAdsTxtEntries(): Promise<string> {
+    const hostname = window.location.hostname;
     try {
-      const response = await fetch(`https://${host}/ads.txt`);
-      return await response.text();
+      if (hostname) {
+        const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
+        const response = await fetch(`https://${domain}/ads.txt`);
+        return await response.text();
+      }
+      return '';
     } catch (error) {
       console.error(error);
+      return '';
     }
   }
 
   async componentDidMount() {
-    const adstxtEntries = (await this.fetchAdsTxtEntries()) ?? '';
+    const adstxtEntries = await this.fetchAdsTxtEntries();
     // Split the entries string on each new line and comma
     const entriesArray = adstxtEntries.split(/\r?\n/).map(entry => entry.split(','));
     const publisherEntry = entriesArray
