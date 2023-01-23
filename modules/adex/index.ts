@@ -34,6 +34,30 @@
  * }, window, logger));
  * ```
  *
+ * ### App/mobile data
+ *
+ * If the ad tag is also used in apps and you would like to send mobile data to the Adex, add the `appConfig` object:
+ *
+ * The object has the following parameters (keys need to be available in the keyValues of the moli config):
+ * - `clientTypeKey`: the key in which information about the clientType ('android' | 'ios') can be found
+ * - `advertiserKey`: the key in which the advertising id can be found
+ * - `adexMobileTagId` (optional): extra id can be added to distinguish mobile (app) data from other Adex data
+ *
+ * ```js
+ * import { AdexModule } from '@highfivve/module-the-adex-dmp';
+ * moli.registerModule(new AdexModule({
+ *   mappingDefinitions: [{ adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }],
+ *   adexCustomerId: '1234',
+ *   adexTagId: '1337',
+ *   spaMode: false // non-spa web project
+ *   appConfig: {
+ *     clientTypeKey: 'gf_clientType',
+ *     advertiserIdKey: 'advertising_id',
+ *     adexMobileTagId: '1447'
+ *   }
+ * }, window, logger));
+ * ```
+ *
  * ## Resources
  *
  * - [The Adex DMP Dashboard](https://www.adex.is/login)
@@ -136,9 +160,9 @@ interface IUserTrackPluginKeyValueConfiguration {
 }
 
 export interface AdexAppConfig {
-  // key within the moli key/values in which the client type is defined
+  // key within the moli config keyValues in which the client type is defined
   clientTypeKey: string;
-  // key within the moli key/values in which the advertising id can be found
+  // key within the moli config keyValues in which the advertising id can be found
   advertiserIdKey: string;
   // extra tag id for the mobile endpoint data if distinction is wanted/necessary
   adexMobileTagId?: string;
