@@ -18,8 +18,4 @@ describe('extractDomainFromHostname', () => {
     const hostname = undefined;
     expect(extractDomainFromHostname(hostname)).to.equal(undefined);
   });
-  it('should return undefined if there is no top-level domain in the hostname', () => {
-    const hostname = 'www.unsere-testpage';
-    expect(extractDomainFromHostname(hostname)).to.equal(undefined);
-  });
 });
