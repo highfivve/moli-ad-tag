@@ -209,10 +209,7 @@ export class AdexModule implements IModule {
    * - key/value targeting is empty
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
-  private track(
-    context: AdPipelineContext,
-    assetLoaderService: IAssetLoaderService
-  ): Promise<void> {
+  public track(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
     const { adexCustomerId, adexTagId, spaMode, mappingDefinitions, appConfig } = this.config();
     const dfpKeyValues = context.config.targeting?.keyValues;
     if (!dfpKeyValues) {
@@ -271,6 +268,7 @@ export class AdexModule implements IModule {
           dfpKeyValues[appConfig.advertiserIdKey] ?? '',
           adexKeyValues,
           dfpKeyValues[appConfig.clientTypeKey] ?? '',
+          context.window.fetch,
           consentString
         );
       } else {

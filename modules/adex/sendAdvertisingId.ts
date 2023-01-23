@@ -16,20 +16,18 @@ export const sendAdvertisingID = (
   advertisingId: string | string[],
   adexAttributes: Array<AdexKeyValues>,
   clientType: string | string[],
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   consentString?: string
 ): void => {
   const ifaType = getAdvertisingIdIFAType(
     typeof clientType === 'string' ? clientType : clientType[0]
   );
-  const keyValuesJSONString: string = adexAttributes.reduce(
-    (accumulator, currentValue) => accumulator + JSON.stringify(currentValue),
-    ''
-  );
+  const keyValuesParameter = !!adexAttributes.length ? `&kv=${JSON.stringify(adexAttributes)}` : '';
   const consentParameter = consentString ? `&gdpr_consent=${consentString}` : '';
 
   try {
     fetch(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}&kv=${keyValuesJSONString}${consentParameter}`
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}`
     );
   } catch (error) {
     console.error(error);
