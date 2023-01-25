@@ -537,6 +537,56 @@ describe('prebid', () => {
         ctxWithLabelServiceStub.labelConfigService,
         'getSupportedLabels'
       );
+
+      it('should resolve the stored request id with the correct apex domain of the site', async () => {
+        const exampleDeviceLabel = 'mobile';
+        getSupportedLabelsStub.returns([exampleDeviceLabel]);
+
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+        const domId = getDomId();
+        const adUnit = {
+          ...prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }])
+        };
+
+        // create a slot with a custom storedrequest id
+        const slot = createSlotDefinitions(domId, { adUnit });
+        const singleSlot: Moli.SlotDefinition<Moli.AdSlot> = {
+          ...slot,
+          moliSlot: {
+            ...slot.moliSlot,
+            prebid: {
+              ...slot.moliSlot.prebid,
+              adUnit: {
+                ...adUnit,
+                ortb2Imp: {
+                  ext: {
+                    prebid: {
+                      storedrequest: { id: `/123/${domId}/{device}/{domain}` }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        await step(ctxWithLabelServiceStub, [singleSlot]);
+        // check that the storedrequest id is properly resolved
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          {
+            ...adUnit,
+            ortb2Imp: {
+              ext: {
+                prebid: {
+                  storedrequest: { id: `/123/${domId}/${exampleDeviceLabel}/localhost` }
+                }
+              }
+            }
+          }
+        ]);
+      });
+
       ['desktop', 'mobile'].forEach(deviceLabel => {
         it(`should resolve an existing adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
           getSupportedLabelsStub.returns([deviceLabel]);
