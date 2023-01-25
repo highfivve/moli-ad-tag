@@ -255,15 +255,12 @@ export const prebidPrepareRequestAds = (
                     }
                   : undefined;
 
-                const apexDomain = extractDomainFromHostname(context.window.location.hostname);
-
                 const pubstack: prebidjs.IPubstackConfig = {
                   ...prebidAdSlotConfig.adUnit.pubstack,
                   adUnitPath: resolveAdUnitPath(
                     prebidAdSlotConfig.adUnit.pubstack?.adUnitPath || moliSlot.adUnitPath,
                     {
                       ...context.config.targeting?.adUnitPathVariables,
-                      ...(apexDomain ? { domain: apexDomain } : {}),
                       device: deviceLabel
                     }
                   )
@@ -271,6 +268,8 @@ export const prebidPrepareRequestAds = (
 
                 const storedRequest =
                   prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid?.storedrequest;
+
+                const apexDomain = extractDomainFromHostname(context.window.location.hostname);
 
                 const storedRequestWithSolvedId = storedRequest &&
                   storedRequest.id && {

@@ -11,7 +11,6 @@ export const extractDomainFromHostname = (hostname: string | undefined): string 
     const apexDomain = hostname.substring(
       hostname.lastIndexOf('.', hostname.lastIndexOf('.') - 1) + 1
     );
-    // check if apex domain only consists of characters/numbers/hyphens and has a top-level domain
     return apexDomain;
   } else {
     return;
