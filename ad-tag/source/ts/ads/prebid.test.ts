@@ -18,6 +18,7 @@ import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
+import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 
 // setup sinon-chai
 use(sinonChai);
@@ -541,6 +542,7 @@ describe('prebid', () => {
       it('should resolve the stored request id with the correct apex domain of the site', async () => {
         const exampleDeviceLabel = 'mobile';
         getSupportedLabelsStub.returns([exampleDeviceLabel]);
+        const apexDomain = extractDomainFromHostname(jsDomWindow.location.hostname);
 
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
@@ -579,7 +581,7 @@ describe('prebid', () => {
             ortb2Imp: {
               ext: {
                 prebid: {
-                  storedrequest: { id: `/123/${domId}/${exampleDeviceLabel}/localhost` }
+                  storedrequest: { id: `/123/${domId}/${exampleDeviceLabel}/${apexDomain}` }
                 }
               }
             }
