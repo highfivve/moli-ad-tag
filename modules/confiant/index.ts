@@ -11,7 +11,7 @@
  * import { Confiant } from '@highfivve/module-confiant';
  * moli.registerModule(new Confiant({
  *   assetUrl: 'https://confiant-integrations.global.ssl.fastly.net/yqnNhQYNEfv8ldKXnwevFDx_IRM/gpt_and_prebid/config.js'
- * }, window));
+ * }));
  * ```
  *
  * ### Alternative integration
