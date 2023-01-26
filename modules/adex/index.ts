@@ -160,26 +160,47 @@ interface IUserTrackPluginKeyValueConfiguration {
 }
 
 export interface AdexAppConfig {
-  // key within the moli config keyValues in which the client type is defined
-  clientTypeKey: string;
-  // key within the moli config keyValues in which the advertising id can be found
-  advertiserIdKey: string;
-  // extra tag id for the mobile endpoint data if distinction is wanted/necessary
-  adexMobileTagId?: string;
+  /**
+   * key within the moli config keyValues in which the client type is defined
+   */
+  readonly clientTypeKey: string;
+  /**
+   * key within the moli config keyValues in which the advertising id can be found
+   */
+  readonly advertiserIdKey: string;
+  /**
+   * extra tag id for the mobile endpoint data if distinction is wanted/necessary
+   */
+  readonly adexMobileTagId?: string;
 }
 
-type AdexModuleConfig = {
-  // Customer and tag id are provided by The Adex.
-  adexCustomerId: string;
-  adexTagId: string;
-  // For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
-  // In regular mode, tracking is only executed once.
-  spaMode: boolean;
-  // extraction and conversion rules to produce Adex compatible data from key/value targeting.
-  mappingDefinitions: Array<MappingDefinition>;
-  // If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
-  appConfig?: AdexAppConfig;
-};
+/**
+ * TheADEX module configuration.
+ */
+export interface AdexModuleConfig {
+  /**
+   * Provided by your ADEX account manager.
+   */
+  readonly adexCustomerId: string;
+
+  /**
+   * Provided by your ADEX account manager.
+   */
+  readonly adexTagId: string;
+  /**
+   * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
+   * In regular mode, tracking is only executed once.
+   */
+  readonly spaMode: boolean;
+  /**
+   * extraction and conversion rules to produce Adex compatible data from key/value targeting.
+   */
+  readonly mappingDefinitions: Array<MappingDefinition>;
+  /**
+   * If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
+   */
+  readonly appConfig?: AdexAppConfig;
+}
 
 /**
  * Module to collect, convert and send key/value targeting data to The Adex DMP.
