@@ -80,6 +80,8 @@ export class IdentityLink implements IModule {
   private readonly atsConfig: ATS.Config;
   private readonly window: ATS.ATSWindow;
 
+  private readonly gvlid: string = '97';
+
   constructor(private readonly moduleConfig: IdentityLinkModuleConfig, window: Window) {
     this.window = window as ATS.ATSWindow;
 
@@ -120,7 +122,7 @@ export class IdentityLink implements IModule {
     }
 
     // no consent
-    if (context.tcData.gdprApplies && !context.tcData.vendor.consents['97']) {
+    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
       return Promise.resolve();
     }
     return assetLoaderService

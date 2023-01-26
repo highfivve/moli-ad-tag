@@ -58,6 +58,8 @@ export class Confiant implements IModule {
   public readonly description: string = 'ad fraud detection and protection module';
   public readonly moduleType: ModuleType = 'ad-fraud';
 
+  private readonly gvlid: string = '56';
+
   constructor(private readonly confiantConfig: ConfiantConfig) {}
 
   config(): Object | null {
@@ -84,7 +86,7 @@ export class Confiant implements IModule {
     }
 
     // no consent
-    if (context.tcData.gdprApplies && !context.tcData.vendor.consents['56']) {
+    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
       return Promise.resolve();
     }
     assetLoaderService.loadScript({
