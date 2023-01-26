@@ -41,13 +41,10 @@ window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidWonEvent) => {
 
 // ad fraud protection
 moli.registerModule(
-  new Confiant(
-    {
-      assetUrl:
-        'https://confiant-integrations.global.ssl.fastly.net/Fhkh8X7bib_CoPkwt4wiIcaO-vk/gpt_and_prebid/config.js'
-    },
-    window
-  )
+  new Confiant({
+    assetUrl:
+      'https://confiant-integrations.global.ssl.fastly.net/Fhkh8X7bib_CoPkwt4wiIcaO-vk/gpt_and_prebid/config.js'
+  })
 );
 
 // blacklist urls
