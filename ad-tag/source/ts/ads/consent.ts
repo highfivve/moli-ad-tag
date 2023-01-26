@@ -53,7 +53,7 @@ export const consentReady = (
   log: Moli.MoliLogger,
   env: Moli.Environment | undefined
 ): Promise<tcfapi.responses.TCData> => {
-  if (env === 'test') {
+  if (env === 'test' || consentConfig.enabled === false) {
     return Promise.resolve({
       gdprApplies: false,
       eventStatus: EventStatus.TC_LOADED,
