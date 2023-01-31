@@ -1,4 +1,5 @@
 import { AdexKeyValues } from './adex-mapping';
+import { Moli } from '@highfivve/ad-tag';
 
 const getAdvertisingIdIFAType = (clientType: string | undefined): 'aaid' | 'idfa' | undefined => {
   if (clientType === 'android') {
@@ -13,10 +14,11 @@ const getAdvertisingIdIFAType = (clientType: string | undefined): 'aaid' | 'idfa
 export const sendAdvertisingID = (
   adexCustomerId: string,
   adexTagId: string,
-  advertisingId: string | string[],
+  advertisingId: string,
   adexAttributes: Array<AdexKeyValues>,
   clientType: string | string[],
   fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  logger: Moli.MoliLogger,
   consentString?: string
 ): void => {
   const ifaType = getAdvertisingIdIFAType(
@@ -25,11 +27,7 @@ export const sendAdvertisingID = (
   const keyValuesParameter = !!adexAttributes.length ? `&kv=${JSON.stringify(adexAttributes)}` : '';
   const consentParameter = consentString ? `&gdpr_consent=${consentString}` : '';
 
-  try {
-    fetch(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}`
-    );
-  } catch (error) {
-    console.error(error);
-  }
+  fetch(
+    `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}`
+  ).catch(error => logger.error(error));
 };

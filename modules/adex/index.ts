@@ -300,22 +300,31 @@ export class AdexModule implements IModule {
       this.isLoaded = true;
 
       // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
-      if (
-        appConfig &&
+      const hasValidMobileKeyValues: boolean =
+        // appConfig is not undefined or null
+        isNotNull(appConfig) &&
+        // advertisingId must be set in dfpKeyValues
+        isNotNull(dfpKeyValues[appConfig.advertiserIdKey]) &&
+        // clientType must be either 'ios' or 'android'
         (dfpKeyValues[appConfig.clientTypeKey] === 'android' ||
-          dfpKeyValues[appConfig.clientTypeKey] === 'ios')
-      ) {
-        const consentString = 'tcString' in context.tcData ? context.tcData.tcString : undefined;
+          dfpKeyValues[appConfig.clientTypeKey] === 'ios');
 
-        sendAdvertisingID(
-          adexCustomerId,
-          appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
-          dfpKeyValues[appConfig.advertiserIdKey] ?? '',
-          adexKeyValues,
-          dfpKeyValues[appConfig.clientTypeKey] ?? '',
-          context.window.fetch,
-          consentString
-        );
+      if (appConfig?.advertiserIdKey && hasValidMobileKeyValues) {
+        const consentString = context.tcData.gdprApplies ? context.tcData.tcString : undefined;
+
+        // only send request if advertisingId is a single string (no array)
+        const advertisingIdValue = dfpKeyValues[appConfig.advertiserIdKey];
+        typeof advertisingIdValue === 'string' &&
+          sendAdvertisingID(
+            adexCustomerId,
+            appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
+            advertisingIdValue,
+            adexKeyValues,
+            dfpKeyValues[appConfig.clientTypeKey] ?? '',
+            context.window.fetch,
+            context.logger,
+            consentString
+          );
       } else {
         assetLoaderService.loadScript({
           name: this.name,
