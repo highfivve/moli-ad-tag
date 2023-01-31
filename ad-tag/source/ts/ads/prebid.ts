@@ -21,6 +21,7 @@ import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
 import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
+import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -271,28 +272,26 @@ export const prebidPrepareRequestAds = (
 
                 const apexDomain = extractDomainFromHostname(context.window.location.hostname);
 
-                const storedRequestWithSolvedId = storedRequest &&
-                  storedRequest.id && {
-                    ...storedRequest,
-                    id: resolveAdUnitPath(storedRequest.id, {
-                      ...context.config.targeting?.adUnitPathVariables,
-                      device: deviceLabel,
-                      ...(apexDomain ? { domain: apexDomain } : {})
-                    })
-                  };
+                const storedRequestWithSolvedId: { id: string } | null =
+                  storedRequest && storedRequest.id
+                    ? {
+                        ...storedRequest,
+                        id: resolveAdUnitPath(storedRequest.id, {
+                          ...context.config.targeting?.adUnitPathVariables,
+                          device: deviceLabel,
+                          ...(apexDomain ? { domain: apexDomain } : {})
+                        })
+                      }
+                    : null;
 
                 return {
                   ...prebidAdSlotConfig.adUnit,
                   ...(storedRequest &&
                     storedRequestWithSolvedId && {
-                      ortb2Imp: {
-                        ext: {
-                          prebid: {
-                            ...prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid,
-                            storedrequest: storedRequestWithSolvedId
-                          }
-                        }
-                      }
+                      ortb2Imp: resolveStoredRequestIdInOrtb2Object(
+                        prebidAdSlotConfig.adUnit.ortb2Imp,
+                        storedRequestWithSolvedId
+                      )
                     }),
                   // use domId if adUnit code is not defined
                   code: prebidAdSlotConfig.adUnit.code || moliSlot.domId,
