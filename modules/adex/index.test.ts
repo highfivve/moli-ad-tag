@@ -22,7 +22,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { MappingDefinition } from './adex-mapping';
-import { AdexModule, ITheAdexWindow } from './index';
+import { AdexAppConfig, AdexModule, ITheAdexWindow } from './index';
 import TCData = tcfapi.responses.TCData;
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 
@@ -62,6 +62,9 @@ describe('The Adex DMP Module', () => {
 
   beforeEach(() => {
     jsDomWindow.googletag = createGoogletagStub();
+    // dummy fetch function in order to be able to stub it
+    jsDomWindow.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
+      Promise.resolve(new Response());
   });
 
   afterEach(() => {
@@ -76,6 +79,7 @@ describe('The Adex DMP Module', () => {
     adexCustomerId: string,
     adexTagId: string,
     mappingDefinitions: Array<MappingDefinition>,
+    appConfig?: AdexAppConfig,
     window: ITheAdexWindow = jsDomWindow
   ): AdexModule => {
     return new AdexModule(
@@ -83,7 +87,8 @@ describe('The Adex DMP Module', () => {
         spaMode,
         adexCustomerId,
         adexTagId,
-        mappingDefinitions
+        mappingDefinitions,
+        appConfig
       },
       window
     );
@@ -324,5 +329,30 @@ describe('The Adex DMP Module', () => {
         [{ iab_cat: 'Automotive' }, 1]
       ]
     ]);
+  });
+  it('should use the in-app endpoint instead of loading the script if there is an appConfig and clientType is either android or ios', async () => {
+    const module = createAdexModule(
+      true,
+      '123',
+      '456',
+      [{ adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }],
+      { clientTypeKey: 'gf_clientType', advertiserIdKey: 'advertising_id' }
+    );
+
+    const { moliConfig } = initModule({ module });
+
+    const context: AdPipelineContext = adPipelineContext(
+      {
+        ...moliConfig,
+        targeting: { keyValues: { gf_clientType: 'android', advertising_id: '1234-5678-9123' } }
+      },
+      fullConsent({ '44': true })
+    );
+
+    const fetchStub = sandbox.stub(context.window, 'fetch');
+
+    await module.track(context, assetLoaderService);
+
+    expect(fetchStub).to.have.been.calledOnce;
   });
 });

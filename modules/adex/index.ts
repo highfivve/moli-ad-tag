@@ -34,6 +34,30 @@
  * }, window, logger));
  * ```
  *
+ * ### App/mobile data
+ *
+ * If the ad tag is also used in apps and you would like to send mobile data to the Adex, add the `appConfig` object:
+ *
+ * The object has the following parameters (keys need to be available in the keyValues of the moli config):
+ * - `clientTypeKey`: the key in which information about the clientType ('android' | 'ios') can be found
+ * - `advertiserKey`: the key in which the advertising id can be found
+ * - `adexMobileTagId` (optional): extra id can be added to distinguish mobile (app) data from other Adex data
+ *
+ * ```js
+ * import { AdexModule } from '@highfivve/module-the-adex-dmp';
+ * moli.registerModule(new AdexModule({
+ *   mappingDefinitions: [{ adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }],
+ *   adexCustomerId: '1234',
+ *   adexTagId: '1337',
+ *   spaMode: false // non-spa web project
+ *   appConfig: {
+ *     clientTypeKey: 'gf_clientType',
+ *     advertiserIdKey: 'advertising_id',
+ *     adexMobileTagId: '1447'
+ *   }
+ * }, window, logger));
+ * ```
+ *
  * ## Resources
  *
  * - [The Adex DMP Dashboard](https://www.adex.is/login)
@@ -50,8 +74,8 @@ import {
   mkConfigureStep,
   mkInitStep,
   ModuleType,
-  Moli,
-  tcfapi
+  tcfapi,
+  Moli
 } from '@highfivve/ad-tag';
 import {
   AdexKeyValues,
@@ -61,6 +85,7 @@ import {
   toAdexStringOrNumberType
 } from './adex-mapping';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import { sendAdvertisingID } from './sendAdvertisingId';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -133,16 +158,49 @@ interface IUserTrackPluginKeyValueConfiguration {
     [1]: 0 | 1;
   };
 }
-type AdexModuleConfig = {
-  // Customer and tag id are provided by The Adex.
-  adexCustomerId: string;
-  adexTagId: string;
-  // For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
-  // In regular mode, tracking is only executed once.
-  spaMode: boolean;
-  // extraction and conversion rules to produce Adex compatible data from key/value targeting.
-  mappingDefinitions: Array<MappingDefinition>;
-};
+
+export interface AdexAppConfig {
+  /**
+   * key within the moli config keyValues in which the client type is defined
+   */
+  readonly clientTypeKey: string;
+  /**
+   * key within the moli config keyValues in which the advertising id can be found
+   */
+  readonly advertiserIdKey: string;
+  /**
+   * extra tag id for the mobile endpoint data if distinction is wanted/necessary
+   */
+  readonly adexMobileTagId?: string;
+}
+
+/**
+ * TheADEX module configuration.
+ */
+export interface AdexModuleConfig {
+  /**
+   * Provided by your ADEX account manager.
+   */
+  readonly adexCustomerId: string;
+
+  /**
+   * Provided by your ADEX account manager.
+   */
+  readonly adexTagId: string;
+  /**
+   * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
+   * In regular mode, tracking is only executed once.
+   */
+  readonly spaMode: boolean;
+  /**
+   * extraction and conversion rules to produce Adex compatible data from key/value targeting.
+   */
+  readonly mappingDefinitions: Array<MappingDefinition>;
+  /**
+   * If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
+   */
+  readonly appConfig?: AdexAppConfig;
+}
 
 /**
  * Module to collect, convert and send key/value targeting data to The Adex DMP.
@@ -196,11 +254,8 @@ export class AdexModule implements IModule {
    * - key/value targeting is empty
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
-  private track(
-    context: AdPipelineContext,
-    assetLoaderService: IAssetLoaderService
-  ): Promise<void> {
-    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions } = this.config();
+  public track(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
+    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions, appConfig } = this.config();
     const dfpKeyValues = context.config.targeting?.keyValues;
     if (!dfpKeyValues) {
       context.logger.warn('Adex DMP', 'targeting key/values are empty');
@@ -240,14 +295,43 @@ export class AdexModule implements IModule {
       ]
     ]);
 
-    // load script if consent is given
+    // load script or make request (appMode) if consent is given
     if (this.hasRequiredConsent(context.tcData) && !this.isLoaded) {
       this.isLoaded = true;
-      assetLoaderService.loadScript({
-        name: this.name,
-        assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
-        loadMethod: AssetLoadMethod.TAG
-      });
+
+      // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
+      const hasValidMobileKeyValues: boolean =
+        // appConfig is not undefined or null
+        isNotNull(appConfig) &&
+        // advertisingId must be set in dfpKeyValues
+        isNotNull(dfpKeyValues[appConfig.advertiserIdKey]) &&
+        // clientType must be either 'ios' or 'android'
+        (dfpKeyValues[appConfig.clientTypeKey] === 'android' ||
+          dfpKeyValues[appConfig.clientTypeKey] === 'ios');
+
+      if (appConfig?.advertiserIdKey && hasValidMobileKeyValues) {
+        const consentString = context.tcData.gdprApplies ? context.tcData.tcString : undefined;
+
+        // only send request if advertisingId is a single string (no array)
+        const advertisingIdValue = dfpKeyValues[appConfig.advertiserIdKey];
+        typeof advertisingIdValue === 'string' &&
+          sendAdvertisingID(
+            adexCustomerId,
+            appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
+            advertisingIdValue,
+            adexKeyValues,
+            dfpKeyValues[appConfig.clientTypeKey] ?? '',
+            context.window.fetch,
+            context.logger,
+            consentString
+          );
+      } else {
+        assetLoaderService.loadScript({
+          name: this.name,
+          assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
+          loadMethod: AssetLoadMethod.TAG
+        });
+      }
     }
 
     return Promise.resolve();
