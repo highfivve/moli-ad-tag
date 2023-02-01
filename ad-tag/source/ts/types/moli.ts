@@ -1110,6 +1110,18 @@ export namespace Moli {
      */
     export interface ConsentConfig {
       /**
+       * Disables consent handling the ad tag. This has a handful of use cases
+       *
+       * 1. Debugging and testing, when the CMP has issues
+       * 2. Disable for regions without data privacy legislation
+       *
+       * When disabled, moli will provide default values for
+       *
+       * * the `tcData` object in the ad request context. `gdprApplies` will be `0`
+       */
+      readonly enabled?: boolean;
+
+      /**
        * If set to `true` ad requests will be aborted when there's only
        * legitimate interest established for at least one purpose.
        */

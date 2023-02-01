@@ -38,28 +38,35 @@ describe('consent', () => {
     expect(tcdata.gdprApplies).to.be.false;
   });
 
+  it('should return TCDataNoGDPR if enabled=false', async () => {
+    const tcdata = await consentReady(
+      { ...emptyConsentConfig, enabled: false },
+      jsDomWindow,
+      noopLogger,
+      'production'
+    );
+    expect(tcdata.gdprApplies).to.be.false;
+  });
+
   ['production' as const, undefined].forEach(env => {
     [tcfapi.status.EventStatus.TC_LOADED, tcfapi.status.EventStatus.USER_ACTION_COMPLETE].forEach(
       eventStatus => {
-        it(`should return TCDataNoGDPR for environment ${env} and event ${eventStatus}`, async () => {
-          const tcdataExpected: tcfapi.responses.TCData = {
-            ...fullConsent(),
-            eventStatus
-          };
-          tcfapiFn.onFirstCall().callsFake((cmd, version, callback) => {
-            expect(cmd).to.be.equals('addEventListener');
-            expect(version).to.be.equals(2);
-            callback(tcdataExpected, true);
-          });
+        [emptyConsentConfig, { ...emptyConsentConfig, enabled: true }].forEach(config => {
+          it(`should return TCDataNoGDPR for environment ${env}, event ${eventStatus}, consent.enabled=${config.enabled}`, async () => {
+            const tcdataExpected: tcfapi.responses.TCData = {
+              ...fullConsent(),
+              eventStatus
+            };
+            tcfapiFn.onFirstCall().callsFake((cmd, version, callback) => {
+              expect(cmd).to.be.equals('addEventListener');
+              expect(version).to.be.equals(2);
+              callback(tcdataExpected, true);
+            });
 
-          const tcdata = await consentReady(
-            emptyConsentConfig,
-            jsDomWindow,
-            noopLogger,
-            'production'
-          );
-          expect(tcdata.gdprApplies).to.be.true;
-          expect(tcdataExpected).to.be.equals(tcdataExpected);
+            const tcdata = await consentReady(config, jsDomWindow, noopLogger, env);
+            expect(tcdata.gdprApplies).to.be.true;
+            expect(tcdataExpected).to.be.equals(tcdataExpected);
+          });
         });
       }
     );

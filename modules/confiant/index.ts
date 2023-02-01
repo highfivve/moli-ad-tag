@@ -11,7 +11,7 @@
  * import { Confiant } from '@highfivve/module-confiant';
  * moli.registerModule(new Confiant({
  *   assetUrl: 'https://confiant-integrations.global.ssl.fastly.net/yqnNhQYNEfv8ldKXnwevFDx_IRM/gpt_and_prebid/config.js'
- * }, window));
+ * }));
  * ```
  *
  * ### Alternative integration
@@ -30,7 +30,15 @@
  *
  * @module
  */
-import { Moli, IModule, ModuleType, AssetLoadMethod, IAssetLoaderService } from '@highfivve/ad-tag';
+import {
+  Moli,
+  IModule,
+  ModuleType,
+  AssetLoadMethod,
+  IAssetLoaderService,
+  mkInitStep,
+  AdPipelineContext
+} from '@highfivve/ad-tag';
 
 export type ConfiantConfig = {
   /**
@@ -50,17 +58,42 @@ export class Confiant implements IModule {
   public readonly description: string = 'ad fraud detection and protection module';
   public readonly moduleType: ModuleType = 'ad-fraud';
 
-  constructor(private readonly confiantConfig: ConfiantConfig, private readonly window: Window) {}
+  private readonly gvlid: string = '56';
+
+  constructor(private readonly confiantConfig: ConfiantConfig) {}
 
   config(): Object | null {
     return this.confiantConfig;
   }
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+    // init additional pipeline steps if not already defined
+    config.pipeline = config.pipeline || {
+      initSteps: [],
+      configureSteps: [],
+      prepareRequestAdsSteps: []
+    };
+
+    config.pipeline.initSteps.push(
+      mkInitStep(this.name, ctx => this.loadConfiant(ctx, assetLoaderService))
+    );
+  }
+
+  loadConfiant(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
+    // test environment doesn't require confiant
+    if (context.env === 'test') {
+      return Promise.resolve();
+    }
+
+    // no consent
+    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
+      return Promise.resolve();
+    }
     assetLoaderService.loadScript({
-      name: 'confiant',
+      name: this.name,
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: this.confiantConfig.assetUrl
     });
+    return Promise.resolve();
   }
 }

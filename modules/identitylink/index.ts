@@ -28,7 +28,15 @@
  *
  * @module
  */
-import { AssetLoadMethod, IAssetLoaderService, IModule, ModuleType, Moli } from '@highfivve/ad-tag';
+import {
+  AdPipelineContext,
+  AssetLoadMethod,
+  IAssetLoaderService,
+  IModule,
+  mkInitStep,
+  ModuleType,
+  Moli
+} from '@highfivve/ad-tag';
 import { ATS } from './types/identitylink';
 
 export type IdentityLinkModuleConfig = {
@@ -72,6 +80,8 @@ export class IdentityLink implements IModule {
   private readonly atsConfig: ATS.Config;
   private readonly window: ATS.ATSWindow;
 
+  private readonly gvlid: string = '97';
+
   constructor(private readonly moduleConfig: IdentityLinkModuleConfig, window: Window) {
     this.window = window as ATS.ATSWindow;
 
@@ -89,7 +99,33 @@ export class IdentityLink implements IModule {
   }
 
   init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    assetLoaderService
+    // init additional pipeline steps if not already defined
+    config.pipeline = config.pipeline || {
+      initSteps: [],
+      configureSteps: [],
+      prepareRequestAdsSteps: []
+    };
+
+    config.pipeline.initSteps.push(
+      mkInitStep(this.name, ctx => {
+        // async loading - prebid takes care of auction delay
+        this.loadAts(ctx, assetLoaderService);
+        return Promise.resolve();
+      })
+    );
+  }
+
+  loadAts(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
+    // test environment doesn't require confiant
+    if (context.env === 'test') {
+      return Promise.resolve();
+    }
+
+    // no consent
+    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
+      return Promise.resolve();
+    }
+    return assetLoaderService
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,

@@ -133,6 +133,62 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   },
   slots: [
     {
+      domId: 'ad-content-1',
+      position: 'in-page',
+      labelAny: ['mobile', 'desktop'],
+      adUnitPath: '/55155651/prebid_test/ad-content-1/{device}/{category}',
+      sizes: [[300, 300]],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ],
+      behaviour: {
+        loaded: 'eager'
+      },
+      gpt: {
+        // prevent collapsing this div because it hurts the CLS score
+        collapseEmptyDiv: false
+      },
+      a9: {
+        labelAll: ['a9']
+      },
+      prebid: context => [
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'ad-content-1'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [[300, 250]]
+              }
+            },
+            ortb2Imp: {
+              ext: {
+                prebid: {
+                  storedrequest: {
+                    id: `/55155651/prebid_test/ad-content-1/{device}/{domain}`
+                  }
+                }
+              }
+            },
+            bids: [
+              // Unruly test placement
+              unrulyBid(1081534, '6f15e139-5f18-49a1-b52f-87e5e69ee65e'),
+              // SpotX test placement
+              spotxBid('85394', 'ad-content-1'),
+              // Teads fallback placements
+              teadsVerticalBid(94142, 101939, ['desktop']),
+              teadsVerticalBid(94140, 101937, ['mobile'])
+            ]
+          }
+        }
+      ]
+    },
+
+    {
       domId: 'ad-mobile-sticky',
       adUnitPath: '/55155651/mobile-sticky/{device}-{category}',
       position: 'in-page',
