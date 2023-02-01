@@ -7,6 +7,14 @@ Add at least the `ad-tag` as a dependency.
 $ yarn add @highfivve/ad-tag
 ```
 
+!! If you are using node.js 17+ you currently need to do this !!
+
+```bash
+export NODE_OPTIONS=--openssl-legacy-provider
+```
+
+See <https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported>
+
 ## moli release script
 
 Moli provides a release script that helps you build releases and a summary page.
