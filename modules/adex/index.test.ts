@@ -349,7 +349,7 @@ describe('The Adex DMP Module', () => {
       fullConsent({ '44': true })
     );
 
-    const fetchStub = sandbox.stub(context.window, 'fetch');
+    const fetchStub = sandbox.stub(context.window, 'fetch').rejects(new Error('whatever'));
 
     await module.track(context, assetLoaderService);
 
