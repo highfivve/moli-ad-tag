@@ -2936,6 +2936,7 @@ export namespace prebidjs {
   }
 
   // Supported SSPs
+  export const Adagio = 'adagio';
   export const AdaptMx = 'amx';
   export const Adform = 'adf';
   export const AdUp = 'aduptech';
@@ -2972,6 +2973,7 @@ export namespace prebidjs {
    * The bidder code is used to identify the different SSPs.
    */
   export type BidderCode =
+    | typeof Adagio
     | typeof AdaptMx
     | typeof AdUp
     | typeof Adform
@@ -3048,6 +3050,68 @@ export namespace prebidjs {
      */
     readonly bidSource?: server.BidSource;
   }
+
+  /**
+   * Adagio bid params
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/adagio.html
+   */
+  export interface IAdagioParams {
+    /**
+     * Id of the Organization. Handed out by Adagio.
+     * @example `'1010'`
+     */
+    readonly organizationId: string;
+
+    /**
+     * Name of the site. Handed out by Adagio.
+     * - max length: 50
+     *
+     * @example `'mysite-com'`
+     */
+    readonly site: string;
+
+    /**
+     * Refers to the placement of an adunit in a page.
+     * Must not contain any information about the type of device.
+     * - max length: 30
+     * - max distinctives values: 10
+     *
+     * @example `'ban_atf'`
+     */
+    readonly placement: string;
+
+    /**
+     * Refers to the adunit html attribute id in a page.
+     */
+    readonly adUnitElementId: string;
+
+    /**
+     * Describes what kind of content will be present in the page.
+     * - max length: 30
+     * - max distinctives values: 50
+     * @example `'article'`
+     */
+    readonly pagetype?: string;
+
+    /**
+     * Category of the content displayed in the page.
+     * - max length: 30
+     * - max distinctives values: 50
+     */
+    readonly category?: string;
+
+    /**
+     *  Partial OpenRTB Native 1.2 request object. Supported fields are:
+     * - context
+     * -plcmttype
+     *
+     * @example `{context: 1, plcmttype: 2}`
+     */
+    readonly native?: any;
+  }
+
+  export interface IAdagioBid extends IBidObject<typeof Adagio, IAdagioParams> {}
 
   /**
    * Adapt.mx bid params
@@ -4537,6 +4601,7 @@ export namespace prebidjs {
    * Supported bid object types.
    */
   export type IBid =
+    | IAdagioBid
     | IAdaptMxBid
     | IAdformBid
     | IAdUpBid
