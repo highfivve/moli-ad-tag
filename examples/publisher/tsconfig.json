@@ -2,7 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "sourceMap": true,
-    "lib": ["dom", "es6", "scripthost"],
+    "lib": ["dom", "ES2019", "scripthost"],
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "ES2019",
