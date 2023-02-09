@@ -1052,6 +1052,9 @@ export namespace Moli {
      * ## Example creative snippet
      *
      * This is an example of how a passback function could look like in a creative.
+     * Note that you can either use the `adUnitPath` or the `domId` of the slot.
+     *
+     * `adUnitPath` is not yet fully supported, when using variables in the ad unit path.
      *
      * ```
      * var passbackCallback = function() {
