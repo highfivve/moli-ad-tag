@@ -1057,7 +1057,7 @@ export namespace Moli {
      * var passbackCallback = function() {
      *   var request = JSON.stringify({
      *     type: 'passback',
-     *     domId: '[AD-SLOT-DOM-ID]',
+     *     adUnitPath: '%%ADUNIT%%' ,
      *     passbackOrigin: '[ADVERTISER-NAME]'
      *   });
      *   try {
