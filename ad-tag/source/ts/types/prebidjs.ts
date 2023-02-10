@@ -272,6 +272,23 @@ export namespace prebidjs {
     };
   }
 
+  interface IAdagioConfig {
+    /**
+     * Global Adagio property
+     */
+    readonly adagio?: {
+      /**
+       * a global `siteId` is a shortcut to facilitate the integration for publisher.
+       */
+      readonly siteId?: string;
+
+      /**
+       *  Edge case. Useful when Prebid Manager cannot handle properly params setting
+       */
+      readonly useAdUnitCodeAsPlacement?: boolean;
+    };
+  }
+
   /**
    *
    * The `targetingControls` object passed to `pbjs.setConfig` provides some options to influence how an auction’s
@@ -1844,7 +1861,8 @@ export namespace prebidjs {
   export interface IPrebidJsConfig
     extends IImproveDigitalConfig,
       IRubiconConfig,
-      IIndexExchangeConfig {
+      IIndexExchangeConfig,
+      IAdagioConfig {
     /**
      * Turn on debugging
      */
@@ -3084,7 +3102,12 @@ export namespace prebidjs {
     /**
      * Refers to the adunit html attribute id in a page.
      */
-    readonly adUnitElementId: string;
+    readonly adUnitElementId?: string;
+
+    /**
+     * If true, "adUnitElementId" must be removed. (Since Prebid.js@4.19)
+     */
+    readonly useAdUnitCodeAsAdUnitElementId?: boolean;
 
     /**
      * Describes what kind of content will be present in the page.
