@@ -1,6 +1,11 @@
 import { AdexKeyValues } from './adex-mapping';
 import { Moli } from '@highfivve/ad-tag';
 
+type ValueOf<T> = T[keyof T];
+type AdexKeyValueObject = {
+  [key: string]: ValueOf<AdexKeyValues>;
+};
+
 const getAdvertisingIdIFAType = (clientType: string | undefined): 'aaid' | 'idfa' | undefined => {
   if (clientType === 'android') {
     return 'aaid';
@@ -17,14 +22,18 @@ export const sendAdvertisingID = (
   advertisingId: string,
   adexAttributes: Array<AdexKeyValues>,
   clientType: string | string[],
-  fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
   logger: Moli.MoliLogger,
   consentString?: string
 ): void => {
   const ifaType = getAdvertisingIdIFAType(
     typeof clientType === 'string' ? clientType : clientType[0]
   );
-  const keyValuesParameter = !!adexAttributes.length ? `&kv=${JSON.stringify(adexAttributes)}` : '';
+  const keyValuesMap = adexAttributes.reduce<AdexKeyValueObject>((acc, currentValue) => {
+    return { ...acc, ...currentValue };
+  }, {});
+
+  const keyValuesParameter = !!adexAttributes.length ? `&kv=${JSON.stringify(keyValuesMap)}` : '';
   const consentParameter = consentString ? `&gdpr_consent=${consentString}` : '';
 
   fetch(
