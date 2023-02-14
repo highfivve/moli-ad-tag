@@ -59,6 +59,27 @@ export class SizeConfigDebug extends Component<ISizeConfigProps, ISizeConfigStat
                   })}
                 </div>
               )}
+              {sizeConfigEntry.labelNone && (
+                <div className="MoliDebug-tagContainer">
+                  <span className="MoliDebug-tagLabel">Label None</span>
+                  {sizeConfigEntry.labelNone.map(label => {
+                    const labelMatches = supportedLabels.includes(label);
+                    return (
+                      <div
+                        key={label}
+                        className={classList(
+                          'MoliDebug-tag',
+                          [!labelMatches, 'MoliDebug-tag--green'],
+                          [labelMatches, 'MoliDebug-tag--red']
+                        )}
+                        title={`Labels ${labelMatches ? 'match' : "don't match"}`}
+                      >
+                        {label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div className="MoliDebug-tagContainer">
                 <span className="MoliDebug-tagLabel">Supported slot sizes</span>
                 {sizeConfigEntry.sizesSupported.map(this.tagFromSlotSize)}

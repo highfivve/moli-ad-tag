@@ -141,6 +141,8 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
+          labelAll: ['this-label-has-to-be-there'],
+          labelNone: ['this-label-cannot-be-there'],
           sizesSupported: [[300, 300]]
         }
       ],
