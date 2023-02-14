@@ -52,7 +52,7 @@ describe('sendAdvertisingId', () => {
     );
 
     expect(fetchStub).to.have.been.calledOnceWithExactly(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv=[{"iab_cat":"Medical"}]`
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv={"iab_cat":"Medical"}`
     );
   });
   it('should use "aaid" as ifa param if clientType is "android"', () => {
@@ -68,7 +68,7 @@ describe('sendAdvertisingId', () => {
     );
 
     expect(fetchStub).to.have.been.calledOnceWithExactly(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv=[{"iab_cat":"Medical"}]`
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv={"iab_cat":"Medical"}`
     );
   });
   it('should use "idfa" as ifa param if clientType is "ios"', () => {
@@ -84,7 +84,7 @@ describe('sendAdvertisingId', () => {
     );
 
     expect(fetchStub).to.have.been.calledOnceWithExactly(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=idfa&kv=[{"iab_cat":"Medical"}]`
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=idfa&kv={"iab_cat":"Medical"}`
     );
   });
   it('should append the consentString to the request url if it is given as argument', () => {
@@ -101,7 +101,7 @@ describe('sendAdvertisingId', () => {
     );
 
     expect(fetchStub).to.have.been.calledOnceWithExactly(
-      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv=[{"iab_cat":"Medical"}]&gdpr_consent=testString`
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv={"iab_cat":"Medical"}&gdpr_consent=testString`
     );
   });
   it('should not append the Adex key-values to the request url if there is no key-value pair in the list', () => {
@@ -118,6 +118,26 @@ describe('sendAdvertisingId', () => {
 
     expect(fetchStub).to.have.been.calledOnceWithExactly(
       `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid`
+    );
+  });
+  it('should send an object as key values to the Adex ', () => {
+    const fetchStub = sandbox.stub(jsDomWindow, 'fetch').rejects(new Error('whatever'));
+    sendAdvertisingID(
+      adexCustomerId,
+      adexTagId,
+      advertisingId,
+      [
+        { iab_cat: 'Medical' },
+        { device_type: 'desktop' },
+        { page_tag: 'interessant,interessante-themen,umfrage' }
+      ],
+      'android',
+      fetchStub,
+      noopLogger
+    );
+
+    expect(fetchStub).to.have.been.calledOnceWithExactly(
+      `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=aaid&kv={"iab_cat":"Medical","device_type":"desktop","page_tag":"interessant,interessante-themen,umfrage"}`
     );
   });
 });
