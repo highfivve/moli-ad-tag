@@ -88,7 +88,7 @@ describe('Confiant Module', () => {
       });
     });
 
-    it('load confiant if gdpr does not apply', () => {
+    it('load confiant if gdpr does apply', () => {
       module.loadConfiant(adPipelineContext(), assetLoaderService);
       expect(loadScriptStub).to.have.been.calledOnce;
       expect(loadScriptStub).to.have.been.calledOnceWithExactly({
