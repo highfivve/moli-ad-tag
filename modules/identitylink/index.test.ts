@@ -83,7 +83,7 @@ describe('IdentityLink Module', () => {
       expect(loadScriptStub).to.have.not.been.called;
     });
 
-    it('not load anything if gdpr applies and vendor 56 has no consent', async () => {
+    it('not load anything if gdpr applies and vendor 97 has no consent', async () => {
       await module.loadAts(
         { ...adPipelineContext(), tcData: fullConsent({ 97: false }) },
         assetLoaderService
