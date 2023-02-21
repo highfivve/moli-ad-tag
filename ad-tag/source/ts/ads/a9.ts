@@ -283,6 +283,18 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
           resolve();
         } else {
           context.reportingService.markA9fetchBids(context.requestId);
+
+          // temporary hack to add assertive yield floors to amazon A9
+          // remove when AB test is finished
+          try {
+            const ayWindow = context.window as any;
+            if (ayWindow.assertive && ayWindow.assertive.floors && ayWindow.assertive.enabled) {
+              ayWindow.assertive.addAmazonFloors(slots);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+
           context.window.apstag.fetchBids(
             { slots, ...(context.bucket?.timeout && { bidTimeout: context.bucket.timeout }) },
             (_bids: Object[]) => {
