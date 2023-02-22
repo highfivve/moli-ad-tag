@@ -315,6 +315,13 @@ export namespace googletag {
        * item backfill or a creative rendered by services other than pubads service.
        */
       sourceAgnosticLineItemId?: number;
+
+      /**
+       * IDs of the yield groups for the rendered backfill ad. Value is null for empty slots, reservation ads, and creatives rendered by services other than PubAdsService.
+       *
+       * @see https://developers.google.com/publisher-tag/reference#googletag.events.SlotRenderEndedEvent_yieldGroupIds
+       */
+      yieldGroupIds: null | number[];
       serviceName: string;
       size: Size;
       slot: IAdSlot;
