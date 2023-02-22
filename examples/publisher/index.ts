@@ -100,7 +100,8 @@ moli.registerModule(
       excludeOrderIds: [],
       includeAdvertiserIds: [
         4693931408 /* AppNexus */, 4868030566, 4858511198 /* gutefrage-intern */
-      ]
+      ],
+      includeYieldGroupIds: []
     },
     window
   )

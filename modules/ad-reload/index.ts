@@ -87,6 +87,12 @@ export type AdReloadModuleConfig = {
   includeAdvertiserIds: Array<number>;
 
   /**
+   * Include list for yield group ids that are eligible to be reloaded.
+   * The id can be obtained from your google ad manager in the yield_group/list section.
+   */
+  includeYieldGroupIds: Array<number>;
+
+  /**
    * Include list for orders that are eligible to be reloaded.
    */
   includeOrderIds: Array<number>;
@@ -235,6 +241,7 @@ export class AdReload implements IModule {
         slot: googleTagSlot,
         campaignId,
         advertiserId,
+        yieldGroupIds,
         isEmpty: slotIsEmpty
       } = renderEndedEvent;
       const slotDomId = googleTagSlot.getSlotElementId();
@@ -246,6 +253,10 @@ export class AdReload implements IModule {
       const advertiserIdIncluded =
         !!advertiserId && this.moduleConfig.includeAdvertiserIds.indexOf(advertiserId) > -1;
 
+      const yieldGroupIdIncluded =
+        !!yieldGroupIds &&
+        this.moduleConfig.includeYieldGroupIds.some(id => yieldGroupIds.indexOf(id) > -1);
+
       // enable refreshing if
       // - the slot wasn't reported empty by pubads
       // - the slot isn't excluded by dom id blocklist
@@ -256,7 +267,7 @@ export class AdReload implements IModule {
         !slotIsEmpty &&
         slotIsMonitored &&
         orderIdNotExcluded &&
-        (orderIdIncluded || advertiserIdIncluded);
+        (orderIdIncluded || advertiserIdIncluded || yieldGroupIdIncluded);
 
       if (!trackingSlotAllowed) {
         // log details why this slot can't be refreshed.
@@ -267,8 +278,10 @@ export class AdReload implements IModule {
             slotIsMonitored,
             orderIdNotExcluded,
             orderIdIncluded,
-            advertiserIdIncluded
+            advertiserIdIncluded,
+            yieldGroupIdIncluded
           },
+          yieldGroupIds,
           campaignId,
           advertiserId
         );
@@ -372,7 +385,9 @@ export class AdReload implements IModule {
       orderIdNotExcluded: boolean;
       orderIdIncluded: boolean;
       advertiserIdIncluded: boolean;
+      yieldGroupIdIncluded: boolean;
     },
+    yieldGroupIds: null | number[],
     campaignId?: number,
     advertiserId?: number
   ): void => {
@@ -381,7 +396,8 @@ export class AdReload implements IModule {
       slotIsMonitored,
       orderIdNotExcluded,
       orderIdIncluded,
-      advertiserIdIncluded
+      advertiserIdIncluded,
+      yieldGroupIdIncluded
     } = reasons;
     if (slotIsEmpty) {
       this.logger?.debug('AdReload', slotDomId, 'slot not tracked: reported empty');
@@ -397,7 +413,7 @@ export class AdReload implements IModule {
         campaignId
       );
     }
-    if (!(orderIdIncluded || advertiserIdIncluded)) {
+    if (!(orderIdIncluded || advertiserIdIncluded || yieldGroupIdIncluded)) {
       this.logger?.debug(
         'AdReload',
         slotDomId,
@@ -405,6 +421,8 @@ export class AdReload implements IModule {
         campaignId,
         'nor advertiser id',
         advertiserId,
+        'nor yieldGroup id',
+        yieldGroupIds,
         'included'
       );
     }
