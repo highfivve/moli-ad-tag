@@ -64,6 +64,7 @@ describe('AdReload Validations', () => {
     includeAdvertiserIds: [1],
     includeOrderIds: [1],
     excludeOrderIds: [2],
+    includeYieldGroupIds: [3],
     excludeAdSlotDomIds: ['23'],
     optimizeClsScoreDomIds: ['22']
   };
