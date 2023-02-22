@@ -54,6 +54,7 @@ moli.registerModule(
       ],
       includeOrderIds: [],
       excludeOrderIds: [],
+      includeYieldGroupIds: [],
       includeAdvertiserIds: [4693931408 /* AppNexus */],
       optimizeClsScoreDomIds: []
     },
