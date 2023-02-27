@@ -1,8 +1,11 @@
 import jsdom from 'jsdom';
 
-export const createDom = (): jsdom.JSDOM => {
+export type CreateDomOptions = {
+  readonly url?: string;
+};
+export const createDom = (options?: CreateDomOptions): jsdom.JSDOM => {
   const dom = new jsdom.JSDOM('', {
-    url: 'http://localhost',
+    url: options?.url ?? 'http://localhost',
     referrer: 'http://localhost',
     contentType: 'text/html'
   });

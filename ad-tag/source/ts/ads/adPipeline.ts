@@ -8,6 +8,7 @@ import { consentReady } from './consent';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 
 /**
  * Context passed to every pipeline step.
@@ -317,6 +318,13 @@ export class AdPipeline {
         extraLabels.push('purpose-1');
       } else if (!consentData.gdprApplies) {
         extraLabels.push('purpose-1');
+      }
+
+      // make the apex domain available for every request. This allows for granular domain level targeting.
+      // note that there's no fallback mechanism now, which leaves "translate" pages or iframe integrations unsupported
+      const domain = extractDomainFromHostname(this.window.location.hostname);
+      if (domain) {
+        extraLabels.push(domain);
       }
 
       const labelConfigService = new LabelConfigService(
