@@ -1,9 +1,17 @@
 {
-  "currentVersion": 2,
+  "currentVersion": 3,
   "currentFilename": "moli_1337.min.mjs",
   "currentFilenameEs5": "moli_es5_f411.min.js",
   "publisherName": "test",
   "versions": [
+    {
+      "version": 3,
+      "filename": "moli_1337.min.mjs",
+      "filenameEs5": "moli_es5_f411.min.js",
+      "changelog": [
+        "This is a test\\nAnother test"
+      ]
+    },
     {
       "version": 2,
       "filename": "moli_1337.min.mjs",
