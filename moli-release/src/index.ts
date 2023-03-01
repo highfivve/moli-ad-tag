@@ -1,7 +1,6 @@
 'use strict';
 
 import program = require('commander');
-
 import inquirer from 'inquirer';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -9,6 +8,7 @@ import * as child from 'child_process';
 import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
+import { ReleaseInformation } from './types/releaseInformation';
 
 const CYAN_ESC = '\x1b[36m%s\x1b[0m';
 
@@ -17,11 +17,15 @@ program
   .description('Create a release for moli ad tag')
   .option('-D, --dry', 'Dry run not creating a commit', false)
   .option('-P, --publishername [publishername]', 'Publisher name')
+  .option('-M, --message [message]', 'Changelog message')
+  .option('--ci', 'Whether this release is performed by CI or person', false)
   .parse(process.argv);
 
 const options = program.opts();
 const dryRun: boolean = options.dry;
 const publisherNameFromArgs: string | undefined = options.publishername;
+const changelogMessage: string | undefined = options.message;
+const ci: boolean = options.ci;
 
 // Parse releases.json (optional) and package.json (required)
 let releasesJson: IReleasesJson;
@@ -60,8 +64,14 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
 (async () => {
   let commitMessages: string[] = await getGitCommitMessages();
 
+  if (ci && !changelogMessage) {
+    console.error('--message parameter is required in CI mode.');
+    process.exit();
+    return;
+  }
+
   // If more than 10 commit messages were found and no tag was assigned to one of these, we ask the user how many commits he wants to check.
-  if (commitMessages.length >= 10) {
+  if (commitMessages.length >= 10 && !ci) {
     await inquirer
       .prompt([
         {
@@ -129,100 +139,116 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
     });
   }
 
-  await inquirer
-    .prompt(questions)
-    .then(async (answers: { version: number; changes: string; push: any }) => {
-      version = answers.version;
+  let releaseInformation: ReleaseInformation;
 
-      // run lint before releasing
-      child.execSync('yarn lint');
+  if (ci) {
+    console.log('Running in CI mode');
+    releaseInformation = {
+      push: true,
+      changes: changelogMessage!,
+      version: version
+    };
+  } else {
+    releaseInformation = await inquirer
+      .prompt(questions)
+      .then(async (answers: { version: number; changes: string; push: any }) => {
+        return {
+          push: answers.push,
+          changes: answers.changes,
+          version: answers.version
+        };
+      });
+  }
 
-      const versionJsonNewContents = JSON.stringify({ currentVersion: version }, null, 2);
+  version = releaseInformation.version;
 
-      if (dryRun) {
-        console.log(CYAN_ESC, '>>> DRY RUN <<<');
-        console.log(CYAN_ESC, 'Projected version.json temp file contents:');
-        console.log(versionJsonNewContents);
-      } else {
-        fs.writeFileSync('version.json', versionJsonNewContents);
+  // run lint before releasing
+  child.execSync('yarn lint');
+
+  const versionJsonNewContents = JSON.stringify({ currentVersion: version }, null, 2);
+
+  if (dryRun) {
+    console.log(CYAN_ESC, '>>> DRY RUN <<<');
+    console.log(CYAN_ESC, 'Projected version.json temp file contents:');
+    console.log(versionJsonNewContents);
+  } else {
+    fs.writeFileSync('version.json', versionJsonNewContents);
+  }
+
+  // run build to generate manifest.json and check if build works
+  child.execSync('yarn build');
+
+  // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
+  const manifestPath = path.join(process.cwd(), 'dist', 'manifest.json');
+  if (!fs.existsSync(manifestPath)) {
+    return Promise.reject(`${manifestPath} file does not exist!`);
+  }
+  const manifestFile = fs.readFileSync(manifestPath);
+  const manifestJson = JSON.parse(manifestFile as any); // yes, we can
+  const filename = manifestJson.moli; // moli is the ad tag name by convention
+
+  const manifestPathEs5 = path.join(process.cwd(), 'dist', 'manifest.es5.json');
+
+  const manifestFileEs5: Buffer | undefined = fs.existsSync(manifestPathEs5)
+    ? fs.readFileSync(manifestPathEs5)
+    : undefined;
+  const manifestJsonEs5: { moli_es5: string } | undefined = manifestFileEs5
+    ? JSON.parse(manifestFileEs5.toString())
+    : undefined; // yes, we can
+  const filenameEs5 = manifestJsonEs5?.moli_es5; // moli_es5 is the ES5 ad tag name by convention
+
+  const change: IAdTagRelease = {
+    version: version,
+    filename: filename,
+    filenameEs5: filenameEs5,
+    changelog: releaseInformation.changes.split('\n').filter(element => element !== '')
+  };
+
+  versions.unshift(change);
+
+  const releasesJsonContent: IReleasesJson = {
+    currentVersion: version,
+    currentFilename: filename,
+    currentFilenameEs5: filenameEs5,
+    publisherName: releasesJson.publisherName,
+    versions: versions
+  };
+
+  packageJson.version = version + '.0.0';
+
+  const packageJsonNewContents = JSON.stringify(packageJson, null, 2);
+  const releasesJsonNewContents = JSON.stringify(releasesJsonContent, null, 2);
+
+  // The tagName for the commit including the name of the publisher and the version.
+  const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
+
+  if (dryRun) {
+    console.log(CYAN_ESC, 'Projected package.json contents:');
+    console.log(packageJsonNewContents);
+    console.log(CYAN_ESC, 'Projected releases.json contents:');
+    console.log(releasesJsonNewContents);
+    console.log(CYAN_ESC, 'Projected git tag name:');
+    console.log(tagName);
+    console.log(CYAN_ESC, '>>> DRY RUN FINISHED <<<');
+  } else {
+    fs.writeFileSync('package.json', packageJsonNewContents);
+    fs.writeFileSync('releases.json', releasesJsonNewContents);
+
+    const pushString: string = releaseInformation.push
+      ? `&& git push && git push origin ${tagName}`
+      : '';
+
+    await child.exec(
+      `git add package.json releases.json version.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
+      async (err, _stdout, _stderr) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(`Successfully released new version (v${version})`);
+        }
       }
-
-      // run build to generate manifest.json and check if build works
-      child.execSync('yarn build');
-
-      // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
-      const manifestPath = path.join(process.cwd(), 'dist', 'manifest.json');
-      if (!fs.existsSync(manifestPath)) {
-        return Promise.reject(`${manifestPath} file does not exist!`);
-      }
-      const manifestFile = fs.readFileSync(manifestPath);
-      const manifestJson = JSON.parse(manifestFile as any); // yes, we can
-      const filename = manifestJson.moli; // moli is the ad tag name by convention
-
-      const manifestPathEs5 = path.join(process.cwd(), 'dist', 'manifest.es5.json');
-
-      const manifestFileEs5: Buffer | undefined = fs.existsSync(manifestPathEs5)
-        ? fs.readFileSync(manifestPathEs5)
-        : undefined;
-      const manifestJsonEs5: { moli_es5: string } | undefined = manifestFileEs5
-        ? JSON.parse(manifestFileEs5.toString())
-        : undefined; // yes, we can
-      const filenameEs5 = manifestJsonEs5?.moli_es5; // moli_es5 is the ES5 ad tag name by convention
-
-      const change: IAdTagRelease = {
-        version: version,
-        filename: filename,
-        filenameEs5: filenameEs5,
-        changelog: answers.changes.split('\n').filter(element => element !== '')
-      };
-
-      versions.unshift(change);
-
-      const releasesJsonContent: IReleasesJson = {
-        currentVersion: version,
-        currentFilename: filename,
-        currentFilenameEs5: filenameEs5,
-        publisherName: releasesJson.publisherName,
-        versions: versions
-      };
-
-      packageJson.version = version + '.0.0';
-
-      const packageJsonNewContents = JSON.stringify(packageJson, null, 2);
-      const releasesJsonNewContents = JSON.stringify(releasesJsonContent, null, 2);
-
-      // The tagName for the commit including the name of the publisher and the version.
-      const tagName: string = `${releasesJsonContent.publisherName}-v${version}`;
-
-      if (dryRun) {
-        console.log(CYAN_ESC, 'Projected package.json contents:');
-        console.log(packageJsonNewContents);
-        console.log(CYAN_ESC, 'Projected releases.json contents:');
-        console.log(releasesJsonNewContents);
-        console.log(CYAN_ESC, 'Projected git tag name:');
-        console.log(tagName);
-        console.log(CYAN_ESC, '>>> DRY RUN FINISHED <<<');
-      } else {
-        fs.writeFileSync('package.json', packageJsonNewContents);
-        fs.writeFileSync('releases.json', releasesJsonNewContents);
-
-        const pushString: string = answers.push ? `&& git push && git push origin ${tagName}` : '';
-
-        await child.exec(
-          `git add package.json releases.json version.json && git commit -m 'v${version}' && git tag -a ${tagName} -m ${tagName} ${pushString}`,
-          async (err, _stdout, _stderr) => {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log('Successfully released new version');
-            }
-          }
-        );
-      }
-    })
-    .catch(error => {
-      console.error(error);
-    });
+    );
+  }
 })();
 
 /**
