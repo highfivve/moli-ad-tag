@@ -20,6 +20,7 @@ import {
 } from '../util/environmentOverride';
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
+import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -476,10 +477,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'configurable': {
         state.initialize = true;
         setABtestTargeting();
+        addDomainLabel();
         return Promise.resolve(state);
       }
       case 'configured': {
         setABtestTargeting();
+        addDomainLabel();
         const { moduleMeta, isSinglePageApp, refreshSlots, refreshInfiniteSlots } = state;
         let config = state.config;
 
@@ -934,6 +937,15 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1;
 
     setTargeting(key, abTest.toString());
+  }
+
+  function addDomainLabel(): void {
+    // make the apex domain available for every request. This allows for granular domain level targeting.
+    // note that there's no fallback mechanism now, which leaves "translate" pages or iframe integrations unsupported
+    const domain = extractDomainFromHostname(window.location.hostname);
+    if (domain) {
+      addLabel(domain);
+    }
   }
 
   function getAssetLoaderService(): IAssetLoaderService {

@@ -1378,4 +1378,60 @@ describe('moli', () => {
       expect(refreshSpy).to.have.not.been.called;
     });
   });
+
+  describe('requestAds', () => {
+    describe('configurable state', () => {
+      it('should localhost as domain label in config', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.requestAds();
+        adTag.configure(newEmptyConfig());
+        const config = adTag.getConfig();
+        expect(config).to.be.ok;
+        const labels = config?.targeting?.labels;
+        expect(labels).to.be.ok;
+        expect(labels).to.contain.oneOf(['localhost']);
+      });
+
+      it('should apexDomain as domain label in config', async () => {
+        dom.reconfigure({
+          url: 'https://example.com'
+        });
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.requestAds();
+        adTag.configure(newEmptyConfig());
+        const config = adTag.getConfig();
+        expect(config).to.be.ok;
+        const labels = config?.targeting?.labels;
+        expect(labels).to.be.ok;
+        expect(labels).to.contain.oneOf(['example.com']);
+      });
+    });
+
+    describe('configured state', () => {
+      it('should localhost as domain label in config', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        adTag.configure(newEmptyConfig());
+        await adTag.requestAds();
+        const config = adTag.getConfig();
+        expect(config).to.be.ok;
+        const labels = config?.targeting?.labels;
+        expect(labels).to.be.ok;
+        expect(labels).to.contain.oneOf(['localhost']);
+      });
+
+      it('should apexDomain as domain label in config', async () => {
+        dom.reconfigure({
+          url: 'https://example.com'
+        });
+        const adTag = createMoliTag(jsDomWindow);
+        adTag.configure(newEmptyConfig());
+        await adTag.requestAds();
+        const config = adTag.getConfig();
+        expect(config).to.be.ok;
+        const labels = config?.targeting?.labels;
+        expect(labels).to.be.ok;
+        expect(labels).to.contain.oneOf(['example.com']);
+      });
+    });
+  });
 });

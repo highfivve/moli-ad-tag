@@ -326,44 +326,6 @@ describe('AdPipeline', () => {
 
       expect(supportedLabels).to.contain('purpose-1');
     });
-
-    it('should localhost as domain', async () => {
-      dom.window.__tcfapi = tcfapiFunction(tcDataNoGdpr);
-      let supportedLabels: string[] = [];
-      const configureStep: ConfigureStep[] = [
-        context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
-          return Promise.resolve();
-        }
-      ];
-      const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
-      await pipeline.run([adSlot], emptyConfig, 1);
-
-      expect(supportedLabels).to.contain('localhost');
-    });
-
-    it('should the apex domain from window.location.hostname ', async () => {
-      const domWithLocation = createDom({ url: 'https://www.example.com' });
-      domWithLocation.window.__tcfapi = tcfapiFunction(tcDataNoGdpr);
-      let supportedLabels: string[] = [];
-      const configureStep: ConfigureStep[] = [
-        context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
-          return Promise.resolve();
-        }
-      ];
-
-      const pipeline = new AdPipeline(
-        { ...emptyPipelineConfig, configure: configureStep },
-        noopLogger,
-        domWithLocation.window as any,
-        reportingService
-      );
-
-      await pipeline.run([adSlot], emptyConfig, 1);
-
-      expect(supportedLabels).to.contain('example.com');
-    });
   });
 
   describe('mkConfigureStepOnce', () => {
