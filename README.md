@@ -88,7 +88,7 @@ yarn workspace @highfivve/example-publisher-mode start
 Releases are automatically prepared and publish via github actions. To trigger a release run
 
 ```bash
-yarn lerna version
+yarn lerna version --exact
 ```
 
 There will always be a release draft on the [github release page](https://github.com/highfivve/moli-ad-tag/releases).
