@@ -30,4 +30,17 @@ describe('extractDomainFromHostname', () => {
     const hostname = 'foo.bar.www.testdomain.de';
     expect(extractDomainFromHostname(hostname)).to.equal('testdomain.de');
   });
+
+  describe('ccTLD - country code top level domains', () => {
+    ['co.uk', 'com.br'].forEach(ccTld => {
+      it(`should work for ${ccTld} domains without subdomains`, () => {
+        const hostname = `testdomain.${ccTld}`;
+        expect(extractDomainFromHostname(hostname)).to.equal(`testdomain.${ccTld}`);
+      });
+      it(`should work for ${ccTld} domains with subdomain`, () => {
+        const hostname = `foo.bar.www.testdomain.${ccTld}`;
+        expect(extractDomainFromHostname(hostname)).to.equal(`testdomain.${ccTld}`);
+      });
+    });
+  });
 });
