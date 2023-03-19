@@ -6,8 +6,6 @@ pipeline {
     environment {
         CI = "jenkins"
         PATH = "${WORKSPACE}/node_modules/.bin/:${PATH}"
-        HDFS_PATH_API_DOCS = "/mesos/moli/api-docs/${BUILD_NUMBER}"
-        HDFS_PATH_DEBUG = "/mesos/moli/debug/${BUILD_NUMBER}"
         DOCS_FILE = "docs.tar.gz"
         DEBUG_DIST = "debug-dist.tar.gz"
     }
@@ -81,16 +79,6 @@ pipeline {
                 stage('Examples') {
                     steps {
                         sh "yarn workspaces run validate"
-                    }
-                }
-
-                stage('Moli debug') {
-                    steps {
-                        sh "yarn workspace @highfivve/moli-debugger build:prod"
-                        sh "tar -zcvf ${DEBUG_DIST} -C moli-debugger/lib ."
-                        echo "Publishing to ${HDFS_PATH_DEBUG}"
-                        sh "/usr/local/bin/httpfs put ${DEBUG_DIST} ${HDFS_PATH_DEBUG}"
-                        sh "aurora2 update start --wait --bind=hdfsPath=${HDFS_PATH_DEBUG} --bind=distFile=${DEBUG_DIST}  gfaurora/frontend/prod/moli-debug moli-debugger.aurora"
                     }
                 }
 
