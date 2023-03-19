@@ -34,7 +34,7 @@ First create an `index.html` with the following content:
     <script src="https://cdn.privacy-mgmt.com/wrapperMessagingWithoutDetection.js"></script>
 
     <!-- your ad tag -->
-    <script async="async" src="https://assets.h5v.eu/prebuilt/ad-tag/latest.js"></script>
+    <script async="async" src="https://highfivve.github.io/moli-ad-tag/assets/js/latest.js"></script>
 
     <!-- configure slots and request ads -->
     <script>

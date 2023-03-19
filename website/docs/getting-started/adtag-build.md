@@ -12,7 +12,7 @@ big bundle that contains everything.
 Your `index.html` contains a pre built ad tag that has no configuration.
 
 ```html
-<script async="async" src="https://assets.h5v.eu/prebuilt/ad-tag/latest.js"></script>
+<script async="async" src="https://highfivve.github.io/moli-ad-tag/assets/js/latest.js"></script>
 ```
 
 The configuration is inlined on the page:
