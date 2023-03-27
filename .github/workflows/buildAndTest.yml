@@ -19,6 +19,7 @@ jobs:
             module-the-adex-dmp,
             module-blocklist-url,
             module-confiant,
+            module-emetriq,
             module-generic-skin,
             module-identitylink,
             module-moli-lazy-load,
