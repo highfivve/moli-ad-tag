@@ -128,6 +128,8 @@ module.exports = {
           '../modules/adex/index.ts',
           '../modules/blocklist-urls/index.ts',
           '../modules/confiant/index.ts',
+          '../modules/emetriq/index.ts',
+          '../modules/emetriq/types/emetriq.ts',
           '../modules/generic-skin/index.ts',
           '../modules/identitylink/index.ts',
           '../modules/identitylink/types/identitylink.d.ts',
