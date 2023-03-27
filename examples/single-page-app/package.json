@@ -8,6 +8,7 @@
     "setup": "yarn",
     "build": "webpack --mode=production",
     "start": "webpack serve",
+    "make:nodemodule": "echo 'nothing to do'",
     "validate": "yarn build"
   },
   "repository": {
@@ -33,6 +34,7 @@
   },
   "dependencies": {
     "@highfivve/ad-tag": "4.6.4",
+    "core-js": "3.24.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router": "^5.2.0",

@@ -7,6 +7,7 @@
     "setup": "yarn",
     "build": "webpack --mode=production",
     "start": "webpack serve",
+    "make:nodemodule": "echo 'nothing to do'",
     "validate": "yarn build",
     "validate:jenkins": "yarn validate"
   },
