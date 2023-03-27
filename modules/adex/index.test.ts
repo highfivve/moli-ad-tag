@@ -56,7 +56,8 @@ describe('The Adex DMP Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
-      tcData: tcData ?? fullConsent({ '44': true })
+      tcData: tcData ?? fullConsent({ '44': true }),
+      adUnitPathVariables: {}
     };
   };
 

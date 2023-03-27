@@ -54,7 +54,8 @@ describe('Prebid First Party Data Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService,
-      tcData: fullConsent()
+      tcData: fullConsent(),
+      adUnitPathVariables: {}
     };
   };
 
