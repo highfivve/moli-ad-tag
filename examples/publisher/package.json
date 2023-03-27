@@ -10,6 +10,7 @@
     "build:es6": "webpack --mode=production",
     "build:es5": "webpack --config webpack.config.es5.js --mode=production",
     "start": "webpack serve",
+    "make:nodemodule": "echo 'nothing to do'",
     "validate": "yarn build",
     "release": "rm -rf dist && moli-release",
     "lint": "echo 'we good'"

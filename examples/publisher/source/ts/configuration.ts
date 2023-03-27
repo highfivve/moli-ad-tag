@@ -136,7 +136,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       domId: 'ad-content-1',
       position: 'in-page',
       labelAny: ['mobile', 'desktop'],
-      adUnitPath: '/55155651/prebid_test/ad-content-1/{device}/{category}',
+      adUnitPath: '/55155651/prebid_test/ad-content-1/{device}/{domain}',
       sizes: [[300, 300]],
       sizeConfig: [
         {
@@ -192,7 +192,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
 
     {
       domId: 'ad-mobile-sticky',
-      adUnitPath: '/55155651/mobile-sticky/{device}-{category}',
+      adUnitPath: '/55155651/mobile-sticky/{device}-{domain}',
       position: 'in-page',
       behaviour: { loaded: 'manual' },
       labelAll: ['mobile'],
@@ -239,7 +239,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       domId: 'eager-loading-adslot',
       position: 'in-page',
       behaviour: { loaded: 'eager' },
-      adUnitPath: '/55155651/test-ad-unit/{device}-{category}',
+      adUnitPath: '/55155651/test-ad-unit/{device}-{domain}',
       sizes: ['fluid', [300, 250], [300, 600], [728, 90], [970, 250]],
       sizeConfig: [
         {

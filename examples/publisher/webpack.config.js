@@ -31,7 +31,9 @@ const babelConfig = {
               'iOS >= 10.3',
               'Edge >= 15'
             ]
-          }
+          },
+          useBuiltIns: 'entry',
+          corejs: '3.24'
         }
       ]
     ],
@@ -67,7 +69,7 @@ module.exports = (_, argv) => ({
       // override the regular exclusion from above (for being inside node_modules).
       {
         test: /.js$/,
-        include: new RegExp(`\\${path.sep}prebid\.js`),
+        include: new RegExp(`\\${path.sep}prebid\.js|\\${path.sep}@highfivve`),
         use: [babelConfig]
       }
     ]

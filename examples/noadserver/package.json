@@ -8,6 +8,7 @@
     "setup": "yarn",
     "build": "webpack --mode=production",
     "start": "webpack serve",
+    "make:nodemodule": "echo 'nothing to do'",
     "validate": "yarn build",
     "release": "rm -rf dist && moli-release",
     "lint": "echo 'we good'"
