@@ -260,27 +260,18 @@ export const prebidPrepareRequestAds = (
                   ...prebidAdSlotConfig.adUnit.pubstack,
                   adUnitPath: resolveAdUnitPath(
                     prebidAdSlotConfig.adUnit.pubstack?.adUnitPath || moliSlot.adUnitPath,
-                    {
-                      ...context.config.targeting?.adUnitPathVariables,
-                      device: deviceLabel
-                    }
+                    context.adUnitPathVariables
                   )
                 };
 
                 const storedRequest =
                   prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid?.storedrequest;
 
-                const apexDomain = extractDomainFromHostname(context.window.location.hostname);
-
                 const storedRequestWithSolvedId: { id: string } | null =
                   storedRequest && storedRequest.id
                     ? {
                         ...storedRequest,
-                        id: resolveAdUnitPath(storedRequest.id, {
-                          ...context.config.targeting?.adUnitPathVariables,
-                          device: deviceLabel,
-                          ...(apexDomain ? { domain: apexDomain } : {})
-                        })
+                        id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables)
                       }
                     : null;
 

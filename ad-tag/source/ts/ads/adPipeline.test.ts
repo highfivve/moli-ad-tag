@@ -78,7 +78,8 @@ describe('AdPipeline', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      tcData: tcData
+      tcData: tcData,
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
     };
   };
 

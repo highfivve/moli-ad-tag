@@ -37,13 +37,13 @@ describe('YieldOptimizationService', () => {
 
   describe('resolve ad unit paths', () => {
     [
-      { device: 'mobile' as const, channel: 'direct' },
-      { device: 'desktop' as const, channel: 'seo' },
-      { device: 'mobile' as const, channel: 'seo' }
-    ].forEach(({ device, channel }) => {
-      it(`should resolve the ad unit path with device: ${device}, channel: ${channel}`, async () => {
-        const adUnitDynamic = '/123/pub/ad_content_1/{device}/{channel}';
-        const adUnitResolved = `/123/pub/ad_content_1/${device}/${channel}`;
+      { device: 'mobile' as const, domain: 'example.com' },
+      { device: 'desktop' as const, domain: 'test.org' },
+      { device: 'mobile' as const, domain: 'acme.net' }
+    ].forEach(({ device, domain }) => {
+      it(`should resolve the ad unit path with device: ${device}, domain: ${domain}`, async () => {
+        const adUnitDynamic = '/123/pub/ad_content_1/{device}/{domain}';
+        const adUnitResolved = `/123/pub/ad_content_1/${device}/${domain}`;
         const config: StaticYieldOptimizationConfig = {
           provider: 'static',
           config: {
@@ -57,7 +57,7 @@ describe('YieldOptimizationService', () => {
           }
         };
         const service = createService(config);
-        await service.init(device, { channel }, []);
+        await service.init(device, { device: device, domain: domain }, []);
         const rule = await service.getPriceRule(adUnitDynamic);
         expect(rule).to.be.ok;
         expect(rule!.main).to.be.true;

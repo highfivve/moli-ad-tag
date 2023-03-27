@@ -199,7 +199,7 @@ export class YieldOptimization implements IModule {
         .filter(uniquePrimitiveFilter);
       return yieldOptimizationService.init(
         context.labelConfigService.getDeviceLabel(),
-        context.config.targeting?.adUnitPathVariables || {},
+        context.adUnitPathVariables,
         adUnitPaths
       );
     });

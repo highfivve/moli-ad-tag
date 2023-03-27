@@ -57,7 +57,8 @@ describe('a9', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      tcData: tcData
+      tcData: tcData,
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
     };
   };
 
@@ -574,21 +575,16 @@ describe('a9', () => {
       });
 
       [
-        { labels: ['mobile'], device: 'mobile', channel: 'direct' },
-        { labels: ['desktop'], device: 'desktop', channel: 'seo' },
-        { labels: [] as string[], device: 'mobile', channel: 'seo' }
-      ].forEach(({ labels, device, channel }) => {
+        { labels: ['mobile'], device: 'mobile', domain: 'example.com' },
+        { labels: ['desktop'], device: 'desktop', domain: 'acme.org' },
+        { labels: [] as string[], device: 'mobile', domain: 'foo.co.uk' }
+      ].forEach(({ labels, device, domain }) => {
         it(`should resolve the ad unit path with [${labels.join(
           ','
-        )}], device: ${device}, channel: ${channel}`, async () => {
+        )}], device: ${device}, domain: ${domain}`, async () => {
           const ctxWithLabelServiceStub = {
-            ...adPipelineContext('production', {
-              ...emptyConfig,
-              targeting: {
-                keyValues: {},
-                adUnitPathVariables: { channel }
-              }
-            }),
+            ...adPipelineContext('production', emptyConfig),
+            adUnitPathVariables: { domain, device },
             tcData: fullConsent({ '793': true })
           };
           const getSupportedLabelsStub = sandbox.stub(
@@ -600,7 +596,7 @@ describe('a9', () => {
           const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
           const step = a9RequestBids(a9ConfigStub);
 
-          const adUnitPath = '/1234567/pub/content_1/{device}/{channel}';
+          const adUnitPath = '/1234567/pub/content_1/{device}/{domain}';
           const singleSlot = slotWithAdUnitPath(adUnitPath);
 
           await step(ctxWithLabelServiceStub, [singleSlot]);
@@ -611,7 +607,7 @@ describe('a9', () => {
               slots: [
                 {
                   slotID: singleSlot.moliSlot.domId,
-                  slotName: `/1234567/pub/content_1/${device}/${channel}`,
+                  slotName: `/1234567/pub/content_1/${device}/${domain}`,
                   sizes: mediumRec
                 }
               ]

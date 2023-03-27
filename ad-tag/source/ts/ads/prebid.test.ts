@@ -46,7 +46,8 @@ describe('prebid', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      tcData: tcData
+      tcData: tcData,
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
     };
   };
 
@@ -533,16 +534,17 @@ describe('prebid', () => {
     });
 
     describe('resolve adUnitPathVariables', () => {
-      const ctxWithLabelServiceStub = adPipelineContext();
-      const getSupportedLabelsStub = sandbox.stub(
-        ctxWithLabelServiceStub.labelConfigService,
-        'getSupportedLabels'
-      );
+      const ctxWithAdUnitPathVars = (
+        device: 'mobile' | 'desktop',
+        domain: string
+      ): AdPipelineContext => ({
+        ...adPipelineContext(),
+        adUnitPathVariables: { domain: domain, device: device }
+      });
+      const domain = 'example.com';
 
       it('should resolve the stored request id with the correct apex domain of the site', async () => {
-        const exampleDeviceLabel = 'mobile';
-        getSupportedLabelsStub.returns([exampleDeviceLabel]);
-        const apexDomain = extractDomainFromHostname(jsDomWindow.location.hostname);
+        const deviceLabelMobile = 'mobile';
 
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
@@ -573,7 +575,7 @@ describe('prebid', () => {
           }
         };
 
-        await step(ctxWithLabelServiceStub, [singleSlot]);
+        await step(ctxWithAdUnitPathVars('mobile', domain), [singleSlot]);
         // check that the storedrequest id is properly resolved
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
           {
@@ -581,7 +583,7 @@ describe('prebid', () => {
             ortb2Imp: {
               ext: {
                 prebid: {
-                  storedrequest: { id: `/123/${domId}/${exampleDeviceLabel}/${apexDomain}` }
+                  storedrequest: { id: `/123/${domId}/${deviceLabelMobile}/${domain}` }
                 }
               }
             }
@@ -589,9 +591,8 @@ describe('prebid', () => {
         ]);
       });
 
-      ['desktop', 'mobile'].forEach(deviceLabel => {
+      ['desktop' as const, 'mobile' as const].forEach(deviceLabel => {
         it(`should resolve an existing adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
-          getSupportedLabelsStub.returns([deviceLabel]);
           const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
           const step = prebidPrepareRequestAds(moliPrebidTestConfig);
           const domId = getDomId();
@@ -613,7 +614,7 @@ describe('prebid', () => {
             }
           };
 
-          await step(ctxWithLabelServiceStub, [singleSlot]);
+          await step(ctxWithAdUnitPathVars(deviceLabel, domain), [singleSlot]);
           // check that the pubstack adUnitPath is properly resolved and adUnitName is preserved
           expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
             {
@@ -627,8 +628,6 @@ describe('prebid', () => {
         });
 
         it(`should resolve adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
-          getSupportedLabelsStub.returns([deviceLabel]);
-
           const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
           const step = prebidPrepareRequestAds(moliPrebidTestConfig);
           const domId = getDomId();
@@ -648,7 +647,7 @@ describe('prebid', () => {
             }
           };
 
-          await step(ctxWithLabelServiceStub, [singleSlot]);
+          await step(ctxWithAdUnitPathVars(deviceLabel, domain), [singleSlot]);
           // check that the pubstack adUnitPath is properly resolved and adUnitName is preserved
           expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
             {

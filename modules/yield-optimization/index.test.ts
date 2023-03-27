@@ -96,24 +96,23 @@ describe('Yield Optimization module', () => {
         ...emptyConfig,
         targeting: {
           keyValues: {},
-          labels: ['foo'],
-          adUnitPathVariables: {
-            foo: 'bar'
-          }
+          labels: ['foo']
         }
       };
 
       await module.yieldOptimizationInit(yieldOptimizationService)({
         config: config,
         logger: noopLogger,
-        labelConfigService: labelConfigService
+        labelConfigService: labelConfigService,
+        adUnitPathVariables: { device: 'desktop', domain: 'example.com' }
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnceWithExactly(
         'desktop',
         {
-          foo: 'bar'
+          device: 'desktop',
+          domain: 'example.com'
         },
         []
       );
@@ -147,15 +146,19 @@ describe('Yield Optimization module', () => {
         slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/bar', ['mobile'])]
       };
 
+      const adUnitPathVariables = { device: 'desktop', domain: 'example.com' };
       await module.yieldOptimizationInit(yieldOptimizationService)({
         config: config,
         logger: noopLogger,
-        labelConfigService: labelConfigService
+        labelConfigService: labelConfigService,
+        adUnitPathVariables: adUnitPathVariables
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(filterSlotStub).to.have.been.calledTwice;
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {}, ['/123/foo']);
+      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', adUnitPathVariables, [
+        '/123/foo'
+      ]);
     });
 
     it('should filter out duplicated adUnitPaths before initializing yieldOptimizationService', async () => {
@@ -184,13 +187,17 @@ describe('Yield Optimization module', () => {
         slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/foo', ['desktop'])]
       };
 
+      const adUnitPathVariables = { device: 'desktop', domain: 'example.com' };
       await module.yieldOptimizationInit(yieldOptimizationService)({
         config: config,
         logger: noopLogger,
-        labelConfigService: labelConfigService
+        labelConfigService: labelConfigService,
+        adUnitPathVariables: adUnitPathVariables
       } as any);
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', {}, ['/123/foo']);
+      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', adUnitPathVariables, [
+        '/123/foo'
+      ]);
     });
   });
 
