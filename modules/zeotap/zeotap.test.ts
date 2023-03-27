@@ -48,7 +48,8 @@ describe('Zeotap Module', () => {
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
-      tcData: fullConsent({ 301: true })
+      tcData: fullConsent({ 301: true }),
+      adUnitPathVariables: {}
     };
   };
 

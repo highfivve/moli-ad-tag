@@ -650,22 +650,6 @@ describe('moli', () => {
       });
     });
 
-    it('should add ABtest key-value between 1 and 100 in configurable state calling requestAds() ', () => {
-      const adTag = createMoliTag(jsDomWindow);
-      const finished = adTag.requestAds();
-      expect(adTag.getState()).to.be.eq('configurable');
-      return finished.then(state => {
-        expect(state.state).to.be.eq('configurable');
-        const configurableState: IConfigurable = state as IConfigurable;
-        expect(configurableState.keyValues).to.be.not.undefined;
-        expect(configurableState.keyValues.ABtest).to.be.not.undefined;
-
-        const abTest = Number(configurableState.keyValues.ABtest);
-        expect(abTest).to.be.gte(1);
-        expect(abTest).to.be.lte(100);
-      });
-    });
-
     it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', () => {
       const adTag = createMoliTag(jsDomWindow);
       adTag.configure(defaultConfig);
@@ -1381,7 +1365,7 @@ describe('moli', () => {
 
   describe('requestAds', () => {
     describe('configurable state', () => {
-      it('should localhost as domain label in config', async () => {
+      it('should add localhost as domain label in config', async () => {
         const adTag = createMoliTag(jsDomWindow);
         await adTag.requestAds();
         adTag.configure(newEmptyConfig());
@@ -1392,7 +1376,7 @@ describe('moli', () => {
         expect(labels).to.contain.oneOf(['localhost']);
       });
 
-      it('should apexDomain as domain label in config', async () => {
+      it('should add apexDomain as domain label in config', async () => {
         dom.reconfigure({
           url: 'https://example.com'
         });
@@ -1408,6 +1392,17 @@ describe('moli', () => {
     });
 
     describe('configured state', () => {
+      it('should add ABtest targeting', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        adTag.configure(newEmptyConfig());
+        await adTag.requestAds();
+        const config = adTag.getConfig();
+        expect(config).to.be.ok;
+        const keyValues = config?.targeting?.keyValues;
+        expect(keyValues).to.be.ok;
+        expect(keyValues!.ABtest).to.be.ok;
+      });
+
       it('should localhost as domain label in config', async () => {
         const adTag = createMoliTag(jsDomWindow);
         adTag.configure(newEmptyConfig());
@@ -1419,7 +1414,7 @@ describe('moli', () => {
         expect(labels).to.contain.oneOf(['localhost']);
       });
 
-      it('should apexDomain as domain label in config', async () => {
+      it('should add apexDomain as domain label in config', async () => {
         dom.reconfigure({
           url: 'https://example.com'
         });

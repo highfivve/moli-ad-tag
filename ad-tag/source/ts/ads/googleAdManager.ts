@@ -232,15 +232,10 @@ export const gptDefineSlots =
 
       const sizes = filterSupportedSizes(moliSlot.sizes);
 
-      // add device variable to adUnitPathVariables during resolving
-      const device = context.labelConfigService.getDeviceLabel();
-
-      const adUnitPathVariables = {
-        ...context.config.targeting?.adUnitPathVariables,
-        device
-      };
-
-      const resolvedAdUnitPath = resolveAdUnitPath(moliSlot.adUnitPath, adUnitPathVariables);
+      const resolvedAdUnitPath = resolveAdUnitPath(
+        moliSlot.adUnitPath,
+        context.adUnitPathVariables
+      );
 
       // define an ad slot depending on the `position` parameter
       const defineAdSlot = (): googletag.IAdSlot | null => {

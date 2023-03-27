@@ -53,7 +53,8 @@ describe('google ad manager', () => {
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
-      tcData: tcData
+      tcData: tcData,
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
     };
   };
 
@@ -234,56 +235,44 @@ describe('google ad manager', () => {
     matchMediaStub.returns({ matches: true } as MediaQueryList);
     const adSlot: Moli.AdSlot = {
       domId: 'dom-id',
-      adUnitPath: '/123/dom-id/{device}',
+      adUnitPath: '/123/dom-id/{device}/{domain}',
       behaviour: { loaded: 'eager' },
       position: 'in-page',
       sizes: [],
       sizeConfig: []
     };
-    const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
-    const getSupportedLabelsStub = sandbox.stub(
-      ctxWithLabelServiceStub.labelConfigService,
-      'getSupportedLabels'
-    );
+    const ctxWithAdUnitPathVars = (
+      device: 'mobile' | 'desktop',
+      domain: string
+    ): AdPipelineContext => ({
+      ...adPipelineContext(),
+      adUnitPathVariables: { domain: domain, device: device }
+    });
+    const domain = 'example.com';
 
     it('should call googletag.defineAdSlot', async () => {
       const defineSlotsStub = sandbox.spy(dom.window.googletag, 'defineSlot');
-      getSupportedLabelsStub.returns([]);
-      await step(ctxWithLabelServiceStub, [adSlot]);
+      await step(ctxWithAdUnitPathVars('mobile', domain), [adSlot]);
       expect(defineSlotsStub).to.have.been.calledOnce;
       expect(defineSlotsStub.firstCall.args).to.have.length(3);
     });
 
-    ['desktop', 'mobile'].forEach(deviceLabel => {
+    ['desktop' as const, 'mobile' as const].forEach(deviceLabel => {
       it(`should resolve adUnitPath with the appropriate device label ${deviceLabel}`, async () => {
-        getSupportedLabelsStub.returns([deviceLabel]);
         const defineSlotsStub = sandbox.spy(dom.window.googletag, 'defineSlot');
-        await step(ctxWithLabelServiceStub, [adSlot]);
+        await step(ctxWithAdUnitPathVars(deviceLabel, domain), [adSlot]);
         expect(defineSlotsStub).to.have.been.calledOnce;
-        expect(defineSlotsStub.firstCall.args[0]).to.equals(`/123/dom-id/${deviceLabel}`);
+        expect(defineSlotsStub.firstCall.args[0]).to.equals(`/123/dom-id/${deviceLabel}/${domain}`);
       });
     });
 
     it('should resolve adUnitPath with predefined adUnitPathVariables', async () => {
-      const configWithTargeting: Moli.MoliConfig = {
-        ...emptyConfig,
-        targeting: {
-          keyValues: {},
-          adUnitPathVariables: { device: 'desktop' }
-        }
-      };
-      const ctxWithLabelServiceStub = adPipelineContext('production', configWithTargeting);
-      const getSupportedLabelsStub = sandbox.stub(
-        ctxWithLabelServiceStub.labelConfigService,
-        'getSupportedLabels'
-      );
-      // supported labels override predefined adUnitPathVariables.device
-      getSupportedLabelsStub.returns(['mobile']);
+      const ctxWithLabelServiceStub = ctxWithAdUnitPathVars('mobile', 'test.org');
 
       const defineSlotsStub = sandbox.spy(dom.window.googletag, 'defineSlot');
       await step(ctxWithLabelServiceStub, [adSlot]);
       expect(defineSlotsStub).to.have.been.calledOnce;
-      expect(defineSlotsStub.firstCall.args[0]).to.equals('/123/dom-id/mobile');
+      expect(defineSlotsStub.firstCall.args[0]).to.equals('/123/dom-id/mobile/test.org');
     });
   });
 

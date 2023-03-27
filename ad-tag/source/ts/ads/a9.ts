@@ -209,8 +209,6 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
           return;
         }
 
-        const device = context.labelConfigService.getDeviceLabel();
-
         const slots = slotDefinitions
           .filter(isA9SlotDefinition)
           .filter(slot => {
@@ -241,10 +239,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
               const adUnitPath = resolveAdUnitPath(
                 moliSlot.adUnitPath,
                 moliSlot.a9.slotNamePathDepth ?? config.slotNamePathDepth,
-                {
-                  ...context.config.targeting?.adUnitPathVariables,
-                  device
-                }
+                context.adUnitPathVariables
               );
 
               return {

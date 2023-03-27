@@ -21,6 +21,7 @@ import {
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
+import { LabelConfigService } from './labelConfigService';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -167,16 +168,23 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   }
 
   function getAdUnitPathVariables(): adUnitPath.AdUnitPathVariables | undefined {
+    const domain = extractDomainFromHostname(window.location.hostname) || 'unknown';
     switch (state.state) {
       case 'configurable':
-        return state.adUnitPathVariables;
+        return { ...state.adUnitPathVariables, domain: domain, device: 'unknown' };
       case 'configured':
       case 'requestAds':
       case 'spa-requestAds':
       case 'spa-finished':
       case 'finished':
       case 'error':
-        return state.config.targeting?.adUnitPathVariables;
+        // temporary label service to resolve the device label
+        const labelService = new LabelConfigService(state.config.labelSizeConfig || [], [], window);
+        return {
+          ...state.config.targeting?.adUnitPathVariables,
+          domain: domain,
+          device: labelService.getDeviceLabel()
+        };
     }
   }
 
@@ -476,8 +484,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     switch (state.state) {
       case 'configurable': {
         state.initialize = true;
-        setABtestTargeting();
-        addDomainLabel();
         return Promise.resolve(state);
       }
       case 'configured': {

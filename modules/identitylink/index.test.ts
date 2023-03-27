@@ -74,7 +74,8 @@ describe('IdentityLink Module', () => {
         // no service dependencies required
         labelConfigService: null as any,
         reportingService: null as any,
-        tcData: fullConsent({ 97: true })
+        tcData: fullConsent({ 97: true }),
+        adUnitPathVariables: {}
       };
     };
 

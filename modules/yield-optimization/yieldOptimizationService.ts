@@ -72,10 +72,7 @@ export class YieldOptimizationService {
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
     this.device = device;
-    this.adUnitPathVariables = {
-      ...adUnitPathVariables,
-      device: this.device
-    };
+    this.adUnitPathVariables = adUnitPathVariables;
 
     switch (this.yieldConfig.provider) {
       case 'none':

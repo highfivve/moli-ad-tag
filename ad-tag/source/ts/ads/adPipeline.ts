@@ -8,6 +8,8 @@ import { consentReady } from './consent';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import { AdUnitPathVariables } from './adUnitPath';
+import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 
 /**
  * Context passed to every pipeline step.
@@ -71,6 +73,12 @@ export type AdPipelineContext = {
    * bucket config
    */
   readonly bucket?: Moli.bucket.BucketConfig | null;
+
+  /**
+   * Contains the ad unit path variables set in the moli config, enhanced with
+   * the dynamic values generated from the ad tag.
+   */
+  readonly adUnitPathVariables: AdUnitPathVariables;
 };
 
 /**
@@ -330,6 +338,12 @@ export class AdPipeline {
           ? config.buckets.bucket[bucketName]
           : null;
 
+      const adUnitPathVariables = {
+        ...config.targeting?.adUnitPathVariables,
+        device: labelConfigService.getDeviceLabel(),
+        domain: extractDomainFromHostname(this.window.location.hostname) || 'unknown'
+      };
+
       // the context is based on the consent data
       const context: AdPipelineContext = {
         requestId: currentRequestId,
@@ -341,7 +355,8 @@ export class AdPipeline {
         reportingService: this.reportingService,
         window: this.window,
         tcData: consentData,
-        bucket: bucketConfig
+        bucket: bucketConfig,
+        adUnitPathVariables: adUnitPathVariables
       };
 
       this.init = this.init
