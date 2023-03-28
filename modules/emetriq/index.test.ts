@@ -77,6 +77,7 @@ describe('Emetriq Module', () => {
       await module.loadEmetriqScript(
         { ...adPipelineContext(), env: 'test' },
         webConfig,
+        {},
         assetLoaderService
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -86,6 +87,7 @@ describe('Emetriq Module', () => {
       await module.loadEmetriqScript(
         { ...adPipelineContext(), tcData: fullConsent({ 213: false }) },
         webConfig,
+        {},
         assetLoaderService
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -95,7 +97,7 @@ describe('Emetriq Module', () => {
       it(`load emetriq if gdpr ${
         context.tcData.gdprApplies ? 'applies' : 'does not apply'
       }`, async () => {
-        await module.loadEmetriqScript(context, webConfig, assetLoaderService);
+        await module.loadEmetriqScript(context, webConfig, {}, assetLoaderService);
 
         expect(loadScriptStub).to.have.been.calledOnceWithExactly({
           name: module.name,
@@ -117,10 +119,39 @@ describe('Emetriq Module', () => {
         }
       };
       const module = new Emetriq(moduleConfig, jsDomWindow);
-      await module.loadEmetriqScript(adPipelineContext(), moduleConfig, assetLoaderService);
+      await module.loadEmetriqScript(adPipelineContext(), moduleConfig, {}, assetLoaderService);
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
       expect(jsDomWindow._enqAdpParam).to.be.deep.eq(moduleConfig._enqAdpParam);
+    });
+
+    it('should merge additionalIdentifiers', async () => {
+      const moduleConfig: EmetriqWebConfig = {
+        os: 'web',
+        _enqAdpParam: {
+          sid: 55,
+          zip: '12345',
+          custom1: '12,34,56',
+          custom4: 'yes',
+          id_sharedid: '123',
+          id_criteoid: 'xxx'
+        }
+      };
+      const module = new Emetriq(moduleConfig, jsDomWindow);
+      await module.loadEmetriqScript(
+        adPipelineContext(),
+        moduleConfig,
+        {
+          id_criteoid: '567',
+          id_id5: '1010'
+        },
+        assetLoaderService
+      );
+
+      expect(jsDomWindow._enqAdpParam).to.be.ok;
+      expect(jsDomWindow._enqAdpParam?.id_sharedid).to.be.eq('123');
+      expect(jsDomWindow._enqAdpParam?.id_criteoid).to.be.eq('567');
+      expect(jsDomWindow._enqAdpParam?.id_id5).to.be.eq('1010');
     });
   });
 
