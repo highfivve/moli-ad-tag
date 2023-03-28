@@ -13,6 +13,7 @@
  * moli.registerModule(
  *   new Emetriq({
  *     os: 'web',
+ *     syncDelay: 'pbjs', // wait for the first auction to end before the sync is triggered
  *     _enqAdpParam: {
  *       sid: 1337,
  *       yob: '2001',
@@ -43,6 +44,7 @@
  * moli.registerModule(
  *   new Emetriq({
  *     os: 'android' // or 'ios',
+ *     syncDelay: 2000, // wait 2000ms before syncing
  *     sid: 123,
  *
  *     // AppID in the app store
@@ -117,12 +119,32 @@ export type EmetriqAppKeywordOrLinkConfig =
       readonly keywords: string;
     };
 
+type SyncDelay = number | 'pbjs';
+
+/**
+ * Shared configuration properties for emetriq module config.
+ */
+export interface IEmetriqModuleConfig {
+  /**
+   * Defines a delay for the user-sync
+   *
+   * - `pbjs` (recommened)
+   *    uses the prebid.js `auctionEnd` event to fire the user sync.
+   * - `number`
+   *    delay in `ms` before the script is loaded. Use this if prebid is not
+   *    available
+   *
+   * @default if not set, there is no delay
+   */
+  readonly syncDelay?: SyncDelay;
+}
+
 /**
  * InApp tracking configuration
  *
  * @see https://doc.emetriq.de/inapp/api.html#get-/data
  */
-export interface EmetriqAppConfig {
+export interface EmetriqAppConfig extends IEmetriqModuleConfig {
   /**
    * inApp configuration
    * Required parameter for app tracking
@@ -166,7 +188,7 @@ export interface EmetriqAppConfig {
   readonly customKeywords?: EmetriqParams;
 }
 
-export interface EmetriqWebConfig {
+export interface EmetriqWebConfig extends IEmetriqModuleConfig {
   /**
    * specifies that the emetriq js should be loaded
    */
@@ -214,15 +236,17 @@ export class Emetriq implements IModule {
 
     config.pipeline.initSteps.push(
       mkInitStep(this.name, ctx => {
-        switch (this.moduleConfig.os) {
-          case 'web':
-            this.loadEmetriqScript(ctx, this.moduleConfig, assetLoaderService);
-            break;
-          case 'android':
-          case 'ios':
-            trackInApp(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
-            break;
-        }
+        Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(() => {
+          switch (this.moduleConfig.os) {
+            case 'web':
+              this.loadEmetriqScript(ctx, this.moduleConfig, assetLoaderService);
+              break;
+            case 'android':
+            case 'ios':
+              trackInApp(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
+              break;
+          }
+        });
 
         return Promise.resolve();
       })
@@ -251,5 +275,30 @@ export class Emetriq implements IModule {
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: `https://ups.xplosion.de/loader/${webConfig._enqAdpParam.sid}/default.js`
     });
+  }
+
+  static syncDelay(ctx: AdPipelineContext, delay?: SyncDelay): Promise<void> {
+    if (delay) {
+      if (typeof delay === 'number') {
+        return new Promise(resolve => ctx.window.setTimeout(resolve, delay));
+      } else {
+        if (ctx.window.pbjs) {
+          return new Promise(resolve => {
+            ctx.window.pbjs.que.push(() => {
+              const listener = () => {
+                resolve();
+                ctx.window.pbjs.offEvent('auctionEnd', listener);
+              };
+              ctx.window.pbjs.onEvent('auctionEnd', listener);
+            });
+          });
+        } else {
+          ctx.logger.error('emetriq', 'No sync delay, because window.pbjs is not defined!');
+          return Promise.resolve();
+        }
+      }
+    }
+    // default is no delay
+    return Promise.resolve();
   }
 }

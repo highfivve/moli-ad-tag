@@ -9,10 +9,11 @@ import {
 
 import { Emetriq, EmetriqAppConfig, EmetriqWebConfig } from './index';
 import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { AdPipelineContext } from '@highfivve/ad-tag';
+import { AdPipelineContext, prebidjs } from '@highfivve/ad-tag';
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { EmetriqWindow } from './types/emetriq';
 import { trackInApp } from './trackInApp';
+import { createPbjsStub } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -20,7 +21,8 @@ use(sinonChai);
 describe('Emetriq Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: EmetriqWindow = dom.window as any;
+  const jsDomWindow: EmetriqWindow & prebidjs.IPrebidjsWindow = dom.window as any;
+  const setTimeoutStub = sandbox.stub(jsDomWindow, 'setTimeout');
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
@@ -228,6 +230,63 @@ describe('Emetriq Module', () => {
       expect(urlCalled).to.be.eq(
         `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=0`
       );
+    });
+  });
+
+  describe('syncDelay', () => {
+    beforeEach(() => {
+      jsDomWindow.pbjs = createPbjsStub();
+    });
+
+    it('should resolve immediately if no value is provided', async () => {
+      const onEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
+      await Emetriq.syncDelay(adPipelineContext());
+
+      expect(setTimeoutStub).to.have.not.been.called;
+      expect(onEventSpy).to.have.not.been.called;
+    });
+
+    it('should use setTimeout if syncDelay is a number', async () => {
+      setTimeoutStub.callsFake(handler => {
+        if (typeof handler === 'function') {
+          handler();
+        }
+        return 0;
+      });
+      const onEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
+      await Emetriq.syncDelay(adPipelineContext(), 500);
+
+      expect(setTimeoutStub).to.have.been.calledOnce;
+      const [handler, setTimeoutDelay] = setTimeoutStub.firstCall.args;
+      expect(handler).to.be.a('function');
+      expect(setTimeoutDelay).to.be.eq(500);
+
+      expect(onEventSpy).to.have.not.been.called;
+    });
+
+    it('should use auctionEnd if pbjs is configured', async () => {
+      const onEventStub = sandbox
+        .stub(jsDomWindow.pbjs, 'onEvent')
+        .callsFake((_, callback) => callback());
+      const offEventStub = sandbox.stub(jsDomWindow.pbjs, 'offEvent');
+      await Emetriq.syncDelay(adPipelineContext(), 'pbjs');
+
+      expect(setTimeoutStub).to.have.not.been.called;
+      expect(onEventStub).to.have.been.calledOnce;
+      expect(offEventStub).to.have.been.calledOnce;
+
+      const [onEvent] = onEventStub.firstCall.args;
+      const [offEvent] = offEventStub.firstCall.args;
+
+      expect(onEvent).to.be.eq('auctionEnd');
+      expect(offEvent).to.be.eq('auctionEnd');
+    });
+
+    it('should resolve immediately if pbjs is configured, but window.pbjs is undefined', async () => {
+      (jsDomWindow.pbjs as any) = undefined;
+      await Emetriq.syncDelay(adPipelineContext(), 'pbjs');
+
+      expect(setTimeoutStub).to.have.not.been.called;
     });
   });
 });
