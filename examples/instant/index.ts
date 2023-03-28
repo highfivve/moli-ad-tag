@@ -14,7 +14,6 @@ import 'prebid.js/modules/unrulyBidAdapter';
 import { googletag, initAdTag } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 
-import { PrebidGoogleAnalytics } from '@highfivve/module-prebid-google-analytics';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 
 declare const window: Window & googletag.IGoogleTagWindow;
@@ -25,21 +24,6 @@ prebid.processQueue();
 const moli = initAdTag(window);
 
 // register modules
-moli.registerModule(
-  new PrebidGoogleAnalytics(
-    {
-      trackingId: 'UA-965201-41',
-      options: {
-        global: 'ga',
-        trackerName: 'h5',
-        sampling: 1,
-        enableDistribution: true
-      }
-    },
-    window
-  )
-);
-
 moli.registerModule(
   new AdReload(
     {
