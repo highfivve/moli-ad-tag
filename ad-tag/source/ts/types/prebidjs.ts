@@ -133,6 +133,14 @@ export namespace prebidjs {
     triggerUserSyncs(): void;
 
     /**
+     * If you need to export the user IDs stored by Prebid User ID module, the `getUserIds()` function will return an
+     * object formatted the same as bidRequest.userId.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#exporting-user-ids
+     */
+    getUserIds(): userSync.UserIds;
+
+    /**
      * Enable sending analytics data to the analytics provider of your choice.
      *
      * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)
@@ -1002,6 +1010,18 @@ export namespace prebidjs {
        */
       readonly extend?: boolean;
     }
+
+    /**
+     * This key is defined in the `decode()` method of each user id module.
+     * The list is thus not complete.
+     */
+    export type UserIdsKey = 'id5id' | 'criteoId' | 'pubcid' | 'amxId' | 'idl_env' | 'IDP';
+    export type UserIds = {
+      /**
+       * user id from the given user identity module
+       */
+      [provider in UserIdsKey]?: string;
+    };
   }
 
   export namespace event {

@@ -121,6 +121,11 @@ export type EmetriqAppKeywordOrLinkConfig =
 
 type SyncDelay = number | 'pbjs';
 
+/* from https://github.com/piotrwitek/utility-types */
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
 /**
  * Shared configuration properties for emetriq module config.
  */
@@ -236,10 +241,15 @@ export class Emetriq implements IModule {
 
     config.pipeline.initSteps.push(
       mkInitStep(this.name, ctx => {
-        Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(() => {
+        Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(additionalIdentifier => {
           switch (this.moduleConfig.os) {
             case 'web':
-              this.loadEmetriqScript(ctx, this.moduleConfig, assetLoaderService);
+              this.loadEmetriqScript(
+                ctx,
+                this.moduleConfig,
+                additionalIdentifier,
+                assetLoaderService
+              );
               break;
             case 'android':
             case 'ios':
@@ -256,6 +266,7 @@ export class Emetriq implements IModule {
   loadEmetriqScript(
     context: AdPipelineContext,
     webConfig: EmetriqWebConfig,
+    additionalIdentifier: EmetriqAdditionalIdentifier,
     assetLoaderService: IAssetLoaderService
   ): Promise<void> {
     // test environment doesn't require confiant
@@ -268,7 +279,10 @@ export class Emetriq implements IModule {
       return Promise.resolve();
     }
 
-    this.window._enqAdpParam = webConfig._enqAdpParam;
+    this.window._enqAdpParam = {
+      ...webConfig._enqAdpParam,
+      ...additionalIdentifier
+    };
 
     return assetLoaderService.loadScript({
       name: this.name,
@@ -277,16 +291,25 @@ export class Emetriq implements IModule {
     });
   }
 
-  static syncDelay(ctx: AdPipelineContext, delay?: SyncDelay): Promise<void> {
+  /**
+   * Returns a promise that delays the data tracking call.
+   *
+   * @param ctx ad pipeline context for `window` access
+   * @param delay configuration of delay
+   */
+  static syncDelay(
+    ctx: AdPipelineContext,
+    delay?: SyncDelay
+  ): Promise<EmetriqAdditionalIdentifier> {
     if (delay) {
       if (typeof delay === 'number') {
-        return new Promise(resolve => ctx.window.setTimeout(resolve, delay));
+        return new Promise(resolve => ctx.window.setTimeout(() => resolve({}), delay));
       } else {
         if (ctx.window.pbjs) {
           return new Promise(resolve => {
             ctx.window.pbjs.que.push(() => {
               const listener = () => {
-                resolve();
+                resolve(Emetriq.prebidIdentifiers(ctx));
                 ctx.window.pbjs.offEvent('auctionEnd', listener);
               };
               ctx.window.pbjs.onEvent('auctionEnd', listener);
@@ -294,11 +317,41 @@ export class Emetriq implements IModule {
           });
         } else {
           ctx.logger.error('emetriq', 'No sync delay, because window.pbjs is not defined!');
-          return Promise.resolve();
+          return Promise.resolve({});
         }
       }
     }
     // default is no delay
-    return Promise.resolve();
+    return Promise.resolve({});
+  }
+
+  /**
+   * This method assumes that `window.pbjs` is available and loaded. Call this only inside of
+   * a `window.pbjs.que(() => ...)` callback.
+   *
+   * @param ctx ad pipeline context to access `pbjs`
+   */
+  static prebidIdentifiers(ctx: AdPipelineContext): EmetriqAdditionalIdentifier {
+    const identifier: Mutable<EmetriqAdditionalIdentifier> = {};
+    const userIds = ctx.window.pbjs.getUserIds();
+    if (userIds.amxId) {
+      identifier.id_amxid = userIds.amxId;
+    }
+    if (userIds.criteoId) {
+      identifier.id_criteoid = userIds.criteoId;
+    }
+    if (userIds.idl_env) {
+      identifier.id_liveramp = userIds.idl_env;
+    }
+    if (userIds.IDP) {
+      identifier.id_zeotap = userIds.IDP;
+    }
+    if (userIds.pubcid) {
+      identifier.id_sharedid = userIds.pubcid;
+    }
+    if (userIds.id5id) {
+      identifier.id_id5 = userIds.id5id;
+    }
+    return identifier;
   }
 }
