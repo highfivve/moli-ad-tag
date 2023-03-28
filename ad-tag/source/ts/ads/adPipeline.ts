@@ -8,8 +8,7 @@ import { consentReady } from './consent';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import TCPurpose = tcfapi.responses.TCPurpose;
-import { AdUnitPathVariables } from './adUnitPath';
-import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
+import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 
 /**
  * Context passed to every pipeline step.
@@ -338,11 +337,11 @@ export class AdPipeline {
           ? config.buckets.bucket[bucketName]
           : null;
 
-      const adUnitPathVariables = {
-        ...config.targeting?.adUnitPathVariables,
-        device: labelConfigService.getDeviceLabel(),
-        domain: extractDomainFromHostname(this.window.location.hostname) || 'unknown'
-      };
+      const adUnitPathVariables = generateAdUnitPathVariables(
+        this.window.location.hostname,
+        labelConfigService.getDeviceLabel(),
+        config.targeting?.adUnitPathVariables
+      );
 
       // the context is based on the consent data
       const context: AdPipelineContext = {
