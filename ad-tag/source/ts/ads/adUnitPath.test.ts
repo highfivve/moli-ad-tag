@@ -1,7 +1,12 @@
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 
-import { removeChildId, resolveAdUnitPath, withDepth } from './adUnitPath';
+import {
+  generateAdUnitPathVariables,
+  removeChildId,
+  resolveAdUnitPath,
+  withDepth
+} from './adUnitPath';
 
 // setup sinon-chai
 use(sinonChai);
@@ -102,5 +107,35 @@ describe('ad unit path', () => {
         expect(withDepth(input, 3)).to.be.equals(expected);
       });
     });
+  });
+});
+
+describe('generate ad unit path variables', () => {
+  it('should return hostname and device if varsFromConfig are undefined', () => {
+    const vars = generateAdUnitPathVariables('example.com', 'mobile');
+    expect(vars.domain).to.be.equals('example.com');
+    expect(vars.device).to.be.equals('mobile');
+  });
+
+  it('should return hostname unknown for invalid hostname', () => {
+    const vars = generateAdUnitPathVariables('', 'desktop');
+    expect(vars.domain).to.be.equals('unknown');
+    expect(vars.device).to.be.equals('desktop');
+  });
+
+  it('should merge varsFromConfig with hostname and domain', () => {
+    const vars = generateAdUnitPathVariables('example.com', 'mobile', { channel: 'seo' });
+    expect(vars.domain).to.be.equals('example.com');
+    expect(vars.device).to.be.equals('mobile');
+    expect(vars.channel).to.be.equals('seo');
+  });
+
+  it('should prefer varsFromConfig over hostname and domain', () => {
+    const vars = generateAdUnitPathVariables('example.com', 'mobile', {
+      domain: 'sub.example.com',
+      device: 'desktop'
+    });
+    expect(vars.domain).to.be.equals('sub.example.com');
+    expect(vars.device).to.be.equals('desktop');
   });
 });

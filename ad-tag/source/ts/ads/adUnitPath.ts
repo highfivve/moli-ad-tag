@@ -1,3 +1,5 @@
+import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
+
 /**
  * The new MCM that allows managing child publishers, the ad unit path must
  * contain the parent networkId as well as the child networkId separated by a
@@ -89,3 +91,12 @@ export const withDepth = (adUnitPath: string, depth: number): string => {
 
   return adUnitPathSegments.slice(0, depth + 1).join('/');
 };
+
+export const generateAdUnitPathVariables = (
+  hostname: string,
+  device: 'mobile' | 'desktop',
+  varsFromConfig?: AdUnitPathVariables
+): AdUnitPathVariables => ({
+  ...{ device: device, domain: extractDomainFromHostname(hostname) || 'unknown' },
+  ...varsFromConfig
+});
