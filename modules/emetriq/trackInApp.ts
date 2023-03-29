@@ -1,5 +1,6 @@
 import { AdPipelineContext, Moli } from '@highfivve/ad-tag';
 import { EmetriqAppConfig } from './index';
+import { EmetriqAdditionalIdentifier, EmetriqCustomParams } from './types/emetriq';
 
 const extractDeviceIdParam = (
   context: AdPipelineContext,
@@ -16,6 +17,8 @@ const extractDeviceIdParam = (
  * Sends a tracking request directly to the emetriq data API.
  * @param context ad pipeline context to retrieve necessary metadata and consent
  * @param appConfig provides details for the data call
+ * @param additionalIdentifier identifiers derived from an external source such as prebid.js
+ * @param additionalCustomParams
  * @param fetch used to call the data endpoint
  * @param logger required for error logging
  *
@@ -25,6 +28,8 @@ const extractDeviceIdParam = (
 export const trackInApp = (
   context: AdPipelineContext,
   appConfig: EmetriqAppConfig,
+  additionalIdentifier: EmetriqAdditionalIdentifier,
+  additionalCustomParams: EmetriqCustomParams,
   fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
   logger: Moli.MoliLogger
 ): Promise<any> => {
@@ -41,13 +46,18 @@ export const trackInApp = (
     : '';
 
   let additionalIdsParam = '';
-  if (appConfig.additionalIdentifier) {
-    Object.entries(appConfig.additionalIdentifier).forEach(([key, value]) => {
-      additionalIdsParam += `&${key}=${encodeURIComponent(value)}`;
-    });
-  }
+  const identifiers = { ...appConfig.additionalIdentifier, ...additionalIdentifier };
+  Object.entries(identifiers).forEach(([key, value]) => {
+    additionalIdsParam += `&${key}=${encodeURIComponent(value)}`;
+  });
+
+  let additionalCustomParam = '';
+  const customParams = { ...appConfig.customKeywords, ...additionalCustomParams };
+  Object.entries(customParams).forEach(([key, value]) => {
+    additionalCustomParam += `&${key}=${encodeURIComponent(value)}`;
+  });
 
   return fetch(
-    `https://aps.xplosion.de/data?sid=${appConfig.sid}${deviceIdParam}&os=${appConfig.os}&app_id=${appConfig.appId}${keywordsParam}${linkParam}${additionalIdsParam}&${consentString}`
+    `https://aps.xplosion.de/data?sid=${appConfig.sid}${deviceIdParam}&os=${appConfig.os}&app_id=${appConfig.appId}${keywordsParam}${linkParam}${additionalIdsParam}${additionalCustomParam}&${consentString}`
   ).catch(error => logger.error(error));
 };

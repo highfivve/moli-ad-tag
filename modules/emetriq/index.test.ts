@@ -78,6 +78,7 @@ describe('Emetriq Module', () => {
         { ...adPipelineContext(), env: 'test' },
         webConfig,
         {},
+        {},
         assetLoaderService
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -88,6 +89,7 @@ describe('Emetriq Module', () => {
         { ...adPipelineContext(), tcData: fullConsent({ 213: false }) },
         webConfig,
         {},
+        {},
         assetLoaderService
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -97,7 +99,7 @@ describe('Emetriq Module', () => {
       it(`load emetriq if gdpr ${
         context.tcData.gdprApplies ? 'applies' : 'does not apply'
       }`, async () => {
-        await module.loadEmetriqScript(context, webConfig, {}, assetLoaderService);
+        await module.loadEmetriqScript(context, webConfig, {}, {}, assetLoaderService);
 
         expect(loadScriptStub).to.have.been.calledOnceWithExactly({
           name: module.name,
@@ -119,7 +121,7 @@ describe('Emetriq Module', () => {
         }
       };
       const module = new Emetriq(moduleConfig, jsDomWindow);
-      await module.loadEmetriqScript(adPipelineContext(), moduleConfig, {}, assetLoaderService);
+      await module.loadEmetriqScript(adPipelineContext(), moduleConfig, {}, {}, assetLoaderService);
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
       expect(jsDomWindow._enqAdpParam).to.be.deep.eq(moduleConfig._enqAdpParam);
@@ -145,6 +147,7 @@ describe('Emetriq Module', () => {
           id_criteoid: '567',
           id_id5: '1010'
         },
+        {},
         assetLoaderService
       );
 
@@ -152,6 +155,34 @@ describe('Emetriq Module', () => {
       expect(jsDomWindow._enqAdpParam?.id_sharedid).to.be.eq('123');
       expect(jsDomWindow._enqAdpParam?.id_criteoid).to.be.eq('567');
       expect(jsDomWindow._enqAdpParam?.id_id5).to.be.eq('1010');
+    });
+
+    it('should merge additional custom parameters', async () => {
+      const moduleConfig: EmetriqWebConfig = {
+        os: 'web',
+        _enqAdpParam: {
+          sid: 55,
+          zip: '12345',
+          custom1: '12,34,56',
+          custom4: 'yes'
+        }
+      };
+      const module = new Emetriq(moduleConfig, jsDomWindow);
+      await module.loadEmetriqScript(
+        adPipelineContext(),
+        moduleConfig,
+        {},
+        {
+          custom1: 'override',
+          custom2: 'new'
+        },
+        assetLoaderService
+      );
+
+      expect(jsDomWindow._enqAdpParam).to.be.ok;
+      expect(jsDomWindow._enqAdpParam?.custom1).to.be.eq('override');
+      expect(jsDomWindow._enqAdpParam?.custom2).to.be.eq('new');
+      expect(jsDomWindow._enqAdpParam?.custom4).to.be.eq('yes');
     });
   });
 
@@ -177,7 +208,7 @@ describe('Emetriq Module', () => {
     });
 
     it('should call the endpoint with keywords ', async () => {
-      await trackInApp(adPipelineContext(), appConfig, fetchSpy, noopLogger);
+      await trackInApp(adPipelineContext(), appConfig, {}, {}, fetchSpy, noopLogger);
       expect(fetchSpy).to.have.been.calledOnce;
       const [urlCalled] = fetchSpy.firstCall.args;
       expect(urlCalled).to.be.eq(
@@ -187,7 +218,14 @@ describe('Emetriq Module', () => {
 
     ['ios' as const, 'android' as const].forEach(os =>
       it(`should call the endpoint with the os parameter ${os}`, async () => {
-        await trackInApp(adPipelineContext(), { ...appConfig, os: os }, fetchSpy, noopLogger);
+        await trackInApp(
+          adPipelineContext(),
+          { ...appConfig, os: os },
+          {},
+          {},
+          fetchSpy,
+          noopLogger
+        );
         expect(fetchSpy).to.have.been.calledOnce;
         const [urlCalled] = fetchSpy.firstCall.args;
         expect(urlCalled).to.be.eq(
@@ -203,7 +241,7 @@ describe('Emetriq Module', () => {
           link: 'https://www.example.com?param=foo'
         }
       };
-      await trackInApp(adPipelineContext(), appConfigWithLink, fetchSpy, noopLogger);
+      await trackInApp(adPipelineContext(), appConfigWithLink, {}, {}, fetchSpy, noopLogger);
       expect(fetchSpy).to.have.been.calledOnce;
       const [urlCalled] = fetchSpy.firstCall.args;
       expect(urlCalled).to.be.eq(
@@ -219,6 +257,8 @@ describe('Emetriq Module', () => {
           config: { ...emptyConfig, targeting: { keyValues: { advertiserId } } }
         },
         appConfig,
+        {},
+        {},
         fetchSpy,
         noopLogger
       );
@@ -239,6 +279,8 @@ describe('Emetriq Module', () => {
             id_sharedid: '1c6e063f-feaa-40a0-8a86-b9be3c655c39'
           }
         },
+        {},
+        {},
         fetchSpy,
         noopLogger
       );
@@ -249,10 +291,62 @@ describe('Emetriq Module', () => {
       );
     });
 
+    it('should call the endpoint with additional custom params ', async () => {
+      const custom1 = 'foo';
+      await trackInApp(
+        adPipelineContext(),
+        {
+          ...appConfig,
+          additionalIdentifier: {}
+        },
+        {},
+        {
+          custom1: custom1
+        },
+        fetchSpy,
+        noopLogger
+      );
+      expect(fetchSpy).to.have.been.calledOnce;
+      const [urlCalled] = fetchSpy.firstCall.args;
+      expect(urlCalled).to.be.eq(
+        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&custom1=${custom1}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+      );
+    });
+
+    it('should call the endpoint with external additional identifier params ', async () => {
+      const id5Id = '20c0c6f5-b89a-42ff-ab34-24da7cccf9ff';
+      const sharedId = '1c6e063f-feaa-40a0-8a86-b9be3c655c39';
+      const criteoId = '303e3571-9f2a-47ec-b62d-457ebfb5f068';
+      await trackInApp(
+        adPipelineContext(),
+        {
+          ...appConfig,
+          additionalIdentifier: {
+            id_id5: id5Id,
+            id_sharedid: '0df51310-5b4d-49eb-989f-0dfb5323170e'
+          }
+        },
+        {
+          id_sharedid: sharedId,
+          id_criteoid: criteoId
+        },
+        {},
+        fetchSpy,
+        noopLogger
+      );
+      expect(fetchSpy).to.have.been.calledOnce;
+      const [urlCalled] = fetchSpy.firstCall.args;
+      expect(urlCalled).to.be.eq(
+        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=${id5Id}&id_sharedid=${sharedId}&id_criteoid=${criteoId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+      );
+    });
+
     it('should call endpoint when gdpr does not apply', async () => {
       await trackInApp(
         { ...adPipelineContext(), tcData: tcDataNoGdpr },
         appConfig,
+        {},
+        {},
         fetchSpy,
         noopLogger
       );
@@ -318,6 +412,51 @@ describe('Emetriq Module', () => {
       await Emetriq.syncDelay(adPipelineContext(), 'pbjs');
 
       expect(setTimeoutStub).to.have.not.been.called;
+    });
+  });
+
+  describe('staticCustomParams', () => {
+    it('should return an empty object if both parameters are undefined', () => {
+      expect(Emetriq.staticCustomParams(undefined, undefined)).to.be.deep.eq({});
+    });
+
+    it('should return an empty object if mappings are undefined', () => {
+      expect(Emetriq.staticCustomParams({}, undefined)).to.be.deep.eq({});
+    });
+
+    it('should return an empty object if mappings are an empty array', () => {
+      expect(Emetriq.staticCustomParams({}, [])).to.be.deep.eq({});
+    });
+
+    it('should return an empty object if targeting is undefined', () => {
+      expect(Emetriq.staticCustomParams(undefined, [])).to.be.deep.eq({});
+    });
+
+    it('should return string as string', () => {
+      expect(
+        Emetriq.staticCustomParams({ k: 'value' }, [{ param: 'custom1', key: 'k' }])
+      ).to.be.deep.eq({
+        custom1: 'value'
+      });
+    });
+
+    it('should return string arrays as string with string concatenated', () => {
+      expect(
+        Emetriq.staticCustomParams({ k: ['val1', 'val2'] }, [{ param: 'custom1', key: 'k' }])
+      ).to.be.deep.eq({
+        custom1: 'val1,val2'
+      });
+    });
+
+    it('should omit missing keys', () => {
+      expect(
+        Emetriq.staticCustomParams({ k1: 'value', k3: 'unused' }, [
+          { param: 'custom1', key: 'k1' },
+          { param: 'custom2', key: 'notAvailable' }
+        ])
+      ).to.be.deep.eq({
+        custom1: 'value'
+      });
     });
   });
 });

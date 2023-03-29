@@ -76,8 +76,15 @@ import {
   ModuleType,
   Moli
 } from '@highfivve/ad-tag';
-import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqWindow } from './types/emetriq';
+import {
+  EmetriqAdditionalIdentifier,
+  EmetriqCustomParam,
+  EmetriqCustomParams,
+  EmetriqParams,
+  EmetriqWindow
+} from './types/emetriq';
 import { trackInApp } from './trackInApp';
+import DfpKeyValueMap = Moli.DfpKeyValueMap;
 
 /**
  * ## Link
@@ -126,6 +133,23 @@ type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+export type EmetriqMappingDefinition = {
+  /**
+   * custom parameter provided to emetriq
+   */
+  readonly param: EmetriqCustomParam;
+
+  /**
+   * key matching a key-value in the targeting object, that contains the param
+   * value for emetriq.
+   *
+   * string arrays will be mapped to a single, comma separated string.
+   *
+   * If a key is not available in the targeting map, it will be ommited.
+   */
+  readonly key: string;
+};
+
 /**
  * Shared configuration properties for emetriq module config.
  */
@@ -142,6 +166,12 @@ export interface IEmetriqModuleConfig {
    * @default if not set, there is no delay
    */
   readonly syncDelay?: SyncDelay;
+
+  /**
+   * Optional mapping definitions. Map values from the key-value targeting map
+   * to a custom parameter that is sent to emetriq.
+   */
+  readonly customMappingDefinition?: EmetriqMappingDefinition[];
 }
 
 /**
@@ -190,7 +220,7 @@ export interface EmetriqAppConfig extends IEmetriqModuleConfig {
    *
    * @see https://doc.emetriq.de/#/inapp/integration
    */
-  readonly customKeywords?: EmetriqParams;
+  readonly customKeywords?: Omit<EmetriqParams, 'sid'>;
 }
 
 export interface EmetriqWebConfig extends IEmetriqModuleConfig {
@@ -241,6 +271,10 @@ export class Emetriq implements IModule {
 
     config.pipeline.initSteps.push(
       mkInitStep(this.name, ctx => {
+        const customParams = Emetriq.staticCustomParams(
+          ctx.config.targeting?.keyValues,
+          this.moduleConfig.customMappingDefinition
+        );
         Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(additionalIdentifier => {
           switch (this.moduleConfig.os) {
             case 'web':
@@ -248,12 +282,20 @@ export class Emetriq implements IModule {
                 ctx,
                 this.moduleConfig,
                 additionalIdentifier,
+                customParams,
                 assetLoaderService
               );
               break;
             case 'android':
             case 'ios':
-              trackInApp(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
+              trackInApp(
+                ctx,
+                this.moduleConfig,
+                additionalIdentifier,
+                customParams,
+                ctx.window.fetch,
+                ctx.logger
+              );
               break;
           }
         });
@@ -267,6 +309,7 @@ export class Emetriq implements IModule {
     context: AdPipelineContext,
     webConfig: EmetriqWebConfig,
     additionalIdentifier: EmetriqAdditionalIdentifier,
+    additionalCustomParams: EmetriqCustomParams,
     assetLoaderService: IAssetLoaderService
   ): Promise<void> {
     // test environment doesn't require confiant
@@ -281,7 +324,8 @@ export class Emetriq implements IModule {
 
     this.window._enqAdpParam = {
       ...webConfig._enqAdpParam,
-      ...additionalIdentifier
+      ...additionalIdentifier,
+      ...additionalCustomParams
     };
 
     return assetLoaderService.loadScript({
@@ -323,6 +367,21 @@ export class Emetriq implements IModule {
     }
     // default is no delay
     return Promise.resolve({});
+  }
+
+  static staticCustomParams(
+    targeting: DfpKeyValueMap | undefined,
+    mappings: EmetriqMappingDefinition[] | undefined
+  ): EmetriqCustomParams {
+    const keyValues = targeting ?? {};
+    let additionalCustomParams: Mutable<EmetriqCustomParams> = {};
+    (mappings ?? []).forEach(({ param, key }) => {
+      const value = keyValues[key];
+      if (value) {
+        additionalCustomParams[param] = typeof value === 'string' ? value : value.join(',');
+      }
+    });
+    return additionalCustomParams;
   }
 
   /**
