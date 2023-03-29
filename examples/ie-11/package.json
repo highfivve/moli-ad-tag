@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-ie11",
-  "version": "4.7.3",
+  "version": "4.7.4",
   "description": "Demonstrating IE11 support",
   "main": "index.ts",
   "private": true,
@@ -29,7 +29,7 @@
     "whatwg-fetch": "^3.6.2"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.7.3",
+    "@highfivve/ad-tag": "4.7.4",
     "core-js": "^3.12.1"
   }
 }
