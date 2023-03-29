@@ -409,7 +409,7 @@ export class Emetriq implements IModule {
       identifier.id_sharedid = userIds.pubcid;
     }
     if (userIds.id5id) {
-      identifier.id_id5 = userIds.id5id;
+      identifier.id_id5 = userIds.id5id.uid;
     }
     return identifier;
   }
