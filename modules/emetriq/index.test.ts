@@ -177,7 +177,7 @@ describe('Emetriq Module', () => {
     });
 
     it('should call the endpoint with keywords ', async () => {
-      await trackInApp(adPipelineContext(), appConfig, fetchSpy, noopLogger);
+      await trackInApp(adPipelineContext(), appConfig, {}, fetchSpy, noopLogger);
       expect(fetchSpy).to.have.been.calledOnce;
       const [urlCalled] = fetchSpy.firstCall.args;
       expect(urlCalled).to.be.eq(
@@ -187,7 +187,7 @@ describe('Emetriq Module', () => {
 
     ['ios' as const, 'android' as const].forEach(os =>
       it(`should call the endpoint with the os parameter ${os}`, async () => {
-        await trackInApp(adPipelineContext(), { ...appConfig, os: os }, fetchSpy, noopLogger);
+        await trackInApp(adPipelineContext(), { ...appConfig, os: os }, {}, fetchSpy, noopLogger);
         expect(fetchSpy).to.have.been.calledOnce;
         const [urlCalled] = fetchSpy.firstCall.args;
         expect(urlCalled).to.be.eq(
@@ -203,7 +203,7 @@ describe('Emetriq Module', () => {
           link: 'https://www.example.com?param=foo'
         }
       };
-      await trackInApp(adPipelineContext(), appConfigWithLink, fetchSpy, noopLogger);
+      await trackInApp(adPipelineContext(), appConfigWithLink, {}, fetchSpy, noopLogger);
       expect(fetchSpy).to.have.been.calledOnce;
       const [urlCalled] = fetchSpy.firstCall.args;
       expect(urlCalled).to.be.eq(
@@ -219,6 +219,7 @@ describe('Emetriq Module', () => {
           config: { ...emptyConfig, targeting: { keyValues: { advertiserId } } }
         },
         appConfig,
+        {},
         fetchSpy,
         noopLogger
       );
@@ -239,6 +240,7 @@ describe('Emetriq Module', () => {
             id_sharedid: '1c6e063f-feaa-40a0-8a86-b9be3c655c39'
           }
         },
+        {},
         fetchSpy,
         noopLogger
       );
@@ -249,10 +251,38 @@ describe('Emetriq Module', () => {
       );
     });
 
+    it('should call the endpoint with external additional identifier params ', async () => {
+      const id5Id = '20c0c6f5-b89a-42ff-ab34-24da7cccf9ff';
+      const sharedId = '1c6e063f-feaa-40a0-8a86-b9be3c655c39';
+      const criteoId = '303e3571-9f2a-47ec-b62d-457ebfb5f068';
+      await trackInApp(
+        adPipelineContext(),
+        {
+          ...appConfig,
+          additionalIdentifier: {
+            id_id5: id5Id,
+            id_sharedid: '0df51310-5b4d-49eb-989f-0dfb5323170e'
+          }
+        },
+        {
+          id_sharedid: sharedId,
+          id_criteoid: criteoId
+        },
+        fetchSpy,
+        noopLogger
+      );
+      expect(fetchSpy).to.have.been.calledOnce;
+      const [urlCalled] = fetchSpy.firstCall.args;
+      expect(urlCalled).to.be.eq(
+        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=${id5Id}&id_sharedid=${sharedId}&id_criteoid=${criteoId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+      );
+    });
+
     it('should call endpoint when gdpr does not apply', async () => {
       await trackInApp(
         { ...adPipelineContext(), tcData: tcDataNoGdpr },
         appConfig,
+        {},
         fetchSpy,
         noopLogger
       );

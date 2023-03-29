@@ -126,6 +126,23 @@ type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+export type EmetriqMappingDefinition = {
+  /**
+   * custom parameter provided to emetriq
+   */
+  readonly param: `custom${number}`;
+
+  /**
+   * key matching a key-value in the targeting object, that contains the param
+   * value for emetriq.
+   *
+   * string arrays will be mapped to a single, comma separated string.
+   *
+   * If a key is not available in the targeting map, it will be ommited.
+   */
+  readonly key: string;
+};
+
 /**
  * Shared configuration properties for emetriq module config.
  */
@@ -142,6 +159,12 @@ export interface IEmetriqModuleConfig {
    * @default if not set, there is no delay
    */
   readonly syncDelay?: SyncDelay;
+
+  /**
+   * Optional mapping definitions. Map values from the key-value targeting map
+   * to a custom parameter that is sent to emetriq.
+   */
+  readonly customMappingDefinition?: EmetriqMappingDefinition[];
 }
 
 /**
@@ -253,7 +276,13 @@ export class Emetriq implements IModule {
               break;
             case 'android':
             case 'ios':
-              trackInApp(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
+              trackInApp(
+                ctx,
+                this.moduleConfig,
+                additionalIdentifier,
+                ctx.window.fetch,
+                ctx.logger
+              );
               break;
           }
         });
