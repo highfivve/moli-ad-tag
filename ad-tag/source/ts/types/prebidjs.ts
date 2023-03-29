@@ -1012,15 +1012,23 @@ export namespace prebidjs {
     }
 
     /**
-     * This key is defined in the `decode()` method of each user id module.
+     * The keys and the value type can be found in the`decode()` method of each user id module.
      * The list is thus not complete.
      */
-    export type UserIdsKey = 'id5id' | 'criteoId' | 'pubcid' | 'amxId' | 'idl_env' | 'IDP';
     export type UserIds = {
-      /**
-       * user id from the given user identity module
-       */
-      [provider in UserIdsKey]?: string;
+      readonly criteoId?: string;
+
+      readonly pubcid?: string;
+
+      readonly amxId?: string;
+
+      readonly idl_env?: string;
+
+      readonly IDP?: string;
+
+      readonly id5id?: {
+        readonly uid: string;
+      };
     };
   }
 
