@@ -1,3 +1,5 @@
+export type EmetriqCustomParam = `custom${number}`;
+
 /**
  * Configure additional identifiers
  *
@@ -52,8 +54,10 @@ export type EmetriqParams = EmetriqAdditionalIdentifier & {
    *
    * @example `custom1`
    */
-  readonly [key: `custom${number}`]: string;
+  readonly [key: EmetriqCustomParam]: string;
 };
+
+export type EmetriqCustomParams = Pick<EmetriqParams, EmetriqCustomParam>;
 
 export type EmetriqWindow = Window & {
   /**
