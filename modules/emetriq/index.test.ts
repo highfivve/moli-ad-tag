@@ -115,8 +115,8 @@ describe('Emetriq Module', () => {
         _enqAdpParam: {
           sid: 55,
           zip: '12345',
-          custom1: '12,34,56',
-          custom4: 'yes',
+          c_iabV3Ids: '12,34,56',
+          c_awesome: 'yes',
           id_sharedid: '123'
         }
       };
@@ -133,8 +133,8 @@ describe('Emetriq Module', () => {
         _enqAdpParam: {
           sid: 55,
           zip: '12345',
-          custom1: '12,34,56',
-          custom4: 'yes',
+          c_iabV3Ids: '12,34,56',
+          c_awesome: 'yes',
           id_sharedid: '123',
           id_liveramp: 'xxx'
         }
@@ -163,8 +163,8 @@ describe('Emetriq Module', () => {
         _enqAdpParam: {
           sid: 55,
           zip: '12345',
-          custom1: '12,34,56',
-          custom4: 'yes'
+          c_iabV3Ids: '12,34,56',
+          c_awesome: 'yes'
         }
       };
       const module = new Emetriq(moduleConfig, jsDomWindow);
@@ -173,16 +173,16 @@ describe('Emetriq Module', () => {
         moduleConfig,
         {},
         {
-          custom1: 'override',
-          custom2: 'new'
+          c_iabV3Ids: 'override',
+          c_new: 'new'
         },
         assetLoaderService
       );
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
-      expect(jsDomWindow._enqAdpParam?.custom1).to.be.eq('override');
-      expect(jsDomWindow._enqAdpParam?.custom2).to.be.eq('new');
-      expect(jsDomWindow._enqAdpParam?.custom4).to.be.eq('yes');
+      expect(jsDomWindow._enqAdpParam?.c_iabV3Ids).to.be.eq('override');
+      expect(jsDomWindow._enqAdpParam?.c_new).to.be.eq('new');
+      expect(jsDomWindow._enqAdpParam?.c_awesome).to.be.eq('yes');
     });
   });
 
@@ -292,7 +292,6 @@ describe('Emetriq Module', () => {
     });
 
     it('should call the endpoint with additional custom params ', async () => {
-      const custom1 = 'foo';
       await trackInApp(
         adPipelineContext(),
         {
@@ -301,7 +300,8 @@ describe('Emetriq Module', () => {
         },
         {},
         {
-          custom1: custom1
+          c_iabV3Ids: '12,34',
+          c_awesome: 'yes'
         },
         fetchSpy,
         noopLogger
@@ -309,7 +309,7 @@ describe('Emetriq Module', () => {
       expect(fetchSpy).to.have.been.calledOnce;
       const [urlCalled] = fetchSpy.firstCall.args;
       expect(urlCalled).to.be.eq(
-        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&custom1=${custom1}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&c_iabV3Ids=12%2C34&c_awesome=yes&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
       );
     });
 
@@ -434,28 +434,28 @@ describe('Emetriq Module', () => {
 
     it('should return string as string', () => {
       expect(
-        Emetriq.staticCustomParams({ k: 'value' }, [{ param: 'custom1', key: 'k' }])
+        Emetriq.staticCustomParams({ k: 'value' }, [{ param: 'c_param1', key: 'k' }])
       ).to.be.deep.eq({
-        custom1: 'value'
+        c_param1: 'value'
       });
     });
 
     it('should return string arrays as string with string concatenated', () => {
       expect(
-        Emetriq.staticCustomParams({ k: ['val1', 'val2'] }, [{ param: 'custom1', key: 'k' }])
+        Emetriq.staticCustomParams({ k: ['val1', 'val2'] }, [{ param: 'c_param1', key: 'k' }])
       ).to.be.deep.eq({
-        custom1: 'val1,val2'
+        c_param1: 'val1,val2'
       });
     });
 
     it('should omit missing keys', () => {
       expect(
         Emetriq.staticCustomParams({ k1: 'value', k3: 'unused' }, [
-          { param: 'custom1', key: 'k1' },
-          { param: 'custom2', key: 'notAvailable' }
+          { param: 'c_param1', key: 'k1' },
+          { param: 'c_param2', key: 'notAvailable' }
         ])
       ).to.be.deep.eq({
-        custom1: 'value'
+        c_param1: 'value'
       });
     });
   });
