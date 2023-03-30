@@ -396,9 +396,6 @@ export class Emetriq implements IModule {
     if (userIds.amxId) {
       identifier.id_amxid = userIds.amxId;
     }
-    if (userIds.criteoId) {
-      identifier.id_criteoid = userIds.criteoId;
-    }
     if (userIds.idl_env) {
       identifier.id_liveramp = userIds.idl_env;
     }

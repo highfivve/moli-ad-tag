@@ -136,7 +136,7 @@ describe('Emetriq Module', () => {
           custom1: '12,34,56',
           custom4: 'yes',
           id_sharedid: '123',
-          id_criteoid: 'xxx'
+          id_liveramp: 'xxx'
         }
       };
       const module = new Emetriq(moduleConfig, jsDomWindow);
@@ -144,7 +144,7 @@ describe('Emetriq Module', () => {
         adPipelineContext(),
         moduleConfig,
         {
-          id_criteoid: '567',
+          id_liveramp: '567',
           id_id5: '1010'
         },
         {},
@@ -153,7 +153,7 @@ describe('Emetriq Module', () => {
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
       expect(jsDomWindow._enqAdpParam?.id_sharedid).to.be.eq('123');
-      expect(jsDomWindow._enqAdpParam?.id_criteoid).to.be.eq('567');
+      expect(jsDomWindow._enqAdpParam?.id_liveramp).to.be.eq('567');
       expect(jsDomWindow._enqAdpParam?.id_id5).to.be.eq('1010');
     });
 
@@ -316,7 +316,7 @@ describe('Emetriq Module', () => {
     it('should call the endpoint with external additional identifier params ', async () => {
       const id5Id = '20c0c6f5-b89a-42ff-ab34-24da7cccf9ff';
       const sharedId = '1c6e063f-feaa-40a0-8a86-b9be3c655c39';
-      const criteoId = '303e3571-9f2a-47ec-b62d-457ebfb5f068';
+      const liverampId = '303e3571-9f2a-47ec-b62d-457ebfb5f068';
       await trackInApp(
         adPipelineContext(),
         {
@@ -328,7 +328,7 @@ describe('Emetriq Module', () => {
         },
         {
           id_sharedid: sharedId,
-          id_criteoid: criteoId
+          id_liveramp: liverampId
         },
         {},
         fetchSpy,
@@ -337,7 +337,7 @@ describe('Emetriq Module', () => {
       expect(fetchSpy).to.have.been.calledOnce;
       const [urlCalled] = fetchSpy.firstCall.args;
       expect(urlCalled).to.be.eq(
-        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=${id5Id}&id_sharedid=${sharedId}&id_criteoid=${criteoId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
+        `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=${id5Id}&id_sharedid=${sharedId}&id_liveramp=${liverampId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
       );
     });
 

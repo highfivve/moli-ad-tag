@@ -21,8 +21,6 @@ export type EmetriqAdditionalIdentifier = {
 
   readonly id_tmi?: string;
 
-  readonly id_criteoid?: string;
-
   readonly id_sharedid?: string;
 
   readonly id_yocid?: string;
