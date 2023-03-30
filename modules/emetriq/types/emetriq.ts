@@ -1,4 +1,4 @@
-export type EmetriqCustomParam = `custom${number}`;
+export type EmetriqCustomParam = `c_${string}`;
 
 /**
  * Configure additional identifiers
