@@ -1,4 +1,4 @@
-import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
+import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 
 /**
  * The new MCM that allows managing child publishers, the ad unit path must
@@ -92,11 +92,18 @@ export const withDepth = (adUnitPath: string, depth: number): string => {
   return adUnitPathSegments.slice(0, depth + 1).join('/');
 };
 
+/**
+ * Builds an ad unit path variables object
+ *
+ * @param hostname - hostname, usually provided via `window.location.hostname`
+ * @param device - mobile | desktop, usually provided by the labelService
+ * @param varsFromConfig - optional configuration from ad tag config, which overrides the default variables
+ */
 export const generateAdUnitPathVariables = (
   hostname: string,
   device: 'mobile' | 'desktop',
   varsFromConfig?: AdUnitPathVariables
 ): AdUnitPathVariables => ({
-  ...{ device: device, domain: extractDomainFromHostname(hostname) || 'unknown' },
+  ...{ device: device, domain: extractTopPrivateDomainFromHostname(hostname) || 'unknown' },
   ...varsFromConfig
 });

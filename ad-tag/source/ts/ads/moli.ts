@@ -20,7 +20,7 @@ import {
 } from '../util/environmentOverride';
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
-import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
+import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { LabelConfigService } from './labelConfigService';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
@@ -168,7 +168,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   }
 
   function getAdUnitPathVariables(): adUnitPath.AdUnitPathVariables | undefined {
-    const domain = extractDomainFromHostname(window.location.hostname) || 'unknown';
+    const domain = extractTopPrivateDomainFromHostname(window.location.hostname) || 'unknown';
     switch (state.state) {
       case 'configurable':
         return { ...state.adUnitPathVariables, domain: domain, device: 'unknown' };
@@ -948,7 +948,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function addDomainLabel(): void {
     // make the apex domain available for every request. This allows for granular domain level targeting.
     // note that there's no fallback mechanism now, which leaves "translate" pages or iframe integrations unsupported
-    const domain = extractDomainFromHostname(window.location.hostname);
+    const domain = extractTopPrivateDomainFromHostname(window.location.hostname);
     if (domain) {
       addLabel(domain);
     }

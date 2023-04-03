@@ -20,7 +20,6 @@ import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
-import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 
 // if we forget to remove prebid from the configuration.

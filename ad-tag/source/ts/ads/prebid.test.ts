@@ -18,7 +18,6 @@ import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
-import { extractDomainFromHostname } from '../util/extractDomainFromHostname';
 
 // setup sinon-chai
 use(sinonChai);
