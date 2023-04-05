@@ -1414,7 +1414,7 @@ describe('moli', () => {
         expect(labels).to.contain.oneOf(['localhost']);
       });
 
-      it('should add apexDomain as domain label in config', async () => {
+      it('should add top private domain as domain label in config', async () => {
         dom.reconfigure({
           url: 'https://example.com'
         });
@@ -1426,6 +1426,20 @@ describe('moli', () => {
         const labels = config?.targeting?.labels;
         expect(labels).to.be.ok;
         expect(labels).to.contain.oneOf(['example.com']);
+      });
+
+      it('should add top private domain as domain label from config', async () => {
+        dom.reconfigure({
+          url: 'https://example.com'
+        });
+        const adTag = createMoliTag(jsDomWindow);
+        adTag.configure({ ...newEmptyConfig(), domain: 'sub.example.com' });
+        await adTag.requestAds();
+        const config = adTag.getConfig();
+        expect(config).to.be.ok;
+        const labels = config?.targeting?.labels;
+        expect(labels).to.be.ok;
+        expect(labels).to.contain.oneOf(['sub.example.com']);
       });
     });
   });

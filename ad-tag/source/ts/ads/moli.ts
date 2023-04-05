@@ -182,7 +182,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         const labelService = new LabelConfigService(state.config.labelSizeConfig || [], [], window);
         return {
           ...state.config.targeting?.adUnitPathVariables,
-          domain: domain,
+          domain: state.config.domain || domain,
           device: labelService.getDeviceLabel()
         };
     }
@@ -488,7 +488,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       }
       case 'configured': {
         setABtestTargeting();
-        addDomainLabel();
+        addDomainLabel(state.config.domain);
         const { moduleMeta, isSinglePageApp, refreshSlots, refreshInfiniteSlots } = state;
         let config = state.config;
 
@@ -619,6 +619,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         }
         // create new ABTest values
         setABtestTargeting();
+        addDomainLabel(state.config.domain);
 
         const { hooks, moduleMeta } = state;
         const afterRequestAds = state.hooks.afterRequestAds;
@@ -945,10 +946,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     setTargeting(key, abTest.toString());
   }
 
-  function addDomainLabel(): void {
+  function addDomainLabel(domainFromConfig?: string): void {
     // make the apex domain available for every request. This allows for granular domain level targeting.
     // note that there's no fallback mechanism now, which leaves "translate" pages or iframe integrations unsupported
-    const domain = extractTopPrivateDomainFromHostname(window.location.hostname);
+    const domain =
+      domainFromConfig || extractTopPrivateDomainFromHostname(window.location.hostname);
     if (domain) {
       addLabel(domain);
     }

@@ -138,4 +138,24 @@ describe('generate ad unit path variables', () => {
     expect(vars.domain).to.be.equals('sub.example.com');
     expect(vars.device).to.be.equals('desktop');
   });
+
+  it('should prefer domainFromConfig over extracted domain', () => {
+    const vars = generateAdUnitPathVariables('example.com', 'mobile', undefined, 'sub.example.com');
+    expect(vars.domain).to.be.equals('sub.example.com');
+    expect(vars.device).to.be.equals('mobile');
+  });
+
+  it('should prefer varsFromConfig over domainFromConfig ', () => {
+    const vars = generateAdUnitPathVariables(
+      'example.com',
+      'mobile',
+      {
+        domain: 'sub.example.com',
+        device: 'desktop'
+      },
+      'another.example.com'
+    );
+    expect(vars.domain).to.be.equals('sub.example.com');
+    expect(vars.device).to.be.equals('desktop');
+  });
 });

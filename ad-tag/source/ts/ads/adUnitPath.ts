@@ -98,12 +98,17 @@ export const withDepth = (adUnitPath: string, depth: number): string => {
  * @param hostname - hostname, usually provided via `window.location.hostname`
  * @param device - mobile | desktop, usually provided by the labelService
  * @param varsFromConfig - optional configuration from ad tag config, which overrides the default variables
+ * @param domainFromConfig - optional configuration from ad tag config, if not set uses extractTopPrivateDomainFromHostname
  */
 export const generateAdUnitPathVariables = (
   hostname: string,
   device: 'mobile' | 'desktop',
-  varsFromConfig?: AdUnitPathVariables
+  varsFromConfig?: AdUnitPathVariables,
+  domainFromConfig?: string
 ): AdUnitPathVariables => ({
-  ...{ device: device, domain: extractTopPrivateDomainFromHostname(hostname) || 'unknown' },
+  ...{
+    device: device,
+    domain: domainFromConfig || extractTopPrivateDomainFromHostname(hostname) || 'unknown'
+  },
   ...varsFromConfig
 });
