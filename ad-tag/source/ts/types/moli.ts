@@ -791,6 +791,41 @@ export namespace Moli {
      */
     readonly adServer?: AdServer;
 
+    /**
+     * Set the domain on which this ad tag runs. This should be the "top private domain", which is the `subdomain` + `public prefix`.
+     * The notion "top private domain" comes from the Google Guava library.
+     *
+     * In general, it's recommended to set the domain in the ad tag configuration. As a fallback, the ad tag tries to
+     * extract the top private domain, but with a very limited implementation. This also fails if the ad tag is called
+     * on other domains such as google.transl or in iframe integrations.
+     *
+     * ## Ad Unit Path Variables
+     *
+     * The `domain` will be used in the `adUnitPathVariables`. A domain set via `setAdUnitPathVariables` takes precedences over
+     * the ad tag config. If neither `domain` is set in the config, nor provided via `setAdUnitPathVariables`, we make a best
+     * effort guess via `window.location.hostname`.
+     *
+     * ## Label
+     *
+     * If set, the `domain` will also be added as a label.
+     *
+     * ## Why ?
+     *
+     * The `domain` is part of the ad unit path and used for targeting certain bidders that work on a per-domain basis.
+     *
+     * ## Examples
+     *
+     * - `example.com` - the most common domain
+     * - `example.co.uk` - some country TLDs span the last two segments
+     * - `myblog.github.io` - github.io is a public suffix and subdomains are separate domains
+     * - `my-sub-domain.my-domain.com` - my domain is not in the publc_suffix_list.dat , but I still use subdomains for different sites
+     *
+     * @see https://www.npmjs.com/package/parse-domain npm package for root domain parsing
+     * @see https://publicsuffix.org/list/public_suffix_list.dat a list of all public suffixes
+     * @see https://github.com/google/guava/wiki/InternetDomainNameExplained detailed explanation for TLD, public suffix and registry suffix
+     */
+    readonly domain?: string;
+
     /** all possible ad slots */
     readonly slots: AdSlot[];
 

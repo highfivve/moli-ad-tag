@@ -340,7 +340,8 @@ export class AdPipeline {
       const adUnitPathVariables = generateAdUnitPathVariables(
         this.window.location.hostname,
         labelConfigService.getDeviceLabel(),
-        config.targeting?.adUnitPathVariables
+        config.targeting?.adUnitPathVariables,
+        config.domain
       );
 
       // the context is based on the consent data
