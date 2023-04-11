@@ -2789,6 +2789,137 @@ export namespace prebidjs {
     readonly phone?: IMediaTypeNativeRequirement;
   }
 
+  export interface ITitleAssetParams {
+    /**
+     * Maximum length of the text in the title element.
+     * Recommended to be 25, 90, or 140.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly len: number;
+  }
+
+  export interface IImageAssetParams {
+    /**
+     * `type` can be either 1 (icon) or 3 (main image).
+     * @see https://docs.prebid.org/prebid/native-implementation.html#312-image-asset
+     */
+    readonly type?: 1 | 3;
+
+    /**
+     * Minimum requested width of the image in pixels (recommended!).
+     * This option should be used for any rescaling of images by the client.
+     * Either `w` or `wmin` should be transmitted.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly wmin?: number;
+
+    /**
+     * Minimum requested height of the image in pixels (recommended!).
+     * This option should be used for any rescaling of images by the client.
+     * Either `h` or `hmin` should be transmitted.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly hmin?: number;
+
+    /**
+     * Exact width of	the	image	in pixels.
+     * Either `w` or `wmin` should be transmitted.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly w?: number;
+
+    /**
+     * Exact height of the image in pixels.
+     * Either `h` or `hmin` should be transmitted.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly h?: number;
+  }
+
+  export interface IDataAssetParams {
+    /**
+     * Based on the `type` (which stands for a specific field) bidders will respond with the appropriate data (check link for list of types).
+     * @see https://docs.prebid.org/prebid/native-implementation.html#313-data-asset
+     */
+    readonly type: number;
+  }
+
+  export interface INativeAssetOrtb {
+    /**
+     * Unique asset ID, assigned by exchange. Typically a counter for the	array.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly id: number;
+
+    /**
+     * Set to 1 if asset is required. Defaults to 0.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly required?: 0 | 1;
+
+    /**
+     * Title of the ad.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#311-title-asset
+     */
+    readonly title?: ITitleAssetParams;
+
+    /**
+     * Image request.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#312-image-asset
+     */
+    readonly img?: IImageAssetParams;
+
+    /**
+     * Misc component like “sponsored by”, “rating”, likes”, or other fields that have been standardized in OpenRTB 1.2.
+     * Based on the type (which stands for a specific field) bidders will respond with the appropriate data (check link for more info).
+     * @see https://docs.prebid.org/prebid/native-implementation.html#313-data-asset
+     */
+    readonly data?: IDataAssetParams;
+  }
+
+  export interface IOrtbNativeSpecs {
+    /**
+     * Components of the ad that will assembled using the template. An asset must have an id, used for matching the request with the response.
+     * Each asset should additionally have one of the following properties (but may only contain one): title, img, data
+     * @see https://docs.prebid.org/prebid/native-implementation.html#31-prebidjs-and-the-ortb-asset-fields
+     */
+    readonly assets: INativeAssetOrtb[];
+
+    /**
+     * Set  to  1  when  the  native  ad supports  buyer-specific  privacy notice.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly privacy?: 0 | 1;
+  }
+
+  export interface IMediaTypeNativeOrtb {
+    /**
+     * Used in the ‘AdUnit-Defined Creative Scenario’, this value controls the Native template right in the page.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     */
+    readonly adTemplate?: string;
+
+    /**
+     * Used in the ‘Custom Renderer Scenario’, this points to javascript code that will produce the Native template.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     * @example ‘https://host/path.js’
+     */
+    readonly rendererUrl?: string;
+
+    /**
+     * OpenRTB configuration of the Native assets in the 1.2 native specs.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     */
+    readonly ortb: IOrtbNativeSpecs;
+
+    /**
+     * DEPRECATED
+     * Defines whether or not to send the hb_native_ASSET targeting keys to the ad server. Defaults to `false`.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#3-prebidjs-native-adunit-overview
+     */
+    readonly sendTargetingKeys?: boolean;
+  }
+
   /**
    * Defines one or multiple media types the ad unit supports.
    * Media Types can be "banner", "native" or "video.
@@ -2817,7 +2948,7 @@ export namespace prebidjs {
      * @see http://prebid.org/adops/setting-up-prebid-native-in-dfp.html
      * @see http://prebid.org/dev-docs/examples/native-ad-example.html
      */
-    readonly native?: IMediaTypeNative;
+    readonly native?: IMediaTypeNative | IMediaTypeNativeOrtb;
   }
 
   /**
