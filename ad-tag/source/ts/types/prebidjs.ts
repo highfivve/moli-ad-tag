@@ -3004,6 +3004,7 @@ export namespace prebidjs {
   export const Teads = 'teads';
   export const Triplelift = 'triplelift';
   export const Yieldlab = 'yieldlab';
+  export const Seedtag = 'seedtag';
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
   export const StroeerCore = 'stroeerCore';
@@ -3041,6 +3042,7 @@ export namespace prebidjs {
     | typeof Teads
     | typeof Triplelift
     | typeof Yieldlab
+    | typeof Seedtag
     | typeof Spotx
     | typeof ShowHeroes
     | typeof StroeerCore
@@ -4244,6 +4246,33 @@ export namespace prebidjs {
   export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/seedtag
+   */
+  export interface ISeedtagParams {
+    /**
+     * PublisherID povided by seedtag.
+     * @example `0000-0000-01`
+     */
+    readonly publisherId: string;
+
+    /**
+     * AdUnitID provided by seedtag.
+     * @example `00000`
+     */
+    readonly adUnitId: string;
+
+    /**
+     * Adunit placement
+     */
+    readonly placement: 'inScreen' | 'inArticle';
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/seedtag
+   */
+  export interface ISeedtagBid extends IBidObject<typeof Seedtag, ISeedtagParams> {}
+
+  /**
    * Spotx bid parameters.
    *
    *
@@ -4671,6 +4700,7 @@ export namespace prebidjs {
     | IUnrulyBid
     | ITeadsBid
     | IYieldlabBid
+    | ISeedtagBid
     | ISpotXBid
     | IShowHeroesBid
     | IStroeerCoreBid
