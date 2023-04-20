@@ -23,6 +23,47 @@ import IGoogleTag = googletag.IGoogleTag;
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
 
+/**
+ * A dummy googletag ad slot for the test mode
+ * @param domId
+ * @param adUnitPath
+ */
+const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
+  setCollapseEmptyDiv(): void {
+    return;
+  },
+  addService(service: googletag.IService<any>): void {
+    return;
+  },
+
+  getSlotElementId(): string {
+    return domId;
+  },
+
+  getAdUnitPath(): string {
+    return adUnitPath;
+  },
+
+  setTargeting(key: string, value: string | string[]): googletag.IAdSlot {
+    return this;
+  },
+
+  getTargeting(key: string): string[] {
+    return [];
+  },
+
+  getTargetingKeys(): string[] {
+    return [];
+  },
+
+  clearTargeting(key?: string): void {
+    return;
+  },
+  getResponseInformation(): null | googletag.IResponseInformation {
+    return null;
+  }
+});
+
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
   targeting: Moli.Targeting | undefined
@@ -267,6 +308,10 @@ export const gptDefineSlots =
 
       // ensures that an ad slot is only displayed once
       const defineAndDisplayAdSlot = (): googletag.IAdSlot | null => {
+        // do not define and display ad slots in test mode to avoid spurious errors when refreshing ad slots
+        if (context.env === 'test') {
+          return null;
+        }
         const adSlot = defineAdSlot();
         if (adSlot) {
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
@@ -284,32 +329,36 @@ export const gptDefineSlots =
         ? existingSlot
         : defineAndDisplayAdSlot();
 
-      if (adSlot) {
-        adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
-        switch (context.env) {
-          case 'production':
+      switch (context.env) {
+        case 'production':
+          if (adSlot) {
+            adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
             adSlot.addService(context.window.googletag.pubads());
             context.logger.debug(
               'GAM',
               `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
             );
             return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
-          case 'test':
-            return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
-          default:
-            return Promise.reject(`invalid environment: ${context.config.environment}`);
-        }
-      } else if (
-        moliSlot.position === 'out-of-page-interstitial' ||
-        moliSlot.position === 'out-of-page-top-anchor' ||
-        moliSlot.position === 'out-of-page-bottom-anchor'
-      ) {
-        context.logger.warn('GAM', `${moliSlot.position} is not supported`);
-        return Promise.resolve(null);
-      } else {
-        const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
-        context.logger.error('GAM', error);
-        return Promise.reject(new Error(error));
+          } else if (
+            moliSlot.position === 'out-of-page-interstitial' ||
+            moliSlot.position === 'out-of-page-top-anchor' ||
+            moliSlot.position === 'out-of-page-bottom-anchor'
+          ) {
+            context.logger.warn('GAM', `${moliSlot.position} is not supported`);
+            return Promise.resolve(null);
+          } else {
+            const error = `Slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath} is already defined. You may have called requestAds() multiple times`;
+            context.logger.error('GAM', error);
+            return Promise.reject(new Error(error));
+          }
+        case 'test':
+          return Promise.resolve<SlotDefinition>({
+            moliSlot,
+            adSlot: testAdSlot(moliSlot.domId, moliSlot.adUnitPath),
+            filterSupportedSizes
+          });
+        default:
+          return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
     });
 
