@@ -2850,32 +2850,39 @@ export namespace prebidjs {
      * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
      */
     readonly id: number;
-
     /**
      * Set to 1 if asset is required. Defaults to 0.
      * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
      */
     readonly required?: 0 | 1;
+  }
 
-    /**
-     * Title of the ad.
-     * @see https://docs.prebid.org/prebid/native-implementation.html#311-title-asset
-     */
-    readonly title?: ITitleAssetParams;
-
+  export interface INativeImgAssetOrtb extends INativeAssetOrtb {
     /**
      * Image request.
      * @see https://docs.prebid.org/prebid/native-implementation.html#312-image-asset
      */
-    readonly img?: IImageAssetParams;
+    readonly img: IImageAssetParams;
+  }
 
+  export interface INativeTitleAssetOrtb extends INativeAssetOrtb {
+    /**
+     * Title of the ad.
+     * @see https://docs.prebid.org/prebid/native-implementation.html#311-title-asset
+     */
+    readonly title: ITitleAssetParams;
+  }
+
+  export interface INativeDataAssetOrtb extends INativeAssetOrtb {
     /**
      * Misc component like “sponsored by”, “rating”, likes”, or other fields that have been standardized in OpenRTB 1.2.
      * Based on the type (which stands for a specific field) bidders will respond with the appropriate data (check link for more info).
      * @see https://docs.prebid.org/prebid/native-implementation.html#313-data-asset
      */
-    readonly data?: IDataAssetParams;
+    readonly data: IDataAssetParams;
   }
+
+  export type NativeAssetOrtb = INativeImgAssetOrtb | INativeDataAssetOrtb | INativeTitleAssetOrtb;
 
   export interface IOrtbNativeSpecs {
     /**
@@ -2883,7 +2890,7 @@ export namespace prebidjs {
      * Each asset should additionally have one of the following properties (but may only contain one): title, img, data
      * @see https://docs.prebid.org/prebid/native-implementation.html#31-prebidjs-and-the-ortb-asset-fields
      */
-    readonly assets: INativeAssetOrtb[];
+    readonly assets: NativeAssetOrtb[];
 
     /**
      * Set  to  1  when  the  native  ad supports  buyer-specific  privacy notice.
