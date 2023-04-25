@@ -107,8 +107,11 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
     if (!result) {
       result = new Promise<void>(resolve => {
         context.logger.debug('GAM', 'init googletag stub');
-        context.window.googletag =
-          context.window.googletag || ({ cmd: [] } as unknown as IGoogleTag);
+        // These are two separate steps to fix race conditions, when window.googletag is set for unknown reasons,
+        // but window.googletag.cmd is not. The thesis is that gpt.js is loading before `cmd` is set, but doesn't provide
+        // it by itself.
+        context.window.googletag = context.window.googletag || {};
+        context.window.googletag.cmd = context.window.googletag.cmd || [];
         context.window.googletag.cmd.push(resolve);
 
         assetLoader.loadScript({
