@@ -6,7 +6,7 @@ import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
-import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { emptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
   googletag,
   prebidjs,
@@ -115,6 +115,26 @@ describe('Moli Ad Reload Module', () => {
 
     return { moliConfig, adPipeline };
   };
+
+  describe('initialize', () => {
+    it("shouldn't initialize the ad reload in environment test", () => {
+      const module = createAdReloadModule();
+      expect(module.isInitialized()).to.be.false;
+      module.initialize({ ...adPipelineContext(emptyConfig), env: 'test' }, [], () => {
+        return;
+      });
+      expect(module.isInitialized()).to.be.false;
+    });
+
+    it('shouldn initialize the ad reload in environment production', () => {
+      const module = createAdReloadModule();
+      expect(module.isInitialized()).to.be.false;
+      module.initialize(adPipelineContext(emptyConfig), [], () => {
+        return;
+      });
+      expect(module.isInitialized()).to.be.true;
+    });
+  });
 
   it("shouldn't overwrite the config's pipeline if it already has one", () => {
     const module = createAdReloadModule();

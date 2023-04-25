@@ -165,6 +165,10 @@ export class AdReload implements IModule {
     return this.moduleConfig;
   }
 
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
   init(moliConfig: Moli.MoliConfig, _: IAssetLoaderService, getAdPipeline: () => AdPipeline): void {
     this.getAdPipeline = getAdPipeline;
 
@@ -191,26 +195,35 @@ export class AdReload implements IModule {
       mkConfigureStep(this.name, context => {
         this.requestAdsCalls = context.requestAdsCalls;
 
-        this.initialize(moliConfig, context, slotsToMonitor, reloadAdSlotCallback);
+        this.initialize(context, slotsToMonitor, reloadAdSlotCallback);
 
         return Promise.resolve();
       })
     );
   }
 
-  private initialize = (
-    moliConfig: Moli.MoliConfig,
+  /**
+   * Method is public for testing purposes
+   * @param context
+   * @param slotsToMonitor
+   * @param reloadAdSlotCallback
+   */
+  initialize = (
     context: AdPipelineContext,
-    slotsToMonitor: Array<string>,
+    slotsToMonitor: string[],
     reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
   ) => {
+    if (context.env === 'test') {
+      context.logger.info('AdReload', 'disabled in environment test');
+      return;
+    }
     if (this.initialized) {
       return;
     }
 
-    this.logger?.debug('AdReload', 'initialize moli ad reload module');
+    context.logger.debug('AdReload', 'initialize moli ad reload module');
 
-    this.setupAdVisibilityService(moliConfig, context.window);
+    this.setupAdVisibilityService(context.config, context.window);
     this.setupSlotRenderListener(slotsToMonitor, reloadAdSlotCallback, context.window);
 
     this.initialized = true;
