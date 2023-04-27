@@ -1,4 +1,4 @@
-import {googletag, Moli} from '@highfivve/ad-tag';
+import { googletag, Moli } from '@highfivve/ad-tag';
 
 const adStickyContainerDataRef = '[data-ref=sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
@@ -99,7 +99,7 @@ export const initAdSticky = (
         }
       },
       // the slot can only be hidden once
-      {once: true, passive: true}
+      { once: true, passive: true }
     );
 
     // hide mobile sticky for advertiser with custom mobile sticky creative
