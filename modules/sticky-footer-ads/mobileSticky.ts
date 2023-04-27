@@ -1,4 +1,4 @@
-import { googletag, Moli } from '@highfivve/ad-tag';
+import {googletag, Moli} from '@highfivve/ad-tag';
 
 const adStickyContainerDataRef = '[data-ref=sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
@@ -10,7 +10,11 @@ const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
  */
 type RenderEventResult = 'empty' | 'disallowed' | 'standard';
 
+/**
+ * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
+ */
 const stickyRenderedEvent = (
+  adSticky: HTMLElement | undefined,
   mobileStickyDomId: string,
   disallowedAdvertiserIds: number[],
   window: Window & googletag.IGoogleTagWindow
@@ -22,19 +26,24 @@ const stickyRenderedEvent = (
       }
 
       if (event.isEmpty) {
+        if (adSticky) {
+          adSticky.style.setProperty('display', 'none');
+        }
         resolve('empty');
-        window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
       } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve('disallowed');
-        window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
       } else {
         resolve('standard');
       }
+      window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
     };
 
     window.googletag.pubads().addEventListener('slotRenderEnded', listener);
   });
 
+/**
+ * Called when the iFrame was successfully loaded and everything in it was executed.
+ */
 const stickyOnLoadEvent = (
   mobileStickyDomId: string,
   window: Window & googletag.IGoogleTagWindow
@@ -67,13 +76,15 @@ export const initAdSticky = (
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
 
   if (adSticky && closeButton) {
+    adSticky.style.setProperty('display', 'inherit');
+
     closeButton.addEventListener(
       'click',
       () => {
         // hide the ad slot
         adSticky.style.setProperty('display', 'none');
 
-        // destroy the slot so it doesn't get reloaded or refreshed by accident
+        // destroy the slot, so it doesn't get reloaded or refreshed by accident
         const slot = window.googletag
           .pubads()
           .getSlots()
@@ -88,7 +99,7 @@ export const initAdSticky = (
         }
       },
       // the slot can only be hidden once
-      { once: true, passive: true }
+      {once: true, passive: true}
     );
 
     // hide mobile sticky for advertiser with custom mobile sticky creative
@@ -108,7 +119,7 @@ export const initAdSticky = (
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([
-            stickyRenderedEvent(mobileStickyDomId, disallowedAdvertiserIds, window),
+            stickyRenderedEvent(adSticky, mobileStickyDomId, disallowedAdvertiserIds, window),
             stickyOnLoadEvent(mobileStickyDomId, window)
           ]).then(onRenderResult);
         }
@@ -117,7 +128,7 @@ export const initAdSticky = (
 
       // wait for the slot render ended
       Promise.all([
-        stickyRenderedEvent(mobileStickyDomId, disallowedAdvertiserIds, window),
+        stickyRenderedEvent(adSticky, mobileStickyDomId, disallowedAdvertiserIds, window),
         stickyOnLoadEvent(mobileStickyDomId, window)
       ]).then(onRenderResult);
     }
