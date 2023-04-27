@@ -34,7 +34,7 @@ import {
   IModule,
   ModuleType,
   IAssetLoaderService,
-  mkConfigureStepOnce
+  mkConfigureStepOncePerRequestAdsCycle
 } from '@highfivve/ad-tag';
 import { setupFooterAdListener } from './desktopFloorAd';
 import { initAdSticky } from './mobileSticky';
@@ -87,7 +87,7 @@ export class StickyFooterAds implements IModule {
     };
 
     config.pipeline.configureSteps.push(
-      mkConfigureStepOnce(this.name, ctx => {
+      mkConfigureStepOncePerRequestAdsCycle(this.name, ctx => {
         if (this.stickyFooterAdConfig.mobileStickyDomId) {
           initAdSticky(
             ctx.window,
