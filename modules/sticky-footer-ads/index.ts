@@ -29,8 +29,7 @@
  *
  * @module
  */
-import { Moli, IModule, ModuleType, IAssetLoaderService } from '@highfivve/ad-tag';
-import { mkConfigureStep } from 'ad-tag/lib';
+import { Moli, IModule, ModuleType, IAssetLoaderService, mkConfigureStep } from '@highfivve/ad-tag';
 import { setupFooterAdListener } from './desktopFloorAd';
 import { initAdSticky } from './mobileSticky';
 
