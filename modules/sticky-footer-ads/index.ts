@@ -29,13 +29,8 @@
  *
  * @module
  */
-import {
-  Moli,
-  IModule,
-  ModuleType,
-  IAssetLoaderService,
-  mkConfigureStepOncePerRequestAdsCycle
-} from '@highfivve/ad-tag';
+import { Moli, IModule, ModuleType, IAssetLoaderService } from '@highfivve/ad-tag';
+import { mkConfigureStep } from 'ad-tag/lib';
 import { setupFooterAdListener } from './desktopFloorAd';
 import { initAdSticky } from './mobileSticky';
 
@@ -87,8 +82,11 @@ export class StickyFooterAds implements IModule {
     };
 
     config.pipeline.configureSteps.push(
-      mkConfigureStepOncePerRequestAdsCycle(this.name, ctx => {
-        if (this.stickyFooterAdConfig.mobileStickyDomId) {
+      mkConfigureStep(this.name, ctx => {
+        if (
+          this.stickyFooterAdConfig.mobileStickyDomId &&
+          ctx.config.slots.some(slot => slot.domId === this.stickyFooterAdConfig.mobileStickyDomId)
+        ) {
           initAdSticky(
             ctx.window,
             ctx.env,
@@ -97,7 +95,12 @@ export class StickyFooterAds implements IModule {
             this.stickyFooterAdConfig.disallowedAdvertiserIds
           );
         }
-        if (this.stickyFooterAdConfig.desktopFloorAdDomId) {
+        if (
+          this.stickyFooterAdConfig.desktopFloorAdDomId &&
+          ctx.config.slots.some(
+            slot => slot.domId === this.stickyFooterAdConfig.desktopFloorAdDomId
+          )
+        ) {
           setupFooterAdListener(
             ctx.window,
             ctx.env,
