@@ -76,7 +76,9 @@ export const initAdSticky = (
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
 
   if (adSticky && closeButton) {
-    adSticky.style.setProperty('display', 'inherit');
+    log.debug('mobile-sticky-ad', 'Running initAdSticky with defined sticky container and close button');
+
+    adSticky.style.setProperty('display', 'block');
 
     closeButton.addEventListener(
       'click',
