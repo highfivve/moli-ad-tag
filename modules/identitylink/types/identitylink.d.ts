@@ -4,106 +4,6 @@
  */
 export namespace ATS {
   /**
-   * The config object needed for window.ats.start.
-   *
-   * Parameters and types scraped manually from https://docs.authenticated-traffic-solution.com/docs and its sub-pages.
-   */
-  export type Config = {
-    /**
-     * You will always need to include a valid placementID in your configuration object. This value is provided by
-     * LiveRamp to identify your instance of ATS.
-     */
-    placementID: number;
-
-    /**
-     * You will always need to include a valid pixelID in your configuration object. This value is provided by
-     * LiveRamp to identify your instance of ATS.
-     */
-    pixelID: number;
-
-    /**
-     * By default, the envelope (along with a generation timestamp and version information) is written to a first-party
-     * cookie. You can alternatively instruct ATS to write into a localStorage object by changing the `storageType`
-     * attribute.
-     */
-    storageType: 'localStorage' | 'cookie';
-
-    /**
-     * There are three possible detectionTypes:
-     * 1. `scrape`: ATS can be configured to accept one or more standard CSS selectors that instruct it where to watch
-     *    for identifiers. When you configure CSS selectors for ATS, detection is running when the page first loads
-     *    (if the identifier already exists in the element) and when an onBlur event is fired on the element.
-     * 2. `url`: You can alternatively instruct ATS to watch for an identifier in a URL parameter. For example, if users
-     *    click through email notifications and land on `https://example.com/alerts?email_trigger=imeyers@liveramp.com`,
-     *    you can configure ATS to check values in the `email_trigger` parameter.
-     *    ats.js also supports passing of hashed identifiers in the URL. Be sure to specify whether an email address or
-     *    phone number is provided. As a hashed version of the configuration about, the user could click through to
-     *    https://example.com/alerts?email_trigger=b2c0928035d5f521a880381dc7ec85df7b7e06b3.
-     *
-     *    The ats.js configuration would be enabled as:
-     *    ```
-     *    {
-     *      "placementID": 9999,
-     *      "detectionType": "url",
-     *      "urlParameter": "email_trigger",
-     *      "detectionSubject": "email"
-     *    }
-     *    ```
-     * 3. `scrapeAndUrl`: You can instruct ATS to use both on-page and URL element by passing the `scrapeAndUrl`
-     * attribute in the configuration.
-     */
-    detectionType?: 'scrape' | 'url' | 'scrapeAndUrl';
-
-    /**
-     * If `detectionType` is set to `url` or `scrapeAndUrl`, this is where you specify the URL parameter's identifier.
-     */
-    urlParameter?: string;
-
-    /**
-     * When using hashed parameter detection (`url` or `scrapeAndUrl` detection type), you have to specify which hashed
-     * value can be found in the parameter.
-     */
-    detectionSubject?: 'email' | 'phoneNumber';
-
-    /**
-     * If you run ATS across multiple domains, consider specifying the rootDomain attribute. This will ensure that the
-     * envelope is written (and made available) to the base domain, versus the current subdomain.
-     */
-    rootDomain?: string;
-
-    /**
-     * ats.js has two basic modes of operation: direct and detect. In direct mode, you provide the identifier directly
-     * to the ATS library. If you already have user login information on your backend, a sure-fire way to ensure that
-     * it is usable by demand is to include it directly in your configuration.
-     *
-     * We recommend that you pass either a plaintext email address, a plaintext phone number, or pass all three hash
-     * types of an email address to ATS to ensure the best possible identity resolution (and therefore matches to users
-     * that advertisers want to reach).
-     *
-     * If you decide to pass email hashes, make sure that you:
-     *
-     * a) Validate the email against a regular expression
-     * b) Remove whitespace (spaces, tabs, etc)
-     * c) Downcase the email address
-     *
-     * before hex-hashing the address.
-     */
-    email?: string;
-    phoneNumber?: string;
-    emailHashes?: Array<string>;
-
-    /**
-     * The CSS selectors to use when using ats.js in `scrape` or `scrapeAndUrl` modes.
-     */
-    cssSelectors?: Array<string>;
-
-    /**
-     * Log level.
-     */
-    logging: 'debug' | 'info' | 'warn' | 'error';
-  };
-
-  /**
    * "Envelope" object received when calling window.ats.retrieveEnvelope. There's no reliable public documentation
    * about the structure of the envelope, except for the fuzzy description on the "IdentityLink in RTB"
    * [github page](https://github.com/Advertising-ID-Consortium/IdentityLink-in-RTB):
@@ -117,20 +17,90 @@ export namespace ATS {
    */
   export type Envelope = any;
 
+  /**
+   * Passing raw emails: Once the email has been fetched from the provided technology (most likely through their public API),
+   * you can pass the raw email to the ATS script as a variable as shown below.
+   *
+   * ```js
+   * ats.setAdditionalData({'type':'email','id':'<EMAIL_VARIABLE>'})
+   * ```
+   *
+   * The script will hash the email before the outgoing call will be made to LiveRamp to create the envelope.
+   */
+  export type ATSDataEmail = {
+    readonly type: 'email';
+    readonly id: string;
+  };
+
+  /**
+   * Passing hashed emails: LiveRamp supports three different hash methods: SHA1, SHA256, and MD5. The hashed email(s)
+   * have to be provided in an array and you can include up to all three methods in one push. Note that our ATS library
+   * does not allow for an empty element or placeholder within an array. This will not result in an envelope even if it
+   * contains a hashed email.
+   *
+   * While the ATS script only needs one hash to create the envelope, we highly recommend providing the ATS Library with
+   * all three email hash types to get the best match rate. If you are only able to provide one hash, use SHA256 for
+   * EU/EAA and SHA1 for U.S.
+   *
+   * ```js
+   * ats.setAdditionalData({
+   *    'type': 'emailHashes',
+   *    'id': [
+   *        "<EMAIL_HASH_SHA1>",
+   *        "<EMAIL_HASH_SHA256>",
+   *        "<EMAIL_HASH_MD5>"
+   *    ]
+   * })
+   * ```
+   *
+   * The script will hash the email before the outgoing call will be made to LiveRamp to create the envelope.
+   */
+  export type ATSDataEmailHashes = {
+    readonly type: 'emailHashes';
+    readonly id: string[];
+  };
+
+  /**
+   * Passing raw phone numbers: You can pass raw phone numbers directly to the ATS script with or without extraneous
+   * characters. Our library automatically removes the following characters; +1, ., (, ), -, [space] before the phone
+   * number is hashed and sent to the ATS API.
+   *
+   * ```js
+   * atsenvelopemodule.setAdditionalData({
+   *   id: '4155556656',
+   *   type: 'phoneNumber'
+   * });
+   * ```
+   */
+  export type ATSDataPhoneNumber = {
+    readonly type: 'phoneNumber';
+    readonly id: string;
+  };
+
+  /**
+   * Input for the setAdditionalData function
+   */
+  export type ATSData = ATSDataEmail | ATSDataEmailHashes | ATSDataPhoneNumber;
+
   export type ATSWindow = Window & {
     /**
      * LiveRamps  (authenticated traffic solution) implementation.
      *
-     * Docs from https://docs.authenticated-traffic-solution.com/docs/atsjs-functions.
+     * @see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html
      */
     ats: {
       /**
-       * Typically, this is the only function you will need to call.
+       * Use this method to set email hashes.
        *
-       * This function should be placed into its own <script> tag and called with your configuration object just after
-       * the <script> tag for ats.js. The library will not begin to run processing or detection until it is started.
+       * @param data
+       * @see https://docs.liveramp.com/privacy-manager/en/configure-how-identifiers-are-obtained.html
        */
-      start: (config: Config) => void;
+      setAdditionalData: (data: ATSData) => void;
+
+      /**
+       * This will return the current configuration object. The callback function is optional. In both ways it will return the current config object.
+       */
+      outputCurrentConfiguration: () => void;
 
       /**
        * Fetch envelope from configured storage; the callback function is optional. If the function is called without a
@@ -139,8 +109,13 @@ export namespace ATS {
       retrieveEnvelope: (callback?: (envelope: Envelope) => void) => Promise<Envelope> | void;
 
       /**
-       * This function will (re)scan DOM elements with the CSS selectors specified in your configuration. You can call
-       * this function if the ats.js library has been started.
+       * This function will remove the current envelope that is stored in local storage/cookie.
+       */
+      invalidateEnvelope: () => void;
+
+      /**
+       * This function will (re)scan DOM (Document Object Model) elements with the CSS selectors specified in your
+       * configuration. You can call this function if the ATS.js library has been started.
        */
       triggerDetection: () => void;
     };

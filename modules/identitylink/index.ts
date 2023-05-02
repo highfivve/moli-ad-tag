@@ -41,26 +41,33 @@ import { ATS } from './types/identitylink';
 
 export type IdentityLinkModuleConfig = {
   /**
-   * Points to the ATS script.
+   * The launchPadID references a bunch of services from LiveRamp that are
+   * loaded dynamically.
    *
-   * @example //ats.rlcdn.com/ats.js
+   * It is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io
+   *
+   * @example `f865e2a1-5e8f-4011-ae31-079cbb0b1d8e`
+   * @see https://launch.liveramp.com/launchpad/<launchPadId>
+   * @see https://launchpad-wrapper.privacymanager.io/<launchPadId>/launchpad-liveramp.js
    */
-  readonly assetUrl: string;
-
-  /**
-   * Provided by LiveRamp to identify your instance of ATS.
-   */
-  readonly pixelId: number;
-
-  /**
-   * Provided by LiveRamp to identify your instance of ATS.
-   */
-  readonly placementId: number;
+  readonly launchPadId: string;
 
   /**
    * md5, sha1, and sha256 hashes of the user's email address.
+   *
+   * From the docs
+   *
+   * > While the ATS script only needs one hash to create the envelope, we highly recommend providing the ATS Library with
+   * > all three email hash types to get the best match rate. If you are only able to provide one hash, use SHA256 for
+   * > EU/EAA and SHA1 for U.S.
+   *
+   * Ordering seems important.
+   *
+   * - "<EMAIL_HASH_SHA1>",
+   * - "<EMAIL_HASH_SHA256>",
+   * - "<EMAIL_HASH_MD5>"
    */
-  readonly hashedEmailAddresses: Array<string>;
+  readonly hashedEmailAddresses: string[];
 };
 
 /**
@@ -77,21 +84,12 @@ export class IdentityLink implements IModule {
     "Provides LiveRamp's ATS (authenticated traffic solution) functionality to Moli.";
   public readonly moduleType: ModuleType = 'identity';
 
-  private readonly atsConfig: ATS.Config;
   private readonly window: ATS.ATSWindow;
 
   private readonly gvlid: string = '97';
 
   constructor(private readonly moduleConfig: IdentityLinkModuleConfig, window: Window) {
     this.window = window as ATS.ATSWindow;
-
-    this.atsConfig = {
-      placementID: moduleConfig.placementId,
-      pixelID: moduleConfig.pixelId,
-      storageType: 'localStorage',
-      emailHashes: moduleConfig.hashedEmailAddresses,
-      logging: 'error'
-    };
   }
 
   config(): IdentityLinkModuleConfig {
@@ -125,12 +123,21 @@ export class IdentityLink implements IModule {
     if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
       return Promise.resolve();
     }
-    return assetLoaderService
-      .loadScript({
-        name: this.name,
-        loadMethod: AssetLoadMethod.TAG,
-        assetUrl: this.moduleConfig.assetUrl
-      })
-      .then(() => this.window.ats.start(this.atsConfig));
+
+    // register event lister for email module
+    // see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html#envelopemoduleready
+    this.window.addEventListener('envelopeModuleReady', () => {
+      // For example, you can directly feed it emails, like so:
+      this.window.ats.setAdditionalData({
+        type: 'emailHashes',
+        id: this.moduleConfig.hashedEmailAddresses
+      });
+    });
+
+    return assetLoaderService.loadScript({
+      name: this.name,
+      loadMethod: AssetLoadMethod.TAG,
+      assetUrl: `https://launchpad-wrapper.privacymanager.io/${this.moduleConfig.launchPadId}/launchpad-liveramp.js`
+    });
   }
 }
