@@ -41,15 +41,17 @@ module.exports = (_, argv) => {
     // local development
     devServer: {
       https: true,
-      contentBase: [
+      compress: true,
+      port: 9000,
+      static: [
         path.join(__dirname, 'dist'),
         // always use the latest moli-debugger
         '../../moli-debugger/lib'
       ],
-      compress: true,
-      port: 9000,
       allowedHosts: ['localhost', '.h5v.eu'],
-      writeToDisk: true
+      devMiddleware: {
+        writeToDisk: true
+      }
     },
     plugins: [
       new HtmlWebpackPlugin({
