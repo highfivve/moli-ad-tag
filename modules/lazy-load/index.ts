@@ -166,8 +166,7 @@ export class LazyLoad implements IModule {
     );
   }
 
-  private registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
-    console.log(this.initialized);
+  registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
     if (this.initialized) {
       return;
     }
