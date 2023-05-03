@@ -28,7 +28,7 @@ moli.enableSinglePageApp();
 moli.registerModule(
   new LazyLoad(
     {
-      slots: [{ domIds: ['lazy-loading-adslot-1'], options: { threshold: 1 } }],
+      slots: [{ domIds: ['lazy-loading-adslot-1'], options: { threshold: 0.5 } }],
       buckets: [],
       infiniteSlots: []
     },

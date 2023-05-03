@@ -30,7 +30,7 @@ export default class Home extends React.Component<{}, {}> {
         <hr />
         <div className="row">
           <div className="col-md">
-            <h1>Lazy Loading AdSlot-2</h1>
+            <h1>Lazy Loading AdSlot-1</h1>
             <div id="lazy-loading-adslot-1" style={{ height: '500px' }}></div>
           </div>
         </div>
