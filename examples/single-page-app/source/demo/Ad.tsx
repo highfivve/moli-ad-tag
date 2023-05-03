@@ -20,7 +20,7 @@ declare const window: Window & {
 /**
  * # Ad Component
  *
- * Takes care of rendering the correct div container and fireing the
+ * Takes care of rendering the correct div container and firing the
  * corresponding event to trigger the ad.
  */
 export class Ad extends React.Component<IAdProps, {}> {

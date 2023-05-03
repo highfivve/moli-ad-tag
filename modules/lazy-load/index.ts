@@ -26,7 +26,13 @@
  *
  * @module
  */
-import { IModule, ModuleType, Moli, getLogger, mkInitStep } from '@highfivve/ad-tag';
+import {
+  IModule,
+  ModuleType,
+  Moli,
+  getLogger,
+  mkConfigureStepOncePerRequestAdsCycle
+} from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
 
 type LazyLoadModuleOptionsType = {
@@ -122,6 +128,11 @@ export class LazyLoad implements IModule {
    */
   private initialized: boolean = false;
 
+  /**
+   * Preserve observers for garbage collecting in SPA apps
+   */
+  private readonly observers: IntersectionObserver[] = [];
+
   constructor(
     private readonly moduleConfig: LazyLoadModuleConfig,
     private readonly _window: Window & MoliWindow
@@ -144,15 +155,19 @@ export class LazyLoad implements IModule {
       prepareRequestAdsSteps: []
     };
 
-    config.pipeline.initSteps.push(
-      mkInitStep(this.name, () => {
+    config.pipeline.configureSteps.push(
+      mkConfigureStepOncePerRequestAdsCycle('lazy-module-configuration', context => {
+        this.initialized = false;
+        // Disconnect all initialized observers at every requestAd(), useful for SPA apps
+        this.observers.forEach(observer => observer.disconnect());
         this.registerIntersectionObservers(config);
         return Promise.resolve();
       })
     );
   }
 
-  registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
+  private registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
+    console.log(this.initialized);
     if (this.initialized) {
       return;
     }
@@ -183,6 +198,7 @@ export class LazyLoad implements IModule {
           rootMargin: config.options.rootMargin
         }
       );
+      this.observers.push(observer);
 
       config.domIds.forEach(domId => {
         const slot = moliConfig.slots.find(slot => slot.domId === domId);
@@ -238,6 +254,7 @@ export class LazyLoad implements IModule {
           rootMargin: config.options.rootMargin
         }
       );
+      this.observers.push(observer);
 
       if (!moliConfig.buckets?.enabled) {
         this.logger?.warn(this.name, "GlobalBucket config isn't enabled");
@@ -282,6 +299,7 @@ export class LazyLoad implements IModule {
             rootMargin: config.options.rootMargin
           }
         );
+        this.observers.push(observer);
 
         const infiniteElements = this.window.document.querySelectorAll(config.selector);
         infiniteElements.forEach((element, index) => {

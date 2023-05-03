@@ -8,12 +8,15 @@ import 'prebid.js/modules/consentManagement';
 import 'prebid.js/modules/currency';
 import 'prebid.js/modules/appnexusBidAdapter';
 
-import { initAdTag } from '@highfivve/ad-tag';
+import { googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
+import { LazyLoad } from '@highfivve/module-moli-lazy-load';
+import MoliWindow = Moli.MoliWindow;
 
 prebid.processQueue();
 
 const moli = initAdTag(window);
+declare const window: Window & googletag.IGoogleTagWindow & MoliWindow & prebidjs.IPrebidjsWindow;
 
 moli.beforeRequestAds(_ => {
   console.log('BEFORE REQUEST ADS HOOK');
@@ -21,4 +24,15 @@ moli.beforeRequestAds(_ => {
 
 moli.enableSinglePageApp();
 // init moli
+
+moli.registerModule(
+  new LazyLoad(
+    {
+      slots: [{ domIds: ['lazy-loading-adslot-1'], options: { threshold: 1 } }],
+      buckets: [],
+      infiniteSlots: []
+    },
+    window
+  )
+);
 moli.configure(adConfiguration);

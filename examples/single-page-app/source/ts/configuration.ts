@@ -136,6 +136,22 @@ export const adConfiguration: Moli.MoliConfig = {
           sizesSupported: ['fluid', [300, 250]]
         }
       ]
+    },
+    {
+      domId: 'lazy-loading-adslot-1',
+      position: 'in-page',
+      behaviour: {
+        loaded: 'manual'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
     }
   ],
   targeting: {
