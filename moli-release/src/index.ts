@@ -171,7 +171,7 @@ let version = Number(versionJsonVersion) + 1;
   version = releaseInformation.version;
 
   // run lint before releasing
-  child.execSync('yarn lint');
+  child.execSync('yarn lint', { stdio: 'inherit' });
 
   versionJson.currentVersion = `${version}`;
   const versionJsonNewContents = JSON.stringify(versionJson, null, 2);
@@ -185,7 +185,7 @@ let version = Number(versionJsonVersion) + 1;
   }
 
   // run build to generate manifest.json and check if build works
-  child.execSync('yarn build');
+  child.execSync('yarn build', { stdio: 'inherit' });
 
   // Create the name of the moli.js file (this contains a random hash to ensure an immutable tag when a tag gets deleted)
   const manifestPath = path.join(process.cwd(), 'dist', 'manifest.json');
@@ -252,6 +252,7 @@ let version = Number(versionJsonVersion) + 1;
       async (err, _stdout, _stderr) => {
         if (err) {
           console.log(err);
+          console.log(_stderr);
         } else {
           console.log(`Successfully released new version (v${version})`);
         }
