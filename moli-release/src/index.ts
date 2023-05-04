@@ -9,6 +9,7 @@ import { IPackageJson } from './types/packageJson';
 import { IAdTagRelease, IReleasesJson } from './types/releasesJson';
 import { gitLogFormat, IGitJsonLog } from './types/gitJson';
 import { ReleaseInformation } from './types/releaseInformation';
+import { IVersionJson } from './types/versionJson';
 
 const CYAN_ESC = '\x1b[36m%s\x1b[0m';
 
@@ -30,6 +31,7 @@ const ci: boolean = options.ci;
 // Parse releases.json (optional) and package.json (required)
 let releasesJson: IReleasesJson;
 let packageJson: IPackageJson;
+let versionJson: IVersionJson;
 
 try {
   releasesJson = JSON.parse(
@@ -55,11 +57,17 @@ try {
   throw err;
 }
 
+try {
+  versionJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'version.json')).toString());
+} catch (err) {
+  versionJson = { currentVersion: '0' };
+}
+
 // Workaround as coalescing operator doesn't properly work with yarn.
 const versions: IAdTagRelease[] = releasesJson.versions ? releasesJson.versions : [];
 
-const packageJsonVersion: string = packageJson.version;
-let version = Number(packageJsonVersion.split('.')[0]) + 1;
+const versionJsonVersion: string = versionJson.currentVersion;
+let version = Number(versionJsonVersion) + 1;
 
 (async () => {
   let commitMessages: string[] = await getGitCommitMessages();
@@ -165,7 +173,8 @@ let version = Number(packageJsonVersion.split('.')[0]) + 1;
   // run lint before releasing
   child.execSync('yarn lint');
 
-  const versionJsonNewContents = JSON.stringify({ currentVersion: version }, null, 2);
+  versionJson.currentVersion = `${version}`;
+  const versionJsonNewContents = JSON.stringify(versionJson, null, 2);
 
   if (dryRun) {
     console.log(CYAN_ESC, '>>> DRY RUN <<<');
