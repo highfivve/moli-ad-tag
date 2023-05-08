@@ -47,8 +47,8 @@ export type IdentityLinkModuleConfig = {
    * It is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io
    *
    * @example `f865e2a1-5e8f-4011-ae31-079cbb0b1d8e`
-   * @see https://launch.liveramp.com/launchpad/<launchPadId>
-   * @see https://launchpad-wrapper.privacymanager.io/<launchPadId>/launchpad-liveramp.js
+   * @see https://launch.liveramp.com/launchpad/[launchPadId]
+   * @see https://launchpad-wrapper.privacymanager.io/[launchPadId]/launchpad-liveramp.js
    */
   readonly launchPadId: string;
 
