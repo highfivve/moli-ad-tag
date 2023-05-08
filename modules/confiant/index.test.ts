@@ -24,9 +24,10 @@ describe('Confiant Module', () => {
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
-  const createConfiant = (): Confiant =>
+  const createConfiant = (checkGVLID?: boolean): Confiant =>
     new Confiant({
-      assetUrl: 'http://localhost/confiant.js'
+      assetUrl: 'http://localhost/confiant.js',
+      checkGVLID
     });
 
   beforeEach(() => {
@@ -71,9 +72,27 @@ describe('Confiant Module', () => {
       expect(loadScriptStub).to.have.not.been.called;
     });
 
-    it('not load anything if gdpr applies and vendor 56 has no consent', () => {
-      module.loadConfiant(
+    it('not load anything if gdpr applies, vendor 56 has no consent and checkGVLID is true', () => {
+      createConfiant(true).loadConfiant(
         { ...adPipelineContext(), tcData: fullConsent({ 56: false }) },
+        assetLoaderService
+      );
+      expect(loadScriptStub).to.have.not.been.called;
+    });
+
+    it('not load anything if gdpr applies, vendor 56 has no consent and checkGVLID is unset', () => {
+      const tcDataFullConsent = fullConsent({ 56: true });
+      module.loadConfiant(
+        {
+          ...adPipelineContext(),
+          tcData: {
+            ...tcDataFullConsent,
+            purpose: {
+              ...tcDataFullConsent.purpose,
+              consents: { ...tcDataFullConsent.purpose.consents, 1: false }
+            }
+          }
+        },
         assetLoaderService
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -91,6 +110,32 @@ describe('Confiant Module', () => {
 
     it('load confiant if gdpr does apply', () => {
       module.loadConfiant(adPipelineContext(), assetLoaderService);
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: module.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: 'http://localhost/confiant.js'
+      });
+    });
+
+    it('load confiant if gdpr does apply, vendor 56 has no consent and checkGVLID is unset', () => {
+      module.loadConfiant(
+        { ...adPipelineContext(), tcData: fullConsent({ 56: false }) },
+        assetLoaderService
+      );
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: module.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: 'http://localhost/confiant.js'
+      });
+    });
+
+    it('load confiant if gdpr does apply, vendor 56 has no consent and checkGVLID is set to false', () => {
+      createConfiant(false).loadConfiant(
+        { ...adPipelineContext(), tcData: fullConsent({ 56: false }) },
+        assetLoaderService
+      );
       expect(loadScriptStub).to.have.been.calledOnce;
       expect(loadScriptStub).to.have.been.calledOnceWithExactly({
         name: module.name,
