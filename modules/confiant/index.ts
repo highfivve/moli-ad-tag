@@ -96,15 +96,6 @@ export class Confiant implements IModule {
       return Promise.resolve();
     }
 
-    if (context.tcData.gdprApplies) {
-      console.log('context.tcData.purpose.consents[1]', context.tcData.purpose.consents[1]);
-      console.log('context.tcData.purpose.consents["1"]', context.tcData.purpose.consents['1']);
-      console.log('confiantConfig.checkGVLID', this.confiantConfig.checkGVLID);
-      console.log(
-        '!context.tcData.vendor.consents[this.gvlid]',
-        !context.tcData.vendor.consents[this.gvlid]
-      );
-    }
     // no consent if gdpr applies
     if (
       context.tcData.gdprApplies &&
