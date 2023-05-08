@@ -21,11 +21,15 @@ describe('IdentityLink Module', () => {
   const dom = createDom();
   const jsDomWindow: ATS.ATSWindow = dom.window as any;
   const atsStartStub = sandbox.stub();
+  const setAdditionalDataStub = sandbox.stub();
+  const addEventListerSpy = sandbox.spy(jsDomWindow, 'addEventListener');
 
   jsDomWindow.ats = {
+    setAdditionalData: setAdditionalDataStub,
     retrieveEnvelope: sandbox.stub(),
-    start: atsStartStub,
-    triggerDetection: sandbox.stub()
+    triggerDetection: sandbox.stub(),
+    invalidateEnvelope: sandbox.stub(),
+    outputCurrentConfiguration: sandbox.stub()
   };
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
@@ -34,10 +38,8 @@ describe('IdentityLink Module', () => {
   const createIdentityLink = (): IdentityLink =>
     new IdentityLink(
       {
-        assetUrl: 'http://localhost/ats.js',
         hashedEmailAddresses: ['somehashedaddress'],
-        placementId: 1337,
-        pixelId: 42
+        launchPadId: 'aaaa-bbbb-0000-cccc'
       },
       jsDomWindow
     );
@@ -98,18 +100,27 @@ describe('IdentityLink Module', () => {
       }`, async () => {
         await module.loadAts(context, assetLoaderService);
 
+        expect(addEventListerSpy).to.have.been.calledOnce;
+        expect(setAdditionalDataStub).to.have.not.been.called;
+
         expect(loadScriptStub).to.have.been.calledOnceWithExactly({
           name: module.name,
           loadMethod: AssetLoadMethod.TAG,
-          assetUrl: 'http://localhost/ats.js'
+          assetUrl:
+            'https://launchpad-wrapper.privacymanager.io/aaaa-bbbb-0000-cccc/launchpad-liveramp.js'
         });
 
-        expect(atsStartStub).to.have.been.calledOnceWithExactly({
-          placementID: 1337,
-          pixelID: 42,
-          storageType: 'localStorage',
-          emailHashes: ['somehashedaddress'],
-          logging: 'error'
+        const [event, callback] = addEventListerSpy.firstCall.args;
+        expect(event).to.be.eq('envelopeModuleReady');
+
+        // fire callback
+        (callback as any)();
+
+        expect(setAdditionalDataStub).to.have.been.calledOnce;
+
+        expect(setAdditionalDataStub).to.have.been.calledOnceWithExactly({
+          type: 'emailHashes',
+          id: ['somehashedaddress']
         });
       })
     );
