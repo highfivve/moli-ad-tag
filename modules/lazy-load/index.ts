@@ -160,6 +160,7 @@ export class LazyLoad implements IModule {
         this.initialized = false;
         // Disconnect all initialized observers at every requestAd(), useful for SPA apps
         this.observers.forEach(observer => observer.disconnect());
+        this.observers.length = 0;
         this.registerIntersectionObservers(config);
         return Promise.resolve();
       })
