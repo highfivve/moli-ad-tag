@@ -128,7 +128,7 @@ export class IdentityLink implements IModule {
     // see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html#envelopemoduleready
     this.window.addEventListener('envelopeModuleReady', () => {
       // For example, you can directly feed it emails, like so:
-      this.window.ats.setAdditionalData({
+      this.window.atsenvelopemodule.setAdditionalData({
         type: 'emailHashes',
         id: this.moduleConfig.hashedEmailAddresses
       });

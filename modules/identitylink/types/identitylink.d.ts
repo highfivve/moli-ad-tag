@@ -82,42 +82,55 @@ export namespace ATS {
    */
   export type ATSData = ATSDataEmail | ATSDataEmailHashes | ATSDataPhoneNumber;
 
+  /**
+   * LiveRamps  (authenticated traffic solution) implementation.
+   *
+   * @see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html
+   */
+  export type ATSGlobal = {
+    /**
+     * Use this method to set email hashes.
+     *
+     * @param data
+     * @see https://docs.liveramp.com/privacy-manager/en/configure-how-identifiers-are-obtained.html
+     */
+    setAdditionalData: (data: ATSData) => void;
+
+    /**
+     * This will return the current configuration object. The callback function is optional. In both ways it will return the current config object.
+     */
+    outputCurrentConfiguration: () => void;
+
+    /**
+     * Fetch envelope from configured storage; the callback function is optional. If the function is called without a
+     * callback, a promise will be returned. If function is called with callback, an envelope value will be returned.
+     */
+    retrieveEnvelope: (callback?: (envelope: Envelope) => void) => Promise<Envelope> | void;
+
+    /**
+     * This function will remove the current envelope that is stored in local storage/cookie.
+     */
+    invalidateEnvelope: () => void;
+
+    /**
+     * This function will (re)scan DOM (Document Object Model) elements with the CSS selectors specified in your
+     * configuration. You can call this function if the ATS.js library has been started.
+     */
+    triggerDetection: () => void;
+  };
+
   export type ATSWindow = Window & {
     /**
      * LiveRamps  (authenticated traffic solution) implementation.
      *
      * @see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html
      */
-    ats: {
-      /**
-       * Use this method to set email hashes.
-       *
-       * @param data
-       * @see https://docs.liveramp.com/privacy-manager/en/configure-how-identifiers-are-obtained.html
-       */
-      setAdditionalData: (data: ATSData) => void;
+    ats: ATSGlobal;
 
-      /**
-       * This will return the current configuration object. The callback function is optional. In both ways it will return the current config object.
-       */
-      outputCurrentConfiguration: () => void;
-
-      /**
-       * Fetch envelope from configured storage; the callback function is optional. If the function is called without a
-       * callback, a promise will be returned. If function is called with callback, an envelope value will be returned.
-       */
-      retrieveEnvelope: (callback?: (envelope: Envelope) => void) => Promise<Envelope> | void;
-
-      /**
-       * This function will remove the current envelope that is stored in local storage/cookie.
-       */
-      invalidateEnvelope: () => void;
-
-      /**
-       * This function will (re)scan DOM (Document Object Model) elements with the CSS selectors specified in your
-       * configuration. You can call this function if the ATS.js library has been started.
-       */
-      triggerDetection: () => void;
-    };
+    /**
+     * This variable is set, when the `window.addEventListener("envelopeModuleReady", callback)` callback fires.
+     * The `window.ats` may or may not be defined!
+     */
+    atsenvelopemodule: ATSGlobal;
   };
 }
