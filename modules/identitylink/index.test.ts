@@ -20,12 +20,18 @@ describe('IdentityLink Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
   const jsDomWindow: ATS.ATSWindow = dom.window as any;
-  const atsStartStub = sandbox.stub();
-  const setAdditionalDataStub = sandbox.stub();
+  const envelopeModuleSetAdditionalDataStub = sandbox.stub();
   const addEventListerSpy = sandbox.spy(jsDomWindow, 'addEventListener');
 
   jsDomWindow.ats = {
-    setAdditionalData: setAdditionalDataStub,
+    setAdditionalData: sandbox.stub,
+    retrieveEnvelope: sandbox.stub(),
+    triggerDetection: sandbox.stub(),
+    invalidateEnvelope: sandbox.stub(),
+    outputCurrentConfiguration: sandbox.stub()
+  };
+  jsDomWindow.atsenvelopemodule = {
+    setAdditionalData: envelopeModuleSetAdditionalDataStub,
     retrieveEnvelope: sandbox.stub(),
     triggerDetection: sandbox.stub(),
     invalidateEnvelope: sandbox.stub(),
@@ -101,7 +107,7 @@ describe('IdentityLink Module', () => {
         await module.loadAts(context, assetLoaderService);
 
         expect(addEventListerSpy).to.have.been.calledOnce;
-        expect(setAdditionalDataStub).to.have.not.been.called;
+        expect(envelopeModuleSetAdditionalDataStub).to.have.not.been.called;
 
         expect(loadScriptStub).to.have.been.calledOnceWithExactly({
           name: module.name,
@@ -116,9 +122,9 @@ describe('IdentityLink Module', () => {
         // fire callback
         (callback as any)();
 
-        expect(setAdditionalDataStub).to.have.been.calledOnce;
+        expect(envelopeModuleSetAdditionalDataStub).to.have.been.calledOnce;
 
-        expect(setAdditionalDataStub).to.have.been.calledOnceWithExactly({
+        expect(envelopeModuleSetAdditionalDataStub).to.have.been.calledOnceWithExactly({
           type: 'emailHashes',
           id: ['somehashedaddress']
         });
