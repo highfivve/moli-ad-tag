@@ -70,8 +70,7 @@ export const removeTestSlotSizeFromLocalStorage = (slot: Moli.AdSlot) =>
  * @returns the created DOM elements along with their respective slots.
  */
 
-const setContent = (adSlot, content) => {
-  const adSlotId = adSlot.getSlotElementId();
+const setContent = (adSlotId: string, content: string) => {
   const slotToFill = document.getElementById(adSlotId);
 
   if (slotToFill) {
@@ -84,7 +83,7 @@ const createBlankTestSlots = (
   slots: Moli.SlotDefinition[]
 ): TestSlot[] => {
   slots.forEach(slot => {
-    const { adSlot, moliSlot } = slot;
+    const { moliSlot } = slot;
 
     const containerId = testSlotContainerId(moliSlot.domId);
     const div = document.createElement('div');
@@ -96,7 +95,7 @@ const createBlankTestSlots = (
     }
 
     // render test creative
-    setContent(adSlot, div.outerHTML);
+    setContent(moliSlot.domId, div.outerHTML);
 
     context.logger.debug(
       'GAM',
