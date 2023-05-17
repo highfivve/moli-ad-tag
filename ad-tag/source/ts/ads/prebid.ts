@@ -527,6 +527,12 @@ export const prebidRenderAds =
                   const iframeDoc = iframe.contentWindow?.document;
                   if (iframeDoc) {
                     context.window.pbjs.renderAd(iframeDoc, winningBid.adId);
+
+                    // most browsers have a default margin of 8px . We add those after prebid has written to the iframe.
+                    // internally prebid uses document.write or inserts an element. Either way, this is safe to do here.
+                    // document.write is sync.
+                    // see https://github.com/prebid/Prebid.js/blob/92daa81f277598cbed486cf8be01ce796aa80c8f/src/prebid.js#L555-L588
+                    iframe.contentDocument?.body.style.setProperty('margin', '0');
                   } else {
                     context.logger.error(
                       'Prebid',
