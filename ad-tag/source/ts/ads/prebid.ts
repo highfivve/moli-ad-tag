@@ -21,6 +21,7 @@ import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
+import { createTestSlots } from '../util/test-slots';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -489,7 +490,8 @@ export const prebidRenderAds =
       try {
         switch (context.env) {
           case 'test':
-            context.logger.debug('Prebid', 'No test slot support yet');
+            context.logger.debug('Prebid', 'Rendering test slots');
+            createTestSlots(context, slots);
             break;
           case 'production':
             context.window.pbjs
