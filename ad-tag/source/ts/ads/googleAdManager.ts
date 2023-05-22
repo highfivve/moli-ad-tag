@@ -104,6 +104,9 @@ const useStandardGpt = (tcData: tcfapi.responses.TCData): boolean => {
 export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
   let result: Promise<void>;
   return mkInitStep('gpt-init', (context: AdPipelineContext) => {
+    if (context.env === 'test') {
+      return Promise.resolve();
+    }
     if (!result) {
       result = new Promise<void>(resolve => {
         context.logger.debug('GAM', 'init googletag stub');

@@ -87,7 +87,7 @@ export const a9Init = (
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
-        if (hasRequiredConsent(context.tcData)) {
+        if (context.env !== 'test' && hasRequiredConsent(context.tcData)) {
           // async fetch as everything is already initialized
           assetService.loadScript({
             name: 'A9',

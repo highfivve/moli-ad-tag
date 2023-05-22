@@ -126,6 +126,14 @@ describe('a9', () => {
       assetLoaderStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
     });
 
+    it('should not load the a9 script in test mode', async () => {
+      const step = a9Init(a9ConfigStub, assetLoaderService);
+      const tcData = fullConsent({ '793': true });
+
+      await step({ ...adPipelineContext('test'), tcData });
+      expect(assetLoaderStub).to.have.not.been.called;
+    });
+
     it('should load the a9 script if consent is given', async () => {
       const step = a9Init(a9ConfigStub, assetLoaderService);
       const tcData = fullConsent({ '793': true });

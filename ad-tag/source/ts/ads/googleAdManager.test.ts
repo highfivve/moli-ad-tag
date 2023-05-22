@@ -83,6 +83,11 @@ describe('google ad manager', () => {
   });
 
   describe('gptInit', () => {
+    it('should not load anything in test mode', async () => {
+      const step = gptInit(assetLoaderService);
+      await step(adPipelineContext('test'));
+      expect(loadScriptStub).not.been.called;
+    });
     it('should set the window.googletag', () => {
       const step = gptInit(assetLoaderService);
       (dom.window as any).googletag = undefined;
