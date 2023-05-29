@@ -275,6 +275,15 @@ export class Emetriq implements IModule {
           ctx.config.targeting?.keyValues,
           this.moduleConfig.customMappingDefinition
         );
+        // test environment doesn't require confiant
+        if (ctx.env === 'test') {
+          return Promise.resolve();
+        }
+        // no consent
+        if (ctx.tcData.gdprApplies && !ctx.tcData.vendor.consents[this.gvlid]) {
+          return Promise.resolve();
+        }
+
         Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(additionalIdentifier => {
           switch (this.moduleConfig.os) {
             case 'web':
@@ -312,16 +321,6 @@ export class Emetriq implements IModule {
     additionalCustomParams: EmetriqCustomParams,
     assetLoaderService: IAssetLoaderService
   ): Promise<void> {
-    // test environment doesn't require confiant
-    if (context.env === 'test') {
-      return Promise.resolve();
-    }
-
-    // no consent
-    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
-      return Promise.resolve();
-    }
-
     this.window._enqAdpParam = {
       ...webConfig._enqAdpParam,
       ...additionalIdentifier,

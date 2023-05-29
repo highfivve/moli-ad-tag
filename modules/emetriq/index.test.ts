@@ -26,6 +26,7 @@ describe('Emetriq Module', () => {
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
+  const syncDelaySpy = sandbox.spy(Emetriq, 'syncDelay');
 
   const sid = 1337;
   const webConfig: EmetriqWebConfig = {
@@ -70,30 +71,36 @@ describe('Emetriq Module', () => {
     expect(config.pipeline?.initSteps[0].name).to.be.eq('emetriq');
   });
 
+  describe('init step', () => {
+    it('should execute nothing in test mode', async () => {
+      const module = createEmetriqWeb();
+      const config = newEmptyConfig();
+      module.init(config, assetLoaderService);
+
+      const init = config.pipeline?.initSteps[0];
+      expect(init).to.be.ok;
+
+      await init!({ ...adPipelineContext(), env: 'test' });
+      expect(syncDelaySpy).to.have.not.been.called;
+      expect(loadScriptStub).to.have.not.been.called;
+    });
+
+    it('should execute nothing if consent is not provided', async () => {
+      const module = createEmetriqWeb();
+      const config = newEmptyConfig();
+      module.init(config, assetLoaderService);
+
+      const init = config.pipeline?.initSteps[0];
+      expect(init).to.be.ok;
+
+      await init!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) });
+      expect(syncDelaySpy).to.have.not.been.called;
+      expect(loadScriptStub).to.have.not.been.called;
+    });
+  });
+
   describe('loadEmetriq', () => {
     const module = createEmetriqWeb();
-
-    it('not load anything in a test environment', async () => {
-      await module.loadEmetriqScript(
-        { ...adPipelineContext(), env: 'test' },
-        webConfig,
-        {},
-        {},
-        assetLoaderService
-      );
-      expect(loadScriptStub).to.have.not.been.called;
-    });
-
-    it('not load anything if gdpr applies and vendor 213 has no consent', async () => {
-      await module.loadEmetriqScript(
-        { ...adPipelineContext(), tcData: fullConsent({ 213: false }) },
-        webConfig,
-        {},
-        {},
-        assetLoaderService
-      );
-      expect(loadScriptStub).to.have.not.been.called;
-    });
 
     [adPipelineContext(), { ...adPipelineContext(), tcData: tcDataNoGdpr }].forEach(context =>
       it(`load emetriq if gdpr ${
