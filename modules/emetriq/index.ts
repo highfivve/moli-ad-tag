@@ -72,6 +72,7 @@ import {
   AssetLoadMethod,
   IAssetLoaderService,
   IModule,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   ModuleType,
   Moli
@@ -294,8 +295,8 @@ export class Emetriq implements IModule {
       prepareRequestAdsSteps: []
     };
 
-    config.pipeline.initSteps.push(
-      mkInitStep(this.name, ctx => {
+    config.pipeline.configureSteps.push(
+      mkConfigureStepOncePerRequestAdsCycle(this.name, ctx => {
         const customParams = Emetriq.staticCustomParams(
           ctx.config.targeting?.keyValues,
           this.moduleConfig.customMappingDefinition
