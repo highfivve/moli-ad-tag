@@ -67,27 +67,27 @@ describe('Emetriq Module', () => {
     sandbox.reset();
   });
 
-  it('should add an init step', async () => {
+  it('should add an configure step step', async () => {
     const module = createEmetriqWeb();
     const config = newEmptyConfig();
 
     module.init(config, assetLoaderService);
 
     expect(config.pipeline).to.be.ok;
-    expect(config.pipeline?.initSteps).to.have.length(1);
-    expect(config.pipeline?.initSteps[0].name).to.be.eq('emetriq');
+    expect(config.pipeline?.configureSteps).to.have.length(1);
+    expect(config.pipeline?.configureSteps[0].name).to.be.eq('emetriq');
   });
 
-  describe('init step', () => {
+  describe('configure step', () => {
     it('should execute nothing in test mode', async () => {
       const module = createEmetriqWeb();
       const config = newEmptyConfig();
       module.init(config, assetLoaderService);
 
-      const init = config.pipeline?.initSteps[0];
-      expect(init).to.be.ok;
+      const step = config.pipeline?.configureSteps[0];
+      expect(step).to.be.ok;
 
-      await init!({ ...adPipelineContext(), env: 'test' });
+      await step!({ ...adPipelineContext(), env: 'test' }, []);
       expect(syncDelaySpy).to.have.not.been.called;
       expect(loadScriptStub).to.have.not.been.called;
     });
@@ -97,10 +97,10 @@ describe('Emetriq Module', () => {
       const config = newEmptyConfig();
       module.init(config, assetLoaderService);
 
-      const init = config.pipeline?.initSteps[0];
-      expect(init).to.be.ok;
+      const step = config.pipeline?.configureSteps[0];
+      expect(step).to.be.ok;
 
-      await init!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) });
+      await step!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) }, []);
       expect(syncDelaySpy).to.have.not.been.called;
       expect(loadScriptStub).to.have.not.been.called;
     });
