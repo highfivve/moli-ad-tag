@@ -20,7 +20,7 @@ const extractDeviceIdParam = (
  * @param additionalIdentifier identifiers derived from an external source such as prebid.js
  * @param additionalCustomParams
  * @param fetch used to call the data endpoint
- * @param logger required for error logging
+ * @param logger proper logging support
  *
  * @see https://doc.emetriq.de/#/inapp/integration
  * @see https://doc.emetriq.de/inapp/api.html#overview

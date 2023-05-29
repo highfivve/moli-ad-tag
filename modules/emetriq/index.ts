@@ -85,6 +85,7 @@ import {
 } from './types/emetriq';
 import { trackInApp } from './trackInApp';
 import DfpKeyValueMap = Moli.DfpKeyValueMap;
+import { trackLoginEvent } from './trackLoginEvent';
 
 /**
  * ## Link
@@ -133,6 +134,24 @@ type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
 };
 
+/**
+ * @see https://docs.xdn.emetriq.de/#event-import
+ */
+export interface EmetriqLoginEventConfig {
+  /**
+   * This is a special ID assigned to the partner by emetriq.
+   */
+  readonly partner: string;
+
+  /**
+   * a `Base64` encoded `SHA-256` of user’s email address (in lower case and UTF-8 encoded). For event imports it is
+   * necessary to URL encode it. See [Example GUID hashing](https://docs.xdn.emetriq.de/#hashing) for comparing your implementation with expected results.
+   *
+   * @see https://docs.xdn.emetriq.de/#hashing
+   */
+  readonly guid: string;
+}
+
 export type EmetriqMappingDefinition = {
   /**
    * custom parameter provided to emetriq
@@ -172,6 +191,12 @@ export interface IEmetriqModuleConfig {
    * to a custom parameter that is sent to emetriq.
    */
   readonly customMappingDefinition?: EmetriqMappingDefinition[];
+
+  /**
+   * Optional configuration for login events
+   * @see https://docs.xdn.emetriq.de/#event-import
+   */
+  readonly login?: EmetriqLoginEventConfig;
 }
 
 /**
@@ -275,6 +300,19 @@ export class Emetriq implements IModule {
           ctx.config.targeting?.keyValues,
           this.moduleConfig.customMappingDefinition
         );
+        // test environment doesn't require confiant
+        if (ctx.env === 'test') {
+          return Promise.resolve();
+        }
+        // no consent
+        if (ctx.tcData.gdprApplies && !ctx.tcData.vendor.consents[this.gvlid]) {
+          return Promise.resolve();
+        }
+
+        if (this.moduleConfig.login) {
+          trackLoginEvent(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
+        }
+
         Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(additionalIdentifier => {
           switch (this.moduleConfig.os) {
             case 'web':
@@ -312,16 +350,6 @@ export class Emetriq implements IModule {
     additionalCustomParams: EmetriqCustomParams,
     assetLoaderService: IAssetLoaderService
   ): Promise<void> {
-    // test environment doesn't require confiant
-    if (context.env === 'test') {
-      return Promise.resolve();
-    }
-
-    // no consent
-    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
-      return Promise.resolve();
-    }
-
     this.window._enqAdpParam = {
       ...webConfig._enqAdpParam,
       ...additionalIdentifier,
