@@ -307,6 +307,7 @@ export class Emetriq implements IModule {
         }
         // no consent
         if (ctx.tcData.gdprApplies && !ctx.tcData.vendor.consents[this.gvlid]) {
+          ctx.logger.warn(this.name, 'missing consent');
           return Promise.resolve();
         }
 
