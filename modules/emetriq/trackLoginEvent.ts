@@ -14,6 +14,40 @@ const extractAdIdOrIdfa = (
   }
   return;
 };
+
+/**
+ * Uses the session storage to persist the last time when the user was tracked.
+ * @param storage persist last tracking time - sessionStorage is recommended
+ * @param currentDate provided via Date.now(), UTC timestamp in milliseconds
+ * @param logger log errors
+ */
+export const shouldTrackLoginEvent = (
+  storage: Storage,
+  currentDate: number,
+  logger: Moli.MoliLogger
+): boolean => {
+  try {
+    const oneDayMilliseconds = 86400000;
+    const key = 'moli_emetriq';
+    const value = storage.getItem(key);
+    console.log(value);
+    const storedDate = value ? Number.parseInt(value, 10) : 0;
+
+    // if the currentDate - 1 day is smaller than the stored date, the login event should be fired
+    // this should ensure that at most once per day an event is fired
+    const shouldTrack = currentDate - oneDayMilliseconds < storedDate;
+
+    // reset the track timestamp if
+    if (shouldTrack) {
+      storage.setItem(key, currentDate.toString());
+    }
+    return shouldTrack;
+  } catch (e) {
+    logger.error('emetriq', 'could not access session storage', e);
+    return false;
+  }
+};
+
 /**
  * Sends a tracking request directly to the emetriq data API.
  * @param context ad pipeline context to retrieve necessary metadata and consent

@@ -20,7 +20,7 @@ import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentSt
 import { EmetriqWindow } from './types/emetriq';
 import { trackInApp } from './trackInApp';
 import { createPbjsStub } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
-import { trackLoginEvent } from './trackLoginEvent';
+import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 
 // setup sinon-chai
 use(sinonChai);
@@ -383,6 +383,51 @@ describe('Emetriq Module', () => {
         ...webConfig,
         login: loginConfig
       };
+
+      const sessionStorage: Storage = {
+        length: 0,
+        getItem(key: string): string | null {
+          return null;
+        },
+        setItem(key: string, value: string) {
+          return;
+        },
+        key(index: number): string | null {
+          return null;
+        },
+        removeItem(key: string) {
+          return;
+        },
+        clear() {
+          return;
+        }
+      };
+
+      const getItemStub = sandbox.stub(sessionStorage, 'getItem');
+      const setItemSpy = sandbox.spy(sessionStorage, 'setItem');
+
+      describe('shouldTrack', () => {
+        it('should return true if user has not been tracked in the last 24 hours', () => {
+          // 2023-05-30 10:30:00
+          const now = 1685435386900;
+          getItemStub.returns((now - 1).toString(10));
+          expect(shouldTrackLoginEvent(sessionStorage, now, noopLogger)).to.be.true;
+          expect(setItemSpy).to.have.been.calledOnce;
+
+          // check correct update
+          const [key, newDate] = setItemSpy.firstCall.args;
+          expect(key).be.eq('moli_emetriq');
+          expect(newDate).be.eq(now.toString(10));
+        });
+
+        it('should return false if user has been tracked in the last 24 hours', () => {
+          // 2023-05-30 10:30:00
+          const now = 1685435386900;
+          getItemStub.returns((now - 86400001).toString(10));
+          expect(shouldTrackLoginEvent(sessionStorage, now, noopLogger)).to.be.false;
+          expect(setItemSpy).to.have.not.been.called;
+        });
+      });
 
       it('should not fetch if login configuration is missing', async () => {
         await trackLoginEvent(adPipelineContext(), webConfig, fetchSpy, noopLogger);
