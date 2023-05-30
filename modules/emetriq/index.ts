@@ -86,7 +86,7 @@ import {
 } from './types/emetriq';
 import { trackInApp } from './trackInApp';
 import DfpKeyValueMap = Moli.DfpKeyValueMap;
-import { trackLoginEvent } from './trackLoginEvent';
+import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 
 /**
  * ## Link
@@ -310,7 +310,10 @@ export class Emetriq implements IModule {
           return Promise.resolve();
         }
 
-        if (this.moduleConfig.login) {
+        if (
+          this.moduleConfig.login &&
+          shouldTrackLoginEvent(ctx.window.sessionStorage, Date.now(), ctx.logger)
+        ) {
           trackLoginEvent(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
         }
 
