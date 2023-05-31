@@ -422,7 +422,7 @@ describe('Emetriq Module', () => {
         });
 
         it('should return true if user has not been tracked in the last 24 hours', () => {
-          getItemStub.returns((now - 1).toString(10));
+          getItemStub.returns((now - 86400001).toString(10));
           expect(shouldTrackLoginEvent(sessionStorage, now, noopLogger)).to.be.true;
           expect(setItemSpy).to.have.been.calledOnce;
 
@@ -433,8 +433,15 @@ describe('Emetriq Module', () => {
         });
 
         it('should return false if user has been tracked in the last 24 hours', () => {
-          getItemStub.returns((now - 86400001).toString(10));
+          getItemStub.returns((now - 1).toString(10));
           expect(shouldTrackLoginEvent(sessionStorage, now, noopLogger)).to.be.false;
+          expect(setItemSpy).to.have.not.been.called;
+        });
+        it('should return false if user has been tracked in the last 24 hours #2', () => {
+          const trackedAt = 1685521560826;
+          const currentDate = 1685521560826;
+          getItemStub.returns(trackedAt.toString(10));
+          expect(shouldTrackLoginEvent(sessionStorage, currentDate, noopLogger)).to.be.false;
           expect(setItemSpy).to.have.not.been.called;
         });
       });
