@@ -30,16 +30,19 @@ export const shouldTrackLoginEvent = (
     const oneDayMilliseconds = 86400000;
     const key = 'moli_emetriq';
     const value = storage.getItem(key);
-    const storedDate = value ? Number.parseInt(value, 10) : Number.MAX_VALUE;
+    const storedDate = value ? Number.parseInt(value, 10) : 0;
 
     // if the currentDate - 1 day is smaller than the stored date, the login event should be fired
     // this should ensure that at most once per day an event is fired
-    const shouldTrack = currentDate - oneDayMilliseconds < storedDate;
+    const shouldTrack = currentDate - oneDayMilliseconds > storedDate;
 
     // reset the track timestamp if
     if (shouldTrack) {
       storage.setItem(key, currentDate.toString());
-      logger.debug('emetriq', 'eligible for login event tracking');
+      logger.debug(
+        'emetriq',
+        `eligible for login event tracking. Last tracked at ${new Date(storedDate)}`
+      );
     }
     return shouldTrack;
   } catch (e) {
