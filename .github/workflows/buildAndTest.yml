@@ -26,6 +26,7 @@ jobs:
             module-pubstack,
             module-prebid-first-party-data,
             module-sticky-footer-ads,
+            module-sticky-header-ads,
             module-yield-optimization,
             module-zeotap,
             moli-debugger,

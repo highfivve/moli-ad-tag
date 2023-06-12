@@ -137,6 +137,7 @@ module.exports = {
           '../modules/prebid-first-party-data/index.ts',
           '../modules/pubstack/index.ts',
           '../modules/sticky-footer-ads/index.ts',
+          '../modules/sticky-header-ads/index.ts',
           '../modules/yield-optimization/index.ts',
           '../modules/zeotap/zeotap.ts'
         ],
