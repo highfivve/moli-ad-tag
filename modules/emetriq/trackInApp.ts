@@ -58,6 +58,7 @@ export const trackInApp = (
   });
 
   return fetch(
-    `https://aps.xplosion.de/data?sid=${appConfig.sid}${deviceIdParam}&os=${appConfig.os}&app_id=${appConfig.appId}${keywordsParam}${linkParam}${additionalIdsParam}${additionalCustomParam}&${consentString}`
+    `https://aps.xplosion.de/data?sid=${appConfig.sid}${deviceIdParam}&os=${appConfig.os}&app_id=${appConfig.appId}${keywordsParam}${linkParam}${additionalIdsParam}${additionalCustomParam}&${consentString}`,
+    { credentials: 'include', redirect: 'follow' }
   ).catch(error => logger.error(error));
 };

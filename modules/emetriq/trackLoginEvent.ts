@@ -95,5 +95,7 @@ export const trackLoginEvent = (
     }
   }
 
-  return fetch(url.href).catch(error => logger.error(error));
+  return fetch(url.href, { credentials: 'include', redirect: 'follow' }).catch(error =>
+    logger.error(error)
+  );
 };
