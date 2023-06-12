@@ -173,6 +173,15 @@ export type SkinConfig = {
   readonly enableCpmComparison: boolean;
 
   /**
+   * Selector for an (additional) ad slot container that should be set to display: none
+   *
+   * e.g. mobile-sticky ads have another container wrapped around the ad slot container itself which can be hidden like this:
+   * hideBlockedSlotsSelector: '[data-ref="sticky-ad"]'
+   */
+
+  hideBlockedSlotsSelector?: string;
+
+  /**
    * If set to true the ad slot that would load the skin is being destroyed.
    * This is useful only for ad slots that serve as a special "skin ad slot"
    * and have otherwise no other function.
@@ -372,6 +381,18 @@ export class Skin implements IModule {
 
             if (skinConfig.hideSkinAdSlot) {
               this.hideAdSlot(log)(skinConfig.skinAdSlotDomId);
+            }
+
+            if (skinConfig.hideBlockedSlotsSelector) {
+              this.window.document
+                .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
+                .forEach(node => {
+                  log.debug(
+                    'SkinModule',
+                    `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
+                  );
+                  node.style.setProperty('display', 'none');
+                });
             }
           } else if (skinConfig.enableCpmComparison) {
             log.debug('SkinModule', 'Skin configuration ignored because cpm was low', skinConfig);
