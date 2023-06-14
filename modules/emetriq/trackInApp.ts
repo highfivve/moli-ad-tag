@@ -19,8 +19,7 @@ const extractDeviceIdParam = (
  * @param appConfig provides details for the data call
  * @param additionalIdentifier identifiers derived from an external source such as prebid.js
  * @param additionalCustomParams
- * @param fetch used to call the data endpoint
- * @param logger proper logging support
+ * @param document to insert tracking pixel
  *
  * @see https://doc.emetriq.de/#/inapp/integration
  * @see https://doc.emetriq.de/inapp/api.html#overview
@@ -30,9 +29,8 @@ export const trackInApp = (
   appConfig: EmetriqAppConfig,
   additionalIdentifier: EmetriqAdditionalIdentifier,
   additionalCustomParams: EmetriqCustomParams,
-  fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
-  logger: Moli.MoliLogger
-): Promise<any> => {
+  document: Document
+): void => {
   const deviceIdParam = extractDeviceIdParam(context, appConfig.advertiserIdKey);
   const consentString = context.tcData.gdprApplies
     ? `gdpr=1&gdpr_consent=${context.tcData.tcString}`
@@ -57,8 +55,10 @@ export const trackInApp = (
     additionalCustomParam += `&${key}=${encodeURIComponent(value)}`;
   });
 
-  return fetch(
-    `https://aps.xplosion.de/data?sid=${appConfig.sid}${deviceIdParam}&os=${appConfig.os}&app_id=${appConfig.appId}${keywordsParam}${linkParam}${additionalIdsParam}${additionalCustomParam}&${consentString}`,
-    { credentials: 'include', redirect: 'follow' }
-  ).catch(error => logger.error(error));
+  // insert tracking pixel
+  const pixel = document.createElement('img');
+  pixel.src = `https://aps.xplosion.de/data?sid=${appConfig.sid}${deviceIdParam}&os=${appConfig.os}&app_id=${appConfig.appId}${keywordsParam}${linkParam}${additionalIdsParam}${additionalCustomParam}&${consentString}`;
+  pixel.width = 1;
+  pixel.height = 1;
+  document.body.append(pixel);
 };

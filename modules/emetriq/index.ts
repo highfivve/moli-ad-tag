@@ -315,7 +315,7 @@ export class Emetriq implements IModule {
           this.moduleConfig.login &&
           shouldTrackLoginEvent(ctx.window.sessionStorage, Date.now(), ctx.logger)
         ) {
-          trackLoginEvent(ctx, this.moduleConfig, ctx.window.fetch, ctx.logger);
+          trackLoginEvent(ctx, this.moduleConfig, ctx.window.document, ctx.logger);
         }
 
         Emetriq.syncDelay(ctx, this.moduleConfig.syncDelay).then(additionalIdentifier => {
@@ -336,8 +336,7 @@ export class Emetriq implements IModule {
                 this.moduleConfig,
                 additionalIdentifier,
                 customParams,
-                ctx.window.fetch,
-                ctx.logger
+                ctx.window.document
               );
               break;
           }
