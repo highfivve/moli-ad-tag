@@ -4402,7 +4402,7 @@ export namespace prebidjs {
     /**
      * Adunit placement
      */
-    readonly placement: 'inScreen' | 'inArticle';
+    readonly placement: 'inScreen' | 'inArticle' | 'inBanner';
   }
 
   /**
