@@ -861,6 +861,12 @@ export namespace prebidjs {
        * This is the placementId, value needed for obtaining user's IdentityLink envelope.
        */
       readonly pid: string;
+
+      /**
+       * Property for choosing if a cookieable RampID envelope (RTIS) should be set and stored until the user
+       * authenticates which then will be replaced by an authenticated RampID envelope (ATS) (either true or false).
+       */
+      readonly notUse3P: boolean;
     }
 
     /**
