@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-moli-lazy-load",
-  "version": "4.11.2",
+  "version": "4.11.3",
   "description": "Lazy-load Module",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
@@ -27,7 +27,7 @@
     "directory": "modules/lazy-load"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.11.2",
+    "@highfivve/ad-tag": "4.11.3",
     "@types/chai": "4.2.18",
     "@types/jsdom": "^20.0.0",
     "@types/mocha": "8.2.2",
