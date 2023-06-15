@@ -1492,6 +1492,17 @@ export namespace prebidjs {
     };
 
     export type ExtPrebid = {
+      /**
+       * Prebid Server can be instructed to return additional SeatNonBid information about why bidders might not
+       * have bid on certain adunits. You can get this extra information by setting `extPrebid.returnallbidstatus`
+       * equal to `true`.
+       *
+       * Note that client-side analytics adapters can receive this data by listening to the seatNonBid event.
+       *
+       * @see [https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#seat-non-bid]
+       */
+      readonly returnallbidstatus?: boolean;
+
       readonly cache?: {
         readonly vastxml?: {
           readonly returnCreative: boolean;
