@@ -3144,7 +3144,7 @@ export namespace prebidjs {
   export const Criteo = 'criteo';
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
-  export const EmxDigital = 'emx_digital';
+  export const GumGum = 'gumgum';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
   export const Invibes = 'invibes';
@@ -3182,7 +3182,7 @@ export namespace prebidjs {
     | typeof Criteo
     | typeof AppNexusAst
     | typeof AppNexus
-    | typeof EmxDigital
+    | typeof GumGum
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof Invibes
@@ -3616,6 +3616,70 @@ export namespace prebidjs {
    */
   export interface IAppNexusASTBid
     extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {}
+
+  export interface IGumGumParams {
+    /**
+     * TrackingID.
+     * required for all bid requests tracking a single domain or site
+     *
+     * @example `'ggumtest`
+     */
+    readonly zone: string;
+
+    /**
+     * PublisherId
+     * required for all bid requests tracking multiple domains or sites
+     *
+     * @example `123`
+     */
+    readonly pubId: number;
+
+    /**
+     * Iris.tv ID
+     *
+     * @example `'iris_6f9285823a4'`
+     */
+    readonly irisid?: string;
+
+    /**
+     * Iris.tv segments
+     * @example `'segment1,segment2'`
+     */
+    readonly iriscat?: string;
+
+    /**
+     * Slot ID
+     * required for slot placement only
+     *
+     * @example `9`
+     */
+    readonly slot?: number | string;
+
+    /**
+     * Product Type
+     * required for new supported products like ‘skins’
+     */
+    readonly product?: 'skins';
+  }
+
+  /**
+   * ## GumGum Bid params
+   *
+   * GumGum has a few special fields to determine the actual "product" being requested.
+   *
+   * `data.pi`:
+   * - `2` : inscreen
+   * - `3` : inslot
+   * - `5` : native (ICV)
+   * - `6` : invideo
+   * - `7` : video
+   * - `8` : skins
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/gumgum.html
+   * @see https://github.com/prebid/Prebid.js/blob/822c09e5e10077528431054e90073bc4d58099f7/modules/gumgumBidAdapter.js#L355-L370
+   */
+
+  export interface IGumGumBid extends IBidObject<typeof GumGum, IGumGumParams> {}
 
   /**
    * ImproveDigital bid parameters.
@@ -4842,6 +4906,7 @@ export namespace prebidjs {
     | IAdUpBid
     | ICriteoBid
     | IAppNexusASTBid
+    | IGumGumBid
     | IImproveDigitalBid
     | IIndexExchangeBid
     | IInvibesBid
