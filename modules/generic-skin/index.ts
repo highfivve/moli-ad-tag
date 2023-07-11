@@ -110,6 +110,10 @@ export type JustPremiumFormatFilter = {
   readonly format: prebidjs.JustPremiumFormat;
 };
 
+export type GumGumFormatFilter = {
+  readonly bidder: typeof prebidjs.GumGum;
+};
+
 export type DSPXFormatFilter = {
   readonly bidder: typeof prebidjs.DSPX;
 };
@@ -127,6 +131,7 @@ export type XandrFormatFilter = {
 
 export type FormatFilter =
   | JustPremiumFormatFilter
+  | GumGumFormatFilter
   | DSPXFormatFilter
   | VisxFormatFilter
   | XandrFormatFilter;
@@ -233,6 +238,8 @@ export class Skin implements IModule {
         switch (filter.bidder) {
           case 'justpremium':
             return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
+          case 'gumgum':
+            return bid.bidder === prebidjs.GumGum;
           case 'dspx':
             return bid.bidder === prebidjs.DSPX;
           case 'visx':

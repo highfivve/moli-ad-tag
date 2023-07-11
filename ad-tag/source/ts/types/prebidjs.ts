@@ -3662,6 +3662,23 @@ export namespace prebidjs {
     readonly product?: 'skins';
   }
 
+  /**
+   * ## GumGum Bid params
+   *
+   * GumGum has a few special fields to determine the actual "product" being requested.
+   *
+   * `data.pi`:
+   * - `2` : inscreen
+   * - `3` : inslot
+   * - `5` : native (ICV)
+   * - `6` : invideo
+   * - `7` : video
+   * - `8` : skins
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/gumgum.html
+   * @see https://github.com/prebid/Prebid.js/blob/822c09e5e10077528431054e90073bc4d58099f7/modules/gumgumBidAdapter.js#L355-L370
+   */
+
   export interface IGumGumBid extends IBidObject<typeof GumGum, IGumGumParams> {}
 
   /**
