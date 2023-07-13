@@ -110,6 +110,10 @@ export type JustPremiumFormatFilter = {
   readonly format: prebidjs.JustPremiumFormat;
 };
 
+export type GumGumFormatFilter = {
+  readonly bidder: typeof prebidjs.GumGum;
+};
+
 export type DSPXFormatFilter = {
   readonly bidder: typeof prebidjs.DSPX;
 };
@@ -127,6 +131,7 @@ export type XandrFormatFilter = {
 
 export type FormatFilter =
   | JustPremiumFormatFilter
+  | GumGumFormatFilter
   | DSPXFormatFilter
   | VisxFormatFilter
   | XandrFormatFilter;
@@ -171,6 +176,15 @@ export type SkinConfig = {
    * if the other slots have a higher combined cpm.
    */
   readonly enableCpmComparison: boolean;
+
+  /**
+   * Selector for an (additional) ad slot container that should be set to display: none
+   *
+   * e.g. mobile-sticky ads have another container wrapped around the ad slot container itself which can be hidden like this:
+   * hideBlockedSlotsSelector: '[data-ref="sticky-ad"]'
+   */
+
+  hideBlockedSlotsSelector?: string;
 
   /**
    * If set to true the ad slot that would load the skin is being destroyed.
@@ -224,6 +238,8 @@ export class Skin implements IModule {
         switch (filter.bidder) {
           case 'justpremium':
             return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
+          case 'gumgum':
+            return bid.bidder === prebidjs.GumGum;
           case 'dspx':
             return bid.bidder === prebidjs.DSPX;
           case 'visx':
@@ -372,6 +388,18 @@ export class Skin implements IModule {
 
             if (skinConfig.hideSkinAdSlot) {
               this.hideAdSlot(log)(skinConfig.skinAdSlotDomId);
+            }
+
+            if (skinConfig.hideBlockedSlotsSelector) {
+              this.window.document
+                .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
+                .forEach(node => {
+                  log.debug(
+                    'SkinModule',
+                    `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
+                  );
+                  node.style.setProperty('display', 'none');
+                });
             }
           } else if (skinConfig.enableCpmComparison) {
             log.debug('SkinModule', 'Skin configuration ignored because cpm was low', skinConfig);

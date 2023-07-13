@@ -203,14 +203,24 @@ describe('Emetriq Module', () => {
   describe('tracking APIs', () => {
     jsDomWindow.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
       Promise.resolve({} as any);
-    let fetchSpy = sandbox.spy(jsDomWindow, 'fetch');
+    const createElementSpy = sandbox.spy(jsDomWindow.document, 'createElement');
+    const bodyAppendSpy = sandbox.spy(jsDomWindow.document.body, 'append');
 
-    beforeEach(() => {
-      jsDomWindow.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
-        Promise.resolve({} as any);
+    const getValidatedTrackingPixel = (): HTMLImageElement => {
+      expect(createElementSpy).to.have.been.calledOnce;
+      expect(bodyAppendSpy).to.have.been.calledOnce;
+      const [node] = bodyAppendSpy.firstCall.args;
+      expect(node).to.not.be.a('string');
+      const img = node as HTMLImageElement;
+      expect(img.width).to.be.eq(1);
+      expect(img.height).to.be.eq(1);
+      return img;
+    };
 
-      fetchSpy = sandbox.spy(jsDomWindow, 'fetch');
-    });
+    // beforeEach(() => {
+    //   createElementSpy = sandbox.spy(jsDomWindow.document, 'createElement');
+    //   bodyAppendSpy = sandbox.spy(jsDomWindow.document.body, 'append');
+    // });
 
     describe('trackInApp', () => {
       const appConfig: EmetriqAppConfig = {
@@ -224,10 +234,9 @@ describe('Emetriq Module', () => {
       };
 
       it('should call the endpoint with keywords ', async () => {
-        await trackInApp(adPipelineContext(), appConfig, {}, {}, fetchSpy, noopLogger);
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        await trackInApp(adPipelineContext(), appConfig, {}, {}, jsDomWindow.document);
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
@@ -239,12 +248,10 @@ describe('Emetriq Module', () => {
             { ...appConfig, os: os },
             {},
             {},
-            fetchSpy,
-            noopLogger
+            jsDomWindow.document
           );
-          expect(fetchSpy).to.have.been.calledOnce;
-          const [urlCalled] = fetchSpy.firstCall.args;
-          expect(urlCalled).to.be.eq(
+          const img = getValidatedTrackingPixel();
+          expect(img.src).to.be.eq(
             `https://aps.xplosion.de/data?sid=123&os=${os}&app_id=com.highfivve.app&keywords=pokemon&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
           );
         })
@@ -257,10 +264,9 @@ describe('Emetriq Module', () => {
             link: 'https://www.example.com?param=foo'
           }
         };
-        await trackInApp(adPipelineContext(), appConfigWithLink, {}, {}, fetchSpy, noopLogger);
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        await trackInApp(adPipelineContext(), appConfigWithLink, {}, {}, jsDomWindow.document);
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&link=https%3A%2F%2Fwww.example.com%3Fparam%3Dfoo&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
@@ -275,12 +281,10 @@ describe('Emetriq Module', () => {
           appConfig,
           {},
           {},
-          fetchSpy,
-          noopLogger
+          jsDomWindow.document
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&device_id=${advertiserId}&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
@@ -297,12 +301,10 @@ describe('Emetriq Module', () => {
           },
           {},
           {},
-          fetchSpy,
-          noopLogger
+          jsDomWindow.document
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=20c0c6f5-b89a-42ff-ab34-24da7cccf9ff&id_sharedid=1c6e063f-feaa-40a0-8a86-b9be3c655c39&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
@@ -319,12 +321,10 @@ describe('Emetriq Module', () => {
             c_iabV3Ids: '12,34',
             c_awesome: 'yes'
           },
-          fetchSpy,
-          noopLogger
+          jsDomWindow.document
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&c_iabV3Ids=12%2C34&c_awesome=yes&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
@@ -347,12 +347,10 @@ describe('Emetriq Module', () => {
             id_liveramp: liverampId
           },
           {},
-          fetchSpy,
-          noopLogger
+          jsDomWindow.document
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&id_id5=${id5Id}&id_sharedid=${sharedId}&id_liveramp=${liverampId}&gdpr=1&gdpr_consent=${tcDataWithConsent.tcString}`
         );
       });
@@ -363,12 +361,10 @@ describe('Emetriq Module', () => {
           appConfig,
           {},
           {},
-          fetchSpy,
-          noopLogger
+          jsDomWindow.document
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://aps.xplosion.de/data?sid=123&os=android&app_id=com.highfivve.app&keywords=pokemon&gdpr=0`
         );
       });
@@ -447,8 +443,9 @@ describe('Emetriq Module', () => {
       });
 
       it('should not fetch if login configuration is missing', async () => {
-        await trackLoginEvent(adPipelineContext(), webConfig, fetchSpy, noopLogger);
-        expect(fetchSpy).to.have.not.been.called;
+        await trackLoginEvent(adPipelineContext(), webConfig, jsDomWindow.document, noopLogger);
+        expect(createElementSpy).to.have.not.been.called;
+        expect(bodyAppendSpy).to.have.not.been.called;
       });
 
       it('should call endpoint with idfa for iOS config', async () => {
@@ -468,12 +465,11 @@ describe('Emetriq Module', () => {
             tcData: tcDataNoGdpr
           },
           iosConfig,
-          fetchSpy,
+          jsDomWindow.document,
           noopLogger
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://xdn-ttp.de/lns/import-event-partner-123?guid=abc123efg456&gdpr=0&idfa=${advertiserId}`
         );
       });
@@ -495,12 +491,11 @@ describe('Emetriq Module', () => {
             tcData: tcDataNoGdpr
           },
           iosConfig,
-          fetchSpy,
+          jsDomWindow.document,
           noopLogger
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://xdn-ttp.de/lns/import-event-partner-123?guid=abc123efg456&gdpr=0&adid=${advertiserId}`
         );
       });
@@ -510,12 +505,11 @@ describe('Emetriq Module', () => {
         await trackLoginEvent(
           { ...adPipelineContext(), tcData },
           loginWebConfig,
-          fetchSpy,
+          jsDomWindow.document,
           noopLogger
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           `https://xdn-ttp.de/lns/import-event-partner-123?guid=abc123efg456&gdpr=1&gdpr_consent=${tcData.tcString}`
         );
       });
@@ -524,12 +518,11 @@ describe('Emetriq Module', () => {
         await trackLoginEvent(
           { ...adPipelineContext(), tcData: tcDataNoGdpr },
           loginWebConfig,
-          fetchSpy,
+          jsDomWindow.document,
           noopLogger
         );
-        expect(fetchSpy).to.have.been.calledOnce;
-        const [urlCalled] = fetchSpy.firstCall.args;
-        expect(urlCalled).to.be.eq(
+        const img = getValidatedTrackingPixel();
+        expect(img.src).to.be.eq(
           'https://xdn-ttp.de/lns/import-event-partner-123?guid=abc123efg456&gdpr=0'
         );
       });

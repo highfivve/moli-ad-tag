@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-sticky-footer-ads",
-  "version": "4.10.4",
+  "version": "4.12.1",
   "license": "Apache-2.0",
   "description": "Business logic for sticky footer ads",
   "main": "./lib/index.js",
@@ -23,7 +23,7 @@
   "repository": {
     "type": "git",
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
-    "directory": "modules/pubstack"
+    "directory": "modules/sticky-footer-ads"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
@@ -47,6 +47,6 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.10.4"
+    "@highfivve/ad-tag": "4.12.1"
   }
 }

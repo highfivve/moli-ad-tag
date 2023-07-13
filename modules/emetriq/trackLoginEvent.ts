@@ -55,7 +55,7 @@ export const shouldTrackLoginEvent = (
  * Sends a tracking request directly to the emetriq data API.
  * @param context ad pipeline context to retrieve necessary metadata and consent
  * @param moduleConfig provides details for the data call
- * @param fetch used to call the login event endpoint
+ * @param document insert tracking pixel into this document
  * @param logger proper logging support
  *
  * @see https://docs.xdn.emetriq.de/#event-import
@@ -63,12 +63,12 @@ export const shouldTrackLoginEvent = (
 export const trackLoginEvent = (
   context: AdPipelineContext,
   moduleConfig: EmetriqModuleConfig,
-  fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
+  document: Document,
   logger: Moli.MoliLogger
-): Promise<any> => {
+): void => {
   if (!moduleConfig.login) {
     logger.warn('emetriq', 'login configuration missing!');
-    return Promise.resolve();
+    return;
   }
 
   // use modern URL type
@@ -95,5 +95,10 @@ export const trackLoginEvent = (
     }
   }
 
-  return fetch(url.href).catch(error => logger.error(error));
+  // insert tracking pixel
+  const pixel = document.createElement('img');
+  pixel.src = url.href;
+  pixel.width = 1;
+  pixel.height = 1;
+  document.body.append(pixel);
 };
