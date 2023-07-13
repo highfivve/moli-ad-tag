@@ -206,19 +206,6 @@ let version = Number(versionJsonVersion) + 1;
     : undefined; // yes, we can
   const filenameEs5 = manifestJsonEs5?.moli_es5; // moli_es5 is the ES5 ad tag name by convention
 
-  // Create latest directory inside dist folder if not exists
-  const distDir = path.resolve(process.cwd(), 'dist');
-  const latestDir = path.resolve(distDir, 'latest');
-  if (!fs.existsSync(latestDir)) {
-    fs.mkdirSync(latestDir);
-  }
-
-  // Copy ES6 AND ES5 (if exists) ad tag to latest folder
-  fs.copyFileSync(`${distDir}/${filename}`, `${latestDir}/moli.min.mjs`);
-  if (filenameEs5) {
-    fs.copyFileSync(`${distDir}/${filenameEs5}`, `${latestDir}/moli_es5.min.js`);
-  }
-
   const change: IAdTagRelease = {
     version: version,
     filename: filename,

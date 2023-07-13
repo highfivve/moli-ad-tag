@@ -2,6 +2,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HandlebarsPlugin = require('handlebars-webpack-plugin');
 const {WebpackManifestPlugin} = require('webpack-manifest-plugin');
+const WebpackShellPluginNext = require('webpack-shell-plugin-next');
+const fs = require('fs');
 
 const overviewTemplatePath = path.join(__dirname, '..', 'overview.hbs');
 const demoTemplatePath = path.join(__dirname, '..', 'demo.hbs');
@@ -103,7 +105,56 @@ const manifestPlugin = (chunkNames = ['moli'], es5Mode = false) =>
     fileName: es5Mode ? 'manifest.es5.json' : 'manifest.json'
   });
 
+/**
+ * Copies the created js files into the latest folder to be used in the release process, so the publisher's ad-tag gets updated automatically.
+ *
+ * @param {string[]} [chunkNames=['moli']] chunks that should be included. By default `moli`
+ * @param {boolean} [es5Mode=false] this will be the legacy es5 manifest file. By default false
+ */
+const latestVersionPlugin = (chunkNames = ['lol'], es5Mode = false) =>
+  new WebpackShellPluginNext({
+    onBuildEnd: {
+      scripts: [
+        () => {
+          const distDir = path.resolve(__dirname, 'dist');
+          const latestDir = path.resolve(distDir, 'latest');
+
+          if (!fs.existsSync(latestDir)) {
+            fs.mkdirSync(latestDir);
+          }
+
+          const manifestPath = path.join(
+            process.cwd(),
+            'dist',
+            es5Mode ? 'manifest.es5.json' : 'manifest.json'
+          );
+          if (!fs.existsSync(manifestPath)) {
+            return Promise.reject(`${manifestPath} file does not exist!`);
+          }
+
+          const manifestJson = JSON.parse(fs.readFileSync(manifestPath).toString());
+
+          chunkNames.forEach(chunkName => {
+            let file = manifestJson[chunkName];
+            console.log(file);
+
+            if (file) {
+              console.log(`Copying ${file} to latest/${chunkName}.min.${es5Mode ? 'js' : 'mjs'}`);
+
+              // Copy this file to the latest dir with the chunkName as fileName.
+              fs.copyFileSync(
+                `${distDir}/${file}`,
+                `${distDir}/latest/${chunkName}.min.${es5Mode ? 'js' : 'mjs'}`
+              );
+            }
+          });
+        }
+      ]
+    }
+  });
+
 module.exports = {
   makeDocsPages,
-  manifestPlugin
+  manifestPlugin,
+  latestVersionPlugin
 };

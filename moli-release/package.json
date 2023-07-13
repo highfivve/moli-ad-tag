@@ -53,6 +53,7 @@
     "@types/node": "^18.0.3",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.4",
-    "webpack-manifest-plugin": "^5.0.0"
+    "webpack-manifest-plugin": "^5.0.0",
+    "webpack-shell-plugin-next": "^2.3.1"
   }
 }
