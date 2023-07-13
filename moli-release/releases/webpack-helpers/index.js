@@ -116,16 +116,15 @@ const latestVersionPlugin = (chunkNames = ['lol'], es5Mode = false) =>
     onBuildEnd: {
       scripts: [
         () => {
-          const distDir = path.resolve(__dirname, 'dist');
+          const distDir = path.join(process.cwd(), 'dist');
           const latestDir = path.resolve(distDir, 'latest');
 
           if (!fs.existsSync(latestDir)) {
             fs.mkdirSync(latestDir);
           }
 
-          const manifestPath = path.join(
-            process.cwd(),
-            'dist',
+          const manifestPath = path.resolve(
+            distDir,
             es5Mode ? 'manifest.es5.json' : 'manifest.json'
           );
           if (!fs.existsSync(manifestPath)) {
@@ -136,7 +135,6 @@ const latestVersionPlugin = (chunkNames = ['lol'], es5Mode = false) =>
 
           chunkNames.forEach(chunkName => {
             let file = manifestJson[chunkName];
-            console.log(file);
 
             if (file) {
               console.log(`Copying ${file} to latest/${chunkName}.min.${es5Mode ? 'js' : 'mjs'}`);
