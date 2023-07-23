@@ -2170,6 +2170,18 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/modules/schain.html
      */
     readonly schain?: schain.ISupplyChainConfig;
+
+    /**
+     * These identifiers are extremely powerful for discrepancy reconciliation, ad quality investigations, consent
+     * audits, and a huge range of other applications. They also allow data appended to different requests (e.g. dealIds)
+     * to be commingled downstream. For this reason, our publisher committee and Prebid.org counsel have decided to
+     * require publisher opt-in to their inclusion in the bid stream. This means Prebid engineering changed every
+     * openrtb request in the project to potentially transmit a null in these fields. Comments were added to bid
+     * adapters not using OpenRTB that send them over the wire to confirm they can accept null values.
+     */
+    readonly enableTIDs?: boolean;
+
+    readonly allowActivities?: activitycontrols.IAllowActivities;
   }
 
   /**
@@ -5171,6 +5183,177 @@ export namespace prebidjs {
      * @param bidResponse returns the key value value. May be undefined, e.g. for `dealId` if not set
      */
     val(bidResponse: IBidResponse): string | undefined;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/activity-controls.html
+   */
+  export namespace activitycontrols {
+    /**
+     * Always available
+     * @see https://github.com/prebid/Prebid.js/blob/master/src/activities/params.js
+     */
+    export interface IActivityRuleDefaultParams {
+      readonly component: string;
+      readonly componentType: string;
+      readonly componentName: string;
+    }
+
+    /**
+     * Code of the bid adapter that `componentName` is an alias of.
+     * May be the same as the component name.
+     *
+     * relevant for all activities, but only when componentType is 'bidder'.
+     */
+    type ACTIVITY_PARAM_ADAPTER_CODE = { readonly adapterCode: string };
+
+    /**
+     * Storage type - either 'html5' or 'cookie'.
+     * Relevant for: accessDevice
+     */
+    type ACTIVITY_PARAM_STORAGE_TYPE = { readonly storageType: 'html5' | 'cookie' };
+
+    /**
+     * s2sConfig[].configName, used to identify a particular s2s instance
+     * relevant for: fetchBids, but only when component is 'prebid.pbsBidAdapter'
+     */
+    type ACTIVITY_PARAM_S2S_NAME = { readonly configName: string };
+
+    /**
+     * user sync type - 'iframe' or 'pixel'
+     * relevant for: syncUser
+     */
+    type ACTIVITY_PARAM_SYNC_TYPE = { readonly syncType: 'iframe' | 'pixel' };
+
+    /**
+     * user sync URL
+     * relevant for: syncUser
+     */
+    type ACTIVITY_PARAM_SYNC_URL = { readonly syncUrl: string };
+
+    export interface IActivityRule<Param> {
+      /**
+       * Condition function to use for this rule; the rule applies only if this returns true.
+       * Receives a single object that contains activity parameters as input.
+       * If omitted, the rule always applies.
+       */
+      readonly condition?: (param: Param & IActivityRuleDefaultParams) => boolean;
+
+      /**
+       * Whether the activity should be allowed when this rule applies.
+       *
+       * @efault is true
+       */
+      readonly allow?: boolean;
+
+      /**
+       * Priority of this rule compared to other rules; a lower number means
+       * higher priority. See note on rule priority below.
+       *
+       * @default is 1
+       */
+      readonly priority?: number;
+    }
+    export interface IActivity<Param = {}> {
+      /**
+       * Whether the activity should be allowed if no other rule applies.
+       *
+       * @efault is true.
+       */
+      readonly default?: boolean;
+
+      /**
+       * `Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity.
+       * For instance, you could set up a series of rules that says:
+       *
+       * - Amongst the bid adapters, BidderA is always allowed to receive user first-party data
+       * - Always let analytics adapters receive user first-party data
+       * - Otherwise, let the active privacy modules decide
+       * - if they refuse to decide, then the overall default is to allow the transmitting of user first-party data
+       */
+      readonly rules: IActivityRule<Param>[];
+    }
+
+    /**
+     * Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities
+     * - such as accessing device storage or sharing data with partners.  These controls are intended to serve as
+     * building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify
+     * what should be permitted or avoided in any given regulatory environment.
+     *
+     * @see https://docs.prebid.org/dev-docs/activity-controls.html
+     * @see https://docs.prebid.org/dev-docs/activity-controls.html#configuration
+     */
+    export interface IAllowActivities {
+      /**
+       * A component wants to use device storage.
+       *
+       * Effect when denied: Storage is disabled
+       */
+      readonly accessDevice?: IActivity<ACTIVITY_PARAM_STORAGE_TYPE>;
+
+      /**
+       * A user ID or RTD submodule wants to add user IDs to outgoing requests
+       *
+       * Effect when denied: User IDs are discarded
+       */
+      readonly enrichEids?: IActivity;
+
+      /**
+       * A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)
+       *
+       * Effect when denied: User FPD is discarded
+       */
+      readonly enrichUfpd?: IActivity;
+
+      /**
+       * A bid adapter wants to participate in an auction
+       *
+       * Effect when denied: Bidder is removed from the auction
+       */
+      readonly fetchBids?: IActivity<ACTIVITY_PARAM_S2S_NAME>;
+
+      /**
+       * An analytics adapter is being enabled through `pbjs.enableAnalytics`
+       *
+       * Effect when denied: Adapter remains disabled
+       */
+      readonly reportAnalytics?: IActivity;
+
+      /**
+       * A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)
+       *
+       * Effect when denied: User sync is skipped
+       */
+      readonly syncUser?: IActivity<ACTIVITY_PARAM_SYNC_TYPE & ACTIVITY_PARAM_SYNC_URL>;
+
+      /**
+       * A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.
+       *
+       * Effect when denied: User IDs are hidden from the component
+       */
+      readonly transmitEids?: IActivity<ACTIVITY_PARAM_S2S_NAME>;
+
+      /**
+       * A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.
+       *
+       * Effect when denied: Component is allowed only 2-digit precision for latitude and longitude
+       */
+      readonly transmitPreciseGeo?: IActivity<ACTIVITY_PARAM_S2S_NAME>;
+
+      /**
+       * A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.
+       *
+       * Effect when denied: Transaction IDs are hidden from the component
+       */
+      readonly transmitTid?: IActivity<ACTIVITY_PARAM_S2S_NAME>;
+
+      /**
+       * A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.
+       *
+       * Effect when denied: User FPD is hidden from the component
+       */
+      readonly transmitUfpd?: IActivity<ACTIVITY_PARAM_S2S_NAME>;
+    }
   }
 
   export namespace floors {
