@@ -26,7 +26,8 @@ import {
   ModuleType,
   mkInitStep,
   AssetLoadMethod,
-  IAssetLoaderService
+  IAssetLoaderService,
+  mkConfigureStep
 } from '@highfivve/ad-tag';
 
 export type PubstackConfig = {
@@ -64,13 +65,28 @@ export class Pubstack implements IModule {
     };
 
     config.pipeline.initSteps.push(
-      mkInitStep('pubstack', ctx => {
+      mkInitStep('pubstack-init', () => {
         // load the pubstack script
         assetLoaderService.loadScript({
           name: 'pubstack',
           loadMethod: AssetLoadMethod.TAG,
           assetUrl: `https://boot.pbstck.com/v1/tag/${this.pubstackConfig.tagId}`
         });
+        return Promise.resolve();
+      })
+    );
+
+    config.pipeline.configureSteps.push(
+      mkConfigureStep('pubstack-configure', ctx => {
+        const validABTestValues = ['0', '1', '2', '3'];
+        // find meta data
+        const meta = ctx.window.document.head.querySelector<HTMLMetaElement>(
+          'meta[name="pbstck_context:pbstck_ab_test"]'
+        );
+        if (meta && meta.content && validABTestValues.includes(meta.content)) {
+          ctx.window.googletag.pubads().setTargeting('pbstck_ab_test', meta.content);
+        }
+
         return Promise.resolve();
       })
     );
