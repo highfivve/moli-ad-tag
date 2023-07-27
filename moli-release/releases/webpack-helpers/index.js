@@ -111,7 +111,7 @@ const manifestPlugin = (chunkNames = ['moli'], es5Mode = false) =>
  * @param {string[]} [chunkNames=['moli']] chunks that should be included. By default `moli`
  * @param {boolean} [es5Mode=false] this will be the legacy es5 manifest file. By default false
  */
-const latestVersionPlugin = (chunkNames = ['lol'], es5Mode = false) =>
+const latestVersionPlugin = (chunkNames = ['moli'], es5Mode = false) =>
   new WebpackShellPluginNext({
     onBuildEnd: {
       scripts: [
