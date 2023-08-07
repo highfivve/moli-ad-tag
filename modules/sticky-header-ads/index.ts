@@ -43,9 +43,11 @@ import {
   IAssetLoaderService,
   IModule,
   LOW_PRIORITY,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkPrepareRequestAdsStep,
   ModuleType,
-  Moli
+  Moli,
+  googletag
 } from '@highfivve/ad-tag';
 
 /**
@@ -78,6 +80,29 @@ export type StickyHeaderAdConfig = {
    * The class name, which triggers the fade out transition
    */
   readonly fadeOutClassName: string;
+
+  /**
+   * If set to `true` this will additional remove the entire ad slot from the DOM
+   * and not just `googletag.destorySlots([slot])`
+   */
+  readonly destroySlot?: boolean;
+
+  /**
+   * If set to `true`, css class will be delayed until the the ad has been
+   * rendered.
+   *
+   * Note: this doesn't work for prebid only setups
+   */
+  readonly waitForRendering?: boolean;
+
+  /**
+   * If set, setting css classes will be delayed by the amount of milliseconds
+   * specified here.
+   *
+   * If `waitForRendering` is set to `true`, the timer starts after the ad has
+   * been rendered.
+   */
+  readonly minVisibleDurationMs?: number;
 
   /**
    * By default, the first content position will be used; content_1 if available, or else content_2 and so on.
@@ -119,18 +144,24 @@ export class StickyHeaderAds implements IModule {
 
   /**
    * selects the div wrapping the ad slot
+   * @private
    */
   private readonly containerSelector = '[data-ref="header-ad"]';
 
   /**
    * selects the close button of the ad slot
+   * @private
    */
   private readonly buttonSelector = '[data-ref="header-ad-close-button"]';
 
   /**
-   * use to ensure only a single initialization
+   * singleton observer instance. Required for SPA publishers where we need to
+   * disconnect and reconnect when the user navigates.
+   *
+   * The instance is also used to ensure that there's only one observer
+   * @private
    */
-  private initialized: boolean = false;
+  private observer: IntersectionObserver | null = null;
 
   constructor(private readonly stickyHeaderAdConfig: StickyHeaderAdConfig) {}
 
@@ -147,9 +178,19 @@ export class StickyHeaderAds implements IModule {
       prepareRequestAdsSteps: []
     };
 
+    config.pipeline.configureSteps.push(
+      mkConfigureStepOncePerRequestAdsCycle('sticky-header-ads:cleanup', () => {
+        if (this.observer) {
+          this.observer.disconnect();
+          this.observer = null;
+        }
+        return Promise.resolve();
+      })
+    );
+
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-        if (this.initialized) {
+        if (this.observer) {
           return Promise.resolve();
         }
 
@@ -170,39 +211,64 @@ export class StickyHeaderAds implements IModule {
           return Promise.resolve();
         }
 
-        // mark as initialized to avoid multiple observer instantiations
-        this.initialized = true;
+        const minVisibleDuration = this.stickyHeaderAdConfig.minVisibleDurationMs ?? 0;
+
+        const adRenderState = this.stickyHeaderAdConfig.waitForRendering
+          ? new Promise<boolean>(resolve => {
+              const listener: (event: googletag.events.ISlotRenderEndedEvent) => void = event => {
+                // only the header slot is relevant
+                if (event.slot.getSlotElementId() !== headerSlot.moliSlot.domId) {
+                  return;
+                }
+                if (minVisibleDuration > 0) {
+                  setTimeout(
+                    () => resolve(event.isEmpty),
+                    this.stickyHeaderAdConfig.minVisibleDurationMs
+                  );
+                } else {
+                  resolve(event.isEmpty);
+                }
+                ctx.window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
+              };
+
+              ctx.window.googletag.pubads().addEventListener('slotRenderEnded', listener);
+            })
+          : Promise.resolve(false);
 
         // initialize observer only if fadeOutTrigger is not disabled
-        let observer: IntersectionObserver | null = null;
         if (this.stickyHeaderAdConfig.fadeOutTrigger !== false) {
           const options = this.stickyHeaderAdConfig.fadeOutTrigger.options ?? {
             rootMargin: '0px'
           };
 
+          const callback: IntersectionObserverCallback = entries => {
+            adRenderState.then(isEmpty => {
+              // only one element will be observed
+              const entry = entries[0];
+              if (
+                // user scrolls down
+                entry.isIntersecting ||
+                // user starts below observed DOM
+                (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
+                // if the ad is empty, hide it
+                isEmpty
+              ) {
+                container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
+              } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
+                container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
+              }
+            });
+          };
+
           // setup intersection observer
-          // TODO store reference and release when in SPA mode!
-          observer = new IntersectionObserver(entries => {
-            // only one element will be observed
-            const entry = entries[0];
-            if (
-              // user scrolls down
-              entry.isIntersecting ||
-              // user starts below observed DOM
-              (!entry.isIntersecting && entry.boundingClientRect.y < 0)
-            ) {
-              container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-            } else if (entry.boundingClientRect.y >= 0) {
-              container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
-            }
-          }, options);
+          this.observer = new IntersectionObserver(callback, options);
 
           // start observing
           const target = ctx.window.document.querySelector(
             this.stickyHeaderAdConfig.fadeOutTrigger.selector
           );
           if (target) {
-            observer.observe(target);
+            this.observer.observe(target);
           } else {
             ctx.logger.error(
               this.name,
@@ -218,10 +284,17 @@ export class StickyHeaderAds implements IModule {
         if (closeButton) {
           closeButton.addEventListener('click', () => {
             container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-            if (observer) {
-              observer.disconnect();
+            if (this.observer) {
+              this.observer.disconnect();
             }
             ctx.window.googletag.destroySlots([headerSlot.adSlot]);
+
+            // kill it with fire!
+            if (this.stickyHeaderAdConfig.destroySlot) {
+              if (container) {
+                container.remove();
+              }
+            }
           });
         }
         return Promise.resolve();
