@@ -291,9 +291,8 @@ export class StickyHeaderAds implements IModule {
 
             // kill it with fire!
             if (this.stickyHeaderAdConfig.destroySlot) {
-              const element = ctx.window.document.getElementById(headerSlot.moliSlot.domId);
-              if (element) {
-                element.remove();
+              if (container) {
+                container.remove();
               }
             }
           });
