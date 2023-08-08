@@ -332,6 +332,93 @@ describe('Skin Module', () => {
       });
     });
 
+    // ----  GumGum -----
+    const gumgumBidResponse = (
+      ad: prebidjs.IGumGumBidResponseWrapper | string
+    ): prebidjs.IGumGumBidResponse => {
+      return {
+        bidder: prebidjs.GumGum,
+        adId: '',
+        cpm: 10.0,
+        height: 1,
+        width: 1,
+        mediaType: 'banner',
+        source: 'client',
+        ad: ad
+      };
+    };
+    describe('gumgum mobile skin', () => {
+      const config: SkinConfig = {
+        formatFilter: [{ bidder: 'gumgum', auid: 59 }],
+        skinAdSlotDomId: 'mobile-skin-slot',
+        blockedAdSlotDomIds: ['sky-slot'],
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false,
+        enableCpmComparison: false
+      };
+
+      it('should return `BlockOtherSlots` if a gumgum mobile skin was found', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'mobile-skin-slot': {
+            bids: [gumgumBidResponse({ auid: 59 })]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
+      });
+
+      it('should return `NoBlocking` if a gumgum mobile skin was found but cpm 0', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'mobile-skin-slot': {
+            bids: [{ ...gumgumBidResponse({ auid: 59 }), cpm: 0 }]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
+      });
+
+      it('should return `NoBlocking` if the gumgum format does not match was found', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'mobile-skin-slot': {
+            bids: [gumgumBidResponse('some markup'), gumgumBidResponse({ auid: 39 })]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
+      });
+    });
+
+    describe('gumgum no auid', () => {
+      const config: SkinConfig = {
+        formatFilter: [{ bidder: 'gumgum' }],
+        skinAdSlotDomId: 'mobile-skin-slot',
+        blockedAdSlotDomIds: ['sky-slot'],
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false,
+        enableCpmComparison: false
+      };
+
+      it('should return `BlockOtherSlots` if a gumgum mobile skin was found', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'mobile-skin-slot': {
+            bids: [gumgumBidResponse({ auid: 59 })]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
+      });
+
+      it('should return `BlockOtherSlots` if a gumgum mobile skin was found with markup', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'mobile-skin-slot': {
+            bids: [gumgumBidResponse('markup')]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
+      });
+    });
+
     describe('dspx', () => {
       const config: SkinConfig = {
         formatFilter: [{ bidder: 'dspx' }],
