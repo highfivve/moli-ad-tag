@@ -5102,7 +5102,7 @@ export namespace prebidjs {
      * Exclude<BidderCode, typeof JustPremium | typeof AppNexusAst>;
      * ```
      */
-    readonly bidder: Exclude<BidderCode, typeof JustPremium>;
+    readonly bidder: Exclude<BidderCode, typeof JustPremium | typeof GumGum>;
   }
 
   export interface IJustPremiumBidResponse extends IBidResponse {
@@ -5117,7 +5117,36 @@ export namespace prebidjs {
     readonly format: JustPremiumFormat;
   }
 
-  export type BidResponse = IGenericBidResponse | IJustPremiumBidResponse;
+  /**
+   * The `bidResponse.ad` property contains this value if it's considered a
+   * "wrapper" creative.
+   */
+  export interface IGumGumBidResponseWrapper {
+    /**
+     * Stands for _ad id_ and contains the format delivered.
+     *
+     * - `59` = in-screen cascade (former mobile skin)
+     * - `39` = in-screen expandable (mobile expandable)
+     */
+    readonly auid: number;
+  }
+
+  export interface IGumGumBidResponse extends IBidResponse {
+    /**
+     * narrow this bid response type to justpremium
+     */
+    readonly bidder: typeof GumGum;
+
+    /**
+     * Contains the GumGum ad creative.
+     *
+     * If the `cw` field is set, then it's a "wrapper". Otherwise, it's considered
+     * `markup` and is only a string.
+     */
+    readonly ad: IGumGumBidResponseWrapper | string;
+  }
+
+  export type BidResponse = IGenericBidResponse | IJustPremiumBidResponse | IGumGumBidResponse;
 
   /**
    * The bidderSettings object provides a way to define some behaviors for the platform

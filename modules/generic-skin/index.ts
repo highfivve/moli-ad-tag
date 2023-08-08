@@ -100,7 +100,7 @@ export type SkinModuleConfig = {
   readonly trackSkinCpmLow?: (
     cpms: { skin: number; combinedNonSkinSlots: number },
     skinConfig: SkinConfig,
-    skinBid: prebidjs.IJustPremiumBidResponse | prebidjs.IGenericBidResponse
+    skinBid: prebidjs.IBidResponse
   ) => void;
 };
 
@@ -112,6 +112,16 @@ export type JustPremiumFormatFilter = {
 
 export type GumGumFormatFilter = {
   readonly bidder: typeof prebidjs.GumGum;
+
+  /**
+   * Stands for _ad id_ and contains the format delivered.
+   *
+   * - `59` = in-screen cascade (former mobile skin)
+   * - `39` = in-screen expandable (mobile expandable)
+   *
+   * If not set, then the `auid` will not be considered for filtering.
+   */
+  readonly auid?: number;
 };
 
 export type DSPXFormatFilter = {
@@ -239,7 +249,12 @@ export class Skin implements IModule {
           case 'justpremium':
             return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
           case 'gumgum':
-            return bid.bidder === prebidjs.GumGum;
+            return (
+              bid.bidder === prebidjs.GumGum &&
+              // if auid is set, it must match the bid.ad.auid
+              (filter.auid === undefined ||
+                (typeof bid.ad !== 'string' && bid.ad.auid === filter.auid))
+            );
           case 'dspx':
             return bid.bidder === prebidjs.DSPX;
           case 'visx':
