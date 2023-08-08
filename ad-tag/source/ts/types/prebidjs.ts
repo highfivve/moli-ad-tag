@@ -2913,13 +2913,42 @@ export namespace prebidjs {
 
   export type NativeAssetOrtb = INativeImgAssetOrtb | INativeDataAssetOrtb | INativeTitleAssetOrtb;
 
+  export interface INativeEventtrackers {
+    /**
+     * Type of event available for tracking.
+     * 1 for impression
+     * @see more event types on https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    event: number;
+    /**
+     * Array of the types of tracking available for the given event.
+     * 1 for image-pixel tracking; 2 for javascript-based tracking; 500+ for exchange-specific.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    method: number[];
+  }
+
   export interface IOrtbNativeSpecs {
+    /**
+     * Version of the Native Markup version in use.
+     * Defaults to '1.2'
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly ver?: string;
+
     /**
      * Components of the ad that will assembled using the template. An asset must have an id, used for matching the request with the response.
      * Each asset should additionally have one of the following properties (but may only contain one): title, img, data
      * @see https://docs.prebid.org/prebid/native-implementation.html#31-prebidjs-and-the-ortb-asset-fields
      */
     readonly assets: NativeAssetOrtb[];
+
+    /**
+     * Specifies the types of events the bidder can request to be tracked in the bid response, and which types of tracking
+     * are available for each event type, and is included as an array in the request.
+     * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly eventtrackers?: INativeEventtrackers[];
 
     /**
      * Set  to  1  when  the  native  ad supports  buyer-specific  privacy notice.
