@@ -78,6 +78,8 @@ export class Pubstack implements IModule {
 
     config.pipeline.configureSteps.push(
       mkConfigureStep('pubstack-configure', ctx => {
+        // these map to key-value values in the ad manager. All other values are not configured there and thus
+        // don't need to be sent along
         const validABTestValues = ['0', '1', '2', '3'];
         // find meta data
         const meta = ctx.window.document.head.querySelector<HTMLMetaElement>(
