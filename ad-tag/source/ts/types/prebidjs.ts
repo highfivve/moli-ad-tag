@@ -2925,7 +2925,7 @@ export namespace prebidjs {
      * 1 for image-pixel tracking; 2 for javascript-based tracking; 500+ for exchange-specific.
      * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
      */
-    method: number[];
+    methods: number[];
   }
 
   export interface IOrtbNativeSpecs {
