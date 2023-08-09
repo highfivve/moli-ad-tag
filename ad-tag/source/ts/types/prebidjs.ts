@@ -3673,7 +3673,7 @@ export namespace prebidjs {
      *
      * @example `123`
      */
-    readonly pubId: number;
+    readonly pubId?: number;
 
     /**
      * Iris.tv ID
