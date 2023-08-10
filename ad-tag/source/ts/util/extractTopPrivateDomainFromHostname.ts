@@ -26,6 +26,8 @@ export const extractTopPrivateDomainFromHostname = (
       // special country code TLDs
       case 'co.uk':
       case 'com.br':
+      case 'com.mx':
+      case 'com.au':
         return `${sub2}.${sub1}.${tld}`;
       default:
         return sub1 ? `${sub1}.${tld}` : tld;
