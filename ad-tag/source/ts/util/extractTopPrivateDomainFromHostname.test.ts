@@ -32,7 +32,7 @@ describe('extractDomainFromHostname', () => {
   });
 
   describe('ccTLD - country code top level domains', () => {
-    ['co.uk', 'com.br'].forEach(ccTld => {
+    ['co.uk', 'com.br', 'com.mx', 'com.au'].forEach(ccTld => {
       it(`should work for ${ccTld} domains without subdomains`, () => {
         const hostname = `testdomain.${ccTld}`;
         expect(extractTopPrivateDomainFromHostname(hostname)).to.equal(`testdomain.${ccTld}`);
