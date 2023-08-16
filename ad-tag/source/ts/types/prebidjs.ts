@@ -595,6 +595,123 @@ export namespace prebidjs {
     }
   }
 
+  /**
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-realTimeData
+   */
+  export namespace realtimedata {
+    /**
+     *
+     * All of the modules that fall under the [Real-Time Data (RTD) category](https://docs.prebid.org/dev-docs/modules/index.html#real-time-data-providers)
+     * conform to a consistent set of publisher controls. The pub can choose to run multiple RTD modules, define an
+     * overall amount of time they’re willing to wait for results, and even flag some of the modules as being more
+     * "important" than others.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-realTimeData
+     * @see https://docs.prebid.org/dev-docs/modules/index.html#real-time-data-providers
+     */
+    export interface IDataProvider {
+      /**
+       * Setting this value to true flags this RTD module as “important” enough to wait the full auction delay period.
+       * Once all such RTD modules have returned, the auction will proceed even if there are other RTD modules that have not yet responded.
+       *
+       * @default `false`
+       */
+      readonly waitForIt: boolean;
+    }
+
+    /**
+     * The Geolocation module lets publishers get user’s precise location with their permissions. The first permission
+     * that is needed is directly asked from site’s navigator alert. Then if site has installed a
+     * CMP (Consent Management Platform), this module checks the geolocation permission from consent data.
+     *
+     * The module provides Geolocation coords using the [Geolocation API](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API).
+     *
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/geolocationRtdProvider.html
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API
+     */
+    export interface IGeolocationDataProviderModule extends IDataProvider {
+      readonly name: 'geolocation';
+      readonly params: {
+        /**
+         * If the module should ask for permission to access geo data
+         */
+        readonly requestPermission: boolean;
+      };
+    }
+
+    /**
+     * The timeout RTD module enables publishers to set rules that determine the timeout based on certain features.
+     * It supports rules dynamically retrieved from a timeout provider as well as rules set directly via configuration.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/timeoutRtdProvider.html
+     */
+    export interface ITimeoutDataProviderModule extends IDataProvider {
+      readonly name: 'timeout';
+      readonly params: {
+        readonly endpoint: {
+          readonly url: string;
+        };
+      };
+    }
+
+    /**
+     * The Intersection module provides intersection for ad slots on the page using Intersection Observer API.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/intersectionRtdProvider.html
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+     */
+    export interface IIntersectionDataProviderModule extends IDataProvider {
+      readonly name: 'intersection';
+    }
+
+    /**
+     * Confiant’s module provides comprehensive detection of security, quality, and privacy threats across your ad stack.
+     * Confiant is the industry leader in real-time detecting and blocking of bad ads when it comes to protecting
+     * your users and brand reputation.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/confiantRtdProvider.html
+     */
+    export interface IConfiantDataProviderModule extends IDataProvider {
+      readonly name: 'confiant';
+      readonly params: {
+        readonly propertyId: string;
+
+        /**
+         * comma separated list of bidders to exclude from Confiant's prebid.js integration
+         */
+        readonly prebidExcludeBidders?: string;
+
+        /**
+         * namespace for prebid.js integration
+         */
+        readonly prebidNameSpace?: string;
+
+        /**
+         * upon being set to true enables firing of the BillableEvent upon Confiant's impression scanning
+         */
+        readonly shouldEmitBillableEvent?: boolean;
+      };
+    }
+
+    type DataProvider =
+      | IGeolocationDataProviderModule
+      | ITimeoutDataProviderModule
+      | IIntersectionDataProviderModule
+      | IConfiantDataProviderModule;
+
+    export interface IRealTimeDataConfig {
+      /**
+       * Defines the maximum amount of time, in milliseconds, the header bidding auction will be delayed while waiting
+       * for a response from the RTD modules as a whole group. The default is 0 ms delay, which means that RTD modules
+       * need to obtain their data when the page initializes.
+       */
+      readonly auctionDelay: number;
+
+      readonly dataProviders: DataProvider[];
+    }
+  }
+
   export namespace userSync {
     /**
      * ## Configure User Syncing
@@ -2118,6 +2235,11 @@ export namespace prebidjs {
      * @see https://prebid.org/dev-docs/modules/consentManagement.html
      */
     readonly consentManagement?: consent.IConsentManagementConfig;
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-realTimeData
+     */
+    readonly realTimeData?: realtimedata.IRealTimeDataConfig;
 
     /**
      * @see userSync.IUserSyncConfig
