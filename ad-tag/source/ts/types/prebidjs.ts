@@ -814,6 +814,7 @@ export namespace prebidjs {
       | IIdentityLinkProvider
       | IPubCommonIdProvider
       | IZeotapIdPlusIdProvider
+      | IUtiqIdProvider
       | ISharedIdProvider;
 
     interface IUserIdProvider<N extends string> {
@@ -1000,6 +1001,22 @@ export namespace prebidjs {
      * @see http://prebid.org/dev-docs/modules/userId.html#pubcommon-id
      */
     export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {}
+
+    export interface IUtiqIdProviderParams {
+      /**
+       * Max amount of time (in seconds) before looking into storage for data
+       */
+      readonly maxDelayTime: number;
+    }
+
+    export interface IUtiqIdProvider
+      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiq'> {
+      /**
+       * An array of bidder codes to which this user ID may be sent.
+       * Currently, required and supporting AdformOpenRTB
+       */
+      readonly bidders: BidderCode[];
+    }
 
     /**
      * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
