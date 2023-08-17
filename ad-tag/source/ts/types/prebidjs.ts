@@ -3305,6 +3305,7 @@ export namespace prebidjs {
   export const Adform = 'adf';
   export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
+  export const ConnectAd = 'connectad';
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
   export const GumGum = 'gumgum';
@@ -3342,6 +3343,7 @@ export namespace prebidjs {
     | typeof AdaptMx
     | typeof AdUp
     | typeof Adform
+    | typeof ConnectAd
     | typeof Criteo
     | typeof AppNexusAst
     | typeof AppNexus
@@ -3595,6 +3597,26 @@ export namespace prebidjs {
   }
 
   export interface IAdUpBid extends IBidObject<typeof AdUp, IAdUpParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/connectad.html
+   */
+  export interface IConnectAdParams {
+    /**
+     * 	The site ID from ConnectAd.
+     */
+    readonly siteId: number;
+
+    /**
+     * The network ID from ConnectAd.
+     */
+    readonly networkId: number;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/connectad.html
+   */
+  export interface IConnectAdBid extends IBidObject<typeof ConnectAd, IConnectAdParams> {}
 
   /**
    * Criteo bid parameters. There is no public available documentation. All information was
