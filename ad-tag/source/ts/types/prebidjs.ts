@@ -1009,6 +1009,9 @@ export namespace prebidjs {
       readonly maxDelayTime: number;
     }
 
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiq.html
+     */
     export interface IUtiqIdProvider
       extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiq'> {
       /**
