@@ -732,7 +732,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
+  function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed' | Error> {
     const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
       case 'configurable': {
@@ -763,15 +763,16 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        try {
-          return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
-        } catch (error) {
-          getLogger(state.config, window).error(
-            'AdSlot Refresh',
-            `refreshing the adSlot [${domId}] failed because of the following error: ${error}`
-          );
-          return Promise.reject(`Refresh [${domId} failed!]`);
-        }
+        return adService
+          .refreshAdSlots(domIds, state.config)
+          .then(() => 'refreshed')
+          .catch(error => {
+            getLogger(null, window).error(
+              'AdSlot Refresh',
+              `refreshing the adSlot [${domId}] failed because of the following error: ${error}`
+            );
+            return error;
+          });
       }
       default: {
         getLogger(state.config, window).error(

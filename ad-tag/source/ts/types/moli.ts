@@ -221,7 +221,7 @@ export namespace Moli {
      *
      * @param domId - identifies the ad slot or ad slots
      */
-    refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
+    refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed' | Error>;
 
     /**
      * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
