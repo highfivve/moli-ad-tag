@@ -948,12 +948,14 @@ export namespace prebidjs {
     export interface IDigitTrustProvider
       extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {}
 
-    interface ILiveramp {
+    interface IPairIdParamsLiveramp {
       /**
        * storage key to fetch liveramp provided PAIR Id, the default value is "_lr_pairId"
        * @example "_lr_pairId_custom"
        */
-      storageKey?: string;
+      liveramp?: {
+        storageKey?: string;
+      };
     }
 
     export interface IPairIdParams {
@@ -966,7 +968,7 @@ export namespace prebidjs {
       /**
        * Container of all liveramp clean-room specified params.
        */
-      readonly params?: ILiveramp;
+      readonly params?: IPairIdParamsLiveramp;
     }
 
     /**
@@ -1209,8 +1211,8 @@ export namespace prebidjs {
       readonly pairId?: {
         readonly name: string;
         readonly params?: {
-          liveramp?: {
-            storageKey?: string;
+          readonly liveramp?: {
+            readonly storageKey?: string;
           };
         };
       };
