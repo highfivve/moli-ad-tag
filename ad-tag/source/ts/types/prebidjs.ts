@@ -815,7 +815,8 @@ export namespace prebidjs {
       | IPubCommonIdProvider
       | IZeotapIdPlusIdProvider
       | IUtiqIdProvider
-      | ISharedIdProvider;
+      | ISharedIdProvider
+      | IPairIdProvider;
 
     interface IUserIdProvider<N extends string> {
       /**
@@ -946,6 +947,38 @@ export namespace prebidjs {
      */
     export interface IDigitTrustProvider
       extends IParameterizedUserIdProvider<IDigitTrustProviderParams, 'digitrust'> {}
+
+    interface ILiveramp {
+      /**
+       * storage key to fetch liveramp provided PAIR Id, the default value is "_lr_pairId"
+       * @example "_lr_pairId_custom"
+       */
+      storageKey?: string;
+    }
+
+    export interface IPairIdParams {
+      /**
+       * The name of PAIR ID user ID module.
+       * @example "pairId"
+       */
+      readonly name: string;
+
+      /**
+       * Container of all liveramp clean-room specified params.
+       */
+      readonly params?: ILiveramp;
+    }
+
+    /**
+     * Developed by and for use with Display and Video 360,
+     * PAIR (Publisher Advertiser Identity Reconciliation) is a secure and privacy-forward way for enabling advertisers and publishers
+     * to reconcile their first-party data for marketing use cases via advanced data encryption methods without the reliance on third-party cookies.
+     * PAIR can help advertisers and publishers maintain control of first-party data while ensuring there is no pooling of data,
+     * no leakage of data, no leakage of insights, durability for the future using secure encryption methods, and no user tracking across publishers.
+     * @See https://docs.prebid.org/dev-docs/modules/userid-submodules/pair.html
+     */
+    export interface IPairIdProvider
+      extends IParameterizedUserIdProvider<IPairIdParams, 'pairId'> {}
 
     export interface IID5ProviderParams {
       /**
@@ -1171,6 +1204,15 @@ export namespace prebidjs {
 
       readonly id5id?: {
         readonly uid: string;
+      };
+
+      readonly pairId?: {
+        readonly name: string;
+        readonly params?: {
+          liveramp?: {
+            storageKey?: string;
+          };
+        };
       };
     };
   }
