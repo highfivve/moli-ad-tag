@@ -953,12 +953,6 @@ export namespace prebidjs {
      */
     export interface IPairIdParams {
       /**
-       * The name of PAIR ID user ID module.
-       * @example "pairId"
-       */
-      readonly name: string;
-
-      /**
        * Container of all liveramp cleanroom specified params.
        */
       readonly liveramp?: {
