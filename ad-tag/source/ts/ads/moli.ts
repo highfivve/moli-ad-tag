@@ -763,15 +763,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        try {
-          return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
-        } catch (error) {
-          getLogger(state.config, window).error(
-            'AdSlot Refresh',
-            `refreshing the adSlot [${domId}] failed because of the following error: ${error}`
-          );
-          return Promise.reject(`Refresh [${domId} failed!]`);
-        }
+        return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
       }
       default: {
         getLogger(state.config, window).error(
