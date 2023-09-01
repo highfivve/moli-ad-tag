@@ -316,14 +316,27 @@ export class AdService {
     const availableSlots = [...availableManualSlots, ...availableInfiniteSlots];
 
     if (domIds.length !== availableSlots.length) {
-      const unavailableSlots = domIds.filter(
-        domId => !availableSlots.some(slot => slot.domId === domId)
+      const slotsInConfigOnly = availableSlots.filter(slot =>
+        domIds.every(domId => domId !== slot.domId)
       );
-      this.logger.warn(
-        'AdService',
-        'Trying to refresh slots that are not available',
-        unavailableSlots
+      const slotsOnPageDomOnly = domIds.filter(domId =>
+        availableSlots.every(slot => slot.domId !== domId)
       );
+
+      if (slotsInConfigOnly.length) {
+        this.logger.warn(
+          'AdService',
+          'The following slots does not exist on the page DOM.',
+          slotsInConfigOnly
+        );
+      }
+      if (slotsOnPageDomOnly.length) {
+        this.logger.warn(
+          'AdService',
+          'The following slots are not configured in the ad-tag config.',
+          slotsInConfigOnly
+        );
+      }
     }
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
