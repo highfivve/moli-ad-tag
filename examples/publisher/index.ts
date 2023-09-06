@@ -9,7 +9,8 @@ import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
 import { AdexModule } from '@highfivve/module-the-adex-dmp';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
-import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
+import { NewStickyFooterAds } from '../../modules/sticky-footer-ads-v2';
+
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
 import MoliWindow = Moli.MoliWindow;
@@ -120,10 +121,25 @@ moli.registerModule(
 );
 
 // footer ads
+/*
 moli.registerModule(
   new StickyFooterAds({
     mobileStickyDomId: 'ad-mobile-sticky',
     desktopFloorAdDomId: 'ad-floorad',
+    disallowedAdvertiserIds: [
+      //4858511198
+       //gutefrage-intern
+    ]
+  })
+);
+*/
+
+moli.registerModule(
+  new NewStickyFooterAds({
+    stickyFooterDomIds: [
+      { device: 'mobile', id: 'new-ad-mobile-sticky' },
+      { device: 'desktop', id: 'new-ad-desktop-sticky' }
+    ],
     disallowedAdvertiserIds: [
       /*4858511198*/
       // gutefrage-intern

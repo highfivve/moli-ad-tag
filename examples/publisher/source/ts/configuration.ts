@@ -189,7 +189,51 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
-
+    {
+      domId: 'new-ad-mobile-sticky',
+      adUnitPath: '/55155651/mobile-sticky/{device}-{domain}',
+      position: 'in-page',
+      behaviour: { loaded: 'manual' },
+      labelAll: ['mobile'],
+      sizes: ['fluid', [300, 50], [320, 50]],
+      sizeConfig: [
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: ['fluid', [300, 50], [320, 50]]
+        }
+      ]
+    },
+    {
+      domId: 'new-ad-desktop-sticky',
+      adUnitPath: '/55155651/floorad/{device}-{category}',
+      position: 'in-page',
+      behaviour: { loaded: 'eager' },
+      labelAll: ['desktop'],
+      sizes: [
+        [728, 90],
+        [800, 250],
+        [900, 250],
+        [970, 250]
+      ],
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 767px)',
+          sizesSupported: [[728, 90]]
+        },
+        {
+          mediaQuery: '(min-width: 800px)',
+          sizesSupported: [[800, 250]]
+        },
+        {
+          mediaQuery: '(min-width: 900px)',
+          sizesSupported: [[900, 250]]
+        },
+        {
+          mediaQuery: '(min-width: 970px)',
+          sizesSupported: [[970, 250]]
+        }
+      ]
+    },
     {
       domId: 'ad-mobile-sticky',
       adUnitPath: '/55155651/mobile-sticky/{device}-{domain}',
