@@ -5,12 +5,22 @@
   "publisherName": "test",
   "versions": [
     {
+      "version": 7,
+      "filename": "moli_1337.min.mjs",
+      "filenameEs5": "moli_es5_f411.min.js",
+      "changelog": [
+        "Test for createdAt date"
+      ],
+      "createdAt": "2023-09-07T10:34:15.077Z"
+    },
+    {
       "version": 6,
       "filename": "moli_1337.min.mjs",
       "filenameEs5": "moli_es5_f411.min.js",
       "changelog": [
         "This is a test\\nAnother test"
-      ]
+      ],
+      "createdAt": "1995-12-17T03:24:00"
     },
     {
       "version": 5,

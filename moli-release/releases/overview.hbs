@@ -38,9 +38,12 @@
         {{var "isCurrentVersion" (equals version ../releases.currentVersion)}}
         <div class="col-lg-4 col-md-6 col-sm-12">
           <div class="card mb-4{{#if isCurrentVersion}} text-white bg-info{{/if}}">
-            <strong class="card-header d-flex align-items-center">
-              Version {{version}}
-              {{#if isCurrentVersion}}<span class="badge badge-pill badge-warning ml-2">Neueste Version</span>{{/if}}
+            <strong class="card-header d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                Version {{version}}
+                {{#if isCurrentVersion}}<span class="badge badge-pill badge-warning ml-2">Neueste Version</span>{{/if}}
+              </div>
+              {{#if createdAt}}<span>{{formatDate createdAt}}</span>{{/if}}
             </strong>
             <div class="list-group list-group-flush">
               <div class="list-group-item{{#if isCurrentVersion}} bg-info{{/if}}">
