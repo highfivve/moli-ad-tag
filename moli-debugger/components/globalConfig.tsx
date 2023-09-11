@@ -136,25 +136,22 @@ export class GlobalConfig
     }
   }
 
-  async fetchAdsTxtEntries(): Promise<string> {
-    const hostname = window.location.hostname;
+  async fetchAdsTxtEntries(hostname: string): Promise<string | undefined> {
     try {
       if (hostname) {
         const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
         const response = await fetch(`https://${domain}/ads.txt`);
         return await response.text();
       }
-      return '';
     } catch (error) {
       console.error(error);
-      return '';
     }
   }
 
   async componentDidMount() {
-    const adstxtEntries = await this.fetchAdsTxtEntries();
+    const adstxtEntries = await this.fetchAdsTxtEntries(window.location.hostname);
     // Split the entries string on each new line and comma
-    const entriesArray = adstxtEntries.split(/\r?\n/).map(entry => entry.split(','));
+    const entriesArray = adstxtEntries?.split(/\r?\n/).map(entry => entry.split(',')) ?? [];
     const publisherEntry = entriesArray
       // filter out lines that don't carry relevant info e.g. header of the ads.txt
       .filter(entry => entry.length > 1)
@@ -621,13 +618,24 @@ export class GlobalConfig
               {expandSection.supplyChain && (
                 <>
                   <div className="MoliDebug-tagContainer">
-                    <TagLabel>Seller ID</TagLabel>
-                    <Tag variant={adstxtEntry[1] ? 'blue' : 'red'}>{adstxtEntry[1]}</Tag>
+                    <TagLabel>Seller ID (ads.txt)</TagLabel>
+                    <Tag
+                      variant={
+                        adstxtEntry[1] === config?.schain.supplyChainStartNode.sid ? 'green' : 'red'
+                      }
+                    >
+                      {adstxtEntry[1]}
+                    </Tag>
                   </div>
                   <div className="MoliDebug-tagContainer">
                     <TagLabel>Status</TagLabel>
                     <Tag variant={adstxtEntry[2] ? 'blue' : 'red'}>{adstxtEntry[2]}</Tag>
                   </div>
+                  <p className="MoliDebug-info">
+                    {config?.schain.supplyChainStartNode.sid === adstxtEntry[1]
+                      ? '✅ Seller ids in ad tag config and ads.txt are matching!'
+                      : `❗️Seller ids in ad tag config (${config?.schain.supplyChainStartNode.sid}) and ads.txt of current host (${window.location.hostname}, ${adstxtEntry[1]}) are different!`}
+                  </p>
                 </>
               )}
             </div>

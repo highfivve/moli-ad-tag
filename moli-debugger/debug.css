@@ -48,6 +48,10 @@
     }
   }
 
+  &-info {
+    margin-top: 8px;
+  }
+
   &-sidebar {
     background: var(--MoliDebug-sidebar-bg);
     box-shadow: var(--MoliDebug-sidebar-box-shadow);
