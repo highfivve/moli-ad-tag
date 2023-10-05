@@ -131,6 +131,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   consent: {
     disableLegitimateInterest: true
   },
+  domain: 'gutefrage.net',
   slots: [
     {
       domId: 'ad-content-1',

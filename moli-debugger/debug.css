@@ -48,6 +48,10 @@
     }
   }
 
+  &-info {
+    margin-top: 8px;
+  }
+
   &-sidebar {
     background: var(--MoliDebug-sidebar-bg);
     box-shadow: var(--MoliDebug-sidebar-box-shadow);
@@ -280,6 +284,14 @@
 
     &:hover {
       border-color: #000;
+    }
+  }
+
+  &-form {
+    &Container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
     }
   }
 
