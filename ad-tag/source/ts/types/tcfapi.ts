@@ -36,13 +36,6 @@ export namespace tcfapi {
       callback: (success: boolean) => void,
       listenerId: number
     ): void;
-
-    (
-      command: 'getTCData',
-      version: TCFApiVersion,
-      callback: (tcData: responses.TCData, success: boolean) => void,
-      vendorIds?: number[]
-    ): void;
   }
 
   export namespace responses {
