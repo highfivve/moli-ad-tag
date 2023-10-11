@@ -12,10 +12,10 @@
  * ```js
  * moli.registerModule(
  *   new NewStickyFooterAds({
- *     stickyFooterDomIds: [
- *       { device: 'mobile', id: 'ad-mobile-sticky' },
- *       { device: 'desktop', id: 'ad-desktop-sticky' }
- *     ],
+ *     stickyFooterDomIds: {
+ *       mobile: 'ad-mobile-sticky',
+ *       desktop: 'ad-desktop-sticky'
+ *      },
  *     disallowedAdvertiserIds: []
  *      })
  *     );

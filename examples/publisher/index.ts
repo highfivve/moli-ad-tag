@@ -137,8 +137,8 @@ moli.registerModule(
 moli.registerModule(
   new StickyFooterAdsV2({
     stickyFooterDomIds: {
-      desktop: '',
-      mobile: ''
+      desktop: 'ad-desktop-sticky',
+      mobile: 'ad-mobile-sticky'
     },
 
     disallowedAdvertiserIds: [
