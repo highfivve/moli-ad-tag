@@ -190,7 +190,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       ]
     },
     {
-      domId: 'new-ad-mobile-sticky',
+      domId: 'ad-mobile-sticky',
       adUnitPath: '/55155651/mobile-sticky/{device}-{domain}',
       position: 'in-page',
       behaviour: { loaded: 'manual' },
@@ -204,7 +204,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       ]
     },
     {
-      domId: 'new-ad-desktop-sticky',
+      domId: 'ad-desktop-sticky',
       adUnitPath: '/55155651/floorad/{device}-{category}',
       position: 'in-page',
       behaviour: { loaded: 'eager' },

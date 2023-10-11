@@ -10,18 +10,18 @@
  * In your `index.ts` import and register the module.
  *
  * ```js
- * import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
- * moli.registerModule(new StickyFooterAds({
- *   mobileStickyDomId: 'ad-mobile-sticky',
- *   desktopFloorAdDomId: 'ad-floorad',
- *   disallowedAdvertiserIds: [ 111111, 222222 ]
- * }, window));
+ * moli.registerModule(
+ *   new NewStickyFooterAds({
+ *     stickyFooterDomIds: [
+ *       { device: 'mobile', id: 'ad-mobile-sticky' },
+ *       { device: 'desktop', id: 'ad-desktop-sticky' }
+ *     ],
+ *     disallowedAdvertiserIds: []
+ *      })
+ *     );
  * ```
  *
- * Next you need to add the required HTML and CSS on your page. See the [footer ads documentation](https://highfivve.github.io/footer-ads/)
- *
- * **Important**
- * The `data-ref`s are not configurable and are currently hardcoded. Make sure that they are correct.
+ * Next you need to add the required HTML and CSS on your page. See the [footer ads documentation](https://highfivve.github.io/footer-ads/) .. TO DO )
  *
  * ## Resources
  *
@@ -30,6 +30,7 @@
  * @module
  */
 import {
+  AdPipelineContext,
   IAssetLoaderService,
   IModule,
   LOW_PRIORITY,
@@ -41,17 +42,14 @@ import { initAdSticky } from './footerStickyAd';
 
 export type Device = 'mobile' | 'desktop';
 
-export type DeviceWithId = { device: Device; id: string };
+export type FooterDomIds = { [device in Device]?: string };
 
 export type StickyFooterAdConfig = {
-  /**
-   */
-  readonly stickyFooterDomIds: DeviceWithId[];
+  readonly stickyFooterDomIds: FooterDomIds;
 
   /**
    * Disable rendering the footer ad format for certain advertisers by specifying them here.
    * Most of the time you would use this for partners who ship their own special format or behaviour.
-   *
    */
   readonly disallowedAdvertiserIds: number[];
 
@@ -72,7 +70,7 @@ export type StickyFooterAdConfig = {
  *
  * @see https://highfivve.github.io/footer-ads/
  */
-export class NewStickyFooterAds implements IModule {
+export class StickyFooterAdsV2 implements IModule {
   public readonly name: string = 'new-sticky-footer-ads';
   public readonly description: string = 'sticky footer ad creatives';
   public readonly moduleType: ModuleType = 'creatives';
@@ -93,20 +91,20 @@ export class NewStickyFooterAds implements IModule {
     };
 
     config.pipeline.prepareRequestAdsSteps.push(
-      mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
+      mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx: AdPipelineContext, slots) => {
         if (
-          this.stickyFooterAdConfig.stickyFooterDomIds.length &&
-          this.stickyFooterAdConfig.stickyFooterDomIds.map(stickyFooterDomId =>
-            slots.some(slot => slot.moliSlot.domId === stickyFooterDomId.id)
+          Object.keys(this.stickyFooterAdConfig.stickyFooterDomIds).length &&
+          Object.values(this.stickyFooterAdConfig.stickyFooterDomIds).map(stickyFooterDomId =>
+            slots.some(slot => slot.moliSlot.domId === stickyFooterDomId)
           )
         ) {
           initAdSticky(
             ctx.window,
             ctx.env,
             ctx.logger,
+            ctx.labelConfigService.getDeviceLabel(),
             this.stickyFooterAdConfig.stickyFooterDomIds,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
-            this.stickyFooterAdConfig.breakingPoint,
             this.stickyFooterAdConfig.closingButtonText
           );
         }
