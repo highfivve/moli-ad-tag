@@ -69,7 +69,7 @@ export type StickyFooterAdConfig = {
  * @see https://highfivve.github.io/footer-ads/
  */
 export class StickyFooterAdsV2 implements IModule {
-  public readonly name: string = 'new-sticky-footer-ads';
+  public readonly name: string = 'sticky-footer-ads-v2';
   public readonly description: string = 'sticky footer ad creatives';
   public readonly moduleType: ModuleType = 'creatives';
 

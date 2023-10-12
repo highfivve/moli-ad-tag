@@ -9,7 +9,7 @@ import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
 import { AdexModule } from '@highfivve/module-the-adex-dmp';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
-import { StickyFooterAdsV2 } from '../../modules/sticky-footer-ads-v2';
+import { StickyFooterAdsV2 } from '@highfivve/module-sticky-footer-ads-v2';
 
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
