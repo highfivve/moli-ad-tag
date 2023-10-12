@@ -210,7 +210,8 @@ let version = Number(versionJsonVersion) + 1;
     version: version,
     filename: filename,
     filenameEs5: filenameEs5,
-    changelog: releaseInformation.changes.split('\n').filter(element => element !== '')
+    changelog: releaseInformation.changes.split('\n').filter(element => element !== ''),
+    createdAt: new Date().toISOString()
   };
 
   versions.unshift(change);

@@ -51,4 +51,9 @@ export interface IAdTagRelease {
    * The changes for the version of this ad tag.
    */
   readonly changelog: string[];
+
+  /**
+   * The date when this version was released.
+   */
+  readonly createdAt?: string;
 }

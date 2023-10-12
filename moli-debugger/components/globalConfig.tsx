@@ -61,6 +61,7 @@ type IGlobalConfigState = {
   showOnlyRenderedSlots: boolean;
   theme: Theme;
   adstxtEntry: string[];
+  adstxtDomain: string;
 };
 
 export type Message = {
@@ -95,7 +96,8 @@ export class GlobalConfig
       browserResized: false,
       showOnlyRenderedSlots: false,
       theme: props.themingService.currentTheme(),
-      adstxtEntry: []
+      adstxtEntry: [],
+      adstxtDomain: ''
     };
 
     if (!props.config) {
@@ -136,35 +138,47 @@ export class GlobalConfig
     }
   }
 
-  async fetchAdsTxtEntries(): Promise<string> {
-    const hostname = window.location.hostname;
+  async fetchAdsTxtEntries(hostname: string): Promise<string | undefined> {
     try {
       if (hostname) {
         const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
         const response = await fetch(`https://${domain}/ads.txt`);
         return await response.text();
       }
-      return '';
     } catch (error) {
       console.error(error);
-      return '';
     }
   }
 
-  async componentDidMount() {
-    const adstxtEntries = await this.fetchAdsTxtEntries();
+  async findPublisherEntryInAdsTxt(adsTxtDomain: string) {
+    const adstxtEntries = await this.fetchAdsTxtEntries(adsTxtDomain);
     // Split the entries string on each new line and comma
-    const entriesArray = adstxtEntries.split(/\r?\n/).map(entry => entry.split(','));
+    const entriesArray = adstxtEntries?.split(/\r?\n/).map(entry => entry.split(',')) ?? [];
     const publisherEntry = entriesArray
       // filter out lines that don't carry relevant info e.g. header of the ads.txt
       .filter(entry => entry.length > 1)
       .find(entry => entry[0] === 'highfivve.com');
-    this.setState({ adstxtEntry: publisherEntry ?? [] });
+    return publisherEntry;
+  }
+
+  async componentDidMount() {
+    const adsTxtDomain = this.props.config?.domain ?? window.location.hostname;
+    this.setState({
+      adstxtDomain: adsTxtDomain,
+      adstxtEntry: (await this.findPublisherEntryInAdsTxt(adsTxtDomain)) ?? []
+    });
   }
 
   render(): JSX.Element {
     const { config, modules, labelConfigService } = this.props;
-    const { sidebarHidden, showOnlyRenderedSlots, expandSection, theme, adstxtEntry } = this.state;
+    const {
+      sidebarHidden,
+      showOnlyRenderedSlots,
+      expandSection,
+      theme,
+      adstxtEntry,
+      adstxtDomain
+    } = this.state;
     const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
@@ -621,13 +635,48 @@ export class GlobalConfig
               {expandSection.supplyChain && (
                 <>
                   <div className="MoliDebug-tagContainer">
-                    <TagLabel>Seller ID</TagLabel>
-                    <Tag variant={adstxtEntry[1] ? 'blue' : 'red'}>{adstxtEntry[1]}</Tag>
+                    <TagLabel>Seller ID (ads.txt)</TagLabel>
+                    <Tag
+                      variant={
+                        adstxtEntry[1] === config?.schain.supplyChainStartNode.sid ? 'green' : 'red'
+                      }
+                    >
+                      {adstxtEntry[1]}
+                    </Tag>
                   </div>
                   <div className="MoliDebug-tagContainer">
                     <TagLabel>Status</TagLabel>
                     <Tag variant={adstxtEntry[2] ? 'blue' : 'red'}>{adstxtEntry[2]}</Tag>
                   </div>
+                  <p className="MoliDebug-info">
+                    {config?.schain.supplyChainStartNode.sid === adstxtEntry[1]
+                      ? `✅ Seller ids in ad tag config and ads.txt of domain ${adstxtDomain} are matching!`
+                      : `❗️Seller ids in ad tag config (${config?.schain.supplyChainStartNode.sid}) and ads.txt of current domain (${adstxtDomain}, ${adstxtEntry[1]}) are different!`}
+                  </p>
+                  <form
+                    className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
+                    onSubmit={async event => {
+                      event.preventDefault();
+                      const newAdsTxtDomain = event.target[0].value;
+                      this.setState({
+                        adstxtDomain: newAdsTxtDomain,
+                        adstxtEntry: (await this.findPublisherEntryInAdsTxt(newAdsTxtDomain)) ?? []
+                      });
+                    }}
+                  >
+                    <label htmlFor="newDomain">
+                      Use different ads.txt domain for seller id comparison:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter new domain"
+                      name="newDomain"
+                      id="newDomain"
+                    ></input>
+                    <button className="MoliDebug-button" type="submit">
+                      Go!
+                    </button>
+                  </form>
                 </>
               )}
             </div>

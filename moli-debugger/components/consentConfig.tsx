@@ -130,17 +130,6 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
 
   private initConsentData = (): void => {
     if (window.__tcfapi) {
-      // fetch initial TCData
-      window.__tcfapi('getTCData', 2, (data: tcfapi.responses.TCData) => {
-        const tcModel = data.gdprApplies ? TCString.decode(data.tcString) : undefined;
-        this.setState({
-          gdprApplies: data.gdprApplies,
-          cmpStatus: data.cmpStatus,
-          tcModel: tcModel,
-          tcString: data.gdprApplies ? data.tcString : 'none'
-        });
-      });
-
       // Update on changes
       window.__tcfapi('addEventListener', 2, event => {
         const tcModel = event.gdprApplies ? TCString.decode(event.tcString) : undefined;
