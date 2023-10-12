@@ -30,6 +30,7 @@
  * @module
  */
 import {
+  AdPipeline,
   IAssetLoaderService,
   IModule,
   LOW_PRIORITY,
@@ -78,7 +79,11 @@ export class StickyFooterAdsV2 implements IModule {
     return this.stickyFooterAdConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(
+    config: Moli.MoliConfig,
+    assetLoaderService: IAssetLoaderService,
+    getAdPipeline: () => AdPipeline
+  ): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -95,11 +100,12 @@ export class StickyFooterAdsV2 implements IModule {
             slots.some(slot => slot.moliSlot.domId === stickyFooterDomId)
           )
         ) {
+          const device = ctx.labelConfigService.getDeviceLabel();
           initAdSticky(
             ctx.window,
             ctx.env,
             ctx.logger,
-            ctx.labelConfigService.getDeviceLabel(),
+            device,
             this.stickyFooterAdConfig.stickyFooterDomIds,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
             this.stickyFooterAdConfig.closingButtonText
