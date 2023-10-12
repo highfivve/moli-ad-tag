@@ -30,7 +30,6 @@
  * @module
  */
 import {
-  AdPipelineContext,
   IAssetLoaderService,
   IModule,
   LOW_PRIORITY,
@@ -89,7 +88,7 @@ export class StickyFooterAdsV2 implements IModule {
     };
 
     config.pipeline.prepareRequestAdsSteps.push(
-      mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx: AdPipelineContext, slots) => {
+      mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
         if (
           Object.keys(this.stickyFooterAdConfig.stickyFooterDomIds).length &&
           Object.values(this.stickyFooterAdConfig.stickyFooterDomIds).map(stickyFooterDomId =>
