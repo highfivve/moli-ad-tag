@@ -53,8 +53,6 @@ export type StickyFooterAdConfig = {
    */
   readonly disallowedAdvertiserIds: number[];
 
-  readonly breakingPoint?: string;
-
   readonly closingButtonText?: string;
 };
 
