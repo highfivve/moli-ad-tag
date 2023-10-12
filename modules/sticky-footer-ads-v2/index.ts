@@ -100,12 +100,11 @@ export class StickyFooterAdsV2 implements IModule {
             slots.some(slot => slot.moliSlot.domId === stickyFooterDomId)
           )
         ) {
-          const device = ctx.labelConfigService.getDeviceLabel();
           initAdSticky(
             ctx.window,
             ctx.env,
             ctx.logger,
-            device,
+            ctx.labelConfigService.getDeviceLabel(),
             this.stickyFooterAdConfig.stickyFooterDomIds,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
             this.stickyFooterAdConfig.closingButtonText
