@@ -142,12 +142,31 @@ describe('LabelConfigConfigService', () => {
   describe('device labels', () => {
     [
       { labels: [], deviceLabel: 'mobile' },
-      { labels: ['mobile'], deviceLabel: 'mobile' },
+      { labels: ['mobile', 'test'], deviceLabel: 'mobile' },
       { labels: ['desktop', 'mobile'], deviceLabel: 'desktop' },
-      { labels: ['desktop'], deviceLabel: 'desktop' }
+      { labels: ['desktop'], deviceLabel: 'desktop' },
+      { labels: ['android'], deviceLabel: 'android' },
+      { labels: ['ios'], deviceLabel: 'ios' },
+      { labels: ['ios', 'mobile', 'test'], deviceLabel: 'ios' },
+      { labels: ['android', 'mobile', 'test'], deviceLabel: 'android' }
     ].forEach(({ labels, deviceLabel }) => {
       it(`should return ${deviceLabel} if labels are [${labels.join(',')}]`, () => {
         const sizeConfigService = newLabelConfigService([], labels);
+        expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
+      });
+    });
+  });
+
+  describe('extraLabels overriding labelSizeConfig', () => {
+    [
+      { labels: [], deviceLabel: 'desktop' },
+      { labels: ['mobile'], deviceLabel: 'mobile' },
+      { labels: ['desktop'], deviceLabel: 'desktop' },
+      { labels: ['ios'], deviceLabel: 'ios' },
+      { labels: ['android', 'test'], deviceLabel: 'android' }
+    ].forEach(({ labels, deviceLabel }) => {
+      it(`should return ${deviceLabel} if labels are [${labels.join(',')}]`, () => {
+        const sizeConfigService = newLabelConfigService([labelConfigEntry1], labels);
         expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
       });
     });
