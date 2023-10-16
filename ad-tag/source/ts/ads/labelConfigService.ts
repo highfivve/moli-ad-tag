@@ -2,6 +2,7 @@ import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 
 import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
+import Device = Moli.Device;
 
 /**
  * Conditionally select the ad unit based on labels.
@@ -35,11 +36,23 @@ export class LabelConfigService {
    */
   private readonly isValid: boolean;
 
+  /**
+   * List of possible devices that can be configured.
+   * This list is used to check if any of the configured labels by the publisher contains
+   * a device label. If no device label is found, we use the label based on the labelSizeConfig.
+   */
+  private readonly possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
+
   constructor(
     private readonly labelSizeConfig: LabelSizeConfigEntry[],
     private readonly extraLabels: string[],
     private readonly window: Window
   ) {
+    // Check if the device label is already defined by the publisher
+    const isPublisherDeviceDefined: boolean = extraLabels.some(
+      (label): label is Device => this.possibleDevices.indexOf(<Device>label) > -1
+    );
+
     // Matches the given slot sizes against the window's dimensions.
     const supportedLabelSizeConfigs = labelSizeConfig.filter(
       conf => window.matchMedia(conf.mediaQuery).matches
@@ -51,7 +64,11 @@ export class LabelConfigService {
 
     const supportedLabels = flatten(supportedLabelSizeConfigs.map(conf => conf.labelsSupported));
 
-    this.supportedLabels = [...supportedLabels, ...extraLabels].filter(uniquePrimitiveFilter);
+    // Use labels from labelSizeConfig when no publisher defined device label was found.
+    this.supportedLabels = [
+      ...(isPublisherDeviceDefined ? [] : supportedLabels),
+      ...extraLabels
+    ].filter(uniquePrimitiveFilter);
   }
 
   /**
@@ -92,7 +109,11 @@ export class LabelConfigService {
   /**
    * @returns the currently configured device. If no device label is found, mobile is being returned
    */
-  public getDeviceLabel(): 'mobile' | 'desktop' {
-    return this.getSupportedLabels().indexOf('desktop') > -1 ? 'desktop' : 'mobile';
+  public getDeviceLabel(): Device {
+    return (
+      this.getSupportedLabels().find(
+        (label): label is Device => this.possibleDevices.indexOf(<Device>label) > -1
+      ) || 'mobile'
+    );
   }
 }

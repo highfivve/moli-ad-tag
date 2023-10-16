@@ -1,4 +1,6 @@
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
+import { Moli } from '../types/moli';
+import Device = Moli.Device;
 
 /**
  * The new MCM that allows managing child publishers, the ad unit path must
@@ -102,7 +104,7 @@ export const withDepth = (adUnitPath: string, depth: number): string => {
  */
 export const generateAdUnitPathVariables = (
   hostname: string,
-  device: 'mobile' | 'desktop',
+  device: Device,
   varsFromConfig?: AdUnitPathVariables,
   domainFromConfig?: string
 ): AdUnitPathVariables => ({
