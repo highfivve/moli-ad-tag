@@ -1,5 +1,6 @@
 import { googletag, Moli } from '@highfivve/ad-tag';
 import { FooterDomIds } from './index';
+import Device = Moli.Device;
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
@@ -73,7 +74,7 @@ export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
   env: Moli.Environment,
   log: Moli.MoliLogger,
-  device: 'mobile' | 'desktop',
+  device: Device,
   footerStickyDomIds: FooterDomIds,
   disallowedAdvertiserIds: number[],
   closingButtonText?: string
