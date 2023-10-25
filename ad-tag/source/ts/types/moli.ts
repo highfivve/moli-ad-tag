@@ -9,6 +9,15 @@ import { SupplyChainObject } from './supplyChainObject';
 export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
 
+  /**
+   * Type for a device where Moli could possibly be run on.
+   * Web mostly uses mobile or desktop the device.
+   *
+   * We also support android and ios for 'wrapper apps' that use a webview to display the content.
+   *
+   */
+  export type Device = 'mobile' | 'desktop' | 'android' | 'ios';
+
   export type AdServer = 'gam' | 'prebidjs';
 
   /**

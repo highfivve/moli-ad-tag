@@ -4,6 +4,7 @@ import MoliLogger = Moli.MoliLogger;
 import IAdSlot = googletag.IAdSlot;
 import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
 import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
+import Device = Moli.Device;
 
 /**
  * Extended representation which adds
@@ -39,7 +40,7 @@ export class YieldOptimizationService {
   /**
    * The device for the current device
    */
-  private device: 'mobile' | 'desktop' = 'mobile';
+  private device: Device = 'mobile';
 
   /**
    * Contains the device variable
@@ -65,7 +66,7 @@ export class YieldOptimizationService {
    * @param adUnitPaths All adUnitPaths configured in the slot config.
    */
   public init(
-    device: 'mobile' | 'desktop',
+    device: Device,
     adUnitPathVariables: AdUnitPathVariables,
     adUnitPaths: string[]
   ): Promise<void> {
