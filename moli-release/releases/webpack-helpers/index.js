@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HandlebarsPlugin = require('handlebars-webpack-plugin');
-const {WebpackManifestPlugin} = require('webpack-manifest-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const WebpackShellPluginNext = require('webpack-shell-plugin-next');
 const fs = require('fs');
 
@@ -39,22 +39,26 @@ const makeDocsPages = options => {
     inject = false
   } = options;
 
+  const customDataFile = path.join(basePath, 'custom.json');
+  const custom = fs.existsSync(customDataFile) ? require(customDataFile) : {};
+
   return [
     // Create overview page only once and only in es6 mode.
     es5Mode
       ? undefined
       : new HandlebarsPlugin({
-        entry: overviewTemplatePath,
-        output: path.join(basePath, 'dist', 'overview.html'),
-        data: {
-          publisher: publisherName,
-          releases: require(path.join(basePath, 'releases.json'))
-        },
-        ...additionalHandlebarsConfig
-      }),
-    ...chunks.flatMap((chunk) => {
+          entry: overviewTemplatePath,
+          output: path.join(basePath, 'dist', 'overview.html'),
+          data: {
+            publisher: publisherName,
+            releases: require(path.join(basePath, 'releases.json')),
+            custom: custom
+          },
+          ...additionalHandlebarsConfig
+        }),
+    ...chunks.flatMap(chunk => {
       // Map the default chunk (moli) to index to receive an index.html without further configuration
-      const outputFileName = (chunk === 'moli' || chunk === 'moli_es5') ? 'index' : chunk;
+      const outputFileName = chunk === 'moli' || chunk === 'moli_es5' ? 'index' : chunk;
 
       const demoPartial = `demo.${chunk}${es5Mode ? '.es5' : ''}`;
 
@@ -76,13 +80,18 @@ const makeDocsPages = options => {
             HtmlWebpackPlugin
           },
           entry: demoTemplatePath,
-          output: path.join(process.cwd(), 'dist', `${outputFileName}${es5Mode ? '.es5' : ''}.html`),
+          output: path.join(
+            process.cwd(),
+            'dist',
+            `${outputFileName}${es5Mode ? '.es5' : ''}.html`
+          ),
           data: {
             publisher: publisherName,
             currentFilename,
             es5Mode,
             production: mode === 'production',
-            demoPartial: `html/${demoPartial}`
+            demoPartial: `html/${demoPartial}`,
+            custom: custom
           },
           ...additionalHandlebarsConfig,
           partials: [...additionalHandlebarsConfig.partials, 'html/*.hbs']

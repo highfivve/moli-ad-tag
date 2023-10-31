@@ -40,3 +40,7 @@ with mock data.
 
 Just run the `test:release` script from `moli-release`'s [`package.json`](package.json) and check the console logs or
 the output inside the [demo-data/dist](demo-data/dist) dir (e.g. [`overview.html`](demo-data/dist/overview.html)).
+
+## Additional data
+
+You can place a `custom.json` file at the root of your project and access the values inside in hbs via `{{custom.[you property]`}}.
