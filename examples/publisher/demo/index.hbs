@@ -291,6 +291,16 @@
 
   <div class="row">
     <div class="col-md">
+      <h1>Rewarded Ad</h1>
+      <div id="prebid-adslot"></div>
+      <button class="btn btn-primary"  onclick="moli.refreshRewardedAdSlot(window.welect).then((data) => alert(data.status)).catch(err => alert(err.status))">Watch to get rewarded</button>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-md">
       <h1>Normal Test Slot</h1>
       <div id="ad-content-1" style="max-height: 340px; max-width: 605px;"></div>
     </div>
@@ -500,6 +510,7 @@
 {{/if}}
 
 {{> partials/foot }}
+  <script src="https://static.wlt-jupiter.de/p/bundles/1f10ef42-5338-42b5-9797-0283d654ec30.js#wbss"></script>
 
 </body>
 </html>

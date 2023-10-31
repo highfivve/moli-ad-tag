@@ -732,6 +732,54 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
+  function refreshRewardedAdSlot(welect: Moli.Welect): Promise<Moli.RewardedAdResponse> {
+    return new Promise<Moli.RewardedAdResponse>((resolve, reject) => {
+      // Are there any ads to show?
+      if (welect.checkAvailability) {
+        welect.checkAvailability({
+          // No
+          onUnavailable: () => {
+            resolve({ status: 'unavailable-ad' });
+          },
+          // Yes
+          onAvailable: () => {
+            // Play the Welect dialog
+            if (welect.runSession) {
+              welect.runSession({
+                // Was the process interrupted by something?
+                onAbort: () => {
+                  resolve({ status: 'aborted' });
+                },
+                // Ad view was completely
+                onSuccess: () => {
+                  // Let`s check the token again
+                  if (welect.checkSession) {
+                    welect.checkSession({
+                      // Everything is fine
+                      onValid: () => {
+                        resolve({ status: 'succeeded' });
+                      },
+                      // Please contact us in this case
+                      onInvalid: () => {
+                        reject({ status: 'error' });
+                      }
+                    });
+                  } else {
+                    reject({ status: 'error' });
+                  }
+                }
+              });
+            } else {
+              reject({ status: 'error' });
+            }
+          }
+        });
+      } else {
+        reject({ status: 'error' });
+      }
+    });
+  }
+
   function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
     const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
@@ -985,6 +1033,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     requestAds: requestAds,
     refreshAdSlot: refreshAdSlot,
     refreshBucket: refreshBucket,
+    refreshRewardedAdSlot: refreshRewardedAdSlot,
     refreshInfiniteAdSlot: refreshInfiniteAdSlot,
     getModuleMeta: getModuleMeta,
     getState: getState,

@@ -232,6 +232,8 @@ export namespace Moli {
      */
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
+    refreshRewardedAdSlot(welect: Moli.Welect, domId?: string): Promise<Moli.RewardedAdResponse>;
+
     /**
      * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
      * Refresh the created ad slot as soon as possible afterwards.
@@ -1021,7 +1023,8 @@ export namespace Moli {
     | 'out-of-page'
     | 'out-of-page-interstitial'
     | 'out-of-page-top-anchor'
-    | 'out-of-page-bottom-anchor';
+    | 'out-of-page-bottom-anchor'
+    | 'rewarded';
 
   export interface AdSlot {
     /** id for the ad slot element */
@@ -2011,6 +2014,56 @@ export namespace Moli {
        */
       readonly main: boolean;
     }
+  }
+
+  /**
+   * Rewarded ad
+   */
+
+  export type RewardedAdResponse = {
+    readonly status: 'unavailable-ad' | 'succeeded' | 'error' | 'aborted';
+  };
+
+  /**
+   * Welect
+   */
+  interface CheckAvailabilityConfig {
+    onAvailable: () => void;
+    onUnavailable: () => void;
+  }
+
+  interface RunSessionConfig {
+    onSuccess: () => void;
+    onAbort: () => void;
+  }
+
+  interface CheckTokenConfig {
+    onValid: () => void;
+    onInvalid: () => void;
+  }
+
+  export interface Welect {
+    /**
+     * Checks if any ads are available.
+     */
+    checkAvailability?: (config: CheckAvailabilityConfig) => void;
+
+    /**
+     * Initiates the Welect overlay with its ad chooser.
+     */
+    runSession?: (config: RunSessionConfig) => void;
+
+    /**
+     * Analyzes the current window if a complete session is present.
+     * A user has completed a session when the ad has been viewed till the end.
+     */
+    checkSession?: (config: CheckTokenConfig) => void;
+
+    /**
+     * Returns an URL which represents the Welect overlay with its ad
+     * chooser.
+     */
+    startURL?: () => string;
   }
 
   /**

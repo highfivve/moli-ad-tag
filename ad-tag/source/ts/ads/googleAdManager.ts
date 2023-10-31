@@ -306,6 +306,12 @@ export const gptDefineSlots =
               resolvedAdUnitPath,
               context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
             );
+          case 'rewarded':
+            context.logger.debug('GAM', `defined web rewarded ad for ${resolvedAdUnitPath}`);
+            return context.window.googletag.defineOutOfPageSlot(
+              resolvedAdUnitPath,
+              context.window.googletag.enums.OutOfPageFormat.REWARDED
+            );
         }
       };
 
