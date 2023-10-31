@@ -43,6 +43,7 @@ const stickyRenderedEvent = (
 
 /**
  * Called when the iFrame was successfully loaded and everything in it was executed.
+ *
  */
 const stickyOnLoadEvent = (
   mobileStickyDomId: string,

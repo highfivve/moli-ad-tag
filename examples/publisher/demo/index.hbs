@@ -150,6 +150,35 @@
     .is-shifted-bottom:hover {
       margin-bottom: 0;
     }
+
+    /* new design footer */
+    .h5v-new-sticky-ad-container {
+      position: fixed;
+      display: flex;
+      justify-content: center;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #f0f0f0;
+      padding: 0.5rem 0;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      transform: translateY(0);
+      transition: transform 0.3s ease; /* optional, or can be altered */
+    }
+
+     .h5v-new-sticky-ad-close-button {
+      position: fixed;
+      top: 0;
+      right: 0;
+      background-color: #f0f0f0; /* Match the container's background color */
+      border: none;
+      padding: 0.1rem 1rem;
+      cursor: pointer;
+      border-top-left-radius: 0.8rem;
+      transform: translateY(-100%); /* Above the footerAd container */
+      transition: transform 0.3s ease; /* Add animation to transform property */
+    }
+
   </style>
 </head>
 
@@ -470,7 +499,18 @@
   </div>
 
 
-<!-- mobile sticky ad -->
+
+  <!-- new footer ad -->
+  <div class="h5v-new-sticky-ad-container" data-ref="h5v-sticky-ad">
+    <div id="ad-desktop-sticky" ></div>
+    <div id="ad-mobile-sticky" ></div>
+    <button
+      class="h5v-new-sticky-ad-close-button"
+      data-ref="h5v-sticky-ad-close"
+    ></button>
+  </div>
+
+<!-- mobile sticky ad
 <div class="h5-sticky-ad u-hidden-desktop" data-ref="sticky-ad">
   <div id="ad-mobile-sticky" class="h5-sticky-ad-container"></div>
   <button
@@ -479,11 +519,12 @@
     aria-label="Anzeige entfernen"
   ></button>
 </div>
-
-<!-- desktop floorad -->
+-->
+<!-- desktop floorad
 <div data-ref="h5-footer-ad-container">
   <div id="ad-floorad"></div>
 </div>
+-->
 
 <!-- update the [[domain]] variable in the integration example -->
 <script>
