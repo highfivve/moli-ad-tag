@@ -5146,6 +5146,7 @@ export namespace prebidjs {
     | IAdaptMxBid
     | IAdformBid
     | IAdUpBid
+    | IConnectAdBid
     | ICriteoBid
     | IAppNexusASTBid
     | IGumGumBid
