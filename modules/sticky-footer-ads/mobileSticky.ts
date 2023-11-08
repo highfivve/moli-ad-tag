@@ -71,7 +71,8 @@ export const initAdSticky = (
   env: Moli.Environment,
   log: Moli.MoliLogger,
   mobileStickyDomId: string,
-  disallowedAdvertiserIds: number[]
+  disallowedAdvertiserIds: number[],
+  initiallyHidden: boolean
 ): void => {
   const adSticky = window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
@@ -82,7 +83,10 @@ export const initAdSticky = (
       'Running initAdSticky with defined sticky container and close button'
     );
 
-    adSticky.style.setProperty('display', 'block');
+    // if a publisher only wants to show the sticky ad, if there's a result
+    if (!initiallyHidden) {
+      adSticky.style.setProperty('display', 'block');
+    }
 
     closeButton.addEventListener(
       'click',
@@ -122,6 +126,11 @@ export const initAdSticky = (
           }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
+          // if it was initially hidden, display it now
+          if (initiallyHidden) {
+            adSticky.style.setProperty('display', 'block');
+          }
+
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([

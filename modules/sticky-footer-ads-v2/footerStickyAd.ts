@@ -77,6 +77,7 @@ export const initAdSticky = (
   device: Device,
   footerStickyDomIds: FooterDomIds,
   disallowedAdvertiserIds: number[],
+  initiallyHidden: boolean,
   closingButtonText?: string
 ): void => {
   const stickyAd = 'sticky-ad';
@@ -160,6 +161,11 @@ export const initAdSticky = (
           }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
+          // if it was initially hidden, display it now
+          if (initiallyHidden) {
+            adSticky.style.setProperty('display', 'block');
+          }
+
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([
