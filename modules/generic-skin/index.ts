@@ -139,11 +139,19 @@ export type XandrFormatFilter = {
   readonly bidder: typeof prebidjs.AppNexusAst | typeof prebidjs.AppNexus;
 };
 
+/**
+ * Partners buying skin demand via the Yieldlab platform
+ */
+export type YieldlabFormatFilter = {
+  readonly bidder: typeof prebidjs.Yieldlab;
+};
+
 export type FormatFilter =
   | JustPremiumFormatFilter
   | GumGumFormatFilter
   | DSPXFormatFilter
   | VisxFormatFilter
+  | YieldlabFormatFilter
   | XandrFormatFilter;
 
 export type SkinConfig = {
