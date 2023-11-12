@@ -4,13 +4,24 @@ import { Moli } from '../types/moli';
 /**
  * Get the parameter `moliDebug`. If set to true all logs will be written to the console.
  *
+ * The value can be set either
+ *
+ * - as a query parameter: `moliDebug=true`
+ * - as a session storage key
+ * - as a local storage key
  */
-function getMoliDebugParameter(window: Window): boolean {
-  const key = 'moliDebug';
-  const params = parseQueryString(window.location.search);
-  const param = params.get(key);
-
-  return param ? param.toLowerCase() === 'true' : false;
+export function getMoliDebugParameter(window: Window): boolean {
+  try {
+    const key = 'moliDebug';
+    const params = parseQueryString(window.location.search);
+    return (
+      !!params.get(key) ||
+      !!window.sessionStorage.getItem(key) ||
+      !!window.localStorage.getItem(key)
+    );
+  } catch (_) {
+    return false;
+  }
 }
 
 /**
