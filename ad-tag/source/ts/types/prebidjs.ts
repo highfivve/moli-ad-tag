@@ -2254,6 +2254,13 @@ export namespace prebidjs {
     readonly bidderSequence?: 'random' | 'fixed';
 
     /**
+     * By default, Prebid keeps in memory a log of every event since the initial page load, and makes it available to
+     * analytics adapters and getEvents(). This can cause high memory usage on long-running single-page apps;
+     * you can set a limit on how long events are preserved with eventHistoryTTL
+     */
+    readonly eventHistoryTTL?: number;
+
+    /**
      * Set the publisher's domain where Prebid is running, for cross-domain iframe communication
      * @deprecated This API is deprecated. Please use ‘pageUrl’ instead.
      */
