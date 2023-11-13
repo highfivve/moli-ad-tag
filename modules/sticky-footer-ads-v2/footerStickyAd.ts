@@ -5,7 +5,12 @@ import Device = Moli.Device;
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
-const adStickyCloseButtonContent = '.h5v-closeButtonContent';
+const adStickyCloseButtonContent = 'h5v-closeButtonContent';
+
+/**
+ * This class is a optional hint for publishers to use, when the ad is clicked
+ */
+const adVisibleClass = 'h5-sticky-ad--visible';
 
 /**
  * empty: mobile sticky load was empty
@@ -13,6 +18,18 @@ const adStickyCloseButtonContent = '.h5v-closeButtonContent';
  * standard: a regular creative was loaded
  */
 type RenderEventResult = 'empty' | 'disallowed' | 'standard';
+
+// TODO To allow something like transitions, we should stop slapping display: none here
+//      However to not break existing integrations, we need to make this configurable and optional
+const hideAdSlot = (adSticky: HTMLElement): void => {
+  adSticky.style.setProperty('display', 'none');
+  adSticky.classList.remove(adVisibleClass);
+};
+
+const showAdSlot = (adSticky: HTMLElement): void => {
+  adSticky.style.setProperty('display', 'block');
+  adSticky.classList.add(adVisibleClass);
+};
 
 /**
  * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
@@ -31,7 +48,7 @@ const stickyRenderedEvent = (
 
       if (event.isEmpty) {
         if (adSticky) {
-          adSticky.style.setProperty('display', 'none');
+          hideAdSlot(adSticky);
         }
         resolve('empty');
       } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
@@ -84,7 +101,7 @@ export const initAdSticky = (
 
   const adSticky = window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
-  const closeButtonContent = window.document.querySelector(adStickyCloseButtonContent);
+  const closeButtonContent = window.document.querySelector(`.${adStickyCloseButtonContent}`);
 
   if (adSticky && closeButton) {
     log.debug(stickyAd, 'Running initAdSticky with defined sticky container and close button');
@@ -98,7 +115,7 @@ export const initAdSticky = (
         closeButtonSvg.setAttribute('height', '24');
 
         const closeButtonPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        closeButtonPath.classList.add('h5v-closeButtonContent');
+        closeButtonPath.classList.add(adStickyCloseButtonContent);
         closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
         closeButtonSvg.appendChild(closeButtonPath);
         closeButton.appendChild(closeButtonSvg);
@@ -124,7 +141,7 @@ export const initAdSticky = (
     })[0]; // surely there is at only one element array
 
     closeButton.addEventListener('click', () => {
-      adSticky.style.transform = 'translateY(150%)'; // Slide down out of the viewport including the close button
+      hideAdSlot(adSticky);
       adSticky.addEventListener(
         'transitionend',
         () => {
@@ -163,7 +180,7 @@ export const initAdSticky = (
         } else if (renderResult === 'standard') {
           // if it was initially hidden, display it now
           if (initiallyHidden) {
-            adSticky.style.setProperty('display', 'block');
+            showAdSlot(adSticky);
           }
 
           // if it's a standard render then create a new listener set and
