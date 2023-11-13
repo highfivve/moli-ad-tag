@@ -65,13 +65,15 @@ export class Pubstack implements IModule {
     };
 
     config.pipeline.initSteps.push(
-      mkInitStep('pubstack-init', () => {
+      mkInitStep('pubstack-init', context => {
         // load the pubstack script
-        assetLoaderService.loadScript({
-          name: 'pubstack',
-          loadMethod: AssetLoadMethod.TAG,
-          assetUrl: `https://boot.pbstck.com/v1/tag/${this.pubstackConfig.tagId}`
-        });
+        assetLoaderService
+          .loadScript({
+            name: 'pubstack',
+            loadMethod: AssetLoadMethod.TAG,
+            assetUrl: `https://boot.pbstck.com/v1/tag/${this.pubstackConfig.tagId}`
+          })
+          .catch(error => context.logger.error('failed to load pubstack', error));
         return Promise.resolve();
       })
     );

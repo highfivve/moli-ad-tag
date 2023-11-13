@@ -89,11 +89,15 @@ export const a9Init = (
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
         if (hasRequiredConsent(context.tcData)) {
           // async fetch as everything is already initialized
-          assetService.loadScript({
-            name: 'A9',
-            loadMethod: AssetLoadMethod.TAG,
-            assetUrl: config.scriptUrl ? config.scriptUrl : '//c.amazon-adsystem.com/aax2/apstag.js'
-          });
+          assetService
+            .loadScript({
+              name: 'A9',
+              loadMethod: AssetLoadMethod.TAG,
+              assetUrl: config.scriptUrl
+                ? config.scriptUrl
+                : '//c.amazon-adsystem.com/aax2/apstag.js'
+            })
+            .catch(error => context.logger.error('failed to load apstag.js', error));
         }
 
         resolve();

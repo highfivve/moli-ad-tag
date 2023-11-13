@@ -919,11 +919,13 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         break;
       }
       default: {
-        assetLoaderService.loadScript({
-          assetUrl: path || 'https://highfivve.github.io/moli-ad-tag/assets/js/moli-debug.min.js',
-          loadMethod: AssetLoadMethod.TAG,
-          name: 'moli-debugger'
-        });
+        assetLoaderService
+          .loadScript({
+            assetUrl: path || 'https://highfivve.github.io/moli-ad-tag/assets/js/moli-debug.min.js',
+            loadMethod: AssetLoadMethod.TAG,
+            name: 'moli-debugger'
+          })
+          .catch(error => console.error('failed to load moli debugger', error));
       }
     }
   }

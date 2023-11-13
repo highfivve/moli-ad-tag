@@ -114,13 +114,15 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
         context.window.googletag.cmd = context.window.googletag.cmd || [];
         context.window.googletag.cmd.push(resolve);
 
-        assetLoader.loadScript({
-          name: 'gpt',
-          loadMethod: AssetLoadMethod.TAG,
-          assetUrl: useStandardGpt(context.tcData)
-            ? 'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
-            : 'https://pagead2.googlesyndication.com/tag/js/gpt.js'
-        });
+        assetLoader
+          .loadScript({
+            name: 'gpt',
+            loadMethod: AssetLoadMethod.TAG,
+            assetUrl: useStandardGpt(context.tcData)
+              ? 'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
+              : 'https://pagead2.googlesyndication.com/tag/js/gpt.js'
+          })
+          .catch(error => context.logger.error('failed to load gpt.js', error));
       });
     }
     return result;
