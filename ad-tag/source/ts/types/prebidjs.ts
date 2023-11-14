@@ -3380,6 +3380,7 @@ export namespace prebidjs {
   export const JustPremium = 'justpremium';
   export const PubMatic = 'pubmatic';
   export const Ogury = 'ogury';
+  export const OneTag = 'onetag';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
   export const Smartx = 'smartx';
@@ -3419,6 +3420,7 @@ export namespace prebidjs {
     | typeof NanoInteractive
     | typeof PubMatic
     | typeof Ogury
+    | typeof OneTag
     | typeof OpenX
     | typeof SmartAdServer
     | typeof Smartx
@@ -4364,6 +4366,38 @@ export namespace prebidjs {
   export interface IOguryBid extends IBidObject<typeof Ogury, IOguryParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/onetag.html
+   */
+  export interface IOneTagParams {
+    /**
+     * The publisher’s ID provided by OneTag
+     * @example `'386276e072'`
+     */
+    readonly publisherId: string;
+
+    /**
+     * A set of custom key-value pairs
+     */
+    readonly ext: {
+      /**
+       * OneTag automatically maps placements using the `code` parameter of the Prebid ad unit.
+       * You can override this, with this parameter
+       */
+      readonly placement_name?: string;
+
+      /**
+       * Other arbitrary key-values
+       */
+      readonly [key: string]: string | undefined;
+    };
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/onetag.html
+   */
+  export interface IOneTagBid extends IBidObject<typeof OneTag, IOneTagParams> {}
+
+  /**
    * OpenX bid parameters
    *
    * @see https://prebid.org/dev-docs/bidders/openx.html
@@ -5164,6 +5198,7 @@ export namespace prebidjs {
     | INanoInteractiveBid
     | IPubMaticBid
     | IOguryBid
+    | IOneTagBid
     | IOpenxBid
     | ISmartAdServerBid
     | ISmartxBid
