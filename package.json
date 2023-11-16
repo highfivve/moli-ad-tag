@@ -26,7 +26,8 @@
     "lerna": "^3.22.1",
     "prebid.js": "7.36.0",
     "prettier": "^2.3.0",
-    "typescript": "^4.7.4"
+    "typescript": "^5.2.2",
+    "ts-node": "^10.9.1"
   },
   "bin": {
     "moli-release": "moli-release/bin/moli-release"
