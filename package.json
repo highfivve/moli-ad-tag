@@ -23,7 +23,7 @@
     "postpublish": "yarn clean:lib"
   },
   "devDependencies": {
-    "lerna": "^3.22.1",
+    "lerna": "^7.4.2",
     "prebid.js": "7.36.0",
     "prettier": "^2.3.0",
     "typescript": "^5.2.2",
