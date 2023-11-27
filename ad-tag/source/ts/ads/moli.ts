@@ -373,6 +373,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           setEnvironmentOverrideInStorage(envOverride.environment, window.sessionStorage);
         }
 
+        // if there's a spa config, use the enabled flag. Note that this may collide with
+        // `enableSinglePageApp`, which could override this configuration
+        if (config.spa) {
+          state.isSinglePageApp = config.spa.enabled;
+        }
+
         state = {
           state: 'configured',
           configFromAdTag: config,

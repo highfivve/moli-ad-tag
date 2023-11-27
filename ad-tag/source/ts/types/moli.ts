@@ -838,6 +838,11 @@ export namespace Moli {
     /** all possible ad slots */
     readonly slots: AdSlot[];
 
+    /**
+     * Optional configuration for single page
+     */
+    readonly spa?: SinglePageAppConfig;
+
     /** supply chain object */
     readonly schain: schain.SupplyChainConfig;
 
@@ -928,6 +933,26 @@ export namespace Moli {
 
     /** ad unit path variables */
     adUnitPathVariables?: AdUnitPathVariables;
+  }
+
+  /**
+   * Additional configuration for single page application publishers.
+   */
+  export interface SinglePageAppConfig {
+    /**
+     * Set to true if this publisher has a single page application.
+     */
+    readonly enabled: boolean;
+
+    /**
+     * If set to `false`, `requestAds` will not destroy all existing ad slots,
+     * but only the ones being requested.
+     *
+     * Use with caution and test properly.
+     *
+     * @default true
+     */
+    readonly destroyAllAdSlots?: boolean;
   }
 
   /**
