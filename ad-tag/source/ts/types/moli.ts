@@ -950,6 +950,14 @@ export namespace Moli {
      *
      * Use with caution and test properly.
      *
+     * ## Use cases
+     *
+     * This setting can be used for publishers that have more "static" ad slots, like
+     * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+     * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+     * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+     * publisher, while other content positions are refreshed on navigation.
+     *
      * @default true
      */
     readonly destroyAllAdSlots?: boolean;
