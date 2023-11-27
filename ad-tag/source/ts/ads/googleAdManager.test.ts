@@ -65,6 +65,20 @@ describe('google ad manager', () => {
       setTimeout(resolve, timeInMs);
     });
 
+  const createdAdSlot = (domId: string): Moli.AdSlot => ({
+    domId: domId,
+    adUnitPath: `/123/${domId}`,
+    behaviour: { loaded: 'eager' },
+    position: 'in-page',
+    sizes: [[300, 250]],
+    sizeConfig: [
+      {
+        mediaQuery: '(min-width: 0px)',
+        sizesSupported: [[300, 250]]
+      }
+    ]
+  });
+
   after(() => {
     // bring everything back to normal after tests
     sandbox.restore();
@@ -169,18 +183,55 @@ describe('google ad manager', () => {
       });
     });
 
-    it('should only run once per requestAds cycle', () => {
+    it('should call googletag.destroySlots with existing slots if destroyAllAdSlots is set to false', async () => {
+      const domId = 'slot-1';
+      const googleSlot = googleAdSlotStub('', domId);
+      sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot]);
       const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
       const step = gptDestroyAdSlots();
 
-      return Promise.all([
-        step(adPipelineContext('production', emptyConfig, 1), []),
-        step(adPipelineContext('production', emptyConfig, 1), []),
-        step(adPipelineContext('production', emptyConfig, 2), []),
-        step(adPipelineContext('production', emptyConfig, 2), [])
-      ]).then(() => {
-        expect(destroySlotsSpy).to.have.been.calledTwice;
-      });
+      await step(
+        adPipelineContext('production', {
+          ...emptyConfig,
+          spa: { enabled: true, destroyAllAdSlots: false }
+        }),
+        [createdAdSlot(domId), createdAdSlot('slot-2')]
+      );
+      expect(destroySlotsSpy).to.have.been.calledOnce;
+      expect(destroySlotsSpy.firstCall.args).to.have.length(1);
+      const destroyedSlots: googletag.IAdSlot[] = destroySlotsSpy.firstCall.args[0];
+      expect(destroyedSlots).to.be.an('array');
+      expect(destroyedSlots).to.have.length(1);
+      expect(destroyedSlots[0]).to.deep.equals(googleSlot);
+    });
+
+    it('should only run once per requestAds cycle', async () => {
+      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+      const step = gptDestroyAdSlots();
+
+      await step(adPipelineContext('production', emptyConfig, 1), []);
+      await step(adPipelineContext('production', emptyConfig, 1), []);
+      await step(adPipelineContext('production', emptyConfig, 2), []);
+      await step(adPipelineContext('production', emptyConfig, 2), []);
+      expect(destroySlotsSpy).to.have.been.calledTwice;
+    });
+
+    it('should only run on each requestAds cycle if destroyAllAdSlots is set to false', async () => {
+      const domId = 'slot-1';
+      const googleSlot = googleAdSlotStub('', domId);
+      sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot]);
+      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+      const step = gptDestroyAdSlots();
+      const config: Moli.MoliConfig = {
+        ...emptyConfig,
+        spa: { enabled: true, destroyAllAdSlots: false }
+      };
+
+      await step(adPipelineContext('production', config, 1), [createdAdSlot(domId)]);
+      await step(adPipelineContext('production', config, 1), [createdAdSlot(domId)]);
+      await step(adPipelineContext('production', config, 2), [createdAdSlot(domId)]);
+      await step(adPipelineContext('production', config, 2), [createdAdSlot(domId)]);
+      expect(destroySlotsSpy).callCount(4);
     });
   });
 
@@ -354,19 +405,7 @@ describe('google ad manager', () => {
   });
 
   describe('gptDefineSlots', () => {
-    const adSlot: Moli.AdSlot = {
-      domId: 'dom-id',
-      adUnitPath: '/123/dom-id',
-      behaviour: { loaded: 'eager' },
-      position: 'in-page',
-      sizes: [[300, 250]],
-      sizeConfig: [
-        {
-          mediaQuery: '(min-width: 0px)',
-          sizesSupported: [[300, 250]]
-        }
-      ]
-    };
+    const adSlot: Moli.AdSlot = createdAdSlot('dom-id');
 
     describe('production mode', () => {
       it('should define in-page slots', () => {

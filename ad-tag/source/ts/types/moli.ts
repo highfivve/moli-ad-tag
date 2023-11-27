@@ -838,6 +838,11 @@ export namespace Moli {
     /** all possible ad slots */
     readonly slots: AdSlot[];
 
+    /**
+     * Optional configuration for single page
+     */
+    readonly spa?: SinglePageAppConfig;
+
     /** supply chain object */
     readonly schain: schain.SupplyChainConfig;
 
@@ -928,6 +933,34 @@ export namespace Moli {
 
     /** ad unit path variables */
     adUnitPathVariables?: AdUnitPathVariables;
+  }
+
+  /**
+   * Additional configuration for single page application publishers.
+   */
+  export interface SinglePageAppConfig {
+    /**
+     * Set to true if this publisher has a single page application.
+     */
+    readonly enabled: boolean;
+
+    /**
+     * If set to `false`, `requestAds` will not destroy all existing ad slots,
+     * but only the ones being requested.
+     *
+     * Use with caution and test properly.
+     *
+     * ## Use cases
+     *
+     * This setting can be used for publishers that have more "static" ad slots, like
+     * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+     * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+     * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+     * publisher, while other content positions are refreshed on navigation.
+     *
+     * @default true
+     */
+    readonly destroyAllAdSlots?: boolean;
   }
 
   /**
