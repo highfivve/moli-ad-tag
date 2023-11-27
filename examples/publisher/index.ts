@@ -34,12 +34,7 @@ prebid.processQueue();
 
 const moli = initAdTag(window);
 
-declare const window: Window &
-  googletag.IGoogleTagWindow &
-  MoliWindow &
-  prebidjs.IPrebidjsWindow &
-  Moli.WelectWindow;
-
+declare const window: Window & googletag.IGoogleTagWindow & MoliWindow & prebidjs.IPrebidjsWindow;
 // ad fraud protection
 moli.registerModule(
   new Confiant({

@@ -11,7 +11,6 @@ import {
   IAssetLoaderService,
   AdPipelineContext,
   mkPrepareRequestAdsStep,
-  LOW_PRIORITY,
   HIGH_PRIORITY
 } from '@highfivve/ad-tag';
 import RewardedAdResponse = Moli.RewardedAdResponse;
@@ -21,6 +20,58 @@ export type WelectConfig = {
 };
 
 /**
+ * Welect
+ */
+interface CheckAvailabilityConfig {
+  onAvailable: () => void;
+  onUnavailable: () => void;
+}
+
+interface RunSessionConfig {
+  onSuccess: () => void;
+  onAbort: () => void;
+}
+
+interface CheckTokenConfig {
+  onValid: () => void;
+  onInvalid: () => void;
+}
+
+export interface WelectWindow {
+  readonly welect: Welect;
+}
+
+export interface Welect {
+  /**
+   * Checks if any ads are available.
+   */
+  checkAvailability?: (config: CheckAvailabilityConfig) => void;
+
+  /**
+   * Initiates the Welect overlay with its ad chooser.
+   */
+  runSession?: (config: RunSessionConfig) => void;
+
+  /**
+   * Analyzes the current window if a complete session is present.
+   * A user has completed a session when the ad has been viewed till the end.
+   */
+  checkSession?: (config: CheckTokenConfig) => void;
+
+  /**
+   * Analyzes the current window if a complete session is present.
+   * A user has completed a session when the ad has been viewed till the end.
+   */
+  checkToken?: (config: CheckTokenConfig) => void;
+
+  /**
+   * Returns an URL which represents the Welect overlay with its ad
+   * chooser.
+   */
+  startURL?: () => string;
+}
+
+/**
  * ## Welect rewarded ad
  */
 export class WelectRewardedAd implements IModule {
@@ -28,13 +79,11 @@ export class WelectRewardedAd implements IModule {
   public readonly description: string = 'welect rewarded ad';
   public readonly moduleType: ModuleType = 'creatives';
 
-  private readonly rewardedRefreshButton = '[data-ref="h5v-rewarded-ad-refresh-button"]';
-  protected rewardedAdResult: RewardedAdResponse = { status: 'unavailable-ad' };
+  private welectWindow: Window & WelectWindow;
 
-  constructor(
-    private readonly welectConfig: WelectConfig,
-    private readonly window: Window & Moli.WelectWindow
-  ) {}
+  constructor(private readonly welectConfig: WelectConfig, private readonly _window: Window) {
+    this.welectWindow = _window as Window & WelectWindow;
+  }
 
   config(): Object | null {
     return this.welectConfig;
@@ -56,80 +105,50 @@ export class WelectRewardedAd implements IModule {
 
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep('Rewarded Ad Setup', HIGH_PRIORITY, context => {
-        mkInitStep(this.name, ctx => this.loadWelect(ctx, assetLoaderService));
-
-        context.window.googletag.pubads().setTargeting('welect', 'true');
-        // register refresh button
-        const rewardedAdRefreshBtn = context.window.document.querySelector<HTMLButtonElement>(
-          this.rewardedRefreshButton
-        );
-
-        if (rewardedAdRefreshBtn) {
-          rewardedAdRefreshBtn.addEventListener('click', () => {
-            this.refreshRewardedAd().then(result => {
-              this.rewardedAdResult = result;
-              return result;
-            });
-          });
-        }
-
-        return Promise.resolve();
+        return this.requestBids().then(bidsAvailable => {
+          if (bidsAvailable) {
+            // this must trigger a line item in the ad server for welect
+            context.window.googletag.pubads().setTargeting('hb_bidder', 'welect');
+          }
+        });
       })
     );
   }
 
-  private refreshRewardedAd = (): Promise<Moli.RewardedAdResponse> => {
-    return new Promise<Moli.RewardedAdResponse>((resolve, reject) => {
-      if (this.window.welect.checkAvailability) {
-        // Play the Welect dialog
-
-        this.window.welect.checkAvailability({
-          onUnavailable: () => {
-            resolve({ status: 'unavailable-ad' });
-          },
-          onAvailable: () => {
-            if (this.window.welect.runSession) {
-              this.window.welect.runSession({
-                // Was the process interrupted by something?
-                onAbort: () => {
-                  resolve({ status: 'aborted' });
-                },
-                // Ad view was completely
-                onSuccess: () => {
-                  // Let`s check the token again
-                  if (this.window.welect.checkSession) {
-                    this.window.welect.checkSession({
-                      // Everything is fine
-                      onValid: () => {
-                        resolve({ status: 'succeeded' });
-                      },
-                      // Please contact us in this case
-                      onInvalid: () => {
-                        reject({ status: 'error' });
-                      }
-                    });
-                  } else {
-                    reject({ status: 'error' });
-                  }
-                }
+  private requestBids = (): Promise<boolean> => {
+    return new Promise<boolean>(resolve => {
+      if (this.welectWindow.welect && this.welectWindow.welect.checkToken) {
+        this.welectWindow.welect.checkToken({
+          onInvalid: () => resolve(false),
+          onValid: () => {
+            if (this.welectWindow.welect && this.welectWindow.welect.checkAvailability) {
+              this.welectWindow.welect.checkAvailability({
+                onUnavailable: () => resolve(false),
+                onAvailable: () => resolve(true)
               });
+            } else {
+              resolve(false);
             }
           }
         });
+      } else {
+        resolve(false);
       }
     });
   };
 
-  loadWelect(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
+  private loadWelect = (
+    context: AdPipelineContext,
+    assetLoaderService: IAssetLoaderService
+  ): Promise<void> => {
     if (context.config.slots.find(slot => slot.position === 'rewarded')) {
       context.logger.debug(this.name, 'loading welect');
       return assetLoaderService.loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl:
-          'https://static.wlt-jupiter.de/p/bundles/1f10ef42-5338-42b5-9797-0283d654ec30.js#wbss'
+        assetUrl: this.welectConfig.welectScript
       });
     }
     return Promise.resolve();
-  }
+  };
 }

@@ -2031,52 +2031,6 @@ export namespace Moli {
   };
 
   /**
-   * Welect
-   */
-  interface CheckAvailabilityConfig {
-    onAvailable: () => void;
-    onUnavailable: () => void;
-  }
-
-  interface RunSessionConfig {
-    onSuccess: () => void;
-    onAbort: () => void;
-  }
-
-  interface CheckTokenConfig {
-    onValid: () => void;
-    onInvalid: () => void;
-  }
-
-  export interface WelectWindow {
-    welect: Welect;
-  }
-
-  export interface Welect {
-    /**
-     * Checks if any ads are available.
-     */
-    checkAvailability?: (config: CheckAvailabilityConfig) => void;
-
-    /**
-     * Initiates the Welect overlay with its ad chooser.
-     */
-    runSession?: (config: RunSessionConfig) => void;
-
-    /**
-     * Analyzes the current window if a complete session is present.
-     * A user has completed a session when the ad has been viewed till the end.
-     */
-    checkSession?: (config: CheckTokenConfig) => void;
-
-    /**
-     * Returns an URL which represents the Welect overlay with its ad
-     * chooser.
-     */
-    startURL?: () => string;
-  }
-
-  /**
    * # Logger interface
    *
    * The default logging implementation uses `window.console` as the output.
