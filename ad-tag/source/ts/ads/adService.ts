@@ -51,6 +51,9 @@ import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
+import IGoogleTagWindow = googletag.IGoogleTagWindow;
+import IRewardedSlotGrantedEvent = googletag.events.IRewardedSlotGrantedEvent;
+import RewardedAdResponse = Moli.RewardedAdResponse;
 
 /**
  * @internal
@@ -378,6 +381,50 @@ export class AdService {
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
     return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);
   }
+
+  public refreshRewardedAdSlot = (
+    config: Moli.MoliConfig,
+    window: Window & IGoogleTagWindow
+  ): Promise<Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse> => {
+    // 1. rewarded ad slot
+    const rewardedAdSlot = config.slots.find(this.isRewardedSlot);
+    if (!rewardedAdSlot) {
+      return Promise.reject('No rewarded ad slot in moli config');
+    }
+
+    // initializing is important as gpt.js may not be loaded yet!
+    window.googletag.cmd = window.googletag.cmd || [];
+
+    return new Promise(finalResolve => {
+      // 2. created event listeners
+      window.googletag.cmd.push(() => {
+        // this event may always fire! check!
+        const closedEvent: Promise<RewardedAdResponse> = new Promise(resolveClosed => {
+          window.googletag
+            .pubads()
+            .addEventListener('rewardedSlotClosed', payload =>
+              resolveClosed({ status: 'aborted' })
+            );
+        });
+
+        const rewardedEvent: Promise<Pick<IRewardedSlotGrantedEvent, 'payload'>> = new Promise(
+          resolveRewarded => {
+            window.googletag
+              .pubads()
+              .addEventListener('rewardedSlotGranted', payload =>
+                finalResolve(payload /* ad some additional information*/)
+              );
+          }
+        );
+
+        // resolve as soon as one of the events fired as they are none-overlapping
+        Promise.race([closedEvent, rewardedEvent]).then(result => finalResolve(result));
+
+        // 3. run adpipeline
+        this.adPipeline.run([rewardedAdSlot], config, this.requestAdsCalls);
+      });
+    });
+  };
 
   /**
    * Returns the underlying ad pipeline.

@@ -76,17 +76,17 @@ export namespace googletag {
     ): T;
 
     addEventListener(
-      eventType: 'RewardedSlotReadyEvent',
+      eventType: 'rewardedSlotReady',
       listener: (event: events.IRewardedSlotReadyEvent) => void
     ): T;
 
     addEventListener(
-      eventType: 'RewardedSlotGrantedEvent',
+      eventType: 'rewardedSlotGranted',
       listener: (event: events.IRewardedSlotGrantedEvent) => void
     ): T;
 
     addEventListener(
-      eventType: 'RewardedSlotClosedEvent',
+      eventType: 'rewardedSlotClosed',
       listener: (event: events.IRewardedSlotClosedEvent) => void
     ): T;
 

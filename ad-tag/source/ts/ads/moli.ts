@@ -22,6 +22,10 @@ import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { LabelConfigService } from './labelConfigService';
+import { googletag } from '../types/googletag';
+import IGoogleTagWindow = googletag.IGoogleTagWindow;
+import RewardedAdResponse = Moli.RewardedAdResponse;
+import IRewardedSlotGrantedEvent = googletag.events.IRewardedSlotGrantedEvent;
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -732,52 +736,53 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshRewardedAdSlot(welect: Moli.Welect): Promise<Moli.RewardedAdResponse> {
-    return new Promise<Moli.RewardedAdResponse>((resolve, reject) => {
-      // Are there any ads to show?
-      if (welect.checkAvailability) {
-        welect.checkAvailability({
-          // No
-          onUnavailable: () => {
-            resolve({ status: 'unavailable-ad' });
-          },
-          // Yes
-          onAvailable: () => {
-            // Play the Welect dialog
-            if (welect.runSession) {
-              welect.runSession({
-                // Was the process interrupted by something?
-                onAbort: () => {
-                  resolve({ status: 'aborted' });
-                },
-                // Ad view was completely
-                onSuccess: () => {
-                  // Let`s check the token again
-                  if (welect.checkSession) {
-                    welect.checkSession({
-                      // Everything is fine
-                      onValid: () => {
-                        resolve({ status: 'succeeded' });
-                      },
-                      // Please contact us in this case
-                      onInvalid: () => {
-                        reject({ status: 'error' });
-                      }
-                    });
-                  } else {
-                    reject({ status: 'error' });
-                  }
-                }
-              });
-            } else {
-              reject({ status: 'error' });
-            }
-          }
-        });
-      } else {
-        reject({ status: 'error' });
+  function refreshRewardedAdSlot(
+    domId: string
+  ): Promise<'queued' | Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse> {
+    switch (state.state) {
+      case 'configurable': {
+        state.refreshSlots.push(domId);
+        return Promise.resolve('queued');
       }
-    });
+      case 'configured': {
+        state.refreshSlots.push(domId);
+        return Promise.resolve('queued');
+      }
+      // if requestAds is currently called we batch the refreshAdSlot calls until
+      // we hit the 'spa-finished' state
+      case 'spa-requestAds':
+        state.refreshSlots.push(domId);
+        return Promise.resolve('queued');
+      // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
+      // until the next requestAds() call arrives
+      case 'spa-finished':
+        if (state.href === window.location.href) {
+          // user hasn't navigated yet, so we directly refresh the slot
+          return adService
+            .refreshRewardedAdSlot(state.config, window as Window & IGoogleTagWindow)
+            .then(result => result);
+        } else {
+          // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
+          state.refreshSlots.push(domId);
+          return Promise.resolve('queued');
+        }
+      // if the ad tag is currently requesting ads or already finished doesn't matter
+      // slots can be refreshed immediately
+      case 'finished':
+      case 'requestAds': {
+        return adService
+          .refreshRewardedAdSlot(state.config, window as Window & IGoogleTagWindow)
+          .then(result => result);
+      }
+      default: {
+        getLogger(state.config, window).error(
+          'MoliGlobal',
+          `refreshRewardedAdSlot is not allowed in state ${state.state}`,
+          state.config
+        );
+        return Promise.reject(`not allowed in state ${state.state}`);
+      }
+    }
   }
 
   function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {

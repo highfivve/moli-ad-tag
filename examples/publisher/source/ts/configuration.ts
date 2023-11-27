@@ -617,6 +617,24 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       ]
     },
 
+    // rewardedAd
+    {
+      domId: 'rewarded-adslot',
+      position: 'rewarded',
+      behaviour: {
+        loaded: 'manual'
+      },
+      adUnitPath: '/55155651/prebid_test',
+      sizes: [[300, 300]],
+      passbackSupport: true,
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 0px)',
+          sizesSupported: [[300, 300]]
+        }
+      ]
+    },
+
     // web interstitial
     {
       domId: 'unused',

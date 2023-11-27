@@ -7,6 +7,7 @@ import { apstag } from './apstag';
 import { SupplyChainObject } from './supplyChainObject';
 
 export namespace Moli {
+  import IRewardedSlotGrantedEvent = googletag.events.IRewardedSlotGrantedEvent;
   export type DfpSlotSize = [number, number] | 'fluid';
 
   /**
@@ -232,7 +233,9 @@ export namespace Moli {
      */
     refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
 
-    refreshRewardedAdSlot(welect: Moli.Welect, domId?: string): Promise<Moli.RewardedAdResponse>;
+    refreshRewardedAdSlot(
+      domId: string
+    ): Promise<'queued' | Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse>;
 
     /**
      * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
