@@ -75,6 +75,21 @@ export namespace googletag {
       listener: (event: events.ISlotResponseReceived) => void
     ): T;
 
+    addEventListener(
+      eventType: 'RewardedSlotReadyEvent',
+      listener: (event: events.IRewardedSlotReadyEvent) => void
+    ): T;
+
+    addEventListener(
+      eventType: 'RewardedSlotGrantedEvent',
+      listener: (event: events.IRewardedSlotGrantedEvent) => void
+    ): T;
+
+    addEventListener(
+      eventType: 'RewardedSlotClosedEvent',
+      listener: (event: events.IRewardedSlotClosedEvent) => void
+    ): T;
+
     /**
      * This event is fired whenever the on-screen percentage of an ad slot's area changes.
      * The event is throttled and will not fire more often than once every 200ms.
@@ -260,6 +275,39 @@ export namespace googletag {
   }
 
   export namespace events {
+    export interface IRewardedSlotReadyEvent extends Event {
+      serviceName: string;
+      slot: IAdSlot;
+    }
+
+    /**
+     * @see https://developers.google.com/publisher-tag/reference?hl=en#googletag.events.rewardedslotgrantedevent
+     */
+    export interface IRewardedSlotGrantedEvent extends Event {
+      readonly serviceName: string;
+      readonly slot: IAdSlot;
+      /**
+       * An object containing information about the reward that was granted.
+       */
+      readonly payload?: {
+        /**
+         * Contains the amount of the given reward. E.g. `5` (lives, coins)
+         * Configured in the ad unit in GAM.
+         */
+        readonly amount: number;
+
+        /**
+         * Specify what kind of reward is being given, e.g. coins or lives.
+         * Configured in the ad unit in GAM
+         */
+        readonly type: string;
+      };
+    }
+
+    export interface IRewardedSlotClosedEvent extends Event {
+      serviceName: string;
+      slot: IAdSlot;
+    }
     export interface IImpressionViewableEvent extends Event {
       serviceName: string;
       slot: IAdSlot;

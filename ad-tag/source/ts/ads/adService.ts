@@ -3,9 +3,12 @@ import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
 import { Moli } from '../types/moli';
 import {
   AdPipeline,
+  AdPipelineContext,
   ConfigureStep,
   IAdPipelineConfiguration,
   InitStep,
+  LOW_PRIORITY,
+  mkPrepareRequestAdsStep,
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
@@ -196,6 +199,28 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
+    // rewarded ad
+    if (isGam && config.rewardedAd) {
+      prepareRequestAds.push(
+        mkPrepareRequestAdsStep(
+          'rewarded-ad',
+          LOW_PRIORITY,
+          (context: AdPipelineContext) =>
+            new Promise<void>((resolve, reject) => {
+              const rewardedSlots = context.config.slots.filter(
+                slot => slot.position === 'rewarded'
+              );
+              if (rewardedSlots.length) {
+                this.logger.info('RewardedAd service is available');
+                resolve();
+              } else {
+                reject(this.logger.error('No rewarded slots found'));
+              }
+            })
+        )
+      );
+    }
+
     // add additional steps if configured
     if (config.pipeline) {
       init.push(...config.pipeline.initSteps);
@@ -375,6 +400,10 @@ export class AdService {
     slot: Moli.AdSlot
   ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Infinite } => {
     return slot.behaviour.loaded === 'infinite';
+  };
+
+  private isRewardedSlot = (slot: Moli.AdSlot): slot is Moli.AdSlot => {
+    return slot.position === 'rewarded';
   };
 
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {

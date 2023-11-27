@@ -880,6 +880,9 @@ export namespace Moli {
 
     /** configurable logger */
     logger?: MoliLogger;
+
+    /* Rewarded Ad */
+    readonly rewardedAd?: boolean;
   }
 
   /**
@@ -2040,6 +2043,10 @@ export namespace Moli {
   interface CheckTokenConfig {
     onValid: () => void;
     onInvalid: () => void;
+  }
+
+  export interface WelectWindow {
+    welect: Welect;
   }
 
   export interface Welect {

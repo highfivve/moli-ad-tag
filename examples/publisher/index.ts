@@ -28,12 +28,17 @@ import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
+import { WelectRewardedAd } from '@highfivve/module-welect-rewarded-ad';
 
 prebid.processQueue();
 
 const moli = initAdTag(window);
 
-declare const window: Window & googletag.IGoogleTagWindow & MoliWindow & prebidjs.IPrebidjsWindow;
+declare const window: Window &
+  googletag.IGoogleTagWindow &
+  MoliWindow &
+  prebidjs.IPrebidjsWindow &
+  Moli.WelectWindow;
 
 // ad fraud protection
 moli.registerModule(
@@ -114,6 +119,16 @@ moli.registerModule(
       provider: 'dynamic',
       configEndpoint: '/yield-config.json',
       excludedAdUnitPaths: []
+    },
+    window
+  )
+);
+
+moli.registerModule(
+  new WelectRewardedAd(
+    {
+      welectScript:
+        'https://static.wlt-jupiter.de/p/bundles/1f10ef42-5338-42b5-9797-0283d654ec30.js#wbss'
     },
     window
   )
