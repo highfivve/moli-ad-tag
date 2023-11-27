@@ -84,7 +84,13 @@ const configureTargeting = (
  * This is a temporary workaround until gpt.js understands the tcfapi
  * @see https://support.google.com/admanager/answer/9805023
  */
-const useStandardGpt = (tcData: tcfapi.responses.TCData): boolean => {
+const useStandardGpt = (
+  tcData: tcfapi.responses.TCData,
+  consentConfig?: Moli.consent.ConsentConfig
+): boolean => {
+  if (consentConfig?.useLimitedAds === false) {
+    return true;
+  }
   return (
     !tcData.gdprApplies ||
     (tcData.vendor.consents[755] &&
@@ -118,7 +124,7 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
           .loadScript({
             name: 'gpt',
             loadMethod: AssetLoadMethod.TAG,
-            assetUrl: useStandardGpt(context.tcData)
+            assetUrl: useStandardGpt(context.tcData, context.config.consent)
               ? 'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
               : 'https://pagead2.googlesyndication.com/tag/js/gpt.js'
           })
@@ -200,7 +206,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             context.window.googletag.pubads().disableInitialLoad();
             context.window.googletag.pubads().enableSingleRequest();
 
-            const limitedAds = !useStandardGpt(context.tcData);
+            const limitedAds = !useStandardGpt(context.tcData, context.config.consent);
             context.logger.debug('GAM', `use limited ads`, limitedAds);
 
             context.window.googletag.pubads().setPrivacySettings({

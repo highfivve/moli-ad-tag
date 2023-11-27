@@ -1206,6 +1206,23 @@ export namespace Moli {
        * legitimate interest established for at least one purpose.
        */
       readonly disableLegitimateInterest?: boolean;
+
+      /**
+       * If set to `false`, standard `gpt.js` will be loaded and not privacy configuration is set.
+       *
+       * From the google documentation examples
+       *
+       * > In order to manually control limited, you must load GPT from the limited ads URL. The version of GPT served
+       * > from this URL contains additional safeguards against accessing client-side storage by default. To accomplish
+       * > this, certain library operations are delayed until after the first call to display(), leading to a slight
+       * > decrease in performance compared to the standard version of GPT.
+       *
+       * @default `true`
+       * @see https://support.google.com/admanager/answer/9805023
+       * @see https://developers.google.com/publisher-tag/samples/display-limited-ad?hl=en
+       * @see https://developers.google.com/publisher-tag/reference?hl=de#googletag.PrivacySettingsConfig_nonPersonalizedAds
+       */
+      readonly useLimitedAds?: boolean;
     }
   }
 
