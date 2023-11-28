@@ -161,6 +161,8 @@ export namespace googletag {
     getSlots(): Array<IAdSlot>;
   }
 
+  export interface ICompanionAdsService extends IService<ICompanionAdsService> {}
+
   /**
    * ## PubAds Service
    *
@@ -272,6 +274,11 @@ export namespace googletag {
      * @see https://developers.google.com/publisher-tag/reference#googletag.PubAdsService_setCookieOptions
      */
     setCookieOptions(options: 0 | 1): IPubAdsService;
+
+    /**
+     *
+     */
+    enableVideoAds();
   }
 
   export namespace events {
@@ -424,6 +431,8 @@ export namespace googletag {
      * @returns a reference to the pubads service.
      */
     pubads(): IPubAdsService;
+
+    companionAds(): ICompanionAdsService;
 
     /**
      * Constructs an ad slot with a given ad unit path and size and associates it with the ID of a div element

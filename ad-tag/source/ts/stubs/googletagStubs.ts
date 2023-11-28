@@ -26,6 +26,9 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
     disableInitialLoad: (): void => {
       return;
     },
+    enableVideoAds(): void {
+      return;
+    },
     getSlots: (): googletag.IAdSlot[] => {
       return [];
     },
@@ -120,6 +123,7 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
     enableServices: (): void => {
       return;
     },
-    pubads: (): googletag.IPubAdsService => pubAdsStub
+    pubads: (): googletag.IPubAdsService => pubAdsStub,
+    companionAds: (): googletag.ICompanionAdsService => ({} as any)
   };
 };
