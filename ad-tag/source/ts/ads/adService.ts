@@ -396,6 +396,9 @@ export class AdService {
     window.googletag = window.googletag || {};
     window.googletag.cmd = window.googletag.cmd || [];
 
+    // 3. run adpipeline
+    this.adPipeline.run([rewardedAdSlot], config, this.requestAdsCalls);
+
     return new Promise(finalResolve => {
       // 2. created event listeners
       window.googletag.cmd.push(() => {
@@ -420,9 +423,6 @@ export class AdService {
 
         // resolve as soon as one of the events fired as they are none-overlapping
         Promise.race([closedEvent, rewardedEvent]).then(result => finalResolve(result));
-
-        // 3. run adpipeline
-        this.adPipeline.run([rewardedAdSlot], config, this.requestAdsCalls);
       });
     });
   };
