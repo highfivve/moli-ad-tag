@@ -668,13 +668,13 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       behaviour: {
         loaded: 'manual'
       },
-      adUnitPath: '/55155651/prebid_test',
-      sizes: [[300, 300]],
+      adUnitPath: '/55155651/rewarded_ad',
+      sizes: [[1, 1]],
       passbackSupport: true,
       sizeConfig: [
         {
           mediaQuery: '(min-width: 0px)',
-          sizesSupported: [[300, 300]]
+          sizesSupported: [[1, 1]]
         }
       ]
     },
