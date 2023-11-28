@@ -169,7 +169,7 @@ export class WelectRewardedAd implements IModule {
     }
 
     // only load welect if a rewarded ad slot is requested
-    if (slots.find(slot => slot.position === 'rewarded')) {
+    if (slots.some(slot => slot.position === 'rewarded')) {
       context.logger.debug(this.name, 'loading welect');
       return assetLoaderService.loadScript({
         name: this.name,

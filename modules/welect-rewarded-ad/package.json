@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-welect-rewarded-ad",
-  "version": "4.13.16",
+  "version": "4.15.0",
   "license": "Apache-2.0",
   "description": "Rewarded ads with welect module",
   "main": "./lib/index.js",

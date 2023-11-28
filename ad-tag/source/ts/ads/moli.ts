@@ -742,9 +742,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshRewardedAdSlot(
-    domId: string
-  ): Promise<Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse> {
+  function refreshRewardedAdSlot(): Promise<
+    Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse
+  > {
     switch (state.state) {
       case 'configurable':
       case 'configured':
