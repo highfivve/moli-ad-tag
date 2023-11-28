@@ -225,7 +225,7 @@ export namespace prebidjs {
      * @see https://github.com/prebid/Prebid.js/issues/8532
      * @see https://github.com/prebid/prebid.github.io/issues/3830
      */
-    registerSignalSources(): void;
+    registerSignalSources?: () => void;
   }
 
   /**
