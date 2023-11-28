@@ -393,6 +393,7 @@ export class AdService {
     }
 
     // initializing is important as gpt.js may not be loaded yet!
+    window.googletag = window.googletag || {};
     window.googletag.cmd = window.googletag.cmd || [];
 
     return new Promise(finalResolve => {
