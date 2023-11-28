@@ -1,7 +1,11 @@
 import { googletag, Moli } from '@highfivve/ad-tag';
+import { FooterDomIds } from './index';
+import Device = Moli.Device;
 
-const adStickyContainerDataRef = '[data-ref=sticky-ad]';
-const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
+const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
+const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
+// is initialized after init
+const adStickyCloseButtonContent = 'h5v-closeButtonContent';
 
 /**
  * This class is a optional hint for publishers to use, when the ad is clicked
@@ -63,12 +67,12 @@ const stickyRenderedEvent = (
  *
  */
 const stickyOnLoadEvent = (
-  mobileStickyDomId: string,
+  footerStickyDomId: string,
   window: Window & googletag.IGoogleTagWindow
 ): Promise<void> =>
   new Promise(resolve => {
     const listener = (event: googletag.events.ISlotOnloadEvent): void => {
-      if (event.slot.getSlotElementId() !== mobileStickyDomId) {
+      if (event.slot.getSlotElementId() !== footerStickyDomId) {
         return;
       }
       resolve();
@@ -87,58 +91,90 @@ export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
   env: Moli.Environment,
   log: Moli.MoliLogger,
-  mobileStickyDomId: string,
+  device: Device,
+  footerStickyDomIds: FooterDomIds,
   disallowedAdvertiserIds: number[],
-  initiallyHidden: boolean
+  initiallyHidden: boolean,
+  closingButtonText?: string
 ): void => {
+  const stickyAd = 'sticky-ad';
+
   const adSticky = window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
+  const closeButtonContent = window.document.querySelector(`.${adStickyCloseButtonContent}`);
 
   if (adSticky && closeButton) {
-    log.debug(
-      'mobile-sticky-ad',
-      'Running initAdSticky with defined sticky container and close button'
-    );
+    log.debug(stickyAd, 'Running initAdSticky with defined sticky container and close button');
 
-    // if a publisher only wants to show the sticky ad, if there's a result
-    if (!initiallyHidden) {
-      showAdSlot(adSticky);
+    // Don't add the content to the button, if already added
+    if (!closeButtonContent) {
+      // Add an X svg as a content of the button, if no custom text was applied
+      if (!closingButtonText) {
+        const closeButtonSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        closeButtonSvg.setAttribute('width', '24');
+        closeButtonSvg.setAttribute('height', '24');
+
+        const closeButtonPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        closeButtonPath.classList.add(adStickyCloseButtonContent);
+        closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
+        closeButtonSvg.appendChild(closeButtonPath);
+        closeButton.appendChild(closeButtonSvg);
+      } else {
+        closeButton.textContent = closingButtonText;
+      }
     }
 
-    closeButton.addEventListener(
-      'click',
-      () => {
-        hideAdSlot(adSticky);
+    // find the footerId based on the device and remove the other one
+    const desktopFooterElement =
+      footerStickyDomIds.desktop && document.getElementById(footerStickyDomIds.desktop);
+    const mobileFooterElement =
+      footerStickyDomIds.mobile && document.getElementById(footerStickyDomIds.mobile);
 
-        // destroy the slot, so it doesn't get reloaded or refreshed by accident
-        const slot = window.googletag
-          .pubads()
-          .getSlots()
-          .find(slot => slot.getSlotElementId() === mobileStickyDomId);
+    const footerStickyDomId = Object.values(footerStickyDomIds).map(footerDomId => {
+      if (device === 'mobile' && mobileFooterElement) {
+        desktopFooterElement && desktopFooterElement.remove();
+        return footerDomId;
+      } else if (device === 'desktop' && desktopFooterElement) {
+        mobileFooterElement && mobileFooterElement.remove();
+        return footerDomId;
+      }
+    })[0]; // surely there is at only one element array
 
-        // there are cases where the ad slot is not there. This may be the case when
-        // * the ad slot has already been deleted (user clicked two times on the button)
-        // * some weird ad blocker stuff
-        // * ad reload may have already removed the slot
-        if (slot) {
-          window.googletag.destroySlots([slot]);
-        }
-      },
-      // the slot can only be hidden once
-      { once: true, passive: true }
-    );
+    closeButton.addEventListener('click', () => {
+      hideAdSlot(adSticky);
+      adSticky.addEventListener(
+        'transitionend',
+        () => {
+          adSticky.remove(); // Remove the container from the DOM after animation
+        },
+        { once: true }
+      ); // Ensure the event listener is executed only once
+
+      const slot = window.googletag
+        .pubads()
+        .getSlots()
+        .find(slot => slot.getSlotElementId() === footerStickyDomId);
+
+      // there are cases where the ad slot is not there. This may be the case when
+      // * the ad slot has already been deleted (user clicked two times on the button)
+      // * some weird ad blocker stuff
+      // * ad reload may have already removed the slot
+      if (slot) {
+        window.googletag.destroySlots([slot]);
+      }
+    });
 
     // hide mobile sticky for advertiser with custom mobile sticky creative
-    if (env === 'production') {
+    if (env === 'production' && footerStickyDomId) {
       const onRenderResult = ([renderResult]: [RenderEventResult, void]): Promise<void> => {
         // false means that the slot should not be destroyed. If it's not false,
         // we receive the renderEndedEvent, which grants us access to the slot
         // that should be destroyed
-        log.debug('mobile-sticky-ad', `result ${renderResult}`);
+        log.debug(stickyAd, `result ${renderResult}`);
         if (renderResult === 'disallowed') {
-          log.debug('mobile-sticky-ad', 'hide mobile sticky container');
+          log.debug(stickyAd, 'hide mobile sticky container');
           if (adSticky) {
-            hideAdSlot(adSticky);
+            adSticky.remove();
           }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
@@ -150,8 +186,8 @@ export const initAdSticky = (
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([
-            stickyRenderedEvent(adSticky, mobileStickyDomId, disallowedAdvertiserIds, window),
-            stickyOnLoadEvent(mobileStickyDomId, window)
+            stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window),
+            stickyOnLoadEvent(footerStickyDomId, window)
           ]).then(onRenderResult);
         }
         return Promise.resolve();
@@ -159,8 +195,8 @@ export const initAdSticky = (
 
       // wait for the slot render ended
       Promise.all([
-        stickyRenderedEvent(adSticky, mobileStickyDomId, disallowedAdvertiserIds, window),
-        stickyOnLoadEvent(mobileStickyDomId, window)
+        stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window),
+        stickyOnLoadEvent(footerStickyDomId, window)
       ]).then(onRenderResult);
     }
   } else {

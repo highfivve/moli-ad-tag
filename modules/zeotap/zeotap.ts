@@ -182,7 +182,7 @@ export class Zeotap implements IModule {
       config.pipeline.initSteps.push(
         mkInitStep(this.name, context => {
           if (this.hasConsent(context.tcData)) {
-            this.loadScript(context.config);
+            this.loadScript(context.config).catch(error => context.logger.error(this.name, error));
           }
 
           return Promise.resolve();

@@ -10,18 +10,18 @@
  * In your `index.ts` import and register the module.
  *
  * ```js
- * import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
- * moli.registerModule(new StickyFooterAds({
- *   mobileStickyDomId: 'ad-mobile-sticky',
- *   desktopFloorAdDomId: 'ad-floorad',
- *   disallowedAdvertiserIds: [ 111111, 222222 ]
- * }, window));
+ * moli.registerModule(
+ *   new NewStickyFooterAds({
+ *     stickyFooterDomIds: {
+ *       mobile: 'ad-mobile-sticky',
+ *       desktop: 'ad-desktop-sticky'
+ *      },
+ *     disallowedAdvertiserIds: []
+ *      })
+ *     );
  * ```
  *
- * Next you need to add the required HTML and CSS on your page. See the [footer ads documentation](https://highfivve.github.io/footer-ads/)
- *
- * **Important**
- * The `data-ref`s are not configurable and are currently hardcoded. Make sure that they are correct.
+ * Next you need to add the required HTML and CSS on your page. See the [footer ads documentation](https://highfivve.github.io/footer-ads/) .. TO DO )
  *
  * ## Resources
  *
@@ -30,6 +30,7 @@
  * @module
  */
 import {
+  AdPipeline,
   IAssetLoaderService,
   IModule,
   LOW_PRIORITY,
@@ -37,25 +38,25 @@ import {
   ModuleType,
   Moli
 } from '@highfivve/ad-tag';
-import { setupFooterAdListener } from './desktopFloorAd';
-import { initAdSticky } from './mobileSticky';
+import { initAdSticky } from './footerStickyAd';
+
+export type Device = 'mobile' | 'desktop';
+
+export type FooterDomIds = { [device in Device]?: string };
 
 export type StickyFooterAdConfig = {
-  /**
-   */
-  readonly mobileStickyDomId?: string;
-
-  readonly desktopFloorAdDomId?: string;
+  readonly stickyFooterDomIds: FooterDomIds;
 
   /**
    * Disable rendering the footer ad format for certain advertisers by specifying them here.
    * Most of the time you would use this for partners who ship their own special format or behaviour.
-   *
    */
   readonly disallowedAdvertiserIds: number[];
 
+  readonly closingButtonText?: string;
+
   /**
-   * Only applies to the mobile sticky ad. If true, the mobile sticky ad will remain hidden if initialized and only
+   * If true, the footer ad will remain hidden if initialized and only
    * set to `display: block` if an actual ad renders.
    *
    * Default is `false`
@@ -75,8 +76,8 @@ export type StickyFooterAdConfig = {
  *
  * @see https://highfivve.github.io/footer-ads/
  */
-export class StickyFooterAds implements IModule {
-  public readonly name: string = 'sticky-footer-ads';
+export class StickyFooterAdsV2 implements IModule {
+  public readonly name: string = 'sticky-footer-ads-v2';
   public readonly description: string = 'sticky footer ad creatives';
   public readonly moduleType: ModuleType = 'creatives';
 
@@ -86,7 +87,11 @@ export class StickyFooterAds implements IModule {
     return this.stickyFooterAdConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(
+    config: Moli.MoliConfig,
+    assetLoaderService: IAssetLoaderService,
+    getAdPipeline: () => AdPipeline
+  ): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -98,28 +103,20 @@ export class StickyFooterAds implements IModule {
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
         if (
-          this.stickyFooterAdConfig.mobileStickyDomId &&
-          slots.some(slot => slot.moliSlot.domId === this.stickyFooterAdConfig.mobileStickyDomId)
+          Object.keys(this.stickyFooterAdConfig.stickyFooterDomIds).length &&
+          Object.values(this.stickyFooterAdConfig.stickyFooterDomIds).map(stickyFooterDomId =>
+            slots.some(slot => slot.moliSlot.domId === stickyFooterDomId)
+          )
         ) {
           initAdSticky(
             ctx.window,
             ctx.env,
             ctx.logger,
-            this.stickyFooterAdConfig.mobileStickyDomId,
+            ctx.labelConfigService.getDeviceLabel(),
+            this.stickyFooterAdConfig.stickyFooterDomIds,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
-            this.stickyFooterAdConfig.initiallyHidden ?? false
-          );
-        }
-        if (
-          this.stickyFooterAdConfig.desktopFloorAdDomId &&
-          slots.some(slot => slot.moliSlot.domId === this.stickyFooterAdConfig.desktopFloorAdDomId)
-        ) {
-          setupFooterAdListener(
-            ctx.window,
-            ctx.env,
-            ctx.logger,
-            this.stickyFooterAdConfig.desktopFloorAdDomId,
-            this.stickyFooterAdConfig.disallowedAdvertiserIds
+            this.stickyFooterAdConfig.initiallyHidden ?? false,
+            this.stickyFooterAdConfig.closingButtonText
           );
         }
         return Promise.resolve();

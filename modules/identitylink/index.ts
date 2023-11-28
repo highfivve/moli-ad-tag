@@ -134,10 +134,12 @@ export class IdentityLink implements IModule {
       });
     });
 
-    return assetLoaderService.loadScript({
-      name: this.name,
-      loadMethod: AssetLoadMethod.TAG,
-      assetUrl: `https://launchpad-wrapper.privacymanager.io/${this.moduleConfig.launchPadId}/launchpad-liveramp.js`
-    });
+    return assetLoaderService
+      .loadScript({
+        name: this.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: `https://launchpad-wrapper.privacymanager.io/${this.moduleConfig.launchPadId}/launchpad-liveramp.js`
+      })
+      .catch(error => context.logger.error('failed to load emetriq', error));
   }
 }

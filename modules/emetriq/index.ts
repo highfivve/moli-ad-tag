@@ -360,11 +360,13 @@ export class Emetriq implements IModule {
       ...additionalCustomParams
     };
 
-    return assetLoaderService.loadScript({
-      name: this.name,
-      loadMethod: AssetLoadMethod.TAG,
-      assetUrl: `https://ups.xplosion.de/loader/${webConfig._enqAdpParam.sid}/default.js`
-    });
+    return assetLoaderService
+      .loadScript({
+        name: this.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: `https://ups.xplosion.de/loader/${webConfig._enqAdpParam.sid}/default.js`
+      })
+      .catch(error => context.logger.error('failed to load emetriq', error));
   }
 
   /**

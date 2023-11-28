@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-prebid-first-party-data",
-  "version": "4.13.16",
+  "version": "4.15.0",
   "license": "Apache-2.0",
   "description": "Module for passing first party data to prebid auctions",
   "main": "./lib/index.js",
@@ -50,6 +50,6 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.13.16"
+    "@highfivve/ad-tag": "4.15.0"
   }
 }

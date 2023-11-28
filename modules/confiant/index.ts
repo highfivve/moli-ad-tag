@@ -106,11 +106,13 @@ export class Confiant implements IModule {
     ) {
       return Promise.resolve();
     }
-    assetLoaderService.loadScript({
-      name: this.name,
-      loadMethod: AssetLoadMethod.TAG,
-      assetUrl: this.confiantConfig.assetUrl
-    });
+    assetLoaderService
+      .loadScript({
+        name: this.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: this.confiantConfig.assetUrl
+      })
+      .catch(error => context.logger.error('failed to load confiant', error));
     return Promise.resolve();
   }
 }
