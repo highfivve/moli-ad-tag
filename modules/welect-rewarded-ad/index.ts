@@ -104,11 +104,19 @@ export class WelectRewardedAd implements IModule {
     );
 
     config.pipeline.prepareRequestAdsSteps.push(
-      mkPrepareRequestAdsStep('Rewarded Ad Setup', HIGH_PRIORITY, context => {
+      mkPrepareRequestAdsStep('Rewarded Ad Setup', HIGH_PRIORITY, (context, slots) => {
+        const rewardedAdSlot = slots.find(slot => slot.moliSlot.position === 'rewarded');
+
+        // only run if there is exactly one slot, and it is a rewarded ad
+        // otherwise this is another pipeline run, e.g. for a banner ad
+        if (slots.length !== 1 || !rewardedAdSlot) {
+          return Promise.resolve();
+        }
+
         return this.requestBids().then(bidsAvailable => {
           if (bidsAvailable) {
             // this must trigger a line item in the ad server for welect
-            context.window.googletag.pubads().setTargeting('hb_bidder', 'welect');
+            rewardedAdSlot.adSlot.setTargeting('hb_bidder', 'welect');
           }
         });
       })
