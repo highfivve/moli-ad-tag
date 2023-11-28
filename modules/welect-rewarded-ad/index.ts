@@ -6,16 +6,22 @@ import {
   Moli,
   IModule,
   ModuleType,
-  mkInitStep,
   AssetLoadMethod,
   IAssetLoaderService,
   AdPipelineContext,
   mkPrepareRequestAdsStep,
-  HIGH_PRIORITY
+  HIGH_PRIORITY,
+  mkConfigureStep
 } from '@highfivve/ad-tag';
-import RewardedAdResponse = Moli.RewardedAdResponse;
 
+/**
+ * ## Welect configuration
+ *
+ */
 export type WelectConfig = {
+  /**
+   * URL to the welect script that should be loaded
+   */
   readonly welectScript: string;
 };
 
@@ -55,14 +61,10 @@ export interface Welect {
   /**
    * Analyzes the current window if a complete session is present.
    * A user has completed a session when the ad has been viewed till the end.
+   *
+   * NOTE: the docs state "checkToken", but for us it is "checkSession"
    */
   checkSession?: (config: CheckTokenConfig) => void;
-
-  /**
-   * Analyzes the current window if a complete session is present.
-   * A user has completed a session when the ad has been viewed till the end.
-   */
-  checkToken?: (config: CheckTokenConfig) => void;
 
   /**
    * Returns an URL which represents the Welect overlay with its ad
@@ -99,8 +101,8 @@ export class WelectRewardedAd implements IModule {
       prepareRequestAdsSteps: []
     };
 
-    config.pipeline.initSteps.push(
-      mkInitStep(this.name, ctx => this.loadWelect(ctx, assetLoaderService))
+    config.pipeline.configureSteps.push(
+      mkConfigureStep(this.name, (ctx, slots) => this.loadWelect(ctx, slots, assetLoaderService))
     );
 
     config.pipeline.prepareRequestAdsSteps.push(
@@ -113,7 +115,7 @@ export class WelectRewardedAd implements IModule {
           return Promise.resolve();
         }
 
-        return this.requestBids().then(bidsAvailable => {
+        return this.requestBids(context.logger).then(bidsAvailable => {
           if (bidsAvailable) {
             // this must trigger a line item in the ad server for welect
             rewardedAdSlot.adSlot.setTargeting('hb_bidder', 'welect');
@@ -123,23 +125,34 @@ export class WelectRewardedAd implements IModule {
     );
   }
 
-  private requestBids = (): Promise<boolean> => {
+  private requestBids = (log: Moli.MoliLogger): Promise<boolean> => {
     return new Promise<boolean>(resolve => {
-      if (this.welectWindow.welect && this.welectWindow.welect.checkToken) {
-        this.welectWindow.welect.checkToken({
-          onInvalid: () => resolve(false),
+      if (this.welectWindow.welect && this.welectWindow.welect.checkSession) {
+        this.welectWindow.welect.checkSession({
+          onInvalid: () => {
+            log.debug(this.name, 'invalid token');
+            resolve(false);
+          },
           onValid: () => {
             if (this.welectWindow.welect && this.welectWindow.welect.checkAvailability) {
               this.welectWindow.welect.checkAvailability({
-                onUnavailable: () => resolve(false),
-                onAvailable: () => resolve(true)
+                onUnavailable: () => {
+                  log.debug(this.name, 'no ads available');
+                  resolve(false);
+                },
+                onAvailable: () => {
+                  log.debug(this.name, 'ads available');
+                  resolve(true);
+                }
               });
             } else {
+              log.debug(this.name, 'valid token, but welect.checkAvailability not available');
               resolve(false);
             }
           }
         });
       } else {
+        log.warn(this.name, 'welect not available');
         resolve(false);
       }
     });
@@ -147,9 +160,16 @@ export class WelectRewardedAd implements IModule {
 
   private loadWelect = (
     context: AdPipelineContext,
+    slots: Moli.AdSlot[],
     assetLoaderService: IAssetLoaderService
   ): Promise<void> => {
-    if (context.config.slots.find(slot => slot.position === 'rewarded')) {
+    // welect is already loaded
+    if (this.welectWindow.welect) {
+      return Promise.resolve();
+    }
+
+    // only load welect if a rewarded ad slot is requested
+    if (slots.find(slot => slot.position === 'rewarded')) {
       context.logger.debug(this.name, 'loading welect');
       return assetLoaderService.loadScript({
         name: this.name,

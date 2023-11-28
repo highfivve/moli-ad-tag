@@ -83,6 +83,13 @@ And then start one of the example projects
 yarn workspace @highfivve/example-publisher-mode start
 ```
 
+If you are developing a module, don't forget to start the module build in watch mode as well
+
+```bash
+# rebuild the module you change
+yarn workspace @highfivve/module-my-new-awesome-module make:nodemodule --watch
+```
+
 # Release
 
 Releases are automatically prepared and publish via github actions. To trigger a release run

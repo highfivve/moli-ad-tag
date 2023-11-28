@@ -738,23 +738,20 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   function refreshRewardedAdSlot(
     domId: string
-  ): Promise<'queued' | Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse> {
+  ): Promise<Pick<IRewardedSlotGrantedEvent, 'payload'> | RewardedAdResponse> {
     switch (state.state) {
-      case 'configurable': {
-        state.refreshSlots.push(domId);
-        return Promise.resolve('queued');
-      }
-      case 'configured': {
-        state.refreshSlots.push(domId);
-        return Promise.resolve('queued');
-      }
-      // if requestAds is currently called we batch the refreshAdSlot calls until
-      // we hit the 'spa-finished' state
+      case 'configurable':
+      case 'configured':
+        const hooks = state.hooks;
+        return new Promise(resolve => {
+          hooks.beforeRequestAds.push(config => {
+            adService
+              .refreshRewardedAdSlot(config, window as Window & IGoogleTagWindow)
+              .then(resolve);
+          });
+        });
+      // rewarded ads can be called in both spa states
       case 'spa-requestAds':
-        state.refreshSlots.push(domId);
-        return Promise.resolve('queued');
-      // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
-      // until the next requestAds() call arrives
       case 'spa-finished':
         return adService
           .refreshRewardedAdSlot(state.config, window as Window & IGoogleTagWindow)

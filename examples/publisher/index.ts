@@ -11,6 +11,7 @@ import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAds } from '@highfivve/module-sticky-footer-ads';
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
+import { WelectRewardedAd } from '@highfivve/module-welect-rewarded-ad';
 import { adConfiguration } from './source/ts/configuration';
 import MoliWindow = Moli.MoliWindow;
 import prebid from 'prebid.js';
@@ -28,7 +29,6 @@ import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
-import { WelectRewardedAd } from '@highfivve/module-welect-rewarded-ad';
 
 prebid.processQueue();
 
