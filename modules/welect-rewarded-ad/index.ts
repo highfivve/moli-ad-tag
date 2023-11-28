@@ -129,11 +129,11 @@ export class WelectRewardedAd implements IModule {
     return new Promise<boolean>(resolve => {
       if (this.welectWindow.welect && this.welectWindow.welect.checkSession) {
         this.welectWindow.welect.checkSession({
-          onInvalid: () => {
-            log.debug(this.name, 'invalid token');
+          onValid: () => {
+            log.debug(this.name, 'valid token. No demand');
             resolve(false);
           },
-          onValid: () => {
+          onInvalid: () => {
             if (this.welectWindow.welect && this.welectWindow.welect.checkAvailability) {
               this.welectWindow.welect.checkAvailability({
                 onUnavailable: () => {
