@@ -125,7 +125,7 @@ export class WelectRewardedAd implements IModule {
     );
   }
 
-  private requestBids = (log: Moli.MoliLogger): Promise<boolean> => {
+  requestBids = (log: Moli.MoliLogger): Promise<boolean> => {
     return new Promise<boolean>(resolve => {
       if (this.welectWindow.welect && this.welectWindow.welect.checkSession) {
         this.welectWindow.welect.checkSession({
@@ -158,7 +158,7 @@ export class WelectRewardedAd implements IModule {
     });
   };
 
-  private loadWelect = (
+  loadWelect = (
     context: AdPipelineContext,
     slots: Moli.AdSlot[],
     assetLoaderService: IAssetLoaderService

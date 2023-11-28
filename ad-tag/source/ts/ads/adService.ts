@@ -54,6 +54,7 @@ import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugD
 import IGoogleTagWindow = googletag.IGoogleTagWindow;
 import IRewardedSlotGrantedEvent = googletag.events.IRewardedSlotGrantedEvent;
 import RewardedAdResponse = Moli.RewardedAdResponse;
+import IGoogleTag = googletag.IGoogleTag;
 
 /**
  * @internal
@@ -393,7 +394,7 @@ export class AdService {
     }
 
     // initializing is important as gpt.js may not be loaded yet!
-    window.googletag = window.googletag || {};
+    window.googletag = window.googletag || ({} as IGoogleTag);
     window.googletag.cmd = window.googletag.cmd || [];
 
     // 3. run adpipeline
