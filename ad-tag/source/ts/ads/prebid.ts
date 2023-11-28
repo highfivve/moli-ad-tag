@@ -126,7 +126,12 @@ export const prebidConfigure = (
 
           // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
           // don't add this to the init step.
-          context.window.pbjs.registerSignalSources();
+          if (
+            context.window.pbjs.registerSignalSources &&
+            typeof context.window.pbjs.registerSignalSources === 'function'
+          ) {
+            context.window.pbjs.registerSignalSources();
+          }
 
           resolve();
         });
