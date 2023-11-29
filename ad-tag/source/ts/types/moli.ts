@@ -888,9 +888,6 @@ export namespace Moli {
 
     /** configurable logger */
     logger?: MoliLogger;
-
-    /* Rewarded Ad */
-    readonly rewardedAd?: boolean;
   }
 
   /**
