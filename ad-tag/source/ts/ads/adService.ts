@@ -203,28 +203,6 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
-    // rewarded ad
-    if (isGam && config.rewardedAd) {
-      prepareRequestAds.push(
-        mkPrepareRequestAdsStep(
-          'rewarded-ad',
-          LOW_PRIORITY,
-          (context: AdPipelineContext) =>
-            new Promise<void>((resolve, reject) => {
-              const rewardedSlots = context.config.slots.filter(
-                slot => slot.position === 'rewarded'
-              );
-              if (rewardedSlots.length) {
-                this.logger.info('RewardedAd service is available');
-                resolve();
-              } else {
-                reject(this.logger.error('No rewarded slots found'));
-              }
-            })
-        )
-      );
-    }
-
     // add additional steps if configured
     if (config.pipeline) {
       init.push(...config.pipeline.initSteps);
