@@ -91,25 +91,38 @@ describe('Welect Rewarded Ad Module', () => {
     expect(config.pipeline?.prepareRequestAdsSteps[0].name).to.be.eq('Rewarded Ad Setup');
   });
 
-  it('shoud not load welect script if there is no adSlot with position rewarded', () => {
+  it('shoud not load welect script if there is no adSlot with position rewarded', async () => {
     const module = createWelect();
     const slots = [mkAdSlotInDOM(1, 'in-page')];
 
-    module.loadWelect(adPipelineContext(), slots, assetLoaderService);
+    await module.loadWelect(adPipelineContext(), slots, assetLoaderService);
     expect(loadScriptStub).to.have.not.been.called;
   });
 
-  it('should not load welect script if there is an adSlot with position rewarded', () => {
+  it('should not load welect script if there is an adSlot with position rewarded', async () => {
     const module = createWelect();
     const slots = [mkAdSlotInDOM(1, 'rewarded'), mkAdSlotInDOM(2, 'in-page')];
 
-    module.loadWelect(adPipelineContext(), slots, assetLoaderService);
+    await module.loadWelect(adPipelineContext(), slots, assetLoaderService);
     expect(loadScriptStub).to.have.been.calledOnce;
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
       name: module.name,
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: 'http://localhost/welect.js'
     });
+  });
+
+  it('should not load welect script if it was already loaded', async () => {
+    const moduleWithExistingWelect = new WelectRewardedAd(
+      {
+        welectScript: 'http://localhost/welect.js'
+      },
+      { ...jsDomWindow, welect: {} } as any
+    );
+    const slots = [mkAdSlotInDOM(1, 'rewarded'), mkAdSlotInDOM(2, 'in-page')];
+
+    await moduleWithExistingWelect.loadWelect(adPipelineContext(), slots, assetLoaderService);
+    expect(loadScriptStub).to.have.not.been.called;
   });
 
   it('should not call requestBids if there is multiple adSlots', async () => {
