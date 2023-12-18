@@ -54,6 +54,14 @@ export type StickyFooterAdConfig = {
   readonly disallowedAdvertiserIds: number[];
 
   readonly closingButtonText?: string;
+
+  /**
+   * If true, the footer ad will remain hidden if initialized and only
+   * set to `display: block` if an actual ad renders.
+   *
+   * Default is `false`
+   */
+  readonly initiallyHidden?: boolean;
 };
 
 /**
@@ -94,22 +102,26 @@ export class StickyFooterAdsV2 implements IModule {
 
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-        if (
-          Object.keys(this.stickyFooterAdConfig.stickyFooterDomIds).length &&
-          Object.values(this.stickyFooterAdConfig.stickyFooterDomIds).map(stickyFooterDomId =>
-            slots.some(slot => slot.moliSlot.domId === stickyFooterDomId)
-          )
-        ) {
+        // determine the slot to init sticky ad for
+        const desktopSlot = slots.find(
+          slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.desktop
+        );
+        const mobileSlot = slots.find(
+          slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.mobile
+        );
+        const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
+
+        if (footerAdSlot) {
           initAdSticky(
             ctx.window,
             ctx.env,
             ctx.logger,
-            ctx.labelConfigService.getDeviceLabel(),
-            this.stickyFooterAdConfig.stickyFooterDomIds,
+            footerAdSlot.moliSlot.domId,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
             this.stickyFooterAdConfig.closingButtonText
           );
         }
+
         return Promise.resolve();
       })
     );

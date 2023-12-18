@@ -1,6 +1,4 @@
 import { googletag, Moli } from '@highfivve/ad-tag';
-import { FooterDomIds } from './index';
-import Device = Moli.Device;
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
@@ -34,7 +32,7 @@ const stickyRenderedEvent = (
           adSticky.style.setProperty('display', 'none');
         }
         resolve('empty');
-      } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+      } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve('disallowed');
       } else {
         resolve('standard');
@@ -74,8 +72,7 @@ export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
   env: Moli.Environment,
   log: Moli.MoliLogger,
-  device: Device,
-  footerStickyDomIds: FooterDomIds,
+  footerStickyDomId: string,
   disallowedAdvertiserIds: number[],
   closingButtonText?: string
 ): void => {
@@ -105,22 +102,6 @@ export const initAdSticky = (
         closeButton.textContent = closingButtonText;
       }
     }
-
-    // find the footerId based on the device and remove the other one
-    const desktopFooterElement =
-      footerStickyDomIds.desktop && document.getElementById(footerStickyDomIds.desktop);
-    const mobileFooterElement =
-      footerStickyDomIds.mobile && document.getElementById(footerStickyDomIds.mobile);
-
-    const footerStickyDomId = Object.values(footerStickyDomIds).map(footerDomId => {
-      if (device === 'mobile' && mobileFooterElement) {
-        desktopFooterElement && desktopFooterElement.remove();
-        return footerDomId;
-      } else if (device === 'desktop' && desktopFooterElement) {
-        mobileFooterElement && mobileFooterElement.remove();
-        return footerDomId;
-      }
-    })[0]; // surely there is at only one element array
 
     closeButton.addEventListener('click', () => {
       adSticky.style.transform = 'translateY(150%)'; // Slide down out of the viewport including the close button
@@ -155,6 +136,7 @@ export const initAdSticky = (
         log.debug(stickyAd, `result ${renderResult}`);
         if (renderResult === 'disallowed') {
           log.debug(stickyAd, 'hide mobile sticky container');
+          adSticky.style.setProperty('display', 'none');
           if (adSticky) {
             adSticky.remove();
           }
