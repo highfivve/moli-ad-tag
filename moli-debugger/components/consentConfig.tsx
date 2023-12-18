@@ -102,8 +102,12 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
           )}
         </div>
         <div className="MoliDebug-tagContainer">
-          <span className="MoliDebug-tagLabel">TCF Version</span>
-          {tcModel ? <Tag>{tcModel.version.toString()}</Tag> : <Tag variant="red">Unknown</Tag>}
+          <span className="MoliDebug-tagLabel">TCF Policy Version</span>
+          {tcModel ? (
+            <Tag>{tcModel.policyVersion.toString()}</Tag>
+          ) : (
+            <Tag variant="red">Unknown</Tag>
+          )}
         </div>
       </div>
     );

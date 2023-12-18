@@ -53,6 +53,14 @@ export type StickyFooterAdConfig = {
    *
    */
   readonly disallowedAdvertiserIds: number[];
+
+  /**
+   * Only applies to the mobile sticky ad. If true, the mobile sticky ad will remain hidden if initialized and only
+   * set to `display: block` if an actual ad renders.
+   *
+   * Default is `false`
+   */
+  readonly initiallyHidden?: boolean;
 };
 
 /**
@@ -98,7 +106,8 @@ export class StickyFooterAds implements IModule {
             ctx.env,
             ctx.logger,
             this.stickyFooterAdConfig.mobileStickyDomId,
-            this.stickyFooterAdConfig.disallowedAdvertiserIds
+            this.stickyFooterAdConfig.disallowedAdvertiserIds,
+            this.stickyFooterAdConfig.initiallyHidden ?? false
           );
         }
         if (

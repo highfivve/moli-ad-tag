@@ -373,6 +373,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           setEnvironmentOverrideInStorage(envOverride.environment, window.sessionStorage);
         }
 
+        // if there's a spa config, use the enabled flag. Note that this may collide with
+        // `enableSinglePageApp`, which could override this configuration
+        if (config.spa) {
+          state.isSinglePageApp = config.spa.enabled;
+        }
+
         state = {
           state: 'configured',
           configFromAdTag: config,
@@ -919,11 +925,13 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         break;
       }
       default: {
-        assetLoaderService.loadScript({
-          assetUrl: path || 'https://highfivve.github.io/moli-ad-tag/assets/js/moli-debug.min.js',
-          loadMethod: AssetLoadMethod.TAG,
-          name: 'moli-debugger'
-        });
+        assetLoaderService
+          .loadScript({
+            assetUrl: path || 'https://highfivve.github.io/moli-ad-tag/assets/js/moli-debug.min.js',
+            loadMethod: AssetLoadMethod.TAG,
+            name: 'moli-debugger'
+          })
+          .catch(error => console.error('failed to load moli debugger', error));
       }
     }
   }

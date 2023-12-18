@@ -84,7 +84,13 @@ const configureTargeting = (
  * This is a temporary workaround until gpt.js understands the tcfapi
  * @see https://support.google.com/admanager/answer/9805023
  */
-const useStandardGpt = (tcData: tcfapi.responses.TCData): boolean => {
+const useStandardGpt = (
+  tcData: tcfapi.responses.TCData,
+  consentConfig?: Moli.consent.ConsentConfig
+): boolean => {
+  if (consentConfig?.useLimitedAds === false) {
+    return true;
+  }
   return (
     !tcData.gdprApplies ||
     (tcData.vendor.consents[755] &&
@@ -114,13 +120,15 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
         context.window.googletag.cmd = context.window.googletag.cmd || [];
         context.window.googletag.cmd.push(resolve);
 
-        assetLoader.loadScript({
-          name: 'gpt',
-          loadMethod: AssetLoadMethod.TAG,
-          assetUrl: useStandardGpt(context.tcData)
-            ? 'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
-            : 'https://pagead2.googlesyndication.com/tag/js/gpt.js'
-        });
+        assetLoader
+          .loadScript({
+            name: 'gpt',
+            loadMethod: AssetLoadMethod.TAG,
+            assetUrl: useStandardGpt(context.tcData, context.config.consent)
+              ? 'https://securepubads.g.doubleclick.net/tag/js/gpt.js'
+              : 'https://pagead2.googlesyndication.com/tag/js/gpt.js'
+          })
+          .catch(error => context.logger.error('failed to load gpt.js', error));
       });
     }
     return result;
@@ -130,19 +138,35 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
 /**
  * Destroy slots before anything. This step is required for single page applications to ensure a fresh setup.
  *
- * This step is run once per request ads cycle. An alternative implementation could delete google slots y for the ad
- * slots provided in the slot array. However this keeps old slots lingering around, which we surely don't want.
+ * This step is run once per request ads cycle by default. This can be changed by setting the `spa.destroyAllAdSlots` setting
+ * to `false`. In this case the slots provided in the slot array are destroyed during the ad pipeline run.
  */
-export const gptDestroyAdSlots = (): ConfigureStep =>
-  mkConfigureStepOncePerRequestAdsCycle(
-    'gpt-destroy-ad-slots',
-    (context: AdPipelineContext) =>
-      new Promise<void>(resolve => {
-        context.logger.debug('GAM', 'destroy all ad slots');
-        context.window.googletag.destroySlots();
-        resolve();
-      })
-  );
+export const gptDestroyAdSlots = (): ConfigureStep => {
+  // mimic the mkConfigureStepOncePerRequestAdsCycle behaviour. Depending on the spa.destroyAllAdSlots setting
+  // we either destroy all slots once or only the slots provided in the slot array, but with every pipeline run
+  let currentRequestAdsCalls = 0;
+
+  return mkConfigureStep('gpt-destroy-ad-slots', (context, slots) => {
+    if (context.config.spa?.destroyAllAdSlots === false) {
+      const allGptSlots = context.window.googletag.pubads().getSlots();
+      const gptSlots = slots
+        .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
+        .filter(isNotNull);
+      if (gptSlots.length === 0) {
+        context.logger.debug('GAM', 'no ad slots to destroy');
+      } else {
+        context.logger.debug('GAM', `destroy ${gptSlots.length} ad slots`, gptSlots);
+        context.window.googletag.destroySlots(gptSlots);
+      }
+    } else if (currentRequestAdsCalls !== context.requestAdsCalls) {
+      currentRequestAdsCalls = context.requestAdsCalls;
+      context.logger.debug('GAM', 'destroy all ad slots');
+      context.window.googletag.destroySlots();
+    }
+
+    return Promise.resolve();
+  });
+};
 
 /**
  * Reset the gpt targeting configuration (key-values) and uses the targeting information from
@@ -182,7 +206,7 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             context.window.googletag.pubads().disableInitialLoad();
             context.window.googletag.pubads().enableSingleRequest();
 
-            const limitedAds = !useStandardGpt(context.tcData);
+            const limitedAds = !useStandardGpt(context.tcData, context.config.consent);
             context.logger.debug('GAM', `use limited ads`, limitedAds);
 
             context.window.googletag.pubads().setPrivacySettings({

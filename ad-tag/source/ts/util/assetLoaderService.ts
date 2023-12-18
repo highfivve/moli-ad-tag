@@ -73,7 +73,7 @@ export class AssetLoaderService implements IAssetLoaderService {
             return this.loadAssetViaTag(config, parent);
         }
       })
-      .then(() => this.measurePerformance(config.name));
+      .finally(() => this.measurePerformance(config.name));
   }
 
   public loadJson<T>(name: string, assetUrl: string): Promise<T> {

@@ -4,11 +4,28 @@ const adStickyContainerDataRef = '[data-ref=sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
 
 /**
+ * This class is a optional hint for publishers to use, when the ad is clicked
+ */
+const adVisibleClass = 'h5-sticky-ad--visible';
+
+/**
  * empty: mobile sticky load was empty
  * disallowed: an advertiser that brings its own creative was rendered
  * standard: a regular creative was loaded
  */
 type RenderEventResult = 'empty' | 'disallowed' | 'standard';
+
+// TODO To allow something like transitions, we should stop slapping display: none here
+//      However to not break existing integrations, we need to make this configurable and optional
+const hideAdSlot = (adSticky: HTMLElement): void => {
+  adSticky.style.setProperty('display', 'none');
+  adSticky.classList.remove(adVisibleClass);
+};
+
+const showAdSlot = (adSticky: HTMLElement): void => {
+  adSticky.style.setProperty('display', 'block');
+  adSticky.classList.add(adVisibleClass);
+};
 
 /**
  * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
@@ -27,7 +44,7 @@ const stickyRenderedEvent = (
 
       if (event.isEmpty) {
         if (adSticky) {
-          adSticky.style.setProperty('display', 'none');
+          hideAdSlot(adSticky);
         }
         resolve('empty');
       } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
@@ -71,7 +88,8 @@ export const initAdSticky = (
   env: Moli.Environment,
   log: Moli.MoliLogger,
   mobileStickyDomId: string,
-  disallowedAdvertiserIds: number[]
+  disallowedAdvertiserIds: number[],
+  initiallyHidden: boolean
 ): void => {
   const adSticky = window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
@@ -82,13 +100,15 @@ export const initAdSticky = (
       'Running initAdSticky with defined sticky container and close button'
     );
 
-    adSticky.style.setProperty('display', 'block');
+    // if a publisher only wants to show the sticky ad, if there's a result
+    if (!initiallyHidden) {
+      showAdSlot(adSticky);
+    }
 
     closeButton.addEventListener(
       'click',
       () => {
-        // hide the ad slot
-        adSticky.style.setProperty('display', 'none');
+        hideAdSlot(adSticky);
 
         // destroy the slot, so it doesn't get reloaded or refreshed by accident
         const slot = window.googletag
@@ -118,10 +138,15 @@ export const initAdSticky = (
         if (renderResult === 'disallowed') {
           log.debug('mobile-sticky-ad', 'hide mobile sticky container');
           if (adSticky) {
-            adSticky.style.setProperty('display', 'none');
+            hideAdSlot(adSticky);
           }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
+          // if it was initially hidden, display it now
+          if (initiallyHidden) {
+            showAdSlot(adSticky);
+          }
+
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([

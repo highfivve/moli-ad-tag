@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/example-single-page-app",
-  "version": "4.13.16",
+  "version": "4.15.1",
   "description": "Publisher bootstrap template",
   "main": "index.ts",
   "private": true,
@@ -27,13 +27,13 @@
     "@types/react-router-dom": "^5.1.7",
     "html-webpack-plugin": "^5.3.1",
     "ts-loader": "^9.3.1",
-    "typescript": "^4.7.4",
+    "typescript": "^5.3.3",
     "webpack": "^5.76.2",
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.13.1"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.13.16",
+    "@highfivve/ad-tag": "4.15.1",
     "core-js": "3.24.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

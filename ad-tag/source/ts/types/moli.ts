@@ -838,6 +838,11 @@ export namespace Moli {
     /** all possible ad slots */
     readonly slots: AdSlot[];
 
+    /**
+     * Optional configuration for single page
+     */
+    readonly spa?: SinglePageAppConfig;
+
     /** supply chain object */
     readonly schain: schain.SupplyChainConfig;
 
@@ -928,6 +933,34 @@ export namespace Moli {
 
     /** ad unit path variables */
     adUnitPathVariables?: AdUnitPathVariables;
+  }
+
+  /**
+   * Additional configuration for single page application publishers.
+   */
+  export interface SinglePageAppConfig {
+    /**
+     * Set to true if this publisher has a single page application.
+     */
+    readonly enabled: boolean;
+
+    /**
+     * If set to `false`, `requestAds` will not destroy all existing ad slots,
+     * but only the ones being requested.
+     *
+     * Use with caution and test properly.
+     *
+     * ## Use cases
+     *
+     * This setting can be used for publishers that have more "static" ad slots, like
+     * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+     * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+     * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+     * publisher, while other content positions are refreshed on navigation.
+     *
+     * @default true
+     */
+    readonly destroyAllAdSlots?: boolean;
   }
 
   /**
@@ -1173,6 +1206,23 @@ export namespace Moli {
        * legitimate interest established for at least one purpose.
        */
       readonly disableLegitimateInterest?: boolean;
+
+      /**
+       * If set to `false`, standard `gpt.js` will be loaded and not privacy configuration is set.
+       *
+       * From the google documentation examples
+       *
+       * > In order to manually control limited, you must load GPT from the limited ads URL. The version of GPT served
+       * > from this URL contains additional safeguards against accessing client-side storage by default. To accomplish
+       * > this, certain library operations are delayed until after the first call to display(), leading to a slight
+       * > decrease in performance compared to the standard version of GPT.
+       *
+       * @default `true`
+       * @see https://support.google.com/admanager/answer/9805023
+       * @see https://developers.google.com/publisher-tag/samples/display-limited-ad?hl=en
+       * @see https://developers.google.com/publisher-tag/reference?hl=de#googletag.PrivacySettingsConfig_nonPersonalizedAds
+       */
+      readonly useLimitedAds?: boolean;
     }
   }
 

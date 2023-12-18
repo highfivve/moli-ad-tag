@@ -3,6 +3,7 @@
 :root {
   --MoliDebug-green: #90be6d;
   --MoliDebug-red: #db3b3d;
+  --MoliDebug-red--light: #E9898B;
   --MoliDebug-yellow: #ffe152;
   --MoliDebug-yellow-dark: #ffcb00;
   --MoliDebug-blue: #76949f;
@@ -263,6 +264,10 @@
         background: #6a6a6a;
         color: white;
       }
+    }
+
+    &--red {
+      background: var(--MoliDebug-red--light);
     }
 
     &--blue {

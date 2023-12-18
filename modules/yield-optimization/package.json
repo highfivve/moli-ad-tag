@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-yield-optimization",
-  "version": "4.13.16",
+  "version": "4.15.1",
   "license": "UNLICENSED",
   "description": "Blocks ad slots when a wallpaper is being delivered by a prebid partner",
   "main": "./lib/index.js",
@@ -34,7 +34,7 @@
     "node": ">=8.0"
   },
   "devDependencies": {
-    "@highfivve/ad-tag": "4.13.16",
+    "@highfivve/ad-tag": "4.15.1",
     "@types/chai": "4.2.18",
     "@types/jsdom": "^20.0.0",
     "@types/mocha": "8.2.2",
@@ -48,6 +48,6 @@
     "sinon-chai": "3.6.0",
     "ts-loader": "^9.3.1",
     "ts-node": "^10.8.1",
-    "typescript": "^4.7.4"
+    "typescript": "^5.3.3"
   }
 }

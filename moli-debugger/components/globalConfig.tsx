@@ -62,6 +62,7 @@ type IGlobalConfigState = {
   theme: Theme;
   adstxtEntry: string[];
   adstxtDomain: string;
+  adstxtError: string;
 };
 
 export type Message = {
@@ -97,7 +98,8 @@ export class GlobalConfig
       showOnlyRenderedSlots: false,
       theme: props.themingService.currentTheme(),
       adstxtEntry: [],
-      adstxtDomain: ''
+      adstxtDomain: '',
+      adstxtError: ''
     };
 
     if (!props.config) {
@@ -150,15 +152,39 @@ export class GlobalConfig
     }
   }
 
-  async findPublisherEntryInAdsTxt(adsTxtDomain: string) {
-    const adstxtEntries = await this.fetchAdsTxtEntries(adsTxtDomain);
+  parseAdsTxtEntries(adstxtEntries: string): string[] | undefined {
     // Split the entries string on each new line and comma
-    const entriesArray = adstxtEntries?.split(/\r?\n/).map(entry => entry.split(',')) ?? [];
+    const entriesArray = adstxtEntries.split(/\r?\n/).map(entry => entry.split(',')) ?? [];
     const publisherEntry = entriesArray
       // filter out lines that don't carry relevant info e.g. header of the ads.txt
       .filter(entry => entry.length > 1)
       .find(entry => entry[0] === 'highfivve.com');
+
     return publisherEntry;
+  }
+
+  async findPublisherEntryInAdsTxt(adsTxtDomain: string) {
+    try {
+      const adstxtEntries = await this.fetchAdsTxtEntries(adsTxtDomain);
+
+      if (!adstxtEntries) {
+        throw new Error('Failed to fetch ads.txt entries.');
+      }
+
+      // reset ads.txt error to initial state
+      this.setState({ adstxtError: '' });
+
+      const publisherEntry = this.parseAdsTxtEntries(adstxtEntries);
+      return publisherEntry;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.setState({ adstxtError: error.message });
+      } else {
+        this.setState({ adstxtError: 'An unknown error occurred.' });
+      }
+
+      return ['', 'error'];
+    }
   }
 
   async componentDidMount() {
@@ -653,6 +679,9 @@ export class GlobalConfig
                       ? `✅ Seller ids in ad tag config and ads.txt of domain ${adstxtDomain} are matching!`
                       : `❗️Seller ids in ad tag config (${config?.schain.supplyChainStartNode.sid}) and ads.txt of current domain (${adstxtDomain}, ${adstxtEntry[1]}) are different!`}
                   </p>
+                  {this.state.adstxtError !== '' && (
+                    <p className="MoliDebug-panel MoliDebug-panel--red">{`${this.state.adstxtError} If you use this console locally or on the demo page, try to enable CORS by using a CORS unblocking browser extension.`}</p>
+                  )}
                   <form
                     className="MoliDebug-formContainer MoliDebug-panel MoliDebug-panel--blue"
                     onSubmit={async event => {

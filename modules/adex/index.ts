@@ -326,11 +326,13 @@ export class AdexModule implements IModule {
             consentString
           );
       } else {
-        assetLoaderService.loadScript({
-          name: this.name,
-          assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
-          loadMethod: AssetLoadMethod.TAG
-        });
+        assetLoaderService
+          .loadScript({
+            name: this.name,
+            assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
+            loadMethod: AssetLoadMethod.TAG
+          })
+          .catch(error => context.logger.error('failed to load adex', error));
       }
     }
 
