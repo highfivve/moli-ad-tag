@@ -63,6 +63,9 @@ const stickyOnLoadEvent = (
     window.googletag.pubads().addEventListener('slotOnload', listener);
   });
 
+const hideAdSlot = (element: HTMLElement): void => {
+  element.classList.add('h5v-footerAd--hidden');
+};
 /**
  * ## Ad Sticky
  *
@@ -104,7 +107,7 @@ export const initAdSticky = (
     }
 
     closeButton.addEventListener('click', () => {
-      adSticky.style.transform = 'translateY(150%)'; // Slide down out of the viewport including the close button
+      hideAdSlot(adSticky); // Slide down out of the viewport including the close button
       adSticky.addEventListener(
         'transitionend',
         () => {
@@ -136,7 +139,7 @@ export const initAdSticky = (
         log.debug(stickyAd, `result ${renderResult}`);
         if (renderResult === 'disallowed') {
           log.debug(stickyAd, 'hide mobile sticky container');
-          adSticky.style.setProperty('display', 'none');
+          hideAdSlot(adSticky);
           if (adSticky) {
             adSticky.remove();
           }

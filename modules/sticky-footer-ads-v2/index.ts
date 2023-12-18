@@ -54,14 +54,6 @@ export type StickyFooterAdConfig = {
   readonly disallowedAdvertiserIds: number[];
 
   readonly closingButtonText?: string;
-
-  /**
-   * If true, the footer ad will remain hidden if initialized and only
-   * set to `display: block` if an actual ad renders.
-   *
-   * Default is `false`
-   */
-  readonly initiallyHidden?: boolean;
 };
 
 /**
