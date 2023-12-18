@@ -4,7 +4,7 @@ const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
 const adStickyCloseButtonContent = '.h5v-closeButtonContent';
-
+const adStickHidingClass = 'h5v-footerAd--hidden';
 /**
  * empty: mobile sticky load was empty
  * disallowed: an advertiser that brings its own creative was rendered
@@ -64,7 +64,7 @@ const stickyOnLoadEvent = (
   });
 
 const hideAdSlot = (element: HTMLElement): void => {
-  element.classList.add('h5v-footerAd--hidden');
+  element.classList.add(adStickHidingClass);
 };
 /**
  * ## Ad Sticky
@@ -97,7 +97,7 @@ export const initAdSticky = (
         closeButtonSvg.setAttribute('height', '24');
 
         const closeButtonPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        closeButtonPath.classList.add('h5v-closeButtonContent');
+        closeButtonPath.classList.add(adStickyCloseButtonContent);
         closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
         closeButtonSvg.appendChild(closeButtonPath);
         closeButton.appendChild(closeButtonSvg);
