@@ -113,7 +113,7 @@ export type SkinModuleConfig = {
  */
 export type AllFormatFilter = {
   readonly bidder: '*';
-}
+};
 
 export type JustPremiumFormatFilter = {
   readonly bidder: typeof prebidjs.JustPremium;
@@ -274,10 +274,10 @@ export class Skin implements IModule {
       // go through all filters and check if one matches
       const oneFilterApplied = config.formatFilter.some(filter => {
         switch (filter.bidder) {
-          case "*":
+          case '*':
             return true;
           case 'appnexus':
-          case "appnexusAst":
+          case 'appnexusAst':
             return bid.bidder === prebidjs.AppNexusAst || bid.bidder === prebidjs.AppNexus;
           case 'improvedigital':
             return bid.bidder === prebidjs.ImproveDigital;
