@@ -5401,7 +5401,7 @@ export namespace prebidjs {
        * Seen on IX bids
        */
       readonly brandName?: string;
-    }
+    };
   }
 
   export interface IGenericBidResponse extends IBidResponse {
