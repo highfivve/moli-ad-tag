@@ -53,18 +53,29 @@ describe('Skin Module', () => {
     });
   };
 
-  const genericBidResponse = (bidder: prebidjs.IGenericBidResponse['bidder'], cpm: number): prebidjs.IGenericBidResponse => ({
+  const genericBidResponse = (
+    bidder: prebidjs.IGenericBidResponse['bidder'],
+    cpm: number
+  ): prebidjs.IGenericBidResponse => ({
     bidder: bidder,
     cpm,
     adId: '',
     height: 1,
     width: 1,
     mediaType: 'banner',
-    source: 'client'
-  })
+    source: 'client',
+    ad: '<h1>AD</h1>',
+    adUnitCode: '',
+    auctionId: '',
+    currency: 'EUR',
+    originalCurrency: 'EUR',
+    netRevenue: true
+  });
 
-  const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse => genericBidResponse(prebidjs.DSPX, cpm);
-  const visxBidResponse = (cpm: number): prebidjs.IGenericBidResponse => genericBidResponse(prebidjs.Visx, cpm);
+  const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
+    genericBidResponse(prebidjs.DSPX, cpm);
+  const visxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
+    genericBidResponse(prebidjs.Visx, cpm);
 
   describe('init', () => {
     it('should set the prebidResponse listener', () => {
@@ -156,18 +167,22 @@ describe('Skin Module', () => {
 
     const jpBidResponse = (
       format: prebidjs.JustPremiumFormat
-    ): prebidjs.IJustPremiumBidResponse => {
-      return {
-        bidder: prebidjs.JustPremium,
-        format: format,
-        adId: '',
-        cpm: 10.0,
-        height: 1,
-        width: 1,
-        mediaType: 'banner',
-        source: 'client'
-      };
-    };
+    ): prebidjs.IJustPremiumBidResponse => ({
+      bidder: prebidjs.JustPremium,
+      format: format,
+      adId: '',
+      cpm: 10.0,
+      height: 1,
+      width: 1,
+      mediaType: 'banner',
+      source: 'client',
+      ad: '<h1>AD</h1>',
+      adUnitCode: '',
+      auctionId: '',
+      currency: 'EUR',
+      originalCurrency: 'EUR',
+      netRevenue: true
+    });
 
     describe('just premium wallpaper', () => {
       const config: SkinConfig = {
@@ -270,18 +285,21 @@ describe('Skin Module', () => {
     // ----  GumGum -----
     const gumgumBidResponse = (
       ad: prebidjs.IGumGumBidResponseWrapper | string
-    ): prebidjs.IGumGumBidResponse => {
-      return {
-        bidder: prebidjs.GumGum,
-        adId: '',
-        cpm: 10.0,
-        height: 1,
-        width: 1,
-        mediaType: 'banner',
-        source: 'client',
-        ad: ad
-      };
-    };
+    ): prebidjs.IGumGumBidResponse => ({
+      bidder: prebidjs.GumGum,
+      adId: '',
+      cpm: 10.0,
+      height: 1,
+      width: 1,
+      mediaType: 'banner',
+      source: 'client',
+      ad: ad,
+      adUnitCode: '',
+      auctionId: '',
+      currency: 'EUR',
+      originalCurrency: 'EUR',
+      netRevenue: true
+    });
     describe('gumgum mobile skin', () => {
       const config: SkinConfig = {
         formatFilter: [{ bidder: 'gumgum', auid: 59 }],
@@ -366,7 +384,7 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots` if any response was found', () => {
         const skinConfigEffect = module.getConfigEffect(config, {
           'wp-slot': {
-            bids: [genericBidResponse('ix',10.0)]
+            bids: [genericBidResponse('ix', 10.0)]
           }
         });
 
@@ -376,46 +394,55 @@ describe('Skin Module', () => {
       it('should return `NoBlocking` if a bid response was found but with cpm 0', () => {
         const skinConfigEffect = module.getConfigEffect(config, {
           'wp-slot': {
-            bids: [genericBidResponse('pubmatic',0)]
+            bids: [genericBidResponse('pubmatic', 0)]
           }
         });
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
       });
-    })
+    });
 
     // list of simple configurations
-    const bidders: SimpleFormatFilterBidder[] = ['yieldlab', 'visx', 'dspx', 'appnexus', 'appnexusAst', 'improvedigital'];
+    const bidders: SimpleFormatFilterBidder[] = [
+      'yieldlab',
+      'visx',
+      'dspx',
+      'appnexus',
+      'appnexusAst',
+      'improvedigital'
+    ];
 
-    bidders.forEach(bidder => describe(bidder, () => {
-      const config: SkinConfig = {
-        formatFilter: [{ bidder: bidder }],
-        skinAdSlotDomId: 'wp-slot',
-        blockedAdSlotDomIds: ['sky-slot'],
-        hideSkinAdSlot: false,
-        hideBlockedSlots: false,
-        enableCpmComparison: false
-      };
-      it(`should return \`BlockOtherSlots\` if a ${bidder} response was found`, () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'wp-slot': {
-            bids: [genericBidResponse(bidder,10.0)]
-          }
+    bidders.forEach(bidder =>
+      describe(bidder, () => {
+        const config: SkinConfig = {
+          formatFilter: [{ bidder: bidder }],
+          skinAdSlotDomId: 'wp-slot',
+          blockedAdSlotDomIds: ['sky-slot'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: false
+        };
+        it(`should return \`BlockOtherSlots\` if a ${bidder} response was found`, () => {
+          const skinConfigEffect = module.getConfigEffect(config, {
+            'wp-slot': {
+              bids: [genericBidResponse(bidder, 10.0)]
+            }
+          });
+
+          expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
         });
 
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
-      });
+        it(`should return \`NoBlocking\` if a ${bidder} response was found but with cpm 0`, () => {
+          const skinConfigEffect = module.getConfigEffect(config, {
+            'wp-slot': {
+              bids: [genericBidResponse(bidder, 0)]
+            }
+          });
 
-      it(`should return \`NoBlocking\` if a ${bidder} response was found but with cpm 0`, () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'wp-slot': {
-            bids: [genericBidResponse(bidder,0)]
-          }
+          expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
         });
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
-      });
-    }));
+      })
+    );
 
     describe('enableCpmComparison: getConfigEffect', () => {
       const trackSkinCpmLow = sandbox.stub();
@@ -442,13 +469,16 @@ describe('Skin Module', () => {
 
         const bidResponses: IBidResponsesMap = {
           'wp-slot': {
-            bids: [{ ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 }, genericBidResponse('openx', 1)]
+            bids: [
+              { ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 },
+              genericBidResponse('openx', 1)
+            ]
           },
           'sky-slot': {
-            bids: [genericBidResponse('openx',0.5), genericBidResponse('openx',0.49)]
+            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
           },
           'sky-slot-2': {
-            bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx',0)]
+            bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
           },
           'sky-slot-3': undefined
         };
@@ -485,13 +515,13 @@ describe('Skin Module', () => {
 
         const skinConfigEffect = configuredModule.getConfigEffect(config, {
           'wp-slot': {
-            bids: [dspxBidResponse(1.5), genericBidResponse('openx',1)]
+            bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
           },
           'sky-slot': {
-            bids: [genericBidResponse('openx',0.5), genericBidResponse('openx',0.49)]
+            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
           },
           'sky-slot-2': {
-            bids: [genericBidResponse('openx',0.01), genericBidResponse('openx',0)]
+            bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
           }
         });
 
@@ -582,10 +612,10 @@ describe('Skin Module', () => {
             ]
           },
           'sky-slot': {
-            bids: [genericBidResponse('openx',0.5), genericBidResponse('openx',0.49)]
+            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
           },
           'sky-slot-2': {
-            bids: [genericBidResponse('openx',0.01), genericBidResponse('openx',0)]
+            bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
           },
           'sky-slot-3': undefined
         };
