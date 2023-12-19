@@ -5,7 +5,6 @@ const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
 const adStickyCloseButtonContent = '.h5v-closeButtonContent';
 const adStickHidingClass = 'h5v-footerAd--hidden';
-const adStickVisibleClass = 'h5v-footerAd--visible';
 /**
  * empty: mobile sticky load was empty
  * disallowed: an advertiser that brings its own creative was rendered
@@ -29,9 +28,6 @@ const stickyRenderedEvent = (
       }
 
       if (event.isEmpty) {
-        if (adSticky) {
-          adSticky.style.setProperty('display', 'none');
-        }
         resolve('empty');
       } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve('disallowed');
@@ -69,7 +65,7 @@ const hideAdSlot = (element: HTMLElement): void => {
 };
 
 const showAdSlot = (element: HTMLElement): void => {
-  element.classList.add(adStickVisibleClass);
+  element.classList.remove(adStickHidingClass);
 };
 /**
  * ## Ad Sticky
@@ -90,6 +86,7 @@ export const initAdSticky = (
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
   const closeButtonContent = window.document.querySelector(adStickyCloseButtonContent);
 
+  console.log('aa');
   if (adSticky && closeButton) {
     log.debug(stickyAd, 'Running initAdSticky with defined sticky container and close button');
 
@@ -142,8 +139,8 @@ export const initAdSticky = (
         // we receive the renderEndedEvent, which grants us access to the slot
         // that should be destroyed
         log.debug(stickyAd, `result ${renderResult}`);
-        if (renderResult === 'disallowed') {
-          log.debug(stickyAd, 'hide mobile sticky container');
+        if (renderResult === 'disallowed' || renderResult === 'empty') {
+          log.debug(stickyAd, 'stickyFooter container');
           hideAdSlot(adSticky);
           if (adSticky) {
             adSticky.remove();
