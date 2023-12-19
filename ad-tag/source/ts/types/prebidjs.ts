@@ -5300,6 +5300,22 @@ export namespace prebidjs {
     readonly bidder: BidderCode;
 
     /**
+     * the actual creative
+     * Most of the time this a string containing the markup, but in some cases it's an object with more information.
+     */
+    readonly ad: string | any;
+
+    /**
+     * the unique prebid auction ID in which this bid response was created
+     */
+    readonly auctionId: string;
+
+    /**
+     * The `code` property in the adUnit object. This is usually the `domId` of the ad unit.
+     */
+    readonly adUnitCode: string;
+
+    /**
      * The exact bid price from the bidder.
      */
     readonly cpm: number;
@@ -5330,9 +5346,62 @@ export namespace prebidjs {
     readonly source: 'client' | 'server';
 
     /**
+     * The currency of the bid
+     */
+    readonly currency: string;
+
+    /**
+     * If currencyModule performed any currency conversion, this is the original currency.
+     */
+    readonly originalCurrency: string;
+
+    /**
+     * True if the CPM is the one this bidder will pay
+     */
+    readonly netRevenue: boolean;
+
+    /**
+     * (propably optional) - the time to live for this bid response in seconds
+     */
+    readonly ttl?: number;
+
+    /**
      * (Optional) If the bid is associated with a Deal, this field contains the deal ID.
      */
     readonly dealId?: string;
+
+    readonly creativeId?: number;
+
+    /**
+     * Additional meta data for this bid response
+     */
+    readonly meta?: {
+      /**
+       * A list of advertiser domains this bid is for.
+       * This field is populated by at least some bidders.
+       */
+      readonly advertiserDomains?: string[];
+
+      /**
+       * Seen on Criteo bids
+       */
+      readonly networkName?: string;
+
+      /**
+       * Seen on IX bids
+       */
+      readonly networkId?: string;
+
+      /**
+       * Seen on IX bids
+       */
+      readonly brandId?: number;
+
+      /**
+       * Seen on IX bids
+       */
+      readonly brandName?: string;
+    };
   }
 
   export interface IGenericBidResponse extends IBidResponse {

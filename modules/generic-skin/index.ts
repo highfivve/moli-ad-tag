@@ -104,6 +104,17 @@ export type SkinModuleConfig = {
   ) => void;
 };
 
+/**
+ * If this filter is added to the list of filters, then it will always apply.
+ * This filter is useful for "orchestration ad units" that don't serve ads, but
+ * orchestrate a format. Examples are
+ *
+ * - `wallpaper_pixel`
+ */
+export type AllFormatFilter = {
+  readonly bidder: '*';
+};
+
 export type JustPremiumFormatFilter = {
   readonly bidder: typeof prebidjs.JustPremium;
 
@@ -122,6 +133,13 @@ export type GumGumFormatFilter = {
    * If not set, then the `auid` will not be considered for filtering.
    */
   readonly auid?: number;
+};
+
+/**
+ * Azerion (fka Improve Digital) format filter
+ */
+export type AzerionFormatFilter = {
+  readonly bidder: typeof prebidjs.ImproveDigital;
 };
 
 export type DSPXFormatFilter = {
@@ -147,6 +165,8 @@ export type YieldlabFormatFilter = {
 };
 
 export type FormatFilter =
+  | AllFormatFilter
+  | AzerionFormatFilter
   | JustPremiumFormatFilter
   | GumGumFormatFilter
   | DSPXFormatFilter
@@ -254,6 +274,13 @@ export class Skin implements IModule {
       // go through all filters and check if one matches
       const oneFilterApplied = config.formatFilter.some(filter => {
         switch (filter.bidder) {
+          case '*':
+            return true;
+          case 'appnexus':
+          case 'appnexusAst':
+            return bid.bidder === prebidjs.AppNexusAst || bid.bidder === prebidjs.AppNexus;
+          case 'improvedigital':
+            return bid.bidder === prebidjs.ImproveDigital;
           case 'justpremium':
             return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
           case 'gumgum':
@@ -267,6 +294,8 @@ export class Skin implements IModule {
             return bid.bidder === prebidjs.DSPX;
           case 'visx':
             return bid.bidder === prebidjs.Visx;
+          case 'yieldlab':
+            return bid.bidder === prebidjs.Yieldlab;
           default:
             return false;
         }
