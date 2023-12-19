@@ -5,6 +5,7 @@ const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
 const adStickyCloseButtonContent = '.h5v-closeButtonContent';
 const adStickHidingClass = 'h5v-footerAd--hidden';
+const adStickVisibleClass = 'h5v-footerAd--visible';
 /**
  * empty: mobile sticky load was empty
  * disallowed: an advertiser that brings its own creative was rendered
@@ -66,6 +67,10 @@ const stickyOnLoadEvent = (
 const hideAdSlot = (element: HTMLElement): void => {
   element.classList.add(adStickHidingClass);
 };
+
+const showAdSlot = (element: HTMLElement): void => {
+  element.classList.add(adStickVisibleClass);
+};
 /**
  * ## Ad Sticky
  *
@@ -107,7 +112,7 @@ export const initAdSticky = (
     }
 
     closeButton.addEventListener('click', () => {
-      hideAdSlot(adSticky); // Slide down out of the viewport including the close button
+      hideAdSlot(adSticky); // Hide the footer including the close button
       adSticky.addEventListener(
         'transitionend',
         () => {
@@ -145,6 +150,7 @@ export const initAdSticky = (
           }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
+          showAdSlot(adSticky);
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([
