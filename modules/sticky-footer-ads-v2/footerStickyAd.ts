@@ -86,7 +86,6 @@ export const initAdSticky = (
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
   const closeButtonContent = window.document.querySelector(adStickyCloseButtonContent);
 
-  console.log('aa');
   if (adSticky && closeButton) {
     log.debug(stickyAd, 'Running initAdSticky with defined sticky container and close button');
 

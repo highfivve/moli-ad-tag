@@ -101,7 +101,13 @@ export class StickyFooterAdsV2 implements IModule {
         const mobileSlot = slots.find(
           slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.mobile
         );
+        // mobile traffic is usually a lot higher than desktop, so we opt for mobile as default if both are set.
+        // this is usually a configuration error in the ad tag and should not happen
         const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
+
+        if (mobileSlot && desktopSlot) {
+          ctx.logger.warn(this.name, 'mobile and desktop sticky footer are called!');
+        }
 
         if (footerAdSlot) {
           initAdSticky(
