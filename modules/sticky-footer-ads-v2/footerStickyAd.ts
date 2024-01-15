@@ -93,11 +93,14 @@ export const initAdSticky = (
     if (!closeButtonContent) {
       // Add an X svg as a content of the button, if no custom text was applied
       if (!closingButtonText) {
-        const closeButtonSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const closeButtonSvg = window.document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         closeButtonSvg.setAttribute('width', '24');
         closeButtonSvg.setAttribute('height', '24');
 
-        const closeButtonPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const closeButtonPath = window.document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path'
+        );
         closeButtonPath.classList.add(adStickyCloseButtonContent);
         closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
         closeButtonSvg.appendChild(closeButtonPath);
@@ -165,7 +168,7 @@ export const initAdSticky = (
     }
   } else {
     log.warn(
-      '[mobile-sticky]',
+      '[sticky-footer-ad]',
       `Could not find adSticky container ${adStickyContainerDataRef} or closeButton ${adStickyCloseButtonDataRef}`,
       adSticky,
       closeButton

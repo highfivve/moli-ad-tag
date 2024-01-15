@@ -19,6 +19,8 @@ import {
 import Device = Moli.Device;
 import { FooterDomIds, StickyFooterAdsV2 } from './index';
 import * as stickyAdModule from './footerStickyAd';
+import { initAdSticky } from './footerStickyAd';
+import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 const sandbox = Sinon.createSandbox();
 let dom = createDom();
@@ -110,7 +112,8 @@ afterEach(() => {
   sandbox.reset();
   sandbox.restore();
 });
-describe('initialize', () => {
+
+describe('initialize sticky-footer-v2', () => {
   it('should add an init step', async () => {
     const module = createStickyFooterAdModule({
       desktop: 'ad-desktop-sticky',
@@ -211,5 +214,98 @@ describe('initialize', () => {
         'close'
       )
     );
+  });
+});
+
+describe('initialize initAdSticky function', () => {
+  it('should throw a warning if there is no adSticky container in the html', function () {
+    const closeButton = jsDomWindow.document.createElement('div');
+    closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+    jsDomWindow.document.body.appendChild(closeButton);
+    const errorLogSpy = sandbox.spy(noopLogger, 'warn');
+    initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+    expect(errorLogSpy.calledOnce).to.have.been.true;
+    expect(errorLogSpy.args.length).to.eq(1);
+    expect(errorLogSpy.args[0][0]).to.eq('[sticky-footer-ad]');
+    expect(errorLogSpy.args[0][1]).to.eq(
+      'Could not find adSticky container [data-ref=h5v-sticky-ad] or closeButton [data-ref=h5v-sticky-ad-close]'
+    );
+  });
+
+  it('should throw a warning if there is no closeButton element in the html', function () {
+    const adSticky = jsDomWindow.document.createElement('div');
+    adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+    jsDomWindow.document.body.appendChild(adSticky);
+    const errorLogSpy = sandbox.spy(noopLogger, 'warn');
+    initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+    expect(errorLogSpy.calledOnce).to.have.been.true;
+    expect(errorLogSpy.args.length).to.eq(1);
+    expect(errorLogSpy.args[0][0]).to.eq('[sticky-footer-ad]');
+    expect(errorLogSpy.args[0][1]).to.eq(
+      'Could not find adSticky container [data-ref=h5v-sticky-ad] or closeButton [data-ref=h5v-sticky-ad-close]'
+    );
+  });
+
+  it('should log that the stickAd is running when adStickAd elements are available in the html', function () {
+    const adSticky = jsDomWindow.document.createElement('div');
+    adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+    const closeButton = jsDomWindow.document.createElement('div');
+    closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+
+    jsDomWindow.document.body.appendChild(adSticky);
+    jsDomWindow.document.body.appendChild(closeButton);
+
+    const debugLogSpy = sandbox.spy(noopLogger, 'debug');
+    initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+    expect(debugLogSpy.calledOnce).to.have.been.true;
+    expect(debugLogSpy.args.length).to.eq(1);
+    expect(debugLogSpy.args[0][0]).to.eq('sticky-ad');
+    expect(debugLogSpy.args[0][1]).to.eq(
+      'Running initAdSticky with defined sticky container and close button'
+    );
+  });
+
+  it('should add an X svg to the close button if it has no custom text', function () {
+    const adSticky = jsDomWindow.document.createElement('div');
+    adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+    const closeButton = jsDomWindow.document.createElement('div');
+    closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+
+    jsDomWindow.document.body.appendChild(adSticky);
+    jsDomWindow.document.body.appendChild(closeButton);
+
+    initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111]);
+    expect(closeButton.childNodes.length).to.eq(1);
+    expect(closeButton.childNodes[0].nodeName).to.eq('svg');
+  });
+
+  it('should show the stickAd only if there was an ad', async function () {
+    const adSticky = jsDomWindow.document.createElement('div');
+    adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+    const closeButton = jsDomWindow.document.createElement('div');
+    closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+
+    jsDomWindow.document.body.appendChild(adSticky);
+    jsDomWindow.document.body.appendChild(closeButton);
+
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'foo' } as googletag.IAdSlot,
+      advertiserId: 1337,
+      campaignId: 42
+    } as ISlotRenderEndedEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+
+    expect(adSticky.classList.contains('h5v-sticky-ad--hidden')).to.be.false;
+
+    // to be continued...
   });
 });
