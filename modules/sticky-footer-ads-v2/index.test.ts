@@ -21,6 +21,7 @@ import { FooterDomIds, StickyFooterAdsV2 } from './index';
 import * as stickyAdModule from './footerStickyAd';
 import { initAdSticky } from './footerStickyAd';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
+import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
 
 const sandbox = Sinon.createSandbox();
 let dom = createDom();
@@ -279,6 +280,88 @@ describe('initialize initAdSticky function', () => {
     expect(closeButton.childNodes[0].nodeName).to.eq('svg');
   });
 
+  it('should hide the stickAd if the advertiser was disallowed', async function () {
+    const adSticky = jsDomWindow.document.createElement('div');
+    adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+    const closeButton = jsDomWindow.document.createElement('div');
+    closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+
+    jsDomWindow.document.body.appendChild(adSticky);
+    jsDomWindow.document.body.appendChild(closeButton);
+
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+      advertiserId: 111,
+      campaignId: 42
+    } as ISlotRenderEndedEvent;
+
+    const slotLoadedEvent: ISlotOnloadEvent = {
+      slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+      serviceName: 'gpt'
+    } as ISlotOnloadEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+    const slotLoadedCallback: (event: ISlotOnloadEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotOnload'
+    )?.[1] as unknown as (event: ISlotOnloadEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+    slotLoadedCallback(slotLoadedEvent);
+
+    // Wait for the event loop to finish, so the adSticky can be shown or hidden.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
+  });
+
+  it('should hide the stickAd after clicking the close button', async function () {
+    const adSticky = jsDomWindow.document.createElement('div');
+    adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+    const closeButton = jsDomWindow.document.createElement('div');
+    closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+
+    jsDomWindow.document.body.appendChild(adSticky);
+    jsDomWindow.document.body.appendChild(closeButton);
+
+    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+    await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+
+    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+      advertiserId: 999,
+      campaignId: 42
+    } as ISlotRenderEndedEvent;
+
+    const slotLoadedEvent: ISlotOnloadEvent = {
+      slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+      serviceName: 'gpt'
+    } as ISlotOnloadEvent;
+
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+    const slotLoadedCallback: (event: ISlotOnloadEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotOnload'
+    )?.[1] as unknown as (event: ISlotOnloadEvent) => void;
+
+    slotRenderedCallback(slotRenderEndedEvent);
+    slotLoadedCallback(slotLoadedEvent);
+
+    // Wait for the event loop to finish, so the adSticky can be shown or hidden.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.false;
+    closeButton.click();
+    expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
+  });
+
   it('should show the stickAd only if there was an ad', async function () {
     const adSticky = jsDomWindow.document.createElement('div');
     adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
@@ -293,19 +376,30 @@ describe('initialize initAdSticky function', () => {
     await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
     const slotRenderEndedEvent: ISlotRenderEndedEvent = {
-      slot: { getSlotElementId: () => 'foo' } as googletag.IAdSlot,
-      advertiserId: 1337,
+      slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+      advertiserId: 999,
       campaignId: 42
     } as ISlotRenderEndedEvent;
+
+    const slotLoadedEvent: ISlotOnloadEvent = {
+      slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+      serviceName: 'gpt'
+    } as ISlotOnloadEvent;
 
     const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
     )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
+    const slotLoadedCallback: (event: ISlotOnloadEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotOnload'
+    )?.[1] as unknown as (event: ISlotOnloadEvent) => void;
+
     slotRenderedCallback(slotRenderEndedEvent);
+    slotLoadedCallback(slotLoadedEvent);
 
-    expect(adSticky.classList.contains('h5v-sticky-ad--hidden')).to.be.false;
+    // Wait for the event loop to finish, so the adSticky can be shown or hidden.
+    await new Promise(resolve => setTimeout(resolve, 0));
 
-    // to be continued...
+    expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.false;
   });
 });
