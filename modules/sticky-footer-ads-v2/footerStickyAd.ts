@@ -1,35 +1,16 @@
 import { googletag, Moli } from '@highfivve/ad-tag';
-import { FooterDomIds } from './index';
-import Device = Moli.Device;
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
-const adStickyCloseButtonContent = 'h5v-closeButtonContent';
-
-/**
- * This class is a optional hint for publishers to use, when the ad is clicked
- */
-const adVisibleClass = 'h5-sticky-ad--visible';
-
+const adStickyCloseButtonContent = '.h5v-closeButtonContent';
+const adStickHidingClass = 'h5v-footerAd--hidden';
 /**
  * empty: mobile sticky load was empty
  * disallowed: an advertiser that brings its own creative was rendered
  * standard: a regular creative was loaded
  */
 type RenderEventResult = 'empty' | 'disallowed' | 'standard';
-
-// TODO To allow something like transitions, we should stop slapping display: none here
-//      However to not break existing integrations, we need to make this configurable and optional
-const hideAdSlot = (adSticky: HTMLElement): void => {
-  adSticky.style.setProperty('display', 'none');
-  adSticky.classList.remove(adVisibleClass);
-};
-
-const showAdSlot = (adSticky: HTMLElement): void => {
-  adSticky.style.setProperty('display', 'block');
-  adSticky.classList.add(adVisibleClass);
-};
 
 /**
  * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
@@ -47,11 +28,8 @@ const stickyRenderedEvent = (
       }
 
       if (event.isEmpty) {
-        if (adSticky) {
-          hideAdSlot(adSticky);
-        }
         resolve('empty');
-      } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+      } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve('disallowed');
       } else {
         resolve('standard');
@@ -82,6 +60,13 @@ const stickyOnLoadEvent = (
     window.googletag.pubads().addEventListener('slotOnload', listener);
   });
 
+const hideAdSlot = (element: HTMLElement): void => {
+  element.classList.add(adStickHidingClass);
+};
+
+const showAdSlot = (element: HTMLElement): void => {
+  element.classList.remove(adStickHidingClass);
+};
 /**
  * ## Ad Sticky
  *
@@ -91,17 +76,15 @@ export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
   env: Moli.Environment,
   log: Moli.MoliLogger,
-  device: Device,
-  footerStickyDomIds: FooterDomIds,
+  footerStickyDomId: string,
   disallowedAdvertiserIds: number[],
-  initiallyHidden: boolean,
   closingButtonText?: string
 ): void => {
   const stickyAd = 'sticky-ad';
 
   const adSticky = window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
   const closeButton = window.document.querySelector(adStickyCloseButtonDataRef);
-  const closeButtonContent = window.document.querySelector(`.${adStickyCloseButtonContent}`);
+  const closeButtonContent = window.document.querySelector(adStickyCloseButtonContent);
 
   if (adSticky && closeButton) {
     log.debug(stickyAd, 'Running initAdSticky with defined sticky container and close button');
@@ -110,11 +93,14 @@ export const initAdSticky = (
     if (!closeButtonContent) {
       // Add an X svg as a content of the button, if no custom text was applied
       if (!closingButtonText) {
-        const closeButtonSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const closeButtonSvg = window.document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         closeButtonSvg.setAttribute('width', '24');
         closeButtonSvg.setAttribute('height', '24');
 
-        const closeButtonPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const closeButtonPath = window.document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path'
+        );
         closeButtonPath.classList.add(adStickyCloseButtonContent);
         closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
         closeButtonSvg.appendChild(closeButtonPath);
@@ -124,24 +110,8 @@ export const initAdSticky = (
       }
     }
 
-    // find the footerId based on the device and remove the other one
-    const desktopFooterElement =
-      footerStickyDomIds.desktop && document.getElementById(footerStickyDomIds.desktop);
-    const mobileFooterElement =
-      footerStickyDomIds.mobile && document.getElementById(footerStickyDomIds.mobile);
-
-    const footerStickyDomId = Object.values(footerStickyDomIds).map(footerDomId => {
-      if (device === 'mobile' && mobileFooterElement) {
-        desktopFooterElement && desktopFooterElement.remove();
-        return footerDomId;
-      } else if (device === 'desktop' && desktopFooterElement) {
-        mobileFooterElement && mobileFooterElement.remove();
-        return footerDomId;
-      }
-    })[0]; // surely there is at only one element array
-
     closeButton.addEventListener('click', () => {
-      hideAdSlot(adSticky);
+      hideAdSlot(adSticky); // Hide the footer including the close button
       adSticky.addEventListener(
         'transitionend',
         () => {
@@ -171,18 +141,17 @@ export const initAdSticky = (
         // we receive the renderEndedEvent, which grants us access to the slot
         // that should be destroyed
         log.debug(stickyAd, `result ${renderResult}`);
-        if (renderResult === 'disallowed') {
-          log.debug(stickyAd, 'hide mobile sticky container');
+        if (renderResult === 'disallowed' || renderResult === 'empty') {
+          log.debug(stickyAd, 'stickyFooter container');
+          hideAdSlot(adSticky);
+
+          // remove the sticky ad container if the ad is empty or disallowed
           if (adSticky) {
             adSticky.remove();
           }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
-          // if it was initially hidden, display it now
-          if (initiallyHidden) {
-            showAdSlot(adSticky);
-          }
-
+          showAdSlot(adSticky);
           // if it's a standard render then create a new listener set and
           // wait for the results
           return Promise.all([
@@ -201,7 +170,7 @@ export const initAdSticky = (
     }
   } else {
     log.warn(
-      '[mobile-sticky]',
+      '[sticky-footer-ad]',
       `Could not find adSticky container ${adStickyContainerDataRef} or closeButton ${adStickyCloseButtonDataRef}`,
       adSticky,
       closeButton

@@ -54,14 +54,6 @@ export type StickyFooterAdConfig = {
   readonly disallowedAdvertiserIds: number[];
 
   readonly closingButtonText?: string;
-
-  /**
-   * If true, the footer ad will remain hidden if initialized and only
-   * set to `display: block` if an actual ad renders.
-   *
-   * Default is `false`
-   */
-  readonly initiallyHidden?: boolean;
 };
 
 /**
@@ -102,23 +94,32 @@ export class StickyFooterAdsV2 implements IModule {
 
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-        if (
-          Object.keys(this.stickyFooterAdConfig.stickyFooterDomIds).length &&
-          Object.values(this.stickyFooterAdConfig.stickyFooterDomIds).map(stickyFooterDomId =>
-            slots.some(slot => slot.moliSlot.domId === stickyFooterDomId)
-          )
-        ) {
+        // determine the slot to init sticky ad for
+        const desktopSlot = slots.find(
+          slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.desktop
+        );
+        const mobileSlot = slots.find(
+          slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.mobile
+        );
+        // mobile traffic is usually a lot higher than desktop, so we opt for mobile as default if both are set.
+        // this is usually a configuration error in the ad tag and should not happen
+        const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
+
+        if (mobileSlot && desktopSlot) {
+          ctx.logger.warn(this.name, 'mobile and desktop sticky footer are called!');
+        }
+
+        if (footerAdSlot) {
           initAdSticky(
             ctx.window,
             ctx.env,
             ctx.logger,
-            ctx.labelConfigService.getDeviceLabel(),
-            this.stickyFooterAdConfig.stickyFooterDomIds,
+            footerAdSlot.moliSlot.domId,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
-            this.stickyFooterAdConfig.initiallyHidden ?? false,
             this.stickyFooterAdConfig.closingButtonText
           );
         }
+
         return Promise.resolve();
       })
     );
