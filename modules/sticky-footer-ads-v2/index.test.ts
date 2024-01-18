@@ -382,5 +382,31 @@ describe('Sticky-footer-v2 Module', () => {
 
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.false;
     });
+
+    it('should hide the stickyAd if the slotRenderEndedEvent was empty', async function () {
+      jsDomWindow.document.body.appendChild(adSticky);
+      jsDomWindow.document.body.appendChild(closeButton);
+
+      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+
+      const emptySlotRenderEndedEvent: ISlotRenderEndedEvent = {
+        slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+        advertiserId: 999,
+        campaignId: 42,
+        isEmpty: true
+      } as ISlotRenderEndedEvent;
+
+      const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+        args => (args[0] as string) === 'slotRenderEnded'
+      )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+      slotRenderedCallback(emptySlotRenderEndedEvent);
+
+      // Wait for the event loop to finish, so the adSticky can be shown or hidden.
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
+    });
   });
 });

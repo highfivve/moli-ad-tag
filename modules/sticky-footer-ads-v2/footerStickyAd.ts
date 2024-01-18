@@ -136,7 +136,7 @@ export const initAdSticky = (
 
     // hide mobile sticky for advertiser with custom mobile sticky creative
     if (env === 'production' && footerStickyDomId) {
-      const onRenderResult = ([renderResult]: [RenderEventResult, void]): Promise<void> => {
+      const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {
         // false means that the slot should not be destroyed. If it's not false,
         // we receive the renderEndedEvent, which grants us access to the slot
         // that should be destroyed
@@ -152,21 +152,31 @@ export const initAdSticky = (
           return Promise.resolve();
         } else if (renderResult === 'standard') {
           showAdSlot(adSticky);
+
           // if it's a standard render then create a new listener set and
           // wait for the results
-          return Promise.all([
-            stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window),
-            stickyOnLoadEvent(footerStickyDomId, window)
-          ]).then(onRenderResult);
+
+          const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
+          return stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
+            .then(result =>
+              result === 'empty' || result === 'disallowed'
+                ? Promise.resolve(result)
+                : stickyOnLoadEventPromise.then(() => result)
+            )
+            .then(onRenderResult);
         }
         return Promise.resolve();
       };
 
-      // wait for the slot render ended
-      Promise.all([
-        stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window),
-        stickyOnLoadEvent(footerStickyDomId, window)
-      ]).then(onRenderResult);
+      const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
+
+      stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
+        .then(result =>
+          result === 'empty' || result === 'disallowed'
+            ? Promise.resolve(result)
+            : stickyOnLoadEventPromise.then(() => result)
+        )
+        .then(onRenderResult);
     }
   } else {
     log.warn(
