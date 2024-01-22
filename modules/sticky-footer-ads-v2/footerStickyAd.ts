@@ -145,10 +145,6 @@ export const initAdSticky = (
           log.debug(stickyAd, 'stickyFooter container');
           hideAdSlot(adSticky);
 
-          // remove the sticky ad container if the ad is empty or disallowed
-          if (adSticky) {
-            adSticky.remove();
-          }
           return Promise.resolve();
         } else if (renderResult === 'standard') {
           showAdSlot(adSticky);
