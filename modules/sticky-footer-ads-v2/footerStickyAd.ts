@@ -134,52 +134,58 @@ export const initAdSticky = (
       }
     });
 
-    // hide mobile sticky for advertiser with custom mobile sticky creative
-    if (env === 'production' && footerStickyDomId) {
-      const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {
-        // false means that the slot should not be destroyed. If it's not false,
-        // we receive the renderEndedEvent, which grants us access to the slot
-        // that should be destroyed
-        log.debug(stickyAd, `result ${renderResult}`);
-        if (renderResult === 'disallowed' || renderResult === 'empty') {
-          log.debug(stickyAd, 'stickyFooter container');
-          hideAdSlot(adSticky);
+    const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {
+      // false means that the slot should not be destroyed. If it's not false,
+      // we receive the renderEndedEvent, which grants us access to the slot
+      // that should be destroyed
+      log.debug(stickyAd, `result ${renderResult}`);
 
-          return Promise.resolve();
-        } else if (renderResult === 'standard') {
-          showAdSlot(adSticky);
+      if (renderResult === 'disallowed' || renderResult === 'empty') {
+        log.debug(stickyAd, 'stickyFooter container');
+        hideAdSlot(adSticky);
 
-          // if it's a standard render then create a new listener set and
-          // wait for the results
-
-          const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
-          return stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
-            .then(result =>
-              result === 'empty' || result === 'disallowed'
-                ? Promise.resolve(result)
-                : stickyOnLoadEventPromise.then(() => result)
-            )
-            .then(onRenderResult);
-        }
         return Promise.resolve();
-      };
+      } else if (renderResult === 'standard') {
+        showAdSlot(adSticky);
 
-      const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
+        // if it's a standard render then create a new listener set and
+        // wait for the results
 
-      stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
-        .then(result =>
-          result === 'empty' || result === 'disallowed'
-            ? Promise.resolve(result)
-            : stickyOnLoadEventPromise.then(() => result)
-        )
-        .then(onRenderResult);
+        const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
+        return stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
+          .then(result =>
+            result === 'empty' || result === 'disallowed'
+              ? Promise.resolve(result)
+              : stickyOnLoadEventPromise.then(() => result)
+          )
+          .then(onRenderResult);
+      }
+      return Promise.resolve();
+    };
+
+    // hide mobile sticky for advertiser with custom mobile sticky creative
+    if (env === 'production') {
+      if (footerStickyDomId) {
+        const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
+
+        stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
+          .then(result =>
+            result === 'empty' || result === 'disallowed'
+              ? Promise.resolve(result)
+              : stickyOnLoadEventPromise.then(() => result)
+          )
+          .then(onRenderResult);
+      } else {
+        log.warn(
+          '[sticky-footer-ad]',
+          `Could not find adSticky container ${adStickyContainerDataRef} or closeButton ${adStickyCloseButtonDataRef}`,
+          adSticky,
+          closeButton
+        );
+      }
+    } else {
+      // fake a render event
+      onRenderResult('standard');
     }
-  } else {
-    log.warn(
-      '[sticky-footer-ad]',
-      `Could not find adSticky container ${adStickyContainerDataRef} or closeButton ${adStickyCloseButtonDataRef}`,
-      adSticky,
-      closeButton
-    );
   }
 };
