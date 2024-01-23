@@ -213,8 +213,13 @@ export class StickyHeaderAds implements IModule {
 
         const minVisibleDuration = this.stickyHeaderAdConfig.minVisibleDurationMs ?? 0;
 
-        const adRenderState = this.stickyHeaderAdConfig.waitForRendering
+        const adRenderIsEmpty = this.stickyHeaderAdConfig.waitForRendering
           ? new Promise<boolean>(resolve => {
+              // in test mode there's no event fired so we need to resolve immediately and say it's not empty
+              if (ctx.env === 'test') {
+                resolve(false);
+                return;
+              }
               const listener: (event: googletag.events.ISlotRenderEndedEvent) => void = event => {
                 // only the header slot is relevant
                 if (event.slot.getSlotElementId() !== headerSlot.moliSlot.domId) {
@@ -242,7 +247,7 @@ export class StickyHeaderAds implements IModule {
           };
 
           const callback: IntersectionObserverCallback = entries => {
-            adRenderState.then(isEmpty => {
+            adRenderIsEmpty.then(isEmpty => {
               // only one element will be observed
               const entry = entries[0];
               if (
