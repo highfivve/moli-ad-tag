@@ -42,7 +42,7 @@ jobs:
       - name: build adtag
         working-directory: ./prebuilt/ad-tag
         run: |
-          npm install
+          npm ci
           npm run build
           cp dist/* ../../website/build/assets/js/
           cp dist/* ../../website/build/assets/js/${{ env.RELEASE_VERSION }}/

@@ -326,7 +326,7 @@ export namespace Moli {
    *
    * The state machine is defined as:
    *
-   * <pre style="font-size:10px;">
+   * ```
    *                                                                                   setXYZ / addXYZ
    *                                                                                   requestAds()
    *
@@ -360,7 +360,7 @@ export namespace Moli {
    *   +  setXYZ +                            +  setXYZ +                                                 |          |
    *      addXYZ                                 addXYZ                                     ads not ok    +----------+
    *
-   * </pre>
+   * ```
    *
    * Each state has allowed operations and transitions
    *
@@ -1298,15 +1298,20 @@ export namespace Moli {
      *
      * Valid examples (every CSS selector can be used):
      *
+     * ```js
      * {
      *   loaded: 'infinite',
      *   selector: '.ad-infinite'
      * }
+     * ```
+     * or
      *
+     * ```js
      * {
      *   loaded: 'infinite',
      *   selector: '[data-js="ad-infinite"]'
      * }
+     * ````
      *
      */
     export interface Infinite extends ISlotLoading {
