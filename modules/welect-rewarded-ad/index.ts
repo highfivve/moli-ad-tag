@@ -107,18 +107,19 @@ export class WelectRewardedAd implements IModule {
 
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep('Rewarded Ad Setup', HIGH_PRIORITY, (context, slots) => {
-        const rewardedAdSlot = slots.find(slot => slot.moliSlot.position === 'rewarded');
+        const rewardedAdSlot = slots.filter(slot => slot.moliSlot.position === 'rewarded');
 
         // only run if there is exactly one slot, and it is a rewarded ad
         // otherwise this is another pipeline run, e.g. for a banner ad
-        if (slots.length !== 1 || !rewardedAdSlot) {
+        if (rewardedAdSlot.length !== 1) {
+          context.logger.warn(this.name, 'Multiple rewarded ad slots found. Skipping welect');
           return Promise.resolve();
         }
 
         return this.requestBids(context.logger).then(bidsAvailable => {
           if (bidsAvailable) {
             // this must trigger a line item in the ad server for welect
-            rewardedAdSlot.adSlot.setTargeting('hb_bidder', 'welect');
+            rewardedAdSlot[0].adSlot.setTargeting('hb_bidder', 'welect');
           }
         });
       })

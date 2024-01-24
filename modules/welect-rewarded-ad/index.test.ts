@@ -128,7 +128,7 @@ describe('Welect Rewarded Ad Module', () => {
   it('should not call requestBids if there is multiple adSlots', async () => {
     const module = createWelect();
     const slot1 = mkAdSlotInDOM(1, 'rewarded');
-    const slot2 = mkAdSlotInDOM(2, 'in-page');
+    const slot2 = mkAdSlotInDOM(2, 'rewarded');
 
     const config = newEmptyConfig([slot1, slot2]);
     const requestBidsSpy = sandbox.spy(module, 'requestBids');
