@@ -61,6 +61,8 @@ export type StickyHeaderFadeOutConfig = {
    *
    * - no content slots available
    * - hide earlier based on another element
+   *
+   * Note: You can also use multiple selectors, e.g. `#content_1, #content_2`.  The first element that is found will be used.
    */
   readonly selector: string;
 
@@ -268,10 +270,13 @@ export class StickyHeaderAds implements IModule {
           // setup intersection observer
           this.observer = new IntersectionObserver(callback, options);
 
-          // start observing
-          const target = ctx.window.document.querySelector(
+          // start observing the first element that matches the selector
+          const targets = ctx.window.document.querySelectorAll(
             this.stickyHeaderAdConfig.fadeOutTrigger.selector
           );
+          // I don't trust the spread operator [target] = targets. The element is typed as Element without null,
+          // but it can be null. So we need to check for null.
+          const target = targets.length > 0 ? targets.item(0) : null;
           if (target) {
             this.observer.observe(target);
           } else {
