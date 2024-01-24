@@ -13,7 +13,7 @@ $ yarn add @highfivve/ad-tag
 export NODE_OPTIONS=--openssl-legacy-provider
 ```
 
-See <https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported>
+See [https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported](https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported)
 
 ## moli release script
 

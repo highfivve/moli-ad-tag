@@ -1298,15 +1298,20 @@ export namespace Moli {
      *
      * Valid examples (every CSS selector can be used):
      *
+     * ```js
      * {
      *   loaded: 'infinite',
      *   selector: '.ad-infinite'
      * }
+     * ```
+     * or
      *
+     * ```js
      * {
      *   loaded: 'infinite',
      *   selector: '[data-js="ad-infinite"]'
      * }
+     * ````
      *
      */
     export interface Infinite extends ISlotLoading {

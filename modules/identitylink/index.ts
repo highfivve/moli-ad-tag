@@ -63,9 +63,9 @@ export type IdentityLinkModuleConfig = {
    *
    * Ordering seems important.
    *
-   * - "<EMAIL_HASH_SHA1>",
-   * - "<EMAIL_HASH_SHA256>",
-   * - "<EMAIL_HASH_MD5>"
+   * - "EMAIL_HASH_SHA1",
+   * - "EMAIL_HASH_SHA256",
+   * - "EMAIL_HASH_MD5"
    */
   readonly hashedEmailAddresses: string[];
 };
