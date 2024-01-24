@@ -84,6 +84,22 @@ export type StickyHeaderAdConfig = {
   readonly fadeOutClassName: string;
 
   /**
+   * Optional configuration for publishers that have a navbar that hides on scroll or is not sticky.
+   * If set, the ad slot will receive the `navbarHiddenClassName` class when the navbar is hidden.
+   */
+  readonly navbarConfig?: {
+    /**
+     * how to find the navbar element
+     */
+    readonly selector: string;
+
+    /**
+     * the class name that will be added to the ad slot when the navbar is hidden
+     */
+    readonly navbarHiddenClassName: string;
+  };
+
+  /**
    * If set to `true` this will additional remove the entire ad slot from the DOM
    * and not just `googletag.destorySlots([slot])`
    */
@@ -248,28 +264,6 @@ export class StickyHeaderAds implements IModule {
             rootMargin: '0px'
           };
 
-          const callback: IntersectionObserverCallback = entries => {
-            adRenderIsEmpty.then(isEmpty => {
-              // only one element will be observed
-              const entry = entries[0];
-              if (
-                // user scrolls down
-                entry.isIntersecting ||
-                // user starts below observed DOM
-                (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
-                // if the ad is empty, hide it
-                isEmpty
-              ) {
-                container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-              } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
-                container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
-              }
-            });
-          };
-
-          // setup intersection observer
-          this.observer = new IntersectionObserver(callback, options);
-
           // start observing the first element that matches the selector
           const targets = ctx.window.document.querySelectorAll(
             this.stickyHeaderAdConfig.fadeOutTrigger.selector
@@ -277,8 +271,52 @@ export class StickyHeaderAds implements IModule {
           // I don't trust the spread operator [target] = targets. The element is typed as Element without null,
           // but it can be null. So we need to check for null.
           const target = targets.length > 0 ? targets.item(0) : null;
+
+          // optional navbar configuration to support none-sticky navbars
+          const navbarConfig = this.stickyHeaderAdConfig.navbarConfig;
+          const navbarHiddenClass = navbarConfig ? navbarConfig.navbarHiddenClassName : null;
+          const navbar = navbarConfig
+            ? ctx.window.document.querySelector(navbarConfig.selector)
+            : null;
+
+          const callback: IntersectionObserverCallback = entries => {
+            adRenderIsEmpty.then(isEmpty => {
+              // only one element will be observed
+              const entry = entries[0];
+
+              // fadeout the ad if the observed element is the target
+              if (entry.target === target) {
+                if (
+                  // user scrolls down
+                  entry.isIntersecting ||
+                  // user starts below observed DOM
+                  (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
+                  // if the ad is empty, hide it
+                  isEmpty
+                ) {
+                  container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
+                } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
+                  container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
+                }
+              } else if (entry.target === navbar && navbarHiddenClass) {
+                // apply a separate class if the navbar is not intersecting the viewport anymore
+                if (entry.isIntersecting) {
+                  container.classList.remove(navbarHiddenClass);
+                } else {
+                  container.classList.add(navbarHiddenClass);
+                }
+              }
+            });
+          };
+
           if (target) {
+            // setup intersection observer
+            this.observer = new IntersectionObserver(callback, options);
             this.observer.observe(target);
+
+            if (navbar) {
+              this.observer.observe(navbar);
+            }
           } else {
             ctx.logger.error(
               this.name,
