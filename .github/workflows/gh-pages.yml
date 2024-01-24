@@ -1,6 +1,7 @@
 name: Github Pages Deployment
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
