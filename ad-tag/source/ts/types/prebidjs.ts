@@ -2057,12 +2057,90 @@ export namespace prebidjs {
       ext?: any;
     }
 
+    /**
+     * Entity that applied user parameters and the parameters they applied.
+     */
+    export interface OpenRtb2RegsExtDsaTransparency {
+      /**
+       * Domain of the entity that applied user parameters
+       */
+      domain: string;
+
+      /**
+       * Array for platform or sell-side use of any user parameters (using the list provided by DSA Transparency Taskforce).
+       * Note: See definition and list of possible user parameters as listed here, applied consistently in both bid
+       *      request and/or bid response.
+       *
+       * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/extensions/community_extensions/dsa_transparency.md#user_parameters
+       */
+      params: Array<1 | 2 | 3>;
+    }
+
+    /**
+     * Extension for DSA transparency information
+     * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/extensions/community_extensions/dsa_transparency.md
+     */
+    export interface OpenRtb2RegsExtDsa {
+      dsa: {
+        /**
+         * Flag to indicate if DSA information should be made available. This will signal if the bid request belongs to
+         * an Online Platform/VLOP, such that a buyer should respond with DSA Transparency information based on the
+         * pubrender value.
+         *
+         * 0 = Not required
+         * 1 = Supported, bid responses with or without DSA object will be accepted
+         * 2 = Required, bid responses without DSA object will not be accepted
+         * 3 = Required, bid responses without DSA object will not be accepted, Publisher is an Online Platform
+         */
+        required: 0 | 1 | 2 | 3;
+
+        /**
+         * Flag to indicate if the publisher will render the DSA Transparency info. This will signal if the publisher is
+         * able to and intends to render an icon or other appropriate user-facing symbol and display the DSA
+         * transparency info to the end user.
+         *
+         * 0 = Publisher can't render
+         * 1 = Publisher could render depending on adrender
+         * 2 = Publisher will render
+         */
+        pubrender: 0 | 1 | 2;
+
+        /**
+         * Independent of pubrender, the publisher may need the transparency data for audit purposes.
+         *
+         * 0 = do not send transparency data
+         * 1 = optional to send transparency data
+         * 2 = send transparency data
+         */
+        datatopub: 0 | 1 | 2;
+
+        /**
+         * Array of objects of the entities that applied user parameters and the parameters they applied.
+         */
+        transparency: OpenRtb2RegsExtDsaTransparency[];
+      };
+    }
+
+    export interface OpenRtb2Regs {
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB
+       */
+      ext?: OpenRtb2RegsExtDsa;
+    }
+
     export interface PrebidFirstPartyData {
       site?: OpenRtb2Site;
 
       user?: OpenRtb2User;
 
       publisher?: OpenRtb2Publisher;
+
+      /**
+       * This object contains any legal, governmental, or industry regulations that apply to the request. The
+       * coppa flag signals whether or not the request falls under the United States Federal Trade Commission’s
+       * regulations for the United States Children’s Online Privacy Protection Act (“COPPA”)
+       */
+      regs?: OpenRtb2Regs;
     }
   }
 
