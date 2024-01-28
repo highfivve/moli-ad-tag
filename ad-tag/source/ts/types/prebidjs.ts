@@ -3626,6 +3626,15 @@ export namespace prebidjs {
      * @example `{context: 1, plcmttype: 2}`
      */
     readonly native?: any;
+
+    /**
+     * The splitKeyword parameter lets Adagio know that the traffic is eligible to be sent to a Direct Seat using the Optimised Prebid Server offering.
+     * When it’s not included in the configuration, Adagio will only send the traffic to its resellers set up through the Demand Library.
+     *
+     * You can pick any value for splitKeyword (30 alphabetic-numeric string with dash and underscore), e.g. ss-pubmatic (standing for server-side pubmatic).
+     * Once communicated to our team, any change made to its value needs to be communicated again (otw. traffic won’t be recognised as eligible for the Optimised Prebid Server offering)
+     */
+    readonly splitKeyword?: string;
   }
 
   export interface IAdagioBid extends IBidObject<typeof Adagio, IAdagioParams> {}
