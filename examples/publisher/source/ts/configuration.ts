@@ -359,6 +359,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
                   video.PlaybackMethod.InViewportSoundsOn
                 ],
                 placement: video.Placement.InBanner,
+                plcmt: video.Plcmt.NoContentStandalone,
                 api: [
                   video.Api.VPAID_1,
                   video.Api.VPAID_2,
