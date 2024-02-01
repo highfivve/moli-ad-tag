@@ -121,22 +121,21 @@ export const initAdSticky = (
         'transitionend',
         function () {
           adSticky.remove(); // Remove the container from the DOM after animation
+          const slot = window.googletag
+            .pubads()
+            .getSlots()
+            .find(slot => slot.getSlotElementId() === footerStickyDomId);
+
+          // there are cases where the ad slot is not there. This may be the case when
+          // * the ad slot has already been deleted (user clicked two times on the button)
+          // * some weird ad blocker stuff
+          // * ad reload may have already removed the slot
+          if (slot) {
+            window.googletag.destroySlots([slot]);
+          }
         },
         { once: true }
       ); // Ensure the event listener is executed only once
-
-      const slot = window.googletag
-        .pubads()
-        .getSlots()
-        .find(slot => slot.getSlotElementId() === footerStickyDomId);
-
-      // there are cases where the ad slot is not there. This may be the case when
-      // * the ad slot has already been deleted (user clicked two times on the button)
-      // * some weird ad blocker stuff
-      // * ad reload may have already removed the slot
-      if (slot) {
-        window.googletag.destroySlots([slot]);
-      }
     });
 
     const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {

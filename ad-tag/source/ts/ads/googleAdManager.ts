@@ -221,7 +221,6 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             resolve();
             return;
           case 'test':
-            context.window.googletag.enableServices();
             resolve();
             return;
         }
