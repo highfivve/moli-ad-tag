@@ -93,18 +93,23 @@ export const initAdSticky = (
     if (!closeButtonContent) {
       // Add an X svg as a content of the button, if no custom text was applied
       if (!closingButtonText) {
-        const closeButtonSvg = window.document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        closeButtonSvg.setAttribute('width', '24');
-        closeButtonSvg.setAttribute('height', '24');
+        if (!closeButton.querySelector('svg')) {
+          const closeButtonSvg = window.document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'svg'
+          );
+          closeButtonSvg.setAttribute('width', '24');
+          closeButtonSvg.setAttribute('height', '24');
 
-        const closeButtonPath = window.document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path'
-        );
-        closeButtonPath.classList.add(adStickyCloseButtonContent);
-        closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
-        closeButtonSvg.appendChild(closeButtonPath);
-        closeButton.appendChild(closeButtonSvg);
+          const closeButtonPath = window.document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'path'
+          );
+          closeButtonPath.classList.add(adStickyCloseButtonContent);
+          closeButtonPath.setAttribute('d', 'M7 10l5 5 5-5z');
+          closeButtonSvg.appendChild(closeButtonPath);
+          closeButton.appendChild(closeButtonSvg);
+        }
       } else {
         closeButton.textContent = closingButtonText;
       }
@@ -187,5 +192,12 @@ export const initAdSticky = (
       // fake a render event
       onRenderResult('standard');
     }
+  } else {
+    log.warn(
+      '[sticky-footer-ad]',
+      `Could not find adSticky container ${adStickyContainerDataRef} or closeButton ${adStickyCloseButtonDataRef}`,
+      adSticky,
+      closeButton
+    );
   }
 };

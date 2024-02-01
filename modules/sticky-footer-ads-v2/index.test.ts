@@ -257,7 +257,6 @@ describe('Sticky-footer-v2 Module', () => {
 
     it('should throw a warning if there is no adSticky container in the html', function () {
       jsDomWindow.document.querySelector('[data-ref=h5v-sticky-ad]')?.remove();
-
       jsDomWindow.document.body.appendChild(closeButton);
       initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
       expect(errorLogSpy.calledOnce).to.have.been.true;
@@ -299,6 +298,21 @@ describe('Sticky-footer-v2 Module', () => {
       initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111]);
       expect(closeButton.childNodes.length).to.eq(1);
       expect(closeButton.childNodes[0].nodeName).to.eq('svg');
+    });
+
+    it('should not add the X svg to the closing button if it already exists', function () {
+      const closeButton = jsDomWindow.document.createElement('div');
+      closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+      const closeButtonSvg = jsDomWindow.document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'svg'
+      );
+      closeButton.appendChild(closeButtonSvg);
+      jsDomWindow.document.body.appendChild(adSticky);
+      jsDomWindow.document.body.appendChild(closeButton);
+
+      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111]);
+      expect(closeButton.childNodes.length).to.eq(1);
     });
 
     it('should hide the stickAd if the advertiser was disallowed', async function () {
