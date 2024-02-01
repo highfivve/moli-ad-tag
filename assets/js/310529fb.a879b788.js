@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[1128],{8756:e=>{e.exports=JSON.parse('{"permalink":"/moli-ad-tag/blog/tags/docusaurus","page":1,"postsPerPage":10,"totalPages":1,"totalCount":3,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);
