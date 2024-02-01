@@ -37,13 +37,14 @@ describe('AdReload Validations', () => {
                 ? {
                     video: {
                       context: 'outstream',
-                      playerSize: [[605, 340]],
+                      playerSize: [[640, 480]],
                       mimes: ['video/mp4', 'video/MPV', 'video/H264', 'video/webm', 'video/ogg'],
                       startdelay: 1,
                       minduration: 1,
                       maxduration: 30,
                       playbackmethod: [video.PlaybackMethod.AutoPlaySoundOff],
                       placement: video.Placement.InBanner,
+                      plcmt: video.Plcmt.NoContentStandalone,
                       api: [video.Api.VPAID_1],
                       protocols: [video.Protocol.VAST_1],
                       skip: video.Skip.YES
