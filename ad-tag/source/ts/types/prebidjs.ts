@@ -2570,6 +2570,16 @@ export namespace prebidjs {
     }
 
     /**
+     * @see [OpenRTB 2.6 specification, Plcmt Subtypes - Video](https://github.com/InteractiveAdvertisingBureau/AdCOM/blob/develop/AdCOM%20v1.0%20FINAL.md#list_plcmtsubtypesvideo)
+     */
+    export const enum Plcmt {
+      Instream = 1,
+      AccompanyingContent = 2,
+      Interstitial = 3,
+      NoContentStandalone = 4
+    }
+
+    /**
      * Open RTB Spec 2.5 Section 5.3 Creative Attributes
      *
      * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
@@ -2775,6 +2785,11 @@ export namespace prebidjs {
     readonly placement: video.Placement;
 
     /**
+     * @see [OpenRTB 2.6 specification, Plcmt Subtypes -  Video](https://github.com/InteractiveAdvertisingBureau/AdCOM/blob/develop/AdCOM%20v1.0%20FINAL.md#list_plcmtsubtypesvideo)
+     */
+    readonly plcmt: video.Plcmt;
+
+    /**
      * Minimum bit rate in Kbps.
      * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
      */
@@ -2792,7 +2807,7 @@ export namespace prebidjs {
      *   1: Linear/In-Stream
      *   2: Non-Linear/Overlay.
      *
-     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     * @see [OpenRTB spec](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
      */
     readonly linearity?: video.Linearity;
 
@@ -5098,6 +5113,12 @@ export namespace prebidjs {
     readonly zoneId: string;
 
     /**
+     * By default, the Magnite exchange will bid on only one media type in this order: video, banner, native.
+     * Setting this flag to true will cause it to bid on all mediatypes.
+     */
+    readonly bidonmultiformat?: boolean;
+
+    /**
      * Array of Rubicon Project size IDs. If not specified, the system will try to
      * convert from the AdUnit's mediaTypes.banner.sizes.
      */
@@ -5138,20 +5159,14 @@ export namespace prebidjs {
      */
     readonly video?: {
       /**
-       *  Video player width in pixels. If not specified, takes width set in mediaTypes.video.playerSize
-       *  @example '640'
+       * 203 for outstream and 201 for instream
        */
-      readonly playerWidth?: string;
-
+      readonly size_id?: 203 | 201;
       /**
-       *  Video player height in pixels. If not specified, takes height set in mediaTypes.video.playerSize
-       *  @example '360'
-       */
-      readonly playerHeight?: string;
-
-      /**
-       * Indicates the language of the content video, in ISO 639-1/alpha2. Highly recommended for successful
+       * ed	Indicates the language of the content video, in ISO 639-1/alpha2. Highly recommended for successful
        * monetization for pre-, mid-, and post-roll video ads. Not applicable for interstitial and outstream.
+       *
+       * @example 'en'
        */
       readonly language?: string;
     };
