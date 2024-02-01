@@ -119,7 +119,7 @@ export const initAdSticky = (
       hideAdSlot(adSticky); // Hide the footer including the close button
       adSticky.addEventListener(
         'transitionend',
-        () => {
+        function () {
           adSticky.remove(); // Remove the container from the DOM after animation
         },
         { once: true }
