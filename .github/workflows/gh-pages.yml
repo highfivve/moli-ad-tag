@@ -32,7 +32,7 @@ jobs:
       - name: build website
         working-directory: ./website
         run: |
-          npm install
+          npm ci
           npm run build
 
       - name: create versioned asset directory
@@ -43,7 +43,7 @@ jobs:
       - name: build adtag
         working-directory: ./prebuilt/ad-tag
         run: |
-          npm ci
+          npm install
           npm run build
           cp dist/* ../../website/build/assets/js/
           cp dist/* ../../website/build/assets/js/${{ env.RELEASE_VERSION }}/
