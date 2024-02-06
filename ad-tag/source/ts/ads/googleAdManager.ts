@@ -150,6 +150,9 @@ export const gptDestroyAdSlots = (): ConfigureStep => {
   let currentRequestAdsCalls = 0;
 
   return mkConfigureStep('gpt-destroy-ad-slots', (context, slots) => {
+    if (context.env === 'test') {
+      return Promise.resolve();
+    }
     if (context.config.spa?.destroyAllAdSlots === false) {
       const allGptSlots = context.window.googletag.pubads().getSlots();
       const gptSlots = slots
