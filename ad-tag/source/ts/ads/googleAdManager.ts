@@ -240,18 +240,18 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
  * The `LabelConfigService` is used to fetch the supported labels.
  */
 export const gptLDeviceLabelKeyValue = (): PrepareRequestAdsStep =>
-  mkPrepareRequestAdsStep(
-    'gpt-device-label-keyValue',
-    LOW_PRIORITY,
-    ctx =>
-      new Promise<void>(resolve => {
-        const deviceLabel = ctx.labelConfigService.getDeviceLabel();
-        ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabel);
-        ctx.window.googletag.pubads().setTargeting('device_label', deviceLabel);
+  mkPrepareRequestAdsStep('gpt-device-label-keyValue', LOW_PRIORITY, ctx => {
+    if (ctx.env === 'test') {
+      return Promise.resolve();
+    }
+    return new Promise<void>(resolve => {
+      const deviceLabel = ctx.labelConfigService.getDeviceLabel();
+      ctx.logger.debug('GAM', 'adding "device_label" key-value with values', deviceLabel);
+      ctx.window.googletag.pubads().setTargeting('device_label', deviceLabel);
 
-        resolve();
-      })
-  );
+      resolve();
+    });
+  });
 
 /**
  * Sets a `consent` key value depending on the user consent
@@ -260,31 +260,31 @@ export const gptLDeviceLabelKeyValue = (): PrepareRequestAdsStep =>
  * - if any purposes is rejected `none`
  */
 export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
-  mkPrepareRequestAdsStep(
-    'gpt-consent-keyValue',
-    LOW_PRIORITY,
-    ctx =>
-      new Promise(resolve => {
-        const tcData = ctx.tcData;
-        // set consent key value
-        const fullConsent =
-          !tcData.gdprApplies ||
-          [
-            TCPurpose.STORE_INFORMATION_ON_DEVICE,
-            TCPurpose.SELECT_BASIC_ADS,
-            TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
-            TCPurpose.SELECT_PERSONALISED_ADS,
-            TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
-            TCPurpose.SELECT_PERSONALISED_CONTENT,
-            TCPurpose.MEASURE_AD_PERFORMANCE,
-            TCPurpose.MEASURE_CONTENT_PERFORMANCE,
-            TCPurpose.APPLY_MARKET_RESEARCH,
-            TCPurpose.DEVELOP_IMPROVE_PRODUCTS
-          ].every(purpose => tcData.purpose.consents[purpose]);
-        ctx.window.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
-        resolve();
-      })
-  );
+  mkPrepareRequestAdsStep('gpt-consent-keyValue', LOW_PRIORITY, ctx => {
+    if (ctx.env === 'test') {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      const tcData = ctx.tcData;
+      // set consent key value
+      const fullConsent =
+        !tcData.gdprApplies ||
+        [
+          TCPurpose.STORE_INFORMATION_ON_DEVICE,
+          TCPurpose.SELECT_BASIC_ADS,
+          TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+          TCPurpose.SELECT_PERSONALISED_ADS,
+          TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
+          TCPurpose.SELECT_PERSONALISED_CONTENT,
+          TCPurpose.MEASURE_AD_PERFORMANCE,
+          TCPurpose.MEASURE_CONTENT_PERFORMANCE,
+          TCPurpose.APPLY_MARKET_RESEARCH,
+          TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+        ].every(purpose => tcData.purpose.consents[purpose]);
+      ctx.window.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
+      resolve();
+    });
+  });
 
 export const gptDefineSlots =
   (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
