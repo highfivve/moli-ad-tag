@@ -353,7 +353,8 @@ export const gptDefineSlots =
       };
 
       // lookup existing slots and use those if already present. This makes defineSlots idempotent
-      const allSlots = context.window.googletag.pubads().getSlots();
+      // in test mode we only return an empty array as googletag is not defined
+      const allSlots = context.env === 'test' ? [] : context.window.googletag.pubads().getSlots();
       const existingSlot = allSlots.find(s => s.getSlotElementId() === moliSlot.domId);
 
       // define and display ad slot if doesn't exist yet
