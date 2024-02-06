@@ -412,6 +412,35 @@ describe('google ad manager', () => {
   describe('gptDefineSlots', () => {
     const adSlot: Moli.AdSlot = createdAdSlot('dom-id');
 
+    describe('test mode', () => {
+      it('should never call googletag.defineSlot ', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const defineSlotsSpy = sandbox.spy(dom.window.googletag, 'defineSlot');
+        await step(adPipelineContext('test'), [adSlot]);
+        expect(defineSlotsSpy).to.have.not.been.called;
+      });
+
+      it('should never call googletag.display ', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const defineSlotsSpy = sandbox.spy(dom.window.googletag, 'display');
+        await step(adPipelineContext('test'), [adSlot]);
+        expect(defineSlotsSpy).to.have.not.been.called;
+      });
+
+      it('should never call googletag.pubads ', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+        const defineSlotsSpy = sandbox.spy(dom.window.googletag, 'pubads');
+        await step(adPipelineContext('test'), [adSlot]);
+        expect(defineSlotsSpy).to.have.not.been.called;
+      });
+    });
+
     describe('production mode', () => {
       it('should define in-page slots', () => {
         const step = gptDefineSlots();
