@@ -65,7 +65,10 @@ export class Pubstack implements IModule {
     };
 
     config.pipeline.initSteps.push(
-      mkInitStep('pubstack-init', context => {
+      mkInitStep('pubstack-init', ctx => {
+        if (ctx.env === 'test') {
+          return Promise.resolve();
+        }
         // load the pubstack script
         assetLoaderService
           .loadScript({
@@ -73,13 +76,16 @@ export class Pubstack implements IModule {
             loadMethod: AssetLoadMethod.TAG,
             assetUrl: `https://boot.pbstck.com/v1/tag/${this.pubstackConfig.tagId}`
           })
-          .catch(error => context.logger.error('failed to load pubstack', error));
+          .catch(error => ctx.logger.error('failed to load pubstack', error));
         return Promise.resolve();
       })
     );
 
     config.pipeline.configureSteps.push(
       mkConfigureStep('pubstack-configure', ctx => {
+        if (ctx.env === 'test') {
+          return Promise.resolve();
+        }
         // these map to key-value values in the ad manager. All other values are not configured there and thus
         // don't need to be sent along
         const validABTestValues = ['0', '1', '2', '3'];

@@ -80,10 +80,23 @@ describe('Pubstack Module', () => {
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: 'https://boot.pbstck.com/v1/tag/1234-5678-910a'
     });
+
+    it('should not load script in init step if env is test', async () => {
+      const module = createPubstack();
+      const config = newEmptyConfig();
+
+      module.init(config, assetLoaderService);
+      const init = config.pipeline?.initSteps[0]!;
+
+      expect(config.pipeline).to.be.ok;
+
+      await init({ ...adPipelineContext(), env: 'test' });
+      expect(loadScriptStub).to.have.not.been.called;
+    });
   });
 
   describe('ab test feature', () => {
-    const callConfigureStep = async () => {
+    const callConfigureStep = async (env: 'production' | 'test' = 'production') => {
       const module = createPubstack();
       const config = newEmptyConfig();
 
@@ -93,7 +106,7 @@ describe('Pubstack Module', () => {
       const step = config.pipeline?.configureSteps[0]!;
       expect(step.name).to.be.eq('pubstack-configure');
 
-      await step(adPipelineContext(), []);
+      await step({ ...adPipelineContext(), env }, []);
     };
 
     const addMetaTag = (content: string): void => {
@@ -125,6 +138,12 @@ describe('Pubstack Module', () => {
         addMetaTag(content);
         await callConfigureStep();
         expect(setTargetingSpy).to.have.been.called;
+      });
+
+      it(`should do nothing if env is test with valid value ${content}`, async () => {
+        addMetaTag(content);
+        await callConfigureStep('test');
+        expect(setTargetingSpy).to.have.not.been.called;
       });
     });
   });
