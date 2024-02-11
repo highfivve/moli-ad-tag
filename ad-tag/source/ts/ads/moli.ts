@@ -525,7 +525,13 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
         // call the configured hooks
         if (state.hooks && state.hooks.beforeRequestAds) {
-          state.hooks.beforeRequestAds.forEach(hook => hook(config));
+          state.hooks.beforeRequestAds.forEach(hook => {
+            try {
+              hook(config);
+            } catch (e) {
+              getLogger(config, window).error('MoliGlobal', 'beforeRequestAds hook failed', e);
+            }
+          });
         }
 
         const afterRequestAds = state.hooks.afterRequestAds;
@@ -682,7 +688,17 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           })
           .then(configWithTargeting => {
             // run hooks
-            beforeRequestAds.forEach(hook => hook(configWithTargeting));
+            beforeRequestAds.forEach(hook => {
+              try {
+                hook(configWithTargeting);
+              } catch (e) {
+                getLogger(configWithTargeting, window).error(
+                  'MoliGlobal',
+                  'beforeRequestAds hook failed',
+                  e
+                );
+              }
+            });
 
             return adService
               .requestAds(configWithTargeting, refreshSlots, refreshInfiniteSlots)
