@@ -8,7 +8,12 @@ import { prebidjs } from '../types/prebidjs';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { prebidConfigure, prebidPrepareRequestAds, prebidRequestBids } from './prebid';
+import {
+  prebidConfigure,
+  prebidPrepareRequestAds,
+  prebidRemoveAdUnits,
+  prebidRequestBids
+} from './prebid';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
@@ -221,14 +226,12 @@ describe('prebid', () => {
   });
 
   describe('prebid prepare request ads', () => {
-    it('should add empty adunits array when the slots array is empty', () => {
+    it('should add empty adunits array when the slots array is empty', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
       const step = prebidPrepareRequestAds(moliPrebidTestConfig);
-
-      return step(adPipelineContext(), []).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
-      });
+      await step(adPipelineContext(), []);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
     });
 
     it('should use the code property if set', async () => {
@@ -264,6 +267,13 @@ describe('prebid', () => {
       await step(adPipelineContext(), [singleSlot]);
       expect(addAdUnitsSpy).to.have.been.calledOnce;
       expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
+    });
+
+    it('should add no adunits if ephemeralAdUnits is true ', async () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+      const step = prebidPrepareRequestAds({ ...moliPrebidTestConfig, ephemeralAdUnits: true });
+      await step(adPipelineContext(), []);
+      expect(addAdUnitsSpy).to.have.callCount(0);
     });
 
     describe('prebid adslot context', () => {
@@ -810,6 +820,37 @@ describe('prebid', () => {
     });
   });
 
+  describe('prebidRemoveAdUnits', () => {
+    const adUnit1Slot = createAdSlot('adUnit1');
+
+    beforeEach(() => {
+      // add some dummy data
+      dom.window.pbjs.adUnits = [{ code: adUnit1Slot.domId }];
+    });
+    afterEach(() => {
+      // clean up adUnits property
+      delete dom.window.pbjs.adUnits;
+    });
+
+    it('should call pbjs.removeAdUnit with the adUnitCode', async () => {
+      const removeAdUnitSpy = sandbox.spy(dom.window.pbjs, 'removeAdUnit');
+
+      const step = prebidRemoveAdUnits(moliPrebidTestConfig);
+
+      await step(adPipelineContext(), [adUnit1Slot]);
+      expect(removeAdUnitSpy).to.have.been.calledOnce;
+      expect(removeAdUnitSpy).to.have.been.calledOnceWithExactly(adUnit1Slot.domId);
+    });
+
+    it('should not call pbjs.removeAdUnit with the adUnitCode if ephemeralAdUnits is true', async () => {
+      const removeAdUnitSpy = sandbox.spy(dom.window.pbjs, 'removeAdUnit');
+      const step = prebidRemoveAdUnits({ ...moliPrebidTestConfig, ephemeralAdUnits: true });
+
+      await step(adPipelineContext(), [adUnit1Slot]);
+      expect(removeAdUnitSpy).to.has.callCount(0);
+    });
+  });
+
   describe('prebid request bids', () => {
     it('should not call requestBids if slots are empty', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
@@ -852,6 +893,39 @@ describe('prebid', () => {
       expect(requestBidsSpy).to.have.been.calledWith(
         Sinon.match.has('bidsBackHandler', Sinon.match.func)
       );
+    });
+
+    it('should call requestBids with the prebid ad units if ephemeralAdUnits is true', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(
+        { ...moliPrebidTestConfig, ephemeralAdUnits: true },
+        'gam',
+        undefined
+      );
+
+      const domId = 'prebid-slot';
+      const adUnit = prebidAdUnit(domId, [
+        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+      ]);
+      const slotDef = createSlotDefinitions(domId, { adUnit });
+
+      await step(adPipelineContext(), [slotDef]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      expect(requestBidsSpy).to.have.not.been.calledWith(
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId]))
+      );
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('bidsBackHandler', Sinon.match.func)
+      );
+
+      // validate the adUnits call - this gives better error messages than the Sinon.match calledWith
+      const adUnits = requestBidsSpy.firstCall.args[0].adUnits;
+      expect(adUnits).to.have.length(1);
+      expect(adUnits[0]).to.deep.equals({
+        ...adUnit,
+        // labelAll & labelAny are stripped away
+        bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+      });
     });
 
     it('should call requestBids with the timeout in adPipeline context', async () => {

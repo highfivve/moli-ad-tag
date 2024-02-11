@@ -1518,6 +1518,14 @@ export namespace Moli {
         readonly nodes: BidderSupplyChainNode[];
       };
 
+      /**
+       * if set to true the ad units will not be added via `pbjs.addAdUnits`, but created as ephemeral ad units each time
+       * an auction is triggered.
+       *
+       * @default is false
+       */
+      readonly ephemeralAdUnits?: boolean;
+
       /** optional listener for prebid events */
       listener?: PrebidListenerProvider;
     }
