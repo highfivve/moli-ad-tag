@@ -966,7 +966,23 @@ describe('moli', () => {
       });
     });
 
-    it('should add the beforeRequestAds hook with spa state if requestAds() was successful', () => {
+    it('should catch errors in beforeRequestAds hook', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        throw new Error('oh no!');
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.configure(defaultConfig);
+      const result = await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(result.state).not.to.be.eq('error');
+    });
+
+    it('should add the beforeRequestAds hook with spa state if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
@@ -978,9 +994,8 @@ describe('moli', () => {
       adTag.beforeRequestAds(hookSpy);
       adTag.enableSinglePageApp();
       adTag.configure(defaultConfig);
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-      });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
     });
 
     it('should add the beforeRequestAds hooks and call them on each requestAds() cal', async () => {
@@ -1003,7 +1018,24 @@ describe('moli', () => {
       expect(hookSpy).to.be.calledTwice;
     });
 
-    it('should add the afterRequestAds hook if requestAds() was successful', () => {
+    it('should catch errors in beforeRequestAds hook in spa mode', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        throw new Error('oh no!');
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.enableSinglePageApp();
+      adTag.configure(defaultConfig);
+      const result = await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(result.state).not.to.be.eq('error');
+    });
+
+    it('should add the afterRequestAds hook if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
@@ -1014,10 +1046,9 @@ describe('moli', () => {
 
       adTag.afterRequestAds(hookSpy);
       adTag.configure(defaultConfig);
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-        expect(hookSpy).to.be.calledOnceWithExactly('finished');
-      });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(hookSpy).to.be.calledOnceWithExactly('finished');
     });
 
     [2, 3].forEach(callCounts => {
