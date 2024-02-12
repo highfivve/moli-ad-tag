@@ -198,7 +198,7 @@ describe('google ad manager', () => {
       await step(
         adPipelineContext('production', {
           ...emptyConfig,
-          spa: { enabled: true, destroyAllAdSlots: false }
+          spa: { enabled: true, destroyAllAdSlots: false, validateLocation: 'href' }
         }),
         [createdAdSlot(domId), createdAdSlot('slot-2')]
       );
@@ -229,7 +229,7 @@ describe('google ad manager', () => {
       const step = gptDestroyAdSlots();
       const config: Moli.MoliConfig = {
         ...emptyConfig,
-        spa: { enabled: true, destroyAllAdSlots: false }
+        spa: { enabled: true, destroyAllAdSlots: false, validateLocation: 'href' }
       };
 
       await step(adPipelineContext('production', config, 1), [createdAdSlot(domId)]);

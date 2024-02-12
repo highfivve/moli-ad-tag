@@ -22,6 +22,7 @@ import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { LabelConfigService } from './labelConfigService';
+import { allowRefreshAdSlots } from './spa';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -773,7 +774,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
       // until the next requestAds() call arrives
       case 'spa-finished':
-        if (state.href === window.location.href) {
+        const validateLocation = state.config.spa?.validateLocation ?? 'href';
+        if (allowRefreshAdSlots(validateLocation, state.href, window.location)) {
           // user hasn't navigated yet, so we directly refresh the slot
           return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
         } else {
