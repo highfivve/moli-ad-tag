@@ -464,10 +464,18 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function enableSinglePageApp(): void {
     switch (state.state) {
       case 'configurable': {
+        getLogger(null, window).warn(
+          'MoliGlobal',
+          'enableSinglePageApp() is deprecated. Use spa config.'
+        );
         state.isSinglePageApp = true;
         break;
       }
       case 'configured': {
+        getLogger(state.config, window).warn(
+          'MoliGlobal',
+          'enableSinglePageApp() is deprecated. Use spa config.'
+        );
         state.isSinglePageApp = true;
         break;
       }
