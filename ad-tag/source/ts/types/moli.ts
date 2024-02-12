@@ -206,7 +206,7 @@ export namespace Moli {
      *   moliAdTag.requestAds()
      * });
      * ```
-     *
+     * @deprecated use the `spa` configuration option in the ad tag configuration instead. This method will soon be removed.
      */
     enableSinglePageApp(): void;
 
