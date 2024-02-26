@@ -134,6 +134,37 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
   domain: 'gutefrage.net',
   slots: [
     {
+      domId: 'ad-header',
+      position: 'in-page',
+      labelAny: ['mobile', 'desktop'],
+      adUnitPath: '/55155651/prebid_test/ad-header/{device}/{domain}',
+      sizes: [
+        [320, 100],
+        [300, 100],
+        [728, 90]
+      ],
+      sizeConfig: [
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [
+            [320, 100],
+            [300, 100]
+          ]
+        },
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [[728, 90]]
+        }
+      ],
+      behaviour: {
+        loaded: 'eager'
+      },
+      gpt: {
+        // prevent collapsing this div because it hurts the CLS score
+        collapseEmptyDiv: false
+      }
+    },
+    {
       domId: 'ad-content-1',
       position: 'in-page',
       labelAny: ['mobile', 'desktop'],

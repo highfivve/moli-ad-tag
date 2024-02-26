@@ -3,6 +3,7 @@ import video = prebidjs.video;
 
 export const adConfiguration: Moli.MoliConfig = {
   environment: 'test',
+  spa: { enabled: true, validateLocation: 'href' },
   slots: [
     {
       position: 'in-page',
