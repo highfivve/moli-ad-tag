@@ -29,6 +29,7 @@ import 'prebid.js/modules/userId/index';
 import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
+import { StickyHeaderAds } from '@highfivve/module-sticky-header-ads';
 
 prebid.processQueue();
 
@@ -146,6 +147,23 @@ moli.registerModule(
       // gutefrage-intern
     ],
     closingButtonText: 'schließen'
+  })
+);
+
+moli.registerModule(
+  new StickyHeaderAds({
+    headerAdDomId: 'ad-header',
+    navbarConfig: {
+      selector: 'nav',
+      navbarHiddenClassName: 'header-ad--navbarHidden'
+    },
+    fadeOutTrigger: {
+      selector: '#fadeOut--trigger'
+    },
+    fadeOutClassName: 'header-ad--fadeOut',
+    disallowedAdvertiserIds: [],
+    waitForRendering: true,
+    minVisibleDurationMs: 1500
   })
 );
 

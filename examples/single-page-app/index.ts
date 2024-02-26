@@ -22,9 +22,6 @@ moli.beforeRequestAds(_ => {
   console.log('BEFORE REQUEST ADS HOOK');
 });
 
-moli.enableSinglePageApp();
-// init moli
-
 moli.registerModule(
   new LazyLoad(
     {

@@ -280,24 +280,25 @@ export class StickyHeaderAds implements IModule {
             : null;
 
           const callback: IntersectionObserverCallback = entries => {
-            adRenderIsEmpty.then(isEmpty => {
-              // only one element will be observed
-              const entry = entries[0];
-
+            // initially there maybe two events, for navbar and the target element
+            entries.forEach(entry => {
               // fadeout the ad if the observed element is the target
               if (entry.target === target) {
-                if (
-                  // user scrolls down
-                  entry.isIntersecting ||
-                  // user starts below observed DOM
-                  (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
-                  // if the ad is empty, hide it
-                  isEmpty
-                ) {
-                  container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-                } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
-                  container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
-                }
+                // wait for the ad to be rendered before hiding it
+                adRenderIsEmpty.then(isEmpty => {
+                  if (
+                    // user scrolls down
+                    entry.isIntersecting ||
+                    // user starts below observed DOM
+                    (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
+                    // if the ad is empty, hide it
+                    isEmpty
+                  ) {
+                    container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
+                  } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
+                    container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
+                  }
+                });
               } else if (entry.target === navbar && navbarHiddenClass) {
                 // apply a separate class if the navbar is not intersecting the viewport anymore
                 if (entry.isIntersecting) {
