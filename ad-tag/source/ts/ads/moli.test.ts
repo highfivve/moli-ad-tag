@@ -141,30 +141,41 @@ describe('moli', () => {
       });
     });
 
-    it('should stay in spa state if single page app is enabled and requestAds is called multiple times', () => {
+    it('should stay in spa state if single page app is enabled and requestAds is called multiple times', async () => {
       dom.reconfigure({
         url: 'https://localhost/page-one'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       expect(adTag.getState()).to.be.eq('configured');
-      return adTag
-        .requestAds()
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-          dom.reconfigure({
-            url: 'https://localhost/page-two'
-          });
-          return adTag.requestAds();
-        })
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-        });
+      const state1 = await adTag.requestAds();
+      expect(state1.state).to.be.eq('spa-finished');
+      const spaState1: ISinglePageApp = state1 as ISinglePageApp;
+      expect(spaState1.config).to.be.ok;
+      dom.reconfigure({
+        url: 'https://localhost/page-two'
+      });
+      let state2 = await adTag.requestAds();
+      expect(state2.state).to.be.eq('spa-finished');
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.config).to.be.ok;
+    });
+
+    it('should stay in spa state if single page app is enabled and requestAds is called multiple times with validationLocation none', async () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'none' } });
+      expect(adTag.getState()).to.be.eq('configured');
+      const state1 = await adTag.requestAds();
+      expect(state1.state).to.be.eq('spa-finished');
+      const spaState1: ISinglePageApp = state1 as ISinglePageApp;
+      expect(spaState1.config).to.be.ok;
+      let state2 = await adTag.requestAds();
+      expect(state2.state).to.be.eq('spa-finished');
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.config).to.be.ok;
     });
 
     it('should fail in spa state if single page app is enabled and requestAds is called multiple times without changing the window.location.href', () => {
@@ -172,8 +183,7 @@ describe('moli', () => {
         url: 'https://localhost/page-one'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       expect(adTag.getState()).to.be.eq('configured');
       return adTag
         .requestAds()
@@ -189,7 +199,7 @@ describe('moli', () => {
           },
           error => {
             expect(error.toString()).to.be.equal(
-              'You are trying to refresh ads on the same page, which is not allowed.'
+              'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
             );
           }
         );

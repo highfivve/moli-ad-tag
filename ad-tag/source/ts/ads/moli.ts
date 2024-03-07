@@ -22,7 +22,7 @@ import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { LabelConfigService } from './labelConfigService';
-import { allowRefreshAdSlots } from './spa';
+import { allowRefreshAdSlot, allowRequestAds } from './spa';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -663,9 +663,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
           .then(config => {
             // don't use the config from the initialized method as we need to alter the config
             // here to allow different key-values for multiple pages
-            if (href === window.location.href) {
+            const validation = config.spa?.validateLocation ?? 'href';
+            if (!allowRequestAds(validation, href, window.location)) {
               return Promise.reject(
-                'You are trying to refresh ads on the same page, which is not allowed.'
+                `You are trying to refresh ads on the same page, which is not allowed. Using ${validation} for validation.`
               );
             }
             return Promise.resolve(config);
@@ -783,7 +784,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // until the next requestAds() call arrives
       case 'spa-finished':
         const validateLocation = state.config.spa?.validateLocation ?? 'href';
-        if (allowRefreshAdSlots(validateLocation, state.href, window.location)) {
+        if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
           // user hasn't navigated yet, so we directly refresh the slot
           return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
         } else {
