@@ -206,7 +206,7 @@ export namespace Moli {
      *   moliAdTag.requestAds()
      * });
      * ```
-     *
+     * @deprecated use the `spa` configuration option in the ad tag configuration instead. This method will soon be removed.
      */
     enableSinglePageApp(): void;
 
@@ -961,6 +961,29 @@ export namespace Moli {
      * @default true
      */
     readonly destroyAllAdSlots?: boolean;
+
+    /**
+     * If set to `href`
+     * - the ad tag will only allow one `requestAds` call per `href`
+     * - requires `moli.requestAds()` to be called once per page, otherwise `moli.refreshAdSlot` will queue calls
+     *
+     * All available options are:
+     * - `href` - the ad tag will only allow one `requestAds` call per `href`
+     * - `path` - the ad tag will only allow one `requestAds` call per `path`
+     * - `none` - the ad tag will allow multiple `requestAds` calls
+     *
+     * ## Use cases
+     *
+     * The default is `true` to ensure that subsequent `refreshAdSlot` calls are queued and not executed, if the URL
+     * has already changed. This ensures that the `requestAds()` call has cleaned up all ad slots and state before
+     * loading new ones.
+     *
+     * However, there are publishers that change the URL, e.g. for putting filter settings into the query and do not
+     * call `moli.requestAds()`, because that's not a page change.
+     *
+     * @default true
+     */
+    readonly validateLocation: 'href' | 'path' | 'none';
   }
 
   /**

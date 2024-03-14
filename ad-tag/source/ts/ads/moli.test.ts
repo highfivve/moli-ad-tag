@@ -141,30 +141,41 @@ describe('moli', () => {
       });
     });
 
-    it('should stay in spa state if single page app is enabled and requestAds is called multiple times', () => {
+    it('should stay in spa state if single page app is enabled and requestAds is called multiple times', async () => {
       dom.reconfigure({
         url: 'https://localhost/page-one'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       expect(adTag.getState()).to.be.eq('configured');
-      return adTag
-        .requestAds()
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-          dom.reconfigure({
-            url: 'https://localhost/page-two'
-          });
-          return adTag.requestAds();
-        })
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-        });
+      const state1 = await adTag.requestAds();
+      expect(state1.state).to.be.eq('spa-finished');
+      const spaState1: ISinglePageApp = state1 as ISinglePageApp;
+      expect(spaState1.config).to.be.ok;
+      dom.reconfigure({
+        url: 'https://localhost/page-two'
+      });
+      let state2 = await adTag.requestAds();
+      expect(state2.state).to.be.eq('spa-finished');
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.config).to.be.ok;
+    });
+
+    it('should stay in spa state if single page app is enabled and requestAds is called multiple times with validationLocation none', async () => {
+      dom.reconfigure({
+        url: 'https://localhost/page-one'
+      });
+      const adTag = createMoliTag(jsDomWindow);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'none' } });
+      expect(adTag.getState()).to.be.eq('configured');
+      const state1 = await adTag.requestAds();
+      expect(state1.state).to.be.eq('spa-finished');
+      const spaState1: ISinglePageApp = state1 as ISinglePageApp;
+      expect(spaState1.config).to.be.ok;
+      let state2 = await adTag.requestAds();
+      expect(state2.state).to.be.eq('spa-finished');
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.config).to.be.ok;
     });
 
     it('should fail in spa state if single page app is enabled and requestAds is called multiple times without changing the window.location.href', () => {
@@ -172,8 +183,7 @@ describe('moli', () => {
         url: 'https://localhost/page-one'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       expect(adTag.getState()).to.be.eq('configured');
       return adTag
         .requestAds()
@@ -189,7 +199,7 @@ describe('moli', () => {
           },
           error => {
             expect(error.toString()).to.be.equal(
-              'You are trying to refresh ads on the same page, which is not allowed.'
+              'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
             );
           }
         );
@@ -384,7 +394,7 @@ describe('moli', () => {
     });
 
     describe('single page application mode (spa)', () => {
-      it('should batch refresh calls before requestAds() is called', () => {
+      it('should batch refresh calls before requestAds() is called', async () => {
         // create all slots
         const slots: Moli.AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
@@ -403,19 +413,17 @@ describe('moli', () => {
         adTag.refreshAdSlot(slots[2].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
-        return adTag.requestAds().then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-          expect(spaState.refreshSlots).to.be.empty;
-          expect(refreshSpy).to.have.been.calledOnce;
-          const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
-
-          expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
-        });
+        const state = await adTag.requestAds();
+        expect(state.state).to.be.eq('spa-finished');
+        const spaState: ISinglePageApp = state as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        expect(spaState.refreshSlots).to.be.empty;
+        expect(refreshSpy).to.have.been.calledOnce;
+        const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+        expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
       });
 
-      it('should call refresh after refreshAds is being called', () => {
+      it('should call refresh after refreshAds is being called', async () => {
         // create all slots
         const slots: Moli.AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
@@ -427,29 +435,29 @@ describe('moli', () => {
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.enableSinglePageApp();
-        adTag.configure({ ...defaultConfig, slots: slots });
-        adTag.refreshAdSlot(slots[0].domId);
+        adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' }
+        });
+        const refreshAdSlotResponse = await adTag.refreshAdSlot(slots[0].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
-        return (
-          adTag
-            .requestAds()
-            // refresh after requestAds has been called
-            .then(state => adTag.refreshAdSlot(slots[1].domId).then(() => state))
-            .then(state => {
-              expect(state.state).to.be.eq('spa-finished');
-              const spaState: ISinglePageApp = state as ISinglePageApp;
-              expect(spaState.config).to.be.ok;
-              expect(spaState.refreshSlots).to.be.empty;
-              expect(refreshSpy).to.have.been.calledTwice;
-              const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
-              expect(domIds).to.have.length(1);
-              expect(domIds[0]).to.be.eq(slots[0].domId);
-            })
-        );
+        const requestAdsState = await adTag.requestAds();
+
+        const refreshAdSlotResponse2 = await adTag.refreshAdSlot(slots[1].domId);
+
+        expect(requestAdsState.state).to.be.eq('spa-finished');
+        const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        expect(spaState.refreshSlots).to.be.empty;
+        expect(refreshSpy).to.have.been.calledTwice;
+        const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+        expect(domIds).to.have.length(1);
+        expect(domIds[0]).to.be.eq(slots[0].domId);
       });
 
-      it('should queue refreshAds calls if a navigation changed happened and no requestAds() call has happend yet', () => {
+      it('should queue refreshAds calls if a navigation changed happened and no requestAds() call has happend yet', async () => {
         dom.reconfigure({
           url: 'https://localhost/page-one'
         });
@@ -460,34 +468,70 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.enableSinglePageApp();
-        adTag.configure({ ...defaultConfig, slots: slots });
+        adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' }
+        });
 
         expect(adTag.getState()).to.be.eq('configured');
 
         // we must set the state to 'spa-finished' here
-        return (
-          adTag
-            .requestAds()
-            .then(state => {
-              // navigation change
-              dom.reconfigure({
-                url: 'https://localhost/page-two'
-              });
-              return state;
-            })
-            // refresh after requestAds has been called - this should be queue up
-            .then(state => adTag.refreshAdSlot(slots[0].domId).then(() => state))
-            .then(state => {
-              expect(state.state).to.be.eq('spa-finished');
-              const spaState: ISinglePageApp = state as ISinglePageApp;
-              expect(spaState.config).to.be.ok;
-              expect(spaState.refreshSlots).to.have.length(1);
+        const requestAdsState = await adTag.requestAds();
+        // navigation change
+        dom.reconfigure({
+          url: 'https://localhost/page-two'
+        });
+        const refreshAdSlotResponse = await adTag.refreshAdSlot(slots[0].domId);
+        expect(refreshAdSlotResponse).to.be.eq('queued');
 
-              expect(refreshSpy).to.have.not.been.called;
-              expect(spaState.refreshSlots).to.contain(slots[0].domId);
-            })
-        );
+        expect(requestAdsState.state).to.be.eq('spa-finished');
+        const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        expect(spaState.refreshSlots).to.have.length(1);
+
+        expect(refreshSpy).to.have.not.been.called;
+        expect(spaState.refreshSlots).to.contain(slots[0].domId);
+
+        // the queue calls should now be executed
+        await adTag.requestAds();
+        expect(refreshSpy).to.have.been.calledOnce;
+      });
+
+      it('should call refreshAds calls if a navigation changed happened and no requestAds() call has happend yet, but validationLocation is set to path', async () => {
+        dom.reconfigure({
+          url: 'https://localhost/page-one'
+        });
+
+        // create all slots
+        const slots: Moli.AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
+
+        const adTag = createMoliTag(jsDomWindow);
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+        adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'path' }
+        });
+
+        expect(adTag.getState()).to.be.eq('configured');
+
+        // we must set the state to 'spa-finished' here
+        const requestAdsState = await adTag.requestAds();
+        // navigation change
+        dom.reconfigure({
+          url: 'https://localhost/page-one?filter=1'
+        });
+        const refreshAdSlotResponse = await adTag.refreshAdSlot(slots[0].domId);
+        expect(refreshAdSlotResponse).to.be.eq('refreshed');
+
+        expect(requestAdsState.state).to.be.eq('spa-finished');
+        const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
+        expect(spaState.config).to.be.ok;
+        expect(spaState.refreshSlots).to.have.length(0);
+
+        expect(refreshSpy).to.have.been.calledOnce;
       });
     });
   });
@@ -966,7 +1010,23 @@ describe('moli', () => {
       });
     });
 
-    it('should add the beforeRequestAds hook with spa state if requestAds() was successful', () => {
+    it('should catch errors in beforeRequestAds hook', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        throw new Error('oh no!');
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.configure(defaultConfig);
+      const result = await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(result.state).not.to.be.eq('error');
+    });
+
+    it('should add the beforeRequestAds hook with spa state if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
@@ -978,9 +1038,8 @@ describe('moli', () => {
       adTag.beforeRequestAds(hookSpy);
       adTag.enableSinglePageApp();
       adTag.configure(defaultConfig);
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-      });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
     });
 
     it('should add the beforeRequestAds hooks and call them on each requestAds() cal', async () => {
@@ -1003,7 +1062,24 @@ describe('moli', () => {
       expect(hookSpy).to.be.calledTwice;
     });
 
-    it('should add the afterRequestAds hook if requestAds() was successful', () => {
+    it('should catch errors in beforeRequestAds hook in spa mode', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+
+      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        throw new Error('oh no!');
+      };
+
+      const hookSpy = sandbox.spy(beforeRequestAdsHook);
+
+      adTag.beforeRequestAds(hookSpy);
+      adTag.enableSinglePageApp();
+      adTag.configure(defaultConfig);
+      const result = await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(result.state).not.to.be.eq('error');
+    });
+
+    it('should add the afterRequestAds hook if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
@@ -1014,10 +1090,9 @@ describe('moli', () => {
 
       adTag.afterRequestAds(hookSpy);
       adTag.configure(defaultConfig);
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-        expect(hookSpy).to.be.calledOnceWithExactly('finished');
-      });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(hookSpy).to.be.calledOnceWithExactly('finished');
     });
 
     [2, 3].forEach(callCounts => {
