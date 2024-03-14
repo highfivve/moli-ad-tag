@@ -965,7 +965,7 @@ export class GlobalConfig
   };
 
   private checkForDuplicateOrMissingSlots = (messages: Message[], slot: AdSlot): void => {
-    const count = document.querySelectorAll(`#${slot.domId}`).length;
+    const count = document.querySelectorAll(`[id='${slot.domId}']`).length;
 
     if (count > 1) {
       messages.push({
