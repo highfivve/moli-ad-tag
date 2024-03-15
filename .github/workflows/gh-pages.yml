@@ -17,11 +17,12 @@ jobs:
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       # Setup node
-      - name: setup node
-        uses: actions/setup-node@v3
+      - name: Node setup
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
           cache: 'npm'
+          cache-dependency-path: 'website/package-json.lock'
+          node-version: 18
 
       ## type declarations need to be present for docs to work properly
       - name: setup project
