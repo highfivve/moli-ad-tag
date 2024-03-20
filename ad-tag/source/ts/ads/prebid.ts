@@ -15,13 +15,13 @@ import {
 import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
 import { SizeConfigService } from './sizeConfigService';
-import IPrebidJs = prebidjs.IPrebidJs;
 import { resolveAdUnitPath } from './adUnitPath';
 import { googletag } from '../types/googletag';
-import { isNotNull } from '../util/arrayUtils';
+import { isNotNull, uniquePrimitiveFilter } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 import { createTestSlots } from '../util/test-slots';
+import IPrebidJs = prebidjs.IPrebidJs;
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -51,6 +51,15 @@ const isPrebidSlotDefinition = (
   return !!slotDefinition.moliSlot.prebid;
 };
 
+/**
+ * Checks if an adUnit is already added via `pbjs.addAdUnits`
+ *
+ * NOTE: There's no record on why this check was added in the first place.
+ *       In the future we may transition to a stateless approach where we do not add adUnits anymore
+ *       and instead build them each time we request bids. The setting is called `ephemeralAdUnits`.
+ * @param adUnit
+ * @param window
+ */
 const isAdUnitDefined = (
   adUnit: prebidjs.IAdUnit,
   window: Window & prebidjs.IPrebidjsWindow
@@ -61,21 +70,194 @@ const isAdUnitDefined = (
   return false;
 };
 
+/**
+ * This method creates prebid ad unit definitions from the given slots.
+ * There's a lot of filtering an mapping going on here.
+ *
+ * 1. slots without a `prebid` property are filtered out
+ * 2. the `prebid` property is evaluated and the result is flattened. This allows to define multiple ad units for a
+ *    single slot, which prebid calls "twin ad units"
+ * 3. static floor prices are added if available
+ * 4. add pubstack meta fields
+ * 5. adUnitPath is resolved
+ * 6. resolve stored request id and added to the ortb2Imp object
+ * 7. filter out `mediaTypes` that are not defined or have no single size after size filtering
+ * 8. filter out bids that are not supported by the label config
+ *
+ * @param context
+ * @param prebidConfig
+ * @param slots
+ *
+ * @return a list of prebid ad units. Those can either be added via `pbjs.addAdUnits` or used in `pbjs.requestBids`.
+ */
+const createdAdUnits = (
+  context: AdPipelineContext,
+  prebidConfig: Moli.headerbidding.PrebidConfig,
+  slots: Moli.SlotDefinition[]
+): prebidjs.IAdUnit[] => {
+  const labels = context.labelConfigService.getSupportedLabels();
+  const deviceLabel = context.labelConfigService.getDeviceLabel();
+  const prebidAdUnits = slots
+    .filter(isPrebidSlotDefinition)
+    .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
+      const targeting = context.config.targeting;
+      const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
+      const floorPrice = priceRule ? priceRule.floorprice : undefined;
+      const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
+        ? {
+            floors: {
+              currency: prebidConfig.config.currency.adServerCurrency,
+              schema: {
+                delimiter: '|',
+                fields: ['mediaType']
+              },
+              values: {
+                '*': priceRule.floorprice
+              }
+            }
+          }
+        : null;
+      context.logger.debug(
+        'Prebid',
+        context.requestId,
+        'Price Rule',
+        priceRule,
+        moliSlot.domId,
+        floors
+      );
+
+      return extractPrebidAdSlotConfigs(
+        {
+          keyValues: keyValues,
+          floorPrice: floorPrice,
+          priceRule: priceRule,
+          labels: labels,
+          isMobile: deviceLabel === 'mobile'
+        },
+        moliSlot.prebid
+      )
+        .map(prebidAdSlotConfig => {
+          const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
+          const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
+          const mediaTypeNative = prebidAdSlotConfig.adUnit.mediaTypes.native;
+
+          const bannerSizes = mediaTypeBanner
+            ? filterSupportedSizes(mediaTypeBanner.sizes).filter(SizeConfigService.isFixedSize)
+            : [];
+          const videoSizes = mediaTypeVideo
+            ? filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes)
+            : [];
+
+          // filter bids ourselves and don't rely on prebid to have a stable API
+          // we also remove the bid labels so prebid doesn't require them
+          const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
+            .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
+            .map(bid => {
+              return { bidder: bid.bidder, params: bid.params } as prebidjs.IBid;
+            });
+
+          const videoDimensionsWH =
+            videoSizes.length > 0 && !mediaTypeVideo?.w && !mediaTypeVideo?.h
+              ? {
+                  w: videoSizes[0][0],
+                  h: videoSizes[0][1]
+                }
+              : {};
+          const video: prebidjs.IMediaTypes | undefined = mediaTypeVideo
+            ? {
+                video: {
+                  ...mediaTypeVideo,
+                  playerSize: videoSizes.length === 0 ? undefined : videoSizes,
+                  ...videoDimensionsWH
+                }
+              }
+            : undefined;
+
+          const banner =
+            mediaTypeBanner && bannerSizes.length > 0
+              ? {
+                  banner: { ...mediaTypeBanner, sizes: bannerSizes }
+                }
+              : undefined;
+
+          const native = mediaTypeNative
+            ? {
+                native: { ...mediaTypeNative }
+              }
+            : undefined;
+
+          const pubstack: prebidjs.IPubstackConfig = {
+            ...prebidAdSlotConfig.adUnit.pubstack,
+            adUnitPath: resolveAdUnitPath(
+              prebidAdSlotConfig.adUnit.pubstack?.adUnitPath || moliSlot.adUnitPath,
+              context.adUnitPathVariables
+            )
+          };
+
+          const storedRequest = prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid?.storedrequest;
+
+          const storedRequestWithSolvedId: { id: string } | null =
+            storedRequest && storedRequest.id
+              ? {
+                  ...storedRequest,
+                  id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables)
+                }
+              : null;
+
+          return {
+            ...prebidAdSlotConfig.adUnit,
+            ...(storedRequest &&
+              storedRequestWithSolvedId && {
+                ortb2Imp: resolveStoredRequestIdInOrtb2Object(
+                  prebidAdSlotConfig.adUnit.ortb2Imp,
+                  storedRequestWithSolvedId
+                )
+              }),
+            // use domId if adUnit code is not defined
+            code: prebidAdSlotConfig.adUnit.code || moliSlot.domId,
+            ...(prebidAdSlotConfig.adUnit.pubstack ? { pubstack } : {}),
+            mediaTypes: {
+              ...video,
+              ...banner,
+              ...native
+            },
+            bids: bids,
+            ...floors
+          };
+        })
+        .filter(
+          adUnit =>
+            adUnit.bids.length > 0 &&
+            adUnit.mediaTypes &&
+            // some mediaType must be defined
+            (adUnit.mediaTypes.banner || adUnit.mediaTypes.video || adUnit.mediaTypes.native) &&
+            // if an adUnit is already defined we should not add it a second time
+            !isAdUnitDefined(adUnit, context.window)
+        );
+    });
+
+  return prebidAdUnits.reduce((acc, adUnits) => [...acc, ...adUnits], []);
+};
+
 export const prebidInit = (): InitStep =>
   mkInitStep('prebid-init', context =>
     Promise.race([prebidInitAndReady(context.window), prebidTimeout(context)])
   );
 
-export const prebidRemoveAdUnits = (): ConfigureStep =>
+export const prebidRemoveAdUnits = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep =>
   mkConfigureStep(
     'prebid-remove-adunits',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
-        const adUnits = context.window.pbjs.adUnits;
-        if (adUnits) {
-          context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
-          adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
+        // only try to remove ad units if the configuration is set to not use ephemeral ad units and prebid is defined
+        // at all
+        if (prebidConfig.ephemeralAdUnits !== true) {
+          context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
+          const adUnits = context.window.pbjs.adUnits;
+          if (adUnits) {
+            context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
+            adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
+          }
         }
         resolve();
       })
@@ -167,165 +349,21 @@ export const prebidPrepareRequestAds = (
     LOW_PRIORITY,
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
-        const labels = context.labelConfigService.getSupportedLabels();
-        const deviceLabel = context.labelConfigService.getDeviceLabel();
-
-        const prebidAdUnits = slots
-          .filter(isPrebidSlotDefinition)
-          .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
-            const targeting = context.config.targeting;
-            const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-            const floorPrice = priceRule ? priceRule.floorprice : undefined;
-            const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
-              ? {
-                  floors: {
-                    currency: prebidConfig.config.currency.adServerCurrency,
-                    schema: {
-                      delimiter: '|',
-                      fields: ['mediaType']
-                    },
-                    values: {
-                      '*': priceRule.floorprice
-                    }
-                  }
-                }
-              : null;
+        if (prebidConfig.ephemeralAdUnits) {
+          resolve();
+        } else {
+          const adUnits = createdAdUnits(context, prebidConfig, slots);
+          adUnits.forEach(adUnit => {
             context.logger.debug(
               'Prebid',
               context.requestId,
-              'Price Rule',
-              priceRule,
-              moliSlot.domId,
-              floors
+              `Prebid add ad unit: [Code] ${adUnit.code}`,
+              adUnit
             );
-
-            return extractPrebidAdSlotConfigs(
-              {
-                keyValues: keyValues,
-                floorPrice: floorPrice,
-                priceRule: priceRule,
-                labels: labels,
-                isMobile: deviceLabel === 'mobile'
-              },
-              moliSlot.prebid
-            )
-              .map(prebidAdSlotConfig => {
-                const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
-                const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
-                const mediaTypeNative = prebidAdSlotConfig.adUnit.mediaTypes.native;
-
-                const bannerSizes = mediaTypeBanner
-                  ? filterSupportedSizes(mediaTypeBanner.sizes).filter(
-                      SizeConfigService.isFixedSize
-                    )
-                  : [];
-                const videoSizes = mediaTypeVideo
-                  ? filterVideoPlayerSizes(mediaTypeVideo.playerSize, filterSupportedSizes)
-                  : [];
-
-                // filter bids ourselves and don't rely on prebid to have a stable API
-                // we also remove the bid labels so prebid doesn't require them
-                const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
-                  .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
-                  .map(bid => {
-                    return { bidder: bid.bidder, params: bid.params } as prebidjs.IBid;
-                  });
-
-                const videoDimensionsWH =
-                  videoSizes.length > 0 && !mediaTypeVideo?.w && !mediaTypeVideo?.h
-                    ? {
-                        w: videoSizes[0][0],
-                        h: videoSizes[0][1]
-                      }
-                    : {};
-                const video: prebidjs.IMediaTypes | undefined = mediaTypeVideo
-                  ? {
-                      video: {
-                        ...mediaTypeVideo,
-                        playerSize: videoSizes.length === 0 ? undefined : videoSizes,
-                        ...videoDimensionsWH
-                      }
-                    }
-                  : undefined;
-
-                const banner =
-                  mediaTypeBanner && bannerSizes.length > 0
-                    ? {
-                        banner: { ...mediaTypeBanner, sizes: bannerSizes }
-                      }
-                    : undefined;
-
-                const native = mediaTypeNative
-                  ? {
-                      native: { ...mediaTypeNative }
-                    }
-                  : undefined;
-
-                const pubstack: prebidjs.IPubstackConfig = {
-                  ...prebidAdSlotConfig.adUnit.pubstack,
-                  adUnitPath: resolveAdUnitPath(
-                    prebidAdSlotConfig.adUnit.pubstack?.adUnitPath || moliSlot.adUnitPath,
-                    context.adUnitPathVariables
-                  )
-                };
-
-                const storedRequest =
-                  prebidAdSlotConfig.adUnit.ortb2Imp?.ext?.prebid?.storedrequest;
-
-                const storedRequestWithSolvedId: { id: string } | null =
-                  storedRequest && storedRequest.id
-                    ? {
-                        ...storedRequest,
-                        id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables)
-                      }
-                    : null;
-
-                return {
-                  ...prebidAdSlotConfig.adUnit,
-                  ...(storedRequest &&
-                    storedRequestWithSolvedId && {
-                      ortb2Imp: resolveStoredRequestIdInOrtb2Object(
-                        prebidAdSlotConfig.adUnit.ortb2Imp,
-                        storedRequestWithSolvedId
-                      )
-                    }),
-                  // use domId if adUnit code is not defined
-                  code: prebidAdSlotConfig.adUnit.code || moliSlot.domId,
-                  ...(prebidAdSlotConfig.adUnit.pubstack ? { pubstack } : {}),
-                  mediaTypes: {
-                    ...video,
-                    ...banner,
-                    ...native
-                  },
-                  bids: bids,
-                  ...floors
-                };
-              })
-              .filter(adUnit => {
-                return (
-                  adUnit.bids.length > 0 &&
-                  adUnit.mediaTypes &&
-                  // some mediaType must be defined
-                  (adUnit.mediaTypes.banner ||
-                    adUnit.mediaTypes.video ||
-                    adUnit.mediaTypes.native) &&
-                  // if an adUnit is already defined we should not add it a second time
-                  !isAdUnitDefined(adUnit, context.window)
-                );
-              });
           });
-
-        const prebidAdUnitsFlat = prebidAdUnits.reduce((acc, adUnits) => [...acc, ...adUnits], []);
-        prebidAdUnitsFlat.forEach(adUnit => {
-          context.logger.debug(
-            'Prebid',
-            context.requestId,
-            `Prebid add ad unit: [Code] ${adUnit.code}`,
-            adUnit
-          );
-        });
-        context.window.pbjs.addAdUnits(prebidAdUnitsFlat);
-        resolve();
+          context.window.pbjs.addAdUnits(adUnits);
+          resolve();
+        }
       })
   );
 
@@ -338,7 +376,22 @@ export const prebidRequestBids = (
     'prebid-request-bids',
     (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
       new Promise(resolve => {
-        const adUnitCodes = slots.filter(isPrebidSlotDefinition).map(slot => slot.moliSlot.domId);
+        const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
+          ? {
+              adUnits: createdAdUnits(context, prebidConfig, slots)
+            }
+          : {
+              adUnitCodes: slots.filter(isPrebidSlotDefinition).map(slot => slot.moliSlot.domId)
+            };
+
+        // ad unit codes are required for setTargetingForGPTAsync
+        const adUnitCodes =
+          requestObject.adUnitCodes ||
+          requestObject.adUnits
+            ?.map(adUnit => adUnit.code)
+            .filter(isNotNull)
+            .filter(uniquePrimitiveFilter) ||
+          [];
 
         // resolve immediately if no ad unit codes should be requested
         if (adUnitCodes.length === 0) {
@@ -352,7 +405,7 @@ export const prebidRequestBids = (
 
         // It seems that the bidBackHandler can be triggered more than once. The reason might be that
         // when a timeout for the prebid request occurs, the callback is executed. When the request finishes
-        // afterwards anyway the bidsBackHandler is called a second time.
+        // afterward anyway the bidsBackHandler is called a second time.
         let adserverRequestSent = false;
 
         context.logger.debug(
@@ -360,97 +413,77 @@ export const prebidRequestBids = (
           `Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`
         );
 
-        context.reportingService.markPrebidSlotsRequested(context.requestId);
+        const bidsBackHandler = (
+          bidResponses: prebidjs.IBidResponsesMap | undefined,
+          timedOut: boolean,
+          auctionId: string
+        ) => {
+          context.logger.info(
+            'Prebid',
+            auctionId,
+            bidResponses,
+            slots.map(s => s.moliSlot.domId)
+          );
+          // the bids back handler seems to run on a different thread
+          // in consequence, we need to catch errors here to propagate them to top levels
+          try {
+            if (adserverRequestSent) {
+              context.logger.warn(
+                'Prebid',
+                `ad server request already sent [${context.requestId}]. AuctionId ${auctionId}`
+              );
+              return;
+            }
 
-        context.window.pbjs.requestBids({
-          adUnitCodes: adUnitCodes,
-          timeout: context.bucket?.timeout,
-          bidsBackHandler: (
-            bidResponses: prebidjs.IBidResponsesMap | undefined,
-            timedOut: boolean,
-            auctionId: string
-          ) => {
-            context.logger.info(
-              'Prebid',
-              auctionId,
-              bidResponses,
-              slots.map(s => s.moliSlot.domId)
-            );
-            // the bids back handler seems to run on a different thread
-            // in consequence, we need to catch errors here to propagate them to top levels
-            try {
-              if (adserverRequestSent) {
-                context.logger.warn(
-                  'Prebid',
-                  `ad server request already sent [${context.requestId}]`,
-                  auctionId,
-                  slots.map(s => s.moliSlot)
-                );
-                return;
-              }
+            if (!bidResponses) {
+              context.logger.warn(
+                'Prebid',
+                `Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`
+              );
+              return resolve();
+            }
 
-              if (!bidResponses) {
-                context.logger.warn(
-                  'Prebid',
-                  `Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`
-                );
-                return resolve();
-              }
+            adserverRequestSent = true;
 
-              adserverRequestSent = true;
-              context.reportingService.measureAndReportPrebidBidsBack(context.requestId);
-
-              if (adServer === 'gam') {
-                // execute listener
-                if (prebidConfig.listener) {
-                  const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-                  const prebidListener =
-                    typeof prebidConfig.listener === 'function'
-                      ? prebidConfig.listener({ keyValues: keyValues })
-                      : prebidConfig.listener;
-                  if (prebidListener.preSetTargetingForGPTAsync) {
-                    try {
-                      prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut, slots);
-                    } catch (e) {
-                      context.logger.error(
-                        'Prebid',
-                        `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`
-                      );
-                    }
+            if (adServer === 'gam') {
+              // execute listener
+              if (prebidConfig.listener) {
+                const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
+                const prebidListener =
+                  typeof prebidConfig.listener === 'function'
+                    ? prebidConfig.listener({ keyValues: keyValues })
+                    : prebidConfig.listener;
+                if (prebidListener.preSetTargetingForGPTAsync) {
+                  try {
+                    prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut, slots);
+                  } catch (e) {
+                    context.logger.error(
+                      'Prebid',
+                      `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`
+                    );
                   }
                 }
-
-                // set key-values for DFP to target the correct line items
-                context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
               }
 
-              adUnitCodes.forEach(adUnitPath => {
-                const bidResponse = bidResponses[adUnitPath];
-                bidResponse
-                  ? context.logger.debug(
-                      'Prebid',
-                      auctionId,
-                      `Prebid bid response: [DomID]: ${adUnitPath} \n\t\t\t${bidResponse.bids.map(
-                        bid =>
-                          `[bidder] ${bid.bidder} [width] ${bid.width} [height] ${bid.height} [cpm] ${bid.cpm}`
-                      )}`
-                    )
-                  : context.logger.debug(
-                      'Prebid',
-                      auctionId,
-                      `Prebid bid response: [DomID] ${adUnitPath} ---> no bid response`
-                    );
-              });
-
-              resolve();
-            } catch (error) {
-              context.logger.error(
-                'Prebid',
-                'DfpService:: could not resolve bidsBackHandler' + JSON.stringify(error)
-              );
-              resolve();
+              // set key-values for DFP to target the correct line items
+              context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
             }
+
+            resolve();
+          } catch (error) {
+            context.logger.error(
+              'Prebid',
+              'DfpService:: could not resolve bidsBackHandler' + JSON.stringify(error)
+            );
+            resolve();
           }
+        };
+
+        // finally call the auction
+        context.window.pbjs.requestBids({
+          ...requestObject,
+          timeout: context.bucket?.timeout,
+          bidsBackHandler: bidsBackHandler
         });
       })
   );

@@ -2142,6 +2142,11 @@ export namespace prebidjs {
        */
       regs?: OpenRtb2Regs;
     }
+
+    /**
+     * The OpenRTB 2.5 bid request object.
+     */
+    export type OpenRtb2 = PrebidFirstPartyData;
   }
 
   /**
@@ -5331,7 +5336,7 @@ export namespace prebidjs {
     /**
      * AdUnitObjects to request. Use this or requestObj.adUnitCodes
      */
-    adUnits?: string[];
+    adUnits?: IAdUnit[];
 
     /**
      * Timeout for requesting the bids specified in milliseconds
@@ -5362,6 +5367,18 @@ export namespace prebidjs {
      * is desired to tie them together in analytics.
      */
     readonly auctionId?: string;
+
+    /**
+     * Additional first-party data to use for this auction only
+     * @see https://docs.prebid.org/features/firstPartyData.html
+     */
+    readonly ortb2?: firstpartydata.OpenRtb2;
+
+    /**
+     * TTL buffer override for this auction.
+     * @see [`setConfig({ttlBuffer})`](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-ttlBuffer)
+     */
+    readonly ttlBuffer?: number;
   }
 
   /**
