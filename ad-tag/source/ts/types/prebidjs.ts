@@ -1466,6 +1466,7 @@ export namespace prebidjs {
 
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
+     * @see https://docs.prebid.org/dev-docs/modules/prebidServer.html#configuration
      */
     export interface IS2SConfig {
       /**
@@ -1477,6 +1478,12 @@ export namespace prebidjs {
        * Which bidders auctions should take place on the server side
        */
       readonly bidders: ReadonlyArray<BidderCode>;
+
+      /**
+       * An optional name for this configuration. This is necessary if you have multiple configurations and want to
+       * reference them in a `BidObject` via the `module` property.
+       */
+      readonly name?: string;
 
       /**
        * Automatically includes all following options in the config with vendor's default values.
@@ -3435,6 +3442,22 @@ export namespace prebidjs {
   }
 
   /**
+   * custom prebid ortb2 extension. Mainly used for prebid server communication
+   */
+  export interface IOrtb2ImpPrebid {
+    readonly bidder?: {
+      readonly [Bidder in BidderCode]: any;
+    };
+    readonly storedrequest?: IOrtb2ImpStoredRequest;
+  }
+
+  export interface IOrtb2ImpStoredRequest {
+    /**
+     * Specify a stored request id
+     */
+    readonly id?: string;
+  }
+  /**
    * Values passed by prebid during a prebid server auction call.
    *
    * @see https://github.com/prebid/Prebid.js/pull/6494
@@ -3447,17 +3470,7 @@ export namespace prebidjs {
       /**
        * custom prebid extensions
        */
-      readonly prebid?: {
-        readonly bidder?: {
-          readonly [Bidder in BidderCode]: any;
-        };
-        readonly storedrequest?: {
-          /**
-           * Specify a stored request id
-           */
-          readonly id?: string;
-        };
-      };
+      readonly prebid?: IOrtb2ImpPrebid;
     };
   }
 
@@ -4209,6 +4222,33 @@ export namespace prebidjs {
   }
 
   export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
+
+  /**
+   * The prebid server bid object is special as it doesn't user the `bidder` property, but rather a `module` property.
+   *
+   * @see https://github.com/prebid/Prebid.js/issues/7688
+   * @see https://github.com/prebid/Prebid.js/issues/8668
+   * @see https://github.com/prebid/Prebid.js/pull/9470
+   * @see https://docs.prebid.org/dev-docs/adunit-reference.html#stored-imp
+   */
+  export interface IPrebidServerBid {
+    readonly module: 'pbsBidAdapter';
+    readonly params: {
+      /**
+       * this must reference the `name` of an `s2sConfig` object
+       */
+      readonly configName: string;
+    };
+
+    readonly ortb2Imp: IOrtb2Imp & {
+      readonly prebid: IOrtb2ImpPrebid & {
+        /**
+         * stored request is required for prebid server calls
+         */
+        readonly storedrequest: IOrtb2ImpStoredRequest;
+      };
+    };
+  }
 
   export interface IPubMaticParams {
     /**
@@ -5303,6 +5343,7 @@ export namespace prebidjs {
     | IInvibesBid
     | IJustPremiumBid
     | INanoInteractiveBid
+    | IPrebidServerBid
     | IPubMaticBid
     | IOguryBid
     | IOneTagBid
