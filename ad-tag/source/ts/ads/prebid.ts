@@ -150,11 +150,9 @@ const createdAdUnits = (
 
           // filter bids ourselves and don't rely on prebid to have a stable API
           // we also remove the bid labels so prebid doesn't require them
-          const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
-            .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
-            .map(bid => {
-              return { bidder: bid.bidder, params: bid.params } as prebidjs.IBid;
-            });
+          const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids.filter(
+            (bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid)
+          );
 
           const videoDimensionsWH =
             videoSizes.length > 0 && !mediaTypeVideo?.w && !mediaTypeVideo?.h

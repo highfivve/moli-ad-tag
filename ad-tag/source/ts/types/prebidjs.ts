@@ -4223,6 +4223,12 @@ export namespace prebidjs {
 
   export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
 
+  export interface IPrebidServerBidParams {
+    /**
+     * this must reference the `name` of an `s2sConfig` object
+     */
+    readonly configName: string;
+  }
   /**
    * The prebid server bid object is special as it doesn't user the `bidder` property, but rather a `module` property.
    *
@@ -4231,14 +4237,10 @@ export namespace prebidjs {
    * @see https://github.com/prebid/Prebid.js/pull/9470
    * @see https://docs.prebid.org/dev-docs/adunit-reference.html#stored-imp
    */
-  export interface IPrebidServerBid {
+  export interface IPrebidServerBid
+    extends Omit<IBidObject<any, IPrebidServerBidParams>, 'bidder'> {
     readonly module: 'pbsBidAdapter';
-    readonly params: {
-      /**
-       * this must reference the `name` of an `s2sConfig` object
-       */
-      readonly configName: string;
-    };
+    readonly params: IPrebidServerBidParams;
 
     readonly ortb2Imp: IOrtb2Imp & {
       readonly prebid: IOrtb2ImpPrebid & {
