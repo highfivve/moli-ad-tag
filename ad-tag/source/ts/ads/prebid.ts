@@ -153,7 +153,10 @@ const createdAdUnits = (
           const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
             .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
             .map(bid => {
-              return { bidder: bid.bidder, params: bid.params } as prebidjs.IBid;
+              // we remove the labelAll and labelAny fields from the bid object to ensure that prebid doesn't
+              // interfere with the label filtering from our end
+              const { labelAny: _, labelAll: __, ...bidCopy } = bid;
+              return bidCopy;
             });
 
           const videoDimensionsWH =
