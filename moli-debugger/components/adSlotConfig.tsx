@@ -279,7 +279,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
               <hr />
               <div className="MoliDebug-tagContainer">
                 <span className="MoliDebug-tagLabel">Bidder #{idx + 1}</span>
-                <Tag variant="blue">{bid.bidder}</Tag>
+                <Tag variant="blue">{bid.bidder ?? bid.module}</Tag>
               </div>
               <div className="MoliDebug-tagContainer">{this.labelConfig(bid)}</div>
               <div className="MoliDebug-tagContainer">

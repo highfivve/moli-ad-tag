@@ -4239,6 +4239,8 @@ export namespace prebidjs {
    */
   export interface IPrebidServerBid
     extends Omit<IBidObject<any, IPrebidServerBidParams>, 'bidder'> {
+    /** bidder is not used and can be left out */
+    readonly bidder?: never;
     readonly module: 'pbsBidAdapter';
     readonly params: IPrebidServerBidParams;
 

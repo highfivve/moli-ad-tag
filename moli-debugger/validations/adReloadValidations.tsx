@@ -24,7 +24,7 @@ const isWallpaperSlot = (
   const hasOnlyDspxAndJustPremium = prebidConfigs.every(
     prebidConfig =>
       prebidConfig.adUnit.bids.length > 0 &&
-      prebidConfig.adUnit.bids.every(bid => skinBidder.has(bid.bidder))
+      prebidConfig.adUnit.bids.every(bid => skinBidder.has(bid.bidder ?? bid.module))
   );
 
   return (
