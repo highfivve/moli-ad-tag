@@ -155,7 +155,8 @@ const createdAdUnits = (
             .map(bid => {
               // we remove the labelAll and labelAny fields from the bid object to ensure that prebid doesn't
               // interfere with the label filtering from our end
-              return { ...bid, labelAll: undefined, labelAny: undefined } as prebidjs.IBid;
+              const { labelAny: _, labelAll: __, ...bidCopy } = bid;
+              return bidCopy;
             });
 
           const videoDimensionsWH =
