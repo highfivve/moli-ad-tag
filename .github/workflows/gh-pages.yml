@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'npm'
-          cache-dependency-path: 'website/package-json.lock'
+          cache-dependency-path: 'website/package-lock.json'
           node-version: 18
 
       ## type declarations need to be present for docs to work properly
