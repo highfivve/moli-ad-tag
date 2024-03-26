@@ -1468,12 +1468,12 @@ export namespace Moli {
      * @example
      * ```typescript
      *
-     * const checkForJustPremiumWallpaper = (bidResponses: prebidjs.IBidResponseMap): boolean => {
+     * const checkForGumGumWallpaper = (bidResponses: prebidjs.IBidResponseMap): boolean => {
      *   const wallpaperAdSlot = bidResponses['ad-wallpaper']; // select the ad slot by using the DOM ID
      *   // if available during this request
      *   if (wallpaperAdSlot) {
-     *      return wallpaperAdSlot.bids.filter((bidResponse: prebidjs.BidREsponse) => {
-     *          return bidResponse.bidder == 'justpremium' && bidResponse.format == 'wp' && bidResponse.cpm > 0
+     *      return wallpaperAdSlot.bids.filter((bidResponse: prebidjs.BidResponse) => {
+     *          return bidResponse.bidder == 'gumgum' && bidResponse.cpm > 0
      *      }).length !== 0;
      *   }
      *   return false;
@@ -1481,7 +1481,7 @@ export namespace Moli {
      *
      * const prebidListener = {
      *   preSetTargetingForGPTAsync: (bidResponses: prebidjs.IBidResponsesMap, timedOut: boolean, slotDefinitions: SlotDefinition<AdSlot>[]) => {
-     *     if (this.checkForJustPremiumWallpaper(bidResponses)) {
+     *     if (this.checkForGumGumWallpaper(bidResponses)) {
      *       // finds the googletag.AdSlot and calls googletag.destroySlots([skyScraperSlot]);
      *       this.destroySkyscraperAdUnit(slotDefinitions);
      *     }

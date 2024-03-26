@@ -10,8 +10,8 @@ import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
 describe('AdReload Validations', () => {
   const dspxBid: prebidjs.IDSPXBid = { bidder: prebidjs.DSPX, params: { placement: 'placebo' } };
 
-  const justPremium: prebidjs.IJustPremiumBid = {
-    bidder: prebidjs.JustPremium,
+  const gumGum: prebidjs.IGumGumBid = {
+    bidder: prebidjs.GumGum,
     params: { zone: 'magic' }
   };
 
@@ -90,7 +90,7 @@ describe('AdReload Validations', () => {
 
     it('should return an error when a wallpaper slot is detected by bids config and is not excluded from ad reload', () => {
       const messages: Message[] = [];
-      const adSlot = createAdSlot('path', [[12, 12]], [dspxBid, justPremium]);
+      const adSlot = createAdSlot('path', [[12, 12]], [dspxBid, gumGum]);
       checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
       expect(messages).to.have.length(1);
       expect(messages[0].kind).to.eq('error');

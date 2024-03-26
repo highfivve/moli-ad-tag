@@ -3488,7 +3488,6 @@ export namespace prebidjs {
   export const IndexExchange = 'ix';
   export const Invibes = 'invibes';
   export const NanoInteractive = 'nanointeractive';
-  export const JustPremium = 'justpremium';
   export const PubMatic = 'pubmatic';
   export const Ogury = 'ogury';
   export const OneTag = 'onetag';
@@ -3527,7 +3526,6 @@ export namespace prebidjs {
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof Invibes
-    | typeof JustPremium
     | typeof NanoInteractive
     | typeof PubMatic
     | typeof Ogury
@@ -4158,70 +4156,6 @@ export namespace prebidjs {
   }
 
   export interface IInvibesBid extends IBidObject<typeof Invibes, IInvibesParams> {}
-
-  // ----- JustPremium ----- //
-
-  export const JustPremiumPushUpBillboard = 'pu';
-  export const JustPremiumPushDownBillboard = 'pd';
-  export const JustPremiumLeaderboard = 'as';
-  export const JustPremiumFloorAd = 'fa';
-  export const JustPremiumClassicFloorAd = 'cf';
-  export const JustPremiumSideAd = 'sa';
-  export const JustPremiumWallpaper = 'wp';
-  export const JustPremiumMobileScroller = 'is';
-  export const JustPremiumMobileSkin = 'mt';
-  export const JustPremiumCascadeAd = 'ca';
-  export const JustPremiumVideoWallpaper = 'wv';
-  export const JustPremiumVideoFloorAd = 'fv';
-  export const JustPremiumMobileStickyExpandable = 'ms';
-  export const JustPremiumMobileVideo = 'mv';
-
-  /**
-   * The JustPremium HeaderBidding Guide offers a complete list of all formats.
-   * This type only contains the formats in use.
-   *
-   * IMPORTANT: The format identifier is used by the prebid adapter to identify the correct adslot.
-   *            AdUnit and DOM id are irrelevant. Make sure that the allow / exclude settings are
-   *            unique for each ad slot. Otherwise only one ad slot will be filled, while the others
-   *            stay empty.
-   */
-  export type JustPremiumFormat =
-    | typeof JustPremiumPushUpBillboard
-    | typeof JustPremiumPushDownBillboard
-    | typeof JustPremiumLeaderboard
-    | typeof JustPremiumFloorAd
-    | typeof JustPremiumClassicFloorAd
-    | typeof JustPremiumSideAd
-    | typeof JustPremiumWallpaper
-    | typeof JustPremiumMobileScroller
-    | typeof JustPremiumMobileSkin
-    | typeof JustPremiumCascadeAd
-    | typeof JustPremiumVideoWallpaper
-    | typeof JustPremiumVideoFloorAd
-    | typeof JustPremiumMobileStickyExpandable
-    | typeof JustPremiumMobileVideo;
-
-  /**
-   * JustPremium bid parameters
-   */
-  export interface IJustPremiumParams {
-    /**
-     * The zone ID provided by JustPremium.
-     */
-    readonly zone: string;
-
-    /**
-     * Permits a publisher to decide which products can be run from a specific ad unit
-     */
-    readonly allow?: Array<JustPremiumFormat>;
-
-    /**
-     * Permits a publisher to decide which products should be excluded from running in specific ad unit
-     */
-    readonly exclude?: Array<JustPremiumFormat>;
-  }
-
-  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
 
   export interface IPrebidServerBidParams {
     /**
@@ -5345,7 +5279,6 @@ export namespace prebidjs {
     | IImproveDigitalBid
     | IIndexExchangeBid
     | IInvibesBid
-    | IJustPremiumBid
     | INanoInteractiveBid
     | IPrebidServerBid
     | IPubMaticBid
@@ -5452,7 +5385,7 @@ export namespace prebidjs {
    *
    * 1. Creating a new interface that extends IBidResponse
    * 2. Narrow the `bidder` property to the header bidder, e.g.
-   *    readonly bidder: typeof JustPremium
+   *    readonly bidder: typeof GumGum
    * 3. Add the interface to the `BidResponse` union type
    * 4. Match on the `bidder` (acts as the union discriminator) to get the specific response you want.
    *
@@ -5576,22 +5509,10 @@ export namespace prebidjs {
      * Add more bidders by extending the union type, e.g.
      *
      * ```
-     * Exclude<BidderCode, typeof JustPremium | typeof AppNexusAst>;
+     * Exclude<BidderCode, typeof AppNexusAst>;
      * ```
      */
-    readonly bidder: Exclude<BidderCode, typeof JustPremium | typeof GumGum>;
-  }
-
-  export interface IJustPremiumBidResponse extends IBidResponse {
-    /**
-     * narrow this bid response type to justpremium
-     */
-    readonly bidder: typeof JustPremium;
-
-    /**
-     * The format that justpremium wants to deliever
-     */
-    readonly format: JustPremiumFormat;
+    readonly bidder: Exclude<BidderCode, typeof GumGum>;
   }
 
   /**
@@ -5610,7 +5531,7 @@ export namespace prebidjs {
 
   export interface IGumGumBidResponse extends IBidResponse {
     /**
-     * narrow this bid response type to justpremium
+     * narrow this bid response type to gumgum
      */
     readonly bidder: typeof GumGum;
 
@@ -5623,7 +5544,7 @@ export namespace prebidjs {
     readonly ad: IGumGumBidResponseWrapper | string;
   }
 
-  export type BidResponse = IGenericBidResponse | IJustPremiumBidResponse | IGumGumBidResponse;
+  export type BidResponse = IGenericBidResponse | IGumGumBidResponse;
 
   /**
    * The bidderSettings object provides a way to define some behaviors for the platform

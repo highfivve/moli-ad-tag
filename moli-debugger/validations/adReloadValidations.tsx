@@ -20,16 +20,19 @@ const isWallpaperSlot = (
     .filter(isNotNull)
     .every(size => wallpaperSizes.has(size));
 
-  const skinBidder = new Set([prebidjs.JustPremium, prebidjs.DSPX]);
-  const hasOnlyDspxAndJustPremium = prebidConfigs.every(
+  const skinBidder = new Set([
+    prebidjs.GumGum,
+    prebidjs.DSPX,
+    prebidjs.Visx,
+    prebidjs.ImproveDigital
+  ]);
+  const hasOnlySkinBidders = prebidConfigs.every(
     prebidConfig =>
       prebidConfig.adUnit.bids.length > 0 &&
       prebidConfig.adUnit.bids.every(bid => skinBidder.has(bid.bidder ?? bid.module))
   );
 
-  return (
-    hasWallpaperInAdUnitPath || hasOnlyDspxAndJustPremium || (hasOnlyWallpaperSizes && !isFloorAd)
-  );
+  return hasWallpaperInAdUnitPath || hasOnlySkinBidders || (hasOnlyWallpaperSizes && !isFloorAd);
 };
 
 export const checkAdReloadConfig = (
