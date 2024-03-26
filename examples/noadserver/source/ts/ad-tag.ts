@@ -7,7 +7,6 @@ import prebid from 'prebid.js';
 import 'prebid.js/modules/consentManagement';
 import 'prebid.js/modules/currency';
 import 'prebid.js/modules/appnexusBidAdapter';
-import 'prebid.js/modules/justpremiumBidAdapter';
 import 'prebid.js/modules/pubmaticBidAdapter';
 import 'prebid.js/modules/smartadserverBidAdapter';
 import 'prebid.js/modules/teadsBidAdapter';

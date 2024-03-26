@@ -18,7 +18,7 @@ use(sinonChai);
 /**
  * All bidders that require no additional configuration other than the bidder code
  */
-type SimpleFormatFilterBidder = Exclude<FormatFilter['bidder'], 'gumgum' | 'justpremium' | '*'>;
+type SimpleFormatFilterBidder = Exclude<FormatFilter['bidder'], 'gumgum' | '*'>;
 
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
@@ -164,123 +164,6 @@ describe('Skin Module', () => {
       },
       jsDomWindow
     );
-
-    const jpBidResponse = (
-      format: prebidjs.JustPremiumFormat
-    ): prebidjs.IJustPremiumBidResponse => ({
-      bidder: prebidjs.JustPremium,
-      format: format,
-      adId: '',
-      cpm: 10.0,
-      height: 1,
-      width: 1,
-      mediaType: 'banner',
-      source: 'client',
-      ad: '<h1>AD</h1>',
-      adUnitCode: '',
-      auctionId: '',
-      currency: 'EUR',
-      originalCurrency: 'EUR',
-      netRevenue: true
-    });
-
-    describe('just premium wallpaper', () => {
-      const config: SkinConfig = {
-        formatFilter: [{ bidder: 'justpremium', format: 'wp' }],
-        skinAdSlotDomId: 'wp-slot',
-        blockedAdSlotDomIds: ['sky-slot'],
-        hideSkinAdSlot: false,
-        hideBlockedSlots: false,
-        enableCpmComparison: false
-      };
-
-      it('should return `BlockOtherSlots` if a just premium wallpaper was found', () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'wp-slot': {
-            bids: [jpBidResponse('wp')]
-          }
-        });
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
-      });
-
-      it('should return `NoBlocking` if a just premium wallpaper was found but cpm 0', () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'wp-slot': {
-            bids: [{ ...jpBidResponse('wp'), cpm: 0 }]
-          }
-        });
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
-      });
-
-      it('should return `NoBlocking` if the just premium format does not match was found', () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'wp-slot': {
-            bids: [
-              jpBidResponse('pu'),
-              jpBidResponse('pd'),
-              jpBidResponse('fa'),
-              jpBidResponse('cf'),
-              jpBidResponse('sa'),
-              jpBidResponse('is'),
-              jpBidResponse('mt'),
-              jpBidResponse('ca')
-            ]
-          }
-        });
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
-      });
-    });
-
-    describe('just premium mobile skin', () => {
-      const config: SkinConfig = {
-        formatFilter: [{ bidder: 'justpremium', format: 'mt' }],
-        skinAdSlotDomId: 'mobile-skin-slot',
-        blockedAdSlotDomIds: ['sky-slot'],
-        hideSkinAdSlot: false,
-        hideBlockedSlots: false,
-        enableCpmComparison: false
-      };
-
-      it('should return `BlockOtherSlots` if a just premium mobile skin was found', () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'mobile-skin-slot': {
-            bids: [jpBidResponse('mt')]
-          }
-        });
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
-      });
-
-      it('should return `NoBlocking` if a just premium mobile skin was found but cpm 0', () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'mobile-skin-slot': {
-            bids: [{ ...jpBidResponse('mt'), cpm: 0 }]
-          }
-        });
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
-      });
-
-      it('should return `NoBlocking` if the just premium format does not match was found', () => {
-        const skinConfigEffect = module.getConfigEffect(config, {
-          'mobile-skin-slot': {
-            bids: [
-              jpBidResponse('pu'),
-              jpBidResponse('pd'),
-              jpBidResponse('fa'),
-              jpBidResponse('cf'),
-              jpBidResponse('sa'),
-              jpBidResponse('is'),
-              jpBidResponse('ca')
-            ]
-          }
-        });
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
-      });
-    });
 
     // ----  GumGum -----
     const gumgumBidResponse = (
@@ -459,7 +342,7 @@ describe('Skin Module', () => {
         );
 
         const config: SkinConfig = {
-          formatFilter: [{ bidder: prebidjs.JustPremium, format: prebidjs.JustPremiumWallpaper }],
+          formatFilter: [{ bidder: prebidjs.GumGum }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
           hideSkinAdSlot: false,
@@ -470,7 +353,7 @@ describe('Skin Module', () => {
         const bidResponses: IBidResponsesMap = {
           'wp-slot': {
             bids: [
-              { ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 },
+              { ...gumgumBidResponse('<h1>skin</h1>'), cpm: 1.5 },
               genericBidResponse('openx', 1)
             ]
           },
@@ -491,7 +374,7 @@ describe('Skin Module', () => {
             combinedNonSkinSlots: 1.51
           },
           config,
-          { ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 }
+          { ...gumgumBidResponse('<h1>skin</h1>'), cpm: 1.5 }
         );
       });
 
@@ -532,7 +415,7 @@ describe('Skin Module', () => {
 
     describe('selectConfig filter selection', () => {
       const wallpaperConfig: SkinConfig = {
-        formatFilter: [{ bidder: 'justpremium', format: 'wp' }],
+        formatFilter: [{ bidder: prebidjs.GumGum }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
         hideSkinAdSlot: false,
@@ -541,9 +424,9 @@ describe('Skin Module', () => {
       };
 
       const mobileSkinConfig: SkinConfig = {
-        formatFilter: [{ bidder: 'justpremium', format: 'mt' }],
-        skinAdSlotDomId: 'wp-slot',
-        blockedAdSlotDomIds: ['sky-slot'],
+        formatFilter: [{ bidder: prebidjs.GumGum, auid: 59 }],
+        skinAdSlotDomId: 'mobile-sticky',
+        blockedAdSlotDomIds: ['content-1'],
         hideSkinAdSlot: false,
         hideBlockedSlots: false,
         enableCpmComparison: false
@@ -559,21 +442,21 @@ describe('Skin Module', () => {
 
         // select desktop wallpaper
         const wpConfig = configuredModule.selectConfig({
-          'wp-slot': { bids: [jpBidResponse('wp')] }
+          'wp-slot': { bids: [gumgumBidResponse('<h1>skin</h1>')] }
         });
         expect(wpConfig?.skinConfig).to.equal(wallpaperConfig);
         expect(wpConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
 
         // select mobile skin
         const mobileConfig = configuredModule.selectConfig({
-          'wp-slot': { bids: [jpBidResponse('mt')] }
+          'mobile-sticky': { bids: [gumgumBidResponse({ auid: 59 })] }
         });
         expect(mobileConfig?.skinConfig).to.equal(mobileSkinConfig);
         expect(mobileConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
 
         // select wallpaper config skin
         const wp2Config = configuredModule.selectConfig({
-          'wp-slot': { bids: [jpBidResponse('wp'), jpBidResponse('mt')] }
+          'wp-slot': { bids: [gumgumBidResponse('wp'), gumgumBidResponse('mt')] }
         });
         expect(wp2Config?.skinConfig).to.equal(wallpaperConfig);
         expect(wp2Config?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -583,10 +466,7 @@ describe('Skin Module', () => {
         const trackSkinCpmLow = sandbox.stub();
 
         const config: SkinConfig = {
-          formatFilter: [
-            { bidder: prebidjs.JustPremium, format: prebidjs.JustPremiumWallpaper },
-            { bidder: prebidjs.DSPX }
-          ],
+          formatFilter: [{ bidder: prebidjs.GumGum }, { bidder: prebidjs.DSPX }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
           hideSkinAdSlot: false,
@@ -601,15 +481,12 @@ describe('Skin Module', () => {
           jsDomWindow
         );
 
-        // justpremium has 1.50 cpm
+        // gumgum has 1.50 cpm
         // other bids combined have 1.51 cpm
         // dspx has 1.52 cpm and will be selected
         const bidResponses: IBidResponsesMap = {
           'wp-slot': {
-            bids: [
-              { ...jpBidResponse(prebidjs.JustPremiumWallpaper), cpm: 1.5 },
-              dspxBidResponse(1.52)
-            ]
+            bids: [{ ...gumgumBidResponse('<h1>skin</h1>'), cpm: 1.5 }, dspxBidResponse(1.52)]
           },
           'sky-slot': {
             bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]

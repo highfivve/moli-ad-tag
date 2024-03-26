@@ -16,10 +16,9 @@
  *
  * moli.registerModule(new Skin({
  *   configs: [
- *     // configuration for regular wallpaper/skin from JustPremium or Screen on Demand (DSPX)
+ *     // configuration for regular wallpaper/skin from GumGum or Screen on Demand (DSPX)
  *     {
  *       formatFilter: [
- *         { bidder: 'justpremium', format: 'wp' },
  *         { bidder: 'dspx' },
  *         { bidder: 'visx' }
  *       ],
@@ -49,10 +48,9 @@
  *
  * moli.registerModule(new Skin({
  *   configs: [
- *     // configuration for regular wallpaper/skin from JustPremium or Screen on Demand (DSPX)
+ *     // configuration for regular wallpaper/skin from GumGum or Screen on Demand (DSPX)
  *     {
  *       formatFilter: [
- *         { bidder: 'justpremium', format: 'wp' },
  *         { bidder: 'dspx' },
  *       ],
  *       skinAdSlotDomId: 'my_skin',
@@ -115,12 +113,6 @@ export type AllFormatFilter = {
   readonly bidder: '*';
 };
 
-export type JustPremiumFormatFilter = {
-  readonly bidder: typeof prebidjs.JustPremium;
-
-  readonly format: prebidjs.JustPremiumFormat;
-};
-
 export type GumGumFormatFilter = {
   readonly bidder: typeof prebidjs.GumGum;
 
@@ -167,7 +159,6 @@ export type YieldlabFormatFilter = {
 export type FormatFilter =
   | AllFormatFilter
   | AzerionFormatFilter
-  | JustPremiumFormatFilter
   | GumGumFormatFilter
   | DSPXFormatFilter
   | VisxFormatFilter
@@ -281,8 +272,6 @@ export class Skin implements IModule {
             return bid.bidder === prebidjs.AppNexusAst || bid.bidder === prebidjs.AppNexus;
           case 'improvedigital':
             return bid.bidder === prebidjs.ImproveDigital;
-          case 'justpremium':
-            return bid.bidder === prebidjs.JustPremium && bid.format === filter.format;
           case 'gumgum':
             return (
               bid.bidder === prebidjs.GumGum &&
