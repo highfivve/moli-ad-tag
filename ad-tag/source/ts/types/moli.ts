@@ -45,7 +45,7 @@ export namespace Moli {
    * This environment is recommended for early testing to get some visual feedback.
    *
    */
-  export type Environment = 'production' | 'test';
+  export type Environment = 'production' | 'staging' | 'test';
 
   /**
    * # Moli Ad Tag

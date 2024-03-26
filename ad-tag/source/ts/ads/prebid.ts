@@ -514,7 +514,7 @@ export const prebidDefineSlots =
       } as any;
       switch (context.env) {
         case 'production':
-          return Promise.resolve<Moli.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+        case 'staging':
         case 'test':
           return Promise.resolve<Moli.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         default:
@@ -535,6 +535,7 @@ export const prebidRenderAds =
             createTestSlots(context, slots);
             break;
           case 'production':
+          case 'staging':
             context.window.pbjs
               .getHighestCpmBids()
               .filter(bid => bid && bid.adId)

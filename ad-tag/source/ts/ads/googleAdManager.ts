@@ -187,7 +187,7 @@ export const gptResetTargeting = (): ConfigureStep =>
     'gpt-reset-targeting',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        if (context.env === 'production') {
+        if (context.env === 'production' || context.env === 'staging') {
           context.logger.debug('GAM', 'reset top level targeting');
           context.window.googletag.pubads().clearTargeting();
           configureTargeting(context.window, context.config.targeting);
@@ -202,10 +202,10 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
   return mkConfigureStep('gpt-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
     if (!result) {
       result = new Promise<void>(resolve => {
-        const env = config.environment || 'production';
         context.logger.debug('GAM', 'configure googletag');
-        switch (env) {
+        switch (context.env) {
           case 'production':
+          case 'staging':
             configureTargeting(context.window, config.targeting);
 
             context.window.googletag.pubads().enableAsyncRendering();
@@ -221,6 +221,10 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             });
 
             context.window.googletag.enableServices();
+            if (context.env === 'staging' && config.domain) {
+              context.logger.debug('GAM', `set page url to ${config.domain}`);
+              context.window.googletag.pubads().set('page_url', config.domain);
+            }
             resolve();
             return;
           case 'test':
@@ -364,6 +368,7 @@ export const gptDefineSlots =
 
       switch (context.env) {
         case 'production':
+        case 'staging':
           if (adSlot) {
             adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
             adSlot.addService(context.window.googletag.pubads());
@@ -407,6 +412,7 @@ export const gptRequestAds =
           createTestSlots(context, slots);
           break;
         case 'production':
+        case 'staging':
           // load ads
           context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
           // mark slots as refreshed

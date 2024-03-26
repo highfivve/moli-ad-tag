@@ -213,6 +213,19 @@ export class GlobalConfig
     const switchToDarkTheme = () => this.setTheme('dark');
     const switchToLightTheme = () => this.setTheme('light');
 
+    const EnvironmentTag: React.FC<{ env: Moli.Environment | undefined }> = ({ env }) => {
+      switch (env) {
+        case 'production':
+          return <Tag variant="green">Production</Tag>;
+        case 'staging':
+          return <Tag variant="blue">Staging</Tag>;
+        case 'test':
+          return <Tag variant="yellow">Test</Tag>;
+        default:
+          return <Tag variant="red">Unknown</Tag>;
+      }
+    };
+
     return (
       <>
         <button
@@ -256,11 +269,7 @@ export class GlobalConfig
                 <div>
                   <div className="MoliDebug-tagContainer">
                     <TagLabel>Mode</TagLabel>
-                    {config.environment === 'test' ? (
-                      <Tag variant="yellow">Test</Tag>
-                    ) : (
-                      <Tag variant="green">Production</Tag>
-                    )}
+                    <EnvironmentTag env={config.environment} />
                     {isEnvironmentOverriden ? (
                       <button
                         className="MoliDebug-button MoliDebug-button--green"
