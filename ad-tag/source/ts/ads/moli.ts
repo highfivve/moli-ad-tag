@@ -548,7 +548,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // handle single page application case
         if (isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
-          const initialized = adService.initialize(config, isSinglePageApp).then(() => config);
+          const initialized = adService
+            .initialize(config, isSinglePageApp, state.moduleMeta)
+            .then(() => config);
           const spaRequestAdsState: ISinglePageApp = {
             state: 'spa-requestAds',
             configFromAdTag: state.configFromAdTag,
