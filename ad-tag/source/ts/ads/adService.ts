@@ -48,6 +48,7 @@ import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 /**
  * @internal
@@ -79,7 +80,8 @@ export class AdService {
     },
     getDefaultLogger(),
     this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-    noopReportingService
+    noopReportingService,
+    undefined
   );
 
   private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
@@ -222,7 +224,10 @@ export class AdService {
       },
       this.logger,
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-      reportingService
+      reportingService,
+      config.globalAuctionContext?.enabled
+        ? new GlobalAuctionContext(config.globalAuctionContext)
+        : undefined
     );
 
     return new Promise<Readonly<Moli.MoliConfig>>(resolve => {
@@ -241,7 +246,7 @@ export class AdService {
    * @param refreshInfiniteSlots a list of infinite ad slots that are already manually refreshed via the `moli.refreshInfiniteAdSlot` API
    *         and can be part of the requestAds cycle
    */
-  public requestAds = (
+  public requestAds = async (
     config: Readonly<Moli.MoliConfig>,
     refreshSlots: string[],
     refreshInfiniteSlots: Moli.state.IRefreshInfiniteSlot[]
@@ -280,18 +285,18 @@ export class AdService {
           }
         });
 
-        return Promise.all(
+        const arr = await Promise.all(
           Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
             this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
             return this.adPipeline
               .run(bucketSlots, config, this.requestAdsCalls)
               .then(() => bucketSlots);
           })
-        ).then(flatten);
+        );
+        return flatten(arr);
       } else {
-        return this.adPipeline
-          .run(immediatelyLoadedSlots, config, this.requestAdsCalls)
-          .then(() => immediatelyLoadedSlots);
+        await this.adPipeline.run(immediatelyLoadedSlots, config, this.requestAdsCalls);
+        return immediatelyLoadedSlots;
       }
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
