@@ -132,12 +132,7 @@ describe('AdService', () => {
 
         const adService = makeAdService();
 
-        await adService.initialize(
-          {
-            ...emptyConfigWithGlobalAuction
-          },
-          true
-        );
+        await adService.initialize(emptyConfigWithGlobalAuction, true);
         expect(adService.getAdPipeline().getAuction()).to.be.undefined;
       });
 
@@ -149,12 +144,7 @@ describe('AdService', () => {
 
         const adService = makeAdService();
 
-        await adService.initialize(
-          {
-            ...emptyConfigWithGlobalAuction
-          },
-          true
-        );
+        await adService.initialize(emptyConfigWithGlobalAuction, true);
         expect(adService.getAdPipeline().getAuction()).to.be.ok;
       });
     });
