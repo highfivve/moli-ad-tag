@@ -10,6 +10,7 @@ import { AdexModule } from '@highfivve/module-the-adex-dmp';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAdsV2 } from '@highfivve/module-sticky-footer-ads-v2';
+import { Cleanup } from '../../modules/cleanup';
 
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
@@ -35,6 +36,7 @@ const moli = initAdTag(window);
 
 declare const window: Window & googletag.IGoogleTagWindow & MoliWindow & prebidjs.IPrebidjsWindow;
 
+moli.enableSinglePageApp();
 // ad fraud protection
 moli.registerModule(
   new Confiant({
@@ -217,6 +219,19 @@ moli.registerModule(
     },
     window
   )
+);
+
+moli.registerModule(
+  new Cleanup({
+    configs: [
+      {
+        bidder: 'Seedtag',
+        deleteMethod: {
+          cssSelectors: ['.seedtag-container']
+        }
+      }
+    ]
+  })
 );
 
 //
