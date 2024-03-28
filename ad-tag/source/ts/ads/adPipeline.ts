@@ -9,6 +9,7 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 /**
  * Context passed to every pipeline step.
@@ -78,6 +79,12 @@ export type AdPipelineContext = {
    * the dynamic values generated from the ad tag.
    */
   readonly adUnitPathVariables: AdUnitPathVariables;
+
+  /**
+   * Access to global auction for auction optimizations.
+   * If not set, the global auction context is undefined
+   */
+  readonly auction?: GlobalAuctionContext;
 };
 
 /**
@@ -275,12 +282,14 @@ export class AdPipeline {
    * @param logger
    * @param window
    * @param reportingService
+   * @param auction
    */
   constructor(
     public readonly config: IAdPipelineConfiguration,
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-    private readonly reportingService: IReportingService
+    private readonly reportingService: IReportingService,
+    private readonly auction?: GlobalAuctionContext
   ) {}
 
   /**
@@ -356,7 +365,8 @@ export class AdPipeline {
         window: this.window,
         tcData: consentData,
         bucket: bucketConfig,
-        adUnitPathVariables: adUnitPathVariables
+        adUnitPathVariables: adUnitPathVariables,
+        auction: this.auction
       };
 
       this.init = this.init
@@ -405,6 +415,11 @@ export class AdPipeline {
           }
         });
     });
+  }
+
+  // for testing purposes
+  getAuction(): GlobalAuctionContext | undefined {
+    return this.auction;
   }
 
   private runPrepareRequestAds = (
