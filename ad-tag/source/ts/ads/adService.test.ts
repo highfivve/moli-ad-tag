@@ -125,7 +125,7 @@ describe('AdService', () => {
         return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
       };
 
-      it('should instantiate auction in adPipeline by default config', async () => {
+      it("shouldn't instantiate auction in adPipeline by default config", async () => {
         const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
           ...emptyConfig,
           globalAuctionContext: new GlobalAuctionContext()
@@ -133,7 +133,7 @@ describe('AdService', () => {
         const adService = makeAdService();
 
         await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.ok;
+        expect(adService.getAdPipeline().getAuction()).to.be.undefined;
       });
 
       it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
