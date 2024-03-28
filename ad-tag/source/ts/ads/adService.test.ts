@@ -111,6 +111,54 @@ describe('AdService', () => {
       });
     });
 
+    describe('Global action', () => {
+      const makeAdService = (): AdService => {
+        const adPipelineConfiguration: IAdPipelineConfiguration = {
+          init: [],
+          configure: [],
+          defineSlots: () => Promise.resolve([]),
+          prepareRequestAds: [],
+          requestBids: [],
+          requestAds: () => Promise.resolve()
+        };
+        return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+      };
+
+      it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
+        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+          ...emptyConfig,
+          globalAuctionContext: { enabled: false }
+        };
+
+        const adService = makeAdService();
+
+        await adService.initialize(
+          {
+            ...emptyConfigWithGlobalAuction
+          },
+          true
+        );
+        expect(adService.getAdPipeline().getAuction()).to.be.undefined;
+      });
+
+      it('should instantiate auction in adPipeline if it was enabled in config', async () => {
+        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+          ...emptyConfig,
+          globalAuctionContext: { enabled: true }
+        };
+
+        const adService = makeAdService();
+
+        await adService.initialize(
+          {
+            ...emptyConfigWithGlobalAuction
+          },
+          true
+        );
+        expect(adService.getAdPipeline().getAuction()).to.be.ok;
+      });
+    });
+
     describe('a9', () => {
       it('should add the a9-init step if a9 is available', () => {
         return initialize(emptyConfigWithA9).then(pipeline => {

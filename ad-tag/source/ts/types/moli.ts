@@ -867,6 +867,11 @@ export namespace Moli {
     readonly a9?: headerbidding.A9Config;
 
     /**
+     * Configure optimization through the global auction context
+     */
+    readonly globalAuctionContext?: auction.GlobalAuctionContextConfig;
+
+    /**
      * Reporting configuration
      */
     reporting?: reporting.ReportingConfig;
@@ -1246,6 +1251,15 @@ export namespace Moli {
        * @see https://developers.google.com/publisher-tag/reference?hl=de#googletag.PrivacySettingsConfig_nonPersonalizedAds
        */
       readonly useLimitedAds?: boolean;
+    }
+  }
+
+  export namespace auction {
+    export interface GlobalAuctionContextConfig {
+      /**
+       * disable global auction context
+       */
+      readonly enabled: boolean;
     }
   }
 
