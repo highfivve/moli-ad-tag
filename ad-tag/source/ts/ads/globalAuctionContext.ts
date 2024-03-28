@@ -1,5 +1,10 @@
 import { Moli } from '../types/moli';
 
 export class GlobalAuctionContext {
-  constructor(private readonly config: Moli.auction.GlobalAuctionContextConfig) {}
+  readonly enabled: boolean;
+  constructor(
+    private readonly config: Moli.auction.GlobalAuctionContextConfig = { enabled: true }
+  ) {
+    this.enabled = this.config.enabled;
+  }
 }
