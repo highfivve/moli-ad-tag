@@ -285,7 +285,7 @@ export class AdService {
           }
         });
 
-        let arr = await Promise.all(
+        const arr = await Promise.all(
           Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
             this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
             return this.adPipeline

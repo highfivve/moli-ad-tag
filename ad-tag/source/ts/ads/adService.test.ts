@@ -11,6 +11,7 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -123,6 +124,17 @@ describe('AdService', () => {
         };
         return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
       };
+
+      it('should instantiate auction in adPipeline by default config', async () => {
+        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+          ...emptyConfig,
+          globalAuctionContext: new GlobalAuctionContext()
+        };
+        const adService = makeAdService();
+
+        await adService.initialize(emptyConfigWithGlobalAuction, true);
+        expect(adService.getAdPipeline().getAuction()).to.be.ok;
+      });
 
       it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
         const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
