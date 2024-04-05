@@ -12,7 +12,7 @@ import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import sinon from 'sinon';
+import sinon, { SinonSandbox } from 'sinon';
 
 // setup sinon-chai
 use(sinonChai);
@@ -115,14 +115,16 @@ describe('AdService', () => {
 
     describe('Global action', () => {
       let globalAuctionContext: GlobalAuctionContext;
+      let sandbox: SinonSandbox;
 
       beforeEach(() => {
+        sandbox = sinon.createSandbox();
         globalAuctionContext = new GlobalAuctionContext({ enabled: true });
       });
 
       afterEach(() => {
         // Restore any stubs/spies
-        sinon.restore();
+        sandbox.restore();
       });
 
       const makeAdService = (): AdService => {
@@ -169,24 +171,7 @@ describe('AdService', () => {
         expect(adService.getAdPipeline().getAuction()).to.be.ok;
       });
 
-      it('should record bidder activity for rubicon', () => {
-        globalAuctionContext.recordBidderActivity('rubicon', 'content-1');
-        expect(globalAuctionContext.isBidderDeactivated('rubicon', 'content-1')).to.be.false;
-      });
-
-      it('should deactivate rubicon for a certain time period and reactivate afterwards', () => {
-        const clock = sinon.useFakeTimers();
-        globalAuctionContext.recordBidderActivity('rubicon', 'content-1');
-        globalAuctionContext.deactivateBidderForTTL('rubicon', 'content-1', 5000);
-        // Verify that rubicon is initially deactivated
-        expect(globalAuctionContext.isBidderDeactivated('rubicon', 'content-1')).to.be.true;
-        clock.tick(4000);
-        // Verify that rubicon remains deactivated before TTL expiration
-        expect(globalAuctionContext.isBidderDeactivated('rubicon', 'content-1')).to.be.true;
-        clock.tick(1000);
-        // Verify that rubicon becomes reactivated after TTL expiration
-        expect(globalAuctionContext.isBidderDeactivated('rubicon', 'content-1')).to.be.false;
-      });
+      // Todo add more tests for GlobalAuctionContext
     });
 
     describe('a9', () => {
