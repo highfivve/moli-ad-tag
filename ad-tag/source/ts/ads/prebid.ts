@@ -377,8 +377,18 @@ export const prebidRequestBids = (
 ): RequestBidsStep =>
   mkRequestBidsStep(
     'prebid-request-bids',
-    (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
-      new Promise(resolve => {
+    (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => {
+      // The failsafe timeout is the maximum of the bidder timeout and the failsafe timeout.
+      // This also ensure that the failsafe timeout is never smaller than the bidderTimeout, which would be a very
+      // unexpected behavior.
+      const failsafeTimeout = Math.max(
+        (prebidConfig.config.bidderTimeout ?? 2000) + 3000,
+        prebidConfig.failsafeTimeout ?? 0
+      );
+      const failsafe = new Promise<void>(resolve =>
+        context.window.setTimeout(resolve, failsafeTimeout)
+      );
+      const auction = new Promise<void>(resolve => {
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
           ? {
               adUnits: createdAdUnits(context, prebidConfig, slots)
@@ -488,7 +498,9 @@ export const prebidRequestBids = (
           timeout: context.bucket?.timeout,
           bidsBackHandler: bidsBackHandler
         });
-      })
+      });
+      return Promise.race([failsafe, auction]);
+    }
   );
 
 export const prebidDefineSlots =
