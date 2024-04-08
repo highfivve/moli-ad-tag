@@ -1563,6 +1563,19 @@ export namespace Moli {
        */
       readonly ephemeralAdUnits?: boolean;
 
+      /**
+       * A timeout in milliseconds for the prebid auction. If for whatever reason never calls the bidsBackHandler, this
+       * timeout will be used to continue anyway to minimize the revenue impact.
+       *
+       * Note that the max of the auction timeout or failsafeTimeout will be used to avoid misconfiguration.
+       *
+       * The default is chosen to be 2000ms longer than the auction timeout to give the auction a chance to finish.
+       * Usually auction timeouts range from 500ms to 3000ms, which makes 2000ms extra for a failsafe a fair guess.
+       *
+       * @default auction timeout + 2000ms
+       */
+      readonly failsafeTimeout?: number;
+
       /** optional listener for prebid events */
       listener?: PrebidListenerProvider;
     }
