@@ -144,6 +144,13 @@ export type StickyHeaderAdConfig = {
 };
 
 /**
+ * empty: mobile sticky load was empty
+ * disallowed: an advertiser that brings its own creative was rendered
+ * standard: a regular creative was loaded
+ */
+type RenderEventResult = 'empty' | 'disallowed' | 'standard';
+
+/**
  * ## Sticky Headers Ads
  *
  * Provides the javascript integration for sticky header ads, which consist of
@@ -231,11 +238,11 @@ export class StickyHeaderAds implements IModule {
 
         const minVisibleDuration = this.stickyHeaderAdConfig.minVisibleDurationMs ?? 0;
 
-        const adRenderIsEmpty = this.stickyHeaderAdConfig.waitForRendering
-          ? new Promise<boolean>(resolve => {
+        const adRenderResult = this.stickyHeaderAdConfig.waitForRendering
+          ? new Promise<RenderEventResult>(resolve => {
               // in test mode there's no event fired so we need to resolve immediately and say it's not empty
               if (ctx.env === 'test') {
-                resolve(false);
+                resolve('standard');
                 return;
               }
               const listener: (event: googletag.events.ISlotRenderEndedEvent) => void = event => {
@@ -243,13 +250,22 @@ export class StickyHeaderAds implements IModule {
                 if (event.slot.getSlotElementId() !== headerSlot.moliSlot.domId) {
                   return;
                 }
-                if (minVisibleDuration > 0) {
-                  setTimeout(
-                    () => resolve(event.isEmpty),
-                    this.stickyHeaderAdConfig.minVisibleDurationMs
-                  );
+
+                // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
+                if (
+                  event.advertiserId &&
+                  this.stickyHeaderAdConfig.disallowedAdvertiserIds.includes(event.advertiserId)
+                ) {
+                  resolve('disallowed');
+                } else if (event.isEmpty) {
+                  resolve('empty');
                 } else {
-                  resolve(event.isEmpty);
+                  minVisibleDuration > 0
+                    ? setTimeout(
+                        () => resolve('standard'),
+                        this.stickyHeaderAdConfig.minVisibleDurationMs
+                      )
+                    : resolve('standard');
                 }
                 ctx.window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
               };
@@ -285,17 +301,20 @@ export class StickyHeaderAds implements IModule {
               // fadeout the ad if the observed element is the target
               if (entry.target === target) {
                 // wait for the ad to be rendered before hiding it
-                adRenderIsEmpty.then(isEmpty => {
+                adRenderResult.then(result => {
                   if (
                     // user scrolls down
                     entry.isIntersecting ||
                     // user starts below observed DOM
                     (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
-                    // if the ad is empty, hide it
-                    isEmpty
+                    // if the ad is empty or an advertiser which is not allowed for this format, hide it
+                    result === 'empty' ||
+                    result === 'disallowed'
                   ) {
                     container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-                  } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
+                  } else if (entry.boundingClientRect.y >= 0 && result === 'standard') {
+                    // if the ad should be visible again, because it's above the viewport and the ad is not empty and the
+                    // advertiser is allowed, remove the fadeout class
                     container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
                   }
                 });
