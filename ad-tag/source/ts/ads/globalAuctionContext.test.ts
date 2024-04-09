@@ -7,10 +7,13 @@ import { emptyConfig } from '../stubs/moliStubs';
 import { expect } from 'chai';
 import { createDom } from '../stubs/browserEnvSetup';
 import { createAssetLoaderService } from '../util/assetLoaderService';
+import { prebidjs } from '../types/prebidjs';
+import { googletag } from '../types/googletag';
 
 describe('Global action', () => {
   let dom = createDom();
-  let jsDomWindow: Window = dom.window as any;
+  let jsDomWindow: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow =
+    dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
@@ -19,7 +22,7 @@ describe('Global action', () => {
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    globalAuctionContext = new GlobalAuctionContext({ enabled: true });
+    globalAuctionContext = new GlobalAuctionContext(jsDomWindow, { enabled: true });
   });
 
   afterEach(() => {
@@ -42,7 +45,7 @@ describe('Global action', () => {
   it("shouldn't instantiate auction in adPipeline by default config", async () => {
     const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
       ...emptyConfig,
-      globalAuctionContext: new GlobalAuctionContext()
+      globalAuctionContext: new GlobalAuctionContext(jsDomWindow)
     };
     const adService = makeAdService();
     await adService.initialize(emptyConfigWithGlobalAuction, true);

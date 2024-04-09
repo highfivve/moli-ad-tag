@@ -3,31 +3,44 @@ import { prebidjs } from '../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { googletag } from '../types/googletag';
 
-declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
-
 export class GlobalAuctionContext {
   readonly enabled: boolean;
   private readonly bidderActivity: Map<string, Map<BidderCode, number>>; // Map of position to map of bidders and their activity timestamps
-  private readonly ttlTimers: Map<string, Map<BidderCode, NodeJS.Timeout>>; // Map of position to map of bidders and their TTL timers
+  private readonly ttlTimers: Map<string, Map<BidderCode, ReturnType<typeof setTimeout>>>; // Map of position to map of bidders and their TTL timers
 
   constructor(
+    private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
     private readonly config: Moli.auction.GlobalAuctionContextConfig = { enabled: false }
   ) {
     this.enabled = this.config.enabled;
     this.bidderActivity = new Map<string, Map<BidderCode, number>>();
-    this.ttlTimers = new Map<string, Map<BidderCode, NodeJS.Timeout>>();
+    this.ttlTimers = new Map<string, Map<BidderCode, ReturnType<typeof setTimeout>>>();
+    this.window.pbjs = this.window.pbjs || { que: [] };
 
     // Register event listeners
-    window.pbjs.onEvent('noBid', bid => this.handleNoBidEvent(bid.bidderCode, bid.adUnitCode));
-    window.pbjs.onEvent('bidWon', bid =>
-      this.handleBidWonEvent(bid.bidderCode, bid.adUnitCode, Date.now())
-    );
-    window.pbjs.onEvent('bidTimeout', bid =>
-      this.handleTimeoutEvent(bid.bidderCode, bid.adUnitCode)
-    );
-    window.pbjs.onEvent('bidResponse', bid =>
-      this.handleBidResponseEvent(bid.bidderCode, bid.adUnitCode)
-    );
+    this.window.pbjs.que.push(() => {
+      this.window.pbjs.onEvent('noBid', bid =>
+        this.handleNoBidEvent(bid.bidderCode, bid.adUnitCode)
+      );
+    });
+
+    this.window.pbjs.que.push(() => {
+      this.window.pbjs.onEvent('bidWon', bid =>
+        this.handleBidWonEvent(bid.bidderCode, bid.adUnitCode, Date.now())
+      );
+    });
+
+    this.window.pbjs.que.push(() => {
+      this.window.pbjs.onEvent('bidTimeout', bid =>
+        this.handleTimeoutEvent(bid.bidderCode, bid.adUnitCode)
+      );
+    });
+
+    this.window.pbjs.que.push(() => {
+      this.window.pbjs.onEvent('bidResponse', bid =>
+        this.handleBidResponseEvent(bid.bidderCode, bid.adUnitCode)
+      );
+    });
   }
 
   // Method to record bidder activity for a specific position
@@ -60,7 +73,7 @@ export class GlobalAuctionContext {
 
       // Save timer reference, so that it can be cleared if needed
       if (!this.ttlTimers.has(position)) {
-        this.ttlTimers.set(position, new Map<BidderCode, NodeJS.Timeout>());
+        this.ttlTimers.set(position, new Map<BidderCode, ReturnType<typeof setTimeout>>());
       }
       this.ttlTimers.get(position)?.set(bidder, timer);
     }

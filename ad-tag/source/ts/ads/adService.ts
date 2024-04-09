@@ -226,7 +226,10 @@ export class AdService {
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
       reportingService,
       config.globalAuctionContext?.enabled
-        ? new GlobalAuctionContext(config.globalAuctionContext)
+        ? new GlobalAuctionContext(
+            this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+            config.globalAuctionContext
+          )
         : undefined
     );
 
