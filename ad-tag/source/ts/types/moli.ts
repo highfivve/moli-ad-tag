@@ -871,6 +871,8 @@ export namespace Moli {
      */
     readonly globalAuctionContext?: auction.GlobalAuctionContextConfig;
 
+    readonly modules?: modules.ModulesConfig;
+
     /**
      * Reporting configuration
      */
