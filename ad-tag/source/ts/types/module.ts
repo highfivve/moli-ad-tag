@@ -64,23 +64,3 @@ export const metaFromModule = (module: IModule): ModuleMeta => ({
   description: module.description,
   config: module.config()
 });
-
-export interface CSSHidingConfig {
-  readonly cssSelectors: string[];
-}
-
-export interface JSHidingConfig {
-  readonly jsAsString: string;
-}
-
-export interface CleanupConfig {
-  readonly bidder: string;
-  readonly deleteMethod: CSSHidingConfig | JSHidingConfig;
-}
-
-export type CleanupModuleConfig = {
-  /**
-   * A list of configurations.
-   */
-  readonly configs: CleanupConfig[];
-};

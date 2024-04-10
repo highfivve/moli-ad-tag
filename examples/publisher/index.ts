@@ -223,11 +223,20 @@ moli.registerModule(
 
 moli.registerModule(
   new Cleanup({
+    enabled: true,
     configs: [
       {
         bidder: 'Seedtag',
+        domId: 'manual-adslot',
         deleteMethod: {
           cssSelectors: ['.seedtag-container']
+        }
+      },
+      {
+        bidder: 'Seedtag',
+        domId: 'lazy-loading-adslot-1',
+        deleteMethod: {
+          jsAsString: `window.document.querySelectorAll('.seedtag-containerr').forEach(element => element.remove());`
         }
       }
     ]
