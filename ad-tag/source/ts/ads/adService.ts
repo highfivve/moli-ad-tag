@@ -51,7 +51,6 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { ModuleMeta, CleanupModuleConfig } from '../types/module';
 
 /**
  * @internal
@@ -115,40 +114,6 @@ export class AdService {
     }
   }
 
-  private destroyOutOfPageAdFormat = (moduleMeta: ModuleMeta[] | undefined): ConfigureStep =>
-    mkConfigureStepOncePerRequestAdsCycle(
-      'destroy-out-of-page-ad-format',
-      (context: AdPipelineContext) => {
-        return new Promise<void>(resolve => {
-          const cleanUpModuleMeta = moduleMeta?.find(meta => meta.name === 'cleanup');
-          if (cleanUpModuleMeta) {
-            const cleanupModuleConfig = cleanUpModuleMeta.config as CleanupModuleConfig;
-            if (cleanupModuleConfig.configs) {
-              cleanupModuleConfig.configs.forEach(config => {
-                if ('cssSelectors' in config.deleteMethod) {
-                  config.deleteMethod.cssSelectors.forEach((selector: string) => {
-                    const elements = document.querySelectorAll(selector);
-                    elements.forEach((element: Element) => {
-                      console.log('element to remove', element);
-                      element.remove();
-                    });
-                  });
-                }
-                if ('jsAsString' in config.deleteMethod) {
-                  try {
-                    // eslint-disable-next-line no-eval
-                    eval(config.deleteMethod.jsAsString);
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }
-              });
-            }
-          }
-          resolve();
-        });
-      }
-    );
   /**
    * Must only be called once.
    *
@@ -163,8 +128,7 @@ export class AdService {
    */
   public initialize = (
     config: Readonly<Moli.MoliConfig>,
-    isSinglePageApp: boolean,
-    moduleMeta?: ModuleMeta[]
+    isSinglePageApp: boolean
   ): Promise<Readonly<Moli.MoliConfig>> => {
     const env = AdService.getEnvironment(config);
     const adServer = config.adServer || 'gam';
@@ -194,11 +158,7 @@ export class AdService {
     const configure: ConfigureStep[] = isGam ? [gptConfigure(config)] : [];
 
     if (isGam && isSinglePageApp) {
-      configure.push(
-        gptDestroyAdSlots(),
-        gptResetTargeting(),
-        this.destroyOutOfPageAdFormat(moduleMeta)
-      );
+      configure.push(gptDestroyAdSlots(), gptResetTargeting());
     }
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [];
