@@ -49,6 +49,8 @@ import {
   Moli,
   googletag
 } from '@highfivve/ad-tag';
+import { intersectionObserverFadeOutCallback } from './fadeOutCallback';
+import { adRenderResult } from './renderResult';
 
 /**
  * Configure intersection observer that controls the fade out behaviour
@@ -110,6 +112,7 @@ export type StickyHeaderAdConfig = {
    * rendered.
    *
    * Note: this doesn't work for prebid only setups
+   * @deprecated this is not used anymore, because we need to wait for rendering in order to check for disallowed advertisers
    */
   readonly waitForRendering?: boolean;
 
@@ -187,7 +190,7 @@ export class StickyHeaderAds implements IModule {
     return this.stickyHeaderAdConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: Moli.MoliConfig): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -231,33 +234,6 @@ export class StickyHeaderAds implements IModule {
 
         const minVisibleDuration = this.stickyHeaderAdConfig.minVisibleDurationMs ?? 0;
 
-        const adRenderIsEmpty = this.stickyHeaderAdConfig.waitForRendering
-          ? new Promise<boolean>(resolve => {
-              // in test mode there's no event fired so we need to resolve immediately and say it's not empty
-              if (ctx.env === 'test') {
-                resolve(false);
-                return;
-              }
-              const listener: (event: googletag.events.ISlotRenderEndedEvent) => void = event => {
-                // only the header slot is relevant
-                if (event.slot.getSlotElementId() !== headerSlot.moliSlot.domId) {
-                  return;
-                }
-                if (minVisibleDuration > 0) {
-                  setTimeout(
-                    () => resolve(event.isEmpty),
-                    this.stickyHeaderAdConfig.minVisibleDurationMs
-                  );
-                } else {
-                  resolve(event.isEmpty);
-                }
-                ctx.window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
-              };
-
-              ctx.window.googletag.pubads().addEventListener('slotRenderEnded', listener);
-            })
-          : Promise.resolve(false);
-
         // initialize observer only if fadeOutTrigger is not disabled
         if (this.stickyHeaderAdConfig.fadeOutTrigger !== false) {
           const options = this.stickyHeaderAdConfig.fadeOutTrigger.options ?? {
@@ -279,40 +255,26 @@ export class StickyHeaderAds implements IModule {
             ? ctx.window.document.querySelector(navbarConfig.selector)
             : null;
 
-          const callback: IntersectionObserverCallback = entries => {
-            // initially there maybe two events, for navbar and the target element
-            entries.forEach(entry => {
-              // fadeout the ad if the observed element is the target
-              if (entry.target === target) {
-                // wait for the ad to be rendered before hiding it
-                adRenderIsEmpty.then(isEmpty => {
-                  if (
-                    // user scrolls down
-                    entry.isIntersecting ||
-                    // user starts below observed DOM
-                    (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
-                    // if the ad is empty, hide it
-                    isEmpty
-                  ) {
-                    container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-                  } else if (entry.boundingClientRect.y >= 0 && !isEmpty) {
-                    container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
-                  }
-                });
-              } else if (entry.target === navbar && navbarHiddenClass) {
-                // apply a separate class if the navbar is not intersecting the viewport anymore
-                if (entry.isIntersecting) {
-                  container.classList.remove(navbarHiddenClass);
-                } else {
-                  container.classList.add(navbarHiddenClass);
-                }
-              }
-            });
-          };
-
           if (target) {
+            const adRenderResultPromise = adRenderResult(
+              ctx,
+              headerSlot.moliSlot,
+              this.stickyHeaderAdConfig.disallowedAdvertiserIds,
+              minVisibleDuration
+            );
+
             // setup intersection observer
-            this.observer = new IntersectionObserver(callback, options);
+            this.observer = new IntersectionObserver(
+              intersectionObserverFadeOutCallback(
+                container,
+                target,
+                adRenderResultPromise,
+                navbar,
+                navbarHiddenClass,
+                this.stickyHeaderAdConfig.fadeOutClassName
+              ),
+              options
+            );
             this.observer.observe(target);
 
             if (navbar) {
