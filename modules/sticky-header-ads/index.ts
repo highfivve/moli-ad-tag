@@ -49,6 +49,8 @@ import {
   Moli,
   googletag
 } from '@highfivve/ad-tag';
+import { intersectionObserverFadeOutCallback } from './fadeOutCallback';
+import { adRenderResult } from './renderResult';
 
 /**
  * Configure intersection observer that controls the fade out behaviour
@@ -110,6 +112,7 @@ export type StickyHeaderAdConfig = {
    * rendered.
    *
    * Note: this doesn't work for prebid only setups
+   * @deprecated this is not used anymore, because we need to wait for rendering in order to check for disallowed advertisers
    */
   readonly waitForRendering?: boolean;
 
@@ -142,13 +145,6 @@ export type StickyHeaderAdConfig = {
    */
   readonly disallowedAdvertiserIds: number[];
 };
-
-/**
- * empty: mobile sticky load was empty
- * disallowed: an advertiser that brings its own creative was rendered
- * standard: a regular creative was loaded
- */
-type RenderEventResult = 'empty' | 'disallowed' | 'standard';
 
 /**
  * ## Sticky Headers Ads
@@ -194,7 +190,7 @@ export class StickyHeaderAds implements IModule {
     return this.stickyHeaderAdConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: Moli.MoliConfig): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -238,42 +234,6 @@ export class StickyHeaderAds implements IModule {
 
         const minVisibleDuration = this.stickyHeaderAdConfig.minVisibleDurationMs ?? 0;
 
-        const adRenderResult = this.stickyHeaderAdConfig.waitForRendering
-          ? new Promise<RenderEventResult>(resolve => {
-              // in test mode there's no event fired so we need to resolve immediately and say it's not empty
-              if (ctx.env === 'test') {
-                resolve('standard');
-                return;
-              }
-              const listener: (event: googletag.events.ISlotRenderEndedEvent) => void = event => {
-                // only the header slot is relevant
-                if (event.slot.getSlotElementId() !== headerSlot.moliSlot.domId) {
-                  return;
-                }
-
-                // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
-                if (
-                  event.advertiserId &&
-                  this.stickyHeaderAdConfig.disallowedAdvertiserIds.includes(event.advertiserId)
-                ) {
-                  resolve('disallowed');
-                } else if (event.isEmpty) {
-                  resolve('empty');
-                } else {
-                  minVisibleDuration > 0
-                    ? setTimeout(
-                        () => resolve('standard'),
-                        this.stickyHeaderAdConfig.minVisibleDurationMs
-                      )
-                    : resolve('standard');
-                }
-                ctx.window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
-              };
-
-              ctx.window.googletag.pubads().addEventListener('slotRenderEnded', listener);
-            })
-          : Promise.resolve(false);
-
         // initialize observer only if fadeOutTrigger is not disabled
         if (this.stickyHeaderAdConfig.fadeOutTrigger !== false) {
           const options = this.stickyHeaderAdConfig.fadeOutTrigger.options ?? {
@@ -295,43 +255,26 @@ export class StickyHeaderAds implements IModule {
             ? ctx.window.document.querySelector(navbarConfig.selector)
             : null;
 
-          const callback: IntersectionObserverCallback = entries => {
-            // initially there maybe two events, for navbar and the target element
-            entries.forEach(entry => {
-              // fadeout the ad if the observed element is the target
-              if (entry.target === target) {
-                // wait for the ad to be rendered before hiding it
-                adRenderResult.then(result => {
-                  if (
-                    // user scrolls down
-                    entry.isIntersecting ||
-                    // user starts below observed DOM
-                    (!entry.isIntersecting && entry.boundingClientRect.y < 0) ||
-                    // if the ad is empty or an advertiser which is not allowed for this format, hide it
-                    result === 'empty' ||
-                    result === 'disallowed'
-                  ) {
-                    container.classList.add(this.stickyHeaderAdConfig.fadeOutClassName);
-                  } else if (entry.boundingClientRect.y >= 0 && result === 'standard') {
-                    // if the ad should be visible again, because it's above the viewport and the ad is not empty and the
-                    // advertiser is allowed, remove the fadeout class
-                    container.classList.remove(this.stickyHeaderAdConfig.fadeOutClassName);
-                  }
-                });
-              } else if (entry.target === navbar && navbarHiddenClass) {
-                // apply a separate class if the navbar is not intersecting the viewport anymore
-                if (entry.isIntersecting) {
-                  container.classList.remove(navbarHiddenClass);
-                } else {
-                  container.classList.add(navbarHiddenClass);
-                }
-              }
-            });
-          };
-
           if (target) {
+            const adRenderResultPromise = adRenderResult(
+              ctx,
+              headerSlot.moliSlot,
+              this.stickyHeaderAdConfig.disallowedAdvertiserIds,
+              minVisibleDuration
+            );
+
             // setup intersection observer
-            this.observer = new IntersectionObserver(callback, options);
+            this.observer = new IntersectionObserver(
+              intersectionObserverFadeOutCallback(
+                container,
+                target,
+                adRenderResultPromise,
+                navbar,
+                navbarHiddenClass,
+                this.stickyHeaderAdConfig.fadeOutClassName
+              ),
+              options
+            );
             this.observer.observe(target);
 
             if (navbar) {
