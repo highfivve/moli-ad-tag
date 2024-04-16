@@ -24,14 +24,17 @@ const cleanUp = (context: AdPipelineContext, configs: Moli.CleanupConfig[] | und
     }
     if ('jsAsString' in config.deleteMethod) {
       try {
-        context.logger.debug(
+        /*   context.logger.debug(
           'Cleanup Module',
-          `Cleanup: Try to execute JS string: '${config.deleteMethod.jsAsString}'`
-        );
+          `Try to execute JS string: '${config.deleteMethod.jsAsString}'`
+        );*/
         // eslint-disable-next-line no-eval
         eval(config.deleteMethod.jsAsString);
       } catch (e) {
-        console.error(e);
+        context.logger.error(
+          'Cleanup Module',
+          `Error executing JS string: '${config.deleteMethod.jsAsString}'`
+        );
       }
     }
   });
