@@ -1,7 +1,7 @@
 import * as Sinon from 'sinon';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { AdPipelineContext, createMoliTag, Moli } from '@highfivve/ad-tag';
-import { emptyConfig, newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { emptyConfig, newNoopLogger, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { Cleanup } from './index';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
@@ -14,7 +14,8 @@ describe('Cleanup Module', () => {
   let dom = createDom();
   let jsDomWindow = dom.window as any;
   jsDomWindow.moli = createMoliTag(jsDomWindow);
-  const noopLogger = newNoopLogger();
+  const noopLogger = newNoopLogger(true);
+  const errorLogSpy = sandbox.spy(noopLogger, 'error');
 
   const domId1 = 'gf_content_1';
   const domId2 = 'gf_wallpaper_pixel';
@@ -108,7 +109,7 @@ describe('Cleanup Module', () => {
       requestId: 0,
       requestAdsCalls: 1,
       env: 'production',
-      logger: noopLogger,
+      logger: { ...noopLogger, error: errorLogSpy },
       config: emptyConfig,
       window: jsDomWindow as any,
       // no service dependencies required
@@ -119,6 +120,28 @@ describe('Cleanup Module', () => {
       // TODO: add auction context
     };
   };
+
+  it('should add a configure and prepare request ads pipeline step', () => {
+    const module = new Cleanup({
+      enabled: true,
+      configs: [
+        {
+          bidder: 'Seedtag',
+          domId: domId1,
+          deleteMethod: {
+            cssSelectors: [specialFormatClass1]
+          }
+        }
+      ]
+    });
+
+    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
+    const config = mkConfig(slots);
+    module.init(config);
+
+    expect(config.pipeline?.configureSteps.length).to.equal(1);
+    expect(config.pipeline?.prepareRequestAdsSteps.length).to.equal(1);
+  });
 
   it('should remove all elements with the configured CSS selectors from the dom or execute the configured JS in the configure step', async () => {
     const module = new Cleanup({
@@ -186,7 +209,7 @@ describe('Cleanup Module', () => {
         }
       ]
     });
-    const slots = createAdSlots(jsDomWindow, ['gf_content_1', 'gf_wallpaper_pixel']);
+    const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
     const config = mkConfig(slots);
     module.init(config);
@@ -206,5 +229,37 @@ describe('Cleanup Module', () => {
     // the element that belongs to the configured slot hat was not reloaded should still be in the dom
     expect(specialFormatElementsSeedtagInDom).to.have.length(1);
     expect(specialFormatElementsSeedtagInDom[0].classList.contains(specialFormatClass2)).to.be.true;
+  });
+  it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {
+    const module = new Cleanup({
+      enabled: true,
+      configs: [
+        {
+          bidder: 'dspx',
+          domId: domId1,
+          deleteMethod: {
+            jsAsString: `context.window.document.querySelctrAll('.${specialFormatClass3}').forEach(element => element.remove());`
+          }
+        }
+      ]
+    });
+    const slots = createAdSlots(jsDomWindow, [domId1]);
+    const config = mkConfig(slots);
+
+    module.init(config);
+
+    const configure = config.pipeline?.configureSteps[0];
+
+    if (configure) {
+      expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
+      await configure({ ...adPipelineContext() }, slots);
+    }
+
+    const specialFormatElementsInDom = jsDomWindow.document.querySelectorAll(
+      `.${specialFormatClass3}`
+    );
+
+    expect(errorLogSpy.called).to.be.true;
+    expect(specialFormatElementsInDom).to.have.length(1);
   });
 });
