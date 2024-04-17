@@ -270,6 +270,8 @@ export class LazyLoad implements IModule {
 
     (infiniteSlotsConfig || []).forEach(config => {
       const serialNumberLabel = 'data-h5-serial-number';
+
+      // FIXME we do not support multiple infinite ad slots yet - pageType is relevant, e.g. content_x and result_content_x
       const configuredInfiniteSlot = moliConfig.slots.find(
         slot => slot.behaviour.loaded === 'infinite'
       );
