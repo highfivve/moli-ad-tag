@@ -1,4 +1,3 @@
-import { GlobalAuctionContext } from './globalAuctionContext';
 import sinon, { SinonSandbox } from 'sinon';
 import { AdService } from './adService';
 import { IAdPipelineConfiguration } from './adPipeline';
@@ -17,12 +16,10 @@ describe('Global action', () => {
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
-  let globalAuctionContext: GlobalAuctionContext;
   let sandbox: SinonSandbox;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    globalAuctionContext = new GlobalAuctionContext(jsDomWindow, { enabled: true });
   });
 
   afterEach(() => {
@@ -45,7 +42,7 @@ describe('Global action', () => {
   it("shouldn't instantiate auction in adPipeline by default config", async () => {
     const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
       ...emptyConfig,
-      globalAuctionContext: new GlobalAuctionContext(jsDomWindow)
+      globalAuctionContext: undefined
     };
     const adService = makeAdService();
     await adService.initialize(emptyConfigWithGlobalAuction, true);
@@ -55,7 +52,7 @@ describe('Global action', () => {
   it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
     const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
       ...emptyConfig,
-      globalAuctionContext: { enabled: false }
+      globalAuctionContext: { enabled: false, minRate: 0, minBidRequests: 0, deactivationTTL: 0 }
     };
 
     const adService = makeAdService();
@@ -66,13 +63,16 @@ describe('Global action', () => {
   it('should instantiate auction in adPipeline if it was enabled in config', async () => {
     const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
       ...emptyConfig,
-      globalAuctionContext: globalAuctionContext
+      globalAuctionContext: {
+        enabled: true,
+        minRate: 0.5,
+        deactivationTTL: 60000,
+        minBidRequests: 10
+      }
     };
 
     const adService = makeAdService();
     await adService.initialize(emptyConfigWithGlobalAuction, true);
     expect(adService.getAdPipeline().getAuction()).to.be.ok;
   });
-
-  // Todo add more tests for GlobalAuctionContext
 });

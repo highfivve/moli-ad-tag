@@ -1,113 +1,110 @@
 import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
-import BidderCode = prebidjs.BidderCode;
 import { googletag } from '../types/googletag';
+import BidderCode = prebidjs.BidderCode;
+import { BiddersDisablingConfig } from './auctions/biddersDisabling';
+
+export type BidderState = {
+  disabled: boolean;
+  bidRequestCount: number;
+  bidReceivedCount: number;
+};
 
 export class GlobalAuctionContext {
   readonly enabled: boolean;
-  private readonly bidderActivity: Map<string, Map<BidderCode, number>>; // Map of position to map of bidders and their activity timestamps
-  private readonly ttlTimers: Map<string, Map<BidderCode, ReturnType<typeof setTimeout>>>; // Map of position to map of bidders and their TTL timers
+  readonly minRate: number;
+  readonly minBidRequests: number;
+  private logger?: Moli.MoliLogger;
+  private auctionsCount = 0;
+  private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map(); // Map of position to map of bidders and their states
+  private biddersDisablingConfig: BiddersDisablingConfig;
 
   constructor(
     private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
-    private readonly config: Moli.auction.GlobalAuctionContextConfig = { enabled: false }
+    private readonly config: Moli.auction.GlobalAuctionContextConfig = {
+      enabled: false,
+      minRate: 0,
+      minBidRequests: 0,
+      deactivationTTL: 0
+    }
   ) {
     this.enabled = this.config.enabled;
-    this.bidderActivity = new Map<string, Map<BidderCode, number>>();
-    this.ttlTimers = new Map<string, Map<BidderCode, ReturnType<typeof setTimeout>>>();
+    this.minRate = this.config.minRate;
+    this.minBidRequests = this.config.minBidRequests;
+
+    this.biddersDisablingConfig = new BiddersDisablingConfig(
+      this.minBidRequests,
+      this.minRate,
+      this.participationInfo,
+      this.config.deactivationTTL,
+      this.logger
+    );
+
     this.window.pbjs = this.window.pbjs || { que: [] };
 
-    // Register event listeners
-    this.window.pbjs.que.push(() => {
-      this.window.pbjs.onEvent('noBid', bid =>
-        this.handleNoBidEvent(bid.bidderCode, bid.adUnitCode)
-      );
-    });
-
-    this.window.pbjs.que.push(() => {
-      this.window.pbjs.onEvent('bidWon', bid =>
-        this.handleBidWonEvent(bid.bidderCode, bid.adUnitCode, Date.now())
-      );
-    });
-
-    this.window.pbjs.que.push(() => {
-      this.window.pbjs.onEvent('bidTimeout', bid =>
-        this.handleTimeoutEvent(bid.bidderCode, bid.adUnitCode)
-      );
-    });
-
-    this.window.pbjs.que.push(() => {
-      this.window.pbjs.onEvent('bidResponse', bid =>
-        this.handleBidResponseEvent(bid.bidderCode, bid.adUnitCode)
-      );
-    });
-  }
-
-  // Method to record bidder activity for a specific position
-  private recordBidderActivity(
-    bidder: BidderCode,
-    position: string,
-    timestamp: number = Date.now()
-  ) {
-    if (!this.bidderActivity.has(position)) {
-      this.bidderActivity.set(position, new Map<BidderCode, number>());
-    }
-    this.bidderActivity.get(position)?.set(bidder, timestamp);
-  }
-
-  // Method to deactivate bidder for a certain time period (TTL) for a specific position
-  private deactivateBidderForTTL(bidder: BidderCode, position: string, ttl: number) {
-    if (this.bidderActivity.has(position) && this.bidderActivity.get(position)?.has(bidder)) {
-      // Deactivate bidder
-      this.bidderActivity.get(position)!.delete(bidder);
-
-      // Clear existing TTL timer if any
-      if (this.ttlTimers.has(position) && this.ttlTimers.get(position)?.has(bidder)) {
-        clearTimeout(this.ttlTimers.get(position)?.get(bidder));
-      }
-
-      // Reactivate bidder after TTL
-      const timer = setTimeout(() => {
-        this.recordBidderActivity(bidder, position);
-      }, ttl);
-
-      // Save timer reference, so that it can be cleared if needed
-      if (!this.ttlTimers.has(position)) {
-        this.ttlTimers.set(position, new Map<BidderCode, ReturnType<typeof setTimeout>>());
-      }
-      this.ttlTimers.get(position)?.set(bidder, timer);
+    // Register events, if enabled
+    if (this.config.enabled) {
+      this.window.pbjs.que.push(() => {
+        this.window.pbjs.onEvent('auctionEnd', auctions => {
+          console.log(auctions);
+          auctions.forEach(auction => this.handleAuctionEndEvent(auction));
+        });
+      });
     }
   }
 
-  // Method to deactivate bidder for a specific position
-  private deactivateBidder(bidder: BidderCode, position: string) {
-    if (this.bidderActivity.has(position) && this.bidderActivity.get(position)?.has(bidder)) {
-      this.bidderActivity.get(position)?.delete(bidder);
+  // Handle auction end event and update participationInfo accordingly
+  private handleAuctionEndEvent(auction: any) {
+    // increase auctions count for each auction end event
+    this.auctionsCount++;
 
-      // Clear TTL timer if exists
-      if (this.ttlTimers.get(position)?.has(bidder)) {
-        clearTimeout(this.ttlTimers.get(position)?.get(bidder));
-        this.ttlTimers.get(position)?.delete(bidder);
-      }
-    }
-  }
+    auction.args.bidderRequests.forEach(bidderRequest => {
+      // iterate over all bids and in each bid request and update participationInfo
+      bidderRequest.bids.forEach(bid => {
+        const bidderCode = bid.BidderCode;
+        const positions = bid.bids.map(bid => bid.adUnitCode);
 
-  private handleNoBidEvent(bidder: BidderCode, position: string) {
-    this.deactivateBidder(bidder, position);
-  }
+        positions.forEach(position => {
+          const bidderState = this.participationInfo.get(position)?.get(bidderCode);
 
-  private handleBidWonEvent(bidder: BidderCode, position: string, timestamp: number) {
-    this.recordBidderActivity(bidder, position, timestamp);
-  }
+          if (bidderState) {
+            const newBidRequestCount = bidderState.bidRequestCount + 1;
 
-  private handleTimeoutEvent(bidder: BidderCode, position: string) {
-    this.deactivateBidder(bidder, position);
-  }
+            this.participationInfo.get(position)?.set(bidderCode, {
+              ...bidderState,
+              bidRequestCount: newBidRequestCount
+            });
+          } else {
+            this.participationInfo.get(position)?.set(bidderCode, {
+              disabled: false,
+              bidRequestCount: 1,
+              bidReceivedCount: 0
+            });
+          }
+        });
+      });
 
-  private handleBidResponseEvent(bidder: BidderCode, position: string) {
-    if (!this.bidderActivity.has(position) || !this.bidderActivity.get(position)?.has(bidder)) {
-      // Throttle bidder by deactivating for a certain time period
-      this.deactivateBidderForTTL(bidder, position, 60000);
-    }
+      auction.args.bidsReceived.forEach(bidReceived => {
+        const bidderForPosition = bidReceived.BidderCode;
+        const position = bidReceived.adUnitCode;
+
+        const bidderState = this.participationInfo.get(position)?.get(bidderForPosition);
+        if (bidderState) {
+          this.participationInfo.get(position)?.set(bidderForPosition, {
+            ...bidderState,
+            bidReceivedCount: bidderState.bidReceivedCount + 1
+          });
+        } else {
+          this.participationInfo.get(position)?.set(bidderForPosition, {
+            disabled: false,
+            bidRequestCount: 1,
+            bidReceivedCount: 1
+          });
+        }
+      });
+
+      // deactivate bidders if they have not participated in the auction
+      this.biddersDisablingConfig.deactivateBidderForTTL();
+    });
   }
 }

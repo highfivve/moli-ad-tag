@@ -11,8 +11,6 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
-import sinon, { SinonSandbox } from 'sinon';
 
 // setup sinon-chai
 use(sinonChai);
