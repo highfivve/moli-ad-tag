@@ -3,6 +3,7 @@ import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
 import BidderCode = prebidjs.BidderCode;
 import { BiddersDisablingConfig } from './auctions/biddersDisabling';
+import IPrebidJs = prebidjs.IPrebidJs;
 
 export type BidderState = {
   disabled: boolean;
@@ -40,7 +41,7 @@ export class GlobalAuctionContext {
       this.logger
     );
 
-    this.window.pbjs = this.window.pbjs || { que: [] };
+    window.pbjs = window.pbjs || ({ que: [] } as unknown as IPrebidJs);
 
     // Register events, if enabled
     if (this.config.enabled) {
