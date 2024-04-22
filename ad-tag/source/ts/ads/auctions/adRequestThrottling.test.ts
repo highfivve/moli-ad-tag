@@ -18,7 +18,7 @@ describe('ad request throttling', () => {
   const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
 
   const throttle = (throttleInSeconds: number) =>
-    new AdRequestThrottling({ throttle: throttleInSeconds }, jsDomWindow);
+    new AdRequestThrottling({ enabled: true, throttle: throttleInSeconds }, jsDomWindow);
 
   const slotRequestedEvent = (slotId: string) =>
     ({ slot: { getSlotElementId: () => slotId } } as googletag.events.ISlotRequestedEvent);
