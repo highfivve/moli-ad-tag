@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { SinonSandbox, createSandbox, SinonFakeTimers } from 'sinon';
-import { BiddersDisablingConfig } from './biddersDisabling';
+import { BiddersDisabling } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { googletag } from '../../types/googletag';
@@ -69,14 +69,14 @@ const auction3: AuctionType = {
 describe('BiddersDisablingConfig', () => {
   const dom = createDom();
 
-  const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow = dom.window as any;
+  const window: Window = dom.window as any;
 
   let sandbox: SinonSandbox;
   let clock: SinonFakeTimers;
-  let biddersDisablingConfig: BiddersDisablingConfig;
+  let biddersDisablingConfig: BiddersDisabling;
 
   beforeEach(() => {
-    biddersDisablingConfig = new BiddersDisablingConfig(true, 2, 0.5, 3600000, window);
+    biddersDisablingConfig = new BiddersDisabling(true, 2, 0.5, 3600000, window);
     sandbox = createSandbox();
     clock = sandbox.useFakeTimers();
   });

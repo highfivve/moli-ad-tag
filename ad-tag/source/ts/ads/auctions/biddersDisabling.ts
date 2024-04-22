@@ -1,6 +1,5 @@
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
-import { googletag } from '../../types/googletag';
 import { Moli } from '../../types/moli';
 
 type BidderState = {
@@ -9,8 +8,18 @@ type BidderState = {
   bidReceivedCount: number;
 };
 
-// This class is responsible for disabling bidders that have low bid rate.
-export class BiddersDisablingConfig {
+/**
+ * This class is responsible for disabling bidders that have low bid rate.
+ * It keeps track of the number of bid requests and bids received for each bidder for the corresponding position.
+ * Bidder if disabled: if the bid rate is lower than the minimum rate and the number of bid requests is higher than the minimum bid requests.
+ * @param enabled - if the bidders disabling is enabled
+ * @param minBidRequests - minimum number of bid requests for a bidder to be disabled if the bid rate is lower than the minimum rate
+ * @param minRate - minimum bid rate for a bidder to be disabled
+ * @param deactivationTTL - time in milliseconds after which the bidder is reactivated
+ * @param window - window object
+ */
+
+export class BiddersDisabling {
   private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map();
   private logger?: Moli.MoliLogger;
   constructor(
@@ -18,8 +27,15 @@ export class BiddersDisablingConfig {
     private minBidRequests: number,
     private minRate: number,
     private deactivationTTL: number,
-    private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow
+    private readonly window: Window
   ) {}
+
+  /**
+   * This method is called when the auction ends.
+   * @param auction - auction object that contains information about the bids and bid requests.
+   * For more info, execute => pbjs.getEvents().filter(event => (event.eventType === 'auctionEnd'))
+   * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
+   */
 
   public onAuctionEnd(auction: any): void {
     auction.args.bidderRequests.forEach(bidderRequest => {
@@ -76,14 +92,18 @@ export class BiddersDisablingConfig {
     this.deactivateBidderForTTL();
   }
 
-  public isBidderDisabled(position: string, bidderCode: BidderCode): boolean | undefined {
-    // check participation
-    const bidder = this.participationInfo.get(position)?.get(bidderCode);
-    // bidder is not in the participationInfo config
-    if (!bidder) {
-      return undefined;
-    }
-    return bidder.disabled;
+  private deactivateBidderForTTL() {
+    this.participationInfo.forEach((bidders, position) => {
+      bidders.forEach((bidderState, bidderCode) => {
+        if (this.shouldDisableBidder(bidderState)) {
+          this.disableBidder(position, bidderCode);
+
+          this.window.setTimeout(() => {
+            this.enableBidder(position, bidderCode);
+          }, this.deactivationTTL);
+        }
+      });
+    });
   }
 
   // check if bidder should be disabled based on the bid rate and the number of bid requests
@@ -93,6 +113,16 @@ export class BiddersDisablingConfig {
       bidderState.bidReceivedCount / bidderState.bidRequestCount < this.minRate &&
       !bidderState.disabled
     );
+  }
+
+  public isBidderDisabled(position: string, bidderCode: BidderCode): boolean | undefined {
+    // check participation
+    const bidder = this.participationInfo.get(position)?.get(bidderCode);
+    // bidder is not in the participationInfo config
+    if (!bidder) {
+      return undefined;
+    }
+    return bidder.disabled;
   }
 
   private disableBidder(position: string, bidderCode: BidderCode) {
@@ -109,19 +139,5 @@ export class BiddersDisablingConfig {
       bidderState.disabled = false;
       this.logger?.info(`Bidder ${bidderCode} for position ${position} is now enabled.`);
     }
-  }
-
-  private deactivateBidderForTTL() {
-    this.participationInfo.forEach((bidders, position) => {
-      bidders.forEach((bidderState, bidderCode) => {
-        if (this.shouldDisableBidder(bidderState)) {
-          this.disableBidder(position, bidderCode);
-
-          this.window.setTimeout(() => {
-            this.enableBidder(position, bidderCode);
-          }, this.deactivationTTL);
-        }
-      });
-    });
   }
 }
