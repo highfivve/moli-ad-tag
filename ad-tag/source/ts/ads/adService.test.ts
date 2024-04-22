@@ -11,7 +11,6 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -109,55 +108,6 @@ describe('AdService', () => {
           const stepNames = pipeline.init.map(step => step.name);
           expect(stepNames).not.to.contain('prebid-init');
         });
-      });
-    });
-
-    describe('Global action', () => {
-      const makeAdService = (): AdService => {
-        const adPipelineConfiguration: IAdPipelineConfiguration = {
-          init: [],
-          configure: [],
-          defineSlots: () => Promise.resolve([]),
-          prepareRequestAds: [],
-          requestBids: [],
-          requestAds: () => Promise.resolve()
-        };
-        return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
-      };
-
-      it("shouldn't instantiate auction in adPipeline by default config", async () => {
-        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-          ...emptyConfig,
-          globalAuctionContext: new GlobalAuctionContext()
-        };
-        const adService = makeAdService();
-
-        await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.undefined;
-      });
-
-      it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
-        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-          ...emptyConfig,
-          globalAuctionContext: { enabled: false }
-        };
-
-        const adService = makeAdService();
-
-        await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.undefined;
-      });
-
-      it('should instantiate auction in adPipeline if it was enabled in config', async () => {
-        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-          ...emptyConfig,
-          globalAuctionContext: { enabled: true }
-        };
-
-        const adService = makeAdService();
-
-        await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.ok;
       });
     });
 

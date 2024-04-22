@@ -1256,10 +1256,16 @@ export namespace Moli {
 
   export namespace auction {
     export interface GlobalAuctionContextConfig {
-      /**
-       * disable global auction context
-       */
-      readonly enabled: boolean;
+      readonly biddersDisabling?: {
+        /** enable or disable this feature */
+        readonly enabled: boolean;
+        readonly minRate: number;
+        /** define a minimum number of bid requests sent by a bidder to deactivate it */
+        readonly minBidRequests: number;
+
+        /** milliseconds until a bidder becomes active again  */
+        readonly deactivationTTL: number;
+      };
     }
   }
 
