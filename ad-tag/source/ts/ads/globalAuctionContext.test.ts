@@ -52,7 +52,9 @@ describe('Global action', () => {
   it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
     const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
       ...emptyConfig,
-      globalAuctionContext: { enabled: false, minRate: 0, minBidRequests: 0, deactivationTTL: 0 }
+      globalAuctionContext: {
+        biddersDisabling: { enabled: false, minRate: 0, minBidRequests: 0, deactivationTTL: 0 }
+      }
     };
 
     const adService = makeAdService();
@@ -64,10 +66,12 @@ describe('Global action', () => {
     const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
       ...emptyConfig,
       globalAuctionContext: {
-        enabled: true,
-        minRate: 0.5,
-        deactivationTTL: 60000,
-        minBidRequests: 10
+        biddersDisabling: {
+          enabled: true,
+          minRate: 0.5,
+          minBidRequests: 10,
+          deactivationTTL: 60000
+        }
       }
     };
 
