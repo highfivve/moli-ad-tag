@@ -1,82 +1,124 @@
 import sinon, { SinonSandbox } from 'sinon';
-import { AdService } from './adService';
-import { IAdPipelineConfiguration } from './adPipeline';
-import { Moli } from '../types/moli';
-import { emptyConfig } from '../stubs/moliStubs';
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import { createDom } from '../stubs/browserEnvSetup';
-import { createAssetLoaderService } from '../util/assetLoaderService';
 import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
+import { GlobalAuctionContext } from './globalAuctionContext';
+import { createPbjsStub } from '../stubs/prebidjsStubs';
+import { createGoogletagStub } from '../stubs/googletagStubs';
+import sinonChai from 'sinon-chai';
 
-describe('Global action', () => {
+// setup sinon-chai
+use(sinonChai);
+
+describe('Global auction context', () => {
   let dom = createDom();
   let jsDomWindow: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow =
     dom.window as any;
 
-  const assetLoaderService = createAssetLoaderService(jsDomWindow);
+  jsDomWindow.pbjs = createPbjsStub();
+  jsDomWindow.googletag = createGoogletagStub();
 
-  let sandbox: SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
+  const sandbox: SinonSandbox = sinon.createSandbox();
+  const pbjsOnEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
+  const googletagAddEventListenerSpy = sandbox.spy(
+    jsDomWindow.googletag.pubads(),
+    'addEventListener'
+  );
 
   afterEach(() => {
     // Restore any stubs/spies
-    sandbox.restore();
+    sandbox.reset();
+    sandbox.resetHistory();
   });
 
-  const makeAdService = (): AdService => {
-    const adPipelineConfiguration: IAdPipelineConfiguration = {
-      init: [],
-      configure: [],
-      defineSlots: () => Promise.resolve([]),
-      prepareRequestAds: [],
-      requestBids: [],
-      requestAds: () => Promise.resolve()
-    };
-    return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
-  };
-
-  it("shouldn't instantiate auction in adPipeline by default config", async () => {
-    const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-      ...emptyConfig,
-      globalAuctionContext: undefined
-    };
-    const adService = makeAdService();
-    await adService.initialize(emptyConfigWithGlobalAuction, true);
-    expect(adService.getAdPipeline().getAuction()).to.be.undefined;
+  it('should not create any event listener if the config is empty', () => {
+    // the constructor immediately sets up the event listeners
+    new GlobalAuctionContext(jsDomWindow);
+    expect(pbjsOnEventSpy).to.have.not.been.called;
+    expect(googletagAddEventListenerSpy).to.have.not.been.called;
   });
 
-  it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
-    const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-      ...emptyConfig,
-      globalAuctionContext: {
-        biddersDisabling: { enabled: false, minRate: 0, minBidRequests: 0, deactivationTTL: 0 }
-      }
-    };
-
-    const adService = makeAdService();
-    await adService.initialize(emptyConfigWithGlobalAuction, true);
-    expect(adService.getAdPipeline().getAuction()).to.be.undefined;
-  });
-
-  it('should instantiate auction in adPipeline if it was enabled in config', async () => {
-    const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-      ...emptyConfig,
-      globalAuctionContext: {
+  describe('bidder disabling', () => {
+    it('add auctionEnd event listener', () => {
+      const context = new GlobalAuctionContext(jsDomWindow, {
         biddersDisabling: {
           enabled: true,
           minRate: 0.5,
-          minBidRequests: 10,
-          deactivationTTL: 60000
+          minBidRequests: 2,
+          reactivationPeriod: 3600000
         }
-      }
-    };
+      });
+      expect(pbjsOnEventSpy).to.have.been.calledOnce;
+      expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', sinon.match.func);
+      expect(context.biddersDisabling).to.be.ok;
+    });
 
-    const adService = makeAdService();
-    await adService.initialize(emptyConfigWithGlobalAuction, true);
-    expect(adService.getAdPipeline().getAuction()).to.be.ok;
+    it('should not add auctionEnd event listener if disabled', () => {
+      const context = new GlobalAuctionContext(jsDomWindow, {
+        biddersDisabling: {
+          enabled: false,
+          minRate: 0.5,
+          minBidRequests: 2,
+          reactivationPeriod: 3600000
+        }
+      });
+      expect(pbjsOnEventSpy).to.have.not.been.called;
+      expect(context.biddersDisabling).to.be.undefined;
+    });
+  });
+
+  describe('adRequestThrottling', () => {
+    describe('enabled', () => {
+      const auctionContextConfig = {
+        adRequestThrottling: {
+          enabled: true,
+          throttle: 10
+        }
+      };
+
+      it('should instantiate adRequestThrottling', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.adRequestThrottling).to.be.ok;
+      });
+
+      it('should never throttle requests in initial state', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.isSlotThrottled('slot-1')).to.be.false;
+      });
+
+      it('should add slotRequested event listener', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(googletagAddEventListenerSpy).to.have.been.calledOnce;
+        expect(googletagAddEventListenerSpy).to.have.been.calledOnceWithExactly(
+          'slotRequested',
+          sinon.match.func
+        );
+      });
+    });
+
+    describe('disabled', () => {
+      const auctionContextConfig = {
+        adRequestThrottling: {
+          enabled: false,
+          throttle: 10
+        }
+      };
+
+      it('should not instantiate adRequestThrottling', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.adRequestThrottling).to.be.undefined;
+      });
+
+      it('should never throttle requests', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.isSlotThrottled('slot-1')).to.be.false;
+      });
+
+      it('should not add slotRequested event listener if disabled', () => {
+        new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(googletagAddEventListenerSpy).to.have.not.been.called;
+      });
+    });
   });
 });

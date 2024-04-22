@@ -26,22 +26,33 @@ type BidderState = {
  * This class is responsible for disabling bidders that have low bid rate.
  * It keeps track of the number of bid requests and bids received for each bidder for the corresponding position.
  * A bidder is disabled: if the bid rate is lower than the minimum rate and the number of bid requests is higher than the minimum bid requests.
- * @param enabled - if the bidders disabling is enabled
- * @param minBidRequests - minimum number of bid requests for a bidder to be disabled if the bid rate is lower than the minimum rate
- * @param minRate - minimum bid rate for a bidder to be disabled
- * @param deactivationTTL - time in milliseconds after which the bidder is reactivated
+ *
+ * NOTE: This only works for client side auctions so far.
+ *
+ * @param config - configuration object
  * @param window - window object
  */
 export class BiddersDisabling {
   private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map();
   private logger?: Moli.MoliLogger;
   constructor(
-    private readonly enabled: boolean,
-    private minBidRequests: number,
-    private minRate: number,
-    private deactivationTTL: number,
+    private readonly config: Moli.auction.BidderDisablingConfig,
     private readonly window: Window
   ) {}
+
+  /**
+   * Disable bidders that have low bid rate as specified in the configuration.
+   * This method should be used to filter bid objects before an auction starts.
+   *
+   * Note that by default bidders are never disabled.
+   *
+   * @param position the DOM id of the ad unit that should be checked
+   * @param bidderCode the prebid.js client side bidder code
+   * @returns true if the bidder is disabled for the given position, false otherwise
+   */
+  public isBidderDisabled(position: string, bidderCode: BidderCode): boolean {
+    return this.participationInfo.get(position)?.get(bidderCode)?.disabled ?? false;
+  }
 
   /**
    * This method is called when the auction ends.
@@ -112,7 +123,7 @@ export class BiddersDisabling {
 
           this.window.setTimeout(() => {
             this.enableBidder(position, bidderCode);
-          }, this.deactivationTTL);
+          }, this.config.reactivationPeriod);
         }
       });
     });
@@ -121,20 +132,10 @@ export class BiddersDisabling {
   // check if bidder should be disabled based on the bid rate and the number of bid requests
   private shouldDisableBidder(bidderState: BidderState): boolean {
     return (
-      bidderState.bidRequestCount > this.minBidRequests &&
-      bidderState.bidReceivedCount / bidderState.bidRequestCount < this.minRate &&
+      bidderState.bidRequestCount > this.config.minBidRequests &&
+      bidderState.bidReceivedCount / bidderState.bidRequestCount < this.config.minRate &&
       !bidderState.disabled
     );
-  }
-
-  public isBidderDisabled(position: string, bidderCode: BidderCode): boolean | undefined {
-    // check participation
-    const bidder = this.participationInfo.get(position)?.get(bidderCode);
-    // bidder is not in the participationInfo config
-    if (!bidder) {
-      return undefined;
-    }
-    return bidder.disabled;
   }
 
   private disableBidder(position: string, bidderCode: BidderCode) {

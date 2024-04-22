@@ -1,9 +1,8 @@
 import { expect } from 'chai';
-import { SinonSandbox, createSandbox, SinonFakeTimers } from 'sinon';
+import Sinon, { SinonSandbox, SinonFakeTimers } from 'sinon';
 import { BiddersDisabling } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
-import { googletag } from '../../types/googletag';
 import { createDom } from '../../stubs/browserEnvSetup';
 
 type AuctionType = {
@@ -66,32 +65,48 @@ const auction3: AuctionType = {
   }
 };
 
-describe('BiddersDisablingConfig', () => {
+describe('BiddersDisabling', () => {
   const dom = createDom();
 
   const window: Window = dom.window as any;
 
-  let sandbox: SinonSandbox;
-  let clock: SinonFakeTimers;
+  const sandbox: SinonSandbox = Sinon.createSandbox();
+  const clock: SinonFakeTimers = sandbox.useFakeTimers();
   let biddersDisablingConfig: BiddersDisabling;
 
   beforeEach(() => {
-    biddersDisablingConfig = new BiddersDisabling(true, 2, 0.5, 3600000, window);
-    sandbox = createSandbox();
-    clock = sandbox.useFakeTimers();
+    biddersDisablingConfig = new BiddersDisabling(
+      {
+        enabled: true,
+        minBidRequests: 2,
+        minRate: 0.5,
+        reactivationPeriod: 3600000
+      },
+      window
+    );
   });
 
   afterEach(() => {
-    sandbox.restore();
+    sandbox.reset();
   });
 
-  it('should return undefined if bidder is not in participationInfo config', () => {
+  it('should return false if bidder is not in participationInfo config', () => {
     biddersDisablingConfig.onAuctionEnd(auction1);
     const result = biddersDisablingConfig.isBidderDisabled('position1', 'onetag');
-    expect(result).to.be.undefined;
+    expect(result).to.be.false;
   });
 
-  it('should return true if bidder should be disabled, and vice versa', () => {
+  it('should return false if bidder should be enabled', () => {
+    [auction1, auction2, auction3].forEach(auction => {
+      biddersDisablingConfig.onAuctionEnd(auction);
+    });
+
+    // three bid requests, three bid received, rate is 1 > 0.5 => gumgum should not be disabled
+    const gumGumResult = biddersDisablingConfig.isBidderDisabled('position1', 'gumgum');
+    expect(gumGumResult).to.be.false;
+  });
+
+  it('should return true if bidder should be disabled', () => {
     [auction1, auction2, auction3].forEach(auction => {
       biddersDisablingConfig.onAuctionEnd(auction);
     });
@@ -99,10 +114,6 @@ describe('BiddersDisablingConfig', () => {
     // three bid requests, one bid received, rate is 0.33 < 0.5 and bidRequestCount is 3 > 2 => seedtag should be disabled
     const seedTagResult = biddersDisablingConfig.isBidderDisabled('position1', 'seedtag');
     expect(seedTagResult).to.be.true;
-
-    // three bid requests, three bid received, rate is 1 > 0.5 => gumgum should not be disabled
-    const gumGumResult = biddersDisablingConfig.isBidderDisabled('position1', 'gumgum');
-    expect(gumGumResult).to.be.false;
   });
 
   it('should reactivate bidders after passing the reactivation period of disabling them', () => {

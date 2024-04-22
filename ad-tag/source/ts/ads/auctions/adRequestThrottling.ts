@@ -1,14 +1,6 @@
 import { googletag } from '../../types/googletag';
-
-/**
- * TODO move this into moli modules namespace
- */
-export interface AdRequestThrottlingConfig {
-  /**
-   * the time in seconds that has to pass before a slot can be requested again
-   */
-  throttle: number;
-}
+import { Moli } from '../../types/moli';
+import auction = Moli.auction;
 
 export class AdRequestThrottling {
   /**
@@ -18,7 +10,7 @@ export class AdRequestThrottling {
   private slotsRequested: Set<string> = new Set();
 
   constructor(
-    private readonly config: AdRequestThrottlingConfig,
+    private readonly config: auction.AdRequestThrottlingConfig,
     private readonly _window: Window
   ) {}
 
