@@ -1,17 +1,82 @@
 import { expect } from 'chai';
-import { SinonSandbox, createSandbox, SinonStub, SinonFakeTimers } from 'sinon';
-import { BidderState } from '../globalAuctionContext';
+import { SinonSandbox, createSandbox, SinonFakeTimers } from 'sinon';
 import { BiddersDisablingConfig } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
-import { noopLogger } from '../../stubs/moliStubs';
-import * as Sinon from 'sinon';
+import { googletag } from '../../types/googletag';
+import { createDom } from '../../stubs/browserEnvSetup';
+
+type AuctionType = {
+  args: {
+    bidderRequests: {
+      bids: {
+        bidderCode: BidderCode;
+        bids: { adUnitCode: string }[];
+      }[];
+    }[];
+    bidsReceived: { bidderCode: BidderCode; adUnitCode: string }[];
+  };
+};
+
+const auction1: AuctionType = {
+  args: {
+    bidderRequests: [
+      {
+        bids: [
+          { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
+          { bidderCode: 'seedtag', bids: [{ adUnitCode: 'position1' }] }
+        ]
+      }
+    ],
+    bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
+  }
+};
+
+const auction2: AuctionType = {
+  args: {
+    bidderRequests: [
+      {
+        bids: [
+          { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
+          { bidderCode: 'seedtag', bids: [{ adUnitCode: 'position1' }] }
+        ]
+      }
+    ],
+    bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
+  }
+};
+
+const auction3: AuctionType = {
+  args: {
+    bidderRequests: [
+      {
+        bids: [
+          { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
+          {
+            bidderCode: 'seedtag',
+            bids: [{ adUnitCode: 'position1' }, { adUnitCode: 'position2' }]
+          }
+        ]
+      }
+    ],
+    bidsReceived: [
+      { bidderCode: 'gumgum', adUnitCode: 'position1' },
+      { bidderCode: 'seedtag', adUnitCode: 'position1' }
+    ]
+  }
+};
 
 describe('BiddersDisablingConfig', () => {
+  const dom = createDom();
+
+  const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow = dom.window as any;
+
   let sandbox: SinonSandbox;
   let clock: SinonFakeTimers;
+  let biddersDisablingConfig: BiddersDisablingConfig;
 
   beforeEach(() => {
+    biddersDisablingConfig = new BiddersDisablingConfig(true, 2, 0.5, 3600000, window);
     sandbox = createSandbox();
     clock = sandbox.useFakeTimers();
   });
@@ -20,146 +85,49 @@ describe('BiddersDisablingConfig', () => {
     sandbox.restore();
   });
 
-  describe('shouldDisableBidder method', () => {
-    it('should return true if bidder should be disabled', () => {
-      const participationInfo = new Map<string, Map<BidderCode, BidderState>>();
-      const bidderState: BidderState = {
-        disabled: false,
-        bidRequestCount: 7,
-        bidReceivedCount: 3
-      };
-      const biddersDisablingConfig = new BiddersDisablingConfig(
-        5,
-        0.5,
-        participationInfo,
-        1000,
-        noopLogger
-      );
-
-      const result = biddersDisablingConfig.shouldDisableBidder(bidderState);
-
-      expect(result).to.be.true;
-    });
-
-    it('should return false if bidder should not be disabled', () => {
-      const participationInfo = new Map<string, Map<BidderCode, BidderState>>();
-      const bidderState: BidderState = {
-        disabled: false,
-        bidRequestCount: 4,
-        bidReceivedCount: 3
-      };
-      const biddersDisablingConfig = new BiddersDisablingConfig(
-        5,
-        0.5,
-        participationInfo,
-        1000,
-        noopLogger
-      );
-
-      const result = biddersDisablingConfig.shouldDisableBidder(bidderState);
-
-      expect(result).to.be.false;
-    });
+  it('should return undefined if bidder is not in participationInfo config', () => {
+    biddersDisablingConfig.onAuctionEnd(auction1);
+    const result = biddersDisablingConfig.isBidderDisabled('position1', 'onetag');
+    expect(result).to.be.undefined;
   });
 
-  describe('disableBidder method', () => {
-    it('should disable the bidder', () => {
-      const infoSpy = Sinon.spy();
-      const participationInfo = new Map<string, Map<BidderCode, BidderState>>();
-      const bidderState: BidderState = {
-        disabled: false,
-        bidRequestCount: 7,
-        bidReceivedCount: 3
-      };
-      participationInfo.set('position1', new Map([['gumgum', bidderState]]));
-
-      const biddersDisablingConfig = new BiddersDisablingConfig(5, 0.5, participationInfo, 10000, {
-        ...noopLogger,
-        info: infoSpy
-      });
-
-      biddersDisablingConfig.disableBidder('position1', 'gumgum');
-      const disabledBidderState = participationInfo.get('position1')?.get('gumgum');
-
-      expect(disabledBidderState?.disabled).to.be.true;
-      expect(infoSpy.calledOnceWithExactly('Bidder gumgum for position position1 is now disabled.'))
-        .to.be.true;
+  it('should return true if bidder should be disabled, and vice versa', () => {
+    [auction1, auction2, auction3].forEach(auction => {
+      biddersDisablingConfig.onAuctionEnd(auction);
     });
+
+    // three bid requests, one bid received, rate is 0.33 < 0.5 and bidRequestCount is 3 > 2 => seedtag should be disabled
+    const seedTagResult = biddersDisablingConfig.isBidderDisabled('position1', 'seedtag');
+    expect(seedTagResult).to.be.true;
+
+    // three bid requests, three bid received, rate is 1 > 0.5 => gumgum should not be disabled
+    const gumGumResult = biddersDisablingConfig.isBidderDisabled('position1', 'gumgum');
+    expect(gumGumResult).to.be.false;
   });
 
-  describe('enableBidder method', () => {
-    it('should enable the bidder', () => {
-      const infoSpy = Sinon.spy();
-      const participationInfo = new Map<string, Map<BidderCode, BidderState>>();
-      const bidderState: BidderState = {
-        disabled: true,
-        bidRequestCount: 6,
-        bidReceivedCount: 3
-      };
-      participationInfo.set('position1', new Map([['gumgum', bidderState]]));
-
-      const biddersDisablingConfig = new BiddersDisablingConfig(5, 0.5, participationInfo, 1000, {
-        ...noopLogger,
-        info: infoSpy
-      });
-      biddersDisablingConfig.enableBidder('position1', 'gumgum');
-
-      const enabledBidderState = participationInfo.get('position1')?.get('gumgum');
-
-      expect(enabledBidderState?.disabled).to.be.false;
-      expect(infoSpy.calledOnceWithExactly('Bidder gumgum for position position1 is now enabled.'))
-        .to.be.true;
+  it('should reactivate bidders after passing the reactivation period of disabling them', () => {
+    [auction1, auction2, auction3].forEach(auction => {
+      biddersDisablingConfig.onAuctionEnd(auction);
     });
-  });
 
-  describe('deactivateBidderForTTL method', () => {
-    it('should deactivate bidders if they should be disabled', () => {
-      const participationInfo = new Map<string, Map<BidderCode, BidderState>>();
-      const bidderState1: BidderState = {
-        disabled: false,
-        bidRequestCount: 7,
-        bidReceivedCount: 3
-      };
-      const bidderState2: BidderState = {
-        disabled: false,
-        bidRequestCount: 4,
-        bidReceivedCount: 3
-      };
-      const bidderState3: BidderState = {
-        disabled: false,
-        bidRequestCount: 4,
-        bidReceivedCount: 0
-      };
-      participationInfo.set('position1', new Map([['gumgum', bidderState1]]));
-      participationInfo.set(
-        'position2',
-        new Map([
-          ['appnexus', bidderState2],
-          ['adagio', bidderState3]
-        ])
-      );
+    // three bid requests, one bid received, rate is 0.33 < 0.5 and bidRequestCount is 3 > 2 => seedtag should be disabled
+    const seedTagResult = biddersDisablingConfig.isBidderDisabled('position1', 'seedtag');
+    expect(seedTagResult).to.be.true;
 
-      const biddersDisablingConfig = new BiddersDisablingConfig(
-        5,
-        0.5,
-        participationInfo,
-        1000,
-        noopLogger
-      );
+    // 1 hour didn't pass yet, seedtag should still be disabled
+    clock.tick(3599999);
+    const seedTagResultBeforeAnHour = biddersDisablingConfig.isBidderDisabled(
+      'position1',
+      'seedtag'
+    );
+    expect(seedTagResultBeforeAnHour).to.be.true;
 
-      const disableBidderSpy = sandbox.spy(biddersDisablingConfig, 'disableBidder');
-      const enableBidderSpy = sandbox.spy(biddersDisablingConfig, 'enableBidder');
-
-      biddersDisablingConfig.deactivateBidderForTTL();
-
-      expect(disableBidderSpy.calledWithExactly('position1', 'gumgum')).to.be.true; // rate is less than 0.5
-      expect(disableBidderSpy.calledWithExactly('position2', 'adagio')).to.be.false; // rate is less than 0.5 but bidRequestCount is less than 5
-      expect(enableBidderSpy.calledWithExactly('position2', 'appnexus')).to.be.false; // rate is more than 0.5
-
-      clock.tick(1001);
-
-      // re-enable gumgum after 1000ms
-      expect(enableBidderSpy.calledOnceWithExactly('position1', 'gumgum')).to.be.true;
-    });
+    // 1 hour passed, seedtag should be reactivated
+    clock.tick(3600000);
+    const seedTagResultAfterAnHour = biddersDisablingConfig.isBidderDisabled(
+      'position1',
+      'seedtag'
+    );
+    expect(seedTagResultAfterAnHour).to.be.false;
   });
 });
