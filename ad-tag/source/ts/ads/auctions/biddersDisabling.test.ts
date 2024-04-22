@@ -71,7 +71,6 @@ describe('BiddersDisabling', () => {
   const window: Window = dom.window as any;
 
   const sandbox: SinonSandbox = Sinon.createSandbox();
-  const clock: SinonFakeTimers = sandbox.useFakeTimers();
   let biddersDisablingConfig: BiddersDisabling;
 
   beforeEach(() => {
@@ -86,8 +85,13 @@ describe('BiddersDisabling', () => {
     );
   });
 
+  beforeEach(() => {
+    sandbox.useFakeTimers();
+  });
+
   afterEach(() => {
     sandbox.reset();
+    sandbox.clock.restore();
   });
 
   after(() => {
@@ -131,7 +135,7 @@ describe('BiddersDisabling', () => {
     expect(seedTagResult).to.be.true;
 
     // 1 hour didn't pass yet, seedtag should still be disabled
-    clock.tick(3599999);
+    sandbox.clock.tick(3599999);
     const seedTagResultBeforeAnHour = biddersDisablingConfig.isBidderDisabled(
       'position1',
       'seedtag'
@@ -139,7 +143,7 @@ describe('BiddersDisabling', () => {
     expect(seedTagResultBeforeAnHour).to.be.true;
 
     // 1 hour passed, seedtag should be reactivated
-    clock.tick(3600000);
+    sandbox.clock.tick(3600000);
     const seedTagResultAfterAnHour = biddersDisablingConfig.isBidderDisabled(
       'position1',
       'seedtag'
