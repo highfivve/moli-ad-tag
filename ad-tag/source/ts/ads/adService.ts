@@ -225,7 +225,7 @@ export class AdService {
       this.logger,
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
       reportingService,
-      config.globalAuctionContext?.enabled
+      config.globalAuctionContext?.biddersDisabling?.enabled
         ? new GlobalAuctionContext(
             this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
             config.globalAuctionContext
