@@ -206,7 +206,7 @@ export namespace prebidjs {
      * @param adUnitCode - optional filter for the given ad unit code
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getHighestCpmBids.html
      */
-    getHighestCpmBids(adUnitCode?: string): event.BidWonEvent[];
+    getHighestCpmBids(adUnitCode?: string): event.BidResponse[];
 
     /**
      * This function will render the ad (based on params) in the given iframe document passed through.
@@ -1216,6 +1216,7 @@ export namespace prebidjs {
     export type EventName =
       | 'auctionInit'
       | 'auctionEnd'
+      | 'auctionTimeout'
       | 'beforeRequestBids'
       | 'bidRequested'
       | 'bidResponse'
@@ -1244,12 +1245,112 @@ export namespace prebidjs {
        * @param handler
        * @param id - ad unit code
        */
-      (event: 'bidWon', handler: (bid: BidWonEvent) => void, id?: string): void;
+
+      (event: 'bidWon', handler: (bidResponse: BidResponse) => void, id?: string): void;
+
+      (event: 'noBid', handler: (bid: BidObject) => void, id?: string): void;
+
+      (event: 'auctionInit', handler: (auction: AuctionObject) => void, id?: string): void;
+
+      (event: 'bidResponse', handler: (bidResponse: BidResponse) => void, id?: string): void;
+
+      (event: 'bidTimeout', handler: (bid: BidObject[]) => void, id?: string): void;
+
+      (event: 'auctionTimeout', handler: (auction: AuctionObject) => void, id?: string): void;
 
       (event: UntypedEventName, bid: any, id?: string): void;
     };
 
-    export type BidWonEvent = {
+    export type GdprConsent = {
+      readonly addtlConsent?: string;
+      readonly apiVersion?: number;
+      readonly consentString?: string;
+      readonly gdprApplies?: boolean;
+      readonly vendorData?: any;
+    };
+
+    export type BidderRequest = {
+      readonly adUnitsS2SCopy?: IAdUnit[];
+      readonly auctionId?: string;
+      readonly auctionStart?: number;
+      readonly bidderCode?: BidderCode;
+      readonly bidderRequestId?: string;
+      readonly bids?: [];
+      readonly gdprConsent?: GdprConsent;
+      /**
+       * different functions to manage metrics
+       */
+      readonly metrics?: any;
+      readonly ortb2?: firstpartydata.PrebidFirstPartyData;
+      readonly refererInfo?: any;
+      readonly src?: string;
+      readonly start?: number;
+      readonly timeout?: number;
+      readonly uniquePbsTid?: string;
+    };
+
+    export type AuctionObject = {
+      readonly adUnitCodes?: string[];
+      readonly adUnits?: IAdUnit[];
+      readonly auctionId?: string;
+      readonly auctionStatus?: 'inProgress' | 'completed';
+      readonly bidderRequests?: BidderRequest[];
+      readonly bidsReceived?: BidObject[];
+      readonly bidsRejected?: BidObject[];
+      /**
+       * different functions to manage metrics
+       */
+      readonly metrics?: any;
+      readonly noBids?: BidObject[];
+      readonly seatNonBids?: BidObject[];
+      readonly timeout?: number;
+      readonly timestamp?: number;
+      readonly winningBids?: BidObject[];
+    };
+
+    export type BidObject = {
+      readonly adUnitCode?: string;
+      readonly adUnitId?: string;
+      readonly auctionId?: string;
+      readonly bidId?: string;
+      /**
+       * the current count of the bid requests on the page
+       * (each request increases the count)
+       */
+      readonly bidRequestsCount?: number;
+      readonly bidder?: string;
+      readonly bidderRequestId?: string;
+      /**
+       * the current count of the bidder requests on the page
+       * (each request to the bidder increases the count)
+       */
+      readonly bidderRequestsCount?: number;
+      /**
+       * the current count of auctions the bidder won
+       */
+      readonly bidderWinsCount?: number;
+      readonly floorData?: floors.IFloorConfig;
+      readonly mediaTypes?: IMediaTypes;
+      /**
+       * different functions to manage metrics
+       */
+      readonly metrics?: any;
+      readonly ortb2?: firstpartydata.PrebidFirstPartyData;
+      readonly ortb2Imp?: IOrtb2Imp;
+      /**
+       * provider specific params
+       */
+      readonly params?: any;
+      readonly schain?: SupplyChainObject.ISupplyChainObject;
+      readonly sizes?: [number, number][];
+      readonly src?: 'client' | 's2s';
+      readonly timeout?: number;
+      readonly transactionId?: string;
+      readonly userId?: userSync.UserIds;
+      readonly userIdsAsEids?: any;
+    };
+
+    export type BidResponse = {
       readonly bidder: string;
       readonly bidderCode: BidderCode;
 
