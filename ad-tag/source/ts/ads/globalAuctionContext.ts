@@ -38,7 +38,7 @@ export class GlobalAuctionContext {
     //       have to put this init code across the entire codebase
     this.window.pbjs = this.window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
     this.window.googletag =
-      this.window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTagWindow);
+      this.window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
 
     // Register events, if enabled
     if (this.config.biddersDisabling?.enabled) {
