@@ -329,26 +329,26 @@ describe('AdPipeline', () => {
     });
   });
 
-  // describe('mkConfigureStepOnce', () => {
-  //   it('should run the configure step on the first requestAds call with requestId 1', async () => {
-  //     const stubFn = sandbox.stub().resolves();
-  //     const step = mkConfigureStepOnce('step', stubFn);
-  //     await step(adPipelineContext(1, 1), []);
-  //     expect(stubFn).to.have.been.calledOnce;
-  //   });
-  //
-  //   it('should not run the configure step on the first requestAds call with requestId larger than 1', async () => {
-  //     const stubFn = sandbox.stub().resolves();
-  //     const step = mkConfigureStepOnce('step', stubFn);
-  //     await step(adPipelineContext(1, 2), []);
-  //     expect(stubFn).to.have.callCount(0);
-  //   });
-  //
-  //   it('should not run the configure step after the first requestAds call', async () => {
-  //     const stubFn = sandbox.stub().resolves();
-  //     const step = mkConfigureStepOnce('step', stubFn);
-  //     await step(adPipelineContext(2, 1), []);
-  //     expect(stubFn).to.have.callCount(0);
-  //   });
-  // });
+  describe('mkConfigureStepOnce', () => {
+    it('should run the configure step on the first requestAds call with requestId 1', async () => {
+      const stubFn = sandbox.stub().resolves();
+      const step = mkConfigureStepOnce('step', stubFn);
+      await step(adPipelineContext(1, 1), []);
+      expect(stubFn).to.have.been.calledOnce;
+    });
+
+    it('should not run the configure step on the first requestAds call with requestId larger than 1', async () => {
+      const stubFn = sandbox.stub().resolves();
+      const step = mkConfigureStepOnce('step', stubFn);
+      await step(adPipelineContext(1, 2), []);
+      expect(stubFn).to.have.callCount(0);
+    });
+
+    it('should not run the configure step after the first requestAds call', async () => {
+      const stubFn = sandbox.stub().resolves();
+      const step = mkConfigureStepOnce('step', stubFn);
+      await step(adPipelineContext(2, 1), []);
+      expect(stubFn).to.have.callCount(0);
+    });
+  });
 });
