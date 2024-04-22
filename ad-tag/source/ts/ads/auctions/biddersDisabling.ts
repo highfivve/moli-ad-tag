@@ -11,7 +11,7 @@ type BidderState = {
 /**
  * This class is responsible for disabling bidders that have low bid rate.
  * It keeps track of the number of bid requests and bids received for each bidder for the corresponding position.
- * Bidder if disabled: if the bid rate is lower than the minimum rate and the number of bid requests is higher than the minimum bid requests.
+ * A bidder is disabled: if the bid rate is lower than the minimum rate and the number of bid requests is higher than the minimum bid requests.
  * @param enabled - if the bidders disabling is enabled
  * @param minBidRequests - minimum number of bid requests for a bidder to be disabled if the bid rate is lower than the minimum rate
  * @param minRate - minimum bid rate for a bidder to be disabled
