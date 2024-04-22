@@ -2,9 +2,23 @@ import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { Moli } from '../../types/moli';
 
+/**
+ * This interface represents the state of a bidder for a specific position.
+ */
 type BidderState = {
+  /**
+   * true if bidder has been temporarily disabled due to lack of participation
+   */
   disabled: boolean;
+
+  /**
+   * bid requests sent for this bidder in prebid so far
+   */
   bidRequestCount: number;
+
+  /**
+   * bid responses received for this bidder in prebid. These are not won bids, just responses.
+   */
   bidReceivedCount: number;
 };
 
@@ -18,7 +32,6 @@ type BidderState = {
  * @param deactivationTTL - time in milliseconds after which the bidder is reactivated
  * @param window - window object
  */
-
 export class BiddersDisabling {
   private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map();
   private logger?: Moli.MoliLogger;
@@ -36,7 +49,6 @@ export class BiddersDisabling {
    * For more info, execute => pbjs.getEvents().filter(event => (event.eventType === 'auctionEnd'))
    * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
    */
-
   public onAuctionEnd(auction: any): void {
     auction.args.bidderRequests.forEach(bidderRequest => {
       // iterate over all bids and in each bid request and update participationInfo
