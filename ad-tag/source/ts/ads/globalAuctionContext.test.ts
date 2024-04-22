@@ -26,6 +26,11 @@ describe('Global auction context', () => {
     'addEventListener'
   );
 
+  after(() => {
+    // bring everything back to normal after tests
+    sandbox.restore();
+  });
+
   afterEach(() => {
     // Restore any stubs/spies
     sandbox.reset();

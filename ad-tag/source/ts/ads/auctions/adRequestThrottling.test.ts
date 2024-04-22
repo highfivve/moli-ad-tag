@@ -14,7 +14,7 @@ describe('ad request throttling', () => {
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
-  sandbox.useFakeTimers();
+  const clock = sandbox.useFakeTimers();
   const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
 
   const throttle = (throttleInSeconds: number) =>
@@ -60,7 +60,7 @@ describe('ad request throttling', () => {
     adRequestThrottling.onSlotRequested(slotRequestedEvent('slot-1'));
 
     expect(adRequestThrottling.isThrottled('slot-1')).to.be.true;
-    sandbox.clock.tick(10 * 1000);
+    clock.tick(10 * 1000);
     expect(adRequestThrottling.isThrottled('slot-1')).to.be.false;
   });
 });

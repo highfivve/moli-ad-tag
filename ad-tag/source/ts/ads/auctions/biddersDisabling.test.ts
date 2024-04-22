@@ -90,6 +90,11 @@ describe('BiddersDisabling', () => {
     sandbox.reset();
   });
 
+  after(() => {
+    // bring everything back to normal after tests
+    sandbox.restore();
+  });
+
   it('should return false if bidder is not in participationInfo config', () => {
     biddersDisablingConfig.onAuctionEnd(auction1);
     const result = biddersDisablingConfig.isBidderDisabled('position1', 'onetag');
