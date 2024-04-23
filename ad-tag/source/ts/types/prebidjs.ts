@@ -1258,6 +1258,8 @@ export namespace prebidjs {
 
       (event: 'auctionTimeout', handler: (auction: AuctionObject) => void, id?: string): void;
 
+      (event: 'auctionEnd', handler: (auction: AuctionObject) => void, id?: string): void;
+
       (event: UntypedEventName, bid: any, id?: string): void;
     };
 
