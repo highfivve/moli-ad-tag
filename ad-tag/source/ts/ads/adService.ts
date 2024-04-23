@@ -3,11 +3,9 @@ import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
 import { Moli } from '../types/moli';
 import {
   AdPipeline,
-  AdPipelineContext,
   ConfigureStep,
   IAdPipelineConfiguration,
   InitStep,
-  mkConfigureStepOncePerRequestAdsCycle,
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';

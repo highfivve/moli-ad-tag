@@ -1,13 +1,14 @@
 import * as Sinon from 'sinon';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { AdPipelineContext, createMoliTag, Moli } from '@highfivve/ad-tag';
-import { emptyConfig, newNoopLogger, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { AdPipelineContext, createMoliTag, Moli } from '../../../../ts/index';
+import { emptyConfig, newNoopLogger } from '../../../stubs/moliStubs';
 import { Cleanup } from './index';
-import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
-import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
+import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
+import { dummySchainConfig } from '../../../stubs/schainStubs';
 import { expect } from 'chai';
-import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
-import { googletag } from '@highfivve/ad-tag/lib/types/googletag';
+import { fullConsent } from '../../../stubs/consentStubs';
+import { googletag } from '../../../../ts/index';
+
 import IAdSlot = googletag.IAdSlot;
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();

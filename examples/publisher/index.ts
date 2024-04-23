@@ -10,8 +10,6 @@ import { AdexModule } from '@highfivve/module-the-adex-dmp';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAdsV2 } from '@highfivve/module-sticky-footer-ads-v2';
-import { Cleanup } from '../../modules/cleanup';
-
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
 import MoliWindow = Moli.MoliWindow;
@@ -29,6 +27,7 @@ import 'prebid.js/modules/unifiedIdSystem';
 import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
 import { StickyHeaderAds } from '@highfivve/module-sticky-header-ads';
+import { Cleanup } from '@highfivve/ad-tag/lib/ads/modules/cleanup';
 
 prebid.processQueue();
 
@@ -246,7 +245,7 @@ moli.registerModule(
 //
 window.pbjs = window.pbjs || { que: [] };
 window.pbjs.que.push(() => {
-  window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidWonEvent) => {
+  window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidResponse) => {
     console.log('bidWon', bidWon);
   });
 });
