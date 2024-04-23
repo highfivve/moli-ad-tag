@@ -23,6 +23,7 @@ import { googletag } from '../types/googletag';
 import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -51,7 +52,15 @@ describe('prebid', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
+      auction: new GlobalAuctionContext(jsDomWindow, {
+        biddersDisabling: {
+          enabled: true,
+          minRate: 0.2,
+          minBidRequests: 1,
+          reactivationPeriod: 1000
+        }
+      })
     };
   };
 
@@ -422,6 +431,67 @@ describe('prebid', () => {
           expect(addAdUnitsSpy).to.have.been.calledOnce;
           expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1, adUnit2]);
         });
+      });
+
+      it('should filter out bidders that are disabled in the auctionContext', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+        const domId = getDomId();
+        const adUnit1 = prebidAdUnit(domId, [
+          { bidder: 'teads', params: { pageId: 123, placementId: 456 } },
+          { bidder: 'appnexus', params: { placementId: '124' } }
+        ]);
+
+        const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
+
+        const ctx = adPipelineContext();
+        const isBidderDisabledStub = sandbox.stub(
+          ctx.auction!.biddersDisabling!,
+          'isBidderDisabled'
+        );
+
+        isBidderDisabledStub.withArgs(domId, 'teads').returns(true);
+        isBidderDisabledStub.withArgs(domId, 'appnexus').returns(false);
+
+        await step(ctx, [singleSlot]);
+        expect(isBidderDisabledStub).to.have.been.called;
+
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          prebidAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '124' } }])
+        ]);
+      });
+
+      it('should do nothing if auctionContext was defined but bidder is undefined', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+        const domId = getDomId();
+        const adUnit1 = prebidAdUnit(domId, [
+          { bidder: undefined } as any,
+          { bidder: 'appnexus', params: { placementId: '124' } }
+        ]);
+
+        const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
+
+        const ctx = adPipelineContext();
+        const isBidderDisabledStub = sandbox.stub(
+          ctx.auction!.biddersDisabling!,
+          'isBidderDisabled'
+        );
+
+        isBidderDisabledStub.withArgs(domId, 'teads').returns(true);
+        isBidderDisabledStub.withArgs(domId, 'appnexus').returns(false);
+
+        await step(ctx, [singleSlot]);
+        expect(isBidderDisabledStub).to.have.been.called;
+
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+          prebidAdUnit(domId, [
+            { bidder: undefined } as any,
+            { bidder: 'appnexus', params: { placementId: '124' } }
+          ])
+        ]);
       });
 
       it('should add a single adunit when the static prebid config provider returns a two bids but one is filtered', () => {
