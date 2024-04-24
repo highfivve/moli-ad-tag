@@ -854,6 +854,5 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       sid: '1111111',
       hp: 1
     }
-  },
-  globalAuctionContext: { enabled: true }
+  }
 });
