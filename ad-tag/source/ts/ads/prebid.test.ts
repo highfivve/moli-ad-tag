@@ -466,31 +466,19 @@ describe('prebid', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
         const domId = getDomId();
-        const adUnit1 = prebidAdUnit(domId, [
-          { bidder: undefined } as any,
-          { bidder: 'appnexus', params: { placementId: '124' } }
-        ]);
+        const adUnit1 = prebidAdUnit(domId, [{ bidder: undefined } as any]);
 
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
 
         const ctx = adPipelineContext();
-        const isBidderDisabledStub = sandbox.stub(
-          ctx.auction!.biddersDisabling!,
-          'isBidderDisabled'
-        );
-
-        isBidderDisabledStub.withArgs(domId, 'teads').returns(true);
-        isBidderDisabledStub.withArgs(domId, 'appnexus').returns(false);
+        const isBidderDisabledSpy = sandbox.spy(ctx.auction!.biddersDisabling!, 'isBidderDisabled');
 
         await step(ctx, [singleSlot]);
-        expect(isBidderDisabledStub).to.have.been.called;
+        expect(isBidderDisabledSpy).to.have.not.been.called;
 
         expect(addAdUnitsSpy).to.have.been.calledOnce;
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          prebidAdUnit(domId, [
-            { bidder: undefined } as any,
-            { bidder: 'appnexus', params: { placementId: '124' } }
-          ])
+          prebidAdUnit(domId, [{ bidder: undefined } as any])
         ]);
       });
 
