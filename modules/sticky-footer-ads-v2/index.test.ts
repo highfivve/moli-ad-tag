@@ -1,5 +1,6 @@
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
+import sinonChai from 'sinon-chai';
 
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
@@ -22,6 +23,9 @@ import * as stickyAdModule from './footerStickyAd';
 import { initAdSticky } from './footerStickyAd';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
+
+// setup sinon-chai
+use(sinonChai);
 
 const sandbox = Sinon.createSandbox();
 let dom = createDom();

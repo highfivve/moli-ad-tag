@@ -1230,7 +1230,8 @@ export namespace prebidjs {
       | 'adRenderFailed'
       | 'auctionDebug'
       | 'bidderDone'
-      | 'tcf2Enforcement';
+      | 'tcf2Enforcement'
+      | 'beforeBidderHttp';
 
     /**
      * All events that have no type definitions

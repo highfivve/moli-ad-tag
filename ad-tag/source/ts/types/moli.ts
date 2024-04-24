@@ -1257,11 +1257,40 @@ export namespace Moli {
   }
 
   export namespace auction {
+    export interface AdRequestThrottlingConfig {
+      /** enable or disable this feature */
+      readonly enabled: boolean;
+      /**
+       * the time in seconds that has to pass before a slot can be requested again
+       */
+      throttle: number;
+    }
+
+    export interface BidderDisablingConfig {
+      /** enable or disable this feature */
+      readonly enabled: boolean;
+
+      /** minimum bid rate for a bidder to be disabled */
+      readonly minRate: number;
+      /** define a minimum number of bid requests sent by a bidder before it can be deactivated */
+      readonly minBidRequests: number;
+
+      /** milliseconds until a bidder becomes active again  */
+      readonly reactivationPeriod: number;
+    }
+
     export interface GlobalAuctionContextConfig {
       /**
-       * disable global auction context
+       * Disable bidders that lack auction participation
        */
-      readonly enabled: boolean;
+      readonly biddersDisabling?: BidderDisablingConfig;
+
+      /**
+       * Throttle ad requests for a slot to avoid flooding the ad server.
+       * This is a general safeguard and should always be active. Mostly single page apps benefit from this, if a dev
+       * misuses `React.useEffect` or similar implementations that constantly re-render and thus trigger ad requests.
+       */
+      readonly adRequestThrottling?: AdRequestThrottlingConfig;
     }
   }
 
@@ -1564,6 +1593,19 @@ export namespace Moli {
        * @default is false
        */
       readonly ephemeralAdUnits?: boolean;
+
+      /**
+       * A timeout in milliseconds for the prebid auction. If for whatever reason never calls the bidsBackHandler, this
+       * timeout will be used to continue anyway to minimize the revenue impact.
+       *
+       * Note that the max of the auction timeout or failsafeTimeout will be used to avoid misconfiguration.
+       *
+       * The default is chosen to be 2000ms longer than the auction timeout to give the auction a chance to finish.
+       * Usually auction timeouts range from 500ms to 3000ms, which makes 2000ms extra for a failsafe a fair guess.
+       *
+       * @default auction timeout + 2000ms
+       */
+      readonly failsafeTimeout?: number;
 
       /** optional listener for prebid events */
       listener?: PrebidListenerProvider;

@@ -225,9 +225,10 @@ export class AdService {
       this.logger,
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
       reportingService,
-      config.globalAuctionContext?.enabled
-        ? new GlobalAuctionContext(config.globalAuctionContext)
-        : undefined
+      new GlobalAuctionContext(
+        this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+        config.globalAuctionContext
+      )
     );
 
     return new Promise<Readonly<Moli.MoliConfig>>(resolve => {

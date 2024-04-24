@@ -11,7 +11,6 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -53,11 +52,26 @@ describe('AdService', () => {
     }
   };
 
-  const initialize = (
+  const makeAdService = (): AdService => {
+    const adPipelineConfiguration: IAdPipelineConfiguration = {
+      init: [],
+      configure: [],
+      defineSlots: () => Promise.resolve([]),
+      prepareRequestAds: [],
+      requestBids: [],
+      requestAds: () => Promise.resolve()
+    };
+    return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+  };
+
+  const initialize: (
+    config?: Moli.MoliConfig,
+    isSinglePageApp?: boolean
+  ) => Promise<IAdPipelineConfiguration> = (
     config: Moli.MoliConfig = emptyConfig,
     isSinglePageApp: boolean = false
   ): Promise<IAdPipelineConfiguration> => {
-    const adService = new AdService(assetLoaderService, jsDomWindow);
+    const adService = makeAdService();
     return adService
       .initialize(config, isSinglePageApp)
       .then(() => adService.getAdPipeline().config);
@@ -109,55 +123,6 @@ describe('AdService', () => {
           const stepNames = pipeline.init.map(step => step.name);
           expect(stepNames).not.to.contain('prebid-init');
         });
-      });
-    });
-
-    describe('Global action', () => {
-      const makeAdService = (): AdService => {
-        const adPipelineConfiguration: IAdPipelineConfiguration = {
-          init: [],
-          configure: [],
-          defineSlots: () => Promise.resolve([]),
-          prepareRequestAds: [],
-          requestBids: [],
-          requestAds: () => Promise.resolve()
-        };
-        return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
-      };
-
-      it("shouldn't instantiate auction in adPipeline by default config", async () => {
-        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-          ...emptyConfig,
-          globalAuctionContext: new GlobalAuctionContext()
-        };
-        const adService = makeAdService();
-
-        await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.undefined;
-      });
-
-      it("instantiated adPipeline shouldn't hold auction context if it was disabled in config", async () => {
-        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-          ...emptyConfig,
-          globalAuctionContext: { enabled: false }
-        };
-
-        const adService = makeAdService();
-
-        await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.undefined;
-      });
-
-      it('should instantiate auction in adPipeline if it was enabled in config', async () => {
-        const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
-          ...emptyConfig,
-          globalAuctionContext: { enabled: true }
-        };
-
-        const adService = makeAdService();
-
-        await adService.initialize(emptyConfigWithGlobalAuction, true);
-        expect(adService.getAdPipeline().getAuction()).to.be.ok;
       });
     });
 
@@ -393,18 +358,6 @@ describe('AdService', () => {
   describe('requestAds', () => {
     let domIdCounter: number = 0;
 
-    const makeAdService = (): AdService => {
-      const adPipelineConfiguration: IAdPipelineConfiguration = {
-        init: [],
-        configure: [],
-        defineSlots: () => Promise.resolve([]),
-        prepareRequestAds: [],
-        requestBids: [],
-        requestAds: () => Promise.resolve()
-      };
-      return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
-    };
-
     const requestAds = (
       slots: Moli.AdSlot[],
       refreshSlots: string[] = [],
@@ -573,6 +526,36 @@ describe('AdService', () => {
           Sinon.match.number
         );
       });
+    });
+  });
+
+  describe('global auction context', () => {
+    it('should instantiate auction in adPipeline by default config', async () => {
+      const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+        ...emptyConfig,
+        globalAuctionContext: undefined
+      };
+      const adService = makeAdService();
+      await adService.initialize(emptyConfigWithGlobalAuction, true);
+      expect(adService.getAdPipeline().getAuction()).to.be.ok;
+    });
+
+    it('should instantiate auction in adPipeline with config', async () => {
+      const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+        ...emptyConfig,
+        globalAuctionContext: {
+          adRequestThrottling: { enabled: true, throttle: 15 },
+          biddersDisabling: {
+            enabled: false,
+            minBidRequests: 2,
+            minRate: 0.2,
+            reactivationPeriod: 3600000
+          }
+        }
+      };
+      const adService = makeAdService();
+      await adService.initialize(emptyConfigWithGlobalAuction, true);
+      expect(adService.getAdPipeline().getAuction()).to.be.ok;
     });
   });
 });

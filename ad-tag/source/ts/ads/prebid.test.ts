@@ -195,10 +195,12 @@ describe('prebid', () => {
   beforeEach(() => {
     // reset the before each test
     dom.window.pbjs = createPbjsStub();
+    sandbox.useFakeTimers();
   });
 
   afterEach(() => {
     sandbox.reset();
+    sandbox.clock.restore();
   });
 
   describe('prebid configure step', () => {
@@ -941,6 +943,52 @@ describe('prebid', () => {
       await step({ ...adPipelineContext(), bucket: { timeout: 3000 } }, [slotDef]);
       expect(requestBidsSpy).to.have.been.calledOnce;
       expect(requestBidsSpy).to.have.been.calledWith(Sinon.match.has('timeout', 3000));
+    });
+
+    it('should resolve within the failsafe timeout', async () => {
+      // do nothing when requestBids is called
+      const requestBidsStub = sandbox.stub(dom.window.pbjs, 'requestBids');
+      requestBidsStub.callsFake(() => {
+        console.log('requestBids called');
+      });
+      const step = prebidRequestBids(
+        { ...moliPrebidTestConfig, failsafeTimeout: 10000 },
+        'gam',
+        undefined
+      );
+
+      const domId = 'prebid-slot';
+      const adUnit = prebidAdUnit(domId, [
+        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+      ]);
+      const slotDef = createSlotDefinitions(domId, { adUnit });
+      const result = step(adPipelineContext(), [slotDef]);
+      sandbox.clock.tick(10000);
+      await result;
+    });
+
+    it('should resolve within the bidder timeout + buffer if the failsafe timeout is set too low', async () => {
+      // do nothing when requestBids is called
+      const requestBidsStub = sandbox.stub(dom.window.pbjs, 'requestBids');
+      requestBidsStub.callsFake(() => {
+        console.log('requestBids called');
+      });
+      const step = prebidRequestBids(
+        { ...moliPrebidTestConfig, failsafeTimeout: 500 },
+        'gam',
+        undefined
+      );
+
+      const domId = 'prebid-slot';
+      const adUnit = prebidAdUnit(domId, [
+        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+      ]);
+      const slotDef = createSlotDefinitions(domId, { adUnit });
+      const result = step(adPipelineContext(), [slotDef]);
+
+      // 500ms bidder timeout + 3000ms buffer
+      sandbox.clock.tick(3500);
+      await result;
     });
   });
 });
