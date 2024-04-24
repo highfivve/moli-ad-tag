@@ -43,8 +43,8 @@ export class GlobalAuctionContext {
     // Register events, if enabled
     if (this.config.biddersDisabling?.enabled) {
       this.window.pbjs.que.push(() => {
-        this.window.pbjs.onEvent('auctionEnd', auctions => {
-          auctions.forEach(auction => this.handleAuctionEndEvent(auction));
+        this.window.pbjs.onEvent('auctionEnd', auction => {
+          this.handleAuctionEndEvent(auction);
         });
       });
     }
