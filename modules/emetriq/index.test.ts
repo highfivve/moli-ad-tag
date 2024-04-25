@@ -581,8 +581,11 @@ describe('Emetriq Module', () => {
     });
 
     it('should resolve immediately if pbjs is configured, but window.pbjs is undefined', async () => {
+      const ctx = adPipelineContext();
+
+      // remove the pbjs object that was added by the GlobalAuctionContext initialized
       (jsDomWindow.pbjs as any) = undefined;
-      await Emetriq.syncDelay(adPipelineContext(), 'pbjs');
+      await Emetriq.syncDelay(ctx, 'pbjs');
 
       expect(setTimeoutStub).to.have.not.been.called;
     });
