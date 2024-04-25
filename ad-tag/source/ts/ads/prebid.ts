@@ -394,12 +394,17 @@ export const prebidRequestBids = (
         context.window.setTimeout(resolve, failsafeTimeout)
       );
       const auction = new Promise<void>(resolve => {
+        const slotsToRefresh = slots.filter(
+          slot => !context.auction.isSlotThrottled(slot.moliSlot.domId)
+        );
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
           ? {
-              adUnits: createdAdUnits(context, prebidConfig, slots)
+              adUnits: createdAdUnits(context, prebidConfig, slotsToRefresh)
             }
           : {
-              adUnitCodes: slots.filter(isPrebidSlotDefinition).map(slot => slot.moliSlot.domId)
+              adUnitCodes: slotsToRefresh
+                .filter(isPrebidSlotDefinition)
+                .map(slot => slot.moliSlot.domId)
             };
 
         // ad unit codes are required for setTargetingForGPTAsync
@@ -416,7 +421,7 @@ export const prebidRequestBids = (
           context.logger.debug(
             'Prebid',
             'skip request bids. All slots were filtered.',
-            slots.map(s => s.moliSlot)
+            slotsToRefresh.map(s => s.moliSlot)
           );
           return resolve();
         }
