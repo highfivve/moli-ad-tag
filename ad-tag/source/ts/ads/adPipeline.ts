@@ -84,7 +84,7 @@ export type AdPipelineContext = {
    * Access to global auction for auction optimizations.
    * If not set, the global auction context is undefined
    */
-  readonly auction?: GlobalAuctionContext;
+  readonly auction: GlobalAuctionContext;
 };
 
 /**
@@ -289,7 +289,7 @@ export class AdPipeline {
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
     private readonly reportingService: IReportingService,
-    private readonly auction?: GlobalAuctionContext
+    private readonly auction: GlobalAuctionContext
   ) {}
 
   /**

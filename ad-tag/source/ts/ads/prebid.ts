@@ -153,7 +153,7 @@ const createdAdUnits = (
           const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
             .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
             .filter((bid: prebidjs.IBid) => {
-              return bid.bidder && context.auction?.biddersDisabling
+              return bid.bidder && context.auction.biddersDisabling
                 ? !context.auction.biddersDisabling.isBidderDisabled(moliSlot.domId, bid.bidder)
                 : true;
             })

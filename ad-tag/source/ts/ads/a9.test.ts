@@ -28,6 +28,7 @@ import { apstag } from '../types/apstag';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -58,7 +59,8 @@ describe('a9', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 

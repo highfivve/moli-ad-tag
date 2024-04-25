@@ -25,6 +25,7 @@ import { noopReportingService } from './reportingService';
 import MoliConfig = Moli.MoliConfig;
 import SlotDefinition = Moli.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -60,7 +61,13 @@ describe('AdPipeline', () => {
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(config, noopLogger, jsDomWindow, reportingService);
+    return new AdPipeline(
+      config,
+      noopLogger,
+      jsDomWindow,
+      reportingService,
+      new GlobalAuctionContext(jsDomWindow)
+    );
   };
 
   const adPipelineContext = (
@@ -79,7 +86,8 @@ describe('AdPipeline', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 
