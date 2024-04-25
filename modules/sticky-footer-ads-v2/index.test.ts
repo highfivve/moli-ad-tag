@@ -23,6 +23,7 @@ import * as stickyAdModule from './footerStickyAd';
 import { initAdSticky } from './footerStickyAd';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -55,7 +56,8 @@ const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
     labelConfigService: null as any,
     reportingService: null as any,
     tcData: null as any,
-    adUnitPathVariables: {}
+    adUnitPathVariables: {},
+    auction: new GlobalAuctionContext(jsDomWindow)
   };
 };
 
@@ -102,7 +104,13 @@ const initModule = (
     schain: dummySchainConfig
   };
 
-  const adPipeline = new AdPipeline(emptyPipelineConfig, noopLogger, jsDomWindow, reportingService);
+  const adPipeline = new AdPipeline(
+    emptyPipelineConfig,
+    noopLogger,
+    jsDomWindow,
+    reportingService,
+    new GlobalAuctionContext(jsDomWindow)
+  );
 
   return { moliConfig, adPipeline };
 };

@@ -8,6 +8,7 @@ import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 
 import { Pubstack } from './index';
 import { AdPipelineContext, AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -37,7 +38,8 @@ describe('Pubstack Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: fullConsent(),
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow as any)
     };
   };
 

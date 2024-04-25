@@ -25,6 +25,7 @@ import { MappingDefinition } from './adex-mapping';
 import { AdexAppConfig, AdexModule, ITheAdexWindow } from './index';
 import TCData = tcfapi.responses.TCData;
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -57,7 +58,8 @@ describe('The Adex DMP Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: tcData ?? fullConsent({ '44': true }),
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 
@@ -114,7 +116,8 @@ describe('The Adex DMP Module', () => {
       emptyPipelineConfig,
       noopLogger,
       jsDomWindow,
-      reportingService
+      reportingService,
+      new GlobalAuctionContext(jsDomWindow)
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);

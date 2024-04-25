@@ -17,6 +17,7 @@ import { Zeotap } from './zeotap';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -49,7 +50,8 @@ describe('Zeotap Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: fullConsent({ 301: true }),
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 

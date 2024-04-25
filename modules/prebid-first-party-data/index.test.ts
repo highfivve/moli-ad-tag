@@ -23,6 +23,7 @@ import { GptTargetingMapping, PrebidFirstPartyDataModule } from './index';
 import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -55,7 +56,8 @@ describe('Prebid First Party Data Module', () => {
       labelConfigService: null as any,
       reportingService,
       tcData: fullConsent(),
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 
@@ -112,7 +114,8 @@ describe('Prebid First Party Data Module', () => {
       emptyPipelineConfig,
       noopLogger,
       jsDomWindow,
-      reportingService
+      reportingService,
+      new GlobalAuctionContext(jsDomWindow)
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);
