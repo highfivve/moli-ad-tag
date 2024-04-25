@@ -25,6 +25,7 @@ import { noopReportingService } from './reportingService';
 import MoliConfig = Moli.MoliConfig;
 import SlotDefinition = Moli.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -60,7 +61,13 @@ describe('AdPipeline', () => {
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(config, noopLogger, jsDomWindow, reportingService);
+    return new AdPipeline(
+      config,
+      noopLogger,
+      jsDomWindow,
+      reportingService,
+      new GlobalAuctionContext(jsDomWindow)
+    );
   };
 
   const adPipelineContext = (
@@ -79,7 +86,8 @@ describe('AdPipeline', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 
@@ -106,7 +114,7 @@ describe('AdPipeline', () => {
   });
 
   describe('run', () => {
-    it('should not run when the slots array is empty', () => {
+    it('should not run when the slots array is empty', async () => {
       let callCount: number = 0;
       const initSteps: InitStep[] = [
         () => {
@@ -115,9 +123,8 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
-      return pipeline.run([], emptyConfig, 1).then(() => {
-        expect(callCount).to.be.equals(0);
-      });
+      await pipeline.run([], emptyConfig, 1);
+      expect(callCount).to.be.equals(0);
     });
 
     it('should use the proper timeout', () => {
@@ -178,7 +185,7 @@ describe('AdPipeline', () => {
       );
     });
 
-    it('should run the init phase only once', () => {
+    it('should run the init phase only once', async () => {
       let callCount: number = 0;
       const initSteps: InitStep[] = [
         () => {
@@ -187,16 +194,10 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
-
-      return pipeline
-        .run([adSlot], emptyConfig, 1)
-        .then(() => {
-          expect(callCount).to.be.equals(1);
-          return pipeline.run([adSlot], emptyConfig, 1);
-        })
-        .then(() => {
-          expect(callCount).to.be.equals(1);
-        });
+      await pipeline.run([adSlot], emptyConfig, 1);
+      expect(callCount).to.be.equals(1);
+      await pipeline.run([adSlot], emptyConfig, 1);
+      expect(callCount).to.be.equals(1);
     });
 
     it('should abort running the ad pipeline if no slots are available after filtering', async () => {
@@ -233,7 +234,7 @@ describe('AdPipeline', () => {
       expect(prepareRequestAdsStub).to.not.have.been.called;
     });
 
-    it('should execute prepareRequestAds by priority', () => {
+    it('should execute prepareRequestAds by priority', async () => {
       const spyFn = sandbox.spy();
 
       // higher priority / earlier execution
@@ -248,18 +249,16 @@ describe('AdPipeline', () => {
         defineSlots: () => Promise.resolve([{ moliSlot: adSlot } as SlotDefinition]),
         prepareRequestAds: prepareRequestAdsSteps
       });
-
-      return pipeline.run([adSlot], emptyConfig, 1).then(() => {
-        expect(spyFn).to.have.been.calledThrice;
-        expect(spyFn.firstCall).calledWithExactly('1', 'priority 3');
-        expect(spyFn.secondCall).calledWithExactly('2', 'priority 2');
-        expect(spyFn.thirdCall).calledWithExactly('3', 'priority 1');
-      });
+      await pipeline.run([adSlot], emptyConfig, 1);
+      expect(spyFn).to.have.been.calledThrice;
+      expect(spyFn.firstCall).calledWithExactly('1', 'priority 3');
+      expect(spyFn.secondCall).calledWithExactly('2', 'priority 2');
+      expect(spyFn.thirdCall).calledWithExactly('3', 'priority 1');
     });
   });
 
   describe('pipeline context', () => {
-    it('should contain an auto incremented request id', () => {
+    it('should contain an auto incremented request id', async () => {
       let requestId: number | undefined;
       const configureStep: ConfigureStep[] = [
         context => {
@@ -268,16 +267,10 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
-
-      return pipeline
-        .run([adSlot], emptyConfig, 1)
-        .then(() => {
-          expect(requestId).to.be.equals(1);
-          return pipeline.run([adSlot], emptyConfig, 1);
-        })
-        .then(() => {
-          expect(requestId).to.be.equals(2);
-        });
+      await pipeline.run([adSlot], emptyConfig, 1);
+      expect(requestId).to.be.equals(1);
+      await pipeline.run([adSlot], emptyConfig, 1);
+      expect(requestId).to.be.equals(2);
     });
   });
 

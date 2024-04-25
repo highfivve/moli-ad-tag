@@ -912,6 +912,18 @@ describe('prebid', () => {
   });
 
   describe('prebid request bids', () => {
+    const domId1 = 'prebid-slot-1';
+    const domId2 = 'prebid-slot-2';
+    const adUnit1 = prebidAdUnit(domId1, [
+      { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+    ]);
+    const adUnit2 = prebidAdUnit(domId1, [
+      { bidder: 'appnexus', params: { placementId: '456' }, labelAll: ['mobile'] }
+    ]);
+
+    const slotDef1 = createSlotDefinitions(domId1, { adUnit: adUnit1 });
+    const slotDef2 = createSlotDefinitions(domId2, { adUnit: adUnit2 });
+
     it('should not call requestBids if slots are empty', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
       const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
@@ -935,20 +947,56 @@ describe('prebid', () => {
       expect(requestBidsSpy).to.have.not.been.called;
     });
 
+    it('should not call requestBids if all slots are throttled', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const slot = createAdSlot('none-prebid');
+      const ctx = adPipelineContext();
+      const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+      isThrottledStub.withArgs(slot.domId).returns(true);
+
+      await step(ctx, [
+        {
+          moliSlot: slot,
+          adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
+          filterSupportedSizes: sizes => sizes
+        }
+      ]);
+      expect(requestBidsSpy).to.have.not.been.called;
+    });
+
     it('should call requestBids with the ad unit code', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
       const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
 
-      const domId = 'prebid-slot';
-      const adUnit = prebidAdUnit(domId, [
-        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
-      ]);
-      const slotDef = createSlotDefinitions(domId, { adUnit });
+      const slotDef = createSlotDefinitions(domId1, { adUnit: adUnit1 });
 
       await step(adPipelineContext(), [slotDef]);
       expect(requestBidsSpy).to.have.been.calledOnce;
       expect(requestBidsSpy).to.have.been.calledWith(
-        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId]))
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId1]))
+      );
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('bidsBackHandler', Sinon.match.func)
+      );
+    });
+
+    it('should call requestBids with ad unit codes that are not throttled', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+
+      const slotDef1 = createSlotDefinitions(domId1, { adUnit: adUnit1 });
+      const slotDef2 = createSlotDefinitions(domId2, { adUnit: adUnit2 });
+
+      const ctx = adPipelineContext();
+      const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+      isThrottledStub.withArgs(domId1).returns(false);
+      isThrottledStub.withArgs(domId2).returns(true);
+
+      await step(ctx, [slotDef1, slotDef2]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId1]))
       );
       expect(requestBidsSpy).to.have.been.calledWith(
         Sinon.match.has('bidsBackHandler', Sinon.match.func)
@@ -963,16 +1011,10 @@ describe('prebid', () => {
         undefined
       );
 
-      const domId = 'prebid-slot';
-      const adUnit = prebidAdUnit(domId, [
-        { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
-      ]);
-      const slotDef = createSlotDefinitions(domId, { adUnit });
-
-      await step(adPipelineContext(), [slotDef]);
+      await step(adPipelineContext(), [slotDef1]);
       expect(requestBidsSpy).to.have.been.calledOnce;
       expect(requestBidsSpy).to.have.not.been.calledWith(
-        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId]))
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId1]))
       );
       expect(requestBidsSpy).to.have.been.calledWith(
         Sinon.match.has('bidsBackHandler', Sinon.match.func)
@@ -982,7 +1024,39 @@ describe('prebid', () => {
       const adUnits = requestBidsSpy.firstCall.args[0].adUnits;
       expect(adUnits).to.have.length(1);
       expect(adUnits[0]).to.deep.equals({
-        ...adUnit,
+        ...adUnit1,
+        // labelAll & labelAny are stripped away
+        bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+      });
+    });
+
+    it('should call requestBids with the prebid ad units if ephemeralAdUnits is true without throttled slots', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids(
+        { ...moliPrebidTestConfig, ephemeralAdUnits: true },
+        'gam',
+        undefined
+      );
+
+      const ctx = adPipelineContext();
+      const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+      isThrottledStub.withArgs(domId1).returns(false);
+      isThrottledStub.withArgs(domId2).returns(true);
+
+      await step(ctx, [slotDef1, slotDef2]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      expect(requestBidsSpy).to.have.not.been.calledWith(
+        Sinon.match.has('adUnitCodes', Sinon.match.array.deepEquals([domId1]))
+      );
+      expect(requestBidsSpy).to.have.been.calledWith(
+        Sinon.match.has('bidsBackHandler', Sinon.match.func)
+      );
+
+      // validate the adUnits call - this gives better error messages than the Sinon.match calledWith
+      const adUnits = requestBidsSpy.firstCall.args[0].adUnits;
+      expect(adUnits).to.have.length(1);
+      expect(adUnits[0]).to.deep.equals({
+        ...adUnit1,
         // labelAll & labelAny are stripped away
         bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
       });

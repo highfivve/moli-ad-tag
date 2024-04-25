@@ -81,7 +81,9 @@ export class AdService {
     getDefaultLogger(),
     this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
     noopReportingService,
-    undefined
+    new GlobalAuctionContext(
+      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
+    )
   );
 
   private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
@@ -107,7 +109,10 @@ export class AdService {
         adPipelineConfig,
         this.logger,
         window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-        noopReportingService
+        noopReportingService,
+        new GlobalAuctionContext(
+          window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
+        )
       );
     }
   }

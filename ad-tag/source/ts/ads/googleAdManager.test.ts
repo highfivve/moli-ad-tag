@@ -15,7 +15,8 @@ import {
   gptInit,
   gptLDeviceLabelKeyValue,
   gptResetTargeting,
-  gptConfigure
+  gptConfigure,
+  gptRequestAds
 } from './googleAdManager';
 import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
@@ -23,6 +24,7 @@ import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
+import { GlobalAuctionContext } from './globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -54,7 +56,8 @@ describe('google ad manager', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       reportingService: noopReportingService,
       tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
+      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 
@@ -767,6 +770,64 @@ describe('google ad manager', () => {
       it('should set to false if false', async () => {
         await defineSlots(false);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(false);
+      });
+    });
+  });
+
+  describe('gptRequestAds', () => {
+    describe('test environment', () => {
+      it('should not call googletag.pubads().refresh', async () => {
+        const step = gptRequestAds();
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        await step(adPipelineContext('test'), []);
+        expect(refreshSpy).to.have.not.been.called;
+      });
+    });
+
+    describe('production environment', () => {
+      it('should not call googletag.pubads().refresh if slots are empty', async () => {
+        const step = gptRequestAds();
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+
+        await step(adPipelineContext(), []);
+        expect(refreshSpy).to.have.not.been.called;
+      });
+
+      it('should call googletag.pubads().refresh with the configured slots', async () => {
+        const step = gptRequestAds();
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const slot: Moli.SlotDefinition = {
+          adSlot: googleAdSlotStub('/123/content_1', 'slot-1'),
+          moliSlot: createdAdSlot('slot-1')
+        } as any;
+
+        await step(adPipelineContext(), [slot]);
+        expect(refreshSpy).to.have.been.calledOnce;
+        expect(refreshSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
+      });
+
+      it('should call googletag.pubads().refresh with slots that are not throttled', async () => {
+        const step = gptRequestAds();
+        const ctx = adPipelineContext();
+        const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+        isThrottledStub.withArgs('slot-1').returns(true);
+        isThrottledStub.withArgs('slot-2').returns(false);
+
+        const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+        const slot1: Moli.SlotDefinition = {
+          adSlot: googleAdSlotStub('/123/content_1', 'slot-1'),
+          moliSlot: createdAdSlot('slot-1')
+        } as any;
+        const slot2: Moli.SlotDefinition = {
+          adSlot: googleAdSlotStub('/123/content_2', 'slot-2'),
+          moliSlot: createdAdSlot('slot-2')
+        } as any;
+
+        await step(ctx, [slot1, slot2]);
+        expect(isThrottledStub).to.have.been.calledTwice;
+        expect(refreshSpy).to.have.been.calledOnce;
+        expect(refreshSpy).to.have.been.calledOnceWithExactly([slot2.adSlot]);
       });
     });
   });

@@ -12,6 +12,7 @@ import {
   googletag
 } from '@highfivve/ad-tag';
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -63,7 +64,8 @@ describe('Confiant Module', () => {
         labelConfigService: null as any,
         reportingService: null as any,
         tcData: fullConsent({ 56: true }),
-        adUnitPathVariables: {}
+        adUnitPathVariables: {},
+        auction: new GlobalAuctionContext(jsDomWindow as any)
       };
     };
 
