@@ -322,31 +322,58 @@ describe('a9', () => {
       });
     });
 
-    it('should request for the wanted ad slot', () => {
+    it('should request for the wanted ad slot', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
-
-      return step(contextWithConsent, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: domId,
-                slotName: singleSlot.adSlot.getAdUnitPath(),
-                sizes: mediumRec
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
+      await step(contextWithConsent, [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
 
-    it('should respect the supportedSizes configuration in the global a9 config', () => {
+    it('should fetchBids only for un-throttled slots', async () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids(a9ConfigStub);
+
+      const domId1 = getDomId();
+      const domId2 = getDomId();
+      const slot1 = createSlotDefinitions(domId1, {});
+      const slot2 = createSlotDefinitions(domId2, {});
+
+      const isThrottled = sandbox.stub(contextWithConsent.auction, 'isSlotThrottled');
+      isThrottled.withArgs(domId1).returns(false);
+      isThrottled.withArgs(domId2).returns(true);
+
+      await step(contextWithConsent, [slot1, slot2]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId1,
+              slotName: slot1.adSlot.getAdUnitPath(),
+              sizes: mediumRec
+            }
+          ]
+        },
+        Sinon.match.func
+      );
+    });
+
+    it('should respect the supportedSizes configuration in the global a9 config', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids({
         ...a9ConfigStub,
@@ -355,22 +382,20 @@ describe('a9', () => {
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
-
-      return step(contextWithConsent, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: domId,
-                slotName: singleSlot.adSlot.getAdUnitPath(),
-                sizes: [[300, 250]]
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
+      await step(contextWithConsent, [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: [[300, 250]]
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
 
     it('should return mediaType video when wanted', () => {
