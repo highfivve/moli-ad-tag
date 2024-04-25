@@ -24,6 +24,23 @@
  * }, window));
  * ```
  *
+ * ## Multiple infinite slots
+ *
+ * If you have infinite slots with different `pageType` values, you can use this to differentiate between them.
+ * Image you have a
+ *
+ * - `search_content_x` slot
+ * - `result_content_x` slot
+ *
+ * You add a `data-h5-slot-dom-id` attribute to the infinite slot container, which will select the ad slot with this
+ * `domId` value from the moli slots.
+ *
+ * ```html
+ * <div class="ad-infinite" data-h5-slot-dom-id="search_content_x"></div>
+ * ```
+ *
+ * If the `data-h5-slot-dom-id` is not provided, the first slot with `loaded: infinite` will be used.
+ *
  * @module
  */
 import {
@@ -34,6 +51,7 @@ import {
   mkConfigureStepOncePerRequestAdsCycle
 } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
+import { selectInfiniteSlot } from './selectInfiniteSlot';
 
 type LazyLoadModuleOptionsType = {
   /**
@@ -89,6 +107,10 @@ export type InfiniteSlotsSelector = {
    * CSS selector for divs in the document that should be considered as infinite loading slots
    */
   readonly selector: string;
+
+  /**
+   * Options for the IntersectionObserver
+   */
   readonly options: LazyLoadModuleOptionsType;
 };
 
@@ -268,28 +290,39 @@ export class LazyLoad implements IModule {
       }
     });
 
+    const { configuredInfiniteSlots, findSlot } = selectInfiniteSlot(moliConfig.slots);
+
     (infiniteSlotsConfig || []).forEach(config => {
       const serialNumberLabel = 'data-h5-serial-number';
 
-      // FIXME we do not support multiple infinite ad slots yet - pageType is relevant, e.g. content_x and result_content_x
-      const configuredInfiniteSlot = moliConfig.slots.find(
-        slot => slot.behaviour.loaded === 'infinite'
-      );
-      if (configuredInfiniteSlot) {
+      if (configuredInfiniteSlots.length > 0) {
         const observer = new this.window.IntersectionObserver(
           entries => {
             entries.forEach((entry: IntersectionObserverEntry) => {
               if (entry.isIntersecting) {
-                const serialNumber =
-                  entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
-                const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
-                entry.target.setAttribute('id', createdDomId);
-                this.logger?.debug(
-                  this.name,
-                  `Trigger ad slot with newly created DOM ID ${createdDomId}`
-                );
-                this.window.moli.refreshInfiniteAdSlot(createdDomId, configuredInfiniteSlot.domId);
-                observer.unobserve(entry.target);
+                const { configuredInfiniteSlot, configSlotDomId } = findSlot(entry.target);
+
+                if (configuredInfiniteSlot) {
+                  const serialNumber =
+                    entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
+                  const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
+                  entry.target.setAttribute('id', createdDomId);
+                  this.logger?.debug(
+                    this.name,
+                    `Trigger ad slot with newly created DOM ID ${createdDomId}`
+                  );
+                  this.window.moli.refreshInfiniteAdSlot(
+                    createdDomId,
+                    configuredInfiniteSlot.domId
+                  );
+                  observer.unobserve(entry.target);
+                } else {
+                  this.logger?.error(
+                    this.name,
+                    `No infinite-scrolling slot configured for ${configSlotDomId}`
+                  );
+                  observer.unobserve(entry.target);
+                }
               }
             });
           },
