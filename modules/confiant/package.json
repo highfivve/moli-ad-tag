@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-confiant",
-  "version": "4.20.3",
+  "version": "4.20.4",
   "license": "Apache-2.0",
   "description": "Ad fraud detection and protection",
   "main": "./lib/index.js",
@@ -47,6 +47,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.20.3"
+    "@highfivve/ad-tag": "4.20.4"
   }
 }
