@@ -6,63 +6,55 @@ import BidderCode = prebidjs.BidderCode;
 import { createDom } from '../../stubs/browserEnvSetup';
 
 type AuctionType = {
-  args: {
-    bidderRequests: {
-      bids: {
-        bidderCode: BidderCode;
-        bids: { adUnitCode: string }[];
-      }[];
+  bidderRequests: {
+    bids: {
+      bidderCode: BidderCode;
+      bids: { adUnitCode: string }[];
     }[];
-    bidsReceived: { bidderCode: BidderCode; adUnitCode: string }[];
-  };
+  }[];
+  bidsReceived: { bidderCode: BidderCode; adUnitCode: string }[];
 };
 
 const auction1: AuctionType = {
-  args: {
-    bidderRequests: [
-      {
-        bids: [
-          { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
-          { bidderCode: 'seedtag', bids: [{ adUnitCode: 'position1' }] }
-        ]
-      }
-    ],
-    bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
-  }
+  bidderRequests: [
+    {
+      bids: [
+        { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
+        { bidderCode: 'seedtag', bids: [{ adUnitCode: 'position1' }] }
+      ]
+    }
+  ],
+  bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
 };
 
 const auction2: AuctionType = {
-  args: {
-    bidderRequests: [
-      {
-        bids: [
-          { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
-          { bidderCode: 'seedtag', bids: [{ adUnitCode: 'position1' }] }
-        ]
-      }
-    ],
-    bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
-  }
+  bidderRequests: [
+    {
+      bids: [
+        { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
+        { bidderCode: 'seedtag', bids: [{ adUnitCode: 'position1' }] }
+      ]
+    }
+  ],
+  bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
 };
 
 const auction3: AuctionType = {
-  args: {
-    bidderRequests: [
-      {
-        bids: [
-          { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
-          {
-            bidderCode: 'seedtag',
-            bids: [{ adUnitCode: 'position1' }, { adUnitCode: 'position2' }]
-          }
-        ]
-      }
-    ],
-    bidsReceived: [
-      { bidderCode: 'gumgum', adUnitCode: 'position1' },
-      { bidderCode: 'seedtag', adUnitCode: 'position1' }
-    ]
-  }
+  bidderRequests: [
+    {
+      bids: [
+        { bidderCode: 'gumgum', bids: [{ adUnitCode: 'position1' }] },
+        {
+          bidderCode: 'seedtag',
+          bids: [{ adUnitCode: 'position1' }, { adUnitCode: 'position2' }]
+        }
+      ]
+    }
+  ],
+  bidsReceived: [
+    { bidderCode: 'gumgum', adUnitCode: 'position1' },
+    { bidderCode: 'seedtag', adUnitCode: 'position1' }
+  ]
 };
 
 describe('BiddersDisabling', () => {
