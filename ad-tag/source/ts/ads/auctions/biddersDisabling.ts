@@ -38,7 +38,9 @@ export class BiddersDisabling {
   constructor(
     private readonly config: Moli.auction.BidderDisablingConfig,
     private readonly window: Window
-  ) {}
+  ) {
+    this.logger?.info(`Bidders disabling feature is ${config.enabled ? 'enabled' : 'disabled'}`);
+  }
 
   /**
    * Disable bidders that have low bid rate as specified in the configuration.
@@ -61,7 +63,7 @@ export class BiddersDisabling {
    * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
    */
   public onAuctionEnd(auction: any): void {
-    auction.args.bidderRequests.forEach(bidderRequest => {
+    auction.bidderRequests.forEach(bidderRequest => {
       // iterate over all bids and in each bid request and update participationInfo
       bidderRequest.bids.forEach(bid => {
         const bidderCode = bid.bidderCode;
@@ -93,7 +95,7 @@ export class BiddersDisabling {
       });
     });
 
-    auction.args.bidsReceived.forEach(bidReceived => {
+    auction.bidsReceived.forEach(bidReceived => {
       const bidderForPosition = bidReceived.bidderCode;
       const position = bidReceived.adUnitCode;
 
