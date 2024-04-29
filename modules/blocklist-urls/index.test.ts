@@ -22,6 +22,7 @@ import {
 import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -78,7 +79,8 @@ describe('BlocklistedUrls Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: null as any,
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 

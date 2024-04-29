@@ -407,13 +407,17 @@ export const gptRequestAds =
           createTestSlots(context, slots);
           break;
         case 'production':
+          const slotsToRefresh = slots.filter(
+            ({ moliSlot }) => !context.auction.isSlotThrottled(moliSlot.domId)
+          );
+          if (slotsToRefresh.length === 0) {
+            break;
+          }
           // load ads
-          context.window.googletag.pubads().refresh(slots.map(slot => slot.adSlot));
-          // mark slots as refreshed
-          slots.forEach(({ moliSlot }) => context.reportingService.markRefreshed(moliSlot));
+          context.window.googletag.pubads().refresh(slotsToRefresh.map(({ adSlot }) => adSlot));
 
           // debug logs
-          const debugMessage = slots
+          const debugMessage = slotsToRefresh
             .map(({ moliSlot }) => `[DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`)
             .join('\n');
           context.logger.debug('GAM', `Refresh ${slots.length} slot(s):\n${debugMessage}`);

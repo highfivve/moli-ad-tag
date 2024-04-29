@@ -38,7 +38,9 @@ export class BiddersDisabling {
   constructor(
     private readonly config: Moli.auction.BidderDisablingConfig,
     private readonly window: Window
-  ) {}
+  ) {
+    this.logger?.info(`Bidders disabling feature is ${config.enabled ? 'enabled' : 'disabled'}`);
+  }
 
   /**
    * Disable bidders that have low bid rate as specified in the configuration.
@@ -61,39 +63,37 @@ export class BiddersDisabling {
    * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
    */
   public onAuctionEnd(auction: any): void {
-    auction.args.bidderRequests.forEach(bidderRequest => {
+    auction.bidderRequests.forEach(bidderRequest => {
       // iterate over all bids and in each bid request and update participationInfo
       bidderRequest.bids.forEach(bid => {
-        const bidderCode = bid.bidderCode;
-        const positions = bid.bids.map(bid => bid.adUnitCode);
+        const bidderCode = bid.bidder;
+        const adUnitCode = bid.adUnitCode;
 
-        positions.forEach(position => {
-          const foundPosition = this.participationInfo.get(position);
-          if (!foundPosition) {
-            this.participationInfo.set(position, new Map());
-          }
+        const foundPosition = this.participationInfo.get(adUnitCode);
+        if (!foundPosition) {
+          this.participationInfo.set(adUnitCode, new Map());
+        }
 
-          const bidderState = this.participationInfo.get(position)?.get(bidderCode);
+        const bidderState = this.participationInfo.get(adUnitCode)?.get(bidderCode);
 
-          if (bidderState) {
-            const newBidRequestCount = bidderState.bidRequestCount + 1;
+        if (bidderState) {
+          const newBidRequestCount = bidderState.bidRequestCount + 1;
 
-            this.participationInfo.get(position)?.set(bidderCode, {
-              ...bidderState,
-              bidRequestCount: newBidRequestCount
-            });
-          } else {
-            this.participationInfo.get(position)?.set(bidderCode, {
-              disabled: false,
-              bidRequestCount: 1,
-              bidReceivedCount: 0
-            });
-          }
-        });
+          this.participationInfo.get(adUnitCode)?.set(bidderCode, {
+            ...bidderState,
+            bidRequestCount: newBidRequestCount
+          });
+        } else {
+          this.participationInfo.get(adUnitCode)?.set(bidderCode, {
+            disabled: false,
+            bidRequestCount: 1,
+            bidReceivedCount: 0
+          });
+        }
       });
     });
 
-    auction.args.bidsReceived.forEach(bidReceived => {
+    auction.bidsReceived.forEach(bidReceived => {
       const bidderForPosition = bidReceived.bidderCode;
       const position = bidReceived.adUnitCode;
 

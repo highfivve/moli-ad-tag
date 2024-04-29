@@ -32,7 +32,10 @@ import { checkBucketConfig, checkSkinConfig } from 'moli-debugger/validations/bu
 import { checkAdReloadConfig } from '../validations/adReloadValidations';
 import { checkSizesConfig } from '../validations/sizesConfigValidations';
 
-declare const window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow;
+declare const window: Window &
+  prebidjs.IPrebidjsWindow &
+  googletag.IGoogleTagWindow &
+  Moli.MoliWindow;
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
@@ -187,6 +190,22 @@ export class GlobalConfig
     }
   }
 
+  extractAdVersionFromS2sConfig(s2sConfig: prebidjs.IPrebidJsConfig['s2sConfig']): string {
+    if (!s2sConfig) {
+      return '?';
+    }
+
+    // see https://github.com/microsoft/TypeScript/issues/53395
+    // type casts are apparently necessary
+    if (Array.isArray(s2sConfig)) {
+      return (
+        (s2sConfig[0] as prebidjs.server.S2SConfig)?.extPrebid?.analytics?.h5v.adTagVersion ?? '?'
+      );
+    } else {
+      return (s2sConfig as prebidjs.server.S2SConfig).extPrebid?.analytics?.h5v.adTagVersion ?? '?';
+    }
+  }
+
   async componentDidMount() {
     const adsTxtDomain = this.props.config?.domain ?? window.location.hostname;
     this.setState({
@@ -197,6 +216,9 @@ export class GlobalConfig
 
   render(): JSX.Element {
     const { config, modules, labelConfigService } = this.props;
+
+    const adTagVersion = this.extractAdVersionFromS2sConfig(config?.prebid?.config?.s2sConfig);
+
     const {
       sidebarHidden,
       showOnlyRenderedSlots,
@@ -228,6 +250,11 @@ export class GlobalConfig
           <div className={classes} data-ref={debugSidebarSelector}>
             <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--moli">
               <div className="MoliDebug-tagContainer">
+                <div className="MoliDebug-tagContainer">
+                  <TagLabel>Ad Tag Version</TagLabel>
+                  <Tag>{adTagVersion}</Tag>
+                </div>
+                <br />
                 <TagLabel>Appearance</TagLabel>
                 {isDarkTheme && (
                   <button
@@ -250,7 +277,7 @@ export class GlobalConfig
               </div>
               <h4>
                 {this.collapseToggle('moli')}
-                Moli
+                Moli <span>{window.moli.version}</span>
               </h4>
               {expandSection.moli && (
                 <div>

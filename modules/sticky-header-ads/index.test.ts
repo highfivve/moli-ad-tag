@@ -20,6 +20,7 @@ import Device = Moli.Device;
 import { StickyHeaderAds, StickyHeaderAdConfig, StickyHeaderFadeOutConfig } from './index';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
 use(sinonChai);
@@ -52,7 +53,8 @@ describe('sticky header ad module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: null as any,
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow)
     };
   };
 
@@ -113,7 +115,8 @@ describe('sticky header ad module', () => {
       emptyPipelineConfig,
       noopLogger,
       jsDomWindow,
-      reportingService
+      reportingService,
+      new GlobalAuctionContext(jsDomWindow)
     );
 
     return { moliConfig, adPipeline };

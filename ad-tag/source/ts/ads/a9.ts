@@ -215,6 +215,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
 
         const slots = slotDefinitions
           .filter(isA9SlotDefinition)
+          .filter(slot => !context.auction.isSlotThrottled(slot.moliSlot.domId))
           .filter(slot => {
             const isVideo = slot.moliSlot.a9.mediaType === 'video';
             const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
