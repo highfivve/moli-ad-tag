@@ -127,7 +127,8 @@ describe('Cleanup Module', () => {
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: fullConsent(),
-      adUnitPathVariables: {}
+      adUnitPathVariables: {},
+      auction: null as any
     };
   };
 
