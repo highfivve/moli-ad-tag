@@ -226,6 +226,8 @@ export namespace prebidjs {
      * @see https://github.com/prebid/prebid.github.io/issues/3830
      */
     registerSignalSources?: () => void;
+
+    getAllWinningBids(): event.BidResponse[];
   }
 
   /**

@@ -28,7 +28,16 @@ describe('Cleanup Module', () => {
   beforeEach(() => {
     sandbox = Sinon.createSandbox();
     dom = createDom();
-    jsDomWindow = dom.window;
+    jsDomWindow = {
+      ...dom.window,
+      pbjs: {
+        getAllWinningBids: () => [
+          { adUnitCode: domId1, bidder: 'Seedtag' },
+          { adUnitCode: domId2, bidder: 'Seedtag' },
+          { adUnitCode: domId3, bidder: 'dspx' }
+        ]
+      }
+    };
     jsDomWindow.moli = createMoliTag(jsDomWindow);
 
     // add special format elements to the dom
@@ -52,7 +61,8 @@ describe('Cleanup Module', () => {
       },
       logger: noopLogger,
       prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
-      schain: dummySchainConfig
+      schain: dummySchainConfig,
+      spa: { enabled: true, validateLocation: 'href' }
     };
   };
 
@@ -111,14 +121,13 @@ describe('Cleanup Module', () => {
       requestAdsCalls: 1,
       env: 'production',
       logger: { ...noopLogger, error: errorLogSpy },
-      config: emptyConfig,
+      config: { ...emptyConfig, spa: { enabled: true, validateLocation: 'href' } },
       window: jsDomWindow as any,
       // no service dependencies required
       labelConfigService: null as any,
       reportingService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {}
-      // TODO: add auction context
     };
   };
 

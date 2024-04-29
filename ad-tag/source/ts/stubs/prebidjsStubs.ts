@@ -77,6 +77,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     registerSignalSources(): void {
       return;
+    },
+    getAllWinningBids(): prebidjs.event.BidResponse[] {
+      return [];
     }
   };
 };

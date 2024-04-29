@@ -36,7 +36,7 @@ import { IModule, ModuleType } from '../../../types/module';
  *         bidder: 'Seedtag',
  *         domId: 'lazy-loading-adslot-1',
  *         deleteMethod: {
- *           jsAsString: `window.document.querySelectorAll('.seedtag-containerr').forEach(element => element.remove());`
+ *           jsAsString: `window.document.querySelectorAll('.dspx-container').forEach(element => element.remove());`
  *         }
  *       }
  *     }]));
@@ -64,9 +64,12 @@ export class Cleanup implements IModule {
         prepareRequestAdsSteps: []
       };
 
-      config.pipeline.configureSteps.push(
-        this.destroyAllOutOfPageAdFormats(this.cleanupModuleConfig)
-      );
+      if (config.spa?.enabled) {
+        config.pipeline.configureSteps.push(
+          this.destroyAllOutOfPageAdFormats(this.cleanupModuleConfig)
+        );
+      }
+
       config.pipeline.prepareRequestAdsSteps.push(
         this.destroySpecialFormatOfReloadedSlot(this.cleanupModuleConfig)
       );
@@ -74,16 +77,25 @@ export class Cleanup implements IModule {
   }
 
   private cleanUp = (context: AdPipelineContext, configs: Moli.CleanupConfig[]) => {
-    configs?.forEach(config => {
+    configs.forEach(config => {
       if ('cssSelectors' in config.deleteMethod) {
         config.deleteMethod.cssSelectors.forEach((selector: string) => {
           const elements = context.window.document.querySelectorAll(selector);
+          context.logger.debug(
+            'Cleanup Module',
+            `Remove elements with selector ${selector} from dom`,
+            elements
+          );
           elements.forEach((element: Element) => {
-            context.logger.debug(
-              'Cleanup Module',
-              `Remove elements with selector ${selector} from dom`
-            );
-            element.remove();
+            try {
+              element.remove();
+            } catch (e) {
+              context.logger.error(
+                'Cleanup Module',
+                `Error removing element with selector ${selector}`,
+                e
+              );
+            }
           });
         });
       } else {
@@ -97,7 +109,8 @@ export class Cleanup implements IModule {
         } catch (e) {
           context.logger.error(
             'Cleanup Module',
-            `Error executing JS string: '${config.deleteMethod.jsAsString}'`
+            `Error executing JS string: '${config.deleteMethod.jsAsString}'`,
+            e
           );
         }
       }
@@ -105,39 +118,38 @@ export class Cleanup implements IModule {
   };
 
   private destroyAllOutOfPageAdFormats = (
-    cleanupConfig: Moli.modules.CleanupModuleConfig | undefined
+    cleanupConfig: Moli.modules.CleanupModuleConfig
   ): ConfigureStep =>
     mkConfigureStepOncePerRequestAdsCycle(
       'destroy-out-of-page-ad-format',
       (context: AdPipelineContext) => {
-        if (cleanupConfig && cleanupConfig.enabled) {
-          this.cleanUp(context, cleanupConfig?.configs);
-        }
+        this.cleanUp(context, cleanupConfig?.configs);
         return Promise.resolve();
       }
     );
 
-  // TODO update when global auction context is ready
   private hasBidderWonLastAuction = (
-    bidderThatWonLastAuctionOnSlot: string,
-    bidderInConfig: string
+    context: AdPipelineContext,
+    config: Moli.CleanupConfig
   ): boolean => {
+    const prebidWinningBids = context.window.pbjs.getAllWinningBids();
+    const bidderThatWonLastAuctionOnSlot = prebidWinningBids.find(
+      bid => bid.adUnitCode === config.domId
+    )?.bidder;
     // look at the single cleanup config and check if the configured bidder has won the last auction on the configured slot
-    return bidderThatWonLastAuctionOnSlot === bidderInConfig;
+    return bidderThatWonLastAuctionOnSlot === config.bidder;
   };
 
   private destroySpecialFormatOfReloadedSlot = (
     config: Moli.modules.CleanupModuleConfig
   ): PrepareRequestAdsStep =>
     mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
-      if (config.enabled) {
-        const configsOfDomIdsThatNeedToBeCleaned = config.configs
-          .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
-          // TODO update when global auction context is ready / find bidder that won the last auction on the configured slot
-          .filter(config => this.hasBidderWonLastAuction('Seedtag', config.bidder));
+      const configsOfDomIdsThatNeedToBeCleaned = config.configs
+        .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
+        .filter(config => this.hasBidderWonLastAuction(context, config));
 
-        this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
-      }
+      this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+
       return Promise.resolve();
     });
 }
