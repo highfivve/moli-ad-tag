@@ -11,7 +11,7 @@ import { Tag } from './tag';
 
 import headerbidding = Moli.headerbidding;
 import AdSlot = Moli.AdSlot;
-import DfpSlotSize = Moli.DfpSlotSize;
+import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 
@@ -426,7 +426,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     );
   };
 
-  private static isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
+  private static isFixedSize(size: Moli.GoogleAdManagerSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 

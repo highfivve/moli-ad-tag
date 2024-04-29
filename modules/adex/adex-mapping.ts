@@ -1,5 +1,5 @@
 import { Moli } from '@highfivve/ad-tag';
-import DfpKeyValueMap = Moli.DfpKeyValueMap;
+import DfpKeyValueMap = Moli.GoogleAdManagerKeyValueMap;
 import MoliLogger = Moli.MoliLogger;
 
 export type MappingDefinition =
@@ -182,7 +182,7 @@ const sortAndToListObject = (arr: Array<string>): AdexListObject =>
 const sortAndJoin = (arr: Array<string>) => arr.sort().join(',');
 
 const extractStringOrNumber = (
-  keyValueMap: Moli.DfpKeyValueMap,
+  keyValueMap: Moli.GoogleAdManagerKeyValueMap,
   valueType: 'number' | 'string',
   keyToExtract: string
 ) => (valueType === 'number' ? Number(keyValueMap[keyToExtract]) : keyValueMap[keyToExtract]);

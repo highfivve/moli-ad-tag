@@ -301,7 +301,7 @@ export class Zeotap implements IModule {
    * Convert the key/values object from the moli config to an actual map, filtering out entries with falsy values.
    */
   private makeKeyValuesMap = (
-    keyValues: Moli.DfpKeyValueMap | undefined
+    keyValues: Moli.GoogleAdManagerKeyValueMap | undefined
   ): Map<string, string | Array<string>> => {
     return keyValues
       ? new Map(

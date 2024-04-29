@@ -1,5 +1,5 @@
 import { Moli } from '../types/moli';
-import DfpSlotSize = Moli.DfpSlotSize;
+import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
 
 /**
  * Checks if two dfp slot sizes are equal.

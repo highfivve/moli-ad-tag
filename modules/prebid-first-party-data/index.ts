@@ -270,7 +270,10 @@ export class PrebidFirstPartyDataModule implements IModule {
     return Promise.resolve();
   }
 
-  private static extractKeyValueArray(key: string, keyValues: Moli.DfpKeyValueMap): string[] {
+  private static extractKeyValueArray(
+    key: string,
+    keyValues: Moli.GoogleAdManagerKeyValueMap
+  ): string[] {
     const value = keyValues[key];
     if (value) {
       return typeof value === 'string' ? [value] : value;

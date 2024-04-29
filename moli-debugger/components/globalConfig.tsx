@@ -830,7 +830,7 @@ export class GlobalConfig
   private setTheme = (theme: Theme) =>
     this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
 
-  private keyValues = (keyValues: Moli.DfpKeyValueMap): JSX.Element => {
+  private keyValues = (keyValues: Moli.GoogleAdManagerKeyValueMap): JSX.Element => {
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (

@@ -19,7 +19,7 @@ describe('AdReload Validations', () => {
 
   const createAdSlot = (
     adUnitPath: string,
-    sizes: Moli.DfpSlotSize[],
+    sizes: Moli.GoogleAdManagerSlotSize[],
     bids: prebidjs.IBid[],
     isOutstream: boolean = false
   ): Moli.AdSlot => {

@@ -8,7 +8,7 @@ import { SizeConfigService } from './sizeConfigService';
 import { Moli } from '../types/moli';
 
 import SizeConfigEntry = Moli.SizeConfigEntry;
-import DfpSlotSize = Moli.DfpSlotSize;
+import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
 
 // setup sinon-chai
 use(sinonChai);

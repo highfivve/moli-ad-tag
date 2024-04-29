@@ -57,7 +57,7 @@ describe('Zeotap Module', () => {
 
   const initModule = (
     module: Zeotap,
-    keyValues: Moli.DfpKeyValueMap,
+    keyValues: Moli.GoogleAdManagerKeyValueMap,
     configPipeline?: Moli.pipeline.PipelineConfig
   ): Moli.MoliConfig => {
     const moliConfig: Moli.MoliConfig = {

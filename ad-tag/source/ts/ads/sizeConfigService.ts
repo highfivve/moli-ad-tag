@@ -2,7 +2,7 @@ import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 import { isSizeEqual } from '../util/sizes';
 
-import DfpSlotSize = Moli.DfpSlotSize;
+import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
 import SizeConfigEntry = Moli.SizeConfigEntry;
 
 /**
@@ -34,7 +34,7 @@ export class SizeConfigService {
    */
   private readonly isValid: boolean;
 
-  public static isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
+  public static isFixedSize(size: Moli.GoogleAdManagerSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 
@@ -89,7 +89,7 @@ export class SizeConfigService {
    * https://github.com/prebid/Prebid.js/blob/master/src/sizeMapping.js#L129-L131
    *
    * @param givenSizes
-   * @returns {DfpSlotSize[]}
+   * @returns {GoogleAdManagerSlotSize[]}
    */
   public filterSupportedSizes = (givenSizes: DfpSlotSize[]): DfpSlotSize[] => {
     if (!this.isValid) {

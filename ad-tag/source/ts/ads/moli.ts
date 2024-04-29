@@ -23,6 +23,7 @@ import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { LabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
+import { AdUnitPathVariables, MoliConfig, ResolveAdUnitPathOptions } from '../types/moliConfig';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -36,14 +37,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   let state: IStateMachine = {
     state: 'configurable',
     initialize: false,
-    isSinglePageApp: false,
     keyValues: {},
     labels: [],
     modules: [],
     moduleMeta: [],
-    reporting: {
-      reporters: []
-    },
     refreshSlots: [],
     refreshInfiniteSlots: [],
     hooks: {
@@ -132,7 +129,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function setAdUnitPathVariables(variables: Moli.AdUnitPathVariables): void {
+  function setAdUnitPathVariables(variables: AdUnitPathVariables): void {
     switch (state.state) {
       case 'configurable': {
         state.adUnitPathVariables = variables;
@@ -189,10 +186,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function resolveAdUnitPath(
-    adUnitPathParam: string,
-    options?: Moli.ResolveAdUnitPathOptions
-  ): string {
+  function resolveAdUnitPath(adUnitPathParam: string, options?: ResolveAdUnitPathOptions): string {
     const opts = options || {};
     const removeNetworkChildId: boolean = opts.removeNetworkChildId || false;
     const resolvedPath = adUnitPath.resolveAdUnitPath(adUnitPathParam, getAdUnitPathVariables());
@@ -201,15 +195,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   function setLogger(logger: Moli.MoliLogger): void {
     switch (state.state) {
-      case 'configurable': {
-        state.logger = logger;
-        break;
-      }
+      case 'configurable':
       case 'configured': {
-        state.config = {
-          ...state.config,
-          logger: logger
-        };
+        state.logger = logger;
         break;
       }
       default: {
@@ -219,67 +207,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function setSampleRate(sampleRate: number): void {
-    switch (state.state) {
-      case 'configurable': {
-        state.reporting.sampleRate = sampleRate;
-        break;
-      }
-      case 'configured': {
-        state.config = {
-          ...state.config,
-          reporting: {
-            ...state.config.reporting,
-            sampleRate: sampleRate,
-            reporters: state.config.reporting ? state.config.reporting.reporters : []
-          }
-        };
-        break;
-      }
-      default: {
-        getLogger(state.config, window).error(
-          'MoliGlobal',
-          'Trying to setSampleRate. Already configured.',
-          state.config
-        );
-        break;
-      }
-    }
-  }
-
-  function addReporter(reporter: Moli.reporting.Reporter): void {
-    switch (state.state) {
-      case 'configurable': {
-        state.reporting.reporters.push(reporter);
-        break;
-      }
-      case 'configured': {
-        state.config = {
-          ...state.config,
-          reporting: {
-            ...state.config.reporting,
-            // a reporter is added without a sampling size being configured, we set the sampling rate to 0
-            sampleRate: state.config.reporting ? state.config.reporting.sampleRate : 0,
-            reporters: [
-              ...(state.config.reporting ? state.config.reporting.reporters : []),
-              reporter
-            ]
-          }
-        };
-        break;
-      }
-      default: {
-        getLogger(state.config, window).error(
-          'MoliGlobal',
-          'Trying to setSampleRate. Already configured.',
-          state.config
-        );
-        break;
-      }
-    }
-  }
-
-  function beforeRequestAds(callback: (config: Moli.MoliConfig) => void): void {
+  function beforeRequestAds(callback: (config: MoliConfig) => void): void {
     switch (state.state) {
       case 'configurable': {
         state.hooks.beforeRequestAds.push(callback);
@@ -321,7 +249,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function getConfig(): Moli.MoliConfig | null {
+  function getConfig(): MoliConfig | null {
     switch (state.state) {
       case 'configurable': {
         return null;
@@ -360,7 +288,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function configure(config: Moli.MoliConfig): void {
+  function configure(config: MoliConfig): void {
     switch (state.state) {
       case 'configurable': {
         const shouldInitialize = state.initialize;
@@ -372,12 +300,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         // if the site filters out query params.
         if (envOverride?.source === 'queryParam') {
           setEnvironmentOverrideInStorage(envOverride.environment, window.sessionStorage);
-        }
-
-        // if there's a spa config, use the enabled flag. Note that this may collide with
-        // `enableSinglePageApp`, which could override this configuration
-        if (config.spa) {
-          state.isSinglePageApp = config.spa.enabled;
         }
 
         state = {
@@ -399,25 +321,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               ],
               adUnitPathVariables: state.adUnitPathVariables,
               adManagerExcludes: config.targeting ? config.targeting.adManagerExcludes : []
-            },
-            reporting: {
-              ...config.reporting,
-              sampleRate: state.reporting.sampleRate
-                ? state.reporting.sampleRate
-                : config.reporting && config.reporting.sampleRate
-                ? config.reporting.sampleRate
-                : 0,
-              reporters: [
-                ...(config.reporting ? config.reporting.reporters : []),
-                ...state.reporting.reporters
-              ]
-            },
-            logger: state.logger || config.logger
+            }
           },
           modules: modules,
           moduleMeta: modules.map(metaFromModule),
           hooks: state.hooks,
-          isSinglePageApp: state.isSinglePageApp,
           // create a new array as we must not share this mutable data structure
           refreshSlots: [...state.refreshSlots],
           refreshInfiniteSlots: [...state.refreshInfiniteSlots]
@@ -461,40 +369,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function enableSinglePageApp(): void {
-    switch (state.state) {
-      case 'configurable': {
-        getLogger(null, window).warn(
-          'MoliGlobal',
-          'enableSinglePageApp() is deprecated. Use spa config.'
-        );
-        state.isSinglePageApp = true;
-        break;
-      }
-      case 'configured': {
-        getLogger(state.config, window).warn(
-          'MoliGlobal',
-          'enableSinglePageApp() is deprecated. Use spa config.'
-        );
-        state.isSinglePageApp = true;
-        break;
-      }
-      case 'spa-requestAds':
-      case 'spa-finished': {
-        // already in spa mode
-        break;
-      }
-      default: {
-        getLogger(state.config, window).error(
-          'MoliGlobal',
-          'Trying enable single page app. Already configured.',
-          state.config
-        );
-        break;
-      }
-    }
-  }
-
   function requestAds(): Promise<IConfigurable | ISinglePageApp | IFinished | IError> {
     switch (state.state) {
       case 'configurable': {
@@ -504,7 +378,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'configured': {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
-        const { moduleMeta, isSinglePageApp, refreshSlots, refreshInfiniteSlots } = state;
+        const { moduleMeta, refreshSlots, refreshInfiniteSlots } = state;
         let config = state.config;
 
         // if there are infinite adslots available in the refreshInfiniteSlots array, they need to be added to the config
@@ -544,7 +418,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         }
 
         const afterRequestAds = state.hooks.afterRequestAds;
-
+        const isSinglePageApp = config.spa?.enabled === true;
         // handle single page application case
         if (isSinglePageApp) {
           // initialize first and then make the initial requestAds() call
@@ -877,7 +751,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
 
   function refreshBucket(bucket: string): Promise<'queued' | 'refreshed'> {
     // A helper function to retrieve domIds that belong to buckets.
-    function getBucketDomIds(config: Moli.MoliConfig): string[] {
+    function getBucketDomIds(config: MoliConfig): string[] {
       const slotsInBucket = config.slots.filter(slot => slot.behaviour.bucket === bucket);
       return slotsInBucket?.map(slot => slot.domId);
     }
@@ -1007,16 +881,13 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     setTargeting: setTargeting,
     addLabel: addLabel,
     setLogger: setLogger,
-    setSampleRate: setSampleRate,
     setAdUnitPathVariables: setAdUnitPathVariables,
     resolveAdUnitPath: resolveAdUnitPath,
-    addReporter: addReporter,
     beforeRequestAds: beforeRequestAds,
     afterRequestAds: afterRequestAds,
     getConfig: getConfig,
     registerModule: registerModule,
     configure: configure,
-    enableSinglePageApp: enableSinglePageApp,
     requestAds: requestAds,
     refreshAdSlot: refreshAdSlot,
     refreshBucket: refreshBucket,

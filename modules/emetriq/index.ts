@@ -85,7 +85,7 @@ import {
   EmetriqWindow
 } from './types/emetriq';
 import { trackInApp } from './trackInApp';
-import DfpKeyValueMap = Moli.DfpKeyValueMap;
+import DfpKeyValueMap = Moli.GoogleAdManagerKeyValueMap;
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 
 /**

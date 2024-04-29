@@ -11,7 +11,7 @@ import {
   toAdexMapType,
   toAdexStringOrNumberType
 } from './adex-mapping';
-import DfpKeyValueMap = Moli.DfpKeyValueMap;
+import DfpKeyValueMap = Moli.GoogleAdManagerKeyValueMap;
 
 use(sinonChai);
 
