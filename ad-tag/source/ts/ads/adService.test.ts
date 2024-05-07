@@ -77,6 +77,23 @@ describe('AdService', () => {
       .then(() => adService.getAdPipeline().config);
   };
 
+  let domIdCounter: number = 0;
+  const eagerAdSlot = (): Moli.AdSlot => {
+    domIdCounter = domIdCounter + 1;
+    return {
+      domId: `dom-id-${domIdCounter}`,
+      adUnitPath: `/123/ad-unit-${domIdCounter}`,
+      sizes: [],
+      position: 'in-page',
+      sizeConfig: [],
+      behaviour: { loaded: 'eager' }
+    };
+  };
+
+  const manualAdSlot = (): Moli.AdSlot => {
+    return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
+  };
+
   after(() => {
     // bring everything back to normal after tests
     sandbox.restore();
@@ -356,8 +373,6 @@ describe('AdService', () => {
   });
 
   describe('requestAds', () => {
-    let domIdCounter: number = 0;
-
     const requestAds = (
       slots: Moli.AdSlot[],
       refreshSlots: string[] = [],
@@ -377,22 +392,6 @@ describe('AdService', () => {
       name: 'event',
       event: 'noop',
       source: jsDomWindow
-    };
-
-    const eagerAdSlot = (): Moli.AdSlot => {
-      domIdCounter = domIdCounter + 1;
-      return {
-        domId: `dom-id-${domIdCounter}`,
-        adUnitPath: `/123/ad-unit-${domIdCounter}`,
-        sizes: [],
-        position: 'in-page',
-        sizeConfig: [],
-        behaviour: { loaded: 'eager' }
-      };
-    };
-
-    const manualAdSlot = (): Moli.AdSlot => {
-      return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
     };
 
     const addToDom = (adSlots: Moli.AdSlot[]): void => {
@@ -526,6 +525,127 @@ describe('AdService', () => {
           Sinon.match.number
         );
       });
+    });
+  });
+
+  describe('refreshAdSlots', () => {
+    const backfillSlot: Moli.AdSlot = { ...eagerAdSlot(), behaviour: { loaded: 'backfill' } };
+    const infiniteSlot: Moli.AdSlot = {
+      ...eagerAdSlot(),
+      behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
+    };
+
+    it('should do nothing if domIds is empty', async () => {
+      const adService = makeAdService();
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([], emptyConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should call adPipeline.run with an empty array if no slots are available', async () => {
+      const adService = makeAdService();
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots(['content_1'], emptyConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly([], emptyConfig, Sinon.match.number);
+    });
+
+    it('should call adPipeline.run with an empty array if slot is eager', async () => {
+      const adService = makeAdService();
+      const slot = eagerAdSlot();
+      const configWithEagerSlot: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithEagerSlot);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly([], configWithEagerSlot, Sinon.match.number);
+    });
+
+    it('should call adPipeline.run with an empty array if slot is backfill', async () => {
+      const adService = makeAdService();
+      const configWithEagerSlot: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [backfillSlot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([backfillSlot.domId], configWithEagerSlot);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly([], configWithEagerSlot, Sinon.match.number);
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        Sinon.match.number
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is infinite', async () => {
+      const adService = makeAdService();
+      const configWithManualSlot: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [infiniteSlot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([infiniteSlot.domId], configWithManualSlot);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [infiniteSlot],
+        configWithManualSlot,
+        Sinon.match.number
+      );
+    });
+
+    it('should call adPipeline.run with the slot if backfill is provided as loaded option', async () => {
+      const adService = makeAdService();
+      const configWithManualSlot: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [backfillSlot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([backfillSlot.domId], configWithManualSlot, {
+        loaded: 'backfill'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [backfillSlot],
+        configWithManualSlot,
+        Sinon.match.number
+      );
+    });
+
+    it('should call adPipeline.run with the backfill and infinite slot if backfill is provided as loaded option', async () => {
+      const adService = makeAdService();
+      const configWithManualSlot: Moli.MoliConfig = {
+        ...emptyConfig,
+        slots: [backfillSlot, infiniteSlot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots(
+        [backfillSlot.domId, infiniteSlot.domId],
+        configWithManualSlot,
+        {
+          loaded: 'backfill'
+        }
+      );
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [backfillSlot, infiniteSlot],
+        configWithManualSlot,
+        Sinon.match.number
+      );
     });
   });
 

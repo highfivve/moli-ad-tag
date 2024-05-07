@@ -228,9 +228,33 @@ export namespace Moli {
      * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
+     * ## Usage
+     *
+     * Refreshing a single ad slot that has loading behaviour `manual`.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1']);
+     * ```
+     *
+     * Refreshing multiple ad slots that have loading behaviour `manual`.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1', 'content_2']);
+     * ```
+     *
+     * Refreshing a single ad slot that has loading behaviour `backfill` with custom options.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1'], { loaded: 'backfill' });
+     * ```
+     *
      * @param domId - identifies the ad slot or ad slots
+     * @param options - optional options to override the default refreshing behaviour
      */
-    refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
+    refreshAdSlot(
+      domId: string | string[],
+      options?: RefreshAdSlotsOptions
+    ): Promise<'queued' | 'refreshed'>;
 
     /**
      * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
@@ -318,6 +342,30 @@ export namespace Moli {
      * @return the asset loader service that is used to fetch additional assets / resources
      */
     getAssetLoaderService(): IAssetLoaderService;
+  }
+
+  /**
+   * ## Refresh Ad Slot Options
+   *
+   * You can override the default refreshing behaviour with this object. The ad tag has some default behaviours that
+   * try to prevent fraudulent or unwanted behaviour. This object allows you to override those behaviours.
+   *
+   * 1. Refreshing eager slots
+   * 2. Refreshing backfill slots
+   *
+   */
+  export interface RefreshAdSlotsOptions {
+    /**
+     * By default, only ad slots with loading behaviour `manual` are refreshed. You can override this behaviour by
+     * specifying the loading behaviour here. This serves two uses cases
+     *
+     * 1. Refreshing `eager` slots. This is useful if you have a eager slot, but it may be refreshed later by a user actions,
+     *    e.g. a filter selection
+     * 2. Refreshing `backfill` slots. Those slots are never refreshed by default, but you can force a refresh with this option.
+     *
+     * @default `'manual'`
+     */
+    readonly loaded?: Exclude<behaviour.ISlotLoading['loaded'], 'infinite'>;
   }
 
   /**
@@ -1320,7 +1368,7 @@ export namespace Moli {
      * only covers the first use case.
      */
     export interface ISlotLoading {
-      readonly loaded: 'eager' | 'manual' | 'infinite';
+      readonly loaded: 'eager' | 'manual' | 'infinite' | 'backfill';
 
       /**
        * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
@@ -1388,9 +1436,18 @@ export namespace Moli {
     }
 
     /**
+     * This loading behaviour describes slots that are loaded through a backfill integration.
+     * A backfill slot is never loaded by default and needs to be refreshed manually along with the backfill option set.
+     * This is neccessary to differentiate between slots that are loaded manually and slots that are loaded through a backfill integration.
+     */
+    export interface Backfill extends ISlotLoading {
+      readonly loaded: 'backfill';
+    }
+
+    /**
      * all available slot loading behaviours.
      */
-    export type SlotLoading = Eager | Manual | Infinite;
+    export type SlotLoading = Eager | Manual | Infinite | Backfill;
 
     /** all available triggers for loading behaviours */
     export type Trigger = EventTrigger;
