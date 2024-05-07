@@ -310,21 +310,20 @@ export class AdService {
     }
   };
 
-  public refreshAdSlots(domIds: string[], config: Moli.MoliConfig): Promise<void> {
+  public refreshAdSlots(
+    domIds: string[],
+    config: Moli.MoliConfig,
+    options?: Moli.RefreshAdSlotsOptions
+  ): Promise<void> {
     if (domIds.length === 0) {
       return Promise.resolve();
     }
-    const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableManualSlots = manualSlots.filter(slot =>
-      domIds.some(domId => domId === slot.domId)
-    );
 
-    const infiniteSlots = config.slots.filter(this.isInfiniteSlot);
-    const availableInfiniteSlots = infiniteSlots.filter(slot =>
-      domIds.some(domId => domId === slot.domId)
-    );
+    const { loaded } = options || { loaded: 'manual' };
 
-    const availableSlots = [...availableManualSlots, ...availableInfiniteSlots];
+    const availableSlots = config.slots
+      .filter(slot => slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+      .filter(slot => domIds.some(domId => domId === slot.domId));
 
     if (domIds.length !== availableSlots.length) {
       const slotsInConfigOnly = availableSlots.filter(slot =>

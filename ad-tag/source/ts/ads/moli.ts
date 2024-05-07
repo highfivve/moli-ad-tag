@@ -12,6 +12,7 @@ import IFinished = Moli.state.IFinished;
 import IError = Moli.state.IError;
 import IConfigurable = Moli.state.IConfigurable;
 import ISinglePageApp = Moli.state.ISinglePageApp;
+import RefreshAdSlotsOptions = Moli.RefreshAdSlotsOptions;
 import { IModule, metaFromModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
 import {
@@ -764,7 +765,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
+  function refreshAdSlot(
+    domId: string | string[],
+    options?: RefreshAdSlotsOptions
+  ): Promise<'queued' | 'refreshed'> {
     const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
       case 'configurable': {
@@ -786,7 +790,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         const validateLocation = state.config.spa?.validateLocation ?? 'href';
         if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
           // user hasn't navigated yet, so we directly refresh the slot
-          return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
+          return adService.refreshAdSlots(domIds, state.config, options).then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
           state.refreshSlots.push(...domIds);
@@ -796,7 +800,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        return adService.refreshAdSlots(domIds, state.config).then(() => 'refreshed');
+        return adService.refreshAdSlots(domIds, state.config, options).then(() => 'refreshed');
       }
       default: {
         getLogger(state.config, window).error(
