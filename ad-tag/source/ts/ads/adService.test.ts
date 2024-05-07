@@ -94,6 +94,16 @@ describe('AdService', () => {
     return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
   };
 
+  const backfillAdSlot = (): Moli.AdSlot => ({
+    ...eagerAdSlot(),
+    behaviour: { loaded: 'backfill' }
+  });
+
+  const infiniteSlot = (): Moli.AdSlot => ({
+    ...eagerAdSlot(),
+    behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
+  });
+
   after(() => {
     // bring everything back to normal after tests
     sandbox.restore();
@@ -419,10 +429,36 @@ describe('AdService', () => {
       return expect(requestAds(slots, [], [])).to.eventually.be.deep.equals(slots);
     });
 
-    it('should return all eagerly loaded slots that are available in the DOM', () => {
-      const slots = [eagerAdSlot(), eagerAdSlot()];
+    it('should return all eagerly loaded slots that are available in the DOM', async () => {
+      const eagerSlots = [eagerAdSlot(), eagerAdSlot()];
+      const slots = [...eagerSlots, backfillAdSlot(), manualAdSlot()];
       addToDom(slots);
-      return expect(requestAds(slots, [], [])).to.eventually.be.deep.equals(slots);
+      const result = await requestAds(slots, [], []);
+      expect(result).to.be.deep.equals(eagerSlots);
+    });
+
+    it('should return all manual slots if present in the refreshSlots array', async () => {
+      const slot1 = manualAdSlot();
+      const slot2 = manualAdSlot();
+      const slots = [slot1, slot2];
+      addToDom(slots);
+      const result = await requestAds(slots, [slot1.domId], []);
+      expect(result).to.be.deep.equals([slot1]);
+    });
+
+    it('should return all infinite slots if present in the refreshSlots array', async () => {
+      const slot1 = infiniteSlot();
+      const slots = [slot1];
+      addToDom(slots);
+      const adDiv = dom.window.document.createElement('div');
+      adDiv.id = 'another-id';
+      dom.window.document.body.appendChild(adDiv);
+      const result = await requestAds(
+        slots,
+        [],
+        [{ artificialDomId: slot1.domId, idOfConfiguredSlot: 'another-id' }]
+      );
+      expect(result).to.be.deep.equals([slot1]);
     });
 
     describe('slot buckets', () => {

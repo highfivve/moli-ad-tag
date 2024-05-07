@@ -271,6 +271,9 @@ export class AdService {
             )
               ? slot
               : null;
+          } else if (this.isBackfillSlot(slot)) {
+            // backfill slots must never be eagerly loaded
+            return null;
           } else {
             return slot;
           }
@@ -385,6 +388,12 @@ export class AdService {
     slot: Moli.AdSlot
   ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Infinite } => {
     return slot.behaviour.loaded === 'infinite';
+  };
+
+  private isBackfillSlot = (
+    slot: Moli.AdSlot
+  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Backfill } => {
+    return slot.behaviour.loaded === 'backfill';
   };
 
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
