@@ -228,6 +228,26 @@ export namespace Moli {
      * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
+     * ## Usage
+     *
+     * Refreshing a single ad slot that has loading behaviour `manual`.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1']);
+     * ```
+     *
+     * Refreshing multiple ad slots that have loading behaviour `manual`.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1', 'content_2']);
+     * ```
+     *
+     * Refreshing a single ad slot that has loading behaviour `backfill` with custom options.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1'], { loaded: 'backfill' });
+     * ```
+     *
      * @param domId - identifies the ad slot or ad slots
      * @param options - optional options to override the default refreshing behaviour
      */
