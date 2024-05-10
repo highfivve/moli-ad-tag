@@ -167,9 +167,33 @@ export namespace Moli {
      * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
+     * ## Usage
+     *
+     * Refreshing a single ad slot that has loading behaviour `manual`.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1']);
+     * ```
+     *
+     * Refreshing multiple ad slots that have loading behaviour `manual`.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1', 'content_2']);
+     * ```
+     *
+     * Refreshing a single ad slot that has loading behaviour `backfill` with custom options.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1'], { loaded: 'backfill' });
+     * ```
+     *
      * @param domId - identifies the ad slot or ad slots
+     * @param options - optional options to override the default refreshing behaviour
      */
-    refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'>;
+    refreshAdSlot(
+      domId: string | string[],
+      options?: RefreshAdSlotsOptions
+    ): Promise<'queued' | 'refreshed'>;
 
     /**
      * Copy the configuration of a slot with an `infinite` loading behaviour and add it to a slot with the given domId.
@@ -257,6 +281,30 @@ export namespace Moli {
      * @return the asset loader service that is used to fetch additional assets / resources
      */
     getAssetLoaderService(): IAssetLoaderService;
+  }
+
+  /**
+   * ## Refresh Ad Slot Options
+   *
+   * You can override the default refreshing behaviour with this object. The ad tag has some default behaviours that
+   * try to prevent fraudulent or unwanted behaviour. This object allows you to override those behaviours.
+   *
+   * 1. Refreshing eager slots
+   * 2. Refreshing backfill slots
+   *
+   */
+  export interface RefreshAdSlotsOptions {
+    /**
+     * By default, only ad slots with loading behaviour `manual` are refreshed. You can override this behaviour by
+     * specifying the loading behaviour here. This serves two uses cases
+     *
+     * 1. Refreshing `eager` slots. This is useful if you have a eager slot, but it may be refreshed later by a user actions,
+     *    e.g. a filter selection
+     * 2. Refreshing `backfill` slots. Those slots are never refreshed by default, but you can force a refresh with this option.
+     *
+     * @default `'manual'`
+     */
+    readonly loaded?: Exclude<behaviour.ISlotLoading['loaded'], 'infinite'>;
   }
 
   /**
@@ -915,6 +963,64 @@ export namespace Moli {
        * If `false` as key-value can be applied to only select the test cohorts.
        */
       readonly main: boolean;
+    }
+  }
+
+  /**
+   * == Cleanup Module ==
+   *
+   * Cleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.
+   *
+   * The configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted
+   * or JS as a string that will be evaluated by the module in order to remove these elements.
+   *
+   * @see cleanup module
+   */
+
+  export interface CSSDeletionMethod {
+    /**
+     * The CSS selectors of the html elements in the DOM that should be removed.
+     */
+    readonly cssSelectors: string[];
+  }
+
+  export interface JSDeletionMethod {
+    /**
+     * JavaScript code as a string that will be executed as given
+     * (and most likely deletes the html elements of the special format).
+     */
+    readonly jsAsString: string;
+  }
+
+  export interface CleanupConfig {
+    /**
+     * The bidder that offers the special format.
+     */
+    readonly bidder: string;
+    /**
+     * The domId of the slot on which the special format runs.
+     */
+    readonly domId: string;
+    /**
+     * The method how the special format should be cleaned up.
+     */
+    readonly deleteMethod: CSSDeletionMethod | JSDeletionMethod;
+  }
+
+  export namespace modules {
+    export interface CleanupModuleConfig {
+      /**
+       * Information about whether the cleanup module is enabled or not.
+       */
+      readonly enabled: boolean;
+      /**
+       * A list of configurations.
+       */
+      readonly configs: CleanupConfig[];
+    }
+
+    export interface ModulesConfig {
+      readonly cleanup?: CleanupModuleConfig;
     }
   }
 

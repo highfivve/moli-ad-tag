@@ -69,7 +69,7 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
       // We use an unrealistic value here to easily check the value in tests.
       return cpm * 2;
     },
-    getHighestCpmBids(adUnitCode?: string): prebidjs.event.BidWonEvent[] {
+    getHighestCpmBids(adUnitCode?: string): prebidjs.event.BidResponse[] {
       return [];
     },
     renderAd(iframeDocument: Document, adId: string): void {
@@ -77,6 +77,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     registerSignalSources(): void {
       return;
+    },
+    getAllWinningBids(): prebidjs.event.BidResponse[] {
+      return [];
     }
   };
 };

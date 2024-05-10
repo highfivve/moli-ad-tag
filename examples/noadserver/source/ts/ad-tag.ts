@@ -34,7 +34,7 @@ const moli = initAdTag(window);
 
 declare const window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
 
-window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidWonEvent) => {
+window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidResponse) => {
   console.log('bidWon', bidWon);
 });
 
