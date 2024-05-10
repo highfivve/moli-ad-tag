@@ -1,4 +1,5 @@
 import { Moli } from '../types/moli';
+import { SinglePageAppConfig } from '../types/moliConfig';
 
 /**
  * Check if the refresh of ad slots is allowed based on the validateLocation setting.
@@ -8,7 +9,7 @@ import { Moli } from '../types/moli';
  * @param currentLocation passed in via `window.location`
  */
 export const allowRefreshAdSlot = (
-  validateLocation: Moli.SinglePageAppConfig['validateLocation'],
+  validateLocation: SinglePageAppConfig['validateLocation'],
   stateHref: string,
   currentLocation: Location
 ): boolean => {
@@ -35,7 +36,7 @@ export const allowRefreshAdSlot = (
  * @param currentLocation passed in via `window.location`
  */
 export const allowRequestAds = (
-  validateLocation: Moli.SinglePageAppConfig['validateLocation'],
+  validateLocation: SinglePageAppConfig['validateLocation'],
   stateHref: string,
   currentLocation: Location
 ): boolean => {

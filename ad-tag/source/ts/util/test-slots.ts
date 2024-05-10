@@ -8,6 +8,7 @@ import {
   removeBrowserStorageValue,
   setBrowserStorageValue
 } from './localStorage';
+import { AdSlot } from '../types/moliConfig';
 
 /**
  * When starting in test environment, all ads are replaced by fake "test slots". These contain debugging functionality.
@@ -62,7 +63,7 @@ export const createTestSlots = (
 /**
  * Removes the given slot's saved sizes from local storage.
  */
-export const removeTestSlotSizeFromLocalStorage = (slot: Moli.AdSlot) =>
+export const removeTestSlotSizeFromLocalStorage = (slot: AdSlot) =>
   removeBrowserStorageValue(BrowserStorageKeys.testSlotSize(slot.domId));
 
 /**
@@ -221,9 +222,9 @@ const getSizesForSlot = (slot: Moli.SlotDefinition): Array<Size> => {
 
 /**
  * The last manually activated size, which is saved in local storage, is preferred.
- * Otherwise a random one is picked.
+ * Otherwise, a random one is picked.
  */
-const pickTestSlotSize = (slot: Moli.AdSlot, sizes: Array<Size>): TestSlotSize => {
+const pickTestSlotSize = (slot: AdSlot, sizes: Array<Size>): TestSlotSize => {
   const sizeFromLocalStorage = getSizeFromLocalStorage(slot);
 
   if (
@@ -239,10 +240,10 @@ const pickTestSlotSize = (slot: Moli.AdSlot, sizes: Array<Size>): TestSlotSize =
   }
 };
 
-const saveSizeInLocalStorage = (slot: Moli.AdSlot, size: TestSlotSize) =>
+const saveSizeInLocalStorage = (slot: AdSlot, size: TestSlotSize) =>
   setBrowserStorageValue(BrowserStorageKeys.testSlotSize(slot.domId), JSON.stringify(size));
 
-const getSizeFromLocalStorage = (slot: Moli.AdSlot): TestSlotSize | undefined => {
+const getSizeFromLocalStorage = (slot: AdSlot): TestSlotSize | undefined => {
   const localStorageValue = getBrowserStorageValue(BrowserStorageKeys.testSlotSize(slot.domId));
 
   if (!localStorageValue) {

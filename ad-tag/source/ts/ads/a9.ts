@@ -20,12 +20,11 @@ import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
+import { AdSlot, headerbidding, schain } from '../types/moliConfig';
 
 const isA9SlotDefinition = (
   slotDefinition: Moli.SlotDefinition
-): slotDefinition is Moli.SlotDefinition<
-  Moli.AdSlot & { a9: Moli.headerbidding.A9AdSlotConfig }
-> => {
+): slotDefinition is Moli.SlotDefinition<AdSlot & { a9: headerbidding.A9AdSlotConfig }> => {
   return !!slotDefinition.moliSlot.a9;
 };
 
@@ -54,7 +53,7 @@ const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
  * @returns {Promise<void>}
  */
 export const a9Init = (
-  config: Moli.headerbidding.A9Config,
+  config: headerbidding.A9Config,
   assetService: IAssetLoaderService
 ): InitStep =>
   mkInitStep(
@@ -105,10 +104,10 @@ export const a9Init = (
   );
 
 export const a9Configure = (
-  config: Moli.headerbidding.A9Config,
-  schainConfig: Moli.schain.SupplyChainConfig
+  config: headerbidding.A9Config,
+  schainConfig: schain.SupplyChainConfig
 ): ConfigureStep =>
-  mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+  mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
     return new Promise<void>(resolve => {
       context.window.apstag.init({
         pubID: config.pubID,
@@ -128,10 +127,10 @@ export const a9Configure = (
     });
   });
 
-export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
+export const a9PublisherAudiences = (config: headerbidding.A9Config): ConfigureStep =>
   mkConfigureStepOnce(
     'a9-publisher-audiences',
-    (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
+    (context: AdPipelineContext, _slots: AdSlot[]) =>
       new Promise<void>(resolve => {
         const publisherAudience = config.publisherAudience;
         if (publisherAudience && publisherAudience.enabled) {
@@ -192,7 +191,7 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
 
 const resolveAdUnitPath = (
   path: string,
-  slotDepth: Moli.headerbidding.A9SlotNamePathDepth | undefined,
+  slotDepth: headerbidding.A9SlotNamePathDepth | undefined,
   variables: AdUnitPathVariables
 ): string => {
   const adUnitPathWithoutChildId = adUnitPath.removeChildId(path);
@@ -202,7 +201,7 @@ const resolveAdUnitPath = (
   return adUnitPath.resolveAdUnitPath(truncated, variables);
 };
 
-export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsStep =>
+export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =>
   mkRequestBidsStep(
     'a9-fetch-bids',
     (context: AdPipelineContext, slotDefinitions: Moli.SlotDefinition[]) =>
@@ -282,11 +281,9 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
         if (slots.length === 0) {
           resolve();
         } else {
-          context.reportingService.markA9fetchBids(context.requestId);
           context.window.apstag.fetchBids(
             { slots, ...(context.bucket?.timeout && { bidTimeout: context.bucket.timeout }) },
             (_bids: Object[]) => {
-              context.reportingService.measureAndReportA9BidsBack(context.requestId);
               context.window.apstag.setDisplayBids();
               resolve();
             }

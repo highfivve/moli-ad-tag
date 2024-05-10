@@ -1,4 +1,5 @@
 import { Moli } from '../types/moli';
+import { AdSlot, MoliConfig } from '../types/moliConfig';
 
 export const newNoopLogger = (withErrorLogs?: boolean): Moli.MoliLogger => {
   return {
@@ -21,10 +22,9 @@ export const newNoopLogger = (withErrorLogs?: boolean): Moli.MoliLogger => {
 
 export const noopLogger: Moli.MoliLogger = newNoopLogger();
 
-export const newEmptyConfig = (slots: Moli.AdSlot[] = []): Moli.MoliConfig => {
+export const newEmptyConfig = (slots: AdSlot[] = []): MoliConfig => {
   return {
     slots: slots,
-    logger: newNoopLogger(),
     schain: {
       supplyChainStartNode: {
         asi: 'highfivve.com',
@@ -35,4 +35,4 @@ export const newEmptyConfig = (slots: Moli.AdSlot[] = []): Moli.MoliConfig => {
   };
 };
 
-export const emptyConfig: Moli.MoliConfig = newEmptyConfig();
+export const emptyConfig: MoliConfig = newEmptyConfig();

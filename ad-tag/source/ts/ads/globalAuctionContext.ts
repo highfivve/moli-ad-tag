@@ -1,8 +1,8 @@
-import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
 import { BiddersDisabling } from './auctions/biddersDisabling';
 import { AdRequestThrottling } from './auctions/adRequestThrottling';
+import { auction } from '../types/moliConfig';
 
 /**
  * ## Global Auction Context
@@ -24,7 +24,7 @@ export class GlobalAuctionContext {
 
   constructor(
     private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
-    private readonly config: Moli.auction.GlobalAuctionContextConfig = {}
+    private readonly config: auction.GlobalAuctionContextConfig = {}
   ) {
     if (config.biddersDisabling?.enabled) {
       this.biddersDisabling = new BiddersDisabling(config.biddersDisabling, this.window);

@@ -440,7 +440,7 @@ export namespace behaviour {
    * only covers the first use case.
    */
   export interface ISlotLoading {
-    readonly loaded: 'eager' | 'manual' | 'infinite';
+    readonly loaded: 'eager' | 'manual' | 'infinite' | 'backfill';
 
     /**
      * Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad
@@ -508,9 +508,18 @@ export namespace behaviour {
   }
 
   /**
+   * This loading behaviour describes slots that are loaded through a backfill integration.
+   * A backfill slot is never loaded by default and needs to be refreshed manually along with the backfill option set.
+   * This is neccessary to differentiate between slots that are loaded manually and slots that are loaded through a backfill integration.
+   */
+  export interface Backfill extends ISlotLoading {
+    readonly loaded: 'backfill';
+  }
+
+  /**
    * all available slot loading behaviours.
    */
-  export type SlotLoading = Eager | Manual | Infinite;
+  export type SlotLoading = Eager | Manual | Infinite | Backfill;
 
   /** all available triggers for loading behaviours */
   export type Trigger = EventTrigger;

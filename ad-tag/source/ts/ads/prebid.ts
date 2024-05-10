@@ -22,6 +22,7 @@ import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 import { createTestSlots } from '../util/test-slots';
 import IPrebidJs = prebidjs.IPrebidJs;
+import { AdServer, AdSlot, headerbidding, schain, Targeting } from '../types/moliConfig';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -46,7 +47,7 @@ const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
 const isPrebidSlotDefinition = (
   slotDefinition: Moli.SlotDefinition
 ): slotDefinition is Moli.SlotDefinition<
-  Moli.AdSlot & { prebid: Moli.headerbidding.PrebidAdSlotConfigProvider }
+  AdSlot & { prebid: headerbidding.PrebidAdSlotConfigProvider }
 > => {
   return !!slotDefinition.moliSlot.prebid;
 };
@@ -92,7 +93,7 @@ const isAdUnitDefined = (
  */
 const createdAdUnits = (
   context: AdPipelineContext,
-  prebidConfig: Moli.headerbidding.PrebidConfig,
+  prebidConfig: headerbidding.PrebidConfig,
   slots: Moli.SlotDefinition[]
 ): prebidjs.IAdUnit[] => {
   const labels = context.labelConfigService.getSupportedLabels();
@@ -126,16 +127,7 @@ const createdAdUnits = (
         floors
       );
 
-      return extractPrebidAdSlotConfigs(
-        {
-          keyValues: keyValues,
-          floorPrice: floorPrice,
-          priceRule: priceRule,
-          labels: labels,
-          isMobile: deviceLabel === 'mobile'
-        },
-        moliSlot.prebid
-      )
+      return extractPrebidAdSlotConfigs(moliSlot.prebid)
         .map(prebidAdSlotConfig => {
           const mediaTypeBanner = prebidAdSlotConfig.adUnit.mediaTypes.banner;
           const mediaTypeVideo = prebidAdSlotConfig.adUnit.mediaTypes.video;
@@ -252,7 +244,7 @@ export const prebidInit = (): InitStep =>
     Promise.race([prebidInitAndReady(context.window), prebidTimeout(context)])
   );
 
-export const prebidRemoveAdUnits = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep =>
+export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): ConfigureStep =>
   mkConfigureStep(
     'prebid-remove-adunits',
     (context: AdPipelineContext) =>
@@ -272,8 +264,8 @@ export const prebidRemoveAdUnits = (prebidConfig: Moli.headerbidding.PrebidConfi
   );
 
 export const prebidConfigure = (
-  prebidConfig: Moli.headerbidding.PrebidConfig,
-  schainConfig: Moli.schain.SupplyChainConfig
+  prebidConfig: headerbidding.PrebidConfig,
+  schainConfig: schain.SupplyChainConfig
 ): ConfigureStep => {
   let result: Promise<void>;
 
@@ -288,69 +280,59 @@ export const prebidConfigure = (
     }
   });
 
-  return mkConfigureStep(
-    'prebid-configure',
-    (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
-      if (!result) {
-        result = new Promise<void>(resolve => {
-          if (prebidConfig.bidderSettings) {
-            context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
-          }
-          context.window.pbjs.setConfig({
-            ...prebidConfig.config,
-            // global schain configuration
-            ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
-            // for module priceFloors
-            ...{ floors: prebidConfig.config.floors || {} }
-          });
-          prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
-            const nodes = [schainConfig.supplyChainStartNode];
-            if (appendNode) {
-              nodes.push(node);
-            }
-            context.window.pbjs.setBidderConfig(
-              { bidders: [bidder], config: { schain: mkSupplyChainConfig(nodes) } },
-              true
-            );
-          });
-
-          // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
-          // don't add this to the init step.
-          if (
-            context.window.pbjs.registerSignalSources &&
-            typeof context.window.pbjs.registerSignalSources === 'function'
-          ) {
-            context.window.pbjs.registerSignalSources();
-          }
-
-          resolve();
+  return mkConfigureStep('prebid-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
+    if (!result) {
+      result = new Promise<void>(resolve => {
+        if (prebidConfig.bidderSettings) {
+          context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
+        }
+        context.window.pbjs.setConfig({
+          ...prebidConfig.config,
+          // global schain configuration
+          ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
+          // for module priceFloors
+          ...{ floors: prebidConfig.config.floors || {} }
         });
-      }
-      return result;
+        prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
+          const nodes = [schainConfig.supplyChainStartNode];
+          if (appendNode) {
+            nodes.push(node);
+          }
+          context.window.pbjs.setBidderConfig(
+            { bidders: [bidder], config: { schain: mkSupplyChainConfig(nodes) } },
+            true
+          );
+        });
+
+        // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
+        // don't add this to the init step.
+        if (
+          context.window.pbjs.registerSignalSources &&
+          typeof context.window.pbjs.registerSignalSources === 'function'
+        ) {
+          context.window.pbjs.registerSignalSources();
+        }
+
+        resolve();
+      });
     }
-  );
+    return result;
+  });
 };
 
 /**
  * Evaluates the prebid ad slot configuration provider and returns the result in an array.
  *
- * @param context
  * @param provider
  */
 const extractPrebidAdSlotConfigs = (
-  context: Moli.headerbidding.PrebidAdSlotContext,
-  provider: Moli.headerbidding.PrebidAdSlotConfigProvider
-): Moli.headerbidding.PrebidAdSlotConfig[] => {
-  if (typeof provider === 'function') {
-    const oneOrMoreConfigs = provider(context);
-    return Array.isArray(oneOrMoreConfigs) ? oneOrMoreConfigs : [oneOrMoreConfigs];
-  } else {
-    return Array.isArray(provider) ? provider : [provider];
-  }
+  provider: headerbidding.PrebidAdSlotConfigProvider
+): headerbidding.PrebidAdSlotConfig[] => {
+  return Array.isArray(provider) ? provider : [provider];
 };
 
 export const prebidPrepareRequestAds = (
-  prebidConfig: Moli.headerbidding.PrebidConfig
+  prebidConfig: headerbidding.PrebidConfig
 ): PrepareRequestAdsStep =>
   mkPrepareRequestAdsStep(
     'prebid-prepare-adunits',
@@ -376,9 +358,9 @@ export const prebidPrepareRequestAds = (
   );
 
 export const prebidRequestBids = (
-  prebidConfig: Moli.headerbidding.PrebidConfig,
-  adServer: Moli.AdServer,
-  targeting: Moli.Targeting | undefined
+  prebidConfig: headerbidding.PrebidConfig,
+  adServer: AdServer,
+  targeting: Targeting | undefined
 ): RequestBidsStep =>
   mkRequestBidsStep(
     'prebid-request-bids',
@@ -514,7 +496,7 @@ export const prebidRequestBids = (
   );
 
 export const prebidDefineSlots =
-  (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
+  (): DefineSlotsStep => (context: AdPipelineContext, slots: AdSlot[]) => {
     const slotDefinitions = slots.map(moliSlot => {
       const sizeConfigService = new SizeConfigService(
         moliSlot.sizeConfig,

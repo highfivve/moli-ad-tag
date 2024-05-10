@@ -1,6 +1,7 @@
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { Moli } from '../../types/moli';
+import { auction } from '../../types/moliConfig';
 
 /**
  * This interface represents the state of a bidder for a specific position.
@@ -36,7 +37,7 @@ export class BiddersDisabling {
   private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map();
   private logger?: Moli.MoliLogger;
   constructor(
-    private readonly config: Moli.auction.BidderDisablingConfig,
+    private readonly config: auction.BidderDisablingConfig,
     private readonly window: Window
   ) {
     this.logger?.info(`Bidders disabling feature is ${config.enabled ? 'enabled' : 'disabled'}`);

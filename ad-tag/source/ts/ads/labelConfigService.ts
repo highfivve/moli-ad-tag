@@ -1,8 +1,5 @@
-import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
-
-import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
-import Device = Moli.Device;
+import { Device, LabelSizeConfigEntry } from '../types/moliConfig';
 
 /**
  * Conditionally select the ad unit based on labels.

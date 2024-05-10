@@ -1,6 +1,5 @@
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
-import { Moli } from '../types/moli';
-import Device = Moli.Device;
+import { Device } from '../types/moliConfig';
 
 /**
  * The new MCM that allows managing child publishers, the ad unit path must

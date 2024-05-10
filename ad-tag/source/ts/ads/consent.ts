@@ -2,6 +2,7 @@ import { Moli } from '../types/moli';
 import { tcfapi } from '../types/tcfapi';
 import EventStatus = tcfapi.status.EventStatus;
 import CmpStatus = tcfapi.status.CmpStatus;
+import { consent } from '../types/moliConfig';
 
 const allPurposes: tcfapi.responses.TCPurpose[] = [
   tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
@@ -48,7 +49,7 @@ export const missingPurposeConsent = (tcData: tcfapi.responses.TCData): boolean 
  * @param env test environment requires no CMP
  */
 export const consentReady = (
-  consentConfig: Moli.consent.ConsentConfig,
+  consentConfig: consent.ConsentConfig,
   window: Window & tcfapi.TCFApiWindow,
   log: Moli.MoliLogger,
   env: Moli.Environment | undefined

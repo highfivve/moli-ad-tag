@@ -1,5 +1,5 @@
 import { getLogger } from './logging';
-import { Moli } from '../types/moli';
+import { MoliConfig } from '../types/moliConfig';
 
 /**
  * Add a slot with a new domId and the configuration of the 'infinite' loading ad slot to the moli config
@@ -9,11 +9,11 @@ import { Moli } from '../types/moli';
  * @param window
  */
 export const addNewInfiniteSlotToConfig = (
-  config: Moli.MoliConfig,
+  config: MoliConfig,
   idOfConfiguredSlot: string,
   artificialIdOfNewSlot: string,
   window: Window
-): Moli.MoliConfig => {
+): MoliConfig => {
   const configuredInfiniteAdSlot = config.slots.find(
     configSlot => configSlot.domId === idOfConfiguredSlot
   );

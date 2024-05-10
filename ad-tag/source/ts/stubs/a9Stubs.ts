@@ -1,7 +1,7 @@
-import { Moli } from '../types/moli';
 import { apstag } from '../types/apstag';
+import { headerbidding } from '../types/moliConfig';
 
-export const a9ConfigStub: Moli.headerbidding.A9Config = {
+export const a9ConfigStub: headerbidding.A9Config = {
   pubID: '123',
   timeout: 666,
   cmpTimeout: 246,

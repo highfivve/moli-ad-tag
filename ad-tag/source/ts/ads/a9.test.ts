@@ -7,7 +7,6 @@ import { Moli } from '../types/moli';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
@@ -29,6 +28,7 @@ import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { AdSlot, headerbidding, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -46,7 +46,7 @@ describe('a9', () => {
     tcfapi.TCFApiWindow = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
-    config: Moli.MoliConfig = emptyConfig,
+    config: MoliConfig = emptyConfig,
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
@@ -57,7 +57,6 @@ describe('a9', () => {
       config: config,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: new GlobalAuctionContext(jsDomWindow)
@@ -75,7 +74,7 @@ describe('a9', () => {
     return `dom-id-${domIdCounter}`;
   };
 
-  const a9Slot = (domId: string, a9: Moli.headerbidding.A9AdSlotConfig): Moli.AdSlot => {
+  const a9Slot = (domId: string, a9: headerbidding.A9AdSlotConfig): AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
@@ -90,7 +89,7 @@ describe('a9', () => {
 
   const createSlotDefinitions = (
     domId: string,
-    provider: Moli.headerbidding.A9AdSlotConfig
+    provider: headerbidding.A9AdSlotConfig
   ): Moli.SlotDefinition => {
     const slot = a9Slot(domId, provider);
     return {
@@ -211,8 +210,8 @@ describe('a9', () => {
 
   describe('a9 publisher audiences step', () => {
     const a9Config = (
-      publisherAudiencesConfig: Moli.headerbidding.A9PublisherAudienceConfig
-    ): Moli.headerbidding.A9Config => {
+      publisherAudiencesConfig: headerbidding.A9PublisherAudienceConfig
+    ): headerbidding.A9Config => {
       return {
         ...a9ConfigStub,
         publisherAudience: publisherAudiencesConfig
@@ -567,7 +566,7 @@ describe('a9', () => {
     describe('slotId ad unit path resolving', () => {
       const slotWithAdUnitPath = (adUnitPath: string): Moli.SlotDefinition => {
         const domId = getDomId();
-        const slot: Moli.AdSlot = {
+        const slot: AdSlot = {
           ...a9Slot(domId, {}),
           adUnitPath
         };

@@ -19,9 +19,9 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import SlotDefinition = Moli.SlotDefinition;
-import IGoogleTag = googletag.IGoogleTag;
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
+import { AdSlot, consent, MoliConfig, Targeting } from '../types/moliConfig';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -66,7 +66,7 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
-  targeting: Moli.Targeting | undefined
+  targeting: Targeting | undefined
 ): void => {
   const keyValueMap = targeting ? targeting.keyValues : {};
   const excludes = targeting?.adManagerExcludes ?? [];
@@ -86,7 +86,7 @@ const configureTargeting = (
  */
 const useStandardGpt = (
   tcData: tcfapi.responses.TCData,
-  consentConfig?: Moli.consent.ConsentConfig
+  consentConfig?: consent.ConsentConfig
 ): boolean => {
   if (consentConfig?.useLimitedAds === false) {
     return true;
@@ -197,9 +197,9 @@ export const gptResetTargeting = (): ConfigureStep =>
       })
   );
 
-export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
+export const gptConfigure = (config: MoliConfig): ConfigureStep => {
   let result: Promise<void>;
-  return mkConfigureStep('gpt-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+  return mkConfigureStep('gpt-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
     if (!result) {
       result = new Promise<void>(resolve => {
         const env = config.environment || 'production';
@@ -287,7 +287,7 @@ export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
   });
 
 export const gptDefineSlots =
-  (): DefineSlotsStep => (context: AdPipelineContext, slots: Moli.AdSlot[]) => {
+  (): DefineSlotsStep => (context: AdPipelineContext, slots: AdSlot[]) => {
     const slotDefinitions = slots.map(moliSlot => {
       const sizeConfigService = new SizeConfigService(
         moliSlot.sizeConfig,

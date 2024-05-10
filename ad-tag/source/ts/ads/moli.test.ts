@@ -19,6 +19,9 @@ import { prebidjs } from '../types/prebidjs';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { AdSlot, MoliConfig } from '../types/moliConfig';
+import MoliTag = Moli.MoliTag;
+import state = Moli.state;
 
 // setup sinon-chai
 use(sinonChai);
@@ -30,9 +33,9 @@ describe('moli', () => {
   let dom: JSDOM;
   let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
   let domIdCounter: number;
-  let mkAdSlotInDOM: () => Moli.AdSlot;
-  let defaultSlots: Moli.AdSlot[];
-  let defaultConfig: Moli.MoliConfig;
+  let mkAdSlotInDOM: () => AdSlot;
+  let defaultSlots: AdSlot[];
+  let defaultConfig: MoliConfig;
 
   beforeEach(() => {
     dom = createDom();
@@ -214,7 +217,7 @@ describe('moli', () => {
       config(): Object | null {
         return null;
       },
-      init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+      init(config: MoliConfig, assetLoaderService: IAssetLoaderService): void {
         return;
       }
     };
@@ -243,7 +246,7 @@ describe('moli', () => {
       };
       const configChangingModule = {
         ...fakeModule,
-        init(config: Moli.MoliConfig): void {
+        init(config: MoliConfig): void {
           config.targeting = targeting;
         }
       };
@@ -284,7 +287,7 @@ describe('moli', () => {
 
   describe('refreshBucket()', () => {
     it('should refresh slots that belong to the same bucket', async () => {
-      const slots: Moli.AdSlot[] = [
+      const slots: AdSlot[] = [
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } },
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'two' } },
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } }
@@ -308,7 +311,7 @@ describe('moli', () => {
     });
 
     it("should refresh no slots when the bucket doesn't exist", async () => {
-      const slots: Moli.AdSlot[] = [
+      const slots: AdSlot[] = [
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } }
       ];
       const adTag = createMoliTag(jsDomWindow);
@@ -331,7 +334,7 @@ describe('moli', () => {
     describe('server side application mode', () => {
       it('should batch slots until requestAds is called', () => {
         // create all slots
-        const slots: Moli.AdSlot[] = [
+        const slots: AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
@@ -356,7 +359,7 @@ describe('moli', () => {
 
       it('should refresh ads after requestAds have been called', () => {
         // create all slots
-        const slots: Moli.AdSlot[] = [
+        const slots: AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
@@ -396,7 +399,7 @@ describe('moli', () => {
     describe('single page application mode (spa)', () => {
       it('should batch refresh calls before requestAds() is called', async () => {
         // create all slots
-        const slots: Moli.AdSlot[] = [
+        const slots: AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
@@ -425,7 +428,7 @@ describe('moli', () => {
 
       it('should call refresh after refreshAds is being called', async () => {
         // create all slots
-        const slots: Moli.AdSlot[] = [
+        const slots: AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }
         ];
@@ -463,7 +466,7 @@ describe('moli', () => {
         });
 
         // create all slots
-        const slots: Moli.AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
+        const slots: AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
 
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
@@ -504,7 +507,7 @@ describe('moli', () => {
         });
 
         // create all slots
-        const slots: Moli.AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
+        const slots: AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
 
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
@@ -579,7 +582,6 @@ describe('moli', () => {
       adTag.setAdUnitPathVariables({ foo: 'value' });
       adTag.configure({
         slots: defaultSlots,
-        logger: noopLogger,
         targeting: {
           keyValues: {},
           adUnitPathVariables: {}
@@ -726,7 +728,6 @@ describe('moli', () => {
       adTag.setTargeting('dynamicKeyValuePre', 'value');
       adTag.configure({
         slots: defaultSlots,
-        logger: noopLogger,
         targeting: {
           keyValues: { keyFromAdConfig: 'value' },
           labels: []
@@ -827,7 +828,6 @@ describe('moli', () => {
       adTag.addLabel('dynamicLabelPre');
       adTag.configure({
         slots: defaultSlots,
-        logger: noopLogger,
         targeting: {
           keyValues: {},
           labels: ['a9']
@@ -903,83 +903,11 @@ describe('moli', () => {
     });
   });
 
-  describe('setSampleRate()', () => {
-    it('should set the given sample rate instance before configure() is called', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      adTag.setSampleRate(0.23);
-      adTag.configure(defaultConfig);
-
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.reporting!.sampleRate).to.be.equal(0.23);
-    });
-
-    it('should set the given sample rate instance after configure() is called', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      adTag.configure(defaultConfig);
-      adTag.setSampleRate(0.23);
-
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.reporting!.sampleRate).to.be.equal(0.23);
-    });
-
-    it('should set the reporters array to an empty array', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      adTag.configure(defaultConfig);
-      adTag.setSampleRate(0.23);
-
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.reporting!.reporters).to.deep.equal([]);
-    });
-  });
-
-  describe('addReporter()', () => {
-    it('should add the given reporter instances', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      const voidReporter: Moli.reporting.Reporter = () => {
-        return;
-      };
-      adTag.addReporter(voidReporter);
-      adTag.configure(defaultConfig);
-      adTag.addReporter(voidReporter);
-
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.reporting!.reporters).length(2);
-      expect(config!.reporting!.reporters).to.deep.equal([voidReporter, voidReporter]);
-    });
-
-    it('should set the default sampleRate to 0', () => {
-      const adTag = createMoliTag(jsDomWindow);
-
-      const voidReporter: Moli.reporting.Reporter = () => {
-        return;
-      };
-      adTag.addReporter(voidReporter);
-      adTag.configure(defaultConfig);
-
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.reporting).to.be.ok;
-      expect(config!.reporting!.sampleRate).to.be.equal(0);
-    });
-  });
-
   describe('hooks', () => {
     it('should add the beforeRequestAds hook and call it', () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+      const beforeRequestAdsHook = (_: MoliConfig) => {
         return;
       };
 
@@ -996,7 +924,7 @@ describe('moli', () => {
       it(`should add ${callCounts} beforeRequestAds hooks and call all`, () => {
         const adTag = createMoliTag(jsDomWindow);
 
-        const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+        const beforeRequestAdsHook = (_: MoliConfig) => {
           return;
         };
 
@@ -1013,7 +941,7 @@ describe('moli', () => {
     it('should catch errors in beforeRequestAds hook', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+      const beforeRequestAdsHook = (_: MoliConfig) => {
         throw new Error('oh no!');
       };
 
@@ -1029,7 +957,7 @@ describe('moli', () => {
     it('should add the beforeRequestAds hook with spa state if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+      const beforeRequestAdsHook = (_: MoliConfig) => {
         return;
       };
 
@@ -1045,7 +973,7 @@ describe('moli', () => {
     it('should add the beforeRequestAds hooks and call them on each requestAds() cal', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+      const beforeRequestAdsHook = (_: MoliConfig) => {
         return;
       };
 
@@ -1065,7 +993,7 @@ describe('moli', () => {
     it('should catch errors in beforeRequestAds hook in spa mode', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const beforeRequestAdsHook = (_: Moli.MoliConfig) => {
+      const beforeRequestAdsHook = (_: MoliConfig) => {
         throw new Error('oh no!');
       };
 
@@ -1082,7 +1010,7 @@ describe('moli', () => {
     it('should add the afterRequestAds hook if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+      const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
         return;
       };
 
@@ -1099,7 +1027,7 @@ describe('moli', () => {
       it(`should add ${callCounts} afterRequestAds hooks and call all`, () => {
         const adTag = createMoliTag(jsDomWindow);
 
-        const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+        const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
           return;
         };
 
@@ -1117,7 +1045,7 @@ describe('moli', () => {
     it('should add the afterRequestAds hook with spa state if requestAds() was successful', () => {
       const adTag = createMoliTag(jsDomWindow);
 
-      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+      const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
         return;
       };
 
@@ -1138,7 +1066,7 @@ describe('moli', () => {
         url: 'https://localhost/'
       });
 
-      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+      const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
         return;
       };
 
@@ -1175,7 +1103,7 @@ describe('moli', () => {
       };
       const adTag = createMoliTag(jsDomWindow);
 
-      const afterRequestAdsHook = (_: Moli.state.AfterRequestAdsStates) => {
+      const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
         return;
       };
 
@@ -1191,7 +1119,7 @@ describe('moli', () => {
   });
 
   describe('environment override', () => {
-    const expectEnvironment = (adTag: Moli.MoliTag, environment: Moli.Environment | undefined) => {
+    const expectEnvironment = (adTag: MoliTag, environment: Moli.Environment | undefined) => {
       const config = adTag.getConfig();
       expect(config).to.be.ok;
       expect(config!.environment).to.be.equal(environment);
@@ -1353,7 +1281,7 @@ describe('moli', () => {
   describe('refreshInfiniteAdSlots()', () => {
     it('should add a new infinite slot to the config', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      const slots: Moli.AdSlot[] = [
+      const slots: AdSlot[] = [
         ...defaultSlots,
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'infinite', selector: '.ad-infinite' } }
       ];
@@ -1375,7 +1303,7 @@ describe('moli', () => {
       const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
       const idOfConfiguredInfiniteSlot = 'my-id';
 
-      const slots: Moli.AdSlot[] = [
+      const slots: AdSlot[] = [
         {
           ...mkAdSlotInDOM(),
           behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
@@ -1410,7 +1338,7 @@ describe('moli', () => {
       const idOfConfiguredInfiniteSlot = 'my-id';
       const idNotInTheConfig = 'my-id-2';
 
-      const slots: Moli.AdSlot[] = [
+      const slots: AdSlot[] = [
         {
           ...mkAdSlotInDOM(),
           behaviour: { loaded: 'infinite', selector: '.ad-infinite' },

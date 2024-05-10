@@ -16,16 +16,14 @@ import {
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
 } from './adPipeline';
-import { reportingServiceStub } from '../stubs/reportingServiceStub';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { LabelConfigService } from './labelConfigService';
-import { noopReportingService } from './reportingService';
-import MoliConfig = Moli.MoliConfig;
 import SlotDefinition = Moli.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { AdSlot, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -41,7 +39,7 @@ describe('AdPipeline', () => {
     requestAds: () => Promise.resolve()
   };
 
-  const adSlot: Moli.AdSlot = {
+  const adSlot: AdSlot = {
     domId: 'dom-id',
     adUnitPath: '/123/dom-id',
     behaviour: { loaded: 'eager' },
@@ -57,24 +55,16 @@ describe('AdPipeline', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  const reportingService = reportingServiceStub();
-
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(
-      config,
-      noopLogger,
-      jsDomWindow,
-      reportingService,
-      new GlobalAuctionContext(jsDomWindow)
-    );
+    return new AdPipeline(config, noopLogger, jsDomWindow, new GlobalAuctionContext(jsDomWindow));
   };
 
   const adPipelineContext = (
     requestAdsCalls: number = 1,
     requestId: number = 1,
     env: Moli.Environment = 'production',
-    config: Moli.MoliConfig = emptyConfig
+    config: MoliConfig = emptyConfig
   ): AdPipelineContext => {
     return {
       requestId,
@@ -84,7 +74,6 @@ describe('AdPipeline', () => {
       config: config,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: new GlobalAuctionContext(jsDomWindow)

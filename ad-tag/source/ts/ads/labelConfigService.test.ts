@@ -4,10 +4,8 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
-import { Moli } from '../types/moli';
-
 import { LabelConfigService } from './labelConfigService';
-import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
+import { AdSlot, LabelSizeConfigEntry } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -26,7 +24,7 @@ describe('LabelConfigConfigService', () => {
     mediaQuery: 'min-width: 300px',
     labelsSupported: []
   };
-  const adSlotWithLabelAny: Moli.AdSlot = {
+  const adSlotWithLabelAny: AdSlot = {
     position: 'in-page',
     domId: 'not-available-3',
     behaviour: { loaded: 'eager' },
@@ -35,7 +33,7 @@ describe('LabelConfigConfigService', () => {
     sizeConfig: [],
     labelAny: ['video', 'visitor-uk']
   };
-  const adSlotWithLabelAll: Moli.AdSlot = {
+  const adSlotWithLabelAll: AdSlot = {
     position: 'in-page',
     domId: 'not-available-4',
     behaviour: { loaded: 'eager' },
@@ -44,7 +42,7 @@ describe('LabelConfigConfigService', () => {
     sizeConfig: [],
     labelAll: ['video', 'visitor-uk']
   };
-  const adSlotWithLabelAnyLabelAll: Moli.AdSlot = {
+  const adSlotWithLabelAnyLabelAll: AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
     behaviour: { loaded: 'eager' },
@@ -55,7 +53,7 @@ describe('LabelConfigConfigService', () => {
     labelAll: ['video', 'visitor-uk']
   };
 
-  const adSlotWithDifferentLabelAnyLabelAll: Moli.AdSlot = {
+  const adSlotWithDifferentLabelAnyLabelAll: AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
     behaviour: { loaded: 'eager' },

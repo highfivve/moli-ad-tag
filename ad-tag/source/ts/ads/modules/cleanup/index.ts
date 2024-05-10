@@ -8,6 +8,7 @@ import {
 } from '../../adPipeline';
 import { Moli } from '../../../types/moli';
 import { IModule, ModuleType } from '../../../types/module';
+import { CleanupConfig, modules, MoliConfig } from '../../../types/moliConfig';
 
 /**
  * # Cleanup Module
@@ -49,13 +50,13 @@ export class Cleanup implements IModule {
   public readonly description: string = 'cleanup out-of-page formats on navigation or ad-reload';
   public readonly moduleType: ModuleType = 'creatives';
 
-  constructor(private readonly cleanupModuleConfig: Moli.modules.CleanupModuleConfig) {}
+  constructor(private readonly cleanupModuleConfig: modules.CleanupModuleConfig) {}
 
   config(): Object | null {
     return this.cleanupModuleConfig;
   }
 
-  init(config: Moli.MoliConfig) {
+  init(config: MoliConfig) {
     if (this.cleanupModuleConfig && this.cleanupModuleConfig.enabled) {
       // init additional pipeline steps if not already defined
       config.pipeline = config.pipeline || {
@@ -76,7 +77,7 @@ export class Cleanup implements IModule {
     }
   }
 
-  private cleanUp = (context: AdPipelineContext, configs: Moli.CleanupConfig[]) => {
+  private cleanUp = (context: AdPipelineContext, configs: CleanupConfig[]) => {
     configs.forEach(config => {
       if ('cssSelectors' in config.deleteMethod) {
         config.deleteMethod.cssSelectors.forEach((selector: string) => {
@@ -118,7 +119,7 @@ export class Cleanup implements IModule {
   };
 
   private destroyAllOutOfPageAdFormats = (
-    cleanupConfig: Moli.modules.CleanupModuleConfig
+    cleanupConfig: modules.CleanupModuleConfig
   ): ConfigureStep =>
     mkConfigureStepOncePerRequestAdsCycle(
       'destroy-out-of-page-ad-format',
@@ -130,7 +131,7 @@ export class Cleanup implements IModule {
 
   private hasBidderWonLastAuction = (
     context: AdPipelineContext,
-    config: Moli.CleanupConfig
+    config: CleanupConfig
   ): boolean => {
     const prebidWinningBids = context.window.pbjs.getAllWinningBids();
     const bidderThatWonLastAuctionOnSlot = prebidWinningBids.find(
@@ -141,7 +142,7 @@ export class Cleanup implements IModule {
   };
 
   private destroySpecialFormatOfReloadedSlot = (
-    config: Moli.modules.CleanupModuleConfig
+    config: modules.CleanupModuleConfig
   ): PrepareRequestAdsStep =>
     mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
       const configsOfDomIdsThatNeedToBeCleaned = config.configs

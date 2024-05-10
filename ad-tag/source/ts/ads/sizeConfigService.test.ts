@@ -5,10 +5,7 @@ import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
 import { SizeConfigService } from './sizeConfigService';
-import { Moli } from '../types/moli';
-
-import SizeConfigEntry = Moli.SizeConfigEntry;
-import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
+import { AdSlot, GoogleAdManagerSlotSize, SizeConfigEntry } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -31,7 +28,7 @@ describe('SizeConfigService', () => {
     sizesSupported: [],
     mediaQuery: 'min-width: 300px'
   };
-  const outOfPageSlot: Moli.AdSlot = {
+  const outOfPageSlot: AdSlot = {
     position: 'out-of-page',
     domId: 'not-available',
     behaviour: { loaded: 'eager' },
@@ -39,7 +36,7 @@ describe('SizeConfigService', () => {
     sizes: [],
     sizeConfig: []
   };
-  const adSlot605x165: Moli.AdSlot = {
+  const adSlot605x165: AdSlot = {
     position: 'in-page',
     domId: 'not-available',
     behaviour: { loaded: 'eager' },
@@ -47,7 +44,7 @@ describe('SizeConfigService', () => {
     sizes: [[605, 165]],
     sizeConfig: []
   };
-  const adSlotFluid985x380: Moli.AdSlot = {
+  const adSlotFluid985x380: AdSlot = {
     position: 'in-page',
     domId: 'not-available-2',
     behaviour: { loaded: 'eager' },
@@ -94,7 +91,7 @@ describe('SizeConfigService', () => {
     it('should filter out duplicate slots from the size config', () => {
       const sizeConfigService = newSizeConfigService([sizeConfigEntry1, sizeConfigEntry2]);
 
-      expect((sizeConfigService as any).supportedSizes as DfpSlotSize[]).to.deep.equal([
+      expect((sizeConfigService as any).supportedSizes as GoogleAdManagerSlotSize[]).to.deep.equal([
         [205, 200],
         'fluid'
       ]);
@@ -157,7 +154,7 @@ describe('SizeConfigService', () => {
   });
 
   describe('additional label filtering', () => {
-    const sizes: DfpSlotSize[] = [[300, 250], 'fluid'];
+    const sizes: GoogleAdManagerSlotSize[] = [[300, 250], 'fluid'];
     const newSizeConfigEntry = (labelAll?: string[], labelNone?: string[]): SizeConfigEntry => {
       return {
         sizesSupported: sizes,

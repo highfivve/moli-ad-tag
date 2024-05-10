@@ -1,5 +1,5 @@
-import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
+import { headerbidding } from '../types/moliConfig';
 
 export const createPbjsStub = (): prebidjs.IPrebidJs => {
   return {
@@ -100,7 +100,7 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
   floors: {}
 };
 
-export const moliPrebidTestConfig: Moli.headerbidding.PrebidConfig = {
+export const moliPrebidTestConfig: headerbidding.PrebidConfig = {
   config: pbjsTestConfig,
   schain: {
     nodes: []

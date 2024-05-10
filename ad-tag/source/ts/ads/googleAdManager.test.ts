@@ -18,13 +18,13 @@ import {
   gptConfigure,
   gptRequestAds
 } from './googleAdManager';
-import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { AdSlot, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -43,7 +43,7 @@ describe('google ad manager', () => {
 
   const adPipelineContext = (
     env: Moli.Environment = 'production',
-    config: Moli.MoliConfig = emptyConfig,
+    config: MoliConfig = emptyConfig,
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
@@ -54,7 +54,6 @@ describe('google ad manager', () => {
       config: config,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: new GlobalAuctionContext(jsDomWindow)
@@ -68,7 +67,7 @@ describe('google ad manager', () => {
       setTimeout(resolve, timeInMs);
     });
 
-  const createdAdSlot = (domId: string): Moli.AdSlot => ({
+  const createdAdSlot = (domId: string): AdSlot => ({
     domId: domId,
     adUnitPath: `/123/${domId}`,
     behaviour: { loaded: 'eager' },
@@ -105,32 +104,28 @@ describe('google ad manager', () => {
       await step(adPipelineContext('test'));
       expect(loadScriptStub).not.been.called;
     });
-    it('should set the window.googletag', () => {
+    it('should set the window.googletag', async () => {
       const step = gptInit(assetLoaderService);
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;
 
       const init = step(adPipelineContext());
-
-      return sleep().then(() => {
-        expect(dom.window.googletag).to.be.ok;
-        (dom.window as any).googletag.cmd[0]();
-        return init;
-      });
+      await sleep();
+      expect(dom.window.googletag).to.be.ok;
+      (dom.window as any).googletag.cmd[0]();
+      return init;
     });
 
-    it('should set the window.google only once', () => {
+    it('should set the window.google only once', async () => {
       const step = gptInit(assetLoaderService);
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;
 
       const init = step(adPipelineContext());
-
-      return sleep().then(() => {
-        (dom.window as any).googletag.cmd[0]();
-        // a second init call should resolve without processing the cmd queue
-        return init.then(() => step(adPipelineContext()));
-      });
+      await sleep();
+      (dom.window as any).googletag.cmd[0]();
+      await init;
+      return await step(adPipelineContext());
     });
   });
 
@@ -181,14 +176,12 @@ describe('google ad manager', () => {
   });
 
   describe('gptDestroyAdSlots', () => {
-    it('should call googletag.destroySlots', () => {
+    it('should call googletag.destroySlots', async () => {
       const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
       const step = gptDestroyAdSlots();
-
-      return step(adPipelineContext(), []).then(() => {
-        expect(destroySlotsSpy).to.have.been.calledOnce;
-        expect(destroySlotsSpy.firstCall.args).to.have.length(0);
-      });
+      await step(adPipelineContext(), []);
+      expect(destroySlotsSpy).to.have.been.calledOnce;
+      expect(destroySlotsSpy.firstCall.args).to.have.length(0);
     });
 
     it('should call googletag.destroySlots with existing slots if destroyAllAdSlots is set to false', async () => {
@@ -230,7 +223,7 @@ describe('google ad manager', () => {
       sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot]);
       const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
       const step = gptDestroyAdSlots();
-      const config: Moli.MoliConfig = {
+      const config: MoliConfig = {
         ...emptyConfig,
         spa: { enabled: true, destroyAllAdSlots: false, validateLocation: 'href' }
       };
@@ -253,7 +246,7 @@ describe('google ad manager', () => {
 
     it('should clear targeting targetings and then set new targetings', async () => {
       const step = gptResetTargeting();
-      const configWithTargeting: Moli.MoliConfig = {
+      const configWithTargeting: MoliConfig = {
         ...emptyConfig,
         targeting: {
           keyValues: {
@@ -288,7 +281,7 @@ describe('google ad manager', () => {
   describe('resolve adUnitPathVariables', () => {
     const step = gptDefineSlots();
     matchMediaStub.returns({ matches: true } as MediaQueryList);
-    const adSlot: Moli.AdSlot = {
+    const adSlot: AdSlot = {
       domId: 'dom-id',
       adUnitPath: '/123/dom-id/{device}/{domain}',
       behaviour: { loaded: 'eager' },
@@ -425,7 +418,7 @@ describe('google ad manager', () => {
   });
 
   describe('gptDefineSlots', () => {
-    const adSlot: Moli.AdSlot = createdAdSlot('dom-id');
+    const adSlot: AdSlot = createdAdSlot('dom-id');
 
     describe('test mode', () => {
       it('should never call googletag.defineSlot ', async () => {
@@ -457,7 +450,7 @@ describe('google ad manager', () => {
     });
 
     describe('production mode', () => {
-      it('should define in-page slots', () => {
+      it('should define in-page slots', async () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
@@ -469,29 +462,28 @@ describe('google ad manager', () => {
           .returns(adSlotStub);
         const displaySpy = sandbox.spy(dom.window.googletag, 'display');
 
-        return step(adPipelineContext(), [adSlot]).then(slotDefinitions => {
-          expect(defineSlotsStub).to.have.been.calledOnce;
-          expect(defineSlotsStub).to.have.been.calledOnceWithExactly(
-            adSlot.adUnitPath,
-            adSlot.sizes,
-            adSlot.domId
-          );
-          expect(addServiceSpy).to.have.been.calledOnce;
-          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
-          expect(displaySpy).to.have.been.calledOnce;
-          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
-          expect(slotDefinitions).to.have.length(1);
-          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
-        });
+        const slotDefinitions = await step(adPipelineContext(), [adSlot]);
+        expect(defineSlotsStub).to.have.been.calledOnce;
+        expect(defineSlotsStub).to.have.been.calledOnceWithExactly(
+          adSlot.adUnitPath,
+          adSlot.sizes,
+          adSlot.domId
+        );
+        expect(addServiceSpy).to.have.been.calledOnce;
+        expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        expect(displaySpy).to.have.been.calledOnce;
+        expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+        expect(slotDefinitions).to.have.length(1);
+        expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
       });
 
-      it('should define out-of-page slots', () => {
+      it('should define out-of-page slots', async () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page'
         };
@@ -504,28 +496,27 @@ describe('google ad manager', () => {
           .returns(adSlotStub);
         const displaySpy = sandbox.spy(dom.window.googletag, 'display');
 
-        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
-          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
-          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(
-            adSlot.adUnitPath,
-            adSlot.domId
-          );
-          expect(addServiceSpy).to.have.been.calledOnce;
-          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
-          expect(displaySpy).to.have.been.calledOnce;
-          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
-          expect(slotDefinitions).to.have.length(1);
-          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
-        });
+        let slotDefinitions = await step(adPipelineContext(), [outOfPageAdSlot]);
+        expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+        expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(
+          adSlot.adUnitPath,
+          adSlot.domId
+        );
+        expect(addServiceSpy).to.have.been.calledOnce;
+        expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        expect(displaySpy).to.have.been.calledOnce;
+        expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+        expect(slotDefinitions).to.have.length(1);
+        expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
       });
 
-      it('should define out-of-page-interstitial slots', () => {
+      it('should define out-of-page-interstitial slots', async () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page-interstitial'
         };
@@ -538,25 +529,24 @@ describe('google ad manager', () => {
           .returns(adSlotStub);
         const displaySpy = sandbox.spy(dom.window.googletag, 'display');
 
-        return step(adPipelineContext(), [outOfPageAdSlot]).then(slotDefinitions => {
-          expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
-          expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 5);
-          expect(addServiceSpy).to.have.been.calledOnce;
-          expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
-          expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-          expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
-          expect(displaySpy).to.have.been.calledOnce;
-          expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
-          expect(slotDefinitions).to.have.length(1);
-          expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
-        });
+        let slotDefinitions = await step(adPipelineContext(), [outOfPageAdSlot]);
+        expect(defineOutOfPageSlotStub).to.have.been.calledOnce;
+        expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly(adSlot.adUnitPath, 5);
+        expect(addServiceSpy).to.have.been.calledOnce;
+        expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        expect(displaySpy).to.have.been.calledOnce;
+        expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+        expect(slotDefinitions).to.have.length(1);
+        expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
       });
 
       it('should resolve if out-of-page-interstitial slot can not be defined', async () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page-interstitial'
         };
@@ -575,7 +565,7 @@ describe('google ad manager', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page-top-anchor'
         };
@@ -605,7 +595,7 @@ describe('google ad manager', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page-top-anchor'
         };
@@ -624,7 +614,7 @@ describe('google ad manager', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page-bottom-anchor'
         };
@@ -654,7 +644,7 @@ describe('google ad manager', () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
 
-        const outOfPageAdSlot: Moli.AdSlot = {
+        const outOfPageAdSlot: AdSlot = {
           ...adSlot,
           position: 'out-of-page-bottom-anchor'
         };

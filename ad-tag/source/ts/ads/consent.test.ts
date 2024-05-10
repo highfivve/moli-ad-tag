@@ -7,7 +7,7 @@ import { fullConsent } from '../stubs/consentStubs';
 import { consentReady, missingPurposeConsent } from './consent';
 import { noopLogger } from '../stubs/moliStubs';
 import { tcfapi } from '../types/tcfapi';
-import { Moli } from '../types/moli';
+import { consent } from '../types/moliConfig';
 
 const TCPurpose = tcfapi.responses.TCPurpose;
 
@@ -23,7 +23,7 @@ describe('consent', () => {
 
   const tcfapiFn = sandbox.stub();
 
-  const emptyConsentConfig: Moli.consent.ConsentConfig = {};
+  const emptyConsentConfig: consent.ConsentConfig = {};
 
   beforeEach(() => {
     jsDomWindow.__tcfapi = tcfapiFn;
@@ -97,7 +97,7 @@ describe('consent', () => {
   });
 
   describe('disallow legitimate interest', () => {
-    const consentConfig: Moli.consent.ConsentConfig = {
+    const consentConfig: consent.ConsentConfig = {
       disableLegitimateInterest: true
     };
 

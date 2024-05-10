@@ -1,9 +1,7 @@
-import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 import { isSizeEqual } from '../util/sizes';
 
-import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
-import SizeConfigEntry = Moli.SizeConfigEntry;
+import { GoogleAdManagerSlotSize, SizeConfigEntry } from '../types/moliConfig';
 
 /**
  * Filter sizes of an ad slot depending on media queries.
@@ -17,7 +15,7 @@ export interface ISizedSlot {
    *    to filter the slot as well
    *
    */
-  readonly sizes?: DfpSlotSize[];
+  readonly sizes?: GoogleAdManagerSlotSize[];
 }
 
 /**
@@ -26,7 +24,7 @@ export interface ISizedSlot {
  * It provides methods for evaluating if a given slot or a given set of slot sizes match the configured criteria.
  */
 export class SizeConfigService {
-  private readonly supportedSizes: DfpSlotSize[];
+  private readonly supportedSizes: GoogleAdManagerSlotSize[];
 
   /**
    * True:  Either no size config is used or the size config produced supported sizes.
@@ -34,7 +32,7 @@ export class SizeConfigService {
    */
   private readonly isValid: boolean;
 
-  public static isFixedSize(size: Moli.GoogleAdManagerSlotSize): size is [number, number] {
+  public static isFixedSize(size: GoogleAdManagerSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 
@@ -91,7 +89,9 @@ export class SizeConfigService {
    * @param givenSizes
    * @returns {GoogleAdManagerSlotSize[]}
    */
-  public filterSupportedSizes = (givenSizes: DfpSlotSize[]): DfpSlotSize[] => {
+  public filterSupportedSizes = (
+    givenSizes: GoogleAdManagerSlotSize[]
+  ): GoogleAdManagerSlotSize[] => {
     if (!this.isValid) {
       return [];
     }
@@ -110,7 +110,7 @@ export class SizeConfigService {
         );
   };
 
-  private areLabelsMatching = (conf: Moli.SizeConfigEntry, supportedLabels: string[]): boolean => {
+  private areLabelsMatching = (conf: SizeConfigEntry, supportedLabels: string[]): boolean => {
     return (
       // either labelAll is not set or _all_ labels must be present
       (!conf.labelAll ||

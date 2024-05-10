@@ -1,7 +1,6 @@
 import { Moli } from '../types/moli';
 import SlotDefinition = Moli.SlotDefinition;
 import { LabelConfigService } from './labelConfigService';
-import { IReportingService } from './reportingService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
 import { consentReady } from './consent';
@@ -50,11 +49,6 @@ export type AdPipelineContext = {
    * required for filtering based on labels
    */
   readonly labelConfigService: LabelConfigService;
-
-  /**
-   * enables steps to access the reporting API
-   */
-  readonly reportingService: IReportingService;
 
   /**
    * access to the global window. Never access the global window object
@@ -282,14 +276,12 @@ export class AdPipeline {
    * @param config public available for testing and building APIs for configuration from outside
    * @param logger
    * @param window
-   * @param reportingService
    * @param auction
    */
   constructor(
     public readonly config: IAdPipelineConfiguration,
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-    private readonly reportingService: IReportingService,
     private readonly auction: GlobalAuctionContext
   ) {}
 
@@ -362,7 +354,6 @@ export class AdPipeline {
         env: config.environment || 'production',
         config: config,
         labelConfigService: labelConfigService,
-        reportingService: this.reportingService,
         window: this.window,
         tcData: consentData,
         bucket: bucketConfig,

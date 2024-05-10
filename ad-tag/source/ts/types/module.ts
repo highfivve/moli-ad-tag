@@ -1,6 +1,7 @@
 import { Moli } from './moli';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { AdPipeline } from '../ads/adPipeline';
+import { MoliConfig } from './moliConfig';
 
 export type ModuleType =
   | 'cmp'
@@ -44,7 +45,7 @@ export interface IModule {
    *                      pipeline as the ad tag is not yet initialized.
    */
   init(
-    config: Moli.MoliConfig,
+    config: MoliConfig,
     assetLoaderService: IAssetLoaderService,
     getAdPipeline: () => AdPipeline
   ): void;

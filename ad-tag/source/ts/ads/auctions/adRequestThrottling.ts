@@ -1,6 +1,5 @@
 import { googletag } from '../../types/googletag';
-import { Moli } from '../../types/moli';
-import auction = Moli.auction;
+import { auction } from '../../types/moliConfig';
 
 export class AdRequestThrottling {
   /**
