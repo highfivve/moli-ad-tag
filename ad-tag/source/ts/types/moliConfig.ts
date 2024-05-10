@@ -936,7 +936,7 @@ export interface MoliConfig {
    */
   labelSizeConfig?: LabelSizeConfigEntry[];
 
-  consent?: consent.ConsentConfig;
+  readonly consent?: consent.ConsentConfig;
 
   /** optional prebid configuration */
   readonly prebid?: headerbidding.PrebidConfig;
@@ -961,5 +961,5 @@ export interface MoliConfig {
   /**
    * Configure bucketing behaviour
    */
-  buckets?: bucket.GlobalBucketConfig;
+  readonly buckets?: bucket.GlobalBucketConfig;
 }

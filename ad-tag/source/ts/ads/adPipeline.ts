@@ -10,6 +10,7 @@ import { prebidjs } from '../types/prebidjs';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { AdSlot, bucket, consent, MoliConfig } from '../types/moliConfig';
 
 /**
  * Context passed to every pipeline step.
@@ -43,7 +44,7 @@ export type AdPipelineContext = {
   /**
    * The config used for the ad configuration run
    */
-  readonly config: Moli.MoliConfig;
+  readonly config: MoliConfig;
 
   /**
    * required for filtering based on labels
@@ -72,7 +73,7 @@ export type AdPipelineContext = {
   /**
    * bucket config
    */
-  readonly bucket?: Moli.bucket.BucketConfig | null;
+  readonly bucket?: bucket.BucketConfig | null;
 
   /**
    * Contains the ad unit path variables set in the moli config, enhanced with
@@ -107,7 +108,7 @@ export type InitStep = (context: AdPipelineContext) => Promise<void>;
  * - a9 configuration
  *
  */
-export type ConfigureStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>;
+export type ConfigureStep = (context: AdPipelineContext, slots: AdSlot[]) => Promise<void>;
 
 /**
  * ## Define Slots
@@ -120,7 +121,7 @@ export type ConfigureStep = (context: AdPipelineContext, slots: Moli.AdSlot[]) =
  */
 export type DefineSlotsStep = (
   context: AdPipelineContext,
-  slots: Moli.AdSlot[]
+  slots: AdSlot[]
 ) => Promise<SlotDefinition[]>;
 
 /**
@@ -188,7 +189,7 @@ export const mkInitStep = (
 
 export const mkConfigureStep = (
   name: string,
-  fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>
+  fn: (context: AdPipelineContext, slots: AdSlot[]) => Promise<void>
 ): ConfigureStep => {
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
@@ -207,7 +208,7 @@ export const mkConfigureStep = (
  */
 export const mkConfigureStepOncePerRequestAdsCycle = (
   name: string,
-  fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>
+  fn: (context: AdPipelineContext, slots: AdSlot[]) => Promise<void>
 ): ConfigureStep => {
   Object.defineProperty(fn, 'name', { value: name });
   let currentRequestAdsCalls = 0;
@@ -237,7 +238,7 @@ export const mkConfigureStepOncePerRequestAdsCycle = (
  */
 export const mkConfigureStepOnce = (
   name: string,
-  fn: (context: AdPipelineContext, slots: Moli.AdSlot[]) => Promise<void>
+  fn: (context: AdPipelineContext, slots: AdSlot[]) => Promise<void>
 ): ConfigureStep => {
   Object.defineProperty(fn, 'name', { value: name });
 
@@ -296,8 +297,8 @@ export class AdPipeline {
    * run the pipeline
    */
   run(
-    slots: Moli.AdSlot[],
-    config: Moli.MoliConfig,
+    slots: AdSlot[],
+    config: MoliConfig,
     requestAdsCalls: number,
     bucketName?: string
   ): Promise<void> {
@@ -316,7 +317,7 @@ export class AdPipeline {
     );
 
     // fetch the consent data when ready
-    const consentConfig: Moli.consent.ConsentConfig = config.consent || {};
+    const consentConfig: consent.ConsentConfig = config.consent || {};
     this.tcData = this.tcData
       ? this.tcData
       : consentReady(consentConfig, this.window, this.logger, config.environment);

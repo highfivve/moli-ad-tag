@@ -13,6 +13,13 @@ import {
   ResolveAdUnitPathOptions
 } from './moliConfig';
 
+/**
+ * ## Moli Runtime Configuration & API
+ *
+ * This file contains the API and runtime configuration for the moli ad tag. This includes the state machine that
+ * controls the behaviour of the ad tag.
+ *
+ */
 export namespace Moli {
   export type MoliCommand = (moli: MoliTag) => void;
 
