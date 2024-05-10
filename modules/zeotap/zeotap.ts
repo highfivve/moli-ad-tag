@@ -53,7 +53,7 @@ import {
   ModuleType,
   mkConfigureStep,
   mkInitStep,
-  Moli,
+  MoliRuntime,
   tcfapi
 } from '@highfivve/ad-tag';
 import TCDataNoGDPR = tcfapi.responses.TCDataNoGDPR;
@@ -150,7 +150,7 @@ export class Zeotap implements IModule {
 
   private readonly window: Window;
   private assetLoaderService: IAssetLoaderService | undefined;
-  private logger: Moli.MoliLogger | undefined;
+  private logger: MoliRuntime.MoliLogger | undefined;
 
   private gvlid: number = 301;
 
@@ -167,7 +167,7 @@ export class Zeotap implements IModule {
     return this.moduleConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     this.assetLoaderService = assetLoaderService;
     this.logger = getLogger(config, this.window);
 
@@ -222,7 +222,7 @@ export class Zeotap implements IModule {
    * The script is only loaded if the targeting exclusions don't match the provided targeting key/values from the moli
    * config.
    */
-  private loadScript = (config: Moli.MoliConfig): Promise<void> => {
+  private loadScript = (config: MoliRuntime.MoliConfig): Promise<void> => {
     const { mode, dataKeyValues, exclusionKeyValues, assetUrl, hashedEmailAddress, countryCode } =
       this.moduleConfig;
 
@@ -301,7 +301,7 @@ export class Zeotap implements IModule {
    * Convert the key/values object from the moli config to an actual map, filtering out entries with falsy values.
    */
   private makeKeyValuesMap = (
-    keyValues: Moli.GoogleAdManagerKeyValueMap | undefined
+    keyValues: MoliRuntime.GoogleAdManagerKeyValueMap | undefined
   ): Map<string, string | Array<string>> => {
     return keyValues
       ? new Map(

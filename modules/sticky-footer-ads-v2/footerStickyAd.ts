@@ -1,4 +1,6 @@
-import { googletag, Moli } from '@highfivve/ad-tag';
+import { googletag, MoliRuntime } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts';
+import Environment = Moli.Environment;
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
@@ -74,8 +76,8 @@ const showAdSlot = (element: HTMLElement): void => {
  */
 export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
-  env: Moli.Environment,
-  log: Moli.MoliLogger,
+  env: Environment,
+  log: MoliRuntime.MoliLogger,
   footerStickyDomId: string,
   disallowedAdvertiserIds: number[],
   closingButtonText?: string

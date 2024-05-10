@@ -35,7 +35,7 @@ import {
   LOW_PRIORITY,
   mkPrepareRequestAdsStep,
   ModuleType,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 import { setupFooterAdListener } from './desktopFloorAd';
 import { initAdSticky } from './mobileSticky';
@@ -86,7 +86,7 @@ export class StickyFooterAds implements IModule {
     return this.stickyFooterAdConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {

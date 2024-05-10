@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
@@ -24,7 +24,7 @@ import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/cons
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -42,7 +42,7 @@ describe('google ad manager', () => {
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
   const adPipelineContext = (
-    env: Moli.Environment = 'production',
+    env: Environment = 'production',
     config: MoliConfig = emptyConfig,
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
@@ -787,7 +787,7 @@ describe('google ad manager', () => {
       it('should call googletag.pubads().refresh with the configured slots', async () => {
         const step = gptRequestAds();
         const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
-        const slot: Moli.SlotDefinition = {
+        const slot: MoliRuntime.SlotDefinition = {
           adSlot: googleAdSlotStub('/123/content_1', 'slot-1'),
           moliSlot: createdAdSlot('slot-1')
         } as any;
@@ -805,11 +805,11 @@ describe('google ad manager', () => {
         isThrottledStub.withArgs('slot-2').returns(false);
 
         const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
-        const slot1: Moli.SlotDefinition = {
+        const slot1: MoliRuntime.SlotDefinition = {
           adSlot: googleAdSlotStub('/123/content_1', 'slot-1'),
           moliSlot: createdAdSlot('slot-1')
         } as any;
-        const slot2: Moli.SlotDefinition = {
+        const slot2: MoliRuntime.SlotDefinition = {
           adSlot: googleAdSlotStub('/123/content_2', 'slot-2'),
           moliSlot: createdAdSlot('slot-2')
         } as any;

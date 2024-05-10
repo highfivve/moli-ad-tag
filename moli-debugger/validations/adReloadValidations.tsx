@@ -1,4 +1,4 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { ModuleMeta, prebidjs } from '@highfivve/ad-tag';
 import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
 
@@ -8,8 +8,8 @@ import React from 'react';
 import { isNotNull } from '@highfivve/ad-tag/lib/util/arrayUtils';
 
 const isWallpaperSlot = (
-  slot: Moli.AdSlot,
-  prebidConfigs: Moli.headerbidding.PrebidAdSlotConfig[]
+  slot: MoliRuntime.AdSlot,
+  prebidConfigs: MoliRuntime.headerbidding.PrebidAdSlotConfig[]
 ): boolean => {
   const isFloorAd = slot.adUnitPath.includes('floor');
   const hasWallpaperInAdUnitPath = slot.adUnitPath.includes('wallpaper');
@@ -38,7 +38,7 @@ const isWallpaperSlot = (
 export const checkAdReloadConfig = (
   messages: Message[],
   modules: ModuleMeta[],
-  slots: Moli.AdSlot[],
+  slots: MoliRuntime.AdSlot[],
   labels: string[]
 ): void => {
   const module = modules.find(module => module.moduleType === 'ad-reload');

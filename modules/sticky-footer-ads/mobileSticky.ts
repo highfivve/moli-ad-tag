@@ -1,4 +1,6 @@
-import { googletag, Moli } from '@highfivve/ad-tag';
+import { googletag, MoliRuntime } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts';
+import Environment = Moli.Environment;
 
 const adStickyContainerDataRef = '[data-ref=sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
@@ -85,8 +87,8 @@ const stickyOnLoadEvent = (
  */
 export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
-  env: Moli.Environment,
-  log: Moli.MoliLogger,
+  env: Environment,
+  log: MoliRuntime.MoliLogger,
   mobileStickyDomId: string,
   disallowedAdvertiserIds: number[],
   initiallyHidden: boolean

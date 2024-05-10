@@ -12,7 +12,7 @@ import {
   RequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { prebidjs } from '../types/prebidjs';
 import { SizeConfigService } from './sizeConfigService';
 import { resolveAdUnitPath } from './adUnitPath';
@@ -45,8 +45,8 @@ const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
   });
 
 const isPrebidSlotDefinition = (
-  slotDefinition: Moli.SlotDefinition
-): slotDefinition is Moli.SlotDefinition<
+  slotDefinition: MoliRuntime.SlotDefinition
+): slotDefinition is MoliRuntime.SlotDefinition<
   AdSlot & { prebid: headerbidding.PrebidAdSlotConfigProvider }
 > => {
   return !!slotDefinition.moliSlot.prebid;
@@ -94,7 +94,7 @@ const isAdUnitDefined = (
 const createdAdUnits = (
   context: AdPipelineContext,
   prebidConfig: headerbidding.PrebidConfig,
-  slots: Moli.SlotDefinition[]
+  slots: MoliRuntime.SlotDefinition[]
 ): prebidjs.IAdUnit[] => {
   const labels = context.labelConfigService.getSupportedLabels();
   const deviceLabel = context.labelConfigService.getDeviceLabel();
@@ -337,7 +337,7 @@ export const prebidPrepareRequestAds = (
   mkPrepareRequestAdsStep(
     'prebid-prepare-adunits',
     LOW_PRIORITY,
-    (context: AdPipelineContext, slots: Moli.SlotDefinition[]) =>
+    (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) =>
       new Promise<void>(resolve => {
         if (prebidConfig.ephemeralAdUnits) {
           resolve();
@@ -364,7 +364,7 @@ export const prebidRequestBids = (
 ): RequestBidsStep =>
   mkRequestBidsStep(
     'prebid-request-bids',
-    (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => {
+    (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
       // The failsafe timeout is the maximum of the bidder timeout and the failsafe timeout.
       // This also ensure that the failsafe timeout is never smaller than the bidderTimeout, which would be a very
       // unexpected behavior.
@@ -518,9 +518,9 @@ export const prebidDefineSlots =
       } as any;
       switch (context.env) {
         case 'production':
-          return Promise.resolve<Moli.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+          return Promise.resolve<MoliRuntime.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         case 'test':
-          return Promise.resolve<Moli.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+          return Promise.resolve<MoliRuntime.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
         default:
           return Promise.reject(`invalid environment: ${context.config.environment}`);
       }
@@ -529,7 +529,7 @@ export const prebidDefineSlots =
   };
 
 export const prebidRenderAds =
-  (): RequestAdsStep => (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => {
+  (): RequestAdsStep => (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
     return new Promise((resolve, reject) => {
       context.logger.debug('Prebid', 'start rendering');
       try {
@@ -619,7 +619,7 @@ export const prebidRenderAds =
  */
 const filterVideoPlayerSizes = (
   playerSize: prebidjs.IMediaTypeVideo['playerSize'],
-  filterSupportedSizes: Moli.FilterSupportedSizes
+  filterSupportedSizes: MoliRuntime.FilterSupportedSizes
 ): [number, number][] => {
   const isSinglePlayerSize = (
     size: prebidjs.IMediaTypeVideo['playerSize']

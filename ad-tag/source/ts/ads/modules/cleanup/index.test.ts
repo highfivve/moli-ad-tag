@@ -1,6 +1,6 @@
 import * as Sinon from 'sinon';
 import { createDom } from '../../../stubs/browserEnvSetup';
-import { AdPipelineContext, createMoliTag, Moli } from '../../../../ts/index';
+import { AdPipelineContext, createMoliTag, MoliRuntime } from '../../../../ts/index';
 import { emptyConfig, newNoopLogger } from '../../../stubs/moliStubs';
 import { Cleanup } from './index';
 import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
@@ -52,7 +52,7 @@ describe('Cleanup Module', () => {
     sandbox.restore();
   });
 
-  const mkConfig = (slots): Moli.MoliConfig => {
+  const mkConfig = (slots): MoliRuntime.MoliConfig => {
     return {
       slots: slots,
       buckets: {
@@ -71,13 +71,13 @@ describe('Cleanup Module', () => {
     domIds: string[],
     behaviour?: 'eager' | 'manual',
     bucket?: string
-  ): Moli.AdSlot[] => {
+  ): MoliRuntime.AdSlot[] => {
     return domIds.map(domId => {
       const div = window.document.createElement('div');
       div.id = domId;
       window.document.body.appendChild(div);
 
-      const slot: Moli.AdSlot = {
+      const slot: MoliRuntime.AdSlot = {
         domId: domId,
         adUnitPath: domId,
         position: 'in-page',
@@ -91,7 +91,7 @@ describe('Cleanup Module', () => {
     });
   };
 
-  const createSlotDefinition = (domId: string): Moli.SlotDefinition<Moli.AdSlot> => {
+  const createSlotDefinition = (domId: string): MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> => {
     return {
       moliSlot: {
         domId: domId,

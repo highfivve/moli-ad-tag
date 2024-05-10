@@ -10,13 +10,13 @@ import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
   googletag,
   prebidjs,
-  Moli,
+  MoliRuntime,
   AdPipeline,
   AdPipelineContext,
   IAdPipelineConfiguration
 } from '@highfivve/ad-tag';
 
-import Device = Moli.Device;
+import Device = MoliRuntime.Device;
 import { StickyHeaderAds, StickyHeaderAdConfig, StickyHeaderFadeOutConfig } from './index';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
@@ -41,7 +41,7 @@ describe('sticky header ad module', () => {
     requestBids: [],
     requestAds: () => Promise.resolve()
   };
-  const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -58,9 +58,9 @@ describe('sticky header ad module', () => {
     };
   };
 
-  const createAdSlotConfig = (domId: string, device: Device): Moli.SlotDefinition => {
+  const createAdSlotConfig = (domId: string, device: Device): MoliRuntime.SlotDefinition => {
     const adUnitPath = '/1/' + domId;
-    const moliSlot: Moli.AdSlot = {
+    const moliSlot: MoliRuntime.AdSlot = {
       domId: domId,
       adUnitPath: adUnitPath,
       position: 'in-page',
@@ -101,10 +101,10 @@ describe('sticky header ad module', () => {
   };
 
   const initModule = (
-    moliSlots: Moli.AdSlot[] = [],
-    configPipeline?: Moli.pipeline.PipelineConfig
+    moliSlots: MoliRuntime.AdSlot[] = [],
+    configPipeline?: MoliRuntime.pipeline.PipelineConfig
   ) => {
-    const moliConfig: Moli.MoliConfig = {
+    const moliConfig: MoliRuntime.MoliConfig = {
       slots: moliSlots,
       pipeline: configPipeline,
       logger: noopLogger,

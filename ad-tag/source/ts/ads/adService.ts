@@ -1,6 +1,6 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import {
   AdPipeline,
   ConfigureStep,
@@ -44,8 +44,8 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, behaviour, MoliConfig } from '../types/moliConfig';
-import state = Moli.state;
+import { AdSlot, behaviour, Environment, MoliConfig } from '../types/moliConfig';
+import state = MoliRuntime.state;
 
 /**
  * @internal
@@ -82,7 +82,7 @@ export class AdService {
     )
   );
 
-  private static getEnvironment(config: MoliConfig): Moli.Environment {
+  private static getEnvironment(config: MoliConfig): Environment {
     return config.environment || 'production';
   }
 
@@ -293,7 +293,7 @@ export class AdService {
   public refreshAdSlots(
     domIds: string[],
     config: MoliConfig,
-    options?: Moli.RefreshAdSlotsOptions
+    options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<void> {
     if (domIds.length === 0) {
       return Promise.resolve();
@@ -351,7 +351,7 @@ export class AdService {
     return this.adPipeline;
   };
 
-  public setLogger = (logger: Moli.MoliLogger): void => {
+  public setLogger = (logger: MoliRuntime.MoliLogger): void => {
     this.logger.setLogger(logger);
   };
 

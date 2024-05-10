@@ -20,26 +20,8 @@ import {
  * controls the behaviour of the ad tag.
  *
  */
-export namespace Moli {
+export namespace MoliRuntime {
   export type MoliCommand = (moli: MoliTag) => void;
-
-  /**
-   * ## Production
-   *
-   * The production environment enables all requests to DFP / Prebid / A9
-   * and other 3rd party module the ad tag may provide.
-   *
-   * This environment needs to be set if the ad tag should be used live.
-   *
-   * ## Test
-   *
-   * The test environment disables all calls to external services and instead
-   * renders placeholder in all available ad slots.
-   *
-   * This environment is recommended for early testing to get some visual feedback.
-   *
-   */
-  export type Environment = 'production' | 'test';
 
   /**
    * # Moli Ad Tag
@@ -1060,6 +1042,6 @@ export namespace Moli {
     /**
      * the global moli tag definition
      */
-    moli: Moli.MoliTag;
+    moli: MoliRuntime.MoliTag;
   };
 }

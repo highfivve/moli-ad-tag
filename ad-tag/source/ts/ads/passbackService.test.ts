@@ -5,7 +5,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { PassbackService } from './passbackService';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { googletag } from '../types/googletag';
 
 // setup sinon-chai
@@ -81,7 +81,7 @@ describe('Passback Service', () => {
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
-      const adSlotDefinition: Moli.SlotDefinition<any> = {
+      const adSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: { domId: 'foo' } as any,
         adSlot: googleAdSlot,
         filterSupportedSizes: {} as any
@@ -104,7 +104,7 @@ describe('Passback Service', () => {
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
-      const adSlotDefinition: Moli.SlotDefinition<any> = {
+      const adSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: { domId: 'foo' } as any,
         adSlot: googleAdSlot,
         filterSupportedSizes: {} as any
@@ -133,7 +133,7 @@ describe('Passback Service', () => {
       const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
-      const adSlotDefinition: Moli.SlotDefinition<any> = {
+      const adSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: { domId: 'foo' } as any,
         adSlot: googleAdSlot,
         filterSupportedSizes: {} as any
@@ -190,7 +190,7 @@ describe('Passback Service', () => {
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
-      const adSlotDefinition: Moli.SlotDefinition<any> = {
+      const adSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: { domId: 'foo', adUnitPath: '/1/foo' } as any,
         adSlot: googleAdSlot,
         filterSupportedSizes: {} as any
@@ -213,7 +213,7 @@ describe('Passback Service', () => {
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
       const googleAdSlotSetTargetingSpy = sandbox.spy(googleAdSlot, 'setTargeting');
-      const adSlotDefinition: Moli.SlotDefinition<any> = {
+      const adSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: { domId: 'foo', adUnitPath: '/1/foo' } as any,
         adSlot: googleAdSlot,
         filterSupportedSizes: {} as any
@@ -246,7 +246,7 @@ describe('Passback Service', () => {
       const passbackService = new PassbackService(noopLogger, jsDomWindow);
       const googleAdSlot = googleAdSlotStub('/1/foo', 'foo');
 
-      const adSlotDefinition: Moli.SlotDefinition<any> = {
+      const adSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: { domId: 'foo', adUnitPath: '/1/foo' } as any,
         adSlot: googleAdSlot,
         filterSupportedSizes: {} as any

@@ -1,4 +1,4 @@
-import { AdPipelineContext, googletag, Moli } from '@highfivve/ad-tag';
+import { AdPipelineContext, googletag, MoliRuntime } from '@highfivve/ad-tag';
 
 /**
  * empty: mobile sticky load was empty
@@ -9,7 +9,7 @@ export type RenderEventResult = 'empty' | 'disallowed' | 'standard';
 
 export const adRenderResult = (
   ctx: AdPipelineContext,
-  headerSlot: Moli.AdSlot,
+  headerSlot: MoliRuntime.AdSlot,
   disallowedAdvertiserIds: number[],
   minVisibleDuration: number
 ) =>

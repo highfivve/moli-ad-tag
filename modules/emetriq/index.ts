@@ -75,7 +75,7 @@ import {
   mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   ModuleType,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 import {
   EmetriqAdditionalIdentifier,
@@ -85,7 +85,7 @@ import {
   EmetriqWindow
 } from './types/emetriq';
 import { trackInApp } from './trackInApp';
-import DfpKeyValueMap = Moli.GoogleAdManagerKeyValueMap;
+import DfpKeyValueMap = MoliRuntime.GoogleAdManagerKeyValueMap;
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 
 /**
@@ -287,7 +287,7 @@ export class Emetriq implements IModule {
     return this.moduleConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
       initSteps: [],

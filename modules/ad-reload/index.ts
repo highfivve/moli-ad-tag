@@ -50,7 +50,7 @@
 import {
   IModule,
   ModuleType,
-  Moli,
+  MoliRuntime,
   googletag,
   IAssetLoaderService,
   getLogger,
@@ -142,7 +142,7 @@ export class AdReload implements IModule {
    */
   private readonly refreshIntervalMs: number = 20000;
 
-  private logger?: Moli.MoliLogger;
+  private logger?: MoliRuntime.MoliLogger;
   private getAdPipeline?: () => AdPipeline;
   private requestAdsCalls: number = 0;
 
@@ -169,7 +169,7 @@ export class AdReload implements IModule {
     return this.initialized;
   }
 
-  init(moliConfig: Moli.MoliConfig, _: IAssetLoaderService, getAdPipeline: () => AdPipeline): void {
+  init(moliConfig: MoliRuntime.MoliConfig, _: IAssetLoaderService, getAdPipeline: () => AdPipeline): void {
     this.getAdPipeline = getAdPipeline;
 
     this.logger = getLogger(moliConfig, this.window);
@@ -230,7 +230,7 @@ export class AdReload implements IModule {
   };
 
   private setupAdVisibilityService = (
-    moliConfig: Moli.MoliConfig,
+    moliConfig: MoliRuntime.MoliConfig,
     window: Window & googletag.IGoogleTagWindow
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
@@ -311,7 +311,7 @@ export class AdReload implements IModule {
       }
     });
 
-  private reloadAdSlot = (moliConfig: Moli.MoliConfig) => (googleTagSlot: googletag.IAdSlot) => {
+  private reloadAdSlot = (moliConfig: MoliRuntime.MoliConfig) => (googleTagSlot: googletag.IAdSlot) => {
     const slotId = googleTagSlot.getSlotElementId();
     const moliSlot = moliConfig.slots.find(moliSlot => moliSlot.domId === slotId);
     const adPipeline = this.getAdPipeline && this.getAdPipeline();
@@ -349,9 +349,9 @@ export class AdReload implements IModule {
    * googletag slot pendant will be destroyed and rebuilt.
    */
   private maybeOptimizeSlotForCls = (
-    moliSlot: Moli.AdSlot,
+    moliSlot: MoliRuntime.AdSlot,
     googleTagSlot: googletag.IAdSlot
-  ): Moli.AdSlot => {
+  ): MoliRuntime.AdSlot => {
     const slotDomId = moliSlot.domId;
 
     if (this.moduleConfig.optimizeClsScoreDomIds.indexOf(slotDomId) > -1) {

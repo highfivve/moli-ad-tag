@@ -36,7 +36,7 @@ import {
   LOW_PRIORITY,
   mkPrepareRequestAdsStep,
   ModuleType,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 import { initAdSticky } from './footerStickyAd';
 
@@ -80,7 +80,7 @@ export class StickyFooterAdsV2 implements IModule {
   }
 
   init(
-    config: Moli.MoliConfig,
+    config: MoliRuntime.MoliConfig,
     assetLoaderService: IAssetLoaderService,
     getAdPipeline: () => AdPipeline
   ): void {

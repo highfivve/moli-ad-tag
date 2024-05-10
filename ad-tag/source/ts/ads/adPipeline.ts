@@ -1,5 +1,5 @@
-import { Moli } from '../types/moli';
-import SlotDefinition = Moli.SlotDefinition;
+import { MoliRuntime } from '../types/moliRuntime';
+import SlotDefinition = MoliRuntime.SlotDefinition;
 import { LabelConfigService } from './labelConfigService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
@@ -9,7 +9,7 @@ import { prebidjs } from '../types/prebidjs';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, bucket, consent, MoliConfig } from '../types/moliConfig';
+import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliConfig';
 
 /**
  * Context passed to every pipeline step.
@@ -33,12 +33,12 @@ export type AdPipelineContext = {
    */
   readonly requestAdsCalls: number;
 
-  readonly logger: Moli.MoliLogger;
+  readonly logger: MoliRuntime.MoliLogger;
 
   /**
    * Environment from the config with a default set to production
    */
-  readonly env: Moli.Environment;
+  readonly env: Environment;
 
   /**
    * The config used for the ad configuration run
@@ -255,7 +255,7 @@ export const mkPrepareRequestAdsStep = (
 
 export const mkRequestBidsStep = (
   name: string,
-  fn: (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => Promise<void>
+  fn: (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => Promise<void>
 ): RequestBidsStep => {
   Object.defineProperty(fn, 'name', { value: name });
   return fn;
@@ -280,7 +280,7 @@ export class AdPipeline {
    */
   constructor(
     public readonly config: IAdPipelineConfiguration,
-    private readonly logger: Moli.MoliLogger,
+    private readonly logger: MoliRuntime.MoliLogger,
     private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
     private readonly auction: GlobalAuctionContext
   ) {}
@@ -416,7 +416,7 @@ export class AdPipeline {
 
   private runPrepareRequestAds = (
     context: AdPipelineContext,
-    definedSlots: Moli.SlotDefinition[]
+    definedSlots: MoliRuntime.SlotDefinition[]
   ) => {
     const byPriority = new Map<number, PrepareRequestAdsStep[]>();
     this.config.prepareRequestAds.forEach(step => {

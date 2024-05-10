@@ -15,7 +15,7 @@ import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeS
 import { Theme, ThemingService } from '../util/themingService';
 
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { ModuleMeta } from '@highfivve/ad-tag/source/ts/types/module';
 import { ConsentConfig } from './consentConfig';
@@ -26,8 +26,8 @@ import {
   setDebugDelayToLocalStorage
 } from 'ad-tag/source/ts/util/debugDelay';
 import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
-import MoliConfig = Moli.MoliConfig;
-import AdSlot = Moli.AdSlot;
+import MoliConfig = MoliRuntime.MoliConfig;
+import AdSlot = MoliRuntime.AdSlot;
 import { checkBucketConfig, checkSkinConfig } from 'moli-debugger/validations/bucketValidations';
 import { checkAdReloadConfig } from '../validations/adReloadValidations';
 import { checkSizesConfig } from '../validations/sizesConfigValidations';
@@ -35,7 +35,7 @@ import { checkSizesConfig } from '../validations/sizesConfigValidations';
 declare const window: Window &
   prebidjs.IPrebidjsWindow &
   googletag.IGoogleTagWindow &
-  Moli.MoliWindow;
+  MoliRuntime.MoliWindow;
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
@@ -830,7 +830,7 @@ export class GlobalConfig
   private setTheme = (theme: Theme) =>
     this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
 
-  private keyValues = (keyValues: Moli.GoogleAdManagerKeyValueMap): JSX.Element => {
+  private keyValues = (keyValues: MoliRuntime.GoogleAdManagerKeyValueMap): JSX.Element => {
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (
@@ -1018,7 +1018,7 @@ export class GlobalConfig
     }
   };
 
-  private checkPrebidConfig = (messages: Message[], prebid: Moli.headerbidding.PrebidConfig) => {
+  private checkPrebidConfig = (messages: Message[], prebid: MoliRuntime.headerbidding.PrebidConfig) => {
     if (!prebid.config.consentManagement) {
       messages.push({
         kind: 'error',
@@ -1060,7 +1060,7 @@ export class GlobalConfig
 
   private checkGlobalSizeConfigEntry =
     (messages: Message[]) =>
-    (entry: Moli.LabelSizeConfigEntry, _: number): void => {
+    (entry: MoliRuntime.LabelSizeConfigEntry, _: number): void => {
       if (entry.labelsSupported.length === 0) {
         messages.push({
           kind: 'warning',

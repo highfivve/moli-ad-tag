@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { SinglePageAppConfig } from '../types/moliConfig';
 
 /**

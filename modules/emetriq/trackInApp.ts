@@ -1,4 +1,4 @@
-import { AdPipelineContext, Moli } from '@highfivve/ad-tag';
+import { AdPipelineContext, MoliRuntime } from '@highfivve/ad-tag';
 import { EmetriqAppConfig } from './index';
 import { EmetriqAdditionalIdentifier, EmetriqCustomParams } from './types/emetriq';
 

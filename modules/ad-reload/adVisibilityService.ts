@@ -1,5 +1,5 @@
 import { UserActivityService } from './userActivityService';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
 import { RefreshIntervalOverrides } from './index';
@@ -47,7 +47,7 @@ export class AdVisibilityService {
     readonly useIntersectionObserver: boolean,
     private readonly disableAdVisibilityChecks: boolean,
     private readonly window: Window & googletag.IGoogleTagWindow,
-    private readonly logger?: Moli.MoliLogger
+    private readonly logger?: MoliRuntime.MoliLogger
   ) {
     this.minimalAdVisibilityRatio = disableAdVisibilityChecks ? 0 : 0.5;
 

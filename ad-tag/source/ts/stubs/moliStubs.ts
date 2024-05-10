@@ -1,7 +1,7 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { AdSlot, MoliConfig } from '../types/moliConfig';
 
-export const newNoopLogger = (withErrorLogs?: boolean): Moli.MoliLogger => {
+export const newNoopLogger = (withErrorLogs?: boolean): MoliRuntime.MoliLogger => {
   return {
     debug: () => {
       return;
@@ -20,7 +20,7 @@ export const newNoopLogger = (withErrorLogs?: boolean): Moli.MoliLogger => {
   };
 };
 
-export const noopLogger: Moli.MoliLogger = newNoopLogger();
+export const noopLogger: MoliRuntime.MoliLogger = newNoopLogger();
 
 export const newEmptyConfig = (slots: AdSlot[] = []): MoliConfig => {
   return {

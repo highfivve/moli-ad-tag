@@ -1,10 +1,10 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import MoliLogger = Moli.MoliLogger;
+import MoliLogger = MoliRuntime.MoliLogger;
 import IAdSlot = googletag.IAdSlot;
 import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
 import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
-import Device = Moli.Device;
+import Device = MoliRuntime.Device;
 
 /**
  * Extended representation which adds
@@ -12,7 +12,7 @@ import Device = Moli.Device;
  * - a flag `main` indicating if the main traffic share price rule was selected
  * - a cpm field
  */
-type PriceRule = Moli.yield_optimization.PriceRule & {
+type PriceRule = MoliRuntime.yield_optimization.PriceRule & {
   /**
    * True if this price rule is the main price rule
    */
@@ -159,7 +159,7 @@ export class YieldOptimizationService {
    * @param adSlot
    * @param adServer
    */
-  public setTargeting(adSlot: IAdSlot, adServer: Moli.AdServer): Promise<PriceRule | undefined> {
+  public setTargeting(adSlot: IAdSlot, adServer: MoliRuntime.AdServer): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];

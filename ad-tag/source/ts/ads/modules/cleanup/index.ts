@@ -6,7 +6,7 @@ import {
   mkConfigureStepOncePerRequestAdsCycle,
   AdPipelineContext
 } from '../../adPipeline';
-import { Moli } from '../../../types/moli';
+import { MoliRuntime } from '../../../types/moliRuntime';
 import { IModule, ModuleType } from '../../../types/module';
 import { CleanupConfig, modules, MoliConfig } from '../../../types/moliConfig';
 

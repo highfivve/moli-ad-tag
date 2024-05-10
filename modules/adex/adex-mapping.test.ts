@@ -1,4 +1,4 @@
-import { Moli } from '@highfivve/ad-tag';
+import { MoliRuntime } from '@highfivve/ad-tag';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
@@ -11,7 +11,7 @@ import {
   toAdexMapType,
   toAdexStringOrNumberType
 } from './adex-mapping';
-import DfpKeyValueMap = Moli.GoogleAdManagerKeyValueMap;
+import DfpKeyValueMap = MoliRuntime.GoogleAdManagerKeyValueMap;
 
 use(sinonChai);
 

@@ -46,7 +46,7 @@ import {
   mkConfigureStepOncePerRequestAdsCycle,
   mkPrepareRequestAdsStep,
   ModuleType,
-  Moli,
+  MoliRuntime,
   googletag
 } from '@highfivve/ad-tag';
 import { intersectionObserverFadeOutCallback } from './fadeOutCallback';
@@ -190,7 +190,7 @@ export class StickyHeaderAds implements IModule {
     return this.stickyHeaderAdConfig;
   }
 
-  init(config: Moli.MoliConfig): void {
+  init(config: MoliRuntime.MoliConfig): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {

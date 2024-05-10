@@ -8,10 +8,10 @@ import 'prebid.js/modules/consentManagement';
 import 'prebid.js/modules/currency';
 import 'prebid.js/modules/appnexusBidAdapter';
 
-import { googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { googletag, initAdTag, MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import { adConfiguration } from './source/ts/configuration';
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
-import MoliWindow = Moli.MoliWindow;
+import MoliWindow = MoliRuntime.MoliWindow;
 
 prebid.processQueue();
 

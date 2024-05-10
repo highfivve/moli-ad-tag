@@ -1,4 +1,4 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 
 /**
  * Used to configure the strictness of user activity checks.
@@ -69,7 +69,7 @@ export class UserActivityService implements UserActivityParameters {
   constructor(
     private readonly window: Window,
     private readonly userActivityLevelControl: UserActivityLevelControl = { level: 'strict' },
-    private readonly logger?: Moli.MoliLogger
+    private readonly logger?: MoliRuntime.MoliLogger
   ) {
     this.listener = [];
     this.window.document.addEventListener('visibilitychange', this.handlePageVisibilityChanged);

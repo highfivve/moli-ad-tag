@@ -1,8 +1,8 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
 
-const logger: Moli.MoliLogger = {
+const logger: MoliRuntime.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
     window.console.debug(`[DEBUG] ${message}`, ...optionalParams);
   },
@@ -25,7 +25,7 @@ const asArray = (value: string | string[] | undefined, fallback: string[]): stri
   return fallback;
 };
 
-export const adConfiguration: Moli.MoliConfig = {
+export const adConfiguration: MoliRuntime.MoliConfig = {
   environment: 'test',
   slots: [
     {

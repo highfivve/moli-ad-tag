@@ -1,6 +1,6 @@
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
-import { Moli } from '../../types/moli';
+import { MoliRuntime } from '../../types/moliRuntime';
 import { auction } from '../../types/moliConfig';
 
 /**
@@ -35,7 +35,7 @@ type BidderState = {
  */
 export class BiddersDisabling {
   private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map();
-  private logger?: Moli.MoliLogger;
+  private logger?: MoliRuntime.MoliLogger;
   constructor(
     private readonly config: auction.BidderDisablingConfig,
     private readonly window: Window

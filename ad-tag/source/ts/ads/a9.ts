@@ -11,7 +11,7 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { isSizeEqual } from '../util/sizes';
 import { SizeConfigService } from './sizeConfigService';
@@ -23,8 +23,8 @@ import { AdUnitPathVariables } from './adUnitPath';
 import { AdSlot, headerbidding, schain } from '../types/moliConfig';
 
 const isA9SlotDefinition = (
-  slotDefinition: Moli.SlotDefinition
-): slotDefinition is Moli.SlotDefinition<AdSlot & { a9: headerbidding.A9AdSlotConfig }> => {
+  slotDefinition: MoliRuntime.SlotDefinition
+): slotDefinition is MoliRuntime.SlotDefinition<AdSlot & { a9: headerbidding.A9AdSlotConfig }> => {
   return !!slotDefinition.moliSlot.a9;
 };
 
@@ -171,7 +171,7 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
   mkPrepareRequestAdsStep(
     'a9-clear-targeting',
     LOW_PRIORITY,
-    (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) => {
+    (context: AdPipelineContext, slots: Array<MoliRuntime.SlotDefinition>) => {
       if (context.requestId === 0) {
         context.logger.debug('A9', 'skip ad slot clearing for first pipeline run');
         return Promise.resolve();
@@ -204,7 +204,7 @@ const resolveAdUnitPath = (
 export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =>
   mkRequestBidsStep(
     'a9-fetch-bids',
-    (context: AdPipelineContext, slotDefinitions: Moli.SlotDefinition[]) =>
+    (context: AdPipelineContext, slotDefinitions: MoliRuntime.SlotDefinition[]) =>
       new Promise<void>(resolve => {
         if (!hasRequiredConsent(context.tcData)) {
           context.logger.debug('A9', 'Skip any due to missing consent');

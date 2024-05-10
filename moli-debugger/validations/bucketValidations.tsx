@@ -1,4 +1,4 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { isNotNull, ModuleMeta } from '@highfivve/ad-tag';
 import { SkinModuleConfig } from '@highfivve/module-generic-skin';
 import React from 'react';
@@ -11,8 +11,8 @@ type AdSlotType = {
 
 export const checkBucketConfig = (
   messages: Message[],
-  bucket: Moli.bucket.GlobalBucketConfig,
-  slots: Moli.AdSlot[]
+  bucket: MoliRuntime.bucket.GlobalBucketConfig,
+  slots: MoliRuntime.AdSlot[]
 ) => {
   const hasBucket = slots.some(slot => !!slot.behaviour.bucket);
   const slotsWithoutBucket = slots.filter(slot => !slot.behaviour.bucket);
@@ -47,7 +47,7 @@ export const checkBucketConfig = (
 export const checkSkinConfig = (
   messages: Message[],
   modules: ModuleMeta[],
-  slots: Moli.AdSlot[]
+  slots: MoliRuntime.AdSlot[]
 ) => {
   const module = modules.find(module => module.name === 'skin');
 
@@ -100,7 +100,7 @@ const formatSkinConfigMsg = (
   );
 };
 
-const formatMissingBucketsMsg = (slots: Moli.AdSlot[]) => {
+const formatMissingBucketsMsg = (slots: MoliRuntime.AdSlot[]) => {
   return (
     <div>
       {`The following slots might require defined buckets:`}

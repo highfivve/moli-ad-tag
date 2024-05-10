@@ -1,6 +1,6 @@
 import { AdPipelineContext } from '../ads/adPipeline';
 import { SizeConfigService } from '../ads/sizeConfigService';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { isNotNull } from './arrayUtils';
 import { BrowserStorageKeys } from './browserStorageKeys';
 import {
@@ -19,7 +19,7 @@ import { AdSlot } from '../types/moliConfig';
  */
 
 export type TestSlot = {
-  slot: Moli.SlotDefinition;
+  slot: MoliRuntime.SlotDefinition;
   /**
    * The visual representation of the test slot.
    */
@@ -49,7 +49,7 @@ const testSlotContainerId = (moliSlotDomId: string) => `${moliSlotDomId}__contai
  */
 export const createTestSlots = (
   context: AdPipelineContext,
-  slots: Moli.SlotDefinition[]
+  slots: MoliRuntime.SlotDefinition[]
 ): TestSlot[] => {
   const testSlots = createBlankTestSlots(context, slots);
   testSlots.forEach(({ slot, container }) => {
@@ -81,7 +81,7 @@ const setContent = (adSlotId: string, content: string) => {
 
 const createBlankTestSlots = (
   context: AdPipelineContext,
-  slots: Moli.SlotDefinition[]
+  slots: MoliRuntime.SlotDefinition[]
 ): TestSlot[] => {
   slots.forEach(slot => {
     const { moliSlot } = slot;
@@ -110,7 +110,7 @@ const createBlankTestSlots = (
 /**
  * Assuming that createTestSlots() was called before, this returns the HTML element for each slot.
  */
-const queryTestSlots = (slots: Moli.SlotDefinition[]): TestSlot[] =>
+const queryTestSlots = (slots: MoliRuntime.SlotDefinition[]): TestSlot[] =>
   slots
     .map(slot => {
       const container = document.getElementById(testSlotContainerId(slot.moliSlot.domId));
@@ -121,7 +121,7 @@ const queryTestSlots = (slots: Moli.SlotDefinition[]): TestSlot[] =>
 /**
  * Fills the empty test slot elements with visual debugging tools.
  */
-const testSlotContent = (slot: Moli.SlotDefinition): HTMLElement => {
+const testSlotContent = (slot: MoliRuntime.SlotDefinition): HTMLElement => {
   const sizes = getSizesForSlot(slot);
   const activeSize = pickTestSlotSize(slot.moliSlot, sizes);
 
@@ -213,7 +213,7 @@ const testSlotContent = (slot: Moli.SlotDefinition): HTMLElement => {
 /**
  * Returns all sizes, except fixed and 1x1 sizes.
  */
-const getSizesForSlot = (slot: Moli.SlotDefinition): Array<Size> => {
+const getSizesForSlot = (slot: MoliRuntime.SlotDefinition): Array<Size> => {
   return slot
     .filterSupportedSizes(slot.moliSlot.sizes)
     .filter(SizeConfigService.isFixedSize)

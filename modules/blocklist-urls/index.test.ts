@@ -16,7 +16,7 @@ import {
   AdPipelineContext,
   ConfigureStep,
   PrepareRequestAdsStep,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 
 import { newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
@@ -67,7 +67,7 @@ describe('BlocklistedUrls Module', () => {
     endpoint: 'http://localhost/blocklist.json'
   };
 
-  const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -93,7 +93,7 @@ describe('BlocklistedUrls Module', () => {
   });
 
   it('should configure nothing in test mode', () => {
-    const testConfig: Moli.MoliConfig = { ...newEmptyConfig(), environment: 'test' };
+    const testConfig: MoliRuntime.MoliConfig = { ...newEmptyConfig(), environment: 'test' };
     const module = new BlocklistedUrls(
       {
         mode: 'block',
@@ -109,7 +109,7 @@ describe('BlocklistedUrls Module', () => {
   describe('block mode with static provider', () => {
     const createInitializedModule = (
       patterns: string[]
-    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: Moli.MoliConfig } => {
+    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: MoliRuntime.MoliConfig } => {
       const config = newEmptyConfig();
       const module = new BlocklistedUrls(
         {
@@ -166,7 +166,7 @@ describe('BlocklistedUrls Module', () => {
   describe('block mode with dynamic provider', () => {
     const createInitializedModule = (
       patterns: string[]
-    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: Moli.MoliConfig } => {
+    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: MoliRuntime.MoliConfig } => {
       const config = newEmptyConfig();
       const module = new BlocklistedUrls(
         { mode: 'block', blocklist: dynamicBlocklistProvider },
@@ -241,7 +241,7 @@ describe('BlocklistedUrls Module', () => {
     ): {
       prepareRequestAdsSteps: PrepareRequestAdsStep;
       module: BlocklistedUrls;
-      config: Moli.MoliConfig;
+      config: MoliRuntime.MoliConfig;
     } => {
       const config = newEmptyConfig();
       const module = new BlocklistedUrls(
@@ -324,7 +324,7 @@ describe('BlocklistedUrls Module', () => {
     ): {
       prepareRequestAdsSteps: PrepareRequestAdsStep;
       module: BlocklistedUrls;
-      config: Moli.MoliConfig;
+      config: MoliRuntime.MoliConfig;
     } => {
       const config = newEmptyConfig();
       const module = new BlocklistedUrls(

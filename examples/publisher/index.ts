@@ -2,7 +2,7 @@
  * ES6 bundle: no polyfills.
  */
 
-import { googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { googletag, initAdTag, MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import { Confiant } from '@highfivve/module-confiant';
 
 import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
@@ -12,7 +12,7 @@ import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAdsV2 } from '@highfivve/module-sticky-footer-ads-v2';
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
-import MoliWindow = Moli.MoliWindow;
+import MoliWindow = MoliRuntime.MoliWindow;
 import prebid from 'prebid.js';
 import 'prebid.js/modules/consentManagement';
 import 'prebid.js/modules/currency';

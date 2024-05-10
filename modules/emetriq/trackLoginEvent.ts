@@ -1,4 +1,4 @@
-import { AdPipelineContext, Moli } from '@highfivve/ad-tag';
+import { AdPipelineContext, MoliRuntime } from '@highfivve/ad-tag';
 import { EmetriqModuleConfig } from './index';
 
 const extractAdIdOrIdfa = (
@@ -24,7 +24,7 @@ const extractAdIdOrIdfa = (
 export const shouldTrackLoginEvent = (
   storage: Storage,
   currentDate: number,
-  logger: Moli.MoliLogger
+  logger: MoliRuntime.MoliLogger
 ): boolean => {
   try {
     const oneDayMilliseconds = 86400000;
@@ -64,7 +64,7 @@ export const trackLoginEvent = (
   context: AdPipelineContext,
   moduleConfig: EmetriqModuleConfig,
   document: Document,
-  logger: Moli.MoliLogger
+  logger: MoliRuntime.MoliLogger
 ): void => {
   if (!moduleConfig.login) {
     logger.warn('emetriq', 'login configuration missing!');

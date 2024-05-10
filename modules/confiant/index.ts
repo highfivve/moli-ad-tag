@@ -31,7 +31,7 @@
  * @module
  */
 import {
-  Moli,
+  MoliRuntime,
   IModule,
   ModuleType,
   AssetLoadMethod,
@@ -77,7 +77,7 @@ export class Confiant implements IModule {
     return this.confiantConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
       initSteps: [],

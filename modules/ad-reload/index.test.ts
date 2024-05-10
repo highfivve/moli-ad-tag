@@ -10,7 +10,7 @@ import { emptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
   googletag,
   prebidjs,
-  Moli,
+  MoliRuntime,
   AdPipeline,
   AdPipelineContext,
   IAdPipelineConfiguration,
@@ -41,7 +41,7 @@ describe('Moli Ad Reload Module', () => {
     requestBids: [],
     requestAds: () => Promise.resolve()
   };
-  const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -94,12 +94,12 @@ describe('Moli Ad Reload Module', () => {
 
   const initModule = (
     module: AdReload,
-    configPipeline?: Moli.pipeline.PipelineConfig,
-    moliSlot?: Moli.AdSlot
+    configPipeline?: MoliRuntime.pipeline.PipelineConfig,
+    moliSlot?: MoliRuntime.AdSlot
   ) => {
-    const slot = moliSlot || ({ domId: 'foo' } as Moli.AdSlot);
+    const slot = moliSlot || ({ domId: 'foo' } as MoliRuntime.AdSlot);
 
-    const moliConfig: Moli.MoliConfig = {
+    const moliConfig: MoliRuntime.MoliConfig = {
       slots: [slot],
       pipeline: configPipeline,
       logger: noopLogger,
@@ -186,7 +186,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -215,7 +215,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -245,7 +245,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -274,7 +274,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -305,7 +305,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -334,7 +334,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -363,7 +363,7 @@ describe('Moli Ad Reload Module', () => {
     const { moliConfig } = initModule(module);
 
     await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [
-      { domId: 'foo' } as Moli.AdSlot
+      { domId: 'foo' } as MoliRuntime.AdSlot
     ]);
 
     expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded');
@@ -386,7 +386,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should set googletag key/value foo-reload=true and run the ad pipeline when reloading a slot', async () => {
-    const moliSlot = { domId: 'foo' } as Moli.AdSlot;
+    const moliSlot = { domId: 'foo' } as MoliRuntime.AdSlot;
     const module = createAdReloadModule('foo-reload', [1337], [4711]);
     const { moliConfig, adPipeline } = initModule(module);
 
@@ -424,7 +424,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should filter possible sizes to same or lower height when CLS optimization is enabled', async () => {
-    const moliSlot = { domId: 'foo', sizes: ['fluid', [300, 600], [300, 250]] } as Moli.AdSlot;
+    const moliSlot = { domId: 'foo', sizes: ['fluid', [300, 600], [300, 250]] } as MoliRuntime.AdSlot;
     const module = createAdReloadModule('foo-reload', [1337], [4711], [], [], [], ['foo']);
     const { moliConfig, adPipeline } = initModule(module, undefined, moliSlot);
 
@@ -477,7 +477,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it("should NOT destroy the googleslot if possible sizes don't change when CLS optimization is enabled", async () => {
-    const moliSlot = { domId: 'foo', sizes: ['fluid', [300, 600], [300, 250]] } as Moli.AdSlot;
+    const moliSlot = { domId: 'foo', sizes: ['fluid', [300, 600], [300, 250]] } as MoliRuntime.AdSlot;
     const module = createAdReloadModule('foo-reload', [1337], [4711], [], [], [], ['foo']);
     const { moliConfig, adPipeline } = initModule(module, undefined, moliSlot);
 
@@ -551,7 +551,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should remove visibility tracking if reloading is not allowed again', async () => {
-    const moliSlot = { domId: 'foo' } as Moli.AdSlot;
+    const moliSlot = { domId: 'foo' } as MoliRuntime.AdSlot;
     const module = createAdReloadModule('foo-reload', [1337], [4711]);
     const { moliConfig, adPipeline } = initModule(module);
 
@@ -645,7 +645,7 @@ describe('Moli Ad Reload Module', () => {
 
     testCases.forEach(({ test, includeAdvertiserIds, includeOrderIds, includeYieldGroupIds }) => {
       it(`should trackSlot if ${test}`, async () => {
-        const moliSlot = { domId: 'foo' } as Moli.AdSlot;
+        const moliSlot = { domId: 'foo' } as MoliRuntime.AdSlot;
         const module = createAdReloadModule(
           'foo-reload',
           includeAdvertiserIds,

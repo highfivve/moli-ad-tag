@@ -4,7 +4,7 @@ import {
   createAssetLoaderService,
   googletag,
   IAdPipelineConfiguration,
-  Moli,
+  MoliRuntime,
   prebidjs
 } from '@highfivve/ad-tag';
 
@@ -44,7 +44,7 @@ describe('Prebid First Party Data Module', () => {
     requestBids: [],
     requestAds: () => Promise.resolve()
   };
-  const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -94,11 +94,11 @@ describe('Prebid First Party Data Module', () => {
       prepareRequestAdsSteps: []
     };
 
-    const targeting: Moli.Targeting = {
+    const targeting: MoliRuntime.Targeting = {
       keyValues: {}
     };
 
-    const moliConfig: Moli.MoliConfig = {
+    const moliConfig: MoliRuntime.MoliConfig = {
       slots: [],
       pipeline: configPipeline,
       targeting,

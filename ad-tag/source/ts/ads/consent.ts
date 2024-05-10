@@ -1,8 +1,8 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { tcfapi } from '../types/tcfapi';
 import EventStatus = tcfapi.status.EventStatus;
 import CmpStatus = tcfapi.status.CmpStatus;
-import { consent } from '../types/moliConfig';
+import { consent, Environment } from '../types/moliConfig';
 
 const allPurposes: tcfapi.responses.TCPurpose[] = [
   tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
@@ -51,8 +51,8 @@ export const missingPurposeConsent = (tcData: tcfapi.responses.TCData): boolean 
 export const consentReady = (
   consentConfig: consent.ConsentConfig,
   window: Window & tcfapi.TCFApiWindow,
-  log: Moli.MoliLogger,
-  env: Moli.Environment | undefined
+  log: MoliRuntime.MoliLogger,
+  env: Environment | undefined
 ): Promise<tcfapi.responses.TCData> => {
   if (env === 'test') {
     log.info('gdprApplies is set to false in test mode!');

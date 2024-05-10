@@ -1,4 +1,4 @@
-import { Moli, prebidjs, prebidOutstreamRenderer } from '@highfivve/ad-tag';
+import { MoliRuntime, prebidjs, prebidOutstreamRenderer } from '@highfivve/ad-tag';
 import video = prebidjs.video;
 
 const appNexusOutstream = (placementId: string): prebidjs.IAppNexusASTBid => {
@@ -53,7 +53,7 @@ const rubiconVideoBid: prebidjs.IRubiconBid = {
   labelAll: [prebidjs.Rubicon]
 };
 
-export const adConfiguration: Moli.MoliConfig = {
+export const adConfiguration: MoliRuntime.MoliConfig = {
   // <---- this configures prebid only ----->
   adServer: 'prebidjs',
 

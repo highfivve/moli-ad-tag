@@ -46,7 +46,7 @@ import {
   mergeDeep,
   mkConfigureStep,
   ModuleType,
-  Moli,
+  MoliRuntime,
   prebidjs,
   uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
@@ -124,7 +124,7 @@ export class PrebidFirstPartyDataModule implements IModule {
   readonly moduleType: ModuleType = 'prebid';
   readonly name = 'prebid-first-party-data';
 
-  private log?: Moli.MoliLogger;
+  private log?: MoliRuntime.MoliLogger;
 
   constructor(
     private readonly moduleConfig: PrebidFirstPartyDataModuleConfig,
@@ -136,7 +136,7 @@ export class PrebidFirstPartyDataModule implements IModule {
   }
 
   init(
-    moliConfig: Moli.MoliConfig,
+    moliConfig: MoliRuntime.MoliConfig,
     assetLoaderService: IAssetLoaderService,
     getAdPipeline: () => AdPipeline
   ): void {
@@ -160,7 +160,7 @@ export class PrebidFirstPartyDataModule implements IModule {
   private static setPrebidFpdConfig(
     context: AdPipelineContext,
     config: PrebidFirstPartyDataModuleConfig,
-    log: Moli.MoliLogger
+    log: MoliRuntime.MoliLogger
   ): Promise<void> {
     if (context.config.prebid) {
       const keyValues = context.config.targeting?.keyValues || {};
@@ -272,7 +272,7 @@ export class PrebidFirstPartyDataModule implements IModule {
 
   private static extractKeyValueArray(
     key: string,
-    keyValues: Moli.GoogleAdManagerKeyValueMap
+    keyValues: MoliRuntime.GoogleAdManagerKeyValueMap
   ): string[] {
     const value = keyValues[key];
     if (value) {

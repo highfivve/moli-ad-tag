@@ -3,9 +3,9 @@ import React, { Component } from 'react';
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import SizeConfigEntry = Moli.SizeConfigEntry;
-import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
+import SizeConfigEntry = MoliRuntime.SizeConfigEntry;
+import DfpSlotSize = MoliRuntime.GoogleAdManagerSlotSize;
 
 type ISizeConfigProps = {
   sizeConfig: Array<SizeConfigEntry>;

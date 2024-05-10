@@ -2,11 +2,11 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // This example builds an ad tag without any configuration or modules
 
-import { initAdTag, Moli } from '@highfivve/ad-tag';
+import { initAdTag, MoliRuntime } from '@highfivve/ad-tag';
 
 initAdTag(window);
 
-const config: Moli.MoliConfig = {
+const config: MoliRuntime.MoliConfig = {
   slots: [
     {
       domId: 'content_1',

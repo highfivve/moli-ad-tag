@@ -1,4 +1,4 @@
-import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
+import { MoliRuntime, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
 import video = prebidjs.video;
 
 const { currentVersion } = require('../../version.json');
@@ -127,7 +127,7 @@ const rubiconBid = (
   };
 };
 
-export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
+export const adConfiguration = (moliVersion: string): MoliRuntime.MoliConfig => ({
   consent: {
     disableLegitimateInterest: true
   },

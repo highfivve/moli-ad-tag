@@ -9,7 +9,7 @@ import {
   AssetLoadMethod,
   createAssetLoaderService,
   googletag,
-  Moli,
+  MoliRuntime,
   prebidjs
 } from '@highfivve/ad-tag';
 
@@ -32,13 +32,13 @@ describe('Zeotap Module', () => {
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
-  const emptyConfigPipeline = (): Moli.pipeline.PipelineConfig => ({
+  const emptyConfigPipeline = (): MoliRuntime.pipeline.PipelineConfig => ({
     initSteps: [],
     configureSteps: [],
     prepareRequestAdsSteps: []
   });
 
-  const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -57,10 +57,10 @@ describe('Zeotap Module', () => {
 
   const initModule = (
     module: Zeotap,
-    keyValues: Moli.GoogleAdManagerKeyValueMap,
-    configPipeline?: Moli.pipeline.PipelineConfig
-  ): Moli.MoliConfig => {
-    const moliConfig: Moli.MoliConfig = {
+    keyValues: MoliRuntime.GoogleAdManagerKeyValueMap,
+    configPipeline?: MoliRuntime.pipeline.PipelineConfig
+  ): MoliRuntime.MoliConfig => {
+    const moliConfig: MoliRuntime.MoliConfig = {
       slots: [],
       pipeline: configPipeline,
       logger: noopLogger,

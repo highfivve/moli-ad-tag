@@ -1,7 +1,7 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import video = prebidjs.video;
 
-export const adConfiguration: Moli.MoliConfig = {
+export const adConfiguration: MoliRuntime.MoliConfig = {
   environment: 'test',
   spa: { enabled: true, validateLocation: 'href' },
   slots: [

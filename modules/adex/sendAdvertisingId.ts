@@ -1,5 +1,5 @@
 import { AdexKeyValues } from './adex-mapping';
-import { Moli } from '@highfivve/ad-tag';
+import { MoliRuntime } from '@highfivve/ad-tag';
 
 type ValueOf<T> = T[keyof T];
 type AdexKeyValueObject = {
@@ -23,7 +23,7 @@ export const sendAdvertisingID = (
   adexAttributes: Array<AdexKeyValues>,
   clientType: string | string[],
   fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
-  logger: Moli.MoliLogger,
+  logger: MoliRuntime.MoliLogger,
   consentString?: string
 ): void => {
   const ifaType = getAdvertisingIdIFAType(

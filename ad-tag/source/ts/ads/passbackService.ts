@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { googletag } from '../types/googletag';
 
 /**
@@ -46,18 +46,18 @@ export class PassbackService {
    * AdSlots that have passback support enabled
    */
   private readonly adSlots: {
-    [domIdOrAdUnitPath: string]: Moli.SlotDefinition;
+    [domIdOrAdUnitPath: string]: MoliRuntime.SlotDefinition;
   } = {};
 
   private readonly passbackKeyValue: string = 'passback';
   private readonly passbackOriginKeyValue: string = 'passbackOrigin';
 
   constructor(
-    private readonly logger: Moli.MoliLogger,
+    private readonly logger: MoliRuntime.MoliLogger,
     private readonly window: Window & googletag.IGoogleTagWindow
   ) {}
 
-  addAdSlot(adSlot: Moli.SlotDefinition): void {
+  addAdSlot(adSlot: MoliRuntime.SlotDefinition): void {
     // initialize on the first add call
     if (!this.isInitialized) {
       this.isInitialized = true;
@@ -118,7 +118,7 @@ export class PassbackService {
     return null;
   }
 
-  private findAdSlot = (message: IPassbackMessage): Moli.SlotDefinition | undefined => {
+  private findAdSlot = (message: IPassbackMessage): MoliRuntime.SlotDefinition | undefined => {
     if (message.adUnitPath) {
       return this.adSlots[message.adUnitPath];
     } else if (message.domId) {

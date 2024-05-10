@@ -1,4 +1,4 @@
-import { Moli } from './moli';
+import { MoliRuntime } from './moliRuntime';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { AdPipeline } from '../ads/adPipeline';
 import { MoliConfig } from './moliConfig';

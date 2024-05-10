@@ -6,7 +6,7 @@ import {
   googletag,
   IAdPipelineConfiguration,
   mkInitStep,
-  Moli,
+  MoliRuntime,
   prebidjs,
   tcfapi
 } from '@highfivve/ad-tag';
@@ -46,7 +46,7 @@ describe('The Adex DMP Module', () => {
     requestBids: [],
     requestAds: () => Promise.resolve()
   };
-  const adPipelineContext = (config: Moli.MoliConfig, tcData?: TCData): AdPipelineContext => {
+  const adPipelineContext = (config: MoliRuntime.MoliConfig, tcData?: TCData): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -99,13 +99,13 @@ describe('The Adex DMP Module', () => {
 
   const initModule = (config: {
     module: AdexModule;
-    configPipeline?: Moli.pipeline.PipelineConfig;
-    moliSlot?: Moli.AdSlot;
+    configPipeline?: MoliRuntime.pipeline.PipelineConfig;
+    moliSlot?: MoliRuntime.AdSlot;
   }) => {
     const { moliSlot, configPipeline, module } = config;
-    const slot = moliSlot || ({ domId: 'foo' } as Moli.AdSlot);
+    const slot = moliSlot || ({ domId: 'foo' } as MoliRuntime.AdSlot);
 
-    const moliConfig: Moli.MoliConfig = {
+    const moliConfig: MoliRuntime.MoliConfig = {
       slots: [slot],
       pipeline: configPipeline,
       logger: noopLogger,

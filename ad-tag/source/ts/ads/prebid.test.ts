@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { prebidjs } from '../types/prebidjs';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
@@ -20,10 +20,11 @@ import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/p
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import PrebidAdSlotContext = Moli.headerbidding.PrebidAdSlotContext;
+import PrebidAdSlotContext = MoliRuntime.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { Environment, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -38,8 +39,8 @@ describe('prebid', () => {
     dom.window as any;
 
   const adPipelineContext = (
-    env: Moli.Environment = 'production',
-    config: Moli.MoliConfig = emptyConfig,
+    env: Environment = 'production',
+    config: MoliConfig = emptyConfig,
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
@@ -74,8 +75,8 @@ describe('prebid', () => {
 
   const prebidSlot = (
     domId: string,
-    provider: Moli.headerbidding.PrebidAdSlotConfigProvider
-  ): Moli.AdSlot => {
+    provider: MoliRuntime.headerbidding.PrebidAdSlotConfigProvider
+  ): MoliRuntime.AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
@@ -88,7 +89,7 @@ describe('prebid', () => {
     };
   };
 
-  const createAdSlot = (domId: string): Moli.AdSlot => {
+  const createAdSlot = (domId: string): MoliRuntime.AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
@@ -184,9 +185,9 @@ describe('prebid', () => {
 
   const createSlotDefinitions = (
     domId: string,
-    provider: Moli.headerbidding.PrebidAdSlotConfigProvider,
+    provider: MoliRuntime.headerbidding.PrebidAdSlotConfigProvider,
     floorprice?: number
-  ): Moli.SlotDefinition => {
+  ): MoliRuntime.SlotDefinition => {
     const slot = prebidSlot(domId, provider);
     return {
       moliSlot: slot,
@@ -625,7 +626,7 @@ describe('prebid', () => {
 
         // create a slot with a custom storedrequest id
         const slot = createSlotDefinitions(domId, { adUnit });
-        const singleSlot: Moli.SlotDefinition<Moli.AdSlot> = {
+        const singleSlot: MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> = {
           ...slot,
           moliSlot: {
             ...slot.moliSlot,
@@ -676,7 +677,7 @@ describe('prebid', () => {
           };
           // create a slot with a custom adUnitPath
           const slot = createSlotDefinitions(domId, { adUnit });
-          const singleSlot: Moli.SlotDefinition<Moli.AdSlot> = {
+          const singleSlot: MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> = {
             ...slot,
             moliSlot: {
               ...slot.moliSlot,
@@ -709,7 +710,7 @@ describe('prebid', () => {
           };
           // create a slot with a custom adUnitPath
           const slot = createSlotDefinitions(domId, { adUnit });
-          const singleSlot: Moli.SlotDefinition<Moli.AdSlot> = {
+          const singleSlot: MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> = {
             ...slot,
             moliSlot: {
               ...slot.moliSlot,

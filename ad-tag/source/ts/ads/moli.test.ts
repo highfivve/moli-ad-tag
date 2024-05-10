@@ -2,15 +2,15 @@ import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { createMoliTag } from './moli';
 import { initAdTag } from './moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
 import { emptyConfig, newEmptyConfig, noopLogger } from '../stubs/moliStubs';
-import IConfigurable = Moli.state.IConfigurable;
-import IFinished = Moli.state.IFinished;
-import ISinglePageApp = Moli.state.ISinglePageApp;
+import IConfigurable = MoliRuntime.state.IConfigurable;
+import IFinished = MoliRuntime.state.IFinished;
+import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
 import { IModule } from '../types/module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
@@ -19,9 +19,9 @@ import { prebidjs } from '../types/prebidjs';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { AdSlot, MoliConfig } from '../types/moliConfig';
-import MoliTag = Moli.MoliTag;
-import state = Moli.state;
+import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
+import MoliTag = MoliRuntime.MoliTag;
+import state = MoliRuntime.state;
 
 // setup sinon-chai
 use(sinonChai);
@@ -81,14 +81,14 @@ describe('moli', () => {
 
   describe('init ad tag', () => {
     it('should initialize the global moli variable', () => {
-      const moliWindow = jsDomWindow as unknown as Moli.MoliWindow;
+      const moliWindow = jsDomWindow as unknown as MoliRuntime.MoliWindow;
       expect(moliWindow.moli).to.be.undefined;
       const moli = initAdTag(moliWindow);
       expect(moliWindow.moli).to.be.equal(moli);
     });
 
     it('should process the global command queue', () => {
-      const moliWindow = jsDomWindow as unknown as Moli.MoliWindow;
+      const moliWindow = jsDomWindow as unknown as MoliRuntime.MoliWindow;
       const cmd1Spy = sandbox.spy();
       const cmd2Spy = sandbox.spy();
       moliWindow.moli = { que: [cmd1Spy, cmd2Spy] } as any;
@@ -879,7 +879,7 @@ describe('moli', () => {
   describe('setLogger()', () => {
     it('should set the given logger instance', () => {
       const adTag = createMoliTag(jsDomWindow);
-      const customLogger: Moli.MoliLogger = {
+      const customLogger: MoliRuntime.MoliLogger = {
         debug: () => {
           return;
         },
@@ -1119,7 +1119,7 @@ describe('moli', () => {
   });
 
   describe('environment override', () => {
-    const expectEnvironment = (adTag: MoliTag, environment: Moli.Environment | undefined) => {
+    const expectEnvironment = (adTag: MoliTag, environment: Environment | undefined) => {
       const config = adTag.getConfig();
       expect(config).to.be.ok;
       expect(config!.environment).to.be.equal(environment);

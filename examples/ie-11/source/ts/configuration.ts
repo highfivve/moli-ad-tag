@@ -1,8 +1,8 @@
-import { Moli, prebidjs } from '@highfivve/ad-tag';
+import { MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import { consoleLogReporter } from './reporters';
 import video = prebidjs.video;
 
-const logger: Moli.MoliLogger = {
+const logger: MoliRuntime.MoliLogger = {
   debug(message?: any, ...optionalParams: any[]): void {
     window.console.debug(`[DEBUG] ${message}`, ...optionalParams);
   },
@@ -35,7 +35,7 @@ const appNexusNative = (placementId: string): prebidjs.IAppNexusASTBid => {
   };
 };
 
-export const adConfiguration: Moli.MoliConfig = {
+export const adConfiguration: MoliRuntime.MoliConfig = {
   slots: [
     {
       position: 'in-page',

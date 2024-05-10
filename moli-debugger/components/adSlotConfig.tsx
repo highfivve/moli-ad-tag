@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
 
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import { SizeConfigService } from '@highfivve/ad-tag/source/ts/ads/sizeConfigService';
 
@@ -9,9 +9,9 @@ import { classList } from '../util/stringUtils';
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
 
-import headerbidding = Moli.headerbidding;
-import AdSlot = Moli.AdSlot;
-import DfpSlotSize = Moli.GoogleAdManagerSlotSize;
+import headerbidding = MoliRuntime.headerbidding;
+import AdSlot = MoliRuntime.AdSlot;
+import DfpSlotSize = MoliRuntime.GoogleAdManagerSlotSize;
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
 
@@ -20,7 +20,7 @@ type IAdSlotConfigProps = {
   slot: AdSlot;
   labelConfigService: LabelConfigService;
   /** required to find measurements for this slot */
-  reportingConfig?: Moli.reporting.ReportingConfig;
+  reportingConfig?: MoliRuntime.reporting.ReportingConfig;
 };
 type IAdSlotConfigState = {
   dimensions?: { width: number; height: number };
@@ -426,7 +426,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     );
   };
 
-  private static isFixedSize(size: Moli.GoogleAdManagerSlotSize): size is [number, number] {
+  private static isFixedSize(size: MoliRuntime.GoogleAdManagerSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 

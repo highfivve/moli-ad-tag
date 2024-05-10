@@ -101,7 +101,7 @@ import {
   mkConfigureStep,
   mkPrepareRequestAdsStep,
   getLogger,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 
 export type BlocklistEntry = {
@@ -202,7 +202,7 @@ export class BlocklistedUrls implements IModule {
     return this.blocklistUrlsConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
 
     if (config.environment === 'test') {
@@ -257,7 +257,7 @@ export class BlocklistedUrls implements IModule {
     }
   }
 
-  isBlocklisted = (blocklist: Blocklist, href: string, log: Moli.MoliLogger): boolean => {
+  isBlocklisted = (blocklist: Blocklist, href: string, log: MoliRuntime.MoliLogger): boolean => {
     return blocklist.urls.some(({ pattern, matchType }) => {
       switch (matchType) {
         case 'exact':
@@ -283,7 +283,7 @@ export class BlocklistedUrls implements IModule {
   private getBlocklist(
     blocklist: BlocklistProvider,
     assetLoaderService: IAssetLoaderService,
-    log: Moli.MoliLogger
+    log: MoliRuntime.MoliLogger
   ): () => Promise<Blocklist> {
     switch (blocklist.provider) {
       case 'static':

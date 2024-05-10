@@ -6,17 +6,17 @@ import { AdSlotConfig } from './components/adSlotConfig';
 
 import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { ModuleMeta } from '@highfivve/ad-tag/source/ts/types/module';
 
-import MoliConfig = Moli.MoliConfig;
+import MoliConfig = MoliRuntime.MoliConfig;
 
 import './debug.css';
 
 import { ThemingService } from './util/themingService';
 import { WindowResizeService } from './util/windowResizeService';
 
-declare const window: Moli.MoliWindow;
+declare const window: MoliRuntime.MoliWindow;
 
 const moliConfig: MoliConfig | null = window.moli.getConfig();
 const modulesMeta: Array<ModuleMeta> =

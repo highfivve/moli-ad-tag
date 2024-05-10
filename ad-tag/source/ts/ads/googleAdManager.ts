@@ -11,14 +11,14 @@ import {
   PrepareRequestAdsStep,
   RequestAdsStep
 } from './adPipeline';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
-import SlotDefinition = Moli.SlotDefinition;
+import SlotDefinition = MoliRuntime.SlotDefinition;
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
 import { AdSlot, consent, MoliConfig, Targeting } from '../types/moliConfig';

@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { AdPipelineContext, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { AdPipelineContext, googletag, MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 
 import { adRenderResult } from './renderResult';
@@ -48,7 +48,7 @@ describe('renderResult', () => {
     const ctx: AdPipelineContext = { ...adPipelineContext(), env: 'test' };
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 0;
 
@@ -66,7 +66,7 @@ describe('renderResult', () => {
   it('should do nothing if the dom id differs', async () => {
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 0;
 
@@ -96,7 +96,7 @@ describe('renderResult', () => {
   it('should resolve with empty if event is empty', async () => {
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 0;
 
@@ -120,7 +120,7 @@ describe('renderResult', () => {
   it('should resolve with disallowed if advertiser id is in disallowed list', async () => {
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 0;
 
@@ -144,7 +144,7 @@ describe('renderResult', () => {
   it('should resolve with standard if advertiser id is not in disallowed list', async () => {
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 0;
 
@@ -168,7 +168,7 @@ describe('renderResult', () => {
   it('should resolve with standard if minVisibleDuration is 0', async () => {
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 0;
 
@@ -193,7 +193,7 @@ describe('renderResult', () => {
     const setTimeSpy = sandbox.spy(jsDomWindow, 'setTimeout');
     const headerSlot = {
       domId: domId
-    } as Moli.AdSlot;
+    } as MoliRuntime.AdSlot;
     const disallowedAdvertiserIds = [1];
     const minVisibleDuration = 100;
 

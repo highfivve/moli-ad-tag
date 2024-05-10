@@ -1,9 +1,9 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 
 export const extractPrebidAdSlotConfigs = (
-  context: Moli.headerbidding.PrebidAdSlotContext,
-  prebid: Moli.headerbidding.PrebidAdSlotConfigProvider
-): Moli.headerbidding.PrebidAdSlotConfig[] => {
+  context: MoliRuntime.headerbidding.PrebidAdSlotContext,
+  prebid: MoliRuntime.headerbidding.PrebidAdSlotConfigProvider
+): MoliRuntime.headerbidding.PrebidAdSlotConfig[] => {
   if (typeof prebid === 'function') {
     const oneOrMoreConfigs = prebid(context);
     return Array.isArray(oneOrMoreConfigs) ? oneOrMoreConfigs : [oneOrMoreConfigs];

@@ -61,7 +61,7 @@
 import {
   IModule,
   ModuleType,
-  Moli,
+  MoliRuntime,
   getLogger,
   IAssetLoaderService,
   AdPipelineContext,
@@ -125,7 +125,7 @@ export type PriceRules = {
   /**
    * The ad unit that is being configured along with a price that was selected from the server
    */
-  readonly [adUnitPath: string]: Moli.yield_optimization.PriceRule;
+  readonly [adUnitPath: string]: MoliRuntime.yield_optimization.PriceRule;
 };
 
 /**
@@ -154,7 +154,7 @@ export class YieldOptimization implements IModule {
   public readonly description: string = 'Provides floors and UPR ids';
   public readonly moduleType: ModuleType = 'yield';
 
-  private log?: Moli.MoliLogger;
+  private log?: MoliRuntime.MoliLogger;
 
   constructor(
     private readonly yieldModuleConfig: YieldOptimizationConfig,
@@ -165,7 +165,7 @@ export class YieldOptimization implements IModule {
     return this.yieldModuleConfig;
   }
 
-  init(moliConfig: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(moliConfig: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     this.log = getLogger(moliConfig, this.window);
 
     const yieldOptimizationService = new YieldOptimizationService(
@@ -216,7 +216,7 @@ export class YieldOptimization implements IModule {
     mkPrepareRequestAdsStep(
       'yield-optimization',
       HIGH_PRIORITY,
-      (context: AdPipelineContext, slots: Moli.SlotDefinition[]) => {
+      (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
         context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
         const adServer = context.config.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {

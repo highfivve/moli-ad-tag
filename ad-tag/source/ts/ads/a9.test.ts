@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
@@ -28,7 +28,7 @@ import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, headerbidding, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -45,7 +45,7 @@ describe('a9', () => {
     prebidjs.IPrebidjsWindow &
     tcfapi.TCFApiWindow = dom.window as any;
   const adPipelineContext = (
-    env: Moli.Environment = 'production',
+    env: Environment = 'production',
     config: MoliConfig = emptyConfig,
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
@@ -90,7 +90,7 @@ describe('a9', () => {
   const createSlotDefinitions = (
     domId: string,
     provider: headerbidding.A9AdSlotConfig
-  ): Moli.SlotDefinition => {
+  ): MoliRuntime.SlotDefinition => {
     const slot = a9Slot(domId, provider);
     return {
       moliSlot: slot,
@@ -564,7 +564,7 @@ describe('a9', () => {
     });
 
     describe('slotId ad unit path resolving', () => {
-      const slotWithAdUnitPath = (adUnitPath: string): Moli.SlotDefinition => {
+      const slotWithAdUnitPath = (adUnitPath: string): MoliRuntime.SlotDefinition => {
         const domId = getDomId();
         const slot: AdSlot = {
           ...a9Slot(domId, {}),

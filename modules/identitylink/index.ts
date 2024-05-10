@@ -35,7 +35,7 @@ import {
   IModule,
   mkInitStep,
   ModuleType,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 import { ATS } from './types/identitylink';
 
@@ -96,7 +96,7 @@ export class IdentityLink implements IModule {
     return this.moduleConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
       initSteps: [],

@@ -1,5 +1,5 @@
 import { parseQueryString } from './query';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { MoliConfig } from '../types/moliConfig';
 
 /**
@@ -28,7 +28,7 @@ export function getMoliDebugParameter(window: Window): boolean {
 /**
  * The noop logger that only writes error to the console.
  */
-function getNoopLogger(): Moli.MoliLogger {
+function getNoopLogger(): MoliRuntime.MoliLogger {
   const noop = () => {
     return;
   };
@@ -108,7 +108,7 @@ function getSourceLabelStyle(
 /**
  * The default logger that writes everything to the console with labels.
  */
-export function getDefaultLogger(): Moli.MoliLogger {
+export function getDefaultLogger(): MoliRuntime.MoliLogger {
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
       // eslint-disable-next-line
@@ -161,7 +161,7 @@ export function getDefaultLogger(): Moli.MoliLogger {
  * @param config
  * @param window the global window object
  */
-export function getLogger(config: MoliConfig | null, window: Window): Moli.MoliLogger {
+export function getLogger(config: MoliConfig | null, window: Window): MoliRuntime.MoliLogger {
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
   } else if (config && config.logger) {
@@ -175,10 +175,10 @@ export function getLogger(config: MoliConfig | null, window: Window): Moli.MoliL
  * Allows to change the underlying logging during runtime.
  * @internal
  */
-export class ProxyLogger implements Moli.MoliLogger {
-  constructor(private logger: Moli.MoliLogger) {}
+export class ProxyLogger implements MoliRuntime.MoliLogger {
+  constructor(private logger: MoliRuntime.MoliLogger) {}
 
-  setLogger = (newLogger: Moli.MoliLogger): void => {
+  setLogger = (newLogger: MoliRuntime.MoliLogger): void => {
     this.logger = newLogger;
   };
 

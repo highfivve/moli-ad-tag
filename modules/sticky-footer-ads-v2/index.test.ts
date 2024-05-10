@@ -10,14 +10,14 @@ import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
   googletag,
   prebidjs,
-  Moli,
+  MoliRuntime,
   AdPipeline,
   AdPipelineContext,
   IAdPipelineConfiguration,
   createAssetLoaderService
 } from '@highfivve/ad-tag';
 
-import Device = Moli.Device;
+import Device = MoliRuntime.Device;
 import { FooterDomIds, StickyFooterAdsV2 } from './index';
 import * as stickyAdModule from './footerStickyAd';
 import { initAdSticky } from './footerStickyAd';
@@ -44,7 +44,7 @@ const emptyPipelineConfig: IAdPipelineConfiguration = {
   requestBids: [],
   requestAds: () => Promise.resolve()
 };
-const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
+const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
   return {
     requestId: 0,
     requestAdsCalls: 1,
@@ -62,7 +62,7 @@ const adPipelineContext = (config: Moli.MoliConfig): AdPipelineContext => {
 };
 
 const createAdSlotConfig = (domId: string, device: Device) => {
-  const slot: Moli.AdSlot = {
+  const slot: MoliRuntime.AdSlot = {
     domId: domId,
     adUnitPath: 'path',
     position: 'in-page',
@@ -94,11 +94,11 @@ const createStickyFooterAdModule = (
 
 const initModule = (
   module: StickyFooterAdsV2,
-  configPipeline?: Moli.pipeline.PipelineConfig,
-  moliSlot?: Moli.AdSlot[]
+  configPipeline?: MoliRuntime.pipeline.PipelineConfig,
+  moliSlot?: MoliRuntime.AdSlot[]
 ) => {
-  const moliConfig: Moli.MoliConfig = {
-    slots: moliSlot ? [...moliSlot] : [{ domId: 'foo' } as Moli.AdSlot],
+  const moliConfig: MoliRuntime.MoliConfig = {
+    slots: moliSlot ? [...moliSlot] : [{ domId: 'foo' } as MoliRuntime.AdSlot],
     pipeline: configPipeline,
     logger: noopLogger,
     schain: dummySchainConfig
@@ -164,12 +164,12 @@ describe('Sticky-footer-v2 Module', () => {
       const mobileGoogleAdSlot = googleAdSlotStub('/1/ad-mobile-sticky', 'ad-mobile-sticky');
       const desktopGoogleAdSlot = googleAdSlotStub('/1/ad-desktop-sticky', 'ad-desktop-sticky');
 
-      const mobileAdSlotDefinition: Moli.SlotDefinition<any> = {
+      const mobileAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: mobileSlot,
         adSlot: mobileGoogleAdSlot,
         filterSupportedSizes: {} as any
       };
-      const desktopAdSlotDefinition: Moli.SlotDefinition<any> = {
+      const desktopAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: desktopSlot,
         adSlot: desktopGoogleAdSlot,
         filterSupportedSizes: {} as any
@@ -210,7 +210,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const desktopGoogleAdSlot = googleAdSlotStub('/1/ad-desktop-sticky', 'ad-desktop-sticky');
 
-      const desktopAdSlotDefinition: Moli.SlotDefinition<any> = {
+      const desktopAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: desktopSlot,
         adSlot: desktopGoogleAdSlot,
         filterSupportedSizes: {} as any

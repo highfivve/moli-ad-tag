@@ -1,5 +1,5 @@
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { createMoliTag, Moli } from '@highfivve/ad-tag';
+import { createMoliTag, MoliRuntime } from '@highfivve/ad-tag';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { expect, use } from 'chai';
@@ -13,13 +13,13 @@ const createAdSlots = (
   domIds: string[],
   behaviour?: 'eager' | 'manual',
   bucket?: string
-): Moli.AdSlot[] => {
+): MoliRuntime.AdSlot[] => {
   return domIds.map(domId => {
     const div = window.document.createElement('div');
     div.id = domId;
     window.document.body.appendChild(div);
 
-    const slot: Moli.AdSlot = {
+    const slot: MoliRuntime.AdSlot = {
       domId: domId,
       adUnitPath: domId,
       position: 'in-page',
@@ -47,7 +47,7 @@ const createInfiniteAdSlotInDOM = (
 };
 
 const createInfiniteAdSlotinConfig = (infiniteSlotClassSelector: string) => {
-  const slot: Moli.AdSlot = {
+  const slot: MoliRuntime.AdSlot = {
     domId: 'infinite-loading-adslot',
     adUnitPath: 'infinite-loading-adslot',
     position: 'in-page',
@@ -135,7 +135,7 @@ describe('Lazy-load Module', () => {
     sandbox.restore();
   });
 
-  const mkConfig = (slots): Moli.MoliConfig => {
+  const mkConfig = (slots): MoliRuntime.MoliConfig => {
     return {
       slots: slots,
       buckets: {

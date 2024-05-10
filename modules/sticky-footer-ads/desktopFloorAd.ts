@@ -1,4 +1,6 @@
-import { googletag, Moli } from '@highfivve/ad-tag';
+import { googletag, MoliRuntime } from '@highfivve/ad-tag';
+import { Moli } from '@highfivve/ad-tag/source/ts';
+import Environment = Moli.Environment;
 
 const closeButtonDataRef = 'footer-ad-close-button';
 const containerDataRefSelector = '[data-ref=h5-footer-ad-container]';
@@ -27,7 +29,7 @@ const renderFooterAd =
     window: Window & googletag.IGoogleTagWindow,
     floorAdDomId: string,
     disallowedAdvertiserIds: number[],
-    log: Moli.MoliLogger
+    log: MoliRuntime.MoliLogger
   ) =>
   (event: googletag.events.ISlotRenderEndedEvent) => {
     const slot = event.slot;
@@ -89,8 +91,8 @@ const renderFooterAd =
 
 export const setupFooterAdListener = (
   window: Window & googletag.IGoogleTagWindow,
-  env: Moli.Environment,
-  log: Moli.MoliLogger,
+  env: Environment,
+  log: MoliRuntime.MoliLogger,
   floorAdDomId: string,
   disallowedAdvertiserIds: number[]
 ): void => {

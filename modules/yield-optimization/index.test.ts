@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, googletag, Moli } from '@highfivve/ad-tag';
+import { createAssetLoaderService, googletag, MoliRuntime } from '@highfivve/ad-tag';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
@@ -35,7 +35,7 @@ describe('Yield Optimization module', () => {
     }
   };
 
-  const adUnit = (adUnitPath: string, labelAll: string[]): Moli.AdSlot => {
+  const adUnit = (adUnitPath: string, labelAll: string[]): MoliRuntime.AdSlot => {
     return {
       domId: 'domId',
       position: 'in-page',
@@ -92,7 +92,7 @@ describe('Yield Optimization module', () => {
         .returns('desktop');
 
       // a config with targeting labels set
-      const config: Moli.MoliConfig = {
+      const config: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         targeting: {
           keyValues: {},
@@ -141,7 +141,7 @@ describe('Yield Optimization module', () => {
         .returns(false);
 
       // a config with targeting labels set
-      const config: Moli.MoliConfig = {
+      const config: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/bar', ['mobile'])]
       };
@@ -182,7 +182,7 @@ describe('Yield Optimization module', () => {
         .returns(true);
 
       // a config with targeting labels set
-      const config: Moli.MoliConfig = {
+      const config: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/foo', ['desktop'])]
       };
@@ -223,7 +223,7 @@ describe('Yield Optimization module', () => {
       );
       const adSlot = googleAdSlotStub(`/123/${adUnitId}`, adUnitId);
 
-      const slot: Moli.SlotDefinition = {
+      const slot: MoliRuntime.SlotDefinition = {
         moliSlot: {} as any,
         adSlot,
         filterSupportedSizes: givenSizes => givenSizes

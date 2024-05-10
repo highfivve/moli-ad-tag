@@ -1,5 +1,5 @@
 import { Message } from '../components/globalConfig';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import React from 'react';
 import { flatten } from '@highfivve/ad-tag';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
@@ -11,7 +11,7 @@ type MissingSizesType = {
   unusedSupportedSizes?: string[];
 };
 
-export const checkSizesConfig = (messages: Message[], slots: Moli.AdSlot[], labels: string[]) => {
+export const checkSizesConfig = (messages: Message[], slots: MoliRuntime.AdSlot[], labels: string[]) => {
   const missingSizesInSlots: MissingSizesType[] = [];
   slots.map(slot => {
     const supportedSizesAsString: string[] = flatten(

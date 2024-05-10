@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { Message } from '../components/globalConfig';
 import { checkBucketConfig } from './bucketValidations';
 
 const mockedSlots = (bucket?: string) => {
-  const slots: Moli.AdSlot[] = [
+  const slots: MoliRuntime.AdSlot[] = [
     {
       domId: 'id1',
       adUnitPath: '',
@@ -34,7 +34,7 @@ describe('Buckets Validations', () => {
   it('should return the optimization message: "Buckets are disabled!" when bucket config is disabled, and there are no slots with defined buckets', () => {
     const messages: Message[] = [];
     const slots = mockedSlots();
-    const buckets: Moli.bucket.GlobalBucketConfig = { enabled: false };
+    const buckets: MoliRuntime.bucket.GlobalBucketConfig = { enabled: false };
     checkBucketConfig(messages, buckets, slots);
 
     expect(messages).to.deep.include({
@@ -46,7 +46,7 @@ describe('Buckets Validations', () => {
   it('should return the error message: "Buckets are configured for ad slots, but buckets are disabled in the config!" when bucket config is disabled, and there is at least a slot with a defined bucket', () => {
     const messages: Message[] = [];
     const slots = mockedSlots('some bucket');
-    const buckets: Moli.bucket.GlobalBucketConfig = { enabled: false };
+    const buckets: MoliRuntime.bucket.GlobalBucketConfig = { enabled: false };
     checkBucketConfig(messages, buckets, slots);
 
     expect(messages).to.deep.include({
@@ -59,7 +59,7 @@ describe('Buckets Validations', () => {
 it('should return the error message: "Buckets are enabled in the config, but there are no ad units that have a bucket defined!", but there are no ad units that have a bucket defined', () => {
   const messages: Message[] = [];
   const slots = mockedSlots();
-  const buckets: Moli.bucket.GlobalBucketConfig = { enabled: true };
+  const buckets: MoliRuntime.bucket.GlobalBucketConfig = { enabled: true };
   checkBucketConfig(messages, buckets, slots);
 
   expect(messages).to.deep.include({
@@ -71,7 +71,7 @@ it('should return the error message: "Buckets are enabled in the config, but the
 it('should show a warning about the slots that require defined buckets', () => {
   const messages: Message[] = [];
   const slots = mockedSlots('some bucket');
-  const buckets: Moli.bucket.GlobalBucketConfig = { enabled: true };
+  const buckets: MoliRuntime.bucket.GlobalBucketConfig = { enabled: true };
   checkBucketConfig(messages, buckets, slots);
 
   expect(messages[0].kind).to.equal('warning');

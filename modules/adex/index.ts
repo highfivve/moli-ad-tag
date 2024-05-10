@@ -75,7 +75,7 @@ import {
   mkInitStep,
   ModuleType,
   tcfapi,
-  Moli
+  MoliRuntime
 } from '@highfivve/ad-tag';
 import {
   AdexKeyValues,
@@ -222,7 +222,7 @@ export class AdexModule implements IModule {
   }
 
   init(
-    moliConfig: Moli.MoliConfig,
+    moliConfig: MoliRuntime.MoliConfig,
     assetLoaderService: IAssetLoaderService,
     getAdPipeline: () => AdPipeline
   ) {

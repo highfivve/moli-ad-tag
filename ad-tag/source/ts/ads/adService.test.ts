@@ -3,13 +3,13 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { IAdPipelineConfiguration } from './adPipeline';
 import { AdService } from './adService';
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
-import MoliLogger = Moli.MoliLogger;
+import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 
 // setup sinon-chai
@@ -24,7 +24,7 @@ describe('AdService', () => {
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
-  const emptyConfigWithPrebid: Moli.MoliConfig = {
+  const emptyConfigWithPrebid: MoliRuntime.MoliConfig = {
     ...emptyConfig,
     prebid: {
       config: {
@@ -42,7 +42,7 @@ describe('AdService', () => {
     }
   };
 
-  const emptyConfigWithA9: Moli.MoliConfig = {
+  const emptyConfigWithA9: MoliRuntime.MoliConfig = {
     ...emptyConfig,
     a9: {
       cmpTimeout: 500,
@@ -65,10 +65,10 @@ describe('AdService', () => {
   };
 
   const initialize: (
-    config?: Moli.MoliConfig,
+    config?: MoliRuntime.MoliConfig,
     isSinglePageApp?: boolean
   ) => Promise<IAdPipelineConfiguration> = (
-    config: Moli.MoliConfig = emptyConfig,
+    config: MoliRuntime.MoliConfig = emptyConfig,
     isSinglePageApp: boolean = false
   ): Promise<IAdPipelineConfiguration> => {
     const adService = makeAdService();
@@ -78,7 +78,7 @@ describe('AdService', () => {
   };
 
   let domIdCounter: number = 0;
-  const eagerAdSlot = (): Moli.AdSlot => {
+  const eagerAdSlot = (): MoliRuntime.AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: `dom-id-${domIdCounter}`,
@@ -90,16 +90,16 @@ describe('AdService', () => {
     };
   };
 
-  const manualAdSlot = (): Moli.AdSlot => {
+  const manualAdSlot = (): MoliRuntime.AdSlot => {
     return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
   };
 
-  const backfillAdSlot = (): Moli.AdSlot => ({
+  const backfillAdSlot = (): MoliRuntime.AdSlot => ({
     ...eagerAdSlot(),
     behaviour: { loaded: 'backfill' }
   });
 
-  const infiniteSlot = (): Moli.AdSlot => ({
+  const infiniteSlot = (): MoliRuntime.AdSlot => ({
     ...eagerAdSlot(),
     behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
   });
@@ -384,11 +384,11 @@ describe('AdService', () => {
 
   describe('requestAds', () => {
     const requestAds = (
-      slots: Moli.AdSlot[],
+      slots: MoliRuntime.AdSlot[],
       refreshSlots: string[] = [],
-      refreshInfiniteSlots: Moli.state.IRefreshInfiniteSlot[],
+      refreshInfiniteSlots: MoliRuntime.state.IRefreshInfiniteSlot[],
       logger: MoliLogger = noopLogger
-    ): Promise<Moli.AdSlot[]> => {
+    ): Promise<MoliRuntime.AdSlot[]> => {
       const adService = makeAdService();
       adService.setLogger(logger);
       return adService.requestAds(
@@ -398,13 +398,13 @@ describe('AdService', () => {
       );
     };
 
-    const eventTrigger: Moli.behaviour.Trigger = {
+    const eventTrigger: MoliRuntime.behaviour.Trigger = {
       name: 'event',
       event: 'noop',
       source: jsDomWindow
     };
 
-    const addToDom = (adSlots: Moli.AdSlot[]): void => {
+    const addToDom = (adSlots: MoliRuntime.AdSlot[]): void => {
       adSlots.forEach(slot => {
         const adDiv = dom.window.document.createElement('div');
         adDiv.id = slot.domId;
@@ -421,7 +421,7 @@ describe('AdService', () => {
     });
 
     it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
-      const outOfPageInterstitial: Moli.AdSlot = {
+      const outOfPageInterstitial: MoliRuntime.AdSlot = {
         ...eagerAdSlot(),
         position: 'out-of-page-interstitial'
       };
@@ -462,12 +462,12 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
-      const eagerAdSlot1: Moli.AdSlot = {
+      const eagerAdSlot1: MoliRuntime.AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager', bucket: 'bucket1' }
       };
 
-      const eagerAdSlot3: Moli.AdSlot = {
+      const eagerAdSlot3: MoliRuntime.AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager' }
       };
@@ -478,7 +478,7 @@ describe('AdService', () => {
         const adService = makeAdService();
         const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
         const debugStub = sandbox.stub();
-        const logger: Moli.MoliLogger = { ...noopLogger, debug: debugStub };
+        const logger: MoliRuntime.MoliLogger = { ...noopLogger, debug: debugStub };
         adService.setLogger(logger);
 
         addToDom(allSlots);
@@ -565,8 +565,8 @@ describe('AdService', () => {
   });
 
   describe('refreshAdSlots', () => {
-    const backfillSlot: Moli.AdSlot = { ...eagerAdSlot(), behaviour: { loaded: 'backfill' } };
-    const infiniteSlot: Moli.AdSlot = {
+    const backfillSlot: MoliRuntime.AdSlot = { ...eagerAdSlot(), behaviour: { loaded: 'backfill' } };
+    const infiniteSlot: MoliRuntime.AdSlot = {
       ...eagerAdSlot(),
       behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
     };
@@ -589,7 +589,7 @@ describe('AdService', () => {
     it('should call adPipeline.run with an empty array if slot is eager', async () => {
       const adService = makeAdService();
       const slot = eagerAdSlot();
-      const configWithEagerSlot: Moli.MoliConfig = {
+      const configWithEagerSlot: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [slot]
       };
@@ -601,7 +601,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with an empty array if slot is backfill', async () => {
       const adService = makeAdService();
-      const configWithEagerSlot: Moli.MoliConfig = {
+      const configWithEagerSlot: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [backfillSlot]
       };
@@ -614,7 +614,7 @@ describe('AdService', () => {
     it('should call adPipeline.run with the slot if slot is manual', async () => {
       const adService = makeAdService();
       const slot = manualAdSlot();
-      const configWithManualSlot: Moli.MoliConfig = {
+      const configWithManualSlot: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [slot]
       };
@@ -630,7 +630,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with the slot if slot is infinite', async () => {
       const adService = makeAdService();
-      const configWithManualSlot: Moli.MoliConfig = {
+      const configWithManualSlot: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [infiniteSlot]
       };
@@ -646,7 +646,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with the slot if backfill is provided as loaded option', async () => {
       const adService = makeAdService();
-      const configWithManualSlot: Moli.MoliConfig = {
+      const configWithManualSlot: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [backfillSlot]
       };
@@ -664,7 +664,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with the backfill and infinite slot if backfill is provided as loaded option', async () => {
       const adService = makeAdService();
-      const configWithManualSlot: Moli.MoliConfig = {
+      const configWithManualSlot: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         slots: [backfillSlot, infiniteSlot]
       };
@@ -687,7 +687,7 @@ describe('AdService', () => {
 
   describe('global auction context', () => {
     it('should instantiate auction in adPipeline by default config', async () => {
-      const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+      const emptyConfigWithGlobalAuction: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         globalAuctionContext: undefined
       };
@@ -697,7 +697,7 @@ describe('AdService', () => {
     });
 
     it('should instantiate auction in adPipeline with config', async () => {
-      const emptyConfigWithGlobalAuction: Moli.MoliConfig = {
+      const emptyConfigWithGlobalAuction: MoliRuntime.MoliConfig = {
         ...emptyConfig,
         globalAuctionContext: {
           adRequestThrottling: { enabled: true, throttle: 15 },

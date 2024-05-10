@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { createAssetLoaderService, googletag, MoliRuntime, prebidjs } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
@@ -33,13 +33,13 @@ describe('Skin Module', () => {
     sandbox.reset();
   });
 
-  const createAdSlots = (window: Window, domIds: string[]): Moli.AdSlot[] => {
+  const createAdSlots = (window: Window, domIds: string[]): MoliRuntime.AdSlot[] => {
     return domIds.map(domId => {
       const div = window.document.createElement('div');
       div.id = domId;
       window.document.body.appendChild(div);
 
-      const slot: Moli.AdSlot = {
+      const slot: MoliRuntime.AdSlot = {
         domId: domId,
         adUnitPath: domId,
         position: 'in-page',
@@ -102,7 +102,7 @@ describe('Skin Module', () => {
       const initSpy = sandbox.spy(module, 'init');
       const errorLogSpy = sandbox.spy(noopLogger, 'error');
 
-      const config: Moli.MoliConfig = {
+      const config: MoliRuntime.MoliConfig = {
         slots: slots,
         logger: noopLogger,
         prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
@@ -141,7 +141,7 @@ describe('Skin Module', () => {
       const initSpy = sandbox.spy(module, 'init');
       const errorLogSpy = sandbox.spy(noopLogger, 'error');
 
-      const config: Moli.MoliConfig = {
+      const config: MoliRuntime.MoliConfig = {
         slots: slots,
         logger: noopLogger,
         prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
@@ -507,8 +507,8 @@ describe('Skin Module', () => {
 
     describe('destroySkinSlot', () => {
       const assetLoaderService = createAssetLoaderService(jsDomWindow);
-      let slots: Moli.AdSlot[] = [];
-      let slotDefinitions: Moli.SlotDefinition[] = [];
+      let slots: MoliRuntime.AdSlot[] = [];
+      let slotDefinitions: MoliRuntime.SlotDefinition[] = [];
 
       beforeEach(() => {
         slots = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
@@ -539,12 +539,12 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+        const prebidConfig: MoliRuntime.headerbidding.PrebidConfig = {
           config: pbjsTestConfig,
           schain: { nodes: [] }
         };
 
-        const config: Moli.MoliConfig = {
+        const config: MoliRuntime.MoliConfig = {
           slots: slots,
           prebid: prebidConfig,
           schain: dummySchainConfig
@@ -554,7 +554,7 @@ describe('Skin Module', () => {
         expect(config.prebid?.listener).to.be.ok;
 
         const preSetTargetingForGPTAsync = (
-          config.prebid!.listener as Moli.headerbidding.PrebidListener
+          config.prebid!.listener as MoliRuntime.headerbidding.PrebidListener
         ).preSetTargetingForGPTAsync!;
 
         preSetTargetingForGPTAsync({}, false, slotDefinitions);
@@ -580,12 +580,12 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+        const prebidConfig: MoliRuntime.headerbidding.PrebidConfig = {
           config: pbjsTestConfig,
           schain: { nodes: [] }
         };
 
-        const config: Moli.MoliConfig = {
+        const config: MoliRuntime.MoliConfig = {
           slots: slots,
           prebid: prebidConfig,
           schain: dummySchainConfig
@@ -595,7 +595,7 @@ describe('Skin Module', () => {
         expect(config.prebid?.listener).to.be.ok;
 
         const preSetTargetingForGPTAsync = (
-          config.prebid!.listener as Moli.headerbidding.PrebidListener
+          config.prebid!.listener as MoliRuntime.headerbidding.PrebidListener
         ).preSetTargetingForGPTAsync!;
 
         preSetTargetingForGPTAsync({}, false, slotDefinitions);
@@ -630,12 +630,12 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+        const prebidConfig: MoliRuntime.headerbidding.PrebidConfig = {
           config: pbjsTestConfig,
           schain: { nodes: [] }
         };
 
-        const config: Moli.MoliConfig = {
+        const config: MoliRuntime.MoliConfig = {
           slots: slots,
           prebid: prebidConfig,
           schain: dummySchainConfig
@@ -645,7 +645,7 @@ describe('Skin Module', () => {
         expect(config.prebid?.listener).to.be.ok;
 
         const preSetTargetingForGPTAsync = (
-          config.prebid!.listener as Moli.headerbidding.PrebidListener
+          config.prebid!.listener as MoliRuntime.headerbidding.PrebidListener
         ).preSetTargetingForGPTAsync!;
 
         preSetTargetingForGPTAsync(
@@ -687,12 +687,12 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+        const prebidConfig: MoliRuntime.headerbidding.PrebidConfig = {
           config: pbjsTestConfig,
           schain: { nodes: [] }
         };
 
-        const config: Moli.MoliConfig = {
+        const config: MoliRuntime.MoliConfig = {
           slots: slots,
           prebid: prebidConfig,
           schain: dummySchainConfig
@@ -702,7 +702,7 @@ describe('Skin Module', () => {
         expect(config.prebid?.listener).to.be.ok;
 
         const preSetTargetingForGPTAsync = (
-          config.prebid!.listener as Moli.headerbidding.PrebidListener
+          config.prebid!.listener as MoliRuntime.headerbidding.PrebidListener
         ).preSetTargetingForGPTAsync!;
 
         preSetTargetingForGPTAsync({}, false, slotDefinitions);
@@ -744,12 +744,12 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
+        const prebidConfig: MoliRuntime.headerbidding.PrebidConfig = {
           config: pbjsTestConfig,
           schain: { nodes: [] }
         };
 
-        const config: Moli.MoliConfig = {
+        const config: MoliRuntime.MoliConfig = {
           slots: slots,
           prebid: prebidConfig,
           schain: dummySchainConfig
@@ -759,7 +759,7 @@ describe('Skin Module', () => {
         expect(config.prebid?.listener).to.be.ok;
 
         const preSetTargetingForGPTAsync = (
-          config.prebid!.listener as Moli.headerbidding.PrebidListener
+          config.prebid!.listener as MoliRuntime.headerbidding.PrebidListener
         ).preSetTargetingForGPTAsync!;
 
         preSetTargetingForGPTAsync({}, false, slotDefinitions);

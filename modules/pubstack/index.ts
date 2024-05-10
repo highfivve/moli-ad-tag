@@ -21,7 +21,7 @@
  * @module
  */
 import {
-  Moli,
+  MoliRuntime,
   IModule,
   ModuleType,
   mkInitStep,
@@ -55,7 +55,7 @@ export class Pubstack implements IModule {
     return this.pubstackConfig;
   }
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     // direct prebid events
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {

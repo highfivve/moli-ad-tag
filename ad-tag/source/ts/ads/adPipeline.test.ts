@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 
 import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import {
@@ -20,10 +20,10 @@ import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/cons
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { LabelConfigService } from './labelConfigService';
-import SlotDefinition = Moli.SlotDefinition;
+import SlotDefinition = MoliRuntime.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -63,7 +63,7 @@ describe('AdPipeline', () => {
   const adPipelineContext = (
     requestAdsCalls: number = 1,
     requestId: number = 1,
-    env: Moli.Environment = 'production',
+    env: Environment = 'production',
     config: MoliConfig = emptyConfig
   ): AdPipelineContext => {
     return {

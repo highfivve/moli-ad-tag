@@ -46,11 +46,11 @@
 import {
   IModule,
   ModuleType,
-  Moli,
+  MoliRuntime,
   getLogger,
   mkConfigureStepOncePerRequestAdsCycle
 } from '@highfivve/ad-tag';
-import MoliWindow = Moli.MoliWindow;
+import MoliWindow = MoliRuntime.MoliWindow;
 import { selectInfiniteSlot } from './selectInfiniteSlot';
 
 type LazyLoadModuleOptionsType = {
@@ -142,7 +142,7 @@ export class LazyLoad implements IModule {
   public readonly name: string = 'moli-lazy-load';
   public readonly description: string = 'Moli implementation of an ad lazy load module.';
   public readonly moduleType: ModuleType = 'lazy-load';
-  private logger?: Moli.MoliLogger;
+  private logger?: MoliRuntime.MoliLogger;
   private readonly window: LazyLoadWindow;
 
   /**
@@ -168,7 +168,7 @@ export class LazyLoad implements IModule {
     return this.moduleConfig;
   }
 
-  init(config: Moli.MoliConfig): void {
+  init(config: MoliRuntime.MoliConfig): void {
     this.logger = getLogger(config, this.window);
     // init additional pipeline steps if not already defined
     config.pipeline = config.pipeline || {
@@ -189,7 +189,7 @@ export class LazyLoad implements IModule {
     );
   }
 
-  registerIntersectionObservers = (moliConfig: Moli.MoliConfig) => {
+  registerIntersectionObservers = (moliConfig: MoliRuntime.MoliConfig) => {
     if (this.initialized) {
       return;
     }

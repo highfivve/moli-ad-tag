@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { isNotNull } from './arrayUtils';
 import { BrowserStorageKeys } from './browserStorageKeys';
 import {
@@ -8,17 +8,18 @@ import {
 } from './localStorage';
 import { parseQueryString, updateQueryString } from './query';
 import { QueryParameters } from './queryParameters';
+import { Environment } from '../types/moliConfig';
 
 export type EnvironmentOverride = {
   source: 'queryParam' | 'localStorage' | 'sessionStorage';
-  environment: Moli.Environment;
+  environment: Environment;
 };
 
 /**
  * Type guard to test whether a string is a valid environment.
  */
-const isEnvironmentString = (environment: string): environment is Moli.Environment => {
-  const validValues: Moli.Environment[] = ['production', 'test'];
+const isEnvironmentString = (environment: string): environment is Environment => {
+  const validValues: Environment[] = ['production', 'test'];
   return !!validValues.find(value => value === environment);
 };
 
@@ -59,7 +60,7 @@ export const getAllEnvironmentOverrides = (window: Window): EnvironmentOverride[
 /**
  * Typesafe set environment to browser storage.
  */
-export const setEnvironmentOverrideInStorage = (value: Moli.Environment, storage: Storage) =>
+export const setEnvironmentOverrideInStorage = (value: Environment, storage: Storage) =>
   setBrowserStorageValue(BrowserStorageKeys.moliEnv, value, storage);
 
 /**

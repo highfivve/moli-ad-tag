@@ -75,7 +75,7 @@ import {
   googletag,
   IModule,
   ModuleType,
-  Moli,
+  MoliRuntime,
   prebidjs,
   getLogger,
   IAssetLoaderService,
@@ -239,7 +239,7 @@ export class Skin implements IModule {
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
 
-  private log?: Moli.MoliLogger;
+  private log?: MoliRuntime.MoliLogger;
 
   constructor(
     private readonly skinModuleConfig: SkinModuleConfig,
@@ -379,7 +379,7 @@ export class Skin implements IModule {
    * @return function that destroys a given adSlot by domId
    */
   destroyAdSlot =
-    (slotDefinitions: Moli.SlotDefinition[]) =>
+    (slotDefinitions: MoliRuntime.SlotDefinition[]) =>
     (adSlotDomId: string): void => {
       const adSlots = slotDefinitions
         .map(slot => slot.adSlot)
@@ -387,7 +387,7 @@ export class Skin implements IModule {
       (this.window as Window & googletag.IGoogleTagWindow).googletag.destroySlots(adSlots);
     };
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
     const log = getLogger(config, this.window);
     this.log = log;
     if (!config.prebid) {
@@ -462,7 +462,7 @@ export class Skin implements IModule {
   }
 
   private hideAdSlot =
-    (log: Moli.MoliLogger) =>
+    (log: MoliRuntime.MoliLogger) =>
     (domId: string): void => {
       const element = this.window.document.getElementById(domId);
       try {

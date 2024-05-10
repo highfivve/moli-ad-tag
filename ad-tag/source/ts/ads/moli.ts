@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { parseQueryString } from '../util/query';
 import {
   createAssetLoaderService,
@@ -7,12 +7,12 @@ import {
 } from '../util/assetLoaderService';
 import { getLogger } from '../util/logging';
 import { addNewInfiniteSlotToConfig } from '../util/addNewInfiniteSlotToConfig';
-import IStateMachine = Moli.state.IStateMachine;
-import IFinished = Moli.state.IFinished;
-import IError = Moli.state.IError;
-import IConfigurable = Moli.state.IConfigurable;
-import ISinglePageApp = Moli.state.ISinglePageApp;
-import RefreshAdSlotsOptions = Moli.RefreshAdSlotsOptions;
+import IStateMachine = MoliRuntime.state.IStateMachine;
+import IFinished = MoliRuntime.state.IFinished;
+import IError = MoliRuntime.state.IError;
+import IConfigurable = MoliRuntime.state.IConfigurable;
+import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
+import RefreshAdSlotsOptions = MoliRuntime.RefreshAdSlotsOptions;
 import { IModule, metaFromModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
 import {
@@ -26,11 +26,11 @@ import { LabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import { AdUnitPathVariables, MoliConfig, ResolveAdUnitPathOptions } from '../types/moliConfig';
 
-export const createMoliTag = (window: Window): Moli.MoliTag => {
+export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
   const assetLoaderService = createAssetLoaderService(window);
   const adService = new AdService(assetLoaderService, window);
-  const moliWindow = window as Moli.MoliWindow;
+  const moliWindow = window as MoliRuntime.MoliWindow;
 
   /**
    * Initial state is configurable
@@ -194,7 +194,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     return removeNetworkChildId ? adUnitPath.removeChildId(resolvedPath) : resolvedPath;
   }
 
-  function setLogger(logger: Moli.MoliLogger): void {
+  function setLogger(logger: MoliRuntime.MoliLogger): void {
     switch (state.state) {
       case 'configurable':
       case 'configured': {
@@ -229,7 +229,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function afterRequestAds(callback: (state: Moli.state.AfterRequestAdsStates) => void): void {
+  function afterRequestAds(callback: (state: MoliRuntime.state.AfterRequestAdsStates) => void): void {
     switch (state.state) {
       case 'configurable': {
         state.hooks.afterRequestAds.push(callback);
@@ -816,7 +816,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     return Promise.reject(`no slots in buckets found`);
   }
 
-  function getState(): Moli.state.States {
+  function getState(): MoliRuntime.state.States {
     return state.state;
   }
 
@@ -874,7 +874,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   }
 
   const que = {
-    push(cmd: Moli.MoliCommand): void {
+    push(cmd: MoliRuntime.MoliCommand): void {
       cmd(moliWindow.moli);
     }
   };

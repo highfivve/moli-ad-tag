@@ -3,8 +3,8 @@ import React, { Component } from 'react';
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
 
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
+import LabelSizeConfigEntry = MoliRuntime.LabelSizeConfigEntry;
 
 type ISLabelConfigProps = {
   labelSizeConfig: Array<LabelSizeConfigEntry>;

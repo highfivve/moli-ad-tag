@@ -1,6 +1,6 @@
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 
-export const consoleLogReporter: Moli.reporting.Reporter = (metric: Moli.reporting.Metric) => {
+export const consoleLogReporter: MoliRuntime.reporting.Reporter = (metric: MoliRuntime.reporting.Metric) => {
   switch (metric.type) {
     case 'dfpLoad': {
       console.groupCollapsed('DFP Load Time');

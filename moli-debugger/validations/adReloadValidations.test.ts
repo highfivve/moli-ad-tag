@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { checkAdReloadConfig } from './adReloadValidations';
 import { ModuleMeta } from '@highfivve/ad-tag';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
 import video = prebidjs.video;
 import { Message } from '../components/globalConfig';
@@ -19,10 +19,10 @@ describe('AdReload Validations', () => {
 
   const createAdSlot = (
     adUnitPath: string,
-    sizes: Moli.GoogleAdManagerSlotSize[],
+    sizes: MoliRuntime.GoogleAdManagerSlotSize[],
     bids: prebidjs.IBid[],
     isOutstream: boolean = false
-  ): Moli.AdSlot => {
+  ): MoliRuntime.AdSlot => {
     return {
       position: 'in-page',
       domId: 'prebid-adslot',
