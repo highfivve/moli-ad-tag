@@ -326,7 +326,8 @@ export class AdService {
 
     const availableSlots = config.slots
       .filter(slot => slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
-      .filter(slot => domIds.some(domId => domId === slot.domId));
+      .filter(slot => domIds.some(domId => domId === slot.domId))
+      .filter(this.isSlotAvailable);
 
     if (domIds.length !== availableSlots.length) {
       const slotsInConfigOnly = availableSlots.filter(slot =>
