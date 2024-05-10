@@ -799,6 +799,64 @@ export namespace bucket {
 }
 
 /**
+ * == Cleanup Module ==
+ *
+ * Cleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.
+ *
+ * The configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted
+ * or JS as a string that will be evaluated by the module in order to remove these elements.
+ *
+ * @see cleanup module
+ */
+
+export interface CSSDeletionMethod {
+  /**
+   * The CSS selectors of the html elements in the DOM that should be removed.
+   */
+  readonly cssSelectors: string[];
+}
+
+export interface JSDeletionMethod {
+  /**
+   * JavaScript code as a string that will be executed as given
+   * (and most likely deletes the html elements of the special format).
+   */
+  readonly jsAsString: string;
+}
+
+export interface CleanupConfig {
+  /**
+   * The bidder that offers the special format.
+   */
+  readonly bidder: string;
+  /**
+   * The domId of the slot on which the special format runs.
+   */
+  readonly domId: string;
+  /**
+   * The method how the special format should be cleaned up.
+   */
+  readonly deleteMethod: CSSDeletionMethod | JSDeletionMethod;
+}
+
+export namespace modules {
+  export interface CleanupModuleConfig {
+    /**
+     * Information about whether the cleanup module is enabled or not.
+     */
+    readonly enabled: boolean;
+    /**
+     * A list of configurations.
+     */
+    readonly configs: CleanupConfig[];
+  }
+
+  export interface ModulesConfig {
+    readonly cleanup?: CleanupModuleConfig;
+  }
+}
+
+/**
  * ## Moli Configuration
  *
  * Contains the configuration for the ad tag that is served from a backend.
@@ -890,6 +948,15 @@ export interface MoliConfig {
    * Configure optimization through the global auction context
    */
   readonly globalAuctionContext?: auction.GlobalAuctionContextConfig;
+
+  /**
+   * ## Module configuration
+   *
+   * Optional module configuration. Every module must be enabled individually and has its own configuration.
+   * A module may the access its configuration via the `moli` configuration. This is very similar to how prebid handles
+   * module configuration.
+   */
+  readonly modules?: modules.ModulesConfig;
 
   /**
    * Configure bucketing behaviour
