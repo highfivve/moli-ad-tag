@@ -32,8 +32,8 @@ describe('Cleanup Module', () => {
       ...dom.window,
       pbjs: {
         getAllWinningBids: () => [
-          { adUnitCode: domId1, bidder: 'Seedtag' },
-          { adUnitCode: domId2, bidder: 'Seedtag' },
+          { adUnitCode: domId1, bidder: 'seedtag' },
+          { adUnitCode: domId2, bidder: 'seedtag' },
           { adUnitCode: domId3, bidder: 'dspx' }
         ]
       }
