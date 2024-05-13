@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-pubstack",
-  "version": "4.21.2",
+  "version": "4.21.3",
   "license": "Apache-2.0",
   "description": "Ads analytics module",
   "main": "./lib/index.js",
@@ -47,6 +47,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.21.2"
+    "@highfivve/ad-tag": "4.21.3"
   }
 }
