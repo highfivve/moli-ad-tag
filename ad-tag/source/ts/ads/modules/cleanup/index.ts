@@ -12,10 +12,13 @@ import { IModule, ModuleType } from '../../../types/module';
 /**
  * # Cleanup Module
  *
- * Cleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.
+ * Cleans up special formats if enabled (on user navigation and ad reload), especially developed for SPAs.
  *
  * The configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted
- * or JS as a string that will be evaluated by the module in order to remove these elements.
+ * or JS as single strings that contain the logic that removes the special format.
+ *
+ * Please note: if you want to execute more than one statement/line of JS, please provide each line as separate string in the array.
+ * Like this we make sure that each line is tried to be executed and if one fails, the next one is still executed.
  *
  * ## Integration
  *
@@ -26,21 +29,31 @@ import { IModule, ModuleType } from '../../../types/module';
  *     enabled: true,
  *     configs: [
  *       {
- *         bidder: 'Seedtag',
- *         domId: 'manual-adslot',
+ *         bidder: 'seedtag',
+ *         domId: 'wallpaper-pixel',
  *         deleteMethod: {
- *           cssSelectors: ['.seedtag-container']
+ *           cssSelectors: ['div[data-seedtag-format="inscreen"]']
  *         }
  *       },
  *       {
- *         bidder: 'Seedtag',
+ *         bidder: 'dspx',
  *         domId: 'lazy-loading-adslot-1',
  *         deleteMethod: {
- *           jsAsString: `window.document.querySelectorAll('.dspx-container').forEach(element => element.remove());`
+ *           jsAsString: ['window.dspx_start_called.dspxPageSkin.unload();', 'window.dspx_start_called.counter = 0;']
  *         }
  *       }
  *     }]));
  * ```
+ *
+ * ## Dspx Skin
+ *
+ * The dspx wallpaper can be cleaned as shown in the example above. The `dspx_start_called.dspxPageSkin.unload()` function is called to remove the wallpaper from the page.
+ *
+ * Dspx itself also sets a global variable `dspx_start_called.counter` on the window object. This variable is used to count the number of times the skin has been loaded.
+ * Dspx unloads the skin itself, if the counter holds a value greater than 1 in order to prevent multiple loads on the page.
+ *
+ * In SPAs, a value greater than 1 can happen as soon as a user navigates to a sub-page where the wallpaper ad slot is available and refreshed.
+ * If we try to unload() a second time, the dspx script crashes. Therefore we have to reset the counter to 0 after each clean-up.
  *
  */
 
@@ -99,20 +112,22 @@ export class Cleanup implements IModule {
           });
         });
       } else {
-        try {
-          context.logger.debug(
-            'Cleanup Module',
-            `Try to execute JS string: '${config.deleteMethod.jsAsString}'`
-          );
-          // eslint-disable-next-line no-eval
-          eval(config.deleteMethod.jsAsString);
-        } catch (e) {
-          context.logger.error(
-            'Cleanup Module',
-            `Error executing JS string: '${config.deleteMethod.jsAsString}'`,
-            e
-          );
-        }
+        config.deleteMethod.jsAsString.forEach(jsLineAsString => {
+          try {
+            context.logger.debug(
+              'Cleanup Module',
+              `Try to execute JS line string: '${jsLineAsString}'`
+            );
+            // eslint-disable-next-line no-eval
+            eval(jsLineAsString);
+          } catch (e) {
+            context.logger.error(
+              'Cleanup Module',
+              `Error executing JS string: '${jsLineAsString}'`,
+              e
+            );
+          }
+        });
       }
     });
   };
