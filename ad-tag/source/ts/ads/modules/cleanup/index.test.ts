@@ -32,8 +32,8 @@ describe('Cleanup Module', () => {
       ...dom.window,
       pbjs: {
         getAllWinningBids: () => [
-          { adUnitCode: domId1, bidder: 'Seedtag' },
-          { adUnitCode: domId2, bidder: 'Seedtag' },
+          { adUnitCode: domId1, bidder: 'seedtag' },
+          { adUnitCode: domId2, bidder: 'seedtag' },
           { adUnitCode: domId3, bidder: 'dspx' }
         ]
       }
@@ -137,7 +137,7 @@ describe('Cleanup Module', () => {
       enabled: true,
       configs: [
         {
-          bidder: 'Seedtag',
+          bidder: 'seedtag',
           domId: domId1,
           deleteMethod: {
             cssSelectors: [specialFormatClass1]
@@ -159,14 +159,14 @@ describe('Cleanup Module', () => {
       enabled: true,
       configs: [
         {
-          bidder: 'Seedtag',
+          bidder: 'seedtag',
           domId: domId1,
           deleteMethod: {
             cssSelectors: [`.${specialFormatClass1}`]
           }
         },
         {
-          bidder: 'Seedtag',
+          bidder: 'seedtag',
           domId: domId2,
           deleteMethod: {
             cssSelectors: [`.${specialFormatClass2}`]
@@ -176,7 +176,10 @@ describe('Cleanup Module', () => {
           bidder: 'dspx',
           domId: domId3,
           deleteMethod: {
-            jsAsString: `context.window.document.querySelectorAll('.${specialFormatClass3}').forEach(element => element.remove());`
+            jsAsString: [
+              'something broken',
+              `context.window.document.querySelectorAll('.${specialFormatClass3}').forEach(element => element.remove());`
+            ]
           }
         }
       ]
@@ -205,14 +208,14 @@ describe('Cleanup Module', () => {
       enabled: true,
       configs: [
         {
-          bidder: 'Seedtag',
+          bidder: 'seedtag',
           domId: domId1,
           deleteMethod: {
             cssSelectors: [`.${specialFormatClass1}`]
           }
         },
         {
-          bidder: 'Seedtag',
+          bidder: 'seedtag',
           domId: domId2,
           deleteMethod: {
             cssSelectors: [`.${specialFormatClass2}`]
@@ -249,7 +252,10 @@ describe('Cleanup Module', () => {
           bidder: 'dspx',
           domId: domId1,
           deleteMethod: {
-            jsAsString: `context.window.document.querySelctrAll('.${specialFormatClass3}').forEach(element => element.remove());`
+            jsAsString: [
+              `context.window.document.querySelctrAll('.${specialFormatClass3}').forEach(element => element.remove());`,
+              `const test = context.window.document.createElement('div'); test.classList.add('test-element'); context.window.document.body.appendChild(test);`
+            ]
           }
         }
       ]
@@ -269,8 +275,10 @@ describe('Cleanup Module', () => {
     const specialFormatElementsInDom = jsDomWindow.document.querySelectorAll(
       `.${specialFormatClass3}`
     );
+    const getTestElement = jsDomWindow.document.querySelector('.test-element');
 
     expect(errorLogSpy.called).to.be.true;
+    expect(getTestElement).to.not.be.undefined;
     expect(specialFormatElementsInDom).to.have.length(1);
   });
 });
