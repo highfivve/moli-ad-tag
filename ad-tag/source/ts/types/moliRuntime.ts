@@ -130,6 +130,30 @@ export namespace MoliRuntime {
     registerModule(module: IModule): void;
 
     /**
+     * Add the given init step to the ad pipeline. This can only be done before the first `requestAds` call, which
+     * means that the ad tag is still in the `configurable` or `configured` state.
+     *
+     * @param step - init step that should be added to the AdPipeline
+     */
+    addInitStep(step: InitStep): void;
+
+    /**
+     * Add the given configure step to the ad pipeline. This can only be done before the first `requestAds` call, which
+     * means that the ad tag is still in the `configurable` or `configured` state.
+     *
+     * @param step - configure step that should be added to the AdPipeline
+     */
+    addConfigureStep(step: ConfigureStep): void;
+
+    /**
+     * Add the given prepare request ads step to the ad pipeline. This can only be done before the first `requestAds` call, which
+     * means that the ad tag is still in the `configurable` or `configured` state.
+     *
+     * @param step - prepare request ads step that should be added to the AdPipeline
+     */
+    addPrepareRequestAdsStep(step: PrepareRequestAdsStep): void;
+
+    /**
      * **WARNING**
      * This method is called by the ad tag and can only be called once. If the publisher calls
      * `configure` then the ad configuration provided by the ad tag may not be used.
@@ -257,7 +281,7 @@ export namespace MoliRuntime {
     /**
      * @returns meta information about the active moli modules
      */
-    getModuleMeta(): Array<ModuleMeta>;
+    getModuleMeta(): ReadonlyArray<ModuleMeta>;
 
     /**
      * Open the moli debug console.
@@ -271,6 +295,73 @@ export namespace MoliRuntime {
      * @return the asset loader service that is used to fetch additional assets / resources
      */
     getAssetLoaderService(): IAssetLoaderService;
+  }
+
+  /**
+   * ## Moli Runtime Configuration
+   *
+   * This configuration contains the additional runtime configuration added through the various moli APIs, such as
+   *
+   * - `addLabel`
+   * - `setTargeting`
+   * - `addInitStep`
+   * - `addConfigureStep`
+   * - `addPrepareRequestAdsStep`
+   *
+   */
+  export interface MoliRuntimeConfig {
+    /**
+     * contains additional ad pipeline steps added through the `moli.add*Step` methods.
+     */
+    readonly adPipelineConfig: AdPipelineConfig;
+
+    /**
+     * Additional key-values. Insert with
+     *
+     * @example
+     * window.moli.que.push(function(moli) => {
+     *   moli.setTargeting(key, value);
+     * });
+     *
+     */
+    readonly keyValues: GoogleAdManagerKeyValueMap;
+
+    /**
+     * Additional labels. Insert with
+     *
+     * @example
+     * window.moli.que.push(function(moli) => {
+     *   moli.addLabel('foo');
+     * });
+     */
+    readonly labels: string[];
+
+    /**
+     * An object of ad unit path variables. It's mutable because it can only be set as a whole via `setAdUnitPathVariables`.
+     * There's no real use case for changing individual variables as all ad unit path variables must be known before
+     * `requestAds` is called.
+     */
+    adUnitPathVariables: AdUnitPathVariables;
+
+    /**
+     * A list of ad slots that should be refreshed
+     */
+    readonly refreshSlots: string[];
+
+    /**
+     * A list of infinite ad slots that should be refreshed
+     */
+    readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
+
+    /**
+     * Add hooks on specific state changes.
+     */
+    readonly hooks: state.IHooks;
+
+    /**
+     * Custom logger
+     */
+    logger?: MoliLogger;
   }
 
   /**
@@ -296,6 +387,24 @@ export namespace MoliRuntime {
      */
     readonly loaded?: Exclude<behaviour.ISlotLoading['loaded'], 'infinite'>;
   }
+
+  /**
+   * Models `refreshInifiniteAdSlot` calls before ads are being requested
+   */
+  export type IRefreshInfiniteSlot = {
+    /**
+     * the newly created domID by the infinite slot loading behaviour.
+     * This ID can be used to reference the ad slot in the config in the
+     * ad pipeline context config.
+     */
+    readonly artificialDomId: string;
+
+    /**
+     * the domID that references the slot configuration in the original
+     * config.
+     */
+    readonly idOfConfiguredSlot: string;
+  };
 
   /**
    *
@@ -422,35 +531,51 @@ export namespace MoliRuntime {
       | 'error';
 
     /**
-     * Models `refreshInifiniteAdSlot` calls before ads are being requested
-     */
-    export type IRefreshInfiniteSlot = {
-      /**
-       * the newly created domID by the infinite slot loading behaviour.
-       * This ID can be used to reference the ad slot in the config in the
-       * ad pipeline context config.
-       */
-      readonly artificialDomId: string;
-
-      /**
-       * the domID that references the slot configuration in the original
-       * config.
-       */
-      readonly idOfConfiguredSlot: string;
-    };
-
-    /**
      * Base interface for all states.
      */
     export interface IState {
       readonly state: States;
-      /**
-       * Contains stripped-down meta information about all added modules.
-       */
-      readonly moduleMeta: Array<ModuleMeta>;
     }
 
-    export interface IConfigurable extends IState {
+    /**
+     * State that is already configured.
+     */
+    interface WithConfiguration {
+      /**
+       * The configuration set either via `configure(...)` or provided
+       */
+      readonly config: MoliConfig;
+    }
+
+    /**
+     * State that have a runtime configuration.
+     */
+    interface WithRuntimeConfiguration {
+      /**
+       * Changeable configuration if other settings have been pushed into the que.
+       * This configuration is mutable by definition.
+       */
+      readonly runtimeConfig: MoliRuntimeConfig;
+    }
+
+    interface WithModulesConfigurable {
+      /**
+       * Contains the list of modules that need to be initialized
+       */
+      readonly modules: IModule[];
+    }
+
+    interface WithModules {
+      /**
+       * Contains the list of modules that need to be initialized
+       */
+      readonly modules: ReadonlyArray<IModule>;
+    }
+
+    export interface IConfigurable
+      extends IState,
+        WithRuntimeConfiguration,
+        WithModulesConfigurable {
       readonly state: 'configurable';
 
       // changeable configuration options
@@ -460,63 +585,12 @@ export namespace MoliRuntime {
        * If set to false, nothing will initialize until `moli.initialize` is called
        */
       initialize: boolean;
-
-      /**
-       * Additional key-values. Insert with
-       *
-       * @example
-       * window.moli.que.push(function(moli) => {
-       *   moli.setTargeting(key, value);
-       * });
-       *
-       */
-      keyValues: GoogleAdManagerKeyValueMap;
-
-      /**
-       * Additional labels. Insert with
-       *
-       * @example
-       * window.moli.que.push(function(moli) => {
-       *   moli.addLabel('foo');
-       * });
-       */
-      labels: string[];
-
-      /**
-       * Contains the list of modules that need to be initialized
-       */
-      modules: IModule[];
-
-      /**
-       * Custom logger
-       */
-      logger?: MoliLogger;
-
-      /**
-       * Add hooks on specific state changes.
-       */
-      hooks: IHooks;
-
-      /**
-       * A list of ad slots that should be refreshed
-       */
-      readonly refreshSlots: string[];
-
-      /**
-       * A list of infinite ad slots that should be refreshed
-       */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
-
-      /**
-       * An object of ad unit path variables
-       */
-      adUnitPathVariables: AdUnitPathVariables;
     }
 
     /**
      * The ad configuration has been set
      */
-    export interface IConfigured extends IState {
+    export interface IConfigured extends IState, WithRuntimeConfiguration, WithModulesConfigurable {
       readonly state: 'configured';
 
       /**
@@ -525,37 +599,7 @@ export namespace MoliRuntime {
        * - generate a diff for the additions made by the publisher
        * - use this to preserve static targeting values in single application mode
        */
-      readonly configFromAdTag: MoliConfig;
-
-      /**
-       * Changeable configuration if other settings have been pushed into the que.
-       */
-      config: MoliConfig;
-
-      /**
-       * Contains the list of modules that need to be initialized
-       */
-      modules: IModule[];
-
-      /**
-       * Add hooks on specific state changes.
-       */
-      hooks: IHooks;
-
-      /**
-       * Custom logger
-       */
-      logger?: MoliLogger;
-
-      /**
-       * A list of ad slots that should be refreshed
-       */
-      readonly refreshSlots: string[];
-
-      /**
-       * A list of infinite ad slots that should be refreshed
-       */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
+      readonly config: MoliConfig;
     }
 
     /**
@@ -564,7 +608,7 @@ export namespace MoliRuntime {
      * If moli is in the "configurable" state, the `initialize` flag will be set to true
      * and moli is initialized once it's configured.
      */
-    export interface IRequestAds extends IState {
+    export interface IRequestAds extends IState, WithRuntimeConfiguration, WithModules {
       readonly state: 'requestAds';
 
       /**
@@ -576,50 +620,8 @@ export namespace MoliRuntime {
     /**
      * Publisher enabled the single page application mode.
      */
-    export interface ISinglePageApp extends IState {
+    export interface ISinglePageApp extends IState, WithRuntimeConfiguration, WithModules {
       readonly state: 'spa-finished' | 'spa-requestAds';
-
-      /**
-       * Additional key-values. Insert with
-       *
-       * @example
-       * window.moli.que.push(function(moli) => {
-       *   moli.setTargeting(key, value);
-       * });
-       *
-       * These will be truncated every time ads are going to be refreshed.
-       *
-       */
-      keyValues: GoogleAdManagerKeyValueMap;
-
-      /**
-       * Additional labels. Insert with
-       *
-       * @example
-       * window.moli.que.push(function(moli) => {
-       *   moli.addLabel('foo');
-       * });
-       *
-       * These will be truncated every time ads are going to be refreshed.
-       */
-      labels: string[];
-
-      adUnitPathVariables: AdUnitPathVariables;
-
-      /**
-       * Hooks configured by the user
-       */
-      hooks: IHooks;
-
-      /**
-       * A list of ad slots that should be refreshed
-       */
-      readonly refreshSlots: string[];
-
-      /**
-       * A list of infinite ad slots that should be refreshed
-       */
-      readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
 
       /**
        * The original configuration from the ad tag itself. We can use this configuration to
@@ -651,7 +653,7 @@ export namespace MoliRuntime {
     /**
      * Moli has finished loading.
      */
-    export interface IFinished extends IState {
+    export interface IFinished extends IState, WithRuntimeConfiguration, WithModules {
       readonly state: 'finished';
 
       /**
@@ -663,7 +665,7 @@ export namespace MoliRuntime {
     /**
      * Moli has finished loading.
      */
-    export interface IError extends IState {
+    export interface IError extends IState, WithRuntimeConfiguration, WithModules {
       readonly state: 'error';
 
       /**
@@ -887,30 +889,28 @@ export namespace MoliRuntime {
     }
   }
 
-  export namespace pipeline {
+  /**
+   * ## AdPipeline Config
+   *
+   * The AdPipeline is the driving data structure behind every ad request. It executes a set of steps in various
+   * phases. This additional configuration lets the publisher or modules add new steps to the pipeline.
+   *
+   */
+  export interface AdPipelineConfig {
     /**
-     * ## Pipeline Config
-     *
-     * The AdPipeline is the driving data structure behind every ad request. It executes a set of steps in various
-     * phases. This additional configuration lets the publisher or modules add new steps to the pipeline.
-     *
+     * Additional initSteps that should be executed in every AdPipeline run.
      */
-    export interface PipelineConfig {
-      /**
-       * Additional initSteps that should be executed in every AdPipeline run.
-       */
-      readonly initSteps: InitStep[];
+    readonly initSteps: InitStep[];
 
-      /**
-       *  Additional configureSteps that should be executed in every AdPipeline run.
-       */
-      readonly configureSteps: ConfigureStep[];
+    /**
+     *  Additional configureSteps that should be executed in every AdPipeline run.
+     */
+    readonly configureSteps: ConfigureStep[];
 
-      /**
-       *  Additional prepareRequestAdsSteps that should be executed in every AdPipeline run.
-       */
-      readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
-    }
+    /**
+     *  Additional prepareRequestAdsSteps that should be executed in every AdPipeline run.
+     */
+    readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
   }
 
   /**

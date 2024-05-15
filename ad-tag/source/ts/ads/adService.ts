@@ -1,6 +1,6 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
-import { MoliRuntime } from '../types/moliRuntime';
+import { MoliRuntime, MoliRuntimeConfig } from '../types/moliRuntime';
 import {
   AdPipeline,
   ConfigureStep,
@@ -122,11 +122,11 @@ export class AdService {
    *
    *
    * @param config
-   * @param isSinglePageApp
+   * @param runtimeConfig
    */
   public initialize = (
     config: Readonly<MoliConfig>,
-    isSinglePageApp: boolean
+    runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>
   ): Promise<Readonly<MoliConfig>> => {
     const env = AdService.getEnvironment(config);
     const adServer = config.adServer || 'gam';

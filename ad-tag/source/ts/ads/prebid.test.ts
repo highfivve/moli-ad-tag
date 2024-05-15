@@ -14,17 +14,15 @@ import {
   prebidRemoveAdUnits,
   prebidRequestBids
 } from './prebid';
-import { noopReportingService } from './reportingService';
 import { LabelConfigService } from './labelConfigService';
 import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import PrebidAdSlotContext = MoliRuntime.headerbidding.PrebidAdSlotContext;
 import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { Environment, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -51,7 +49,6 @@ describe('prebid', () => {
       config: config,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: new GlobalAuctionContext(jsDomWindow, {
@@ -75,8 +72,8 @@ describe('prebid', () => {
 
   const prebidSlot = (
     domId: string,
-    provider: MoliRuntime.headerbidding.PrebidAdSlotConfigProvider
-  ): MoliRuntime.AdSlot => {
+    provider: headerbidding.PrebidAdSlotConfigProvider
+  ): AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
@@ -89,7 +86,7 @@ describe('prebid', () => {
     };
   };
 
-  const createAdSlot = (domId: string): MoliRuntime.AdSlot => {
+  const createAdSlot = (domId: string): AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
@@ -185,7 +182,7 @@ describe('prebid', () => {
 
   const createSlotDefinitions = (
     domId: string,
-    provider: MoliRuntime.headerbidding.PrebidAdSlotConfigProvider,
+    provider: headerbidding.PrebidAdSlotConfigProvider,
     floorprice?: number
   ): MoliRuntime.SlotDefinition => {
     const slot = prebidSlot(domId, provider);
@@ -288,45 +285,6 @@ describe('prebid', () => {
       expect(addAdUnitsSpy).to.have.callCount(0);
     });
 
-    describe('prebid adslot context', () => {
-      const stubPrebidAdSlotConfigProvider = (domId: string) => {
-        return sandbox.stub().returns({
-          adUnit: prebidAdUnit(domId, [
-            { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
-          ])
-        });
-      };
-
-      it('should have isMobile true if labels are empty', async () => {
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
-        const domId = getDomId();
-        const provider = stubPrebidAdSlotConfigProvider(domId);
-        const singleSlot = createSlotDefinitions(domId, provider);
-
-        await step(adPipelineContext(), [singleSlot]);
-        expect(provider).to.have.been.calledOnce;
-        const context: PrebidAdSlotContext = provider.firstCall.firstArg;
-        expect(context.labels).to.be.empty;
-        expect(context.isMobile).to.be.true;
-      });
-
-      it('should have isMobile false if labels contains desktop', async () => {
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
-        const domId = getDomId();
-        const provider = stubPrebidAdSlotConfigProvider(domId);
-        const singleSlot = createSlotDefinitions(domId, provider);
-
-        const pipelineContext = adPipelineContext();
-        sandbox.stub(pipelineContext.labelConfigService, 'getSupportedLabels').returns(['desktop']);
-
-        await step(pipelineContext, [singleSlot]);
-        expect(provider).to.have.been.calledOnce;
-        const context: PrebidAdSlotContext = provider.firstCall.firstArg;
-        expect(context.labels).contains('desktop');
-        expect(context.isMobile).to.be.false;
-      });
-    });
-
     describe('labels', () => {
       it('should remove labelAll', () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
@@ -348,7 +306,7 @@ describe('prebid', () => {
         });
       });
 
-      it('should remove labelAny', () => {
+      it('should remove labelAny', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -357,33 +315,29 @@ describe('prebid', () => {
           { bidder: 'appnexus', params: { placementId: '123' }, labelAny: ['mobile'] }
         ]);
         const singleSlot = createSlotDefinitions(domId, { adUnit });
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          const expectedAdUnit: prebidjs.IAdUnit = {
-            ...adUnit,
-            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
-          };
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        const expectedAdUnit: prebidjs.IAdUnit = {
+          ...adUnit,
+          bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+        };
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
       });
     });
 
     describe('static ad slot config provider', () => {
-      it('should add empty adunits array when the static prebid config provider is an empty array', () => {
+      it('should add empty adunits array when the static prebid config provider is an empty array', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
         const singleSlot = createSlotDefinitions(domId, []);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
       });
 
-      it('should add a single adunit when the static prebid config provider returns a single bid', () => {
+      it('should add a single adunit when the static prebid config provider returns a single bid', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -392,14 +346,12 @@ describe('prebid', () => {
           { bidder: 'appnexus', params: { placementId: '123' } }
         ]);
         const singleSlot = createSlotDefinitions(domId, { adUnit });
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
       });
 
-      it('should add a single adunit when the static prebid config provider returns a single bid array', () => {
+      it('should add a single adunit when the static prebid config provider returns a single bid array', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -408,14 +360,12 @@ describe('prebid', () => {
           { bidder: 'appnexus', params: { placementId: '123' } }
         ]);
         const singleSlot = createSlotDefinitions(domId, [{ adUnit }]);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
       });
 
-      it('should add a two adunits when the static prebid config provider returns a two bids', () => {
+      it('should add a two adunits when the static prebid config provider returns a two bids', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -427,11 +377,9 @@ describe('prebid', () => {
           { bidder: 'appnexus', params: { placementId: '124' } }
         ]);
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }, { adUnit: adUnit2 }]);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1, adUnit2]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1, adUnit2]);
       });
 
       it('should filter out bidders that are disabled in the auctionContext', async () => {
@@ -483,7 +431,7 @@ describe('prebid', () => {
         ]);
       });
 
-      it('should add a single adunit when the static prebid config provider returns a two bids but one is filtered', () => {
+      it('should add a single adunit when the static prebid config provider returns a two bids but one is filtered', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -498,47 +446,25 @@ describe('prebid', () => {
           []
         );
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }, { adUnit: adUnit2 }]);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
       });
     });
 
     describe('dynamic ad slot config provider', () => {
-      it('should add empty adunits array when the dynamic prebid config provider is an empty array', () => {
+      it('should add empty adunits array when the dynamic prebid config provider is an empty array', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
         const domId = getDomId();
-        const singleSlot = createSlotDefinitions(domId, () => []);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
-        });
+        const singleSlot = createSlotDefinitions(domId, []);
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([]);
       });
 
-      it('should add a single adunit when the dynamic prebid config provider returns a single bid', () => {
-        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
-
-        const domId = getDomId();
-        const adUnit = prebidAdUnit(domId, [
-          { bidder: 'appnexus', params: { placementId: '123' } }
-        ]);
-        const singleSlot = createSlotDefinitions(domId, () => {
-          return { adUnit };
-        });
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
-        });
-      });
-
-      it('should add a single adunit when the dynamic prebid config provider returns a single bid array', () => {
+      it('should add a single adunit when the dynamic prebid config provider returns a single bid', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -546,17 +472,27 @@ describe('prebid', () => {
         const adUnit = prebidAdUnit(domId, [
           { bidder: 'appnexus', params: { placementId: '123' } }
         ]);
-        const singleSlot = createSlotDefinitions(domId, () => {
-          return [{ adUnit }];
-        });
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
-        });
+        const singleSlot = createSlotDefinitions(domId, { adUnit });
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
       });
 
-      it('should add a two adunits when the dynamic prebid config provider returns a two bids', () => {
+      it('should add a single adunit when the dynamic prebid config provider returns a single bid array', async () => {
+        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' } }
+        ]);
+        const singleSlot = createSlotDefinitions(domId, [{ adUnit }]);
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit]);
+      });
+
+      it('should add a two adunits when the dynamic prebid config provider returns a two bids', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -567,18 +503,13 @@ describe('prebid', () => {
         const adUnit2 = prebidAdUnit(domId, [
           { bidder: 'appnexus', params: { placementId: '124' } }
         ]);
-        const singleSlot = createSlotDefinitions(domId, () => [
-          { adUnit: adUnit1 },
-          { adUnit: adUnit2 }
-        ]);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1, adUnit2]);
-        });
+        const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }, { adUnit: adUnit2 }]);
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1, adUnit2]);
       });
 
-      it('should add a single adunit when the dynamic prebid config provider returns a two bids but one is filtered', () => {
+      it('should add a single adunit when the dynamic prebid config provider returns a two bids but one is filtered', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -592,15 +523,10 @@ describe('prebid', () => {
           [{ bidder: 'appnexus', params: { placementId: '124' } }],
           []
         );
-        const singleSlot = createSlotDefinitions(domId, () => [
-          { adUnit: adUnit1 },
-          { adUnit: adUnit2 }
-        ]);
-
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
-        });
+        const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }, { adUnit: adUnit2 }]);
+        await step(adPipelineContext(), [singleSlot]);
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
       });
     });
 
@@ -626,7 +552,7 @@ describe('prebid', () => {
 
         // create a slot with a custom storedrequest id
         const slot = createSlotDefinitions(domId, { adUnit });
-        const singleSlot: MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> = {
+        const singleSlot: MoliRuntime.SlotDefinition<AdSlot> = {
           ...slot,
           moliSlot: {
             ...slot.moliSlot,
@@ -677,7 +603,7 @@ describe('prebid', () => {
           };
           // create a slot with a custom adUnitPath
           const slot = createSlotDefinitions(domId, { adUnit });
-          const singleSlot: MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> = {
+          const singleSlot: MoliRuntime.SlotDefinition<AdSlot> = {
             ...slot,
             moliSlot: {
               ...slot.moliSlot,
@@ -710,7 +636,7 @@ describe('prebid', () => {
           };
           // create a slot with a custom adUnitPath
           const slot = createSlotDefinitions(domId, { adUnit });
-          const singleSlot: MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> = {
+          const singleSlot: MoliRuntime.SlotDefinition<AdSlot> = {
             ...slot,
             moliSlot: {
               ...slot.moliSlot,

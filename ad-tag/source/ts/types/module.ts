@@ -1,6 +1,6 @@
 import { MoliRuntime } from './moliRuntime';
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { AdPipeline } from '../ads/adPipeline';
+import { AdPipeline, ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 import { MoliConfig } from './moliConfig';
 
 export type ModuleType =
@@ -49,19 +49,23 @@ export interface IModule {
     assetLoaderService: IAssetLoaderService,
     getAdPipeline: () => AdPipeline
   ): void;
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   */
+  initSteps(): InitStep[];
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   */
+  configureSteps(): ConfigureStep[];
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   */
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[];
 }
 
 export type ModuleMeta = Pick<IModule, 'name' | 'description' | 'moduleType'> & {
   config: Object | null;
 };
-
-/**
- * @returns a copy of the module, containing meta data like module name, type, description, and config, without access
- *          to its methods.
- */
-export const metaFromModule = (module: IModule): ModuleMeta => ({
-  moduleType: module.moduleType,
-  name: module.name,
-  description: module.description,
-  config: module.config()
-});
