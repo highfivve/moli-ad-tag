@@ -1,6 +1,6 @@
 import { parseQueryString } from './query';
 import { MoliRuntime } from '../types/moliRuntime';
-import { MoliConfig } from '../types/moliConfig';
+import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 /**
  * Get the parameter `moliDebug`. If set to true all logs will be written to the console.
@@ -161,7 +161,10 @@ export function getDefaultLogger(): MoliRuntime.MoliLogger {
  * @param config
  * @param window the global window object
  */
-export function getLogger(config: MoliConfig | null, window: Window): MoliRuntime.MoliLogger {
+export function getLogger(
+  config: MoliRuntimeConfig | null,
+  window: Window
+): MoliRuntime.MoliLogger {
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
   } else if (config && config.logger) {

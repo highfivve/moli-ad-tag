@@ -1,5 +1,6 @@
 import { getLogger } from './logging';
 import { MoliConfig } from '../types/moliConfig';
+import { MoliRuntime } from '../types/moliRuntime';
 
 /**
  * Add a slot with a new domId and the configuration of the 'infinite' loading ad slot to the moli config
@@ -7,12 +8,14 @@ import { MoliConfig } from '../types/moliConfig';
  * @param idOfConfiguredSlot the domId of the configured ad slot with an 'infinite' loading behaviour
  * @param artificialIdOfNewSlot the artificial domId for the added newly added infinite slot
  * @param window
+ * @param logger
  */
 export const addNewInfiniteSlotToConfig = (
   config: MoliConfig,
   idOfConfiguredSlot: string,
   artificialIdOfNewSlot: string,
-  window: Window
+  window: Window,
+  logger: MoliRuntime.MoliLogger
 ): MoliConfig => {
   const configuredInfiniteAdSlot = config.slots.find(
     configSlot => configSlot.domId === idOfConfiguredSlot
@@ -21,7 +24,7 @@ export const addNewInfiniteSlotToConfig = (
     const newAdSlot = { ...configuredInfiniteAdSlot, domId: artificialIdOfNewSlot };
     return { ...config, slots: [...config.slots, newAdSlot] };
   } else {
-    getLogger(config, window).error('MoliGlobal', `no infinite ad slot configured!`, config);
+    logger.error('MoliGlobal', `no infinite ad slot configured!`, config);
     return config;
   }
 };

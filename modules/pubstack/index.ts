@@ -21,13 +21,15 @@
  * @module
  */
 import {
-  MoliRuntime,
   IModule,
   ModuleType,
   mkInitStep,
   AssetLoadMethod,
   IAssetLoaderService,
-  mkConfigureStep
+  mkConfigureStep,
+  InitStep,
+  ConfigureStep,
+  PrepareRequestAdsStep
 } from '@highfivve/ad-tag';
 
 export type PubstackConfig = {
@@ -55,16 +57,8 @@ export class Pubstack implements IModule {
     return this.pubstackConfig;
   }
 
-  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    // direct prebid events
-    // init additional pipeline steps if not already defined
-    config.pipeline = config.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
-
-    config.pipeline.initSteps.push(
+  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+    return [
       mkInitStep('pubstack-init', ctx => {
         if (ctx.env === 'test') {
           return Promise.resolve();
@@ -79,9 +73,11 @@ export class Pubstack implements IModule {
           .catch(error => ctx.logger.error('failed to load pubstack', error));
         return Promise.resolve();
       })
-    );
+    ];
+  }
 
-    config.pipeline.configureSteps.push(
+  configureSteps(): ConfigureStep[] {
+    return [
       mkConfigureStep('pubstack-configure', ctx => {
         if (ctx.env === 'test') {
           return Promise.resolve();
@@ -99,6 +95,14 @@ export class Pubstack implements IModule {
 
         return Promise.resolve();
       })
-    );
+    ];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
+  }
+
+  init(): void {
+    // nothing to do here
   }
 }

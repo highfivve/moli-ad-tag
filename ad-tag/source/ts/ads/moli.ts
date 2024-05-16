@@ -238,6 +238,13 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configurable':
       case 'configured': {
         state.modules.push(module);
+        state.runtimeConfig.adPipelineConfig.initSteps.push(
+          ...module.initSteps(assetLoaderService)
+        );
+        state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps());
+        state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
+          ...module.prepareRequestAdsSteps()
+        );
         return;
       }
       default: {
@@ -362,6 +369,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             `initialize ${module.moduleType} module ${module.name}`,
             module.config()
           );
+          // TODO see if this is necessary!
           module.init(config, assetLoaderService, adService.getAdPipeline);
         });
 

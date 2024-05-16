@@ -451,25 +451,6 @@ export const prebidRequestBids = (
             adserverRequestSent = true;
 
             if (adServer === 'gam') {
-              // execute listener
-              if (prebidConfig.listener) {
-                const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-                const prebidListener =
-                  typeof prebidConfig.listener === 'function'
-                    ? prebidConfig.listener({ keyValues: keyValues })
-                    : prebidConfig.listener;
-                if (prebidListener.preSetTargetingForGPTAsync) {
-                  try {
-                    prebidListener.preSetTargetingForGPTAsync(bidResponses, timedOut, slots);
-                  } catch (e) {
-                    context.logger.error(
-                      'Prebid',
-                      `Failed to execute prebid preSetTargetingForGPTAsync listener. ${e}`
-                    );
-                  }
-                }
-              }
-
               // set key-values for DFP to target the correct line items
               context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
             }
@@ -518,9 +499,17 @@ export const prebidDefineSlots =
       } as any;
       switch (context.env) {
         case 'production':
-          return Promise.resolve<MoliRuntime.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+          return Promise.resolve<MoliRuntime.SlotDefinition>({
+            moliSlot,
+            adSlot,
+            filterSupportedSizes
+          });
         case 'test':
-          return Promise.resolve<MoliRuntime.SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+          return Promise.resolve<MoliRuntime.SlotDefinition>({
+            moliSlot,
+            adSlot,
+            filterSupportedSizes
+          });
         default:
           return Promise.reject(`invalid environment: ${context.config.environment}`);
       }

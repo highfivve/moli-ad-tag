@@ -81,7 +81,12 @@ import {
   IAssetLoaderService,
   flatten,
   isNotNull,
-  uniquePrimitiveFilter
+  uniquePrimitiveFilter,
+  InitStep,
+  ConfigureStep,
+  PrepareRequestAdsStep,
+  mkInitStep,
+  AdPipelineContext
 } from '@highfivve/ad-tag';
 
 export type SkinModuleConfig = {
@@ -250,6 +255,30 @@ export class Skin implements IModule {
     return this.skinModuleConfig;
   }
 
+  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+    return [
+      mkInitStep('skin-init', ctx => {
+        if (ctx.env === 'test') {
+          return Promise.resolve();
+        }
+        ctx.window.pbjs.que.push(() => {
+          ctx.window.pbjs.onEvent('auctionEnd', auctionObject => {
+            this.runSkinConfigs(auctionObject, ctx);
+          });
+        });
+        return Promise.resolve();
+      })
+    ];
+  }
+
+  configureSteps(): ConfigureStep[] {
+    return [];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
+  }
+
   /**
    * Check this skin config against the given bid responses to see if there are any skin bids inside, and if so (and
    * if the respective check is enabled), compare the highest-bidding skin cpm to the combined cpm of the other bids
@@ -257,10 +286,14 @@ export class Skin implements IModule {
    */
   getConfigEffect = (
     config: SkinConfig,
-    bidResponses: prebidjs.IBidResponsesMap
+    auctionObject: prebidjs.event.AuctionObject
   ): SkinConfigEffect => {
     const { trackSkinCpmLow } = this.skinModuleConfig;
-    const skinBidResponse = bidResponses[config.skinAdSlotDomId];
+    // const skinBidResponse = auctionObject[config.skinAdSlotDomId];
+    const skinBidResponses = auctionObject.bidsReceived?.filter(
+      bid => bid.adUnitCode === config.skinAdSlotDomId
+    );
+
     const isSkinBid = (bid: prebidjs.BidResponse) => {
       // go through all filters and check if one matches
       const oneFilterApplied = config.formatFilter.some(filter => {
@@ -294,16 +327,19 @@ export class Skin implements IModule {
     };
 
     // get all slot dom ids
-    const adSlotIds = Object.keys(bidResponses);
+    const adSlotIds = auctionObject.adUnitCodes || [];
     const nonSkinBids = flatten(
       adSlotIds
-        // collect all bid responses for these ad slot dom ids
-        .map(domId => ({ adSlotId: domId, ...bidResponses[domId] }))
-        // filter out all dom ids that aren't affected by this skin
+        // filter out all dom ids that aren't affected by this skin.
+        // the skin must be included to allow for further checking later
         .filter(
-          bidObject =>
-            [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(bidObject.adSlotId) > -1
+          domId => [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(domId) > -1
         )
+        // collect all bid responses for these ad slot dom ids
+        .map(domId => ({
+          adSlotId: domId,
+          bids: auctionObject.bidsReceived?.filter(bid => bid.adUnitCode === domId)
+        }))
         .filter(bidObject => isNotNull(bidObject.bids))
         .map(bidObject =>
           bidObject
@@ -317,9 +353,9 @@ export class Skin implements IModule {
     );
 
     const combinedNonSkinCpm = nonSkinBids.reduce((prev, current) => prev + current.cpm, 0);
-    const skinBids = skinBidResponse
+    const skinBids = skinBidResponses
       ? // sort the skin bids to ensure we compare the highest bidding skin to the other slots' cpms
-        skinBidResponse.bids.filter(isSkinBid).sort((bid1, bid2) => bid2.cpm - bid1.cpm)
+        skinBidResponses.filter(isSkinBid).sort((bid1, bid2) => bid2.cpm - bid1.cpm)
       : [];
 
     const skinConfigEffect: SkinConfigEffect =
@@ -357,16 +393,16 @@ export class Skin implements IModule {
 
   /**
    *
-   * @param bidResponses
+   * @param auctionObject
    * @return the first skin config with matching filters. If no config matches, undefined is being returned
    */
   selectConfig = (
-    bidResponses: prebidjs.IBidResponsesMap
+    auctionObject: prebidjs.event.AuctionObject
   ): { skinConfig: SkinConfig; configEffect: SkinConfigEffect } | undefined =>
     this.skinModuleConfig.configs
       .map(config => ({
         skinConfig: config,
-        configEffect: this.getConfigEffect(config, bidResponses)
+        configEffect: this.getConfigEffect(config, auctionObject)
       }))
       .find(({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking);
 
@@ -405,61 +441,60 @@ export class Skin implements IModule {
       log.error('SkinModule', "Couldn't find one or more ids in the ad slot config:", domIds);
       return;
     }
-
-    const prebidListener = config.prebid.listener;
-    if (prebidListener) {
-      log.error('SkinModule', "Couldn't define prebidListener, because there was already set one.");
-      return;
-    }
-
-    config.prebid.listener = {
-      preSetTargetingForGPTAsync: (bidResponses, timedOut, slotDefinitions) => {
-        const skinConfigWithEffect = this.selectConfig(bidResponses);
-
-        if (skinConfigWithEffect) {
-          const { skinConfig, configEffect } = skinConfigWithEffect;
-
-          if (configEffect === SkinConfigEffect.BlockOtherSlots) {
-            log.debug('SkinModule', 'Skin configuration applied', skinConfig);
-            skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
-
-            if (skinConfig.hideBlockedSlots) {
-              skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(log));
-            }
-
-            if (skinConfig.hideSkinAdSlot) {
-              this.hideAdSlot(log)(skinConfig.skinAdSlotDomId);
-            }
-
-            if (skinConfig.hideBlockedSlotsSelector) {
-              this.window.document
-                .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
-                .forEach(node => {
-                  log.debug(
-                    'SkinModule',
-                    `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
-                  );
-                  node.style.setProperty('display', 'none');
-                });
-            }
-          } else if (skinConfig.enableCpmComparison) {
-            log.debug('SkinModule', 'Skin configuration ignored because cpm was low', skinConfig);
-
-            this.destroyAdSlot(slotDefinitions)(skinConfig.skinAdSlotDomId);
-          }
-        } else {
-          // there's no matching configuration so we check if there are any
-          // slots that should not be part of the ad request to save bandwidth,
-          // money and improve reporting
-          this.skinModuleConfig.configs
-            .filter(skinConfig => skinConfig.destroySkinSlot)
-            .map(skinConfig => skinConfig.skinAdSlotDomId)
-            .filter(uniquePrimitiveFilter)
-            .forEach(this.destroyAdSlot(slotDefinitions));
-        }
-      }
-    };
   }
+
+  private runSkinConfigs = (
+    auctionObject: prebidjs.event.AuctionObject,
+    ctx: AdPipelineContext
+  ) => {
+    const skinConfigWithEffect = this.selectConfig(bidResponses);
+
+    if (skinConfigWithEffect) {
+      const { skinConfig, configEffect } = skinConfigWithEffect;
+
+      if (configEffect === SkinConfigEffect.BlockOtherSlots) {
+        ctx.logger.debug('SkinModule', 'Skin configuration applied', skinConfig);
+        skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
+
+        if (skinConfig.hideBlockedSlots) {
+          skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.logger));
+        }
+
+        if (skinConfig.hideSkinAdSlot) {
+          this.hideAdSlot(ctx.logger)(skinConfig.skinAdSlotDomId);
+        }
+
+        if (skinConfig.hideBlockedSlotsSelector) {
+          this.window.document
+            .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
+            .forEach(node => {
+              ctx.logger.debug(
+                'SkinModule',
+                `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
+              );
+              node.style.setProperty('display', 'none');
+            });
+        }
+      } else if (skinConfig.enableCpmComparison) {
+        ctx.logger.debug(
+          'SkinModule',
+          'Skin configuration ignored because cpm was low',
+          skinConfig
+        );
+
+        this.destroyAdSlot(slotDefinitions)(skinConfig.skinAdSlotDomId);
+      }
+    } else {
+      // there's no matching configuration so we check if there are any
+      // slots that should not be part of the ad request to save bandwidth,
+      // money and improve reporting
+      this.skinModuleConfig.configs
+        .filter(skinConfig => skinConfig.destroySkinSlot)
+        .map(skinConfig => skinConfig.skinAdSlotDomId)
+        .filter(uniquePrimitiveFilter)
+        .forEach(this.destroyAdSlot(slotDefinitions));
+    }
+  };
 
   private hideAdSlot =
     (log: MoliRuntime.MoliLogger) =>
