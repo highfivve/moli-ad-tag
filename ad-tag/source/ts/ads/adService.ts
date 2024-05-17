@@ -1,6 +1,6 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
-import { MoliRuntime, MoliRuntimeConfig } from '../types/moliRuntime';
+import { MoliRuntime } from '../types/moliRuntime';
 import {
   AdPipeline,
   ConfigureStep,
@@ -9,7 +9,6 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
-import { createPerformanceService } from '../util/performanceService';
 import {
   gptConfigure,
   gptConsentKeyValue,
@@ -45,7 +44,6 @@ import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, Environment, MoliConfig } from '../types/moliConfig';
-import state = MoliRuntime.state;
 
 /**
  * @internal
@@ -131,8 +129,9 @@ export class AdService {
     const env = AdService.getEnvironment(config);
     const adServer = config.adServer || 'gam';
     const isGam = adServer === 'gam';
+    const isSinglePageApp = !!config.spa?.enabled;
     // 1. setup all services
-    this.logger.setLogger(getLogger(config, this.window));
+    this.logger.setLogger(getLogger(runtimeConfig, this.window));
     this.logger.debug(
       'AdService',
       `Initializing with environment ${env} and ad server ${adServer}`
@@ -181,13 +180,6 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
-    // add additional steps if configured
-    if (config.pipeline) {
-      init.push(...config.pipeline.initSteps);
-      configure.push(...config.pipeline.configureSteps);
-      prepareRequestAds.push(...config.pipeline.prepareRequestAdsSteps);
-    }
-
     // delay ad requests for debugging
     if (env === 'test') {
       const debugDelay = getDebugDelayFromLocalStorage(this.window);
@@ -232,7 +224,7 @@ export class AdService {
   public requestAds = async (
     config: Readonly<MoliConfig>,
     refreshSlots: string[],
-    refreshInfiniteSlots: state.IRefreshInfiniteSlot[]
+    refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[]
   ): Promise<AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
     this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);

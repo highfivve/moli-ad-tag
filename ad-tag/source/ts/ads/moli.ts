@@ -13,7 +13,7 @@ import IError = MoliRuntime.state.IError;
 import IConfigurable = MoliRuntime.state.IConfigurable;
 import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
 import RefreshAdSlotsOptions = MoliRuntime.RefreshAdSlotsOptions;
-import { IModule, metaFromModule, ModuleMeta } from '../types/module';
+import { IModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
 import {
   getActiveEnvironmentOverride,
@@ -73,7 +73,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           `Setting key-value after configuration: ${key} : ${value}`
         );
@@ -97,7 +97,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           `Adding label after configure: ${label}`
         );
@@ -120,7 +120,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       }
 
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           `Setting unit path variables after configuration: ${variables}`
         );
@@ -179,7 +179,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to add a hook beforeRequestAds. Already configured.',
           state.config
@@ -199,7 +199,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to add a hook afterRequestAds. Already configured.',
           state.config
@@ -248,7 +248,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         return;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'Registering a module is only allowed within the ad tag before the ad tag is configured'
         );
       }
@@ -303,7 +303,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       case 'configured': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to configure moli tag twice. Already configured.',
           state.config
@@ -311,21 +311,21 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       case 'requestAds': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to configure moli tag twice. Already requesting ads.'
         );
         break;
       }
       case 'finished': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to configure moli tag twice. Already finished.'
         );
         break;
       }
       case 'error': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to configure moli tag twice. Already finished, but with an error.',
           state.error
@@ -354,7 +354,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               config,
               slot.idOfConfiguredSlot,
               slot.artificialDomId,
-              window
+              getLogger(state.runtimeConfig, window)
             );
           });
         }
@@ -379,7 +379,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             try {
               hook(config);
             } catch (e) {
-              getLogger(config, window).error('MoliGlobal', 'beforeRequestAds hook failed', e);
+              getLogger(state.runtimeConfig, window).error(
+                'MoliGlobal',
+                'beforeRequestAds hook failed',
+                e
+              );
             }
           });
         }
@@ -427,7 +431,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               } else if (state.state === 'spa-finished' || state.state === 'spa-requestAds') {
                 // this means that a subsequent requestAds call has finished before the previous one.
                 // nothing to do here
-                getLogger(state.config, window).debug(
+                getLogger(state.runtimeConfig, window).debug(
                   'MoliGlobal',
                   'A previous requestAds() was slower than the following requestAds() call'
                 );
@@ -456,7 +460,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               return Promise.resolve(state);
             })
             .catch(error => {
-              getLogger(config, window).error('MoliGlobal', error);
+              getLogger(state.runtimeConfig, window).error('MoliGlobal', error);
               state = {
                 state: 'error',
                 config: config,
@@ -475,7 +479,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       // eslint-disable-next-line no-fallthrough
       case 'spa-finished': {
         if (state.state === 'spa-requestAds') {
-          getLogger(state.config, window).debug(
+          getLogger(state.runtimeConfig, window).debug(
             'MoliGlobal',
             "requestAds is being called while the previous requestAds() hasn't finished yet"
           );
@@ -592,21 +596,21 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           });
       }
       case 'requestAds': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to requestAds twice. Already requesting ads.'
         );
         return Promise.reject();
       }
       case 'finished': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to requestAds twice. Already finished.'
         );
         return Promise.reject();
       }
       case 'error': {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to requestAds twice. Already finished, but with an error.',
           state.error
@@ -651,7 +655,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         return adService.refreshAdSlots(domIds, state.config, options).then(() => 'refreshed');
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           `refreshAdSlot is not allowed in state ${state.state}`,
           state.config
@@ -689,7 +693,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         if (state.href === window.location.href) {
           state = {
             ...state,
-            config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)
+            config: addNewInfiniteSlotToConfig(
+              state.config,
+              idOfConfiguredSlot,
+              domId,
+              getLogger(state.runtimeConfig, window)
+            )
           };
           return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
         } else {
@@ -706,12 +715,17 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'requestAds': {
         state = {
           ...state,
-          config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)
+          config: addNewInfiniteSlotToConfig(
+            state.config,
+            idOfConfiguredSlot,
+            domId,
+            getLogger(state.runtimeConfig, window)
+          )
         };
         return adService.refreshAdSlots([domId], state.config).then(() => 'refreshed');
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           `refreshInfiniteAdSlot is not allowed in state ${state.state}`,
           state.config
@@ -772,7 +786,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         return adService.refreshBucket(bucket, state.config).then(() => 'refreshed');
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           `refreshAdSlot is not allowed in state ${state.state}`,
           state.config
@@ -845,7 +859,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Adding an init step after configuration is not allowed'
         );
@@ -861,7 +875,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Adding a configure step after configuration is not allowed'
         );
@@ -877,7 +891,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         break;
       }
       default: {
-        getLogger(state.config, window).error(
+        getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Adding a prepareRequestAds step after configuration is not allowed'
         );

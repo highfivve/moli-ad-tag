@@ -35,4 +35,24 @@ export const newEmptyConfig = (slots: AdSlot[] = []): MoliConfig => {
   };
 };
 
+export const newEmptyRuntimeConfig = (): MoliRuntime.MoliRuntimeConfig => ({
+  adPipelineConfig: {
+    initSteps: [],
+    configureSteps: [],
+    prepareRequestAdsSteps: []
+  },
+  hooks: {
+    beforeRequestAds: [],
+    afterRequestAds: []
+  },
+  labels: [],
+  keyValues: {},
+  logger: noopLogger,
+  adUnitPathVariables: {},
+  refreshSlots: [],
+  refreshInfiniteSlots: []
+});
+
 export const emptyConfig: MoliConfig = newEmptyConfig();
+
+export const emptyRuntimeConfig: MoliRuntime.MoliRuntimeConfig = newEmptyRuntimeConfig();

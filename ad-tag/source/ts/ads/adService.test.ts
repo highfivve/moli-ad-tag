@@ -7,10 +7,11 @@ import { MoliRuntime } from '../types/moliRuntime';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { IAdPipelineConfiguration } from './adPipeline';
 import { AdService } from './adService';
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { AdSlot, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -24,7 +25,7 @@ describe('AdService', () => {
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
-  const emptyConfigWithPrebid: MoliRuntime.MoliConfig = {
+  const emptyConfigWithPrebid: MoliConfig = {
     ...emptyConfig,
     prebid: {
       config: {
@@ -42,7 +43,7 @@ describe('AdService', () => {
     }
   };
 
-  const emptyConfigWithA9: MoliRuntime.MoliConfig = {
+  const emptyConfigWithA9: MoliConfig = {
     ...emptyConfig,
     a9: {
       cmpTimeout: 500,
@@ -65,20 +66,19 @@ describe('AdService', () => {
   };
 
   const initialize: (
-    config?: MoliRuntime.MoliConfig,
-    isSinglePageApp?: boolean
-  ) => Promise<IAdPipelineConfiguration> = (
-    config: MoliRuntime.MoliConfig = emptyConfig,
-    isSinglePageApp: boolean = false
+    config?: MoliConfig,
+    runtimeConfig?: MoliRuntime.MoliRuntimeConfig
+  ) => Promise<IAdPipelineConfiguration> = async (
+    config: MoliConfig = emptyConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig = emptyRuntimeConfig
   ): Promise<IAdPipelineConfiguration> => {
     const adService = makeAdService();
-    return adService
-      .initialize(config, isSinglePageApp)
-      .then(() => adService.getAdPipeline().config);
+    await adService.initialize(config, runtimeConfig);
+    return adService.getAdPipeline().config;
   };
 
   let domIdCounter: number = 0;
-  const eagerAdSlot = (): MoliRuntime.AdSlot => {
+  const eagerAdSlot = (): AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: `dom-id-${domIdCounter}`,
@@ -90,16 +90,16 @@ describe('AdService', () => {
     };
   };
 
-  const manualAdSlot = (): MoliRuntime.AdSlot => {
+  const manualAdSlot = (): AdSlot => {
     return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
   };
 
-  const backfillAdSlot = (): MoliRuntime.AdSlot => ({
+  const backfillAdSlot = (): AdSlot => ({
     ...eagerAdSlot(),
     behaviour: { loaded: 'backfill' }
   });
 
-  const infiniteSlot = (): MoliRuntime.AdSlot => ({
+  const infiniteSlot = (): AdSlot => ({
     ...eagerAdSlot(),
     behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
   });
@@ -121,274 +121,222 @@ describe('AdService', () => {
 
   describe('initialize', () => {
     // FIXME try to make this test work
-    it.skip('should wait until the dom is initialized', () => {
+    it.skip('should wait until the dom is initialized', async () => {
       const documentLoadedSpy = sandbox.spy(dom.window.document, 'addEventListener');
 
-      return initialize().then(() => {
-        expect(documentLoadedSpy).to.have.been.calledOnce;
-        expect(documentLoadedSpy).to.have.been.calledOnceWithExactly('DOMContentLoaded');
-      });
+      await initialize();
+      expect(documentLoadedSpy).to.have.been.calledOnce;
+      expect(documentLoadedSpy).to.have.been.calledOnceWithExactly('DOMContentLoaded');
     });
 
-    it('should add the gptInit step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.init.map(step => step.name);
-        expect(stepNames).to.contain('gpt-init');
-      });
+    it('should add the gptInit step', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.init.map(step => step.name);
+      expect(stepNames).to.contain('gpt-init');
     });
 
     describe('prebid', () => {
-      it('should add the prebid-init step if prebid is available', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).to.contain('prebid-init');
-        });
+      it('should add the prebid-init step if prebid is available', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('prebid-init');
       });
 
-      it('should not add the prebid-init step if prebid is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-init');
-        });
+      it('should not add the prebid-init step if prebid is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-init');
       });
     });
 
     describe('a9', () => {
-      it('should add the a9-init step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).to.contain('a9-init');
-        });
+      it('should add the a9-init step if a9 is available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('a9-init');
       });
 
-      it('should not add the a9-init step if a9 is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).not.to.contain('a9-init');
-        });
+      it('should not add the a9-init step if a9 is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-init');
       });
     });
   });
 
   describe('configure', () => {
-    it('should add the gptConfigure step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-configure');
-      });
+    it('should add the gptConfigure step', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).to.contain('gpt-configure');
     });
 
-    it('should add the gpt-destroy-ad-slots for single page apps', () => {
-      return initialize(emptyConfig, true).then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-destroy-ad-slots');
-      });
+    it('should add the gpt-destroy-ad-slots for single page apps', async () => {
+      const pipeline = await initialize(emptyConfig, emptyRuntimeConfig);
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).to.contain('gpt-destroy-ad-slots');
     });
 
-    it('should not add the gpt-destroy-ad-slots for none single page apps', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).not.to.contain('gpt-destroy-ad-slots');
-      });
+    it('should not add the gpt-destroy-ad-slots for none single page apps', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).not.to.contain('gpt-destroy-ad-slots');
     });
 
-    it('should add the gpt-reset-targeting for single page apps', () => {
-      return initialize(emptyConfig, true).then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-reset-targeting');
-      });
+    it('should add the gpt-reset-targeting for single page apps', async () => {
+      const pipeline = await initialize(emptyConfig, emptyRuntimeConfig);
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).to.contain('gpt-reset-targeting');
     });
 
-    it('should not add the gpt-reset-targeting for none single page apps', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).not.to.contain('gpt-reset-targeting');
-      });
+    it('should not add the gpt-reset-targeting for none single page apps', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).not.to.contain('gpt-reset-targeting');
     });
 
     describe('prebid', () => {
-      it('should add pbjs if available in the config', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('prebid-configure');
-        });
+      it('should add pbjs if available in the config', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('prebid-configure');
       });
 
-      it('should not initialize pbjs if not set in the config', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-configure');
-        });
+      it('should not initialize pbjs if not set in the config', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-configure');
       });
 
-      it('should add the prebid-remove-adunits for single page apps', () => {
-        return initialize(emptyConfigWithPrebid, true).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('prebid-remove-adunits');
-        });
+      it('should add the prebid-remove-adunits for single page apps', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid, emptyRuntimeConfig);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('prebid-remove-adunits');
       });
 
-      it('should not add the prebid-remove-adunits for none single page apps', () => {
-        return initialize(emptyConfigWithPrebid, false).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-remove-adunits');
-        });
+      it('should not add the prebid-remove-adunits for none single page apps', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid, emptyRuntimeConfig);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-remove-adunits');
       });
 
-      it('should not add the prebid-remove-adunits for single page apps if prebid is not available', () => {
-        return initialize(emptyConfig, false).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-remove-adunits');
-        });
+      it('should not add the prebid-remove-adunits for single page apps if prebid is not available', async () => {
+        const pipeline = await initialize(emptyConfig, emptyRuntimeConfig);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-remove-adunits');
       });
     });
 
     describe('a9', () => {
-      it('should initialize apstag if available in config', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('a9-configure');
-        });
+      it('should initialize apstag if available in config', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('a9-configure');
       });
 
-      it('should not initialize apstag if not available in config', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('a9-configure');
-        });
+      it('should not initialize apstag if not available in config', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-configure');
       });
 
-      it('should configure publisher audiences if available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('a9-publisher-audiences');
-        });
+      it('should configure publisher audiences if available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('a9-publisher-audiences');
       });
     });
   });
 
   describe('defineSlots', () => {
-    it('should add the gptDefineSlots step', () => {
-      return initialize().then(pipeline => {
-        expect(pipeline.defineSlots).to.be.ok;
-      });
+    it('should add the gptDefineSlots step', async () => {
+      const pipeline = await initialize();
+      expect(pipeline.defineSlots).to.be.ok;
     });
   });
 
   describe('prepareRequestAds', () => {
     describe('gpt', () => {
-      it('should add the gpt-device-label-keyValue step', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('gpt-device-label-keyValue');
-        });
+      it('should add the gpt-device-label-keyValue step', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('gpt-device-label-keyValue');
       });
 
-      it('should add the gpt-consent-keyValue step', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('gpt-consent-keyValue');
-        });
+      it('should add the gpt-consent-keyValue step', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('gpt-consent-keyValue');
       });
     });
 
     describe('prebid', () => {
-      it('should add the prebid-prepare-adunits step if prebid is available', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('prebid-prepare-adunits');
-        });
+      it('should add the prebid-prepare-adunits step if prebid is available', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('prebid-prepare-adunits');
       });
 
-      it('should not add the prebid-prepare-adunits step if prebid is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-prepare-adunits');
-        });
+      it('should not add the prebid-prepare-adunits step if prebid is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-prepare-adunits');
       });
     });
 
     describe('a9', () => {
-      it('should add the a9-clear-targeting-step step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('a9-clear-targeting');
-        });
+      it('should add the a9-clear-targeting-step step if a9 is available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('a9-clear-targeting');
       });
     });
 
     describe('passback', () => {
-      it('should configure passback slots', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('passback-prepare-slots');
-        });
-      });
-    });
-
-    describe('reporting', () => {
-      it('should not add the reporting-enabled step if no reporter is set', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.not.contain('reporting-enabled');
-        });
-      });
-
-      it('should add the reporting-enabled step if reporting config is set', () => {
-        return initialize({
-          ...emptyConfig,
-          reporting: {
-            sampleRate: 1,
-            reporters: []
-          }
-        }).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('reporting-enabled');
-        });
+      it('should configure passback slots', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('passback-prepare-slots');
       });
     });
   });
 
   describe('requestBids', () => {
     describe('prebid', () => {
-      it('should add the request prebid bids step if prebid is available', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).to.contain('prebid-request-bids');
-        });
+      it('should add the request prebid bids step if prebid is available', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).to.contain('prebid-request-bids');
       });
 
-      it('should not add the request prebid bids step if prebid is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-request-bids');
-        });
+      it('should not add the request prebid bids step if prebid is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-request-bids');
       });
     });
     describe('a9', () => {
-      it('should add the a9 fetch bids step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).to.contain('a9-fetch-bids');
-        });
+      it('should add the a9 fetch bids step if a9 is available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).to.contain('a9-fetch-bids');
       });
 
-      it('should not the a9 fetch bids step if a9 is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).not.to.contain('a9-fetch-bids');
-        });
+      it('should not the a9 fetch bids step if a9 is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-fetch-bids');
       });
     });
   });
 
   describe('requestAds', () => {
     const requestAds = (
-      slots: MoliRuntime.AdSlot[],
+      slots: AdSlot[],
       refreshSlots: string[] = [],
-      refreshInfiniteSlots: MoliRuntime.state.IRefreshInfiniteSlot[],
+      refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[],
       logger: MoliLogger = noopLogger
-    ): Promise<MoliRuntime.AdSlot[]> => {
+    ): Promise<AdSlot[]> => {
       const adService = makeAdService();
       adService.setLogger(logger);
       return adService.requestAds(
@@ -398,13 +346,7 @@ describe('AdService', () => {
       );
     };
 
-    const eventTrigger: MoliRuntime.behaviour.Trigger = {
-      name: 'event',
-      event: 'noop',
-      source: jsDomWindow
-    };
-
-    const addToDom = (adSlots: MoliRuntime.AdSlot[]): void => {
+    const addToDom = (adSlots: AdSlot[]): void => {
       adSlots.forEach(slot => {
         const adDiv = dom.window.document.createElement('div');
         adDiv.id = slot.domId;
@@ -421,7 +363,7 @@ describe('AdService', () => {
     });
 
     it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
-      const outOfPageInterstitial: MoliRuntime.AdSlot = {
+      const outOfPageInterstitial: AdSlot = {
         ...eagerAdSlot(),
         position: 'out-of-page-interstitial'
       };
@@ -462,12 +404,12 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
-      const eagerAdSlot1: MoliRuntime.AdSlot = {
+      const eagerAdSlot1: AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager', bucket: 'bucket1' }
       };
 
-      const eagerAdSlot3: MoliRuntime.AdSlot = {
+      const eagerAdSlot3: AdSlot = {
         ...eagerAdSlot(),
         behaviour: { loaded: 'eager' }
       };
@@ -565,8 +507,8 @@ describe('AdService', () => {
   });
 
   describe('refreshAdSlots', () => {
-    const backfillSlot: MoliRuntime.AdSlot = { ...eagerAdSlot(), behaviour: { loaded: 'backfill' } };
-    const infiniteSlot: MoliRuntime.AdSlot = {
+    const backfillSlot: AdSlot = { ...eagerAdSlot(), behaviour: { loaded: 'backfill' } };
+    const infiniteSlot: AdSlot = {
       ...eagerAdSlot(),
       behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
     };
@@ -589,7 +531,7 @@ describe('AdService', () => {
     it('should call adPipeline.run with an empty array if slot is eager', async () => {
       const adService = makeAdService();
       const slot = eagerAdSlot();
-      const configWithEagerSlot: MoliRuntime.MoliConfig = {
+      const configWithEagerSlot: MoliConfig = {
         ...emptyConfig,
         slots: [slot]
       };
@@ -601,7 +543,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with an empty array if slot is backfill', async () => {
       const adService = makeAdService();
-      const configWithEagerSlot: MoliRuntime.MoliConfig = {
+      const configWithEagerSlot: MoliConfig = {
         ...emptyConfig,
         slots: [backfillSlot]
       };
@@ -614,7 +556,7 @@ describe('AdService', () => {
     it('should call adPipeline.run with the slot if slot is manual', async () => {
       const adService = makeAdService();
       const slot = manualAdSlot();
-      const configWithManualSlot: MoliRuntime.MoliConfig = {
+      const configWithManualSlot: MoliConfig = {
         ...emptyConfig,
         slots: [slot]
       };
@@ -630,7 +572,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with the slot if slot is infinite', async () => {
       const adService = makeAdService();
-      const configWithManualSlot: MoliRuntime.MoliConfig = {
+      const configWithManualSlot: MoliConfig = {
         ...emptyConfig,
         slots: [infiniteSlot]
       };
@@ -646,7 +588,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with the slot if backfill is provided as loaded option', async () => {
       const adService = makeAdService();
-      const configWithManualSlot: MoliRuntime.MoliConfig = {
+      const configWithManualSlot: MoliConfig = {
         ...emptyConfig,
         slots: [backfillSlot]
       };
@@ -664,7 +606,7 @@ describe('AdService', () => {
 
     it('should call adPipeline.run with the backfill and infinite slot if backfill is provided as loaded option', async () => {
       const adService = makeAdService();
-      const configWithManualSlot: MoliRuntime.MoliConfig = {
+      const configWithManualSlot: MoliConfig = {
         ...emptyConfig,
         slots: [backfillSlot, infiniteSlot]
       };
@@ -687,17 +629,17 @@ describe('AdService', () => {
 
   describe('global auction context', () => {
     it('should instantiate auction in adPipeline by default config', async () => {
-      const emptyConfigWithGlobalAuction: MoliRuntime.MoliConfig = {
+      const emptyConfigWithGlobalAuction: MoliConfig = {
         ...emptyConfig,
         globalAuctionContext: undefined
       };
       const adService = makeAdService();
-      await adService.initialize(emptyConfigWithGlobalAuction, true);
+      await adService.initialize(emptyConfigWithGlobalAuction, emptyRuntimeConfig);
       expect(adService.getAdPipeline().getAuction()).to.be.ok;
     });
 
     it('should instantiate auction in adPipeline with config', async () => {
-      const emptyConfigWithGlobalAuction: MoliRuntime.MoliConfig = {
+      const emptyConfigWithGlobalAuction: MoliConfig = {
         ...emptyConfig,
         globalAuctionContext: {
           adRequestThrottling: { enabled: true, throttle: 15 },
@@ -710,7 +652,7 @@ describe('AdService', () => {
         }
       };
       const adService = makeAdService();
-      await adService.initialize(emptyConfigWithGlobalAuction, true);
+      await adService.initialize(emptyConfigWithGlobalAuction, emptyRuntimeConfig);
       expect(adService.getAdPipeline().getAuction()).to.be.ok;
     });
   });
