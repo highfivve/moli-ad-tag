@@ -10,6 +10,8 @@ import { fullConsent } from '../../../stubs/consentStubs';
 import { googletag } from '../../../../ts/index';
 
 import IAdSlot = googletag.IAdSlot;
+import { AdSlot, MoliConfig } from '../../../types/moliConfig';
+
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();
   let dom = createDom();
@@ -52,14 +54,13 @@ describe('Cleanup Module', () => {
     sandbox.restore();
   });
 
-  const mkConfig = (slots): MoliRuntime.MoliConfig => {
+  const mkConfig = (slots: AdSlot[]): MoliConfig => {
     return {
       slots: slots,
       buckets: {
         enabled: true,
         bucket: { lazy_bucket: { timeout: 3000 }, another_lazy_bucket: { timeout: 3000 } }
       },
-      logger: noopLogger,
       prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
       schain: dummySchainConfig,
       spa: { enabled: true, validateLocation: 'href' }
@@ -71,13 +72,13 @@ describe('Cleanup Module', () => {
     domIds: string[],
     behaviour?: 'eager' | 'manual',
     bucket?: string
-  ): MoliRuntime.AdSlot[] => {
+  ): AdSlot[] => {
     return domIds.map(domId => {
       const div = window.document.createElement('div');
       div.id = domId;
       window.document.body.appendChild(div);
 
-      const slot: MoliRuntime.AdSlot = {
+      const slot: AdSlot = {
         domId: domId,
         adUnitPath: domId,
         position: 'in-page',
@@ -91,7 +92,7 @@ describe('Cleanup Module', () => {
     });
   };
 
-  const createSlotDefinition = (domId: string): MoliRuntime.SlotDefinition<MoliRuntime.AdSlot> => {
+  const createSlotDefinition = (domId: string): MoliRuntime.SlotDefinition => {
     return {
       moliSlot: {
         domId: domId,
@@ -125,7 +126,6 @@ describe('Cleanup Module', () => {
       window: jsDomWindow as any,
       // no service dependencies required
       labelConfigService: null as any,
-      reportingService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
       auction: null as any
@@ -150,8 +150,11 @@ describe('Cleanup Module', () => {
     const config = mkConfig(slots);
     module.init(config);
 
-    expect(config.pipeline?.configureSteps.length).to.equal(1);
-    expect(config.pipeline?.prepareRequestAdsSteps.length).to.equal(1);
+    const configureSteps = module.configureSteps();
+    const prepareRequestAdsSteps = module.prepareRequestAdsSteps();
+
+    expect(configureSteps.length).to.equal(1);
+    expect(prepareRequestAdsSteps.length).to.equal(1);
   });
 
   it('should remove all elements with the configured CSS selectors from the dom or execute the configured JS in the configure step', async () => {
@@ -185,7 +188,7 @@ describe('Cleanup Module', () => {
 
     const config = mkConfig(slots);
     module.init(config);
-    const configure = config.pipeline?.configureSteps[0];
+    const configure = module.configureSteps()[0];
 
     if (configure) {
       expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
@@ -224,7 +227,7 @@ describe('Cleanup Module', () => {
 
     const config = mkConfig(slots);
     module.init(config);
-    const prepareRequestAds = config.pipeline?.prepareRequestAdsSteps[0];
+    const prepareRequestAds = module.prepareRequestAdsSteps()[0];
 
     if (prepareRequestAds) {
       expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
@@ -259,7 +262,7 @@ describe('Cleanup Module', () => {
 
     module.init(config);
 
-    const configure = config.pipeline?.configureSteps[0];
+    const configure = module.configureSteps()[0];
 
     if (configure) {
       expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');

@@ -4,11 +4,13 @@ import {
   HIGH_PRIORITY,
   ConfigureStep,
   mkConfigureStepOncePerRequestAdsCycle,
-  AdPipelineContext
+  AdPipelineContext,
+  InitStep
 } from '../../adPipeline';
-import { MoliRuntime } from '../../../types/moliRuntime';
 import { IModule, ModuleType } from '../../../types/module';
 import { CleanupConfig, modules, MoliConfig } from '../../../types/moliConfig';
+import { IAssetLoaderService } from '../../../util/assetLoaderService';
+import CleanupModuleConfig = modules.CleanupModuleConfig;
 
 /**
  * # Cleanup Module
@@ -56,26 +58,51 @@ export class Cleanup implements IModule {
     return this.cleanupModuleConfig;
   }
 
-  init(config: MoliConfig) {
-    if (this.cleanupModuleConfig && this.cleanupModuleConfig.enabled) {
-      // init additional pipeline steps if not already defined
-      config.pipeline = config.pipeline || {
-        initSteps: [],
-        configureSteps: [],
-        prepareRequestAdsSteps: []
-      };
-
-      if (config.spa?.enabled) {
-        config.pipeline.configureSteps.push(
-          this.destroyAllOutOfPageAdFormats(this.cleanupModuleConfig)
-        );
-      }
-
-      config.pipeline.prepareRequestAdsSteps.push(
-        this.destroySpecialFormatOfReloadedSlot(this.cleanupModuleConfig)
-      );
-    }
+  initSteps(): InitStep[] {
+    return [];
   }
+
+  configureSteps(): ConfigureStep[] {
+    return [
+      mkConfigureStepOncePerRequestAdsCycle(
+        'destroy-out-of-page-ad-format',
+        (context: AdPipelineContext) => {
+          const cleanupConfig = this.moduleConfigIfEnabled(context.config);
+          if (cleanupConfig) {
+            this.cleanUp(context, cleanupConfig.configs);
+          }
+          return Promise.resolve();
+        }
+      )
+    ];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [
+      mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
+        const cleanupConfig = this.moduleConfigIfEnabled(context.config);
+        if (cleanupConfig) {
+          const configsOfDomIdsThatNeedToBeCleaned = cleanupConfig.configs
+            .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
+            .filter(config => this.hasBidderWonLastAuction(context, config));
+
+          this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+        }
+
+        return Promise.resolve();
+      })
+    ];
+  }
+
+  init(config: MoliConfig) {
+    // nothing to do here
+  }
+
+  private moduleConfigIfEnabled = (moliConfig: MoliConfig): CleanupModuleConfig | null => {
+    return moliConfig.modules?.cleanup && moliConfig.modules?.cleanup.enabled
+      ? moliConfig.modules?.cleanup
+      : null;
+  };
 
   private cleanUp = (context: AdPipelineContext, configs: CleanupConfig[]) => {
     configs.forEach(config => {
@@ -118,17 +145,6 @@ export class Cleanup implements IModule {
     });
   };
 
-  private destroyAllOutOfPageAdFormats = (
-    cleanupConfig: modules.CleanupModuleConfig
-  ): ConfigureStep =>
-    mkConfigureStepOncePerRequestAdsCycle(
-      'destroy-out-of-page-ad-format',
-      (context: AdPipelineContext) => {
-        this.cleanUp(context, cleanupConfig?.configs);
-        return Promise.resolve();
-      }
-    );
-
   private hasBidderWonLastAuction = (
     context: AdPipelineContext,
     config: CleanupConfig
@@ -140,17 +156,4 @@ export class Cleanup implements IModule {
     // look at the single cleanup config and check if the configured bidder has won the last auction on the configured slot
     return bidderThatWonLastAuctionOnSlot === config.bidder;
   };
-
-  private destroySpecialFormatOfReloadedSlot = (
-    config: modules.CleanupModuleConfig
-  ): PrepareRequestAdsStep =>
-    mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
-      const configsOfDomIdsThatNeedToBeCleaned = config.configs
-        .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
-        .filter(config => this.hasBidderWonLastAuction(context, config));
-
-      this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
-
-      return Promise.resolve();
-    });
 }
