@@ -7,6 +7,7 @@ import {
   AdSlot,
   AdUnitPathVariables,
   behaviour,
+  Environment,
   GoogleAdManagerKeyValueMap,
   GoogleAdManagerSlotSize,
   MoliConfig,
@@ -271,7 +272,17 @@ export namespace MoliRuntime {
      * @returns the configuration used to initialize the ads. If not yet initialized, null.
      * @see [[beforeRequestAds]]
      */
-    getConfig(): MoliConfig | null;
+    getConfig(): Readonly<MoliConfig> | null;
+
+    /**
+     * Returns the current runtime configuration. This configuration may not be final!
+     *
+     * Note, that even if the type declares it as readonly, the configuration is mutable. Don't make use of this!
+     * Always use moli APIs to change the configuration.
+     *
+     * @returns the current state of the runtime config.
+     */
+    getRuntimeConfig(): Readonly<MoliRuntimeConfig>;
 
     /**
      * @returns the current state name
@@ -310,6 +321,17 @@ export namespace MoliRuntime {
    *
    */
   export interface MoliRuntimeConfig {
+    /**
+     * Configure the environment the ad tag should use.
+     *
+     * The default environment is `production` as we have a very conservative way of deploying
+     * applications.
+     *
+     * default: 'production'
+     * @see [[Environment]]
+     */
+    readonly environment?: Environment;
+
     /**
      * contains additional ad pipeline steps added through the `moli.add*Step` methods.
      */
@@ -624,14 +646,6 @@ export namespace MoliRuntime {
       readonly state: 'spa-finished' | 'spa-requestAds';
 
       /**
-       * The original configuration from the ad tag itself. We can use this configuration to
-       *
-       * - generate a diff for the additions made by the publisher
-       * - use this to preserve static targeting values in single application mode
-       */
-      readonly configFromAdTag: MoliConfig;
-
-      /**
        * Immutable configuration. This is the same configuration returned by
        * the initialized Promise.
        */
@@ -699,7 +713,10 @@ export namespace MoliRuntime {
      * Callback function executed before ads are being requested.
      * DOM is ready at this point.
      */
-    export type BeforeRequestAdsHook = (config: MoliConfig) => void;
+    export type BeforeRequestAdsHook = (
+      config: MoliConfig,
+      runtimeConfig: MoliRuntimeConfig
+    ) => void;
 
     export interface IHooks {
       /**

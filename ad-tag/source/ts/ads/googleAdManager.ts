@@ -21,7 +21,7 @@ import { createTestSlots } from '../util/test-slots';
 import SlotDefinition = MoliRuntime.SlotDefinition;
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
-import { AdSlot, consent, MoliConfig, Targeting } from '../types/moliConfig';
+import { AdSlot, consent, GoogleAdManagerKeyValueMap, Targeting } from '../types/moliConfig';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -66,18 +66,23 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
-  targeting: Targeting | undefined
+  runtimeKeyValues: GoogleAdManagerKeyValueMap,
+  serverSideTargeting: Targeting | undefined
 ): void => {
-  const keyValueMap = targeting ? targeting.keyValues : {};
-  const excludes = targeting?.adManagerExcludes ?? [];
-  Object.keys(keyValueMap)
-    .filter(key => !excludes.includes(key))
-    .forEach(key => {
-      const value = keyValueMap[key];
-      if (value) {
-        window.googletag.pubads().setTargeting(key, value);
-      }
-    });
+  const staticKeyValues = serverSideTargeting ? serverSideTargeting.keyValues : {};
+  const excludes = serverSideTargeting?.adManagerExcludes ?? [];
+
+  // first use the static targeting and override if necessary with the runtime key values
+  [staticKeyValues, runtimeKeyValues].forEach(keyValues => {
+    Object.keys(keyValues)
+      .filter(key => !excludes.includes(key))
+      .forEach(key => {
+        const value = staticKeyValues[key];
+        if (value) {
+          window.googletag.pubads().setTargeting(key, value);
+        }
+      });
+  });
 };
 
 /**
@@ -190,23 +195,31 @@ export const gptResetTargeting = (): ConfigureStep =>
         if (context.env === 'production') {
           context.logger.debug('GAM', 'reset top level targeting');
           context.window.googletag.pubads().clearTargeting();
-          configureTargeting(context.window, context.config.targeting);
+          configureTargeting(
+            context.window,
+            context.runtimeConfig.keyValues,
+            context.config.targeting
+          );
         }
 
         resolve();
       })
   );
 
-export const gptConfigure = (config: MoliConfig): ConfigureStep => {
+export const gptConfigure = (): ConfigureStep => {
   let result: Promise<void>;
   return mkConfigureStep('gpt-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
     if (!result) {
       result = new Promise<void>(resolve => {
-        const env = config.environment || 'production';
+        const env = context.runtimeConfig.environment || 'production';
         context.logger.debug('GAM', 'configure googletag');
         switch (env) {
           case 'production':
-            configureTargeting(context.window, config.targeting);
+            configureTargeting(
+              context.window,
+              context.runtimeConfig.keyValues,
+              context.config.targeting
+            );
 
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
@@ -391,7 +404,7 @@ export const gptDefineSlots =
             filterSupportedSizes
           });
         default:
-          return Promise.reject(`invalid environment: ${context.config.environment}`);
+          return Promise.reject(`invalid environment: ${context.runtimeConfig.environment}`);
       }
     });
 

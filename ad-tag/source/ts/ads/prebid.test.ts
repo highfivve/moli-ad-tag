@@ -6,7 +6,7 @@ import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 import { prebidjs } from '../types/prebidjs';
 
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import {
   prebidConfigure,
@@ -47,6 +47,7 @@ describe('prebid', () => {
       env: env,
       logger: noopLogger,
       config: config,
+      runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
@@ -211,25 +212,24 @@ describe('prebid', () => {
   });
 
   describe('prebid configure step', () => {
-    it('should set the prebid config', () => {
+    it('should set the prebid config', async () => {
       const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
       const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
 
-      return step(adPipelineContext(), []).then(() => {
-        expect(setConfigSpy).to.have.been.calledOnce;
-        expect(setConfigSpy).to.have.been.calledOnceWithExactly({
-          ...pbjsTestConfig,
-          ...{
-            schain: {
-              validation: 'relaxed',
-              config: {
-                ver: '1.0',
-                complete: 1,
-                nodes: [dummySchainConfig.supplyChainStartNode]
-              }
+      await step(adPipelineContext(), []);
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).to.have.been.calledOnceWithExactly({
+        ...pbjsTestConfig,
+        ...{
+          schain: {
+            validation: 'relaxed',
+            config: {
+              ver: '1.0',
+              complete: 1,
+              nodes: [dummySchainConfig.supplyChainStartNode]
             }
           }
-        });
+        }
       });
     });
   });
@@ -286,7 +286,7 @@ describe('prebid', () => {
     });
 
     describe('labels', () => {
-      it('should remove labelAll', () => {
+      it('should remove labelAll', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -296,14 +296,13 @@ describe('prebid', () => {
         ]);
         const singleSlot = createSlotDefinitions(domId, { adUnit });
 
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          const expectedAdUnit: prebidjs.IAdUnit = {
-            ...adUnit,
-            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
-          };
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        const expectedAdUnit: prebidjs.IAdUnit = {
+          ...adUnit,
+          bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+        };
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
       });
 
       it('should remove labelAny', async () => {
@@ -552,7 +551,7 @@ describe('prebid', () => {
 
         // create a slot with a custom storedrequest id
         const slot = createSlotDefinitions(domId, { adUnit });
-        const singleSlot: MoliRuntime.SlotDefinition<AdSlot> = {
+        const singleSlot: MoliRuntime.SlotDefinition = {
           ...slot,
           moliSlot: {
             ...slot.moliSlot,
@@ -603,7 +602,7 @@ describe('prebid', () => {
           };
           // create a slot with a custom adUnitPath
           const slot = createSlotDefinitions(domId, { adUnit });
-          const singleSlot: MoliRuntime.SlotDefinition<AdSlot> = {
+          const singleSlot: MoliRuntime.SlotDefinition = {
             ...slot,
             moliSlot: {
               ...slot.moliSlot,
@@ -636,7 +635,7 @@ describe('prebid', () => {
           };
           // create a slot with a custom adUnitPath
           const slot = createSlotDefinitions(domId, { adUnit });
-          const singleSlot: MoliRuntime.SlotDefinition<AdSlot> = {
+          const singleSlot: MoliRuntime.SlotDefinition = {
             ...slot,
             moliSlot: {
               ...slot.moliSlot,
@@ -764,7 +763,7 @@ describe('prebid', () => {
       });
     });
     describe('floors', () => {
-      it('should not be filled if priceRule is not set', () => {
+      it('should not be filled if priceRule is not set', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -774,17 +773,16 @@ describe('prebid', () => {
         ]);
         const singleSlot = createSlotDefinitions(domId, { adUnit });
 
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          const expectedAdUnit: prebidjs.IAdUnit = {
-            ...adUnit,
-            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
-          };
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        const expectedAdUnit: prebidjs.IAdUnit = {
+          ...adUnit,
+          bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+        };
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
       });
 
-      it('should be filled if priceRule is set', () => {
+      it('should be filled if priceRule is set', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
         const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
@@ -794,15 +792,14 @@ describe('prebid', () => {
         ]);
         const singleSlot = createSlotDefinitions(domId, { adUnit }, 0.2);
 
-        return step(adPipelineContext(), [singleSlot]).then(() => {
-          const expectedAdUnit: prebidjs.IAdUnit = {
-            ...adUnit,
-            bids: [{ bidder: 'appnexus', params: { placementId: '123' } }],
-            floors: floors(0.2)
-          };
-          expect(addAdUnitsSpy).to.have.been.calledOnce;
-          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
-        });
+        await step(adPipelineContext(), [singleSlot]);
+        const expectedAdUnit: prebidjs.IAdUnit = {
+          ...adUnit,
+          bids: [{ bidder: 'appnexus', params: { placementId: '123' } }],
+          floors: floors(0.2)
+        };
+        expect(addAdUnitsSpy).to.have.been.calledOnce;
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([expectedAdUnit]);
       });
     });
   });
@@ -853,7 +850,7 @@ describe('prebid', () => {
 
     it('should not call requestBids if slots are empty', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
 
       await step(adPipelineContext(), []);
       expect(requestBidsSpy).to.have.not.been.called;
@@ -861,7 +858,7 @@ describe('prebid', () => {
 
     it('should not call requestBids if all slots are filtered', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
       const slot = createAdSlot('none-prebid');
 
       await step(adPipelineContext(), [
@@ -876,7 +873,7 @@ describe('prebid', () => {
 
     it('should not call requestBids if all slots are throttled', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
       const slot = createAdSlot('none-prebid');
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
@@ -894,7 +891,7 @@ describe('prebid', () => {
 
     it('should call requestBids with the ad unit code', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
 
       const slotDef = createSlotDefinitions(domId1, { adUnit: adUnit1 });
 
@@ -910,7 +907,7 @@ describe('prebid', () => {
 
     it('should call requestBids with ad unit codes that are not throttled', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
 
       const slotDef1 = createSlotDefinitions(domId1, { adUnit: adUnit1 });
       const slotDef2 = createSlotDefinitions(domId2, { adUnit: adUnit2 });
@@ -932,11 +929,7 @@ describe('prebid', () => {
 
     it('should call requestBids with the prebid ad units if ephemeralAdUnits is true', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(
-        { ...moliPrebidTestConfig, ephemeralAdUnits: true },
-        'gam',
-        undefined
-      );
+      const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
 
       await step(adPipelineContext(), [slotDef1]);
       expect(requestBidsSpy).to.have.been.calledOnce;
@@ -959,11 +952,7 @@ describe('prebid', () => {
 
     it('should call requestBids with the prebid ad units if ephemeralAdUnits is true without throttled slots', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(
-        { ...moliPrebidTestConfig, ephemeralAdUnits: true },
-        'gam',
-        undefined
-      );
+      const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
 
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
@@ -991,7 +980,7 @@ describe('prebid', () => {
 
     it('should call requestBids with the timeout in adPipeline context', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
-      const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+      const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
 
       const domId = 'prebid-slot';
       const adUnit = prebidAdUnit(domId, [
@@ -1010,11 +999,7 @@ describe('prebid', () => {
       requestBidsStub.callsFake(() => {
         console.log('requestBids called');
       });
-      const step = prebidRequestBids(
-        { ...moliPrebidTestConfig, failsafeTimeout: 10000 },
-        'gam',
-        undefined
-      );
+      const step = prebidRequestBids({ ...moliPrebidTestConfig, failsafeTimeout: 10000 }, 'gam');
 
       const domId = 'prebid-slot';
       const adUnit = prebidAdUnit(domId, [
@@ -1032,11 +1017,7 @@ describe('prebid', () => {
       requestBidsStub.callsFake(() => {
         console.log('requestBids called');
       });
-      const step = prebidRequestBids(
-        { ...moliPrebidTestConfig, failsafeTimeout: 500 },
-        'gam',
-        undefined
-      );
+      const step = prebidRequestBids({ ...moliPrebidTestConfig, failsafeTimeout: 500 }, 'gam');
 
       const domId = 'prebid-slot';
       const adUnit = prebidAdUnit(domId, [

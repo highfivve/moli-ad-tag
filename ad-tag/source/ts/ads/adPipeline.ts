@@ -10,6 +10,7 @@ import TCPurpose = tcfapi.responses.TCPurpose;
 import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliConfig';
+import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 /**
  * Context passed to every pipeline step.
@@ -44,6 +45,10 @@ export type AdPipelineContext = {
    * The config used for the ad configuration run
    */
   readonly config: MoliConfig;
+  /**
+   * The runtime config. It contains all values that have been set through the javascript API
+   */
+  readonly runtimeConfig: MoliRuntimeConfig;
 
   /**
    * required for filtering based on labels
@@ -291,6 +296,7 @@ export class AdPipeline {
   run(
     slots: AdSlot[],
     config: MoliConfig,
+    runtimeConfig: MoliRuntimeConfig,
     requestAdsCalls: number,
     bucketName?: string
   ): Promise<void> {
@@ -312,7 +318,7 @@ export class AdPipeline {
     const consentConfig: consent.ConsentConfig = config.consent || {};
     this.tcData = this.tcData
       ? this.tcData
-      : consentReady(consentConfig, this.window, this.logger, config.environment);
+      : consentReady(consentConfig, this.window, this.logger, runtimeConfig.environment);
 
     return this.tcData.then(consentData => {
       const extraLabels = [...(config.targeting?.labels || [])];
@@ -351,8 +357,9 @@ export class AdPipeline {
         requestId: currentRequestId,
         requestAdsCalls: requestAdsCalls,
         logger: this.logger,
-        env: config.environment || 'production',
+        env: runtimeConfig.environment || 'production',
         config: config,
+        runtimeConfig: runtimeConfig,
         labelConfigService: labelConfigService,
         window: this.window,
         tcData: consentData,

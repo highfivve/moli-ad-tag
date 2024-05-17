@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
@@ -55,6 +55,7 @@ describe('a9', () => {
       env: env,
       logger: noopLogger,
       config: config,
+      runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,

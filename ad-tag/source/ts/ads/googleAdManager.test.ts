@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
@@ -52,6 +52,7 @@ describe('google ad manager', () => {
       env: env,
       logger: noopLogger,
       config: config,
+      runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
@@ -131,7 +132,7 @@ describe('google ad manager', () => {
 
   describe('gptConfigure', () => {
     it('setTargeting should not be called if targeting is empty', async () => {
-      const step = gptConfigure(emptyConfig);
+      const step = gptConfigure();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
 
       await step(adPipelineContext(), []);
@@ -139,7 +140,10 @@ describe('google ad manager', () => {
     });
 
     it('setTargeting should be called if targeting contains key-values', async () => {
-      const step = gptConfigure({
+      const step = gptConfigure();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+
+      const configWithServerSideTargeting: MoliConfig = {
         ...emptyConfig,
         targeting: {
           keyValues: {
@@ -147,17 +151,19 @@ describe('google ad manager', () => {
             tags: ['one', 'two']
           }
         }
-      });
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      };
 
-      await step(adPipelineContext(), []);
+      await step(adPipelineContext('production', configWithServerSideTargeting), []);
       expect(setTargetingSpy).to.have.been.calledTwice;
       expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
       expect(setTargetingSpy).to.have.been.calledWith('tags', ['one', 'two']);
     });
 
     it('setTargeting should not be called if targeting key-value is excluded', async () => {
-      const step = gptConfigure({
+      const step = gptConfigure();
+      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+
+      const configWithServerSideTargeting: MoliConfig = {
         ...emptyConfig,
         targeting: {
           keyValues: {
@@ -166,10 +172,9 @@ describe('google ad manager', () => {
           },
           adManagerExcludes: ['sensitive']
         }
-      });
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
+      };
 
-      await step(adPipelineContext(), []);
+      await step(adPipelineContext('production', configWithServerSideTargeting), []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
     });

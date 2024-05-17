@@ -44,6 +44,7 @@ import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, Environment, MoliConfig } from '../types/moliConfig';
+import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 /**
  * @internal
@@ -80,7 +81,7 @@ export class AdService {
     )
   );
 
-  private static getEnvironment(config: MoliConfig): Environment {
+  private static getEnvironment(config: MoliRuntimeConfig): Environment {
     return config.environment || 'production';
   }
 
@@ -126,10 +127,10 @@ export class AdService {
     config: Readonly<MoliConfig>,
     runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>
   ): Promise<Readonly<MoliConfig>> => {
-    const env = AdService.getEnvironment(config);
+    const env = AdService.getEnvironment(runtimeConfig);
     const adServer = config.adServer || 'gam';
     const isGam = adServer === 'gam';
-    const isSinglePageApp = !!config.spa?.enabled;
+    const isSinglePageApp = config.spa?.enabled === true;
     // 1. setup all services
     this.logger.setLogger(getLogger(runtimeConfig, this.window));
     this.logger.debug(
@@ -140,7 +141,7 @@ export class AdService {
     // 2. build the AdPipeline
     const init: InitStep[] = isGam ? [gptInit(this.assetService)] : [];
 
-    const configure: ConfigureStep[] = isGam ? [gptConfigure(config)] : [];
+    const configure: ConfigureStep[] = isGam ? [gptConfigure()] : [];
 
     if (isGam && isSinglePageApp) {
       configure.push(gptDestroyAdSlots(), gptResetTargeting());
@@ -168,7 +169,7 @@ export class AdService {
         configure.push(prebidRemoveAdUnits(config.prebid));
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
-      requestBids.push(prebidRequestBids(config.prebid, adServer, config.targeting));
+      requestBids.push(prebidRequestBids(config.prebid, adServer));
     }
 
     // amazon a9
@@ -216,17 +217,18 @@ export class AdService {
   /**
    *
    * @param config
-   * @param refreshSlots a list of ad slots that are already manually refreshed via the `moli.refreshAdSlot` API
-   *         and can be part of the requestAds cycle
-   * @param refreshInfiniteSlots a list of infinite ad slots that are already manually refreshed via the `moli.refreshInfiniteAdSlot` API
-   *         and can be part of the requestAds cycle
+   * @param runtimeConfig contains configuration and APIs call made through the JS API. For instance:
+   *        Contains refreshSlots - a list of ad slots that are already manually refreshed via the `moli.refreshAdSlot` API
+   *        and can be part of the requestAds cycle
+   *        Contains refreshInfiniteSlots - a list of infinite ad slots that are already manually refreshed via the `moli.refreshInfiniteAdSlot` API
+   *        and can be part of the requestAds cycle
    */
   public requestAds = async (
     config: Readonly<MoliConfig>,
-    refreshSlots: string[],
-    refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[]
+    runtimeConfig: Readonly<MoliRuntimeConfig>
   ): Promise<AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
+    const { refreshSlots, refreshInfiniteSlots } = runtimeConfig;
     this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);
     try {
       const immediatelyLoadedSlots: AdSlot[] = config.slots
@@ -267,13 +269,18 @@ export class AdService {
           Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
             this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
             return this.adPipeline
-              .run(bucketSlots, config, this.requestAdsCalls)
+              .run(bucketSlots, config, runtimeConfig, this.requestAdsCalls)
               .then(() => bucketSlots);
           })
         );
         return flatten(arr);
       } else {
-        await this.adPipeline.run(immediatelyLoadedSlots, config, this.requestAdsCalls);
+        await this.adPipeline.run(
+          immediatelyLoadedSlots,
+          config,
+          runtimeConfig,
+          this.requestAdsCalls
+        );
         return immediatelyLoadedSlots;
       }
     } catch (e) {
@@ -285,6 +292,7 @@ export class AdService {
   public refreshAdSlots(
     domIds: string[],
     config: MoliConfig,
+    runtimeConfig: MoliRuntimeConfig,
     options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<void> {
     if (domIds.length === 0) {
@@ -322,10 +330,14 @@ export class AdService {
     }
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
-    return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
+    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls);
   }
 
-  public refreshBucket(bucket: string, config: MoliConfig): Promise<void> {
+  public refreshBucket(
+    bucket: string,
+    config: MoliConfig,
+    runtimeConfig: MoliRuntimeConfig
+  ): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
@@ -333,7 +345,13 @@ export class AdService {
     const availableSlotsInBucket = manualSlots.filter(slot => slot.behaviour.bucket === bucket);
 
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
-    return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);
+    return this.adPipeline.run(
+      availableSlotsInBucket,
+      config,
+      runtimeConfig,
+      this.requestAdsCalls,
+      bucket
+    );
   }
 
   /**

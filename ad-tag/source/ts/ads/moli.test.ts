@@ -7,7 +7,7 @@ import { createMoliTag } from './moli';
 import { initAdTag } from './moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { emptyConfig, newEmptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, newEmptyConfig } from '../stubs/moliStubs';
 import IConfigurable = MoliRuntime.state.IConfigurable;
 import IFinished = MoliRuntime.state.IFinished;
 import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
@@ -19,9 +19,10 @@ import { prebidjs } from '../types/prebidjs';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, MoliConfig, SinglePageAppConfig } from '../types/moliConfig';
 import MoliTag = MoliRuntime.MoliTag;
 import state = MoliRuntime.state;
+import { ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
 
 // setup sinon-chai
 use(sinonChai);
@@ -219,6 +220,15 @@ describe('moli', () => {
       },
       init(config: MoliConfig, assetLoaderService: IAssetLoaderService): void {
         return;
+      },
+      initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+        return [];
+      },
+      configureSteps(): ConfigureStep[] {
+        return [];
+      },
+      prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+        return [];
       }
     };
 
@@ -271,7 +281,7 @@ describe('moli', () => {
     it('should never register modules if the state is not configurable', () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
-      const logger = config.logger!;
+      const logger = adTag.getRuntimeConfig().logger!;
 
       const errorLogSpy = sandbox.spy(logger, 'error');
 
@@ -397,6 +407,8 @@ describe('moli', () => {
     });
 
     describe('single page application mode (spa)', () => {
+      const spa: SinglePageAppConfig = { enabled: true, validateLocation: 'href' };
+
       it('should batch refresh calls before requestAds() is called', async () => {
         // create all slots
         const slots: AdSlot[] = [
@@ -410,9 +422,8 @@ describe('moli', () => {
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.refreshAdSlot(slots[0].domId);
-        adTag.enableSinglePageApp();
         adTag.refreshAdSlot(slots[1].domId);
-        adTag.configure({ ...defaultConfig, slots: slots });
+        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
         adTag.refreshAdSlot(slots[2].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
@@ -420,7 +431,7 @@ describe('moli', () => {
         expect(state.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = state as ISinglePageApp;
         expect(spaState.config).to.be.ok;
-        expect(spaState.refreshSlots).to.be.empty;
+        expect(spaState.runtimeConfig.refreshSlots).to.be.empty;
         expect(refreshSpy).to.have.been.calledOnce;
         const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
         expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
@@ -437,12 +448,7 @@ describe('moli', () => {
 
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.enableSinglePageApp();
-        adTag.configure({
-          ...defaultConfig,
-          slots: slots,
-          spa: { enabled: true, validateLocation: 'href' }
-        });
+        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
         const refreshAdSlotResponse = await adTag.refreshAdSlot(slots[0].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
@@ -453,7 +459,7 @@ describe('moli', () => {
         expect(requestAdsState.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
         expect(spaState.config).to.be.ok;
-        expect(spaState.refreshSlots).to.be.empty;
+        expect(spaState.runtimeConfig.refreshSlots).to.be.empty;
         expect(refreshSpy).to.have.been.calledTwice;
         const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
         expect(domIds).to.have.length(1);
@@ -471,11 +477,7 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.configure({
-          ...defaultConfig,
-          slots: slots,
-          spa: { enabled: true, validateLocation: 'href' }
-        });
+        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
 
         expect(adTag.getState()).to.be.eq('configured');
 
@@ -491,10 +493,10 @@ describe('moli', () => {
         expect(requestAdsState.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
         expect(spaState.config).to.be.ok;
-        expect(spaState.refreshSlots).to.have.length(1);
+        expect(spaState.runtimeConfig.refreshSlots).to.have.length(1);
 
         expect(refreshSpy).to.have.not.been.called;
-        expect(spaState.refreshSlots).to.contain(slots[0].domId);
+        expect(spaState.runtimeConfig.refreshSlots).to.contain(slots[0].domId);
 
         // the queue calls should now be executed
         await adTag.requestAds();
@@ -512,11 +514,7 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.configure({
-          ...defaultConfig,
-          slots: slots,
-          spa: { enabled: true, validateLocation: 'path' }
-        });
+        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
 
         expect(adTag.getState()).to.be.eq('configured');
 
@@ -532,7 +530,7 @@ describe('moli', () => {
         expect(requestAdsState.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
         expect(spaState.config).to.be.ok;
-        expect(spaState.refreshSlots).to.have.length(0);
+        expect(spaState.runtimeConfig.refreshSlots).to.have.length(0);
 
         expect(refreshSpy).to.have.been.calledOnce;
       });
@@ -578,10 +576,10 @@ describe('moli', () => {
         url: 'https://localhost/1'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
       adTag.setAdUnitPathVariables({ foo: 'value' });
       adTag.configure({
         slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
         targeting: {
           keyValues: {},
           adUnitPathVariables: {}
@@ -600,21 +598,24 @@ describe('moli', () => {
           expect(state.state).to.be.eq('spa-finished');
           const spaState: ISinglePageApp = state as ISinglePageApp;
           expect(spaState.config).to.be.ok;
-          expect(spaState.adUnitPathVariables).to.be.empty;
+          expect(spaState.runtimeConfig.adUnitPathVariables).to.be.empty;
           dom.reconfigure({
             url: 'https://localhost/2'
           });
           // set targeting for next page
           adTag.setAdUnitPathVariables({ foo: 'value', bar: 'value2' });
 
-          expect(spaState.adUnitPathVariables).to.be.deep.equals({ foo: 'value', bar: 'value2' });
+          expect(spaState.runtimeConfig.adUnitPathVariables).to.be.deep.equals({
+            foo: 'value',
+            bar: 'value2'
+          });
 
           return adTag.requestAds();
         })
         .then(state => {
           expect(state.state).to.be.eq('spa-finished');
           const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.adUnitPathVariables).to.be.empty;
+          expect(spaState.runtimeConfig.adUnitPathVariables).to.be.empty;
           expect(spaState.config.targeting).to.be.ok;
           expect(spaState.config.targeting!.adUnitPathVariables).to.be.deep.equals({
             foo: 'value',
@@ -724,10 +725,10 @@ describe('moli', () => {
         url: 'https://localhost/1'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
       adTag.setTargeting('dynamicKeyValuePre', 'value');
       adTag.configure({
         slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
         targeting: {
           keyValues: { keyFromAdConfig: 'value' },
           labels: []
@@ -743,7 +744,7 @@ describe('moli', () => {
       expect(state.state).to.be.eq('spa-finished');
       const spaState1: ISinglePageApp = state as ISinglePageApp;
       expect(spaState1.config).to.be.ok;
-      expect(spaState1.keyValues).to.be.deep.equal({});
+      expect(spaState1.runtimeConfig.keyValues).to.be.deep.equal({});
       expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(5);
       expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
       expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
@@ -758,7 +759,7 @@ describe('moli', () => {
       adTag.setTargeting('kv1', 'value');
       adTag.setTargeting('kv2', 'value');
 
-      expect(spaState1.keyValues).to.be.deep.equals({
+      expect(spaState1.runtimeConfig.keyValues).to.be.deep.equals({
         kv1: 'value',
         kv2: 'value'
       });
@@ -766,7 +767,7 @@ describe('moli', () => {
       const nextState = await adTag.requestAds();
       expect(nextState.state).to.be.eq('spa-finished');
       const spaState2: ISinglePageApp = nextState as ISinglePageApp;
-      expect(spaState2.keyValues).to.be.deep.equal({});
+      expect(spaState2.runtimeConfig.keyValues).to.be.deep.equal({});
       expect(spaState2.config.targeting).to.be.ok;
 
       const keyValues = spaState2.config.targeting!.keyValues;
@@ -824,10 +825,10 @@ describe('moli', () => {
         url: 'https://localhost/1'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.enableSinglePageApp();
       adTag.addLabel('dynamicLabelPre');
       adTag.configure({
         slots: defaultSlots,
+        spa: { enabled: true, validateLocation: 'href' },
         targeting: {
           keyValues: {},
           labels: ['a9']
@@ -850,7 +851,7 @@ describe('moli', () => {
           expect(state.state).to.be.eq('spa-finished');
           const spaState: ISinglePageApp = state as ISinglePageApp;
           expect(spaState.config).to.be.ok;
-          expect(spaState.labels).to.be.empty;
+          expect(spaState.runtimeConfig.labels).to.be.empty;
           dom.reconfigure({
             url: 'https://localhost/2'
           });
@@ -858,14 +859,14 @@ describe('moli', () => {
           adTag.addLabel('label1');
           adTag.addLabel('label2');
 
-          expect(spaState.labels).to.contain.all.members(['label1', 'label2']);
+          expect(spaState.runtimeConfig.labels).to.contain.all.members(['label1', 'label2']);
 
           return adTag.requestAds();
         })
         .then(state => {
           expect(state.state).to.be.eq('spa-finished');
           const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.labels).to.be.empty;
+          expect(spaState.runtimeConfig.labels).to.be.empty;
           expect(spaState.config.targeting).to.be.ok;
           expect(spaState.config.targeting!.labels).to.contain.all.members([
             'a9',
@@ -897,7 +898,7 @@ describe('moli', () => {
       adTag.setLogger(customLogger);
       adTag.configure(defaultConfig);
 
-      const config = adTag.getConfig();
+      const config = adTag.getRuntimeConfig();
       expect(config).to.be.ok;
       expect(config!.logger).to.be.equal(customLogger);
     });
@@ -964,8 +965,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       await adTag.requestAds();
       expect(hookSpy).to.be.calledOnce;
     });
@@ -980,8 +980,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       await adTag.requestAds();
       dom.reconfigure({
         url: 'https://localhost/page-one'
@@ -1000,8 +999,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       const result = await adTag.requestAds();
       expect(hookSpy).to.be.calledOnce;
       expect(result.state).not.to.be.eq('error');
@@ -1052,8 +1050,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       return adTag.requestAds().then(() => {
         expect(hookSpy).to.be.calledOnce;
         expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
@@ -1073,8 +1070,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.enableSinglePageApp();
-      adTag.configure(defaultConfig);
+      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       return adTag
         .requestAds()
         .then(() => {
@@ -1120,7 +1116,7 @@ describe('moli', () => {
 
   describe('environment override', () => {
     const expectEnvironment = (adTag: MoliTag, environment: Environment | undefined) => {
-      const config = adTag.getConfig();
+      const config = adTag.getRuntimeConfig();
       expect(config).to.be.ok;
       expect(config!.environment).to.be.equal(environment);
     };

@@ -1,7 +1,7 @@
 import * as Sinon from 'sinon';
 import { createDom } from '../../../stubs/browserEnvSetup';
 import { AdPipelineContext, createMoliTag, MoliRuntime } from '../../../../ts/index';
-import { emptyConfig, newNoopLogger } from '../../../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from '../../../stubs/moliStubs';
 import { Cleanup } from './index';
 import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
 import { dummySchainConfig } from '../../../stubs/schainStubs';
@@ -123,6 +123,7 @@ describe('Cleanup Module', () => {
       env: 'production',
       logger: { ...noopLogger, error: errorLogSpy },
       config: { ...emptyConfig, spa: { enabled: true, validateLocation: 'href' } },
+      runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow as any,
       // no service dependencies required
       labelConfigService: null as any,

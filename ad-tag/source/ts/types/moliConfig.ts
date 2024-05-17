@@ -872,17 +872,6 @@ export namespace modules {
  */
 export interface MoliConfig {
   /**
-   * Configure the environment the ad tag should use.
-   *
-   * The default environment is `production` as we have a very conservative way of deploying
-   * applications.
-   *
-   * default: 'production'
-   * @see [[Environment]]
-   */
-  readonly environment?: Environment;
-
-  /**
    * default is `gam`
    */
   readonly adServer?: AdServer;

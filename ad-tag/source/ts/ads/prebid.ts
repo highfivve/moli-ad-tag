@@ -96,14 +96,9 @@ const createdAdUnits = (
   prebidConfig: headerbidding.PrebidConfig,
   slots: MoliRuntime.SlotDefinition[]
 ): prebidjs.IAdUnit[] => {
-  const labels = context.labelConfigService.getSupportedLabels();
-  const deviceLabel = context.labelConfigService.getDeviceLabel();
   const prebidAdUnits = slots
     .filter(isPrebidSlotDefinition)
     .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
-      const targeting = context.config.targeting;
-      const keyValues = targeting && targeting.keyValues ? targeting.keyValues : {};
-      const floorPrice = priceRule ? priceRule.floorprice : undefined;
       const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
         ? {
             floors: {
@@ -359,8 +354,7 @@ export const prebidPrepareRequestAds = (
 
 export const prebidRequestBids = (
   prebidConfig: headerbidding.PrebidConfig,
-  adServer: AdServer,
-  targeting: Targeting | undefined
+  adServer: AdServer
 ): RequestBidsStep =>
   mkRequestBidsStep(
     'prebid-request-bids',
@@ -511,7 +505,7 @@ export const prebidDefineSlots =
             filterSupportedSizes
           });
         default:
-          return Promise.reject(`invalid environment: ${context.config.environment}`);
+          return Promise.reject(`invalid environment: ${context.runtimeConfig.environment}`);
       }
     });
     return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));

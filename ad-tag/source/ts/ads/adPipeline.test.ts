@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
 import {
   AdPipeline,
   AdPipelineContext,
@@ -72,6 +72,7 @@ describe('AdPipeline', () => {
       env: env,
       logger: noopLogger,
       config: config,
+      runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
@@ -112,7 +113,7 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
-      await pipeline.run([], emptyConfig, 1);
+      await pipeline.run([], emptyConfig, emptyRuntimeConfig, 1);
       expect(callCount).to.be.equals(0);
     });
 
@@ -132,6 +133,7 @@ describe('AdPipeline', () => {
             ...emptyConfig,
             buckets: { enabled: true, bucket: { one: { timeout: 3000 }, two: { timeout: 1500 } } }
           },
+          emptyRuntimeConfig,
           1,
           'one'
         )
@@ -156,6 +158,7 @@ describe('AdPipeline', () => {
             ...emptyConfig,
             buckets: { enabled: true, bucket: { one: { timeout: 3000 } } }
           },
+          emptyRuntimeConfig,
           1,
           'bla'
         )
@@ -169,9 +172,9 @@ describe('AdPipeline', () => {
         ...emptyPipelineConfig,
         init: [() => Promise.reject('init failed')]
       });
-      return expect(pipeline.run([adSlot], emptyConfig, 1)).eventually.be.rejectedWith(
-        'init failed'
-      );
+      return expect(
+        pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1)
+      ).eventually.be.rejectedWith('init failed');
     });
 
     it('should run the init phase only once', async () => {
@@ -183,9 +186,9 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, init: initSteps });
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
       expect(callCount).to.be.equals(1);
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
       expect(callCount).to.be.equals(1);
     });
 
@@ -217,7 +220,8 @@ describe('AdPipeline', () => {
         }
       };
 
-      await expect(pipeline.run([adSlot], config, 1)).to.eventually.be.fulfilled;
+      await expect(pipeline.run([adSlot], config, emptyRuntimeConfig, 1)).to.eventually.be
+        .fulfilled;
 
       expect(callCount).to.be.equals(1);
       expect(prepareRequestAdsStub).to.not.have.been.called;
@@ -238,7 +242,7 @@ describe('AdPipeline', () => {
         defineSlots: () => Promise.resolve([{ moliSlot: adSlot } as SlotDefinition]),
         prepareRequestAds: prepareRequestAdsSteps
       });
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
       expect(spyFn).to.have.been.calledThrice;
       expect(spyFn.firstCall).calledWithExactly('1', 'priority 3');
       expect(spyFn.secondCall).calledWithExactly('2', 'priority 2');
@@ -256,9 +260,9 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
       expect(requestId).to.be.equals(1);
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
       expect(requestId).to.be.equals(2);
     });
   });
@@ -273,7 +277,7 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
 
       expect(supportedLabels).to.contain('purpose-1');
     });
@@ -290,7 +294,7 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
 
       expect(supportedLabels).to.not.contain('purpose-1');
     });
@@ -305,7 +309,7 @@ describe('AdPipeline', () => {
         }
       ];
       const pipeline = newAdPipeline({ ...emptyPipelineConfig, configure: configureStep });
-      await pipeline.run([adSlot], emptyConfig, 1);
+      await pipeline.run([adSlot], emptyConfig, emptyRuntimeConfig, 1);
 
       expect(supportedLabels).to.contain('purpose-1');
     });
