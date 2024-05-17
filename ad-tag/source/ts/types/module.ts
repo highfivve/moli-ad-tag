@@ -24,7 +24,7 @@ export interface IModule {
   /**
    * If the module has some sort of configuration this can be fetched with this method
    */
-  config(): Object | null;
+  config(): Object | undefined;
 
   /**
    * Initialize the module. This method is allowed to do the following things

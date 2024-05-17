@@ -10,7 +10,8 @@ import { fullConsent } from '../../../stubs/consentStubs';
 import { googletag } from '../../../../ts/index';
 
 import IAdSlot = googletag.IAdSlot;
-import { AdSlot, MoliConfig } from '../../../types/moliConfig';
+import { AdSlot, modules, MoliConfig } from '../../../types/moliConfig';
+import CleanupModuleConfig = modules.CleanupModuleConfig;
 
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();
@@ -116,13 +117,17 @@ describe('Cleanup Module', () => {
     };
   };
 
-  const adPipelineContext = (): AdPipelineContext => {
+  const adPipelineContext = (cleanup?: CleanupModuleConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
       env: 'production',
       logger: { ...noopLogger, error: errorLogSpy },
-      config: { ...emptyConfig, spa: { enabled: true, validateLocation: 'href' } },
+      config: {
+        ...emptyConfig,
+        modules: { cleanup },
+        spa: { enabled: true, validateLocation: 'href' }
+      },
       runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow as any,
       // no service dependencies required
@@ -134,18 +139,7 @@ describe('Cleanup Module', () => {
   };
 
   it('should add a configure and prepare request ads pipeline step', () => {
-    const module = new Cleanup({
-      enabled: true,
-      configs: [
-        {
-          bidder: 'Seedtag',
-          domId: domId1,
-          deleteMethod: {
-            cssSelectors: [specialFormatClass1]
-          }
-        }
-      ]
-    });
+    const module = new Cleanup(jsDomWindow);
 
     const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
     const config = mkConfig(slots);
@@ -159,7 +153,9 @@ describe('Cleanup Module', () => {
   });
 
   it('should remove all elements with the configured CSS selectors from the dom or execute the configured JS in the configure step', async () => {
-    const module = new Cleanup({
+    const module = new Cleanup(jsDomWindow);
+    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
+    const cleanupConfig = {
       enabled: true,
       configs: [
         {
@@ -184,17 +180,14 @@ describe('Cleanup Module', () => {
           }
         }
       ]
-    });
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
+    };
 
     const config = mkConfig(slots);
     module.init(config);
     const configure = module.configureSteps()[0];
 
-    if (configure) {
-      expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
-      await configure({ ...adPipelineContext() }, slots);
-    }
+    expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
+    await configure({ ...adPipelineContext(cleanupConfig) }, slots);
 
     const specialFormatElementsInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
@@ -205,7 +198,9 @@ describe('Cleanup Module', () => {
     expect(specialFormatElementsInDom).to.have.length(0);
   });
   it('should remove the configured element only if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
-    const module = new Cleanup({
+    const module = new Cleanup(jsDomWindow);
+    const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
+    const cleanupConfig = {
       enabled: true,
       configs: [
         {
@@ -223,18 +218,17 @@ describe('Cleanup Module', () => {
           }
         }
       ]
-    });
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
+    };
 
     const config = mkConfig(slots);
     module.init(config);
     const prepareRequestAds = module.prepareRequestAdsSteps()[0];
 
-    if (prepareRequestAds) {
-      expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
-      // only one of the configured slots is reloaded
-      await prepareRequestAds({ ...adPipelineContext() }, [createSlotDefinition(domId1)]);
-    }
+    expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
+    // only one of the configured slots is reloaded
+    await prepareRequestAds({ ...adPipelineContext(cleanupConfig) }, [
+      createSlotDefinition(domId1)
+    ]);
 
     const specialFormatElementsSeedtagInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
@@ -246,7 +240,10 @@ describe('Cleanup Module', () => {
     expect(specialFormatElementsSeedtagInDom[0].classList.contains(specialFormatClass2)).to.be.true;
   });
   it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {
-    const module = new Cleanup({
+    const module = new Cleanup(jsDomWindow);
+    const slots = createAdSlots(jsDomWindow, [domId1]);
+    const config = mkConfig(slots);
+    const cleanupConfig = {
       enabled: true,
       configs: [
         {
@@ -257,18 +254,14 @@ describe('Cleanup Module', () => {
           }
         }
       ]
-    });
-    const slots = createAdSlots(jsDomWindow, [domId1]);
-    const config = mkConfig(slots);
+    };
 
     module.init(config);
 
     const configure = module.configureSteps()[0];
 
-    if (configure) {
-      expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
-      await configure({ ...adPipelineContext() }, slots);
-    }
+    expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
+    await configure({ ...adPipelineContext(cleanupConfig) }, slots);
 
     const specialFormatElementsInDom = jsDomWindow.document.querySelectorAll(
       `.${specialFormatClass3}`

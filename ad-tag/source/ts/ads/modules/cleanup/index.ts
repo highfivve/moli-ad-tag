@@ -11,6 +11,7 @@ import { IModule, ModuleType } from '../../../types/module';
 import { CleanupConfig, modules, MoliConfig } from '../../../types/moliConfig';
 import { IAssetLoaderService } from '../../../util/assetLoaderService';
 import CleanupModuleConfig = modules.CleanupModuleConfig;
+import { MoliRuntime } from '../../../types/moliRuntime';
 
 /**
  * # Cleanup Module
@@ -52,10 +53,10 @@ export class Cleanup implements IModule {
   public readonly description: string = 'cleanup out-of-page formats on navigation or ad-reload';
   public readonly moduleType: ModuleType = 'creatives';
 
-  constructor(private readonly cleanupModuleConfig: modules.CleanupModuleConfig) {}
+  constructor(private readonly _window: Window & MoliRuntime.MoliWindow) {}
 
-  config(): Object | null {
-    return this.cleanupModuleConfig;
+  config(): Object | undefined {
+    return this._window.moli.getConfig()?.modules?.cleanup;
   }
 
   initSteps(): InitStep[] {
