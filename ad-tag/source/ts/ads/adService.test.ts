@@ -431,20 +431,19 @@ describe('AdService', () => {
         adService.setLogger(logger);
 
         addToDom(allSlots);
+        const moliConfig = {
+          ...emptyConfig,
+          buckets: { enabled: true },
+          slots: allSlots
+        };
 
-        await adService.requestAds(
-          {
-            ...emptyConfig,
-            buckets: { enabled: true },
-            slots: allSlots
-          },
-          emptyRuntimeConfig
-        );
+        await adService.requestAds(moliConfig, emptyRuntimeConfig);
 
         expect(runSpy).to.have.been.calledTwice;
         expect(runSpy.firstCall).to.have.been.calledWith(
           Sinon.match.array.deepEquals([eagerAdSlot1]),
-          Sinon.match.any,
+          Sinon.match.same(moliConfig),
+          Sinon.match.same(emptyRuntimeConfig),
           Sinon.match.number
         );
 
@@ -467,20 +466,19 @@ describe('AdService', () => {
         const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
 
         addToDom(allSlots);
+        const moliConfig = {
+          ...emptyConfig,
+          buckets: { enabled: false },
+          slots: allSlots
+        };
 
-        await adService.requestAds(
-          {
-            ...emptyConfig,
-            buckets: { enabled: false },
-            slots: allSlots
-          },
-          emptyRuntimeConfig
-        );
+        await adService.requestAds(moliConfig, emptyRuntimeConfig);
 
         expect(runSpy).to.have.been.calledOnce;
         expect(runSpy.firstCall).to.have.been.calledWith(
           Sinon.match.array.deepEquals(allSlots),
-          Sinon.match.any,
+          Sinon.match.same(moliConfig),
+          Sinon.match.same(emptyRuntimeConfig),
           Sinon.match.number
         );
       });
@@ -491,19 +489,18 @@ describe('AdService', () => {
         const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
 
         addToDom(allSlots);
+        const moliConfig = {
+          ...emptyConfig,
+          slots: allSlots
+        };
 
-        await adService.requestAds(
-          {
-            ...emptyConfig,
-            slots: allSlots
-          },
-          emptyRuntimeConfig
-        );
+        await adService.requestAds(moliConfig, emptyRuntimeConfig);
 
         expect(runSpy).to.have.been.calledOnce;
         expect(runSpy.firstCall).to.have.been.calledWith(
           Sinon.match.array.deepEquals(allSlots),
-          Sinon.match.any,
+          Sinon.match.same(moliConfig),
+          Sinon.match.same(emptyRuntimeConfig),
           Sinon.match.number
         );
       });
@@ -529,7 +526,12 @@ describe('AdService', () => {
       const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
       await adService.refreshAdSlots(['content_1'], emptyConfig, emptyRuntimeConfig);
       expect(runSpy).to.have.been.calledOnce;
-      expect(runSpy).to.have.been.calledWithExactly([], emptyConfig, Sinon.match.number);
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        emptyConfig,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
     });
 
     it('should call adPipeline.run with an empty array if slot is eager', async () => {
@@ -542,7 +544,12 @@ describe('AdService', () => {
       const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
       await adService.refreshAdSlots([slot.domId], configWithEagerSlot, emptyRuntimeConfig);
       expect(runSpy).to.have.been.calledOnce;
-      expect(runSpy).to.have.been.calledWithExactly([], configWithEagerSlot, Sinon.match.number);
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        configWithEagerSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
     });
 
     it('should call adPipeline.run with an empty array if slot is backfill', async () => {
@@ -554,7 +561,12 @@ describe('AdService', () => {
       const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
       await adService.refreshAdSlots([backfillSlot.domId], configWithEagerSlot, emptyRuntimeConfig);
       expect(runSpy).to.have.been.calledOnce;
-      expect(runSpy).to.have.been.calledWithExactly([], configWithEagerSlot, Sinon.match.number);
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        configWithEagerSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
     });
 
     it('should call adPipeline.run with the slot if slot is manual', async () => {
@@ -570,6 +582,7 @@ describe('AdService', () => {
       expect(runSpy).to.have.been.calledWithExactly(
         [slot],
         configWithManualSlot,
+        emptyRuntimeConfig,
         Sinon.match.number
       );
     });
@@ -590,6 +603,7 @@ describe('AdService', () => {
       expect(runSpy).to.have.been.calledWithExactly(
         [infiniteSlot],
         configWithManualSlot,
+        emptyRuntimeConfig,
         Sinon.match.number
       );
     });
@@ -613,6 +627,7 @@ describe('AdService', () => {
       expect(runSpy).to.have.been.calledWithExactly(
         [backfillSlot],
         configWithManualSlot,
+        emptyRuntimeConfig,
         Sinon.match.number
       );
     });
@@ -636,6 +651,7 @@ describe('AdService', () => {
       expect(runSpy).to.have.been.calledWithExactly(
         [backfillSlot, infiniteSlot],
         configWithManualSlot,
+        emptyRuntimeConfig,
         Sinon.match.number
       );
     });
