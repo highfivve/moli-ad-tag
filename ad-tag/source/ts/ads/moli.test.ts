@@ -215,8 +215,8 @@ describe('moli', () => {
       description: '',
       moduleType: 'cmp',
       name: '',
-      config(): Object | null {
-        return null;
+      config(): Object | undefined {
+        return undefined;
       },
       init(config: MoliConfig, assetLoaderService: IAssetLoaderService): void {
         return;
