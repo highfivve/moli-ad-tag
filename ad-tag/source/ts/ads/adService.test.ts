@@ -53,6 +53,11 @@ describe('AdService', () => {
     }
   };
 
+  const withSpaEnabled = (config: MoliConfig): MoliConfig => ({
+    ...config,
+    spa: { enabled: true, validateLocation: 'href' }
+  });
+
   const makeAdService = (): AdService => {
     const adPipelineConfiguration: IAdPipelineConfiguration = {
       init: [],
@@ -172,7 +177,7 @@ describe('AdService', () => {
     });
 
     it('should add the gpt-destroy-ad-slots for single page apps', async () => {
-      const pipeline = await initialize(emptyConfig, emptyRuntimeConfig);
+      const pipeline = await initialize(withSpaEnabled(emptyConfig), emptyRuntimeConfig);
       const stepNames = pipeline.configure.map(step => step.name);
       expect(stepNames).to.contain('gpt-destroy-ad-slots');
     });
@@ -184,7 +189,7 @@ describe('AdService', () => {
     });
 
     it('should add the gpt-reset-targeting for single page apps', async () => {
-      const pipeline = await initialize(emptyConfig, emptyRuntimeConfig);
+      const pipeline = await initialize(withSpaEnabled(emptyConfig), emptyRuntimeConfig);
       const stepNames = pipeline.configure.map(step => step.name);
       expect(stepNames).to.contain('gpt-reset-targeting');
     });
@@ -209,7 +214,10 @@ describe('AdService', () => {
       });
 
       it('should add the prebid-remove-adunits for single page apps', async () => {
-        const pipeline = await initialize(emptyConfigWithPrebid, emptyRuntimeConfig);
+        const pipeline = await initialize(
+          withSpaEnabled(emptyConfigWithPrebid),
+          emptyRuntimeConfig
+        );
         const stepNames = pipeline.configure.map(step => step.name);
         expect(stepNames).to.contain('prebid-remove-adunits');
       });
