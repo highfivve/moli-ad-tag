@@ -794,10 +794,8 @@ describe('moli', () => {
       adTag.configure(defaultConfig);
       adTag.addLabel('post');
 
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.labels).to.be.deep.equals(['pre', 'post']);
+      const targeting = adTag.getPageTargeting();
+      expect(targeting.labels).to.be.deep.equals(['pre', 'post']);
     });
 
     it('should append to preexisting values', () => {
@@ -815,13 +813,11 @@ describe('moli', () => {
       });
       adTag.addLabel('post');
 
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.labels).to.be.deep.equals(['pre-existing', 'pre', 'post']);
+      const targeting = adTag.getPageTargeting();
+      expect(targeting!.labels).to.be.deep.equals(['pre-existing', 'pre', 'post']);
     });
 
-    it('should persists the initial labels in spa mode for all requestAd() calls', () => {
+    it('should persists the initial labels in spa mode for all requestAd() calls', async () => {
       dom.reconfigure({
         url: 'https://localhost/1'
       });
@@ -841,40 +837,30 @@ describe('moli', () => {
       adTag.addLabel('dynamicLabelPost');
 
       expect(adTag.getState()).to.be.eq('configured');
-      expect(adTag.getConfig()!.targeting!.labels).to.contain.all.members([
+      expect(adTag.getPageTargeting().labels).to.contain.all.members([
         'dynamicLabelPre',
         'dynamicLabelPost',
         'a9'
       ]);
-      return adTag
-        .requestAds()
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-          expect(spaState.runtimeConfig.labels).to.be.empty;
-          dom.reconfigure({
-            url: 'https://localhost/2'
-          });
-          // set targeting for next page
-          adTag.addLabel('label1');
-          adTag.addLabel('label2');
+      const state = await adTag.requestAds();
+      expect(state.state).to.be.eq('spa-finished');
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+      expect(spaState.config).to.be.ok;
+      expect(spaState.nextRuntimeConfig.labels).to.be.empty;
+      dom.reconfigure({
+        url: 'https://localhost/2'
+      });
+      // set targeting for next page
+      adTag.addLabel('label1');
+      adTag.addLabel('label2');
 
-          expect(spaState.runtimeConfig.labels).to.contain.all.members(['label1', 'label2']);
+      expect(spaState.nextRuntimeConfig.labels).to.contain.all.members(['label1', 'label2']);
+      const state2 = await adTag.requestAds();
+      expect(state2.state).to.be.eq('spa-finished');
 
-          return adTag.requestAds();
-        })
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.runtimeConfig.labels).to.be.empty;
-          expect(spaState.config.targeting).to.be.ok;
-          expect(spaState.config.targeting!.labels).to.contain.all.members([
-            'a9',
-            'label1',
-            'label2'
-          ]);
-        });
+      const spaState2: ISinglePageApp = state2 as ISinglePageApp;
+      expect(spaState2.nextRuntimeConfig.labels).to.be.empty;
+      expect(adTag.getPageTargeting().labels).to.contain.all.members(['a9', 'label1', 'label2']);
     });
   });
 

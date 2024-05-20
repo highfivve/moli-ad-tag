@@ -83,7 +83,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       // labels can be pushed in both spa states
       case 'spa-requestAds':
       case 'spa-finished': {
-        state.runtimeConfig.labels.push(label);
+        state.nextRuntimeConfig.labels.push(label);
         break;
       }
       default: {
@@ -230,7 +230,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function getPageTargeting(): Readonly<Targeting> {
     return {
       keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
-      labels: { ...state.config?.targeting?.labels, ...state.runtimeConfig.labels },
+      labels: [...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels],
       adUnitPathVariables: {
         ...state.config?.targeting?.adUnitPathVariables,
         ...state.runtimeConfig.adUnitPathVariables
