@@ -670,10 +670,9 @@ describe('moli', () => {
       adTag.configure(defaultConfig);
       adTag.setTargeting('post', 'configure2');
 
-      const config = adTag.getConfig();
+      const config = adTag.getPageTargeting();
       expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.keyValues).to.be.deep.equals({
+      expect(config.keyValues).to.be.deep.equals({
         pre: 'configure1',
         post: 'configure2'
       });
@@ -696,32 +695,28 @@ describe('moli', () => {
       });
       adTag.setTargeting('post', 'configure2');
 
-      const config = adTag.getConfig();
+      const config = adTag.getPageTargeting();
       expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.keyValues).to.be.deep.equals({
+      expect(config.keyValues).to.be.deep.equals({
         pre: 'configure1',
         post: 'configure2'
       });
     });
 
-    it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', () => {
+    it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', async () => {
       const adTag = createMoliTag(jsDomWindow);
       adTag.configure(defaultConfig);
 
       expect(adTag.getState()).to.be.eq('configured');
-      return adTag.requestAds().then(state => {
-        expect(state.state).to.be.eq('finished');
-        const finishedState: IFinished = state as IFinished;
-        const config = finishedState.config;
-        expect(config.targeting).to.be.not.undefined;
-        expect(config.targeting!.keyValues).to.be.not.undefined;
-        expect(config.targeting!.keyValues.ABtest).to.be.not.undefined;
+      const state = await adTag.requestAds();
+      expect(state.state).to.be.eq('finished');
+      const finishedState: IFinished = state as IFinished;
 
-        const abTest = Number(config.targeting!.keyValues.ABtest);
-        expect(abTest).to.be.gte(1);
-        expect(abTest).to.be.lte(100);
-      });
+      const keyValues = adTag.getPageTargeting().keyValues;
+      expect(keyValues.ABtest).to.be.not.undefined;
+      const abTest = Number(keyValues.ABtest);
+      expect(abTest).to.be.gte(1);
+      expect(abTest).to.be.lte(100);
     });
 
     it('should persists the initial key-values in spa mode for all requestAd() calls', async () => {
@@ -752,8 +747,7 @@ describe('moli', () => {
       expect(state.state).to.be.eq('spa-finished');
       const spaState1: ISinglePageApp = state as ISinglePageApp;
       expect(spaState1.config).to.be.ok;
-      expect(spaState1.runtimeConfig.keyValues).to.be.deep.equal({});
-      expect(googletagPubAdsSetTargetingSpy.callCount).to.be.gte(5);
+      expect(spaState1.nextRuntimeConfig.keyValues).to.be.deep.equal({});
       expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePre', 'value');
       expect(googletagPubAdsSetTargetingSpy).calledWithExactly('dynamicKeyValuePost', 'value');
       expect(googletagPubAdsSetTargetingSpy).calledWithExactly('keyFromAdConfig', 'value');
@@ -767,7 +761,7 @@ describe('moli', () => {
       adTag.setTargeting('kv1', 'value');
       adTag.setTargeting('kv2', 'value');
 
-      expect(spaState1.runtimeConfig.keyValues).to.be.deep.equals({
+      expect(spaState1.nextRuntimeConfig.keyValues).to.be.deep.equals({
         kv1: 'value',
         kv2: 'value'
       });
@@ -775,10 +769,9 @@ describe('moli', () => {
       const nextState = await adTag.requestAds();
       expect(nextState.state).to.be.eq('spa-finished');
       const spaState2: ISinglePageApp = nextState as ISinglePageApp;
-      expect(spaState2.runtimeConfig.keyValues).to.be.deep.equal({});
-      expect(spaState2.config.targeting).to.be.ok;
+      expect(spaState2.nextRuntimeConfig.keyValues).to.be.deep.equal({});
 
-      const keyValues = spaState2.config.targeting!.keyValues;
+      const keyValues = adTag.getPageTargeting().keyValues;
       expect(keyValues).to.have.all.keys(['ABtest', 'keyFromAdConfig', 'kv1', 'kv2']);
       expect(keyValues).to.have.property('keyFromAdConfig', 'value');
       expect(keyValues).to.have.property('kv1', 'value');

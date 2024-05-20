@@ -77,7 +77,7 @@ const configureTargeting = (
     Object.keys(keyValues)
       .filter(key => !excludes.includes(key))
       .forEach(key => {
-        const value = staticKeyValues[key];
+        const value = keyValues[key];
         if (value) {
           window.googletag.pubads().setTargeting(key, value);
         }
