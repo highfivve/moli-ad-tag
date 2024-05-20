@@ -11,7 +11,8 @@ import {
   GoogleAdManagerKeyValueMap,
   GoogleAdManagerSlotSize,
   MoliConfig,
-  ResolveAdUnitPathOptions
+  ResolveAdUnitPathOptions,
+  Targeting
 } from './moliConfig';
 
 /**
@@ -283,6 +284,17 @@ export namespace MoliRuntime {
      * @returns the current state of the runtime config.
      */
     getRuntimeConfig(): Readonly<MoliRuntimeConfig>;
+
+    /**
+     * Returns the current page targeting. It's a snapshot of the current targeting values set by the server side
+     * `targeting` property and the client side `setTargeting` and `addLabel` method invocations that are stored in the
+     * `MoliRuntimeConfig`.
+     *
+     * Runtime configuration takes precedence over the static configuration.
+     *
+     * @returns the current page targeting
+     */
+    getPageTargeting(): Readonly<Targeting>;
 
     /**
      * @returns the current state name
@@ -600,6 +612,11 @@ export namespace MoliRuntime {
         WithModulesConfigurable {
       readonly state: 'configurable';
 
+      /**
+       * The config is undefined in the initial state of the ad tag
+       */
+      readonly config?: never;
+
       // changeable configuration options
 
       /**
@@ -612,16 +629,12 @@ export namespace MoliRuntime {
     /**
      * The ad configuration has been set
      */
-    export interface IConfigured extends IState, WithRuntimeConfiguration, WithModulesConfigurable {
+    export interface IConfigured
+      extends IState,
+        WithRuntimeConfiguration,
+        WithConfiguration,
+        WithModulesConfigurable {
       readonly state: 'configured';
-
-      /**
-       * The original configuration from the ad tag itself. We can use this configuration to
-       *
-       * - generate a diff for the additions made by the publisher
-       * - use this to preserve static targeting values in single application mode
-       */
-      readonly config: MoliConfig;
     }
 
     /**
@@ -630,26 +643,23 @@ export namespace MoliRuntime {
      * If moli is in the "configurable" state, the `initialize` flag will be set to true
      * and moli is initialized once it's configured.
      */
-    export interface IRequestAds extends IState, WithRuntimeConfiguration, WithModules {
+    export interface IRequestAds
+      extends IState,
+        WithRuntimeConfiguration,
+        WithConfiguration,
+        WithModules {
       readonly state: 'requestAds';
-
-      /**
-       * Configuration is now immutable
-       */
-      readonly config: MoliConfig;
     }
 
     /**
      * Publisher enabled the single page application mode.
      */
-    export interface ISinglePageApp extends IState, WithRuntimeConfiguration, WithModules {
+    export interface ISinglePageApp
+      extends IState,
+        WithRuntimeConfiguration,
+        WithConfiguration,
+        WithModules {
       readonly state: 'spa-finished' | 'spa-requestAds';
-
-      /**
-       * Immutable configuration. This is the same configuration returned by
-       * the initialized Promise.
-       */
-      readonly config: MoliConfig;
 
       /**
        * stores the information if the moli ad tag is configured yet
@@ -662,30 +672,36 @@ export namespace MoliRuntime {
        * once per page.
        */
       readonly href: string;
+
+      /**
+       * The single page app states require two runtime configurations. One for the current `requestAds()` cycle.
+       * All `refreshAdSlot` calls require the current runtime configuration. However, `set*` and `add*`methods may be
+       * called before the next `requestAds()` call and page navigation. Those values are persisted in this variable
+       * and are used as soon as `requestAds()` is successfully invoked.
+       */
+      readonly nextRuntimeConfig: MoliRuntimeConfig;
     }
 
     /**
      * Moli has finished loading.
      */
-    export interface IFinished extends IState, WithRuntimeConfiguration, WithModules {
+    export interface IFinished
+      extends IState,
+        WithRuntimeConfiguration,
+        WithConfiguration,
+        WithModules {
       readonly state: 'finished';
-
-      /**
-       * Configuration is now immutable
-       */
-      readonly config: MoliConfig;
     }
 
     /**
      * Moli has finished loading.
      */
-    export interface IError extends IState, WithRuntimeConfiguration, WithModules {
+    export interface IError
+      extends IState,
+        WithRuntimeConfiguration,
+        WithModules,
+        WithConfiguration {
       readonly state: 'error';
-
-      /**
-       * Configuration is now immutable
-       */
-      readonly config: MoliConfig;
 
       /**
        * the error. Should  be readable for a key accounter and a techi.

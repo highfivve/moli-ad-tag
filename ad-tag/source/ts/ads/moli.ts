@@ -18,7 +18,12 @@ import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { LabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
-import { AdUnitPathVariables, MoliConfig, ResolveAdUnitPathOptions } from '../types/moliConfig';
+import {
+  AdUnitPathVariables,
+  MoliConfig,
+  ResolveAdUnitPathOptions,
+  Targeting
+} from '../types/moliConfig';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
 import IStateMachine = MoliRuntime.state.IStateMachine;
 import IFinished = MoliRuntime.state.IFinished;
@@ -100,7 +105,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       }
       case 'spa-requestAds':
       case 'spa-finished': {
-        state.runtimeConfig.adUnitPathVariables = variables;
+        state.nextRuntimeConfig.adUnitPathVariables = variables;
         break;
       }
 
@@ -128,7 +133,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         // temporary label service to resolve the device label
         const labelService = new LabelConfigService(state.config.labelSizeConfig || [], [], window);
         return {
-          ...state.config.targeting?.adUnitPathVariables,
+          ...getPageTargeting().adUnitPathVariables,
           domain: state.config.domain || domain,
           device: labelService.getDeviceLabel()
         };
@@ -220,6 +225,17 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
 
   function getRuntimeConfig(): MoliRuntime.MoliRuntimeConfig {
     return state.runtimeConfig;
+  }
+
+  function getPageTargeting(): Readonly<Targeting> {
+    return {
+      keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
+      labels: { ...state.config?.targeting?.labels, ...state.runtimeConfig.labels },
+      adUnitPathVariables: {
+        ...state.config?.targeting?.adUnitPathVariables,
+        ...state.runtimeConfig.adUnitPathVariables
+      }
+    };
   }
 
   function registerModule(module: IModule): void {
@@ -367,10 +383,13 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             state: 'spa-requestAds',
             config: config,
             initialized,
+            modules,
+            // store current state for all subsequent refreshAd calls in this requestAds cycle
             href: window.location.href,
+            // reset the refreshed slots array as they are being batched until requestAds() is finished
+            runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig, { keepTargeting: true }),
             // initialize targeting values for next refreshAds call
-            runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig),
-            modules
+            nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
           };
 
           return initialized
@@ -388,7 +407,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 const finishedState: ISinglePageApp = {
                   ...state,
                   state: 'spa-finished',
-                  runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
+                  // reset the runtime config for the next requestAds() call cycle
+                  nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig),
+                  // TODO check if we can't just use the old runtime config as refreshSlots are now use directly
+                  // keep the current runtime config and only reset the refreshSlots
+                  runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig, { keepTargeting: true })
                 };
                 state = finishedState;
                 return finishedState;
@@ -455,16 +478,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         addDomainLabel(state.config.domain);
 
         const { modules } = state;
-        const afterRequestAds = state.runtimeConfig.hooks.afterRequestAds;
-        const beforeRequestAds = state.runtimeConfig.hooks.beforeRequestAds;
+        const afterRequestAds = state.nextRuntimeConfig.hooks.afterRequestAds;
+        const beforeRequestAds = state.nextRuntimeConfig.hooks.beforeRequestAds;
 
         const currentState = state;
-        const { initialized, href } = state;
         // we can only use the preexisting refreshSlots array and refreshInfiniteSlots if the previous requestAds call finished in time
-        const requestAdsRuntimeState =
-          state.state === 'spa-finished'
-            ? state.runtimeConfig
-            : newEmptyRuntimeConfig(state.runtimeConfig);
+        const { initialized, href, nextRuntimeConfig } = state;
 
         // update the state to spa-requestAds and reset the runtime config. All changes will be queued until the next
         // requestAds call.
@@ -472,7 +491,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           ...currentState,
           state: 'spa-requestAds',
           // reset the refreshed slots as they are being batched from now on
-          runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
+          runtimeConfig: newEmptyRuntimeConfig(state.nextRuntimeConfig, { keepTargeting: true }),
+          nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
         };
 
         return initialized
@@ -499,7 +519,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             });
 
             // For single page applications
-            return adService.requestAds(config, requestAdsRuntimeState).then(() => config);
+            return adService.requestAds(config, nextRuntimeConfig).then(() => config);
           })
           .then(config => {
             // if there are refreshAdSlot calls while the requestAds() call is still resolving, there might be new
@@ -511,9 +531,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               state: 'spa-finished',
               config: config,
               initialized,
+              modules,
               href: window.location.href,
-              runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig),
-              modules
+              runtimeConfig: state.runtimeConfig,
+              nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
             };
             afterRequestAds.forEach(hook => hook('spa-finished'));
             return state;
@@ -571,7 +592,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             .then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.runtimeConfig.refreshSlots.push(...domIds);
+          state.nextRuntimeConfig.refreshSlots.push(...domIds);
           return Promise.resolve('queued');
         }
       // if the ad tag is currently requesting ads or already finished doesn't matter
@@ -801,6 +822,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       }
     }
   }
+
   function addConfigureStep(step: ConfigureStep): void {
     switch (state.state) {
       case 'configurable':
@@ -817,6 +839,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       }
     }
   }
+
   function addPrepareRequestAdsStep(step: PrepareRequestAdsStep): void {
     switch (state.state) {
       case 'configurable':
@@ -855,8 +878,15 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
    * - refreshInfiniteSlots , slots that have been refreshed, must be explicitly refreshed again
    *
    * @param previous
+   * @param options
    */
-  function newEmptyRuntimeConfig(previous?: MoliRuntimeConfig): MoliRuntime.MoliRuntimeConfig {
+  function newEmptyRuntimeConfig(
+    previous?: MoliRuntimeConfig,
+    options?: {
+      /** if true, the labels and keyValues are kept from the previous runtime config */
+      keepTargeting: boolean;
+    }
+  ): MoliRuntime.MoliRuntimeConfig {
     return {
       environment: previous?.environment ?? 'production',
       // reusing the previous hooks as they are usually set once on the initial load
@@ -864,11 +894,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         beforeRequestAds: previous?.hooks.beforeRequestAds ?? [],
         afterRequestAds: previous?.hooks.afterRequestAds ?? []
       },
-      adUnitPathVariables: previous?.adUnitPathVariables ?? {},
       logger: previous?.logger ?? undefined,
       // all these values always depend on the current page and must be reset to an empty state
-      labels: [],
-      keyValues: {},
+      adUnitPathVariables:
+        options?.keepTargeting === true ? previous?.adUnitPathVariables ?? {} : {},
+      labels: options?.keepTargeting === true ? previous?.labels ?? [] : [],
+      keyValues: options?.keepTargeting === true ? previous?.keyValues ?? {} : {},
       refreshSlots: [],
       refreshInfiniteSlots: [],
       // the pipeline is always reset to an empty state as they can be altered after the first requestAds() call.
@@ -899,6 +930,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     afterRequestAds: afterRequestAds,
     getConfig: getConfig,
     getRuntimeConfig: getRuntimeConfig,
+    getPageTargeting: getPageTargeting,
     registerModule: registerModule,
     configure: configure,
     requestAds: requestAds,
@@ -909,6 +941,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     getState: getState,
     openConsole: openConsole,
     getAssetLoaderService: getAssetLoaderService,
+
+    // TODO rethink if these API methods are necessary
     addInitStep: addInitStep,
     addConfigureStep: addConfigureStep,
     addPrepareRequestAdsStep: addPrepareRequestAdsStep

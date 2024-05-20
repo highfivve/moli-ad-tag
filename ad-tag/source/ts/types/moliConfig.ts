@@ -46,7 +46,7 @@ export type Environment = 'production' | 'test';
  */
 
 export type AdUnitPathVariables = {
-  [key: string]: string;
+  readonly [key: string]: string;
 };
 
 export interface Targeting {
@@ -64,7 +64,7 @@ export interface Targeting {
   readonly labels?: string[];
 
   /** ad unit path variables */
-  adUnitPathVariables?: AdUnitPathVariables;
+  readonly adUnitPathVariables?: AdUnitPathVariables;
 }
 
 /**

@@ -450,14 +450,14 @@ describe('moli', () => {
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
-        const refreshAdSlotResponse = await adTag.refreshAdSlot(slots[0].domId);
+        await adTag.refreshAdSlot(slots[0].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
         const requestAdsState = await adTag.requestAds();
-
-        const refreshAdSlotResponse2 = await adTag.refreshAdSlot(slots[1].domId);
-
         expect(requestAdsState.state).to.be.eq('spa-finished');
+
+        await adTag.refreshAdSlot(slots[1].domId);
+
         const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
         expect(spaState.config).to.be.ok;
         expect(spaState.runtimeConfig.refreshSlots).to.be.empty;
@@ -467,7 +467,7 @@ describe('moli', () => {
         expect(domIds[0]).to.be.eq(slots[0].domId);
       });
 
-      it('should queue refreshAds calls if a navigation changed happened and no requestAds() call has happend yet', async () => {
+      it('should queue refreshAds calls if a navigation changed happened and no requestAds() call has happened yet', async () => {
         dom.reconfigure({
           url: 'https://localhost/page-one'
         });
@@ -494,17 +494,18 @@ describe('moli', () => {
         expect(requestAdsState.state).to.be.eq('spa-finished');
         const spaState: ISinglePageApp = requestAdsState as ISinglePageApp;
         expect(spaState.config).to.be.ok;
-        expect(spaState.runtimeConfig.refreshSlots).to.have.length(1);
+        expect(spaState.nextRuntimeConfig.refreshSlots).to.have.length(1);
 
         expect(refreshSpy).to.have.not.been.called;
-        expect(spaState.runtimeConfig.refreshSlots).to.contain(slots[0].domId);
+        expect(spaState.nextRuntimeConfig.refreshSlots).to.contain(slots[0].domId);
 
         // the queue calls should now be executed
-        await adTag.requestAds();
+        const requestAdsState2 = await adTag.requestAds();
+        expect(requestAdsState2.state).to.be.eq('spa-finished');
         expect(refreshSpy).to.have.been.calledOnce;
       });
 
-      it('should call refreshAds calls if a navigation changed happened and no requestAds() call has happend yet, but validationLocation is set to path', async () => {
+      it('should call refreshAds calls if a navigation changed happened and no requestAds() call has happened yet, but validationLocation is set to path', async () => {
         dom.reconfigure({
           url: 'https://localhost/page-one'
         });
@@ -515,12 +516,18 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
+        adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'path' }
+        });
 
         expect(adTag.getState()).to.be.eq('configured');
 
         // we must set the state to 'spa-finished' here
         const requestAdsState = await adTag.requestAds();
+        expect(requestAdsState.state).to.be.eq('spa-finished');
+
         // navigation change
         dom.reconfigure({
           url: 'https://localhost/page-one?filter=1'
@@ -543,36 +550,36 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       adTag.setAdUnitPathVariables({ foo: 'value' });
       adTag.configure(defaultConfig);
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.adUnitPathVariables).to.be.deep.equals({
+      const targeting = adTag.getPageTargeting();
+      expect(targeting).to.be.ok;
+      expect(targeting.adUnitPathVariables).to.be.deep.equals({
         foo: 'value'
       });
     });
 
-    it('should override preexisting adUnitPath variables', () => {
+    it('should merge adUnitPath variables from static and runtime config', () => {
       const adTag = createMoliTag(jsDomWindow);
-      adTag.setAdUnitPathVariables({ foo: 'value' });
+      adTag.setAdUnitPathVariables({ foo: 'value', client: 'client' });
       adTag.configure({
         slots: defaultSlots,
         targeting: {
-          adUnitPathVariables: { pre: 'dismiss' },
+          adUnitPathVariables: { foo: 'dismissed', server: 'server' },
           keyValues: {}
         },
         schain: {
           supplyChainStartNode: dummySupplyChainNode
         }
       });
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.adUnitPathVariables).to.be.deep.equals({
-        foo: 'value'
+      const targeting = adTag.getPageTargeting();
+      expect(targeting).to.be.ok;
+      expect(targeting.adUnitPathVariables).to.be.deep.equals({
+        foo: 'value',
+        server: 'server',
+        client: 'client'
       });
     });
 
-    it('should persists the variables in spa mode for all requestAd() calls', () => {
+    it('should persists the variables in spa mode for all requestAd() calls', async () => {
       dom.reconfigure({
         url: 'https://localhost/1'
       });
@@ -590,39 +597,39 @@ describe('moli', () => {
         }
       });
       expect(adTag.getState()).to.be.eq('configured');
-      expect(adTag.getConfig()!.targeting!.adUnitPathVariables).to.be.deep.equals({
+      expect(adTag.getPageTargeting().adUnitPathVariables).to.be.deep.equals({
         foo: 'value'
       });
-      return adTag
-        .requestAds()
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.config).to.be.ok;
-          expect(spaState.runtimeConfig.adUnitPathVariables).to.be.empty;
-          dom.reconfigure({
-            url: 'https://localhost/2'
-          });
-          // set targeting for next page
-          adTag.setAdUnitPathVariables({ foo: 'value', bar: 'value2' });
 
-          expect(spaState.runtimeConfig.adUnitPathVariables).to.be.deep.equals({
-            foo: 'value',
-            bar: 'value2'
-          });
+      const state = await adTag.requestAds();
+      expect(state.state).to.be.eq('spa-finished');
+      const spaState: ISinglePageApp = state as ISinglePageApp;
+      expect(spaState.config).to.be.ok;
+      expect(spaState.runtimeConfig.adUnitPathVariables).to.be.deep.equals({ foo: 'value' });
+      expect(spaState.nextRuntimeConfig.adUnitPathVariables).to.be.empty;
 
-          return adTag.requestAds();
-        })
-        .then(state => {
-          expect(state.state).to.be.eq('spa-finished');
-          const spaState: ISinglePageApp = state as ISinglePageApp;
-          expect(spaState.runtimeConfig.adUnitPathVariables).to.be.empty;
-          expect(spaState.config.targeting).to.be.ok;
-          expect(spaState.config.targeting!.adUnitPathVariables).to.be.deep.equals({
-            foo: 'value',
-            bar: 'value2'
-          });
-        });
+      dom.reconfigure({
+        url: 'https://localhost/2'
+      });
+      // set targeting for next page
+      adTag.setAdUnitPathVariables({ foo: 'value', bar: 'value2' });
+      expect(spaState.runtimeConfig.adUnitPathVariables).to.be.deep.equals({
+        foo: 'value'
+      });
+      expect(adTag.getPageTargeting().adUnitPathVariables).to.be.deep.equals({
+        foo: 'value'
+      });
+
+      expect(spaState.nextRuntimeConfig.adUnitPathVariables).to.be.deep.equals({
+        foo: 'value',
+        bar: 'value2'
+      });
+      const state2 = await adTag.requestAds();
+      expect(state2.state).to.be.eq('spa-finished');
+      expect(adTag.getPageTargeting().adUnitPathVariables).to.be.deep.equals({
+        foo: 'value',
+        bar: 'value2'
+      });
     });
   });
   describe('resolveAdUnitPath', () => {
