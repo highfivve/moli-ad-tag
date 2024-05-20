@@ -314,6 +314,7 @@ describe('moli', () => {
       await adTag.requestAds();
       // refresh after requestAds has been called
       expect(adTag.getState()).to.be.eq('finished');
+      expect(refreshSpy).to.have.been.calledOnce;
       const domIds = (refreshSpy.firstCall.args[0] || []).map(slot => slot.getSlotElementId());
       expect(domIds).to.have.length(2);
       expect(domIds[0]).to.be.eq(slots[0].domId);

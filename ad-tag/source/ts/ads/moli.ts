@@ -312,10 +312,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configured': {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
-        const { refreshSlots, refreshInfiniteSlots } = state.runtimeConfig;
+        const { refreshInfiniteSlots } = state.runtimeConfig;
         let config = state.config;
 
-        // if there are infinite adslots available in the refreshInfiniteSlots array, they need to be added to the config
+        // if there are infinite ad slots available in the refreshInfiniteSlots array, they need to be added to the config
         if (refreshInfiniteSlots.length > 0) {
           refreshInfiniteSlots.forEach(slot => {
             config = addNewInfiniteSlotToConfig(
@@ -360,6 +360,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         const isSinglePageApp = config.spa?.enabled === true;
         // handle single page application case
         if (isSinglePageApp) {
+          const requestAdsRuntimeConfig = state.runtimeConfig;
           // initialize first and then make the initial requestAds() call
           const initialized = adService.initialize(config, state.runtimeConfig).then(() => config);
           state = {
@@ -373,7 +374,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           };
 
           return initialized
-            .then(() => adService.requestAds(config, state.runtimeConfig))
+            .then(() => adService.requestAds(config, requestAdsRuntimeConfig))
             .then(() => {
               // check if we are still on the same page and in the spa-requestAds state
               // if not the user has already navigated to another page, and we discard everything here
@@ -408,7 +409,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             state: 'requestAds',
             config: config,
             modules,
-            runtimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
+            runtimeConfig: state.runtimeConfig
           };
           return adService
             .initialize(config, state.runtimeConfig)
