@@ -132,30 +132,6 @@ export namespace MoliRuntime {
     registerModule(module: IModule): void;
 
     /**
-     * Add the given init step to the ad pipeline. This can only be done before the first `requestAds` call, which
-     * means that the ad tag is still in the `configurable` or `configured` state.
-     *
-     * @param step - init step that should be added to the AdPipeline
-     */
-    addInitStep(step: InitStep): void;
-
-    /**
-     * Add the given configure step to the ad pipeline. This can only be done before the first `requestAds` call, which
-     * means that the ad tag is still in the `configurable` or `configured` state.
-     *
-     * @param step - configure step that should be added to the AdPipeline
-     */
-    addConfigureStep(step: ConfigureStep): void;
-
-    /**
-     * Add the given prepare request ads step to the ad pipeline. This can only be done before the first `requestAds` call, which
-     * means that the ad tag is still in the `configurable` or `configured` state.
-     *
-     * @param step - prepare request ads step that should be added to the AdPipeline
-     */
-    addPrepareRequestAdsStep(step: PrepareRequestAdsStep): void;
-
-    /**
      * **WARNING**
      * This method is called by the ad tag and can only be called once. If the publisher calls
      * `configure` then the ad configuration provided by the ad tag may not be used.

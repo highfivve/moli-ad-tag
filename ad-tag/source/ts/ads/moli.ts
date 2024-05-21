@@ -813,57 +813,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
-  function addInitStep(step: InitStep): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.adPipelineConfig.initSteps.push(step);
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          'Adding an init step after configuration is not allowed'
-        );
-        break;
-      }
-    }
-  }
-
-  function addConfigureStep(step: ConfigureStep): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.adPipelineConfig.configureSteps.push(step);
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          'Adding a configure step after configuration is not allowed'
-        );
-        break;
-      }
-    }
-  }
-
-  function addPrepareRequestAdsStep(step: PrepareRequestAdsStep): void {
-    switch (state.state) {
-      case 'configurable':
-      case 'configured': {
-        state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(step);
-        break;
-      }
-      default: {
-        getLogger(state.runtimeConfig, window).error(
-          'MoliGlobal',
-          'Adding a prepareRequestAds step after configuration is not allowed'
-        );
-        break;
-      }
-    }
-  }
-
   function getAssetLoaderService(): IAssetLoaderService {
     return assetLoaderService;
   }
@@ -947,11 +896,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     getModuleMeta: getModuleMeta,
     getState: getState,
     openConsole: openConsole,
-    getAssetLoaderService: getAssetLoaderService,
-
-    // TODO rethink if these API methods are necessary
-    addInitStep: addInitStep,
-    addConfigureStep: addConfigureStep,
-    addPrepareRequestAdsStep: addPrepareRequestAdsStep
+    getAssetLoaderService: getAssetLoaderService
   };
 };
