@@ -71,23 +71,19 @@
  *
  * @module
  */
+import { prebidjs } from '../../../types/prebidjs';
+import { IModule, ModuleType } from '../../../types/module';
+import { MoliRuntime } from '../../../types/moliRuntime';
+import { IAssetLoaderService } from '../../../util/assetLoaderService';
 import {
-  googletag,
-  IModule,
-  ModuleType,
-  MoliRuntime,
-  prebidjs,
-  getLogger,
-  IAssetLoaderService,
-  flatten,
-  isNotNull,
-  uniquePrimitiveFilter,
-  InitStep,
+  AdPipelineContext,
   ConfigureStep,
-  PrepareRequestAdsStep,
+  InitStep,
   mkInitStep,
-  AdPipelineContext
-} from '@highfivve/ad-tag';
+  PrepareRequestAdsStep
+} from '../../adPipeline';
+import { flatten, isNotNull, uniquePrimitiveFilter } from '../../../util/arrayUtils';
+import { googletag } from '../../../types/googletag';
 
 export type SkinModuleConfig = {
   /**
@@ -246,16 +242,13 @@ export class Skin implements IModule {
 
   private log?: MoliRuntime.MoliLogger;
 
-  constructor(
-    private readonly skinModuleConfig: SkinModuleConfig,
-    private readonly window: Window
-  ) {}
+  constructor(private readonly skinModuleConfig: SkinModuleConfig) {}
 
-  config(): Object | null {
+  config(): Object | undefined {
     return this.skinModuleConfig;
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     return [
       mkInitStep('skin-init', ctx => {
         if (ctx.env === 'test') {
@@ -286,7 +279,8 @@ export class Skin implements IModule {
    */
   getConfigEffect = (
     config: SkinConfig,
-    auctionObject: prebidjs.event.AuctionObject
+    auctionObject: prebidjs.event.AuctionObject,
+    logger: MoliRuntime.MoliLogger
   ): SkinConfigEffect => {
     const { trackSkinCpmLow } = this.skinModuleConfig;
     // const skinBidResponse = auctionObject[config.skinAdSlotDomId];
@@ -368,10 +362,8 @@ export class Skin implements IModule {
         : // no skin config - that means no action should be taken.
           SkinConfigEffect.NoBlocking;
 
-    if (this.log) {
-      this.log.debug(this.name, 'nonSkinBids', nonSkinBids);
-      this.log.debug(this.name, 'skinBids', skinBids);
-    }
+    logger.debug(this.name, 'nonSkinBids', nonSkinBids);
+    logger.debug(this.name, 'skinBids', skinBids);
 
     if (trackSkinCpmLow && skinConfigEffect === SkinConfigEffect.BlockSkinSlot) {
       trackSkinCpmLow(
@@ -394,15 +386,17 @@ export class Skin implements IModule {
   /**
    *
    * @param auctionObject
+   * @param logger
    * @return the first skin config with matching filters. If no config matches, undefined is being returned
    */
   selectConfig = (
-    auctionObject: prebidjs.event.AuctionObject
+    auctionObject: prebidjs.event.AuctionObject,
+    logger: MoliRuntime.MoliLogger
   ): { skinConfig: SkinConfig; configEffect: SkinConfigEffect } | undefined =>
     this.skinModuleConfig.configs
       .map(config => ({
         skinConfig: config,
-        configEffect: this.getConfigEffect(config, auctionObject)
+        configEffect: this.getConfigEffect(config, auctionObject, logger)
       }))
       .find(({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking);
 
@@ -411,61 +405,46 @@ export class Skin implements IModule {
    *
    * NOTE: Accesses the global gpt.js tag (window.googletag).
    *
-   * @param slotDefinitions all available slots
-   * @return function that destroys a given adSlot by domId
+   * @param slotDomIds a list of slots to destroy
+   * @param _window required to access googletag
    */
-  destroyAdSlot =
-    (slotDefinitions: MoliRuntime.SlotDefinition[]) =>
-    (adSlotDomId: string): void => {
-      const adSlots = slotDefinitions
-        .map(slot => slot.adSlot)
-        .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
-      (this.window as Window & googletag.IGoogleTagWindow).googletag.destroySlots(adSlots);
-    };
-
-  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    const log = getLogger(config, this.window);
-    this.log = log;
-    if (!config.prebid) {
-      log.error('SkinModule', "Prebid isn't configured!");
-      return;
+  destroyAdSlots = (slotDomIds: string[], _window: googletag.IGoogleTagWindow) => {
+    const adSlots = _window.googletag
+      .pubads()
+      .getSlots()
+      .filter((slot: googletag.IAdSlot) => slotDomIds.includes(slot.getSlotElementId()));
+    if (adSlots.length > 0) {
+      _window.googletag.destroySlots(adSlots);
     }
+  };
 
-    const domIds = this.skinModuleConfig.configs
-      .reduce<string[]>((domIds, config) => {
-        return [...domIds, config.skinAdSlotDomId, ...config.blockedAdSlotDomIds];
-      }, [])
-      .filter(domId => !config.slots.some(slot => slot.domId === domId));
-
-    if (domIds.length > 0) {
-      log.error('SkinModule', "Couldn't find one or more ids in the ad slot config:", domIds);
-      return;
-    }
+  init(): void {
+    // noop
   }
 
   private runSkinConfigs = (
     auctionObject: prebidjs.event.AuctionObject,
     ctx: AdPipelineContext
   ) => {
-    const skinConfigWithEffect = this.selectConfig(bidResponses);
+    const skinConfigWithEffect = this.selectConfig(auctionObject, ctx.logger);
 
     if (skinConfigWithEffect) {
       const { skinConfig, configEffect } = skinConfigWithEffect;
 
       if (configEffect === SkinConfigEffect.BlockOtherSlots) {
         ctx.logger.debug('SkinModule', 'Skin configuration applied', skinConfig);
-        skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions));
+        this.destroyAdSlots(skinConfig.blockedAdSlotDomIds, ctx.window);
 
         if (skinConfig.hideBlockedSlots) {
-          skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.logger));
+          skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.logger, ctx.window));
         }
 
         if (skinConfig.hideSkinAdSlot) {
-          this.hideAdSlot(ctx.logger)(skinConfig.skinAdSlotDomId);
+          this.hideAdSlot(ctx.logger, ctx.window)(skinConfig.skinAdSlotDomId);
         }
 
         if (skinConfig.hideBlockedSlotsSelector) {
-          this.window.document
+          ctx.window.document
             .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
             .forEach(node => {
               ctx.logger.debug(
@@ -482,24 +461,26 @@ export class Skin implements IModule {
           skinConfig
         );
 
-        this.destroyAdSlot(slotDefinitions)(skinConfig.skinAdSlotDomId);
+        this.destroyAdSlots([skinConfig.skinAdSlotDomId], ctx.window);
       }
     } else {
       // there's no matching configuration so we check if there are any
       // slots that should not be part of the ad request to save bandwidth,
       // money and improve reporting
-      this.skinModuleConfig.configs
+      const unusedSlots = this.skinModuleConfig.configs
         .filter(skinConfig => skinConfig.destroySkinSlot)
         .map(skinConfig => skinConfig.skinAdSlotDomId)
         .filter(uniquePrimitiveFilter)
-        .forEach(this.destroyAdSlot(slotDefinitions));
+        .filter(domId => auctionObject.adUnitCodes?.includes(domId) === false);
+
+      this.destroyAdSlots(unusedSlots, ctx.window);
     }
   };
 
   private hideAdSlot =
-    (log: MoliRuntime.MoliLogger) =>
+    (log: MoliRuntime.MoliLogger, _window: Window) =>
     (domId: string): void => {
-      const element = this.window.document.getElementById(domId);
+      const element = _window.document.getElementById(domId);
       try {
         if (element) {
           log.debug('SkinModule', `Set display:none for ${domId}`);

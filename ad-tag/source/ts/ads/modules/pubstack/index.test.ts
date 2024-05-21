@@ -73,7 +73,6 @@ describe('Pubstack Module', () => {
 
     it('should load script in init step', async () => {
       const module = createPubstack();
-      const config = newEmptyConfig();
 
       const init = module.initSteps(assetLoaderService)[0];
       expect(init).to.be.ok;
