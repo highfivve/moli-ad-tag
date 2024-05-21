@@ -1354,9 +1354,8 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         await adTag.requestAds();
         adTag.configure(newEmptyConfig());
-        const config = adTag.getConfig();
-        expect(config).to.be.ok;
-        const labels = config?.targeting?.labels;
+        const targeting = adTag.getPageTargeting();
+        const labels = targeting?.labels;
         expect(labels).to.be.ok;
         expect(labels).to.contain.oneOf(['localhost']);
       });
@@ -1368,11 +1367,9 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         await adTag.requestAds();
         adTag.configure(newEmptyConfig());
-        const config = adTag.getConfig();
-        expect(config).to.be.ok;
-        const labels = config?.targeting?.labels;
-        expect(labels).to.be.ok;
-        expect(labels).to.contain.oneOf(['example.com']);
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.be.ok;
+        expect(targeting.labels).to.contain.oneOf(['example.com']);
       });
     });
 
@@ -1381,22 +1378,17 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         adTag.configure(newEmptyConfig());
         await adTag.requestAds();
-        const config = adTag.getConfig();
-        expect(config).to.be.ok;
-        const keyValues = config?.targeting?.keyValues;
-        expect(keyValues).to.be.ok;
-        expect(keyValues!.ABtest).to.be.ok;
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.keyValues).to.be.ok;
+        expect(targeting.keyValues.ABtest).to.be.ok;
       });
 
       it('should localhost as domain label in config', async () => {
         const adTag = createMoliTag(jsDomWindow);
         adTag.configure(newEmptyConfig());
         await adTag.requestAds();
-        const config = adTag.getConfig();
-        expect(config).to.be.ok;
-        const labels = config?.targeting?.labels;
-        expect(labels).to.be.ok;
-        expect(labels).to.contain.oneOf(['localhost']);
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.contain.oneOf(['localhost']);
       });
 
       it('should add top private domain as domain label in config', async () => {
@@ -1406,11 +1398,8 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         adTag.configure(newEmptyConfig());
         await adTag.requestAds();
-        const config = adTag.getConfig();
-        expect(config).to.be.ok;
-        const labels = config?.targeting?.labels;
-        expect(labels).to.be.ok;
-        expect(labels).to.contain.oneOf(['example.com']);
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.contain.oneOf(['example.com']);
       });
 
       it('should add top private domain as domain label from config', async () => {
@@ -1420,11 +1409,8 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         adTag.configure({ ...newEmptyConfig(), domain: 'sub.example.com' });
         await adTag.requestAds();
-        const config = adTag.getConfig();
-        expect(config).to.be.ok;
-        const labels = config?.targeting?.labels;
-        expect(labels).to.be.ok;
-        expect(labels).to.contain.oneOf(['sub.example.com']);
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.contain.oneOf(['sub.example.com']);
       });
     });
   });
