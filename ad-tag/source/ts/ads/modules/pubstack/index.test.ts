@@ -1,14 +1,20 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
-import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 
 import { Pubstack } from './index';
-import { AdPipelineContext, AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag';
-import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { GlobalAuctionContext } from '../../globalAuctionContext';
+import { AssetLoadMethod, createAssetLoaderService } from '../../../util/assetLoaderService';
+import { AdPipelineContext } from '../../adPipeline';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newEmptyConfig,
+  noopLogger
+} from '../../../stubs/moliStubs';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { createGoogletagStub } from '../../../stubs/googletagStubs';
+import { fullConsent } from '../../../stubs/consentStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -33,10 +39,10 @@ describe('Pubstack Module', () => {
       env: 'production',
       logger: noopLogger,
       config: emptyConfig,
+      runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow as any,
       // no service dependencies required
       labelConfigService: null as any,
-      reportingService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
       auction: new GlobalAuctionContext(jsDomWindow as any)
@@ -56,56 +62,60 @@ describe('Pubstack Module', () => {
     sandbox.reset();
   });
 
-  it('should add an init step', async () => {
-    const module = createPubstack();
-    const config = newEmptyConfig();
+  describe('init step', () => {
+    it('should add an init step', async () => {
+      const module = createPubstack();
+      const initSteps = module.initSteps(assetLoaderService);
 
-    module.init(config, assetLoaderService);
-
-    expect(config.pipeline).to.be.ok;
-    expect(config.pipeline?.initSteps).to.have.length(1);
-    expect(config.pipeline?.initSteps[0].name).to.be.eq('pubstack-init');
-  });
-
-  it('should load script in init step', async () => {
-    const module = createPubstack();
-    const config = newEmptyConfig();
-
-    module.init(config, assetLoaderService);
-    const init = config.pipeline?.initSteps[0]!;
-
-    expect(config.pipeline).to.be.ok;
-
-    await init(adPipelineContext());
-    expect(loadScriptStub).to.have.been.calledOnceWithExactly({
-      name: module.name,
-      loadMethod: AssetLoadMethod.TAG,
-      assetUrl: 'https://boot.pbstck.com/v1/tag/1234-5678-910a'
+      expect(initSteps).to.have.length(1);
+      expect(initSteps[0].name).to.be.eq('pubstack-init');
     });
 
-    it('should not load script in init step if env is test', async () => {
+    it('should load script in init step', async () => {
       const module = createPubstack();
       const config = newEmptyConfig();
 
-      module.init(config, assetLoaderService);
-      const init = config.pipeline?.initSteps[0]!;
+      const init = module.initSteps(assetLoaderService)[0];
+      expect(init).to.be.ok;
 
-      expect(config.pipeline).to.be.ok;
+      await init(adPipelineContext());
 
-      await init({ ...adPipelineContext(), env: 'test' });
-      expect(loadScriptStub).to.have.not.been.called;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: module.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: 'https://boot.pbstck.com/v1/tag/1234-5678-910a'
+      });
+
+      it('should not load script in init step if env is test', async () => {
+        const module = createPubstack();
+        const config = newEmptyConfig();
+
+        const init = module.initSteps(assetLoaderService)[0];
+        expect(init).to.be.ok;
+
+        await init({ ...adPipelineContext(), env: 'test' });
+        expect(loadScriptStub).to.have.not.been.called;
+      });
+    });
+  });
+
+  describe('prepareRequestAds step', () => {
+    it('should not add a prepareRequestAds step', () => {
+      const module = createPubstack();
+      const prepareRequestAdsSteps = module.prepareRequestAdsSteps();
+
+      expect(prepareRequestAdsSteps).to.have.length(0);
     });
   });
 
   describe('ab test feature', () => {
     const callConfigureStep = async (env: 'production' | 'test' = 'production') => {
       const module = createPubstack();
-      const config = newEmptyConfig();
 
-      module.init(config, assetLoaderService);
-      expect(config.pipeline).to.be.ok;
-      expect(config.pipeline?.configureSteps).to.have.length(1);
-      const step = config.pipeline?.configureSteps[0]!;
+      const configureSteps = module.configureSteps();
+
+      expect(configureSteps).to.have.length(1);
+      const step = configureSteps[0]!;
       expect(step.name).to.be.eq('pubstack-configure');
 
       await step({ ...adPipelineContext(), env }, []);

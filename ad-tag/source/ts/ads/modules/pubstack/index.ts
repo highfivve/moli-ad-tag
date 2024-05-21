@@ -20,17 +20,15 @@
  *
  * @module
  */
+import { IModule, ModuleType } from '../../../types/module';
+import { AssetLoadMethod, IAssetLoaderService } from '../../../util/assetLoaderService';
 import {
-  IModule,
-  ModuleType,
-  mkInitStep,
-  AssetLoadMethod,
-  IAssetLoaderService,
-  mkConfigureStep,
-  InitStep,
   ConfigureStep,
+  InitStep,
+  mkConfigureStep,
+  mkInitStep,
   PrepareRequestAdsStep
-} from '@highfivve/ad-tag';
+} from '../../adPipeline';
 
 export type PubstackConfig = {
   /**
@@ -53,7 +51,7 @@ export class Pubstack implements IModule {
 
   constructor(private readonly pubstackConfig: PubstackConfig) {}
 
-  config(): Object | null {
+  config(): Object | undefined {
     return this.pubstackConfig;
   }
 

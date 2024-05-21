@@ -23,7 +23,6 @@ jobs:
             module-generic-skin,
             module-identitylink,
             module-moli-lazy-load,
-            module-pubstack,
             module-prebid-first-party-data,
             module-sticky-footer-ads,
             module-sticky-header-ads,
