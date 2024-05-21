@@ -7,7 +7,7 @@ import { createMoliTag } from './moli';
 import { initAdTag } from './moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { emptyConfig, newEmptyConfig } from '../stubs/moliStubs';
+import { emptyConfig, newEmptyConfig, newNoopLogger, noopLogger } from '../stubs/moliStubs';
 import IConfigurable = MoliRuntime.state.IConfigurable;
 import IFinished = MoliRuntime.state.IFinished;
 import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
@@ -22,7 +22,15 @@ import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, Environment, MoliConfig, SinglePageAppConfig } from '../types/moliConfig';
 import MoliTag = MoliRuntime.MoliTag;
 import state = MoliRuntime.state;
-import { ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
+import {
+  ConfigureStep,
+  InitStep,
+  LOW_PRIORITY,
+  mkConfigureStep,
+  mkInitStep,
+  mkPrepareRequestAdsStep,
+  PrepareRequestAdsStep
+} from './adPipeline';
 
 // setup sinon-chai
 use(sinonChai);
@@ -238,6 +246,45 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
 
+      const initStep: InitStep = mkInitStep('fake-init', () => Promise.resolve());
+      const configuredStep: ConfigureStep = mkConfigureStep('fake-configure', () =>
+        Promise.resolve()
+      );
+      const prepareRequestAdsStep: PrepareRequestAdsStep = mkPrepareRequestAdsStep(
+        'fake-prepare',
+        LOW_PRIORITY,
+        () => Promise.resolve()
+      );
+
+      const module = {
+        ...fakeModule,
+        initSteps: (): InitStep[] => [initStep],
+        configureSteps: (): ConfigureStep[] => [configuredStep],
+        prepareRequestAdsSteps: (): PrepareRequestAdsStep[] => [prepareRequestAdsStep]
+      };
+
+      adTag.registerModule(module);
+      adTag.configure(config);
+      await adTag.requestAds();
+
+      expect(adTag.getRuntimeConfig().adPipelineConfig.initSteps).to.have.length(1);
+      expect(adTag.getRuntimeConfig().adPipelineConfig.initSteps).to.have.deep.members([initStep]);
+
+      expect(adTag.getRuntimeConfig().adPipelineConfig.configureSteps).to.have.length(1);
+      expect(adTag.getRuntimeConfig().adPipelineConfig.configureSteps).to.have.deep.members([
+        configuredStep
+      ]);
+
+      expect(adTag.getRuntimeConfig().adPipelineConfig.prepareRequestAdsSteps).to.have.length(1);
+      expect(adTag.getRuntimeConfig().adPipelineConfig.prepareRequestAdsSteps).to.have.deep.members(
+        [prepareRequestAdsStep]
+      );
+    });
+
+    it('should add pipeline steps', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const config = newEmptyConfig(defaultSlots);
+
       adTag.registerModule(fakeModule);
       adTag.configure(config);
       await adTag.requestAds();
@@ -278,17 +325,21 @@ describe('moli', () => {
       expect(newConfig.targeting).to.deep.equals(targeting);
     });
 
-    it('should never register modules if the state is not configurable', () => {
+    it('should never register modules if the state is not configurable or configured', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
-      const logger = adTag.getRuntimeConfig().logger!;
+      const logger = newNoopLogger();
 
       const errorLogSpy = sandbox.spy(logger, 'error');
 
+      adTag.setLogger(logger);
       adTag.configure(config);
+      await adTag.requestAds();
+
       adTag.registerModule(fakeModule);
 
       expect(initSpy).to.have.not.been.called;
+      expect(errorLogSpy).to.have.been.calledOnce;
       expect(errorLogSpy).to.have.been.calledOnceWithExactly(
         'Registering a module is only allowed within the ad tag before the ad tag is configured'
       );
