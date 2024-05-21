@@ -1249,11 +1249,10 @@ describe('moli', () => {
       });
       adTag.addLabel('post');
       adTag.setTargeting('post', 'configure2');
-      const config = adTag.getConfig();
-      expect(config).to.be.ok;
-      expect(config!.targeting).to.be.ok;
-      expect(config!.targeting!.labels).to.be.deep.equals(['pre-existing', 'pre', 'post']);
-      expect(config!.targeting!.keyValues).to.be.deep.equals({
+      const targeting = adTag.getPageTargeting();
+      expect(targeting).to.be.ok;
+      expect(targeting.labels).to.be.deep.equals(['pre-existing', 'pre', 'post']);
+      expect(targeting.keyValues).to.be.deep.equals({
         pre: 'configure1',
         post: 'configure2',
         persists: 'available'
