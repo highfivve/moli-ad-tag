@@ -11,7 +11,7 @@ import { googletag } from '../../../../ts/index';
 
 import IAdSlot = googletag.IAdSlot;
 import { AdSlot, modules, MoliConfig } from '../../../types/moliConfig';
-import CleanupModuleConfig = modules.CleanupModuleConfig;
+import CleanupModuleConfig = modules.cleanup.CleanupModuleConfig;
 
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();

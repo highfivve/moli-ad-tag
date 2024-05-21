@@ -2,12 +2,11 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
+import { Skin, SkinConfigEffect } from './index';
 import { createDom } from '../../../stubs/browserEnvSetup';
 import { googletag } from '../../../types/googletag';
 import { createGoogletagStub } from '../../../stubs/googletagStubs';
-import { MoliRuntime } from '../../../types/moliRuntime';
-import { AdSlot, headerbidding, MoliConfig } from '../../../types/moliConfig';
+import { AdSlot, headerbidding, modules, MoliConfig } from '../../../types/moliConfig';
 import { prebidjs } from '../../../types/prebidjs';
 import {
   emptyConfig,
@@ -28,7 +27,7 @@ use(sinonChai);
 /**
  * All bidders that require no additional configuration other than the bidder code
  */
-type SimpleFormatFilterBidder = Exclude<FormatFilter['bidder'], 'gumgum' | '*'>;
+type SimpleFormatFilterBidder = Exclude<modules.skin.FormatFilter['bidder'], 'gumgum' | '*'>;
 
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
@@ -213,7 +212,7 @@ describe('Skin Module', () => {
       } as prebidjs.IGumGumBidResponse);
 
     describe('gumgum mobile skin', () => {
-      const config: SkinConfig = {
+      const config: modules.skin.SkinConfig = {
         formatFilter: [{ bidder: 'gumgum', auid: 59 }],
         skinAdSlotDomId: 'mobile-skin-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -266,7 +265,7 @@ describe('Skin Module', () => {
     });
 
     describe('gumgum no auid', () => {
-      const config: SkinConfig = {
+      const config: modules.skin.SkinConfig = {
         formatFilter: [{ bidder: 'gumgum' }],
         skinAdSlotDomId: 'mobile-skin-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -305,7 +304,7 @@ describe('Skin Module', () => {
     });
 
     describe('* ( AllFormatFilter )', () => {
-      const config: SkinConfig = {
+      const config: modules.skin.SkinConfig = {
         formatFilter: [{ bidder: '*' }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -354,7 +353,7 @@ describe('Skin Module', () => {
 
     bidders.forEach(bidder =>
       describe(bidder, () => {
-        const config: SkinConfig = {
+        const config: modules.skin.SkinConfig = {
           formatFilter: [{ bidder: bidder }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot'],
@@ -403,7 +402,7 @@ describe('Skin Module', () => {
           trackSkinCpmLow
         });
 
-        const config: SkinConfig = {
+        const config: modules.skin.SkinConfig = {
           formatFilter: [{ bidder: prebidjs.GumGum }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
@@ -450,7 +449,7 @@ describe('Skin Module', () => {
           trackSkinCpmLow
         });
 
-        const config: SkinConfig = {
+        const config: modules.skin.SkinConfig = {
           formatFilter: [{ bidder: prebidjs.DSPX }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
@@ -481,7 +480,7 @@ describe('Skin Module', () => {
     });
 
     describe('selectConfig filter selection', () => {
-      const wallpaperConfig: SkinConfig = {
+      const wallpaperConfig: modules.skin.SkinConfig = {
         formatFilter: [{ bidder: prebidjs.GumGum }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -490,7 +489,7 @@ describe('Skin Module', () => {
         enableCpmComparison: false
       };
 
-      const mobileSkinConfig: SkinConfig = {
+      const mobileSkinConfig: modules.skin.SkinConfig = {
         formatFilter: [{ bidder: prebidjs.GumGum, auid: 59 }],
         skinAdSlotDomId: 'mobile-sticky',
         blockedAdSlotDomIds: ['content-1'],
@@ -538,7 +537,7 @@ describe('Skin Module', () => {
       it('should select the highest skin bid if there are multiple skin bids', () => {
         const trackSkinCpmLow = sandbox.stub();
 
-        const config: SkinConfig = {
+        const config: modules.skin.SkinConfig = {
           formatFilter: [{ bidder: prebidjs.GumGum }, { bidder: prebidjs.DSPX }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],

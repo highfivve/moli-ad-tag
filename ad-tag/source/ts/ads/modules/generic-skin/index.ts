@@ -74,7 +74,6 @@
 import { prebidjs } from '../../../types/prebidjs';
 import { IModule, ModuleType } from '../../../types/module';
 import { MoliRuntime } from '../../../types/moliRuntime';
-import { IAssetLoaderService } from '../../../util/assetLoaderService';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -84,147 +83,7 @@ import {
 } from '../../adPipeline';
 import { flatten, isNotNull, uniquePrimitiveFilter } from '../../../util/arrayUtils';
 import { googletag } from '../../../types/googletag';
-
-export type SkinModuleConfig = {
-  /**
-   * A list of configurations. The first configuration with matching
-   * format filters will be used.
-   */
-  readonly configs: SkinConfig[];
-
-  /**
-   * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
-   * would be removed in its favour.
-   */
-  readonly trackSkinCpmLow?: (
-    cpms: { skin: number; combinedNonSkinSlots: number },
-    skinConfig: SkinConfig,
-    skinBid: prebidjs.IBidResponse
-  ) => void;
-};
-
-/**
- * If this filter is added to the list of filters, then it will always apply.
- * This filter is useful for "orchestration ad units" that don't serve ads, but
- * orchestrate a format. Examples are
- *
- * - `wallpaper_pixel`
- */
-export type AllFormatFilter = {
-  readonly bidder: '*';
-};
-
-export type GumGumFormatFilter = {
-  readonly bidder: typeof prebidjs.GumGum;
-
-  /**
-   * Stands for _ad id_ and contains the format delivered.
-   *
-   * - `59` = in-screen cascade (former mobile skin)
-   * - `39` = in-screen expandable (mobile expandable)
-   *
-   * If not set, then the `auid` will not be considered for filtering.
-   */
-  readonly auid?: number;
-};
-
-/**
- * Azerion (fka Improve Digital) format filter
- */
-export type AzerionFormatFilter = {
-  readonly bidder: typeof prebidjs.ImproveDigital;
-};
-
-export type DSPXFormatFilter = {
-  readonly bidder: typeof prebidjs.DSPX;
-};
-
-export type VisxFormatFilter = {
-  readonly bidder: typeof prebidjs.Visx;
-};
-
-/**
- * Partners buying skin demand via the Xandr platform
- */
-export type XandrFormatFilter = {
-  readonly bidder: typeof prebidjs.AppNexusAst | typeof prebidjs.AppNexus;
-};
-
-/**
- * Partners buying skin demand via the Yieldlab platform
- */
-export type YieldlabFormatFilter = {
-  readonly bidder: typeof prebidjs.Yieldlab;
-};
-
-export type FormatFilter =
-  | AllFormatFilter
-  | AzerionFormatFilter
-  | GumGumFormatFilter
-  | DSPXFormatFilter
-  | VisxFormatFilter
-  | YieldlabFormatFilter
-  | XandrFormatFilter;
-
-export type SkinConfig = {
-  /**
-   * A list of filters. If one of the filter applies then this
-   * configuration will be executed.
-   */
-  readonly formatFilter: FormatFilter[];
-
-  /**
-   * This is usually the dom id of the header ad slot.
-   *
-   * Some setups may have an ad slot only for the just premium skin.
-   * This is the case if there are direct campaign formats for wallpapers
-   * that require a DFP road block.
-   */
-  readonly skinAdSlotDomId: string;
-
-  /**
-   * dom ids of the ad slots that should not be requested when a just premium
-   * skin appears in the bid responses.
-   *
-   * Depending on the wallpaperAdSlot these are usually skyscrapers left and right
-   * and if there's a specific wallpaper ad slot the header as well.
-   */
-  readonly blockedAdSlotDomIds: string[];
-
-  /**
-   * if true, the ad slot will be set to display none
-   */
-  readonly hideSkinAdSlot: boolean;
-
-  /**
-   * if true, the blocked ad slots will be set to display: none
-   */
-  readonly hideBlockedSlots: boolean;
-
-  /**
-   * If the skin cpm comparison should be active, i.e. not only logging, but also preventing a skin render
-   * if the other slots have a higher combined cpm.
-   */
-  readonly enableCpmComparison: boolean;
-
-  /**
-   * Selector for an (additional) ad slot container that should be set to display: none
-   *
-   * e.g. mobile-sticky ads have another container wrapped around the ad slot container itself which can be hidden like this:
-   * hideBlockedSlotsSelector: '[data-ref="sticky-ad"]'
-   */
-
-  hideBlockedSlotsSelector?: string;
-
-  /**
-   * If set to true the ad slot that would load the skin is being destroyed.
-   * This is useful only for ad slots that serve as a special "skin ad slot"
-   * and have otherwise no other function.
-   *
-   * @default false
-   */
-  readonly destroySkinSlot?: boolean;
-};
+import { modules } from '../../../types/moliConfig';
 
 export enum SkinConfigEffect {
   BlockSkinSlot = 'BlockSkinSlot',
@@ -242,7 +101,7 @@ export class Skin implements IModule {
 
   private log?: MoliRuntime.MoliLogger;
 
-  constructor(private readonly skinModuleConfig: SkinModuleConfig) {}
+  constructor(private readonly skinModuleConfig: modules.skin.SkinModuleConfig) {}
 
   config(): Object | undefined {
     return this.skinModuleConfig;
@@ -278,7 +137,7 @@ export class Skin implements IModule {
    * to see if we'd be missing out on revenue if we applied the skin to the page.
    */
   getConfigEffect = (
-    config: SkinConfig,
+    config: modules.skin.SkinConfig,
     auctionObject: prebidjs.event.AuctionObject,
     logger: MoliRuntime.MoliLogger
   ): SkinConfigEffect => {
@@ -392,7 +251,7 @@ export class Skin implements IModule {
   selectConfig = (
     auctionObject: prebidjs.event.AuctionObject,
     logger: MoliRuntime.MoliLogger
-  ): { skinConfig: SkinConfig; configEffect: SkinConfigEffect } | undefined =>
+  ): { skinConfig: modules.skin.SkinConfig; configEffect: SkinConfigEffect } | undefined =>
     this.skinModuleConfig.configs
       .map(config => ({
         skinConfig: config,
@@ -464,7 +323,7 @@ export class Skin implements IModule {
         this.destroyAdSlots([skinConfig.skinAdSlotDomId], ctx.window);
       }
     } else {
-      // there's no matching configuration so we check if there are any
+      // there's no matching configuration, so we check if there are any
       // slots that should not be part of the ad request to save bandwidth,
       // money and improve reporting
       const unusedSlots = this.skinModuleConfig.configs

@@ -9,8 +9,7 @@ import {
 } from '../../adPipeline';
 import { IModule, ModuleType } from '../../../types/module';
 import { CleanupConfig, modules, MoliConfig } from '../../../types/moliConfig';
-import { IAssetLoaderService } from '../../../util/assetLoaderService';
-import CleanupModuleConfig = modules.CleanupModuleConfig;
+import CleanupModuleConfig = modules.cleanup.CleanupModuleConfig;
 import { MoliRuntime } from '../../../types/moliRuntime';
 
 /**
