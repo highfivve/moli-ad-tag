@@ -24,7 +24,6 @@ import {
   ResolveAdUnitPathOptions,
   Targeting
 } from '../types/moliConfig';
-import { ConfigureStep, InitStep, PrepareRequestAdsStep } from './adPipeline';
 import IStateMachine = MoliRuntime.state.IStateMachine;
 import IFinished = MoliRuntime.state.IFinished;
 import IError = MoliRuntime.state.IError;
@@ -358,8 +357,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             `initialize ${module.moduleType} module ${module.name}`,
             module.config()
           );
-          // TODO see if this is necessary!
-          module.init(config, assetLoaderService, adService.getAdPipeline);
+          module.configure(config.modules ?? {});
         });
 
         // call the configured hooks

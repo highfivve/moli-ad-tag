@@ -8,9 +8,8 @@ import {
   InitStep
 } from '../../adPipeline';
 import { IModule, ModuleType } from '../../../types/module';
-import { CleanupConfig, modules, MoliConfig } from '../../../types/moliConfig';
+import { CleanupConfig, modules } from '../../../types/moliConfig';
 import CleanupModuleConfig = modules.cleanup.CleanupModuleConfig;
-import { MoliRuntime } from '../../../types/moliRuntime';
 
 /**
  * # Cleanup Module
@@ -52,10 +51,16 @@ export class Cleanup implements IModule {
   public readonly description: string = 'cleanup out-of-page formats on navigation or ad-reload';
   public readonly moduleType: ModuleType = 'creatives';
 
-  constructor(private readonly _window: Window & MoliRuntime.MoliWindow) {}
+  private cleanupConfig: CleanupModuleConfig | null = null;
 
-  config(): Object | undefined {
-    return this._window.moli.getConfig()?.modules?.cleanup;
+  configure(modulesConfig?: modules.ModulesConfig) {
+    if (modulesConfig?.cleanup && modulesConfig.cleanup.enabled) {
+      this.cleanupConfig = modulesConfig.cleanup;
+    }
+  }
+
+  config(): Object | null {
+    return this.cleanupConfig;
   }
 
   initSteps(): InitStep[] {
@@ -63,46 +68,36 @@ export class Cleanup implements IModule {
   }
 
   configureSteps(): ConfigureStep[] {
-    return [
-      mkConfigureStepOncePerRequestAdsCycle(
-        'destroy-out-of-page-ad-format',
-        (context: AdPipelineContext) => {
-          const cleanupConfig = this.moduleConfigIfEnabled(context.config);
-          if (cleanupConfig) {
-            this.cleanUp(context, cleanupConfig.configs);
-          }
-          return Promise.resolve();
-        }
-      )
-    ];
+    const config = this.cleanupConfig;
+    return config
+      ? [
+          mkConfigureStepOncePerRequestAdsCycle(
+            'destroy-out-of-page-ad-format',
+            (context: AdPipelineContext) => {
+              this.cleanUp(context, config.configs);
+              return Promise.resolve();
+            }
+          )
+        ]
+      : [];
   }
 
   prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
-    return [
-      mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
-        const cleanupConfig = this.moduleConfigIfEnabled(context.config);
-        if (cleanupConfig) {
-          const configsOfDomIdsThatNeedToBeCleaned = cleanupConfig.configs
-            .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
-            .filter(config => this.hasBidderWonLastAuction(context, config));
+    const config = this.cleanupConfig;
+    return config
+      ? [
+          mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
+            const configsOfDomIdsThatNeedToBeCleaned = config.configs
+              .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
+              .filter(config => this.hasBidderWonLastAuction(context, config));
 
-          this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
-        }
+            this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
 
-        return Promise.resolve();
-      })
-    ];
+            return Promise.resolve();
+          })
+        ]
+      : [];
   }
-
-  init(config: MoliConfig) {
-    // nothing to do here
-  }
-
-  private moduleConfigIfEnabled = (moliConfig: MoliConfig): CleanupModuleConfig | null => {
-    return moliConfig.modules?.cleanup && moliConfig.modules?.cleanup.enabled
-      ? moliConfig.modules?.cleanup
-      : null;
-  };
 
   private cleanUp = (context: AdPipelineContext, configs: CleanupConfig[]) => {
     configs.forEach(config => {

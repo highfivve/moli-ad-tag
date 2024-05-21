@@ -1,7 +1,6 @@
-import { MoliRuntime } from './moliRuntime';
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { AdPipeline, ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
-import { MoliConfig } from './moliConfig';
+import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
+import { modules } from './moliConfig';
 
 export type ModuleType =
   | 'cmp'
@@ -24,31 +23,15 @@ export interface IModule {
   /**
    * If the module has some sort of configuration this can be fetched with this method
    */
-  config(): Object | undefined;
+  config(): Object | null;
 
   /**
-   * Initialize the module. This method is allowed to do the following things
+   * Initialize the module with the given module configuration.
+   * Depending on the configuration the module may become active or inactive.
    *
-   * - request external resources. The rest of the application won't wait until this is finished
-   * - alter the config in place
-   * - set values in global scope
-   * - use the ad pipeline to execute moli commands
-   *
-   * **Important**: If you want to access any elements in the DOM you must do this
-   *                in an ad pipeline step as the DOM may not be ready, when the
-   *                `init` method is called!
-   *
-   * @param config
-   * @param assetLoaderService
-   * @param getAdPipeline this method returns the current ad pipeline. When you
-   *                      call it in the `init` method, it will return an empty
-   *                      pipeline as the ad tag is not yet initialized.
+   * @param moduleConfig
    */
-  init(
-    config: MoliConfig,
-    assetLoaderService: IAssetLoaderService,
-    getAdPipeline: () => AdPipeline
-  ): void;
+  configure(moduleConfig?: modules.ModulesConfig): void;
 
   /**
    * Returns a list of steps that should be executed in the ad pipeline.
