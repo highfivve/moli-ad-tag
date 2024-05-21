@@ -1105,7 +1105,7 @@ describe('moli', () => {
     const expectEnvironment = (adTag: MoliTag, environment: Environment | undefined) => {
       const config = adTag.getRuntimeConfig();
       expect(config).to.be.ok;
-      expect(config!.environment).to.be.equal(environment);
+      expect(config.environment).to.be.equal(environment);
     };
 
     describe('with query parameter', () => {
@@ -1141,7 +1141,7 @@ describe('moli', () => {
         );
       });
 
-      it('should not change the environment if query parameter is invalid', () => {
+      it('should not change the default environment (production) if query parameter is invalid', () => {
         const adTag = createMoliTag(jsDomWindow);
 
         dom.reconfigure({
@@ -1150,7 +1150,7 @@ describe('moli', () => {
 
         adTag.configure(defaultConfig);
 
-        expectEnvironment(adTag, undefined);
+        expectEnvironment(adTag, 'production');
       });
     });
 
@@ -1169,11 +1169,11 @@ describe('moli', () => {
         expectEnvironment(adTag, 'production');
       });
 
-      it('should not change the environment if the value is invalid', () => {
+      it('should not change the default environment (production) if the value is invalid', () => {
         const adTag = createMoliTag(jsDomWindow);
         jsDomWindow.sessionStorage.setItem(BrowserStorageKeys.moliEnv, 'wrong');
         adTag.configure(defaultConfig);
-        expectEnvironment(adTag, undefined);
+        expectEnvironment(adTag, 'production');
       });
     });
 
@@ -1192,11 +1192,11 @@ describe('moli', () => {
         expectEnvironment(adTag, 'production');
       });
 
-      it('should not change the environment if the value is invalid', () => {
+      it('should not change the default environment (production) if the value is invalid', () => {
         const adTag = createMoliTag(jsDomWindow);
         jsDomWindow.localStorage.setItem(BrowserStorageKeys.moliEnv, 'wrong');
         adTag.configure(defaultConfig);
-        expectEnvironment(adTag, undefined);
+        expectEnvironment(adTag, 'production');
       });
     });
 

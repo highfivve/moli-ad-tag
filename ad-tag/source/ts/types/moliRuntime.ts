@@ -342,7 +342,7 @@ export namespace MoliRuntime {
      * default: 'production'
      * @see [[Environment]]
      */
-    readonly environment?: Environment;
+    environment?: Environment;
 
     /**
      * contains additional ad pipeline steps added through the `moli.add*Step` methods.
