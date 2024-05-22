@@ -1,5 +1,6 @@
 import { Moli, prebidjs, prebidOutstreamRenderer, extractAdTagVersion } from '@highfivve/ad-tag';
 import video = prebidjs.video;
+import Device = Moli.Device;
 
 const { currentVersion } = require('../../version.json');
 
@@ -44,14 +45,20 @@ const spotxBid = (channelId: string, slot: string): prebidjs.ISpotXBid => {
   };
 };
 
-const dspxBid = (placement: string): prebidjs.IDSPXBid => {
+export const dspxBid = (
+  placement: string,
+  labelsAll: string[],
+  injTagId?: string
+): prebidjs.IDSPXBid => {
   return {
     bidder: prebidjs.DSPX,
     params: {
-      placement,
-      devMode: true
+      placement: placement,
+      pfilter: {
+        ...(injTagId ? { injTagId } : {})
+      }
     },
-    labelAll: [prebidjs.DSPX, 'purpose-1']
+    labelAll: [prebidjs.DSPX, ...labelsAll]
   };
 };
 
@@ -109,21 +116,16 @@ const ixBid = (
   };
 };
 
-const rubiconBid = (
-  accountId: string,
-  siteId: string,
-  zoneId: string,
-  bidFloor: number | undefined
-): prebidjs.IRubiconBid => {
+export const rubiconBid = (zoneId: string, device: Device[]): prebidjs.IRubiconBid => {
   return {
     bidder: prebidjs.Rubicon,
     params: {
-      accountId,
-      siteId,
+      accountId: '21406',
+      siteId: '297922',
       zoneId,
-      floor: bidFloor
+      bidonmultiformat: true
     },
-    labelAll: [prebidjs.Rubicon]
+    labelAll: [prebidjs.Rubicon, ...device]
   };
 };
 
@@ -691,6 +693,173 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           sizesSupported: [[300, 300]]
         }
       ]
+    },
+
+    // wallpaper
+    {
+      domId: 'gf_wallpaper_pixel',
+      adUnitPath: '/33559401,22597236956/gutefrage/gf_wallpaper_pixel/{device}/{domain}',
+      labelAll: ['desktop'],
+      sizes: [[1, 1]],
+      position: 'in-page',
+      behaviour: {
+        loaded: 'eager',
+        bucket: 'page'
+      },
+      sizeConfig: [
+        {
+          mediaQuery: '(min-width: 1100px)',
+          sizesSupported: [[1, 1]]
+        }
+      ],
+      prebid: context => {
+        return {
+          adUnit: {
+            pubstack: {},
+            mediaTypes: {
+              banner: {
+                sizes: [[1, 1]]
+              }
+            },
+            bids: [dspxBid('708', ['gutefrage'], 'gf_wallpaper_pixel')]
+          }
+        };
+      }
+    },
+
+    {
+      domId: 'gf_header',
+      adUnitPath: '/33559401,22597236956/gutefrage/gf_header/{device}/{domain}',
+      labelAny: ['mobile', 'desktop'],
+      sizes: [
+        [300, 50],
+        [300, 75],
+        [300, 100],
+        [320, 50],
+        [320, 75],
+        [320, 100],
+        [468, 60],
+        [728, 90],
+        [800, 250],
+        [900, 250],
+        [970, 80],
+        [970, 90],
+        [970, 250],
+        [1, 1]
+      ],
+      position: 'in-page',
+      behaviour: {
+        loaded: 'eager',
+        bucket: 'page'
+      },
+      gpt: {
+        collapseEmptyDiv: false
+      },
+      a9: {
+        labelAll: ['a9']
+      },
+      prebid: context => {
+        // we use multiple bid to ensure that the xaxis bidder only requests the allowed sizes
+        return [
+          {
+            adUnit: {
+              pubstack: {},
+              mediaTypes: {
+                banner: {
+                  sizes: [
+                    [300, 50],
+                    [320, 50],
+                    [300, 75],
+                    [300, 100],
+                    [320, 75],
+                    [320, 100],
+                    [468, 60],
+                    [728, 90],
+                    [800, 250],
+                    [900, 250],
+                    [970, 80],
+                    [970, 90],
+                    [970, 250]
+                  ]
+                }
+              },
+              bids: []
+            }
+          }
+        ];
+      },
+      sizeConfig: []
+    },
+
+    {
+      domId: 'gf_sidebar_1',
+      adUnitPath: '/33559401,22597236956/gutefrage/gf_sidebar_1/{device}/{domain}',
+      labelAll: ['desktop'],
+      sizes: [
+        [300, 600],
+        [160, 600],
+        [120, 600]
+      ],
+      position: 'in-page',
+      behaviour: {
+        loaded: 'eager',
+        bucket: 'page'
+      },
+      a9: {
+        labelAll: ['a9', 'desktop']
+      },
+      prebid: context => {
+        return {
+          adUnit: {
+            pubstack: {},
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [300, 600],
+                  [160, 600],
+                  [120, 600]
+                ]
+              }
+            },
+            bids: []
+          }
+        };
+      },
+      sizeConfig: []
+    },
+
+    {
+      domId: 'gf_sidebar_2',
+      adUnitPath: '/33559401,22597236956/gutefrage/gf_sidebar_2/{device}/{domain}',
+      labelAll: ['desktop'],
+      sizes: [
+        [300, 600],
+        [160, 600],
+        [120, 600]
+      ],
+      position: 'in-page',
+      behaviour: {
+        loaded: 'eager',
+        bucket: 'page'
+      },
+      a9: {
+        labelAll: ['a9', 'desktop']
+      },
+      prebid: context => {
+        // we use multiple bid to ensure that the xaxis bidder only requests the allowed sizes
+        return {
+          adUnit: {
+            pubstack: {},
+            mediaTypes: {
+              banner: {
+                sizes: []
+              }
+            },
+            bids: []
+          }
+        };
+      },
+      sizeConfig: []
     },
 
     // web interstitial

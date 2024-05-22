@@ -340,7 +340,7 @@ export class AdService {
       if (slotsInConfigOnly.length) {
         this.logger.warn(
           'AdService',
-          'The following slots does not exist on the page DOM.',
+          'The following slots do not exist on the page DOM.',
           slotsInConfigOnly
         );
       }
