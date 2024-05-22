@@ -84,7 +84,6 @@ import {
   uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
-import IGoogleTagWindow = googletag.IGoogleTagWindow;
 
 export type SkinModuleConfig = {
   /**
@@ -280,12 +279,13 @@ export class Skin implements IModule {
           case 'improvedigital':
             return bid.bidder === prebidjs.ImproveDigital;
           case 'gumgum':
-            return (
-              bid.bidder === prebidjs.GumGum &&
-              // if auid is set, it must match the bid.ad.auid
-              (filter.auid === undefined ||
-                (typeof bid.ad !== 'string' && bid.ad.auid === filter.auid))
-            );
+            if (bid.bidder === prebidjs.GumGum) {
+              const gumgumFilter = filter as GumGumFormatFilter;
+              return (
+                gumgumFilter.auid === undefined ||
+                (typeof bid.ad !== 'string' && bid.ad.auid === gumgumFilter.auid)
+              );
+            }
           case 'dspx':
             return bid.bidder === prebidjs.DSPX;
           case 'visx':
