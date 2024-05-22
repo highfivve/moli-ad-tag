@@ -28,6 +28,7 @@ import 'prebid.js/modules/rubiconBidAdapter';
 import 'prebid.js/modules/priceFloors';
 import { StickyHeaderAds } from '@highfivve/module-sticky-header-ads';
 import { Cleanup } from '@highfivve/ad-tag/lib/ads/modules/cleanup';
+import { Skin } from '@highfivve/module-generic-skin';
 
 prebid.processQueue();
 
@@ -232,12 +233,12 @@ moli.registerModule(
         }
       },
       {
-        bidder: 'seedtag',
-        domId: 'lazy-loading-adslot-1',
+        bidder: 'dspx',
+        domId: 'gf_wallpaper_pixel',
         deleteMethod: {
           jsAsString: [
-            `window.document.qurySelectorAll('.seedtag-containerr').forEach(element => element.remove());`,
-            'console.log("hi")'
+            'this.window.dspx_start_called.dspxPageSkin.unload();',
+            'this.window.dspx_start_called.counter = 0;'
           ]
         }
       }
@@ -245,7 +246,28 @@ moli.registerModule(
   })
 );
 
-//
+moli.registerModule(
+  new Skin(
+    {
+      configs: [
+        {
+          formatFilter: [{ bidder: '*' }],
+          skinAdSlotDomId: 'gf_wallpaper_pixel',
+          hideSkinAdSlot: false,
+          // we don't hide slots for DSPX because they render the skin's top part inside #gf_header
+          hideBlockedSlots: false,
+          blockedAdSlotDomIds: ['gf_header', 'gf_sidebar_1', 'gf_sidebar_2'],
+          destroySkinSlot: true,
+          enableCpmComparison: true, // set this to true to prevent skin from rendering if its cpm is too low
+          adReloadIntervalMs: 30000
+        }
+      ]
+    },
+    window
+  )
+);
+moli.addLabel('dspx');
+
 window.pbjs = window.pbjs || { que: [] };
 window.pbjs.que.push(() => {
   window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidResponse) => {
