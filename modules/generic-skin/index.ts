@@ -83,6 +83,8 @@ import {
   isNotNull,
   uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
+import MoliWindow = Moli.MoliWindow;
+import IGoogleTagWindow = googletag.IGoogleTagWindow;
 
 export type SkinModuleConfig = {
   /**
@@ -223,6 +225,11 @@ export type SkinConfig = {
    * @default false
    */
   readonly destroySkinSlot?: boolean;
+
+  /**
+   * If set, the skin of the configured bidder reloads after the given interval (in ms).
+   */
+  readonly adReloadIntervalMs?: number;
 };
 
 export enum SkinConfigEffect {
@@ -441,6 +448,23 @@ export class Skin implements IModule {
                   );
                   node.style.setProperty('display', 'none');
                 });
+            }
+
+            const highestSkinBid = bidResponses[skinConfig.skinAdSlotDomId]?.bids.sort(
+              (bid1, bid2) => bid2.cpm - bid1.cpm
+            )[0];
+
+            // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
+            // the cleanup-module takes care of deleting the previous wallpaper
+            if (skinConfig.adReloadIntervalMs && highestSkinBid?.bidder === prebidjs.DSPX) {
+              this.window.setTimeout(() => {
+                (this.window as Window & MoliWindow).moli.refreshAdSlot(
+                  [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
+                  {
+                    loaded: 'eager'
+                  }
+                );
+              }, skinConfig.adReloadIntervalMs);
             }
           } else if (skinConfig.enableCpmComparison) {
             log.debug('SkinModule', 'Skin configuration ignored because cpm was low', skinConfig);
