@@ -849,8 +849,15 @@ export interface CleanupConfig {
 }
 
 export namespace modules {
+  export interface IModuleConfig {
+    /**
+     * If set to true the module will be enabled.
+     */
+    readonly enabled: boolean;
+  }
+
   export namespace cleanup {
-    export interface CleanupModuleConfig {
+    export interface CleanupModuleConfig extends IModuleConfig {
       /**
        * Information about whether the cleanup module is enabled or not.
        */
@@ -862,8 +869,17 @@ export namespace modules {
     }
   }
 
+  export namespace pubstack {
+    export interface PubstackConfig extends IModuleConfig {
+      /**
+       * TagID from pubstack
+       */
+      readonly tagId: string;
+    }
+  }
+
   export namespace skin {
-    export type SkinModuleConfig = {
+    export interface SkinModuleConfig extends IModuleConfig {
       /**
        * A list of configurations. The first configuration with matching
        * format filters will be used.
@@ -879,7 +895,7 @@ export namespace modules {
         skinConfig: SkinConfig,
         skinBid: prebidjs.IBidResponse
       ) => void;
-    };
+    }
 
     /**
      * If this filter is added to the list of filters, then it will always apply.
@@ -1007,6 +1023,7 @@ export namespace modules {
 
   export interface ModulesConfig {
     readonly cleanup?: cleanup.CleanupModuleConfig;
+    readonly pubstack?: pubstack.PubstackConfig;
     readonly skin?: skin.SkinModuleConfig;
   }
 }

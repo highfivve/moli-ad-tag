@@ -99,28 +99,39 @@ export class Skin implements IModule {
   public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
   public readonly moduleType: ModuleType = 'prebid';
 
+  private skinModuleConfig: modules.skin.SkinModuleConfig | null = null;
+
   private log?: MoliRuntime.MoliLogger;
 
-  constructor(private readonly skinModuleConfig: modules.skin.SkinModuleConfig) {}
+  constructor() {}
 
-  config(): Object | undefined {
+  config(): Object | null {
     return this.skinModuleConfig;
   }
 
+  configure(moduleConfig?: modules.ModulesConfig) {
+    if (moduleConfig?.skin && moduleConfig.skin.enabled) {
+      this.skinModuleConfig = moduleConfig.skin;
+    }
+  }
+
   initSteps(): InitStep[] {
-    return [
-      mkInitStep('skin-init', ctx => {
-        if (ctx.env === 'test') {
-          return Promise.resolve();
-        }
-        ctx.window.pbjs.que.push(() => {
-          ctx.window.pbjs.onEvent('auctionEnd', auctionObject => {
-            this.runSkinConfigs(auctionObject, ctx);
-          });
-        });
-        return Promise.resolve();
-      })
-    ];
+    const config = this.skinModuleConfig;
+    return config
+      ? [
+          mkInitStep('skin-init', ctx => {
+            if (ctx.env === 'test') {
+              return Promise.resolve();
+            }
+            ctx.window.pbjs.que.push(() => {
+              ctx.window.pbjs.onEvent('auctionEnd', auctionObject => {
+                this.runSkinConfigs(config, auctionObject, ctx);
+              });
+            });
+            return Promise.resolve();
+          })
+        ]
+      : [];
   }
 
   configureSteps(): ConfigureStep[] {
@@ -139,9 +150,9 @@ export class Skin implements IModule {
   getConfigEffect = (
     config: modules.skin.SkinConfig,
     auctionObject: prebidjs.event.AuctionObject,
-    logger: MoliRuntime.MoliLogger
+    logger: MoliRuntime.MoliLogger,
+    trackSkinCpmLow: modules.skin.SkinModuleConfig['trackSkinCpmLow']
   ): SkinConfigEffect => {
-    const { trackSkinCpmLow } = this.skinModuleConfig;
     // const skinBidResponse = auctionObject[config.skinAdSlotDomId];
     const skinBidResponses = auctionObject.bidsReceived?.filter(
       bid => bid.adUnitCode === config.skinAdSlotDomId
@@ -244,18 +255,25 @@ export class Skin implements IModule {
 
   /**
    *
+   * @param moduleConfig
    * @param auctionObject
    * @param logger
    * @return the first skin config with matching filters. If no config matches, undefined is being returned
    */
   selectConfig = (
+    moduleConfig: modules.skin.SkinModuleConfig,
     auctionObject: prebidjs.event.AuctionObject,
     logger: MoliRuntime.MoliLogger
   ): { skinConfig: modules.skin.SkinConfig; configEffect: SkinConfigEffect } | undefined =>
-    this.skinModuleConfig.configs
+    moduleConfig.configs
       .map(config => ({
         skinConfig: config,
-        configEffect: this.getConfigEffect(config, auctionObject, logger)
+        configEffect: this.getConfigEffect(
+          config,
+          auctionObject,
+          logger,
+          moduleConfig.trackSkinCpmLow
+        )
       }))
       .find(({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking);
 
@@ -277,15 +295,12 @@ export class Skin implements IModule {
     }
   };
 
-  init(): void {
-    // noop
-  }
-
   private runSkinConfigs = (
+    config: modules.skin.SkinModuleConfig,
     auctionObject: prebidjs.event.AuctionObject,
     ctx: AdPipelineContext
   ) => {
-    const skinConfigWithEffect = this.selectConfig(auctionObject, ctx.logger);
+    const skinConfigWithEffect = this.selectConfig(config, auctionObject, ctx.logger);
 
     if (skinConfigWithEffect) {
       const { skinConfig, configEffect } = skinConfigWithEffect;
@@ -326,7 +341,7 @@ export class Skin implements IModule {
       // there's no matching configuration, so we check if there are any
       // slots that should not be part of the ad request to save bandwidth,
       // money and improve reporting
-      const unusedSlots = this.skinModuleConfig.configs
+      const unusedSlots = config.configs
         .filter(skinConfig => skinConfig.destroySkinSlot)
         .map(skinConfig => skinConfig.skinAdSlotDomId)
         .filter(uniquePrimitiveFilter)

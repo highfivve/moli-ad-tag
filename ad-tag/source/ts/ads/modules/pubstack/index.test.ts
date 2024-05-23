@@ -15,6 +15,7 @@ import {
 import { createDom } from '../../../stubs/browserEnvSetup';
 import { createGoogletagStub } from '../../../stubs/googletagStubs';
 import { fullConsent } from '../../../stubs/consentStubs';
+import { modules } from '../../../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -49,10 +50,13 @@ describe('Pubstack Module', () => {
     };
   };
 
-  const createPubstack = (): Pubstack =>
-    new Pubstack({
+  const modulesConfig: modules.ModulesConfig = {
+    pubstack: {
+      enabled: true,
       tagId: '1234-5678-910a'
-    });
+    }
+  };
+  const createPubstack = (): Pubstack => new Pubstack();
 
   beforeEach(() => {
     loadScriptStub.resolves();
@@ -65,6 +69,7 @@ describe('Pubstack Module', () => {
   describe('init step', () => {
     it('should add an init step', async () => {
       const module = createPubstack();
+      module.configure(modulesConfig);
       const initSteps = module.initSteps(assetLoaderService);
 
       expect(initSteps).to.have.length(1);
@@ -73,6 +78,7 @@ describe('Pubstack Module', () => {
 
     it('should load script in init step', async () => {
       const module = createPubstack();
+      module.configure(modulesConfig);
 
       const init = module.initSteps(assetLoaderService)[0];
       expect(init).to.be.ok;
@@ -101,6 +107,7 @@ describe('Pubstack Module', () => {
   describe('prepareRequestAds step', () => {
     it('should not add a prepareRequestAds step', () => {
       const module = createPubstack();
+      module.configure(modulesConfig);
       const prepareRequestAdsSteps = module.prepareRequestAdsSteps();
 
       expect(prepareRequestAdsSteps).to.have.length(0);
@@ -110,6 +117,7 @@ describe('Pubstack Module', () => {
   describe('ab test feature', () => {
     const callConfigureStep = async (env: 'production' | 'test' = 'production') => {
       const module = createPubstack();
+      module.configure(modulesConfig);
 
       const configureSteps = module.configureSteps();
 

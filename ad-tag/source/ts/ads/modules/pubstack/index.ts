@@ -29,13 +29,7 @@ import {
   mkInitStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-
-export type PubstackConfig = {
-  /**
-   * TagID from pubstack
-   */
-  readonly tagId: string;
-};
+import { modules } from '../../../types/moliConfig';
 
 /**
  * ## Pubstack Analytics
@@ -49,58 +43,68 @@ export class Pubstack implements IModule {
   public readonly description: string = 'prebid analytics integration';
   public readonly moduleType: ModuleType = 'reporting';
 
-  constructor(private readonly pubstackConfig: PubstackConfig) {}
+  private pubstackConfig: modules.pubstack.PubstackConfig | null = null;
 
-  config(): Object | undefined {
+  constructor() {}
+
+  config(): Object | null {
     return this.pubstackConfig;
   }
 
+  configure(moduleConfig?: modules.ModulesConfig) {
+    if (moduleConfig?.pubstack && moduleConfig.pubstack.enabled) {
+      this.pubstackConfig = moduleConfig.pubstack;
+    }
+  }
+
   initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
-    return [
-      mkInitStep('pubstack-init', ctx => {
-        if (ctx.env === 'test') {
-          return Promise.resolve();
-        }
-        // load the pubstack script
-        assetLoaderService
-          .loadScript({
-            name: 'pubstack',
-            loadMethod: AssetLoadMethod.TAG,
-            assetUrl: `https://boot.pbstck.com/v1/tag/${this.pubstackConfig.tagId}`
+    const config = this.pubstackConfig;
+    return config
+      ? [
+          mkInitStep('pubstack-init', ctx => {
+            if (ctx.env === 'test') {
+              return Promise.resolve();
+            }
+            // load the pubstack script
+            assetLoaderService
+              .loadScript({
+                name: 'pubstack',
+                loadMethod: AssetLoadMethod.TAG,
+                assetUrl: `https://boot.pbstck.com/v1/tag/${config.tagId}`
+              })
+              .catch(error => ctx.logger.error('failed to load pubstack', error));
+            return Promise.resolve();
           })
-          .catch(error => ctx.logger.error('failed to load pubstack', error));
-        return Promise.resolve();
-      })
-    ];
+        ]
+      : [];
   }
 
   configureSteps(): ConfigureStep[] {
-    return [
-      mkConfigureStep('pubstack-configure', ctx => {
-        if (ctx.env === 'test') {
-          return Promise.resolve();
-        }
-        // these map to key-value values in the ad manager. All other values are not configured there and thus
-        // don't need to be sent along
-        const validABTestValues = ['0', '1', '2', '3'];
-        // find meta data
-        const meta = ctx.window.document.head.querySelector<HTMLMetaElement>(
-          'meta[name="pbstck_context:pbstck_ab_test"]'
-        );
-        if (meta && meta.content && validABTestValues.includes(meta.content)) {
-          ctx.window.googletag.pubads().setTargeting('pbstck_ab_test', meta.content);
-        }
+    const config = this.pubstackConfig;
+    return config
+      ? [
+          mkConfigureStep('pubstack-configure', ctx => {
+            if (ctx.env === 'test') {
+              return Promise.resolve();
+            }
+            // these map to key-value values in the ad manager. All other values are not configured there and thus
+            // don't need to be sent along
+            const validABTestValues = ['0', '1', '2', '3'];
+            // find meta data
+            const meta = ctx.window.document.head.querySelector<HTMLMetaElement>(
+              'meta[name="pbstck_context:pbstck_ab_test"]'
+            );
+            if (meta && meta.content && validABTestValues.includes(meta.content)) {
+              ctx.window.googletag.pubads().setTargeting('pbstck_ab_test', meta.content);
+            }
 
-        return Promise.resolve();
-      })
-    ];
+            return Promise.resolve();
+          })
+        ]
+      : [];
   }
 
   prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
     return [];
-  }
-
-  init(): void {
-    // nothing to do here
   }
 }

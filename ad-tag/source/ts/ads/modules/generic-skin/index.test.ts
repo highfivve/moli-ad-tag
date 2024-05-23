@@ -144,11 +144,25 @@ describe('Skin Module', () => {
     };
   };
 
+  type SkinModuleConfig = Omit<modules.skin.SkinModuleConfig, 'enabled'>;
+  const emptySkinModuleConfig: modules.skin.SkinModuleConfig = { enabled: true, configs: [] };
+
+  const modulesConfig = (skin: SkinModuleConfig): modules.ModulesConfig => ({
+    skin: {
+      ...skin,
+      enabled: true
+    }
+  });
+
+  const skinModule = (skin: SkinModuleConfig = emptySkinModuleConfig): Skin => {
+    const module = new Skin();
+    module.configure(modulesConfig(skin));
+    return module;
+  };
+
   describe('init', () => {
     it('should add an init step', async () => {
-      const module = new Skin({
-        configs: []
-      });
+      const module = skinModule();
 
       const initSteps = module.initSteps();
 
@@ -158,7 +172,7 @@ describe('Skin Module', () => {
 
     it('should add pbjs.onEvent("auctionEnd") listener in production', async () => {
       const noopLogger = newNoopLogger();
-      const module = new Skin({ configs: [] });
+      const module = skinModule();
 
       const errorLogSpy = sandbox.spy(noopLogger, 'error');
 
@@ -173,7 +187,7 @@ describe('Skin Module', () => {
 
     it('should not add pbjs.onEvent("auctionEnd") listener in test', async () => {
       const noopLogger = newNoopLogger();
-      const module = new Skin({ configs: [] });
+      const module = skinModule();
 
       const errorLogSpy = sandbox.spy(noopLogger, 'error');
 
@@ -187,9 +201,7 @@ describe('Skin Module', () => {
   });
 
   describe('checkConfig filter evaluation', () => {
-    const module = new Skin({
-      configs: []
-    });
+    const module = skinModule();
 
     // ----  GumGum -----
     const gumgumBidResponse = (
@@ -229,7 +241,8 @@ describe('Skin Module', () => {
               bids: [gumgumBidResponse({ auid: 59 })]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -243,7 +256,8 @@ describe('Skin Module', () => {
               bids: [{ ...gumgumBidResponse({ auid: 59 }), cpm: 0 }]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -257,7 +271,8 @@ describe('Skin Module', () => {
               bids: [gumgumBidResponse('some markup'), gumgumBidResponse({ auid: 39 })]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -282,7 +297,8 @@ describe('Skin Module', () => {
               bids: [gumgumBidResponse({ auid: 59 })]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -296,7 +312,8 @@ describe('Skin Module', () => {
               bids: [gumgumBidResponse('markup')]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -320,7 +337,8 @@ describe('Skin Module', () => {
               bids: [genericBidResponse('ix', 10.0)]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -334,7 +352,8 @@ describe('Skin Module', () => {
               bids: [genericBidResponse('pubmatic', 0)]
             }
           }),
-          noopLogger
+          noopLogger,
+          undefined
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -369,7 +388,8 @@ describe('Skin Module', () => {
                 bids: [genericBidResponse(bidder, 10.0)]
               }
             }),
-            noopLogger
+            noopLogger,
+            undefined
           );
 
           expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -383,7 +403,8 @@ describe('Skin Module', () => {
                 bids: [genericBidResponse(bidder, 0)]
               }
             }),
-            noopLogger
+            noopLogger,
+            undefined
           );
 
           expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -397,10 +418,7 @@ describe('Skin Module', () => {
       beforeEach(() => trackSkinCpmLow.reset());
 
       it('should return `BlockOtherSlots`, but log the result if the skin bid is low but the comparison is disabled', () => {
-        const configuredModule = new Skin({
-          configs: [],
-          trackSkinCpmLow
-        });
+        const configuredModule = skinModule({ configs: [], trackSkinCpmLow });
 
         const config: modules.skin.SkinConfig = {
           formatFilter: [{ bidder: prebidjs.GumGum }],
@@ -430,7 +448,8 @@ describe('Skin Module', () => {
         const skinConfigEffect = configuredModule.getConfigEffect(
           config,
           auctionObject(bidResponses),
-          noopLogger
+          noopLogger,
+          trackSkinCpmLow
         );
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
         expect(trackSkinCpmLow).to.have.been.calledOnceWithExactly(
@@ -444,7 +463,7 @@ describe('Skin Module', () => {
       });
 
       it('should return `BlockSkinSlot` if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
-        const configuredModule = new Skin({
+        const configuredModule = skinModule({
           configs: [],
           trackSkinCpmLow
         });
@@ -471,7 +490,8 @@ describe('Skin Module', () => {
               bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
             }
           }),
-          noopLogger
+          noopLogger,
+          trackSkinCpmLow
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
@@ -499,12 +519,14 @@ describe('Skin Module', () => {
       };
 
       it('should select the first rule that applies', () => {
-        const configuredModule = new Skin({
+        const config = modulesConfig({
           configs: [wallpaperConfig, mobileSkinConfig]
         });
+        const configuredModule = skinModule(config.skin);
 
         // select desktop wallpaper
         const wpConfig = configuredModule.selectConfig(
+          config.skin!,
           auctionObject({
             'wp-slot': { bids: [gumgumBidResponse('<h1>skin</h1>')] }
           }),
@@ -515,6 +537,7 @@ describe('Skin Module', () => {
 
         // select mobile skin
         const mobileConfig = configuredModule.selectConfig(
+          config.skin!,
           auctionObject({
             'mobile-sticky': { bids: [gumgumBidResponse({ auid: 59 })] }
           }),
@@ -525,6 +548,7 @@ describe('Skin Module', () => {
 
         // select wallpaper config skin
         const wp2Config = configuredModule.selectConfig(
+          config.skin!,
           auctionObject({
             'wp-slot': { bids: [gumgumBidResponse('wp'), gumgumBidResponse('mt')] }
           }),
@@ -545,10 +569,11 @@ describe('Skin Module', () => {
           hideBlockedSlots: false,
           enableCpmComparison: true
         };
-        const configuredModule = new Skin({
+        const moduleConfig = modulesConfig({
           configs: [config],
           trackSkinCpmLow
         });
+        const configuredModule = skinModule(moduleConfig.skin);
 
         // gumgum has 1.50 cpm
         // other bids combined have 1.51 cpm
@@ -566,7 +591,11 @@ describe('Skin Module', () => {
           'sky-slot-3': undefined
         };
 
-        const skinConfig = configuredModule.selectConfig(auctionObject(bidResponses), noopLogger);
+        const skinConfig = configuredModule.selectConfig(
+          moduleConfig.skin!,
+          auctionObject(bidResponses),
+          noopLogger
+        );
 
         expect(skinConfig?.skinConfig).to.equal(config);
         expect(skinConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -588,7 +617,7 @@ describe('Skin Module', () => {
 
       [undefined, false].forEach(destroySkinSlot => {
         it(`should not destroy the skin ad slot destroySkinSlot is set to ${destroySkinSlot}`, () => {
-          const module = new Skin({
+          const module = skinModule({
             configs: [
               {
                 formatFilter: [{ bidder: prebidjs.DSPX }],
@@ -612,7 +641,6 @@ describe('Skin Module', () => {
             prebid: prebidConfig,
             schain: dummySchainConfig
           };
-          module.init();
           module.initSteps()[0](adPipelineContext(config));
 
           pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
@@ -623,7 +651,7 @@ describe('Skin Module', () => {
       });
 
       it('should not destroy the skin ad slot if set to true for a bidder and the other delivers', () => {
-        const module = new Skin({
+        const module = skinModule({
           configs: [
             {
               formatFilter: [{ bidder: prebidjs.Visx }],
@@ -656,7 +684,6 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init();
         module.initSteps()[0](adPipelineContext(config));
 
         pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
@@ -670,7 +697,7 @@ describe('Skin Module', () => {
       });
 
       it('should destroy the skin ad slot if set to true', () => {
-        const module = new Skin({
+        const module = skinModule({
           configs: [
             {
               formatFilter: [{ bidder: prebidjs.DSPX }],
@@ -694,7 +721,6 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init();
         module.initSteps()[0](adPipelineContext(config));
         pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
         emitAuctionEnd({});
@@ -706,7 +732,7 @@ describe('Skin Module', () => {
       });
 
       it('should destroy the skin ad slot only once', () => {
-        const module = new Skin({
+        const module = skinModule({
           configs: [
             {
               formatFilter: [{ bidder: prebidjs.DSPX }],
@@ -739,7 +765,6 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init();
         module.initSteps()[0](adPipelineContext(config));
         pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
         emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
