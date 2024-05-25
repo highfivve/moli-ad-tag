@@ -20,7 +20,6 @@ jobs:
             module-blocklist-url,
             module-confiant,
             module-emetriq,
-            module-generic-skin,
             module-identitylink,
             module-moli-lazy-load,
             module-prebid-first-party-data,
