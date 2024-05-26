@@ -15,18 +15,6 @@ jobs:
       matrix:
         package: [
             ad-tag,
-            module-moli-ad-reload,
-            module-the-adex-dmp,
-            module-blocklist-url,
-            module-confiant,
-            module-emetriq,
-            module-identitylink,
-            module-moli-lazy-load,
-            module-prebid-first-party-data,
-            module-sticky-footer-ads,
-            module-sticky-header-ads,
-            module-yield-optimization,
-            module-zeotap,
             moli-debugger,
             moli-release
         ]
