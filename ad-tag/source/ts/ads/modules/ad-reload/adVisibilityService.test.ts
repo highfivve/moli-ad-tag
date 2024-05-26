@@ -20,8 +20,14 @@ describe('AdVisibilityService', () => {
   (jsDomWindow as any).id = Math.random();
   const logger = noopLogger;
 
+  after(() => {
+    // bring everything back to normal after tests
+    sandbox.restore();
+  });
+
   beforeEach(() => {
     jsDomWindow.googletag = createGoogletagStub();
+    sandbox.useFakeTimers();
   });
 
   afterEach(() => {
@@ -29,6 +35,7 @@ describe('AdVisibilityService', () => {
     jsDomWindow = dom.window as any;
     (jsDomWindow as any).id = Math.random();
     sandbox.reset();
+    sandbox.clock.restore();
   });
 
   const adRefreshInterval = 20000;
@@ -122,8 +129,6 @@ describe('AdVisibilityService', () => {
   });
 
   it('should call the refreshCallback after the specified time to refresh', () => {
-    sandbox.useFakeTimers();
-
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
     // performance.now needs to be stubbed "by hand":
@@ -166,7 +171,6 @@ describe('AdVisibilityService', () => {
 
   it('should call the refreshCallback after the specified time in the override config', () => {
     const newRefreshInterval = 10000;
-    sandbox.useFakeTimers();
 
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
@@ -209,8 +213,6 @@ describe('AdVisibilityService', () => {
   });
 
   it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport', () => {
-    sandbox.useFakeTimers();
-
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
     // performance.now needs to be stubbed "by hand":
@@ -253,8 +255,6 @@ describe('AdVisibilityService', () => {
   });
 
   it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received', () => {
-    sandbox.useFakeTimers();
-
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
     // performance.now needs to be stubbed "by hand":

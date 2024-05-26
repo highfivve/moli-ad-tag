@@ -19,11 +19,21 @@ describe('UserActivityService', () => {
   (jsDomWindow as any).id = Math.random();
   const logger = noopLogger;
 
+  after(() => {
+    // bring everything back to normal after tests
+    sandbox.restore();
+  });
+
+  beforeEach(() => {
+    sandbox.useFakeTimers();
+  });
+
   afterEach(() => {
     dom = createDom();
     jsDomWindow = dom.window as any;
     (jsDomWindow as any).id = Math.random();
     sandbox.reset();
+    sandbox.clock.restore();
   });
 
   new Map<UserActivityLevelControl['level'], UserActivityParameters>([
@@ -33,7 +43,6 @@ describe('UserActivityService', () => {
     it(`should check user activity after ${
       userBecomingInactiveDuration / 1000
     } seconds, mark inactive after ${userActivityDuration / 1000} seconds in ${mode} mode`, () => {
-      sandbox.useFakeTimers();
       const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
       const addEventListenerSpy = sandbox.spy(jsDomWindow, 'addEventListener');
       const userActivityListenerStub = sandbox.stub();
