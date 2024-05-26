@@ -225,17 +225,20 @@ moli.registerModule(
     enabled: true,
     configs: [
       {
-        bidder: 'Seedtag',
+        bidder: 'seedtag',
         domId: 'manual-adslot',
         deleteMethod: {
           cssSelectors: ['.seedtag-container']
         }
       },
       {
-        bidder: 'Seedtag',
+        bidder: 'seedtag',
         domId: 'lazy-loading-adslot-1',
         deleteMethod: {
-          jsAsString: `window.document.querySelectorAll('.seedtag-containerr').forEach(element => element.remove());`
+          jsAsString: [
+            `window.document.qurySelectorAll('.seedtag-containerr').forEach(element => element.remove());`,
+            'console.log("hi")'
+          ]
         }
       }
     ]

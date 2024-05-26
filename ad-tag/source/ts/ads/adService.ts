@@ -316,6 +316,7 @@ export class AdService {
           domIds.some(domId => domId === slot.domId) &&
           (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
       )
+      .filter(this.isSlotAvailable)
       // if sizesOverride is provided, override the sizes of the slots
       .map(slot => (options?.sizesOverride ? { ...slot, sizes: options.sizesOverride } : slot));
 

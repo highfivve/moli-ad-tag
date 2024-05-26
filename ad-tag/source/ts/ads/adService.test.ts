@@ -96,6 +96,18 @@ describe('AdService', () => {
   };
 
   const manualAdSlot = (): AdSlot => {
+  const createDomElementAndAddToDOM = (id: string): HTMLElement => {
+    const adDiv = dom.window.document.createElement('div');
+    adDiv.id = id;
+    dom.window.document.body.appendChild(adDiv);
+    return adDiv;
+  };
+
+  const addToDom = (adSlots: AdSlot[]): void => {
+    adSlots.forEach(slot => createDomElementAndAddToDOM(slot.domId));
+  };
+
+  const manualAdSlot = (): AdSlot => {
     return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
   };
 
@@ -399,9 +411,7 @@ describe('AdService', () => {
       const slot1 = infiniteSlot();
       const slots = [slot1];
       addToDom(slots);
-      const adDiv = dom.window.document.createElement('div');
-      adDiv.id = 'another-id';
-      dom.window.document.body.appendChild(adDiv);
+      createDomElementAndAddToDOM('another-id');
       const result = await requestAds(
         slots,
         [],
@@ -534,6 +544,19 @@ describe('AdService', () => {
       );
     });
 
+    it('should call adPipeline.run with an empty array if slots are available, but not in DOM', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly([], configWithManualSlot, Sinon.match.number);
+    });
+
     it('should call adPipeline.run with an empty array if slot is eager', async () => {
       const adService = makeAdService();
       const slot = eagerAdSlot();
@@ -576,6 +599,8 @@ describe('AdService', () => {
         ...emptyConfig,
         slots: [slot]
       };
+      addToDom([slot]);
+
       const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
       await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig);
       expect(runSpy).to.have.been.calledOnce;
@@ -593,6 +618,7 @@ describe('AdService', () => {
         ...emptyConfig,
         slots: [infiniteSlot]
       };
+      addToDom([infiniteSlot]);
       const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
       await adService.refreshAdSlots(
         [infiniteSlot.domId],
@@ -638,6 +664,7 @@ describe('AdService', () => {
         ...emptyConfig,
         slots: [backfillSlot, infiniteSlot]
       };
+      addToDom([backfillSlot, infiniteSlot]);
       const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
       await adService.refreshAdSlots(
         [backfillSlot.domId, infiniteSlot.domId],
