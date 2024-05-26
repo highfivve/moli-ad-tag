@@ -19,7 +19,7 @@ import { prebidjs } from '../types/prebidjs';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { AdSlot, Environment, MoliConfig, SinglePageAppConfig } from '../types/moliConfig';
+import { AdSlot, Environment, modules, MoliConfig, SinglePageAppConfig } from '../types/moliConfig';
 import MoliTag = MoliRuntime.MoliTag;
 import state = MoliRuntime.state;
 import {
@@ -40,7 +40,10 @@ describe('moli', () => {
   const sandbox = Sinon.createSandbox();
 
   let dom: JSDOM;
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    MoliRuntime.MoliWindow;
   let domIdCounter: number;
   let mkAdSlotInDOM: () => AdSlot;
   let defaultSlots: AdSlot[];
@@ -283,46 +286,60 @@ describe('moli', () => {
 
     it('should add pipeline steps', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      const config = newEmptyConfig(defaultSlots);
+      const moduleConfig: modules.ModulesConfig = {
+        pubstack: {
+          enabled: true,
+          tagId: '123-fake'
+        }
+      };
+      const config: MoliConfig = { ...newEmptyConfig(defaultSlots), modules: moduleConfig };
 
       adTag.registerModule(fakeModule);
       adTag.configure(config);
       await adTag.requestAds();
 
       expect(configureSpy).to.have.been.calledOnce;
-      expect(configureSpy).to.have.been.calledWithMatch(config, adTag.getAssetLoaderService());
+      expect(configureSpy).to.have.been.calledWithMatch(config.modules);
     });
 
-    it('should init modules and use the changed config', async () => {
+    it('should configure modules and push pipeline steps to config', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
-      const targeting = {
-        keyValues: { foo: 'bar' },
-        labels: ['module'],
-        adUnitPathVariables: {}
-      };
+
+      const fakeInitStep: InitStep = mkInitStep('fake-init', () => Promise.resolve());
+      const fakeConfigureStep: ConfigureStep = mkConfigureStep('fake-configure', () =>
+        Promise.resolve()
+      );
+      const fakePrepareRequestAdsStep: PrepareRequestAdsStep = mkPrepareRequestAdsStep(
+        'fake-prepare',
+        LOW_PRIORITY,
+        () => Promise.resolve()
+      );
+
       const configChangingModule = {
         ...fakeModule,
-        init(config: MoliConfig): void {
-          config.targeting = targeting;
-        }
+        initSteps: (): InitStep[] => [fakeInitStep],
+        configureSteps: (): ConfigureStep[] => [fakeConfigureStep],
+        prepareRequestAdsSteps: (): PrepareRequestAdsStep[] => [fakePrepareRequestAdsStep]
       };
-      const configChangingInitSpy = sandbox.spy(configChangingModule, 'init');
+
+      expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
+        initSteps: [],
+        configureSteps: [],
+        prepareRequestAdsSteps: []
+      });
 
       adTag.registerModule(configChangingModule);
       adTag.configure(config);
       const state = await adTag.requestAds();
 
-      expect(configChangingInitSpy).to.have.been.calledOnce;
-      expect(configChangingInitSpy).to.have.been.calledWithMatch(
-        config,
-        adTag.getAssetLoaderService()
-      );
       expect(adTag.getState()).to.be.eq(state.state);
-      const newConfig = adTag.getConfig()!;
-      expect(newConfig).to.be.ok;
 
-      expect(newConfig.targeting).to.deep.equals(targeting);
+      expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
+        initSteps: [fakeInitStep],
+        configureSteps: [fakeConfigureStep],
+        prepareRequestAdsSteps: [fakePrepareRequestAdsStep]
+      });
     });
 
     it('should never register modules if the state is not configurable or configured', async () => {
