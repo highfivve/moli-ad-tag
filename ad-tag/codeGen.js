@@ -1,0 +1,24 @@
+const fs = require('fs');
+const path = require('path');
+
+// reads the package.json file and updates the version field
+const packageJsonFile = fs.readFileSync('package.json');
+const packageJson = JSON.parse(packageJsonFile);
+
+const tsconfigJsonFile = fs.readFileSync('tsconfig.json');
+const tsconfigJson = JSON.parse(tsconfigJsonFile);
+
+const genCodeDirectory = path.join(tsconfigJson.compilerOptions.rootDir, 'gen');
+if (!fs.existsSync(genCodeDirectory)) {
+  fs.mkdirSync(genCodeDirectory);
+}
+
+const packageJsonTs = path.join(genCodeDirectory, 'packageJson.ts');
+
+fs.writeFileSync(
+  packageJsonTs,
+  `export const packageJson = {
+  version: '${packageJson.version}'
+};
+`
+);
