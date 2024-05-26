@@ -130,7 +130,6 @@ describe('Cleanup Module', () => {
       window: jsDomWindow as any,
       // no service dependencies required
       labelConfigService: null as any,
-      reportingService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
       auction: null as any
@@ -140,7 +139,6 @@ describe('Cleanup Module', () => {
   it('should not add a configure and prepare request ads pipeline step if disabled', () => {
     const module = new Cleanup();
 
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
     module.configure({ cleanup: { enabled: false, configs: [] } });
 
     const configureSteps = module.configureSteps();
@@ -152,7 +150,6 @@ describe('Cleanup Module', () => {
   it('should add a configure and prepare request ads pipeline step', () => {
     const module = new Cleanup();
 
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
     module.configure({ cleanup: { enabled: true, configs: [] } });
 
     const configureSteps = module.configureSteps();
@@ -252,7 +249,7 @@ describe('Cleanup Module', () => {
   it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {
     const module = new Cleanup();
     const slots = createAdSlots(jsDomWindow, [domId1]);
-    const cleanupConfig = {
+    const cleanupConfig: modules.cleanup.CleanupModuleConfig = {
       enabled: true,
       configs: [
         {
