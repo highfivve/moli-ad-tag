@@ -1,9 +1,9 @@
 import { UserActivityService } from './userActivityService';
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import { googletag } from '../../../types/googletag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
 import { modules } from '../../../types/moliConfig';
 import RefreshIntervalOverrides = modules.adreload.RefreshIntervalOverrides;
+import { MoliRuntime } from '../../../types/moliRuntime';
 
 /**
  * Tracks the visibility of ad slots.
