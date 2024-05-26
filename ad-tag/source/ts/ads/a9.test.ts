@@ -43,7 +43,8 @@ describe('a9', () => {
     googletag.IGoogleTagWindow &
     apstag.WindowA9 &
     prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow = dom.window as any;
+    tcfapi.TCFApiWindow &
+    MoliRuntime.MoliWindow = dom.window as any;
   const adPipelineContext = (
     env: Environment = 'production',
     config: MoliConfig = emptyConfig,

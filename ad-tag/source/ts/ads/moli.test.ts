@@ -223,13 +223,13 @@ describe('moli', () => {
       description: '',
       moduleType: 'cmp',
       name: '',
-      config(): Object | undefined {
-        return undefined;
+      config(): Object | null {
+        return null;
       },
-      init(config: MoliConfig, assetLoaderService: IAssetLoaderService): void {
+      configure(): void {
         return;
       },
-      initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+      initSteps(): InitStep[] {
         return [];
       },
       configureSteps(): ConfigureStep[] {
@@ -240,7 +240,7 @@ describe('moli', () => {
       }
     };
 
-    const initSpy = sandbox.spy(fakeModule, 'init');
+    const configureSpy = sandbox.spy(fakeModule, 'configure');
 
     it('should init modules in the requestAds call', async () => {
       const adTag = createMoliTag(jsDomWindow);
@@ -289,8 +289,8 @@ describe('moli', () => {
       adTag.configure(config);
       await adTag.requestAds();
 
-      expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledWithMatch(config, adTag.getAssetLoaderService());
+      expect(configureSpy).to.have.been.calledOnce;
+      expect(configureSpy).to.have.been.calledWithMatch(config, adTag.getAssetLoaderService());
     });
 
     it('should init modules and use the changed config', async () => {
@@ -338,7 +338,7 @@ describe('moli', () => {
 
       adTag.registerModule(fakeModule);
 
-      expect(initSpy).to.have.not.been.called;
+      expect(configureSpy).to.have.not.been.called;
       expect(errorLogSpy).to.have.been.calledOnce;
       expect(errorLogSpy).to.have.been.calledOnceWithExactly(
         'Registering a module is only allowed within the ad tag before the ad tag is configured'

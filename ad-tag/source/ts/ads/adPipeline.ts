@@ -62,7 +62,8 @@ export type AdPipelineContext = {
     apstag.WindowA9 &
     googletag.IGoogleTagWindow &
     prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow;
+    tcfapi.TCFApiWindow &
+    MoliRuntime.MoliWindow;
 
   /**
    * consent data
@@ -286,7 +287,10 @@ export class AdPipeline {
   constructor(
     public readonly config: IAdPipelineConfiguration,
     private readonly logger: MoliRuntime.MoliLogger,
-    private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+    private readonly window: Window &
+      googletag.IGoogleTagWindow &
+      prebidjs.IPrebidjsWindow &
+      MoliRuntime.MoliWindow,
     private readonly auction: GlobalAuctionContext
   ) {}
 

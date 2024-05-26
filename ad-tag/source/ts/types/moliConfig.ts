@@ -1,6 +1,7 @@
 import { prebidjs } from './prebidjs';
 import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
+import { UserActivityLevelControl } from '../ads/modules/ad-reload/userActivityService';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -856,6 +857,72 @@ export namespace modules {
     readonly enabled: boolean;
   }
 
+  export namespace adreload {
+    export type RefreshIntervalOverrides = {
+      [slotDomId: string]: number;
+    };
+
+    export interface AdReloadModuleConfig extends IModuleConfig {
+      /**
+       * Ad slots that should never be reloaded
+       */
+      excludeAdSlotDomIds: string[];
+
+      /**
+       * Ad slots that have an influence on content positioning should be included here. The ad reload
+       * module will make sure that reloading these slots will not negatively impact CLS scores.
+       *
+       * @see https://web.dev/cls/
+       */
+      optimizeClsScoreDomIds: string[];
+
+      /**
+       * Include list for advertisers that are eligible to be reloaded.
+       * The id can be obtained from your google ad manager in the admin/company section.
+       */
+      includeAdvertiserIds: number[];
+
+      /**
+       * Include list for yield group ids that are eligible to be reloaded.
+       * The id can be obtained from your google ad manager in the yield_group/list section.
+       */
+      includeYieldGroupIds: number[];
+
+      /**
+       * Include list for orders that are eligible to be reloaded.
+       */
+      includeOrderIds: number[];
+
+      /**
+       * Exclude list for orders that are eligible to be reloaded.
+       */
+      excludeOrderIds: number[];
+
+      /**
+       * Time an ad must be visible before it can be reloaded.
+       */
+      refreshIntervalMs?: number;
+
+      /**
+       * Configures an override for the default refresh interval configured in
+       * `refreshIntervalMs` per ad slot.
+       */
+      refreshIntervalMsOverrides?: RefreshIntervalOverrides;
+
+      /**
+       * Configure what defines a user as active / inactive.
+       */
+      userActivityLevelControl?: UserActivityLevelControl;
+
+      /**
+       * Enable reloading ads that are not in viewport. It is not advised to use this option.
+       * Impressions are usually only counted on ads that have been 50% visible and it's generally not
+       * very user-centric to load stuff that is out of viewport.
+       */
+      disableAdVisibilityChecks?: boolean;
+    }
+  }
+
   export namespace cleanup {
     export interface CleanupModuleConfig extends IModuleConfig {
       /**
@@ -1022,6 +1089,7 @@ export namespace modules {
   }
 
   export interface ModulesConfig {
+    readonly adReload?: adreload.AdReloadModuleConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly skin?: skin.SkinModuleConfig;

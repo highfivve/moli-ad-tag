@@ -75,7 +75,10 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+    this.window as Window &
+      googletag.IGoogleTagWindow &
+      prebidjs.IPrebidjsWindow &
+      MoliRuntime.MoliWindow,
     new GlobalAuctionContext(
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
     )
@@ -103,7 +106,10 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+        window as Window &
+          googletag.IGoogleTagWindow &
+          prebidjs.IPrebidjsWindow &
+          MoliRuntime.MoliWindow,
         new GlobalAuctionContext(
           window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
         )
@@ -199,7 +205,10 @@ export class AdService {
         requestAds: isGam ? gptRequestAds() : prebidRenderAds()
       },
       this.logger,
-      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+      this.window as Window &
+        googletag.IGoogleTagWindow &
+        prebidjs.IPrebidjsWindow &
+        MoliRuntime.MoliWindow,
       new GlobalAuctionContext(
         this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
         config.globalAuctionContext
@@ -299,11 +308,16 @@ export class AdService {
       return Promise.resolve();
     }
 
-    const { loaded } = options || { loaded: 'manual' };
+    const { loaded } = { ...{ loaded: 'manual' }, ...options };
 
     const availableSlots = config.slots
-      .filter(slot => slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
-      .filter(slot => domIds.some(domId => domId === slot.domId));
+      .filter(
+        slot =>
+          domIds.some(domId => domId === slot.domId) &&
+          (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+      )
+      // if sizesOverride is provided, override the sizes of the slots
+      .map(slot => (options?.sizesOverride ? { ...slot, sizes: options.sizesOverride } : slot));
 
     if (domIds.length !== availableSlots.length) {
       const slotsInConfigOnly = availableSlots.filter(slot =>
@@ -329,7 +343,7 @@ export class AdService {
       }
     }
 
-    this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
+    this.logger.debug('AdService', 'refresh ad slots', availableSlots);
     return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls);
   }
 

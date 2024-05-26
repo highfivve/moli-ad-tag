@@ -1,4 +1,4 @@
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
+import { MoliRuntime } from '../../../types/moliRuntime';
 
 /**
  * Used to configure the strictness of user activity checks.

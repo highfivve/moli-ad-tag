@@ -47,85 +47,19 @@
  *     * userBecomingInactiveDuration: configurable
  * @module
  */
-import {
-  IModule,
-  ModuleType,
-  MoliRuntime,
-  googletag,
-  IAssetLoaderService,
-  getLogger,
-  AdPipeline,
-  AdPipelineContext,
-  mkConfigureStep
-} from '@highfivve/ad-tag';
-
 import { AdVisibilityService } from './adVisibilityService';
-import { UserActivityLevelControl, UserActivityService } from './userActivityService';
-
-export type RefreshIntervalOverrides = {
-  [slotDomId: string]: number;
-};
-
-export type AdReloadModuleConfig = {
-  /**
-   * Ad slots that should never be reloaded
-   */
-  excludeAdSlotDomIds: Array<string>;
-
-  /**
-   * Ad slots that have an influence on content positioning should be included here. The ad reload
-   * module will make sure that reloading these slots will not negatively impact CLS scores.
-   *
-   * @see https://web.dev/cls/
-   */
-  optimizeClsScoreDomIds: Array<string>;
-
-  /**
-   * Include list for advertisers that are eligible to be reloaded.
-   * The id can be obtained from your google ad manager in the admin/company section.
-   */
-  includeAdvertiserIds: Array<number>;
-
-  /**
-   * Include list for yield group ids that are eligible to be reloaded.
-   * The id can be obtained from your google ad manager in the yield_group/list section.
-   */
-  includeYieldGroupIds: Array<number>;
-
-  /**
-   * Include list for orders that are eligible to be reloaded.
-   */
-  includeOrderIds: Array<number>;
-
-  /**
-   * Exclude list for orders that are eligible to be reloaded.
-   */
-  excludeOrderIds: Array<number>;
-
-  /**
-   * Time an ad must be visible before it can be reloaded.
-   */
-  refreshIntervalMs?: number;
-
-  /**
-   * Configures an override for the default refresh interval configured in
-   * `refreshIntervalMs` per ad slot.
-   */
-  refreshIntervalMsOverrides?: RefreshIntervalOverrides;
-
-  /**
-   * Configure what defines a user as active / inactive.
-   */
-  userActivityLevelControl?: UserActivityLevelControl;
-
-  /**
-   * Enable reloading ads that are not in viewport. It is not advised to use this option.
-   * Impressions are usually only counted on ads that have been 50% visible and it's generally not
-   * very user-centric to load stuff that is out of viewport.
-   */
-  disableAdVisibilityChecks?: boolean;
-};
-
+import { UserActivityService } from './userActivityService';
+import { IModule, ModuleType } from '../../../types/module';
+import { googletag } from '../../../types/googletag';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  mkConfigureStep,
+  PrepareRequestAdsStep
+} from '../../adPipeline';
+import { AdSlot, GoogleAdManagerSlotSize, modules } from '../../../types/moliConfig';
+import { MoliRuntime } from '../../../types/moliRuntime';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
  */
@@ -133,6 +67,8 @@ export class AdReload implements IModule {
   public readonly name: string = 'moli-ad-reload';
   public readonly description: string = 'Moli implementation of an ad reload module.';
   public readonly moduleType: ModuleType = 'ad-reload';
+
+  private moduleConfig: modules.adreload.AdReloadModuleConfig | null = null;
 
   private adVisibilityService?: AdVisibilityService;
 
@@ -142,26 +78,20 @@ export class AdReload implements IModule {
    */
   private readonly refreshIntervalMs: number = 20000;
 
-  private logger?: MoliRuntime.MoliLogger;
-  private getAdPipeline?: () => AdPipeline;
-  private requestAdsCalls: number = 0;
+  /**
+   * Default ad reload key
+   * @private
+   */
+  private readonly reloadKeyValue: string = 'native-ad-reload';
 
   /**
    * Prevents multiple initialization, which would append multiple googletag event listeners.
    */
   private initialized: boolean = false;
 
-  constructor(
-    private readonly moduleConfig: AdReloadModuleConfig,
-    private readonly window: Window & googletag.IGoogleTagWindow,
-    private readonly reloadKeyValue: string = 'native-ad-reload'
-  ) {
-    if (moduleConfig.refreshIntervalMs) {
-      this.refreshIntervalMs = moduleConfig.refreshIntervalMs;
-    }
-  }
+  constructor() {}
 
-  config(): AdReloadModuleConfig {
+  config(): modules.adreload.AdReloadModuleConfig | null {
     return this.moduleConfig;
   }
 
@@ -169,47 +99,54 @@ export class AdReload implements IModule {
     return this.initialized;
   }
 
-  init(moliConfig: MoliRuntime.MoliConfig, _: IAssetLoaderService, getAdPipeline: () => AdPipeline): void {
-    this.getAdPipeline = getAdPipeline;
+  configure(moduleConfig?: modules.ModulesConfig) {
+    if (moduleConfig?.adReload?.enabled) {
+      this.moduleConfig = moduleConfig.adReload;
+    }
+  }
 
-    this.logger = getLogger(moliConfig, this.window);
+  initSteps(): InitStep[] {
+    return [];
+  }
 
-    const slotsToMonitor = moliConfig.slots
-      // filter out slots excluded by dom id
-      .filter(slot => this.moduleConfig.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
-      .map(slot => slot.domId);
-    const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = this.reloadAdSlot(moliConfig);
+  configureSteps(): ConfigureStep[] {
+    const config = this.moduleConfig;
+    return config
+      ? [
+          mkConfigureStep(this.name, context => {
+            const slotsToMonitor = context.config.slots
+              // filter out slots excluded by dom id
+              .filter(slot => config.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
+              .map(slot => slot.domId);
 
-    this.logger.debug('AdReload', 'monitoring slots', slotsToMonitor);
+            const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = this.reloadAdSlot(
+              config,
+              context
+            );
 
-    // init additional pipeline steps if not already defined
-    moliConfig.pipeline = moliConfig.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
+            context.logger.debug('AdReload', 'monitoring slots', slotsToMonitor);
+            this.initialize(context, config, slotsToMonitor, reloadAdSlotCallback);
 
-    // before 'configure', googletag.pubads() is most likely not set. Therefore, we initialize this module as a
-    // configure step.
-    moliConfig.pipeline.configureSteps.push(
-      mkConfigureStep(this.name, context => {
-        this.requestAdsCalls = context.requestAdsCalls;
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  }
 
-        this.initialize(context, slotsToMonitor, reloadAdSlotCallback);
-
-        return Promise.resolve();
-      })
-    );
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
   }
 
   /**
    * Method is public for testing purposes
    * @param context
+   * @param config
    * @param slotsToMonitor
    * @param reloadAdSlotCallback
    */
   initialize = (
     context: AdPipelineContext,
+    config: modules.adreload.AdReloadModuleConfig,
     slotsToMonitor: string[],
     reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
   ) => {
@@ -223,31 +160,40 @@ export class AdReload implements IModule {
 
     context.logger.debug('AdReload', 'initialize moli ad reload module');
 
-    this.setupAdVisibilityService(context.config, context.window);
-    this.setupSlotRenderListener(slotsToMonitor, reloadAdSlotCallback, context.window);
+    this.setupAdVisibilityService(config, context.window, context.logger);
+    this.setupSlotRenderListener(
+      config,
+      slotsToMonitor,
+      reloadAdSlotCallback,
+      context.window,
+      context.logger
+    );
 
     this.initialized = true;
   };
 
   private setupAdVisibilityService = (
-    moliConfig: MoliRuntime.MoliConfig,
-    window: Window & googletag.IGoogleTagWindow
+    config: modules.adreload.AdReloadModuleConfig,
+    window: Window & googletag.IGoogleTagWindow,
+    logger: MoliRuntime.MoliLogger
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
-      new UserActivityService(window, this.moduleConfig.userActivityLevelControl, this.logger),
+      new UserActivityService(window, config.userActivityLevelControl, logger),
       this.refreshIntervalMs,
-      this.moduleConfig.refreshIntervalMsOverrides || {},
+      config.refreshIntervalMsOverrides || {},
       false,
-      !!this.moduleConfig.disableAdVisibilityChecks,
+      !!config.disableAdVisibilityChecks,
       window,
-      this.logger
+      logger
     );
   };
 
   private setupSlotRenderListener = (
-    slotsToMonitor: Array<string>,
+    config: modules.adreload.AdReloadModuleConfig,
+    slotsToMonitor: string[],
     reloadAdSlotCallback: (googleTagSlot: googletag.IAdSlot) => void,
-    window: Window & googletag.IGoogleTagWindow
+    window: Window & googletag.IGoogleTagWindow,
+    logger: MoliRuntime.MoliLogger
   ) =>
     window.googletag.pubads().addEventListener('slotRenderEnded', renderEndedEvent => {
       const {
@@ -259,16 +205,13 @@ export class AdReload implements IModule {
       } = renderEndedEvent;
       const slotDomId = googleTagSlot.getSlotElementId();
       const slotIsMonitored = slotsToMonitor.indexOf(slotDomId) > -1;
-      const orderIdNotExcluded =
-        !campaignId || this.moduleConfig.excludeOrderIds.indexOf(campaignId) === -1;
-      const orderIdIncluded =
-        !!campaignId && this.moduleConfig.includeOrderIds.indexOf(campaignId) > -1;
+      const orderIdNotExcluded = !campaignId || config.excludeOrderIds.indexOf(campaignId) === -1;
+      const orderIdIncluded = !!campaignId && config.includeOrderIds.indexOf(campaignId) > -1;
       const advertiserIdIncluded =
-        !!advertiserId && this.moduleConfig.includeAdvertiserIds.indexOf(advertiserId) > -1;
+        !!advertiserId && config.includeAdvertiserIds.indexOf(advertiserId) > -1;
 
       const yieldGroupIdIncluded =
-        !!yieldGroupIds &&
-        this.moduleConfig.includeYieldGroupIds.some(id => yieldGroupIds.indexOf(id) > -1);
+        !!yieldGroupIds && config.includeYieldGroupIds.some(id => yieldGroupIds.indexOf(id) > -1);
 
       // enable refreshing if
       // - the slot wasn't reported empty by pubads
@@ -294,6 +237,7 @@ export class AdReload implements IModule {
             advertiserIdIncluded,
             yieldGroupIdIncluded
           },
+          logger,
           yieldGroupIds,
           campaignId,
           advertiserId
@@ -311,31 +255,31 @@ export class AdReload implements IModule {
       }
     });
 
-  private reloadAdSlot = (moliConfig: MoliRuntime.MoliConfig) => (googleTagSlot: googletag.IAdSlot) => {
-    const slotId = googleTagSlot.getSlotElementId();
-    const moliSlot = moliConfig.slots.find(moliSlot => moliSlot.domId === slotId);
-    const adPipeline = this.getAdPipeline && this.getAdPipeline();
+  private reloadAdSlot =
+    (config: modules.adreload.AdReloadModuleConfig, ctx: AdPipelineContext) =>
+    (googleTagSlot: googletag.IAdSlot) => {
+      const slotId = googleTagSlot.getSlotElementId();
+      const moliSlot = ctx.config.slots.find(moliSlot => moliSlot.domId === slotId);
 
-    if (moliSlot && adPipeline) {
-      this.logger?.debug('AdReload', 'fired slot reload', moliSlot.domId);
+      if (moliSlot && moliSlot.behaviour.loaded !== 'infinite') {
+        ctx.logger.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
-      const slotWithOptimizedSizes = this.maybeOptimizeSlotForCls(moliSlot, googleTagSlot);
+        const sizesOverride: GoogleAdManagerSlotSize[] = this.maybeOptimizeSlotForCls(
+          config,
+          moliSlot,
+          googleTagSlot,
+          ctx.logger,
+          ctx.window
+        );
 
-      googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
+        googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-      adPipeline.run(
-        [slotWithOptimizedSizes],
-        {
-          ...moliConfig,
-          slots: [
-            ...moliConfig.slots.filter(({ domId }) => domId !== slotId),
-            slotWithOptimizedSizes
-          ]
-        },
-        this.requestAdsCalls
-      );
-    }
-  };
+        ctx.window.moli.refreshAdSlot(slotId, {
+          loaded: moliSlot.behaviour.loaded,
+          ...(sizesOverride && { sizesOverride: sizesOverride })
+        });
+      }
+    };
 
   /**
    * If the given ad slot should be optimized for low CLS, filters the slot's sizes to only contain
@@ -349,13 +293,16 @@ export class AdReload implements IModule {
    * googletag slot pendant will be destroyed and rebuilt.
    */
   private maybeOptimizeSlotForCls = (
-    moliSlot: MoliRuntime.AdSlot,
-    googleTagSlot: googletag.IAdSlot
-  ): MoliRuntime.AdSlot => {
+    config: modules.adreload.AdReloadModuleConfig,
+    moliSlot: AdSlot,
+    googleTagSlot: googletag.IAdSlot,
+    logger: MoliRuntime.MoliLogger,
+    _window: Window & googletag.IGoogleTagWindow
+  ): GoogleAdManagerSlotSize[] => {
     const slotDomId = moliSlot.domId;
 
-    if (this.moduleConfig.optimizeClsScoreDomIds.indexOf(slotDomId) > -1) {
-      const slotDomElement = this.window.document.getElementById(slotDomId);
+    if (config.optimizeClsScoreDomIds.indexOf(slotDomId) > -1) {
+      const slotDomElement = _window.document.getElementById(slotDomId);
       if (slotDomElement && !!slotDomElement.style) {
         const slotHeight = slotDomElement.scrollHeight;
         slotDomElement.style.setProperty('height', `${slotHeight}px`);
@@ -364,7 +311,7 @@ export class AdReload implements IModule {
           size => size !== 'fluid' && size[1] <= slotHeight
         );
 
-        this.logger?.debug(
+        logger.debug(
           'AdReload',
           `CLS optimization: slot ${slotDomId} received fixed height ${slotHeight}px`,
           'new sizes:',
@@ -372,22 +319,19 @@ export class AdReload implements IModule {
         );
 
         if (newSlotSizes.length < moliSlot.sizes.filter(size => size !== 'fluid').length) {
-          this.window.googletag.destroySlots([googleTagSlot]);
+          _window.googletag.destroySlots([googleTagSlot]);
         }
 
-        return {
-          ...moliSlot,
-          sizes: newSlotSizes
-        };
+        return newSlotSizes;
       }
 
-      this.logger?.warn(
+      logger.warn(
         'AdReload',
         `CLS optimization: slot ${slotDomId} to be optimized but not found in DOM.`
       );
     }
 
-    return moliSlot;
+    return moliSlot.sizes;
   };
 
   private logTrackingDisallowedReason = (
@@ -400,6 +344,7 @@ export class AdReload implements IModule {
       advertiserIdIncluded: boolean;
       yieldGroupIdIncluded: boolean;
     },
+    logger: MoliRuntime.MoliLogger,
     yieldGroupIds: null | number[],
     campaignId?: number,
     advertiserId?: number
@@ -413,21 +358,16 @@ export class AdReload implements IModule {
       yieldGroupIdIncluded
     } = reasons;
     if (slotIsEmpty) {
-      this.logger?.debug('AdReload', slotDomId, 'slot not tracked: reported empty');
+      logger.debug('AdReload', slotDomId, 'slot not tracked: reported empty');
     }
     if (!slotIsMonitored) {
-      this.logger?.debug('AdReload', slotDomId, 'slot not tracked: excluded by DOM id');
+      logger.debug('AdReload', slotDomId, 'slot not tracked: excluded by DOM id');
     }
     if (!orderIdNotExcluded) {
-      this.logger?.debug(
-        'AdReload',
-        slotDomId,
-        'slot not tracked: excluded by order id',
-        campaignId
-      );
+      logger.debug('AdReload', slotDomId, 'slot not tracked: excluded by order id', campaignId);
     }
     if (!(orderIdIncluded || advertiserIdIncluded || yieldGroupIdIncluded)) {
-      this.logger?.debug(
+      logger.debug(
         'AdReload',
         slotDomId,
         'slot not tracked: neither order id',

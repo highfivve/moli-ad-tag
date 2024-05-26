@@ -396,6 +396,17 @@ export namespace MoliRuntime {
      * @default `'manual'`
      */
     readonly loaded?: Exclude<behaviour.ISlotLoading['loaded'], 'infinite'>;
+
+    /**
+     * Ability to override the sizes of the ad slot for this single refresh call.
+     *
+     * The common use case is to reduce the sizes if the ad slot is automatically reloaded to all sizes
+     * that are smaller than the last winning size to avoid any layout shifts (CLS).
+     *
+     * Note that only sizes can be used that are covered by a size configuration. Sizes that don't match any size config,
+     * will be filtered out and may lead to the ad slot not being refreshed.
+     */
+    readonly sizesOverride?: GoogleAdManagerSlotSize[];
   }
 
   /**

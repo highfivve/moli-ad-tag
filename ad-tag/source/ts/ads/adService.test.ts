@@ -655,6 +655,55 @@ describe('AdService', () => {
         Sinon.match.number
       );
     });
+
+    it('should call adPipeline.run with updates slots with the options.sizesOverride', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = {
+        ...manualAdSlot(),
+        sizes: [
+          [300, 250],
+          [300, 600]
+        ]
+      };
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        sizesOverride: [[300, 250]]
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 250]] }]),
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+
+    it('should call adPipeline.run with updates slots with the options.sizesOverride even if they are not part of the original sizes', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = {
+        ...manualAdSlot(),
+        sizes: [[300, 250]]
+      };
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        sizesOverride: [[300, 600]]
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 600]] }]),
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
   });
 
   describe('global auction context', () => {
