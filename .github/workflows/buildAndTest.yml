@@ -15,8 +15,7 @@ jobs:
       matrix:
         package: [
             ad-tag,
-            moli-debugger,
-            moli-release
+            moli-debugger
         ]
 
     steps:
