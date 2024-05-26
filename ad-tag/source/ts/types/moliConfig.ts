@@ -831,14 +831,14 @@ export interface JSDeletionMethod {
    * JavaScript code as a string that will be executed as given
    * (and most likely deletes the html elements of the special format).
    */
-  readonly jsAsString: string;
+  readonly jsAsString: string[];
 }
 
 export interface CleanupConfig {
   /**
    * The bidder that offers the special format.
    */
-  readonly bidder: string;
+  readonly bidder: prebidjs.BidderCode;
   /**
    * The domId of the slot on which the special format runs.
    */
