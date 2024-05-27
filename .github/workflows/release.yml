@@ -23,23 +23,23 @@ jobs:
       - name: Node setup
         uses: actions/setup-node@v4
         with:
-          cache: 'yarn'
-          cache-dependency-path: '**/yarn.lock'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
           always-auth: true
-          node-version: 18
+          node-version: 20
           registry-url: https://npm.pkg.github.com
           scope: '@highfivve'
 
       # Validate and publish
-      - name: Yarn setup and validation
+      - name: npm setup and validation
         run: |
-          yarn install
-          yarn setup
+          npm install
+          npm run setup
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Publish New Package Version
-        run: yarn github:publish --yes
+        run: npm github:publish --yes
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
