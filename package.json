@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:watch": "tsc -p tsconfig.build.json --watch",
-    "setup": "npm install && npm run codeGen && tsc --composite false",
+    "clean": "rm -rf lib",
+    "setup": "npm run clean && npm ci && npm run codeGen && tsc --composite false",
     "start": "npm run watch",
     "watch": "tsc --composite false --watch",
     "compile": "tsc --noEmit",
@@ -22,7 +23,7 @@
     "prettier": "prettier --config .prettierrc --ignore-path .prettierignore --check \"ad-tag/source/**/*.ts*\"",
     "validate": "npm run compile && npm run lint && npm run test",
     "codeGen": "node codeGen.js",
-    "clean": "rm -rf lib",
+    "release": "np --no-release-draf --no-publish --no-release-draft",
     "github:publish": "npm run clean && npm run build && npm publish from-package --registry https://npm.pkg.github.com/",
     "postpublish": "npm run clean"
   },
