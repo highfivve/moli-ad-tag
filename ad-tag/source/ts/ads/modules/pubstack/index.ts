@@ -45,8 +45,6 @@ export class Pubstack implements IModule {
 
   private pubstackConfig: modules.pubstack.PubstackConfig | null = null;
 
-  constructor() {}
-
   config(): Object | null {
     return this.pubstackConfig;
   }

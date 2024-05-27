@@ -229,7 +229,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function getPageTargeting(): Readonly<Targeting> {
     return {
       keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
-      labels: [...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels],
+      labels: [ ...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels ],
       adUnitPathVariables: {
         ...state.config?.targeting?.adUnitPathVariables,
         ...state.runtimeConfig.adUnitPathVariables
@@ -350,14 +350,19 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         // initialize modules with the config from the ad tag.
         // the config will be altered by this call
         const modules = state.modules;
+        const log = getLogger(state.runtimeConfig, window);
+        log.debug('MoliGlobal', 'configure modules', config.modules ?? {});
         modules.forEach(module => {
-          const log = getLogger(state.runtimeConfig, window);
-          log.debug(
-            'MoliGlobal',
-            `initialize ${module.moduleType} module ${module.name}`,
-            module.config()
-          );
-          module.configure(config.modules ?? {});
+          try {
+            module.configure(config.modules ?? {});
+            log.debug(
+              'MoliGlobal',
+              `configure ${module.moduleType} module ${module.name}`,
+              module.config()
+            );
+          } catch (e) {
+            log.error('MoliGlobal', `failed to configure ${module.moduleType} module ${module.name}`, e);
+          }
         });
 
         // call the configured hooks
@@ -366,11 +371,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             try {
               hook(config, state.runtimeConfig);
             } catch (e) {
-              getLogger(state.runtimeConfig, window).error(
-                'MoliGlobal',
-                'beforeRequestAds hook failed',
-                e
-              );
+              log.error('MoliGlobal', 'beforeRequestAds hook failed', e);
             }
           });
         }
@@ -574,7 +575,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     domId: string | string[],
     options?: RefreshAdSlotsOptions
   ): Promise<'queued' | 'refreshed'> {
-    const domIds = typeof domId === 'string' ? [domId] : domId;
+    const domIds = typeof domId === 'string' ? [ domId ] : domId;
     switch (state.state) {
       case 'configurable':
       case 'configured': {
@@ -655,7 +656,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             )
           };
           return adService
-            .refreshAdSlots([domId], state.config, state.runtimeConfig)
+            .refreshAdSlots([ domId ], state.config, state.runtimeConfig)
             .then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
@@ -679,7 +680,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           )
         };
         return adService
-          .refreshAdSlots([domId], state.config, state.runtimeConfig)
+          .refreshAdSlots([ domId ], state.config, state.runtimeConfig)
           .then(() => 'refreshed');
       }
       default: {

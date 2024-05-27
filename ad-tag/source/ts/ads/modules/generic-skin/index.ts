@@ -103,8 +103,6 @@ export class Skin implements IModule {
 
   private log?: MoliRuntime.MoliLogger;
 
-  constructor() {}
-
   config(): Object | null {
     return this.skinModuleConfig;
   }

@@ -89,8 +89,6 @@ export class AdReload implements IModule {
    */
   private initialized: boolean = false;
 
-  constructor() {}
-
   config(): modules.adreload.AdReloadModuleConfig | null {
     return this.moduleConfig;
   }

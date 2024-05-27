@@ -1,16 +1,17 @@
 import * as Sinon from 'sinon';
 import { createDom } from '../../../stubs/browserEnvSetup';
-import { AdPipelineContext, createMoliTag, MoliRuntime } from '../../../../ts/index';
 import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from '../../../stubs/moliStubs';
 import { Cleanup } from './index';
 import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
 import { dummySchainConfig } from '../../../stubs/schainStubs';
 import { expect } from 'chai';
 import { fullConsent } from '../../../stubs/consentStubs';
-import { googletag } from '../../../../ts/index';
-
-import IAdSlot = googletag.IAdSlot;
+import { createMoliTag } from "../../moli";
 import { AdSlot, modules, MoliConfig } from '../../../types/moliConfig';
+import { googletag } from "../../../types/googletag";
+import IAdSlot = googletag.IAdSlot;
+import { MoliRuntime } from "../../../types/moliRuntime";
+import { AdPipelineContext } from "../../adPipeline";
 
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();
