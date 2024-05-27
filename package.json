@@ -23,7 +23,7 @@
     "prettier": "prettier --config .prettierrc --ignore-path .prettierignore --check \"ad-tag/source/**/*.ts*\"",
     "validate": "npm run compile && npm run lint && npm run test",
     "codeGen": "node codeGen.js",
-    "release": "np --no-release-draf --no-publish --no-release-draft",
+    "release": "np --no-release-draft --no-publish --no-release-draft",
     "github:publish": "npm run clean && npm run build && npm publish from-package --registry https://npm.pkg.github.com/",
     "postpublish": "npm run clean"
   },
