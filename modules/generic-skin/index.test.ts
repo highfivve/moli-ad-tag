@@ -358,7 +358,7 @@ describe('Skin Module', () => {
             ]
           },
           'sky-slot': {
-            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
+            bids: [genericBidResponse('openx', 1.5), genericBidResponse('openx', 0.49)]
           },
           'sky-slot-2': {
             bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
@@ -376,6 +376,38 @@ describe('Skin Module', () => {
           config,
           { ...gumgumBidResponse('<h1>skin</h1>'), cpm: 1.5 }
         );
+      });
+
+      it('should return `BlockOtherSlots` if the skin bid is higher than the bids on the to-be-removed slots combined', () => {
+        const configuredModule = new Skin(
+          {
+            configs: []
+          },
+          jsDomWindow
+        );
+
+        const config: SkinConfig = {
+          formatFilter: [{ bidder: prebidjs.DSPX }],
+          skinAdSlotDomId: 'wp-slot',
+          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: true
+        };
+
+        const skinConfigEffect = configuredModule.getConfigEffect(config, {
+          'wp-slot': {
+            bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
+          },
+          'sky-slot': {
+            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
+          },
+          'sky-slot-2': {
+            bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
       });
 
       it('should return `BlockSkinSlot` if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
@@ -401,7 +433,7 @@ describe('Skin Module', () => {
             bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
           },
           'sky-slot': {
-            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
+            bids: [genericBidResponse('openx', 1.5), genericBidResponse('openx', 0.49)]
           },
           'sky-slot-2': {
             bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
