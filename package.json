@@ -4,11 +4,9 @@
   "workspaces": [
     "ad-tag",
     "moli-debugger",
-    "moli-release",
     "modules/*",
     "examples/*",
-    "prebuilt/*",
-    "utils/*"
+    "prebuilt/*"
   ],
   "scripts": {
     "setup:all": "yarn workspaces run setup",
