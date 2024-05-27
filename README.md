@@ -70,14 +70,8 @@ npm start
 Releases are automatically prepared and publish via github actions. To trigger a release run
 
 ```bash
-TODO
+npm run release
 ```
 
 There will always be a release draft on the [github release page](https://github.com/highfivve/moli-ad-tag/releases).
 Pick the version the release drafter suggests.
-
-After the version is bumped, push everything to the github repo. Assuming your `remote` is called `github`
-
-```bash
-git push github master --tags
-```
