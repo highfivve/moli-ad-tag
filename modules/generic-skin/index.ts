@@ -299,17 +299,12 @@ export class Skin implements IModule {
       adSlotIds
         // collect all bid responses for these ad slot dom ids
         .map(domId => ({ adSlotId: domId, ...bidResponses[domId] }))
-        // filter out all dom ids that aren't affected by this skin
-        .filter(
-          bidObject =>
-            [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(bidObject.adSlotId) > -1
-        )
+        // filter out all dom ids that aren't the configured blocked ad slots (non-skin ad slots)
+        .filter(bidObject => config.blockedAdSlotDomIds.indexOf(bidObject.adSlotId) > -1)
         .filter(bidObject => isNotNull(bidObject.bids))
         .map(bidObject =>
           bidObject
-            .bids! // filter out skin bid to not include it in the non-skin cpm sum
-            .filter(bid => !isSkinBid(bid))
-            // highest cpm bid goes first
+            .bids! // highest cpm bid goes first
             .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
             // take(1)
             .slice(0, 1)
