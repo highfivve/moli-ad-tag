@@ -85,6 +85,7 @@ import {
 } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
 import BidderCode = prebidjs.BidderCode;
+import ISlotLoading = Moli.behaviour.ISlotLoading;
 
 export type SkinModuleConfig = {
   /**
@@ -461,14 +462,36 @@ export class Skin implements IModule {
               highestSkinBid?.bidder &&
               skinConfig.adReload.allowed.includes(highestSkinBid.bidder)
             ) {
-              this.window.setTimeout(() => {
-                (this.window as Window & MoliWindow).moli.refreshAdSlot(
-                  [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
-                  {
-                    loaded: 'eager'
-                  }
+              const loadingBehaviorOfSlotsToRefresh = slotDefinitions
+                .filter(
+                  definition =>
+                    definition.moliSlot.domId === skinConfig.skinAdSlotDomId ||
+                    skinConfig.blockedAdSlotDomIds.includes(definition.moliSlot.domId)
+                )
+                .map(slot => slot.moliSlot.behaviour.loaded);
+
+              const uniqueLoadingBehaviors = [...new Set(loadingBehaviorOfSlotsToRefresh)];
+
+              // only reload if blocked slots and skin slot all have the same loading behavior
+              if (uniqueLoadingBehaviors.length === 1 && uniqueLoadingBehaviors[0] !== 'infinite') {
+                this.window.setTimeout(() => {
+                  (this.window as Window & MoliWindow).moli.refreshAdSlot(
+                    [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
+                    {
+                      loaded: uniqueLoadingBehaviors[0] as Exclude<
+                        ISlotLoading['loaded'],
+                        'infinite'
+                      >
+                    }
+                  );
+                }, skinConfig.adReload?.intervalMs);
+              } else {
+                log.error(
+                  'SkinModule',
+                  'Ad reload not possible because of different loading behaviors of the slots that should be refreshed:',
+                  loadingBehaviorOfSlotsToRefresh
                 );
-              }, skinConfig.adReload?.intervalMs);
+              }
             }
           } else if (skinConfig.enableCpmComparison) {
             log.debug('SkinModule', 'Skin configuration ignored because cpm was low', skinConfig);
