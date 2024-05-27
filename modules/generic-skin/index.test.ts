@@ -262,7 +262,7 @@ describe('Skin Module', () => {
         blockedAdSlotDomIds: ['sky-slot'],
         hideSkinAdSlot: false,
         hideBlockedSlots: false,
-        enableCpmComparison: false
+        enableCpmComparison: true
       };
       it('should return `BlockOtherSlots` if any response was found', () => {
         const skinConfigEffect = module.getConfigEffect(config, {
@@ -282,6 +282,19 @@ describe('Skin Module', () => {
         });
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
+      });
+
+      it('should return `BlockSkinSlot`if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
+        const skinConfigEffect = module.getConfigEffect(config, {
+          'wp-slot': {
+            bids: [genericBidResponse('pubmatic', 5)]
+          },
+          'sky-slot': {
+            bids: [genericBidResponse('openx', 6.5), genericBidResponse('openx', 0.49)]
+          }
+        });
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
       });
     });
 
