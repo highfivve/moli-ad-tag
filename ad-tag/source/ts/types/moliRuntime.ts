@@ -934,7 +934,7 @@ export namespace MoliRuntime {
   }
 
   /**
-   * == Yield Optimization ==
+   * # Yield Optimization
    *
    * The system is designed to work with Google Ad Managers _Unified Pricing Rules_. The general idea is that
    * key values are being used to target specific pricing rules per ad unit. The configuration when a pricing rule
