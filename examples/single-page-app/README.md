@@ -25,7 +25,7 @@ See the [index.ts](index.ts) entrypoint for more implementation details.
 3. In this folder run `yarn install`, which will automatically link
 
 Now you have linked the checked out repository with this one.
- 
+
 !! DON'T FORGET TO UNLINK AFTER YOU ARE FINISHED !!
 
 1. In the `moli-ad-tag` repository run `yarn unlink`
@@ -37,10 +37,10 @@ Otherwise tyepscript yields this error:
 
 ```
 ERROR in ../moli-ad-tag/source/ts/index.ts
-Module build failed (from ./node_modules/ts-loader/index.js):
+Module build failed (from ./node_modules/ts-loader/index.ts):
 Error: TypeScript emitted no output for /home/muki/dev/git/sales/moli-ad-tag/source/ts/index.ts.
-    at makeSourceMapAndFinish (/home/muki/dev/git/sales/publisher-tags/node_modules/ts-loader/dist/index.js:78:15)
-    at successLoader (/home/muki/dev/git/sales/publisher-tags/node_modules/ts-loader/dist/index.js:68:9)
-    at Object.loader (/home/muki/dev/git/sales/publisher-tags/node_modules/ts-loader/dist/index.js:22:12)
+    at makeSourceMapAndFinish (/home/muki/dev/git/sales/publisher-tags/node_modules/ts-loader/dist/index.ts:78:15)
+    at successLoader (/home/muki/dev/git/sales/publisher-tags/node_modules/ts-loader/dist/index.ts:68:9)
+    at Object.loader (/home/muki/dev/git/sales/publisher-tags/node_modules/ts-loader/dist/index.ts:22:12)
  @ ./index.ts 4:22-44
 ```

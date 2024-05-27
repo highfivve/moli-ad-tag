@@ -11,6 +11,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
 
+    # TODO probably add a strategy.matrix as well to test all examples
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,12 +32,10 @@ jobs:
           scope: '@highfivve'
 
       - name: Install dependencies
-        run: npm ci && npm run setup
+        run: npm install
+        working-directory: examples/5-plain
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Validate
-        run: npm run validate
 
       - name: Build
         run: npm run build

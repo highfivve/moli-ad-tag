@@ -41,29 +41,18 @@ I recommend putting this under `~/.npmrc` as described in the [npmrc documentati
 
 # Developing
 
-You require `yarn` for developing.
+You require `npm` for developing.
 
 ```bash
-yarn setup
+npm setup
 ```
-
-If you have already checkout this repository you may want to clean things before:
-
-```bash
-yarn clean && yarn setup
-```
-
-This will build all required modules as *CommonJS* modules! That allows you to run all the tests,
-but **not** the examples!
-
 
 ## Examples
 
 In order to run the examples you must create a production build of the modules.
 
 ```bash
-# the clean step is important to remove any commonjs module that were setup with "yarn setup"
-yarn clean:lib && yarn workspaces run make:nodemodule
+npm run build:watch
 ```
 
 ### Testing with examples
@@ -72,15 +61,8 @@ If you want to test code changes within the examples you have to start the modul
 
 ```bash
 # rebuild the module you change, e.g. ad-tag
-yarn workspace @highfivve/ad-tag make:nodemodule --watch
-```
-
-Note that the workspace _name_ for an example can be found in the respective project folder within the `package.json`.
-
-And then start one of the example projects
-
-```bash
-yarn workspace @highfivve/example-publisher-mode start
+cd examples/minimal
+npm start
 ```
 
 # Release
@@ -88,7 +70,7 @@ yarn workspace @highfivve/example-publisher-mode start
 Releases are automatically prepared and publish via github actions. To trigger a release run
 
 ```bash
-yarn lerna version --exact
+TODO
 ```
 
 There will always be a release draft on the [github release page](https://github.com/highfivve/moli-ad-tag/releases).

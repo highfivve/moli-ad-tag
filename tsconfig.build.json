@@ -1,12 +1,7 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "ES6",
-    "moduleResolution": "node",
-    "target": "ES2020",
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "declaration": true,
-    "noEmitOnError": true,
+    "module": "ES6"
   },
-  "exclude": ["node_modules", "dist", "lib"]
+  "exclude": ["node_modules", "**/lib", "**/*.test.ts", "**/stubs"],
 }

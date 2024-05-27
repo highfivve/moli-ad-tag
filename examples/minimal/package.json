@@ -1,0 +1,20 @@
+{
+  "name": "minimal",
+  "version": "1.0.0",
+  "description": "Ad Tag without any modules",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js build",
+    "start": "node build.js serve"
+  },
+  "keywords": [
+    "publisher",
+    "test",
+    "plain"
+  ],
+  "author": "Muki",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "esbuild": "0.21.4"
+  }
+}

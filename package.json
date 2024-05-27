@@ -1,29 +1,72 @@
 {
-  "version": "3.9.8",
-  "private": true,
-  "workspaces": [
-    "ad-tag",
-    "moli-debugger",
-    "modules/*",
-    "examples/*",
-    "prebuilt/*"
+  "name": "@highfivve/ad-tag",
+  "version": "5.0.0-alpha",
+  "license": "Apache-2.0",
+  "description": "An ad tag implementation called moli",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
   ],
   "scripts": {
-    "setup:all": "yarn workspaces run setup",
-    "setup": "yarn && yarn clean:lib && lerna bootstrap && yarn setup:all",
-    "postinstall": "mkdir -p node_modules/@types/prebid.js && cp examples/prebid/prebidjs.d.ts node_modules/@types/prebid.js/index.d.ts",
-    "preversion": "yarn setup && yarn workspaces run validate",
-    "postversion": "git push && git push --tags",
-    "clean:node_modules": "rm -rf node_modules ad-tag/node_modules modules/**/node_modules utils/**/node_modules moli-release/node_modules moli-debugger/node_modules",
-    "clean:lib": "rm -rf ad-tag/lib modules/**/lib utils/**/lib moli-release/lib moli-debugger/lib",
-    "clean": "yarn clean:node_modules && yarn clean:lib",
-    "github:publish": "yarn clean:lib && yarn lerna run make:nodemodule && yarn lerna publish from-package --registry https://npm.pkg.github.com/",
-    "postpublish": "yarn clean:lib"
+    "build": "tsc -p tsconfig.build.json",
+    "build:watch": "tsc -p tsconfig.build.json --watch",
+    "setup": "npm install && npm run codeGen && tsc --composite false",
+    "start": "npm run watch",
+    "watch": "tsc --composite false --watch",
+    "compile": "tsc --noEmit",
+    "lint": "eslint ./ad-tag/source --ext .ts,.tsx && npm run prettier",
+    "lint:fix": "eslint ./ad-tag/source --ext .ts,.tsx --fix && npm run prettier --write",
+    "test": "mocha --require ts-node/register ad-tag/**/*.test.ts",
+    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register source/**/*.test.ts",
+    "prettier": "prettier --config .prettierrc --ignore-path .prettierignore --check \"ad-tag/source/**/*.ts*\"",
+    "validate": "npm run compile && npm run lint && npm run test",
+    "codeGen": "node codeGen.js",
+    "clean": "rm -rf lib",
+    "github:publish": "npm run clean && npm run build && npm publish from-package --registry https://npm.pkg.github.com/",
+    "postpublish": "npm run clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
+    "directory": "ad-tag"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "engines": {
+    "node": ">=18.0"
   },
   "devDependencies": {
-    "lerna": "^3.22.1",
-    "prebid.js": "7.36.0",
-    "prettier": "^2.3.0",
-    "typescript": "^5.3.3"
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.2",
+    "@types/chai": "4.2.18",
+    "@types/chai-as-promised": "^7.1.4",
+    "@types/domready": "^1.0.0",
+    "@types/jsdom": "^20.0.0",
+    "@types/mocha": "8.2.2",
+    "@types/node": "^20.10.4",
+    "@types/sinon": "10.0.0",
+    "@types/sinon-chai": "3.2.5",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "babel-loader": "^8.2.2",
+    "chai": "4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-jsdoc": "^34.8.1",
+    "eslint-plugin-preact": "^0.1.0",
+    "jsdom": "19.0.0",
+    "mocha": "8.4.0",
+    "mocha-junit-reporter": "2.0.0",
+    "prettier": "^3.2.5",
+    "sinon": "10.0.0",
+    "sinon-chai": "3.6.0",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "webpack": "^5.76.2",
+    "webpack-cli": "^5.0.1"
   }
 }
