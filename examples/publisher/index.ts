@@ -237,8 +237,8 @@ moli.registerModule(
         domId: 'gf_wallpaper_pixel',
         deleteMethod: {
           jsAsString: [
-            'this.window.dspx_start_called.dspxPageSkin.unload();',
-            'this.window.dspx_start_called.counter = 0;'
+            'window.dspx_start_called.dspxPageSkin.unload();',
+            'window.dspx_start_called.counter = 0;'
           ]
         }
       }
