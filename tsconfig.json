@@ -18,8 +18,7 @@
     "noLib": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "sourceMap": true,
-    "downlevelIteration": true
+    "sourceMap": true
   },
   "exclude": ["node_modules"]
 }

@@ -465,15 +465,20 @@ export class Skin implements IModule {
                 )
                 .map(slot => slot.moliSlot.behaviour.loaded);
 
-              const uniqueLoadingBehaviors = [...new Set(loadingBehaviorOfSlotsToRefresh)];
+              const allSlotsHaveSameLoadingBehavior = loadingBehaviorOfSlotsToRefresh.every(
+                loadingBehavior => loadingBehavior === loadingBehaviorOfSlotsToRefresh[0]
+              );
 
               // only reload if blocked slots and skin slot all have the same loading behavior
-              if (uniqueLoadingBehaviors.length === 1 && uniqueLoadingBehaviors[0] !== 'infinite') {
+              if (
+                allSlotsHaveSameLoadingBehavior &&
+                loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
+              ) {
                 this.window.setTimeout(() => {
                   (this.window as Window & MoliWindow).moli.refreshAdSlot(
                     [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
                     {
-                      loaded: uniqueLoadingBehaviors[0] as Exclude<
+                      loaded: loadingBehaviorOfSlotsToRefresh[0] as Exclude<
                         ISlotLoading['loaded'],
                         'infinite'
                       >
