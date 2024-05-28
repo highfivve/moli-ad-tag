@@ -83,6 +83,9 @@ import {
   isNotNull,
   uniquePrimitiveFilter
 } from '@highfivve/ad-tag';
+import MoliWindow = Moli.MoliWindow;
+import BidderCode = prebidjs.BidderCode;
+import ISlotLoading = Moli.behaviour.ISlotLoading;
 
 export type SkinModuleConfig = {
   /**
@@ -223,6 +226,11 @@ export type SkinConfig = {
    * @default false
    */
   readonly destroySkinSlot?: boolean;
+
+  /**
+   * If set, the skin of the configured bidder reloads after the given interval (in ms).
+   */
+  readonly adReload?: { intervalMs: number; allowed: BidderCode[] };
 };
 
 export enum SkinConfigEffect {
@@ -436,6 +444,49 @@ export class Skin implements IModule {
                   );
                   node.style.setProperty('display', 'none');
                 });
+            }
+
+            const highestSkinBid = bidResponses[skinConfig.skinAdSlotDomId]?.bids.sort(
+              (bid1, bid2) => bid2.cpm - bid1.cpm
+            )[0];
+
+            // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
+            // the cleanup-module takes care of deleting the previous wallpaper
+            if (
+              skinConfig.adReload?.intervalMs &&
+              highestSkinBid?.bidder &&
+              skinConfig.adReload.allowed.includes(highestSkinBid.bidder)
+            ) {
+              const loadingBehaviorOfSlotsToRefresh = slotDefinitions
+                .filter(
+                  definition =>
+                    definition.moliSlot.domId === skinConfig.skinAdSlotDomId ||
+                    skinConfig.blockedAdSlotDomIds.includes(definition.moliSlot.domId)
+                )
+                .map(slot => slot.moliSlot.behaviour.loaded);
+
+              const uniqueLoadingBehaviors = [...new Set(loadingBehaviorOfSlotsToRefresh)];
+
+              // only reload if blocked slots and skin slot all have the same loading behavior
+              if (uniqueLoadingBehaviors.length === 1 && uniqueLoadingBehaviors[0] !== 'infinite') {
+                this.window.setTimeout(() => {
+                  (this.window as Window & MoliWindow).moli.refreshAdSlot(
+                    [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
+                    {
+                      loaded: uniqueLoadingBehaviors[0] as Exclude<
+                        ISlotLoading['loaded'],
+                        'infinite'
+                      >
+                    }
+                  );
+                }, skinConfig.adReload?.intervalMs);
+              } else {
+                log.error(
+                  'SkinModule',
+                  'Ad reload not possible because of different loading behaviors of the slots that should be refreshed:',
+                  loadingBehaviorOfSlotsToRefresh
+                );
+              }
             }
           } else if (skinConfig.enableCpmComparison) {
             log.debug('SkinModule', 'Skin configuration ignored because cpm was low', skinConfig);
