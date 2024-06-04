@@ -308,7 +308,7 @@ export interface AdSlot {
    *
    * Default is `false`
    */
-  readonly passbackSupport?: Boolean;
+  readonly passbackSupport?: boolean;
 }
 
 /*

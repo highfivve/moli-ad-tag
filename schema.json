@@ -46,9 +46,8 @@
           "type": "array"
         },
         "passbackSupport": {
-          "additionalProperties": false,
           "description": "If true this ad slot will be refreshed if a window.postMessage event is being sent from a creative identifying the ad slot by domId. In additional key value `passback:true` will be set indicating this is a passback request. The rest of the key-values will be untouched keeping the prebid / a9 auction key-values.\n\n\n## Example creative snippet\n\nThis is an example of how a passback function could look like in a creative. Note that you can either use the `adUnitPath` or the `domId` of the slot.\n\n`adUnitPath` is not yet fully supported, when using variables in the ad unit path.\n\n``` var passbackCallback = function() {   var request = JSON.stringify({     type: 'passback',     adUnitPath: '%%ADUNIT%%' ,     passbackOrigin: '[ADVERTISER-NAME]'   });   try {     // first try to post a message on the top most window     window.top.postMessage(request, '*');   } catch (_) {     // best-effort postMessage     window.postMessage(request, '*');   } } ```\n\nDefault is `false`",
-          "type": "object"
+          "type": "boolean"
         },
         "position": {
           "$ref": "#/definitions/IPosition",
@@ -4331,19 +4330,8 @@
           "type": "object"
         },
         "placementId": {
-          "additionalProperties": {
-            "type": "string"
-          },
           "description": "Placement Id.",
-          "properties": {
-            "length": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "length"
-          ],
-          "type": "object"
+          "type": "string"
         }
       },
       "required": [

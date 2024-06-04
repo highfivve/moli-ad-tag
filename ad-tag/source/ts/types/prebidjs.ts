@@ -5201,7 +5201,7 @@ export namespace prebidjs {
      * Placement Id.
      * @example `"somePlacement"`
      */
-    readonly placementId: String;
+    readonly placementId: string;
 
     /**
      * Placement floor price.
