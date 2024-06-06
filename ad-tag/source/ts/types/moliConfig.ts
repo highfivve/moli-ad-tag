@@ -945,6 +945,26 @@ export namespace modules {
     }
   }
 
+  export namespace confiant {
+    export interface ConfiantConfig extends IModuleConfig {
+      /**
+       * Confiant loads a single javascript file that contains all the configuration properties
+       */
+      readonly assetUrl: string;
+
+      /**
+       * Confiant has no defined purposes (state 2023-05-08) and some CMPs (Sourcepoint) exclude it from TC String.
+       * This makes it impossible to check if consent is given or not.
+       *
+       * If Confiant decides to add a purpose, we can use this flag to immediately turn on the check again.
+       * As a safeguard purpose-1 is mandatory to load confiant.
+       *
+       * @default false
+       */
+      readonly checkGVLID?: boolean;
+    }
+  }
+
   export namespace skin {
     export interface SkinModuleConfig extends IModuleConfig {
       /**
@@ -1092,6 +1112,7 @@ export namespace modules {
     readonly adReload?: adreload.AdReloadModuleConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
+    readonly confiant?: confiant.ConfiantConfig;
     readonly skin?: skin.SkinModuleConfig;
   }
 }

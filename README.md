@@ -44,7 +44,7 @@ I recommend putting this under `~/.npmrc` as described in the [npmrc documentati
 You require `npm` for developing.
 
 ```bash
-npm setup
+npm run setup
 ```
 
 ## Examples
