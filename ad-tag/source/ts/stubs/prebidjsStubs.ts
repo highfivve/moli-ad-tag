@@ -102,6 +102,9 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
 
 export const moliPrebidTestConfig: Moli.headerbidding.PrebidConfig = {
   config: pbjsTestConfig,
+  distributionUrls: {
+    es6: ''
+  },
   schain: {
     nodes: []
   }

@@ -60,7 +60,13 @@ describe('Cleanup Module', () => {
         bucket: { lazy_bucket: { timeout: 3000 }, another_lazy_bucket: { timeout: 3000 } }
       },
       logger: noopLogger,
-      prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+      prebid: {
+        config: pbjsTestConfig,
+        distributionUrls: {
+          es6: ''
+        },
+        schain: { nodes: [] }
+      },
       schain: dummySchainConfig,
       spa: { enabled: true, validateLocation: 'href' }
     };

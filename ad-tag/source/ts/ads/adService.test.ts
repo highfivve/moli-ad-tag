@@ -36,6 +36,9 @@ describe('AdService', () => {
           granularityMultiplier: 1
         }
       },
+      distributionUrls: {
+        es6: ''
+      },
       schain: {
         nodes: []
       }
