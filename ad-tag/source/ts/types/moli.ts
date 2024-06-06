@@ -1668,7 +1668,7 @@ export namespace Moli {
       listener?: PrebidListenerProvider;
 
       // External prebid distribution url for the prebid bidder
-      readonly distUrl?: string;
+      readonly distributionUrls: { es6: string; es5?: string };
     }
 
     /**

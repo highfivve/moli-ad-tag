@@ -185,15 +185,27 @@ export class AdService {
     // prebid
     if (config.prebid && env === 'production') {
       // load prebid-dist if configured in the ad-tag config
-      if (config.prebid.distUrl) {
+      this.assetService
+        .loadScript({
+          name: 'prebid-dist',
+          assetUrl: config.prebid.distributionUrls.es6,
+          loadMethod: AssetLoadMethod.TAG,
+          type: 'module'
+        })
+        .catch(error => config.logger?.error('AdService', 'Failed to load es6 prebid-dist', error));
+
+      // load prebid-dist if configured in the ad-tag config
+      config.prebid?.distributionUrls.es5 &&
         this.assetService
           .loadScript({
             name: 'prebid-dist',
-            assetUrl: config.prebid.distUrl,
-            loadMethod: AssetLoadMethod.TAG
+            assetUrl: config.prebid?.distributionUrls.es5,
+            loadMethod: AssetLoadMethod.TAG,
+            type: 'nomodule'
           })
-          .catch(error => config.logger?.error('AdService', 'Failed to load prebid-dist', error));
-      }
+          .catch(error =>
+            config.logger?.error('AdService', 'Failed to load es5 prebid-dist', error)
+          );
 
       init.push(prebidInit());
 

@@ -27,6 +27,11 @@ export interface ILoadAssetParams {
    * Configure how to the script is being loaded
    */
   loadMethod: AssetLoadMethod;
+
+  /**
+   * [optional] type of the script tag. Defaults to 'text/javascript'
+   */
+  type?: 'module' | 'nomodule';
 }
 
 /**
@@ -120,7 +125,7 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 
   private loadAssetViaTag(config: ILoadAssetParams, parentElement: Element): Promise<void> {
-    const tag: HTMLElement = this.scriptTagWithSrc(config.assetUrl);
+    const tag: HTMLElement = this.scriptTag(config);
 
     return new Promise<void>((resolve: () => void, reject: () => void) => {
       tag.onload = resolve;
@@ -129,11 +134,11 @@ export class AssetLoaderService implements IAssetLoaderService {
     });
   }
 
-  private scriptTagWithSrc(src: string): HTMLScriptElement {
+  private scriptTag(config: ILoadAssetParams): HTMLScriptElement {
     const scriptTag = this.window.document.createElement('script');
-    scriptTag.type = 'text/javascript';
+    scriptTag.type = config.type || 'text/javascript';
     scriptTag.async = true;
-    scriptTag.src = src;
+    scriptTag.src = config.assetUrl;
     return scriptTag;
   }
 
