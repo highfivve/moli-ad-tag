@@ -4,6 +4,7 @@ import { apstag } from './apstag';
 import { UserActivityLevelControl } from '../ads/modules/ad-reload/userActivityService';
 import { AdexAppConfig } from '../ads/modules/adex';
 import { MappingDefinition } from '../ads/modules/adex/adex-mapping';
+import { BlocklistProvider } from '../ads/modules/blocklist-url';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -994,6 +995,43 @@ export namespace modules {
     }
   }
 
+  export namespace blocklist {
+    export interface BlocklistUrlsBlockingConfig extends IModuleConfig {
+      /**
+       * `block` - this mode blocks ad requests entirely
+       * `key-value` - sets a specified key value
+       */
+      readonly mode: 'block';
+
+      /**
+       * blocklist content
+       */
+      readonly blocklist: BlocklistProvider;
+    }
+
+    export interface BlocklistUrlsKeyValueConfig extends IModuleConfig {
+      /**
+       * `block` - this mode blocks ad requests entirely
+       * `key-value` - sets a specified key value
+       */
+      readonly mode: 'key-value';
+
+      readonly blocklist: BlocklistProvider;
+
+      /**
+       * The key that is used for the key value
+       */
+      readonly key: string;
+
+      /**
+       * The value that is sent when a URL is listed.
+       *
+       * default is `true`
+       */
+      readonly isBlocklistedValue?: string;
+    }
+  }
+
   export namespace skin {
     export interface SkinModuleConfig extends IModuleConfig {
       /**
@@ -1142,6 +1180,9 @@ export namespace modules {
     readonly cleanup?: cleanup.CleanupModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly confiant?: confiant.ConfiantConfig;
+    readonly blocklist?:
+      | blocklist.BlocklistUrlsBlockingConfig
+      | blocklist.BlocklistUrlsKeyValueConfig;
     readonly adex?: adex.AdexConfig;
     readonly skin?: skin.SkinModuleConfig;
   }
