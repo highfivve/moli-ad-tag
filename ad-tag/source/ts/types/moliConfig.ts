@@ -2,6 +2,8 @@ import { prebidjs } from './prebidjs';
 import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { UserActivityLevelControl } from '../ads/modules/ad-reload/userActivityService';
+import { AdexAppConfig } from '../ads/modules/adex';
+import { MappingDefinition } from '../ads/modules/adex/adex-mapping';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -965,6 +967,33 @@ export namespace modules {
     }
   }
 
+  export namespace adex {
+    export interface AdexConfig extends IModuleConfig {
+      /**
+       * Provided by your ADEX account manager.
+       */
+      readonly adexCustomerId: string;
+
+      /**
+       * Provided by your ADEX account manager.
+       */
+      readonly adexTagId: string;
+      /**
+       * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
+       * In regular mode, tracking is only executed once.
+       */
+      readonly spaMode: boolean;
+      /**
+       * extraction and conversion rules to produce Adex compatible data from key/value targeting.
+       */
+      readonly mappingDefinitions: Array<MappingDefinition>;
+      /**
+       * If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
+       */
+      readonly appConfig?: AdexAppConfig;
+    }
+  }
+
   export namespace skin {
     export interface SkinModuleConfig extends IModuleConfig {
       /**
@@ -1113,6 +1142,7 @@ export namespace modules {
     readonly cleanup?: cleanup.CleanupModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly confiant?: confiant.ConfiantConfig;
+    readonly adex?: adex.AdexConfig;
     readonly skin?: skin.SkinModuleConfig;
   }
 }
