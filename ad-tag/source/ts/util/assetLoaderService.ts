@@ -43,7 +43,7 @@ export interface IAssetLoaderService {
    * Loads the script and append it to the DOM.
    *
    * @param config
-   * @param parent [optional] the element to which the assetLoader should append the asset. defaults to document.head.
+   * @param parent (optional) the element to which the assetLoader should append the asset. defaults to document.head.
    */
   loadScript(config: ILoadAssetParams, parent?: Element): Promise<void>;
 
@@ -143,7 +143,9 @@ export class AssetLoaderService implements IAssetLoaderService {
       scriptTag.type = 'text/javascript';
       scriptTag.type === 'nomodule' && scriptTag.setAttribute('nomodule', '');
     } else {
-      config.assetUrl.endsWith('mjs') ? `module` : 'text/javascript';
+      config.assetUrl.endsWith('mjs')
+        ? (scriptTag.type = 'module')
+        : (scriptTag.type = 'text/javascript');
       // Todo - now the prebid dist has always the .js extension (es6/es5), once it is changed, nomodule attribute should be added to .js files
     }
     scriptTag.async = true;
