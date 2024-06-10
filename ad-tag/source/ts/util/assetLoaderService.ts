@@ -30,6 +30,7 @@ export interface ILoadAssetParams {
 
   /**
    * [optional] type of the script tag. Defaults to 'text/javascript'
+   * if not set, it should be detected from the extension of the assetUrl and set to 'module' if it is a .mjs file
    */
   type?: 'module' | 'nomodule';
 }
@@ -136,7 +137,15 @@ export class AssetLoaderService implements IAssetLoaderService {
 
   private scriptTag(config: ILoadAssetParams): HTMLScriptElement {
     const scriptTag = this.window.document.createElement('script');
-    scriptTag.type = config.type || 'text/javascript';
+    if (config.type === 'module') {
+      scriptTag.type = 'module';
+    } else if (config.type === 'nomodule') {
+      scriptTag.type = 'text/javascript';
+      scriptTag.type === 'nomodule' && scriptTag.setAttribute('nomodule', '');
+    } else {
+      config.assetUrl.endsWith('mjs') ? `module` : 'text/javascript';
+      // Todo - now the prebid dist has always the .js extension (es6/es5), once it is changed, nomodule attribute should be added to .js files
+    }
     scriptTag.async = true;
     scriptTag.src = config.assetUrl;
     return scriptTag;
