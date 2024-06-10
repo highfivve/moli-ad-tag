@@ -141,7 +141,7 @@ export class AssetLoaderService implements IAssetLoaderService {
       scriptTag.type = 'module';
     } else if (config.type === 'nomodule') {
       scriptTag.type = 'text/javascript';
-      scriptTag.type === 'nomodule' && scriptTag.setAttribute('nomodule', '');
+      scriptTag.setAttribute('nomodule', '');
     } else {
       config.assetUrl.endsWith('mjs')
         ? (scriptTag.type = 'module')
