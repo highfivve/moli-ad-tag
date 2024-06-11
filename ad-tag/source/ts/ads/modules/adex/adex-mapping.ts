@@ -1,7 +1,6 @@
 import MoliLogger = MoliRuntime.MoliLogger;
 import { MoliRuntime } from '../../../types/moliRuntime';
-import { Moli } from '../../../../../lib';
-import DfpKeyValueMap = Moli.DfpKeyValueMap;
+import { GoogleAdManagerKeyValueMap } from '../../../types/moliConfig';
 
 export type MappingDefinition =
   | MappingDefinitionToAdexString
@@ -65,7 +64,7 @@ interface MappingDefinitionToAdexString extends ToAdexMapping {
  * Extract Adex map data objects from targeting key/values.
  */
 export const toAdexMapType = (
-  keyValueMap: DfpKeyValueMap,
+  keyValueMap: GoogleAdManagerKeyValueMap,
   mappingDefinition: MappingDefinitionToAdexMap,
   logger: MoliLogger
 ): AdexKeyValueMap | undefined => {
@@ -110,7 +109,7 @@ export const toAdexMapType = (
  * Extract Adex string or number data objects from targeting key/values.
  */
 export const toAdexStringOrNumberType = (
-  keyValueMap: DfpKeyValueMap,
+  keyValueMap: GoogleAdManagerKeyValueMap,
   mappingDefinition: MappingDefinitionToAdexString | MappingDefinitionToAdexNumber,
   logger: MoliLogger
 ): AdexKeyValuePair | undefined => {
@@ -149,7 +148,7 @@ export const toAdexStringOrNumberType = (
  * Extract Adex list objects from targeting key/values.
  */
 export const toAdexListType = (
-  keyValueMap: DfpKeyValueMap,
+  keyValueMap: GoogleAdManagerKeyValueMap,
   mappingDefinition: MappingDefinitionToAdexList,
   logger: MoliLogger
 ): AdexList | undefined => {
@@ -183,7 +182,7 @@ const sortAndToListObject = (arr: Array<string>): AdexListObject =>
 const sortAndJoin = (arr: Array<string>) => arr.sort().join(',');
 
 const extractStringOrNumber = (
-  keyValueMap: DfpKeyValueMap,
+  keyValueMap: GoogleAdManagerKeyValueMap,
   valueType: 'number' | 'string',
   keyToExtract: string
 ) => (valueType === 'number' ? Number(keyValueMap[keyToExtract]) : keyValueMap[keyToExtract]);
