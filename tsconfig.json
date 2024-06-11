@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
     "jsx": "react",
     "jsxFactory": "React.createElement",
     "jsxFragmentFactory": "React.Fragment",
