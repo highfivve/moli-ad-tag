@@ -1,7 +1,8 @@
 // depend on the ad-tag library that was build locally
 import type { MoliRuntime } from '../../lib';
-import '../../lib/bundle/init.js';
-import '../../lib/bundle/instant.js';
+import '../../lib/bundle/init';
+import '../../lib/bundle/instant';
+import '../../lib/bundle/pubstack';
 
 declare const window: MoliRuntime.MoliWindow;
 
