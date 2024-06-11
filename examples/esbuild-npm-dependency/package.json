@@ -1,7 +1,7 @@
 {
-  "name": "minimal",
+  "name": "esbuild-npm-dependency",
   "version": "1.0.0",
-  "description": "Ad Tag without any modules",
+  "description": "Ad Tag build with esbuild and moli as npm dependency",
   "main": "index.js",
   "scripts": {
     "build": "node build.mjs build",
@@ -9,8 +9,9 @@
   },
   "keywords": [
     "publisher",
-    "test",
-    "plain"
+    "example",
+    "esbuild",
+    "npm"
   ],
   "author": "Muki",
   "license": "UNLICENSED",
