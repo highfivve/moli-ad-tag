@@ -89,6 +89,76 @@
       "description": "Add targeting information from the ad tag. Usually these are static values. Dynamic values should be added via the MoliTag API `setTargeting(key, value)` or `addLabel(label)`.",
       "type": "object"
     },
+    "AdexAppConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "adexMobileTagId": {
+          "description": "extra tag id for the mobile endpoint data if distinction is wanted/necessary",
+          "type": "string"
+        },
+        "advertiserIdKey": {
+          "description": "key within the moli config keyValues in which the advertising id can be found",
+          "type": "string"
+        },
+        "clientTypeKey": {
+          "description": "key within the moli config keyValues in which the client type is defined",
+          "type": "string"
+        }
+      },
+      "required": [
+        "clientTypeKey",
+        "advertiserIdKey"
+      ],
+      "type": "object"
+    },
+    "Blocklist": {
+      "additionalProperties": false,
+      "properties": {
+        "urls": {
+          "items": {
+            "$ref": "#/definitions/BlocklistEntry"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "urls"
+      ],
+      "type": "object"
+    },
+    "BlocklistEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "matchType": {
+          "description": "Defines how the pattern should be matched against the url\n\n- `regex` - transform the pattern into a regex and runs `regex.test(url)`\n- `contains` - checks if the url contains the given pattern string\n- `exact` - checks if the url exactly matches the given pattern string",
+          "enum": [
+            "regex",
+            "contains",
+            "exact"
+          ],
+          "type": "string"
+        },
+        "pattern": {
+          "description": "A regex pattern for the complete href of the page",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pattern",
+        "matchType"
+      ],
+      "type": "object"
+    },
+    "BlocklistProvider": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/StaticBlocklistProvider"
+        },
+        {
+          "$ref": "#/definitions/DynamicBlocklistProvider"
+        }
+      ]
+    },
     "CSSDeletionMethod": {
       "additionalProperties": false,
       "description": "== Cleanup Module ==\n\nCleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.\n\nThe configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted or JS as a string that will be evaluated by the module in order to remove these elements.",
@@ -133,6 +203,25 @@
         "bidder",
         "domId",
         "deleteMethod"
+      ],
+      "type": "object"
+    },
+    "DynamicBlocklistProvider": {
+      "additionalProperties": false,
+      "description": "The dynamic configuration provider that lets you update entries without updating the ad tag",
+      "properties": {
+        "endpoint": {
+          "description": "Fetch the blocklist json from the specified endpoint",
+          "type": "string"
+        },
+        "provider": {
+          "const": "dynamic",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "endpoint"
       ],
       "type": "object"
     },
@@ -218,6 +307,124 @@
         "labelsSupported"
       ],
       "type": "object"
+    },
+    "MappingDefinition": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "adexValueType": {
+              "const": "string",
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            },
+            "defaultValue": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "adexValueType",
+            "attribute",
+            "key"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "adexValueType": {
+              "const": "number",
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            },
+            "defaultValue": {
+              "type": "number"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "adexValueType",
+            "attribute",
+            "key"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "adexValueType": {
+              "const": "map",
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            },
+            "defaultValue": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "key": {
+              "type": "string"
+            },
+            "valueKey": {
+              "type": "string"
+            },
+            "valueType": {
+              "enum": [
+                "number",
+                "string"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "adexValueType",
+            "attribute",
+            "key",
+            "valueKey",
+            "valueType"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "adexValueType": {
+              "const": "list",
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            },
+            "defaultValue": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "key": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "adexValueType",
+            "attribute",
+            "key"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "MoliConfig": {
       "additionalProperties": false,
@@ -350,6 +557,24 @@
       "required": [
         "mediaQuery",
         "sizesSupported"
+      ],
+      "type": "object"
+    },
+    "StaticBlocklistProvider": {
+      "additionalProperties": false,
+      "description": "A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added",
+      "properties": {
+        "blocklist": {
+          "$ref": "#/definitions/Blocklist"
+        },
+        "provider": {
+          "const": "static",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "blocklist"
       ],
       "type": "object"
     },
@@ -972,8 +1197,24 @@
         "adReload": {
           "$ref": "#/definitions/modules.adreload.AdReloadModuleConfig"
         },
+        "adex": {
+          "$ref": "#/definitions/modules.adex.AdexConfig"
+        },
+        "blocklist": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/modules.blocklist.BlocklistUrlsBlockingConfig"
+            },
+            {
+              "$ref": "#/definitions/modules.blocklist.BlocklistUrlsKeyValueConfig"
+            }
+          ]
+        },
         "cleanup": {
           "$ref": "#/definitions/modules.cleanup.CleanupModuleConfig"
+        },
+        "confiant": {
+          "$ref": "#/definitions/modules.confiant.ConfiantConfig"
         },
         "pubstack": {
           "$ref": "#/definitions/modules.pubstack.PubstackConfig"
@@ -982,6 +1223,46 @@
           "$ref": "#/definitions/modules.skin.SkinModuleConfig"
         }
       },
+      "type": "object"
+    },
+    "modules.adex.AdexConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "adexCustomerId": {
+          "description": "Provided by your ADEX account manager.",
+          "type": "string"
+        },
+        "adexTagId": {
+          "description": "Provided by your ADEX account manager.",
+          "type": "string"
+        },
+        "appConfig": {
+          "$ref": "#/definitions/AdexAppConfig",
+          "description": "If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "mappingDefinitions": {
+          "description": "extraction and conversion rules to produce Adex compatible data from key/value targeting.",
+          "items": {
+            "$ref": "#/definitions/MappingDefinition"
+          },
+          "type": "array"
+        },
+        "spaMode": {
+          "description": "For single page apps, enable spaMode. Tracking is then executed once per configuration cycle. In regular mode, tracking is only executed once.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "adexCustomerId",
+        "adexTagId",
+        "enabled",
+        "mappingDefinitions",
+        "spaMode"
+      ],
       "type": "object"
     },
     "modules.adreload.AdReloadModuleConfig": {
@@ -1067,6 +1348,62 @@
       },
       "type": "object"
     },
+    "modules.blocklist.BlocklistUrlsBlockingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "blocklist": {
+          "$ref": "#/definitions/BlocklistProvider",
+          "description": "blocklist content"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "mode": {
+          "const": "block",
+          "description": "`block` - this mode blocks ad requests entirely `key-value` - sets a specified key value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "blocklist",
+        "enabled",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.BlocklistUrlsKeyValueConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "blocklist": {
+          "$ref": "#/definitions/BlocklistProvider"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "isBlocklistedValue": {
+          "description": "The value that is sent when a URL is listed.\n\ndefault is `true`",
+          "type": "string"
+        },
+        "key": {
+          "description": "The key that is used for the key value",
+          "type": "string"
+        },
+        "mode": {
+          "const": "key-value",
+          "description": "`block` - this mode blocks ad requests entirely `key-value` - sets a specified key value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "blocklist",
+        "enabled",
+        "key",
+        "mode"
+      ],
+      "type": "object"
+    },
     "modules.cleanup.CleanupModuleConfig": {
       "additionalProperties": false,
       "properties": {
@@ -1084,6 +1421,29 @@
       },
       "required": [
         "configs",
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.confiant.ConfiantConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "assetUrl": {
+          "description": "Confiant loads a single javascript file that contains all the configuration properties",
+          "type": "string"
+        },
+        "checkGVLID": {
+          "default": false,
+          "description": "Confiant has no defined purposes (state 2023-05-08) and some CMPs (Sourcepoint) exclude it from TC String. This makes it impossible to check if consent is given or not.\n\nIf Confiant decides to add a purpose, we can use this flag to immediately turn on the check again. As a safeguard purpose-1 is mandatory to load confiant.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "assetUrl",
         "enabled"
       ],
       "type": "object"
@@ -1192,6 +1552,26 @@
     "modules.skin.SkinConfig": {
       "additionalProperties": false,
       "properties": {
+        "adReload": {
+          "additionalProperties": false,
+          "description": "If set, the skin of the configured bidder reloads after the given interval (in ms).",
+          "properties": {
+            "allowed": {
+              "items": {
+                "$ref": "#/definitions/prebidjs.BidderCode"
+              },
+              "type": "array"
+            },
+            "intervalMs": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "intervalMs",
+            "allowed"
+          ],
+          "type": "object"
+        },
         "blockedAdSlotDomIds": {
           "description": "dom ids of the ad slots that should not be requested when a just premium skin appears in the bid responses.\n\nDepending on the wallpaperAdSlot these are usually skyscrapers left and right and if there's a specific wallpaper ad slot the header as well.",
           "items": {
