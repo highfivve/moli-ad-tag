@@ -417,9 +417,9 @@ export class GlobalConfig
                     </label>
                   </div>
 
-                  {config.slots.map(slot =>
+                  {config.slots.map((slot, index) =>
                     this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
-                      <div key={slot.domId}>
+                      <div key={index}>
                         <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
                         <strong>{slot.domId}</strong>
                         <AdSlotConfig
@@ -610,7 +610,7 @@ export class GlobalConfig
                     </div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Default Rates, USD → EUR</TagLabel>
-                      <Tag>{config.prebid.config.currency.defaultRates.USD.EUR.toString()}</Tag>
+                      <Tag>{config.prebid.config.currency.defaultRates.USD.EUR?.toString()}</Tag>
                     </div>
                   </div>
                 )}
@@ -785,8 +785,8 @@ export class GlobalConfig
 
   private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): JSX.Element => {
     return (
-      <Fragment key={Math.random()}>
-        {Object.keys(moduleConfig).map(key => {
+      <Fragment>
+        {Object.keys(moduleConfig).map((key, index) => {
           const configValue = moduleConfig[key];
           const configValueType: 'other' | 'object' | 'array' =
             typeof configValue === 'object'
@@ -797,7 +797,7 @@ export class GlobalConfig
 
           return (
             <div
-              key={key}
+              key={index}
               className={classList('MoliDebug-tagContainer', [
                 subEntry,
                 'MoliDebug-tagContainer--subEntry'
@@ -813,13 +813,15 @@ export class GlobalConfig
                       this.unwrapConfig(value as Object, true)
                     ) : (
                       <Tag variant="green" key={index}>
-                        {(value as any).toString()}
+                        {value !== undefined ? (value as any).toString() : 'undefined'}
                       </Tag>
                     )
                   )
                 ))}
               {configValueType === 'object' && this.unwrapConfig(configValue, true)}
-              {configValueType === 'other' && <Tag variant="green">{configValue.toString()}</Tag>}
+              {configValueType === 'other' && configValue !== undefined && (
+                <Tag variant="green">{configValue.toString()}</Tag>
+              )}
             </div>
           );
         })}
@@ -867,8 +869,8 @@ export class GlobalConfig
     return (
       <div className="MoliDebug-tagContainer">
         {labels &&
-          labels.map(label => (
-            <Tag key={label} variant="blue" spacing="medium">
+          labels.map((label, index) => (
+            <Tag key={index} variant="blue" spacing="medium">
               {label}
             </Tag>
           ))}

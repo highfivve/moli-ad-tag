@@ -1172,6 +1172,11 @@ export namespace modules {
        * @default false
        */
       readonly destroySkinSlot?: boolean;
+
+      /**
+       * If set, the skin of the configured bidder reloads after the given interval (in ms).
+       */
+      readonly adReload?: { intervalMs: number; allowed: prebidjs.BidderCode[] };
     };
   }
 

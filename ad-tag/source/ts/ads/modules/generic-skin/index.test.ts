@@ -86,7 +86,7 @@ describe('Skin Module', () => {
       getSlotElementId(): string {
         return domId;
       }
-    } as googletag.IAdSlot & { domId: string });
+    }) as googletag.IAdSlot & { domId: string };
 
   const auctionObject = (from: prebidjs.IBidResponsesMap): prebidjs.event.AuctionObject => ({
     auctionId: 'xxxx-xxxx-xxxx-xxxx',
@@ -120,7 +120,7 @@ describe('Skin Module', () => {
       currency: 'EUR',
       originalCurrency: 'EUR',
       netRevenue: true
-    } as prebidjs.IGenericBidResponse);
+    }) as prebidjs.IGenericBidResponse;
 
   const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
     genericBidResponse(prebidjs.DSPX, cpm);
@@ -221,7 +221,7 @@ describe('Skin Module', () => {
         currency: 'EUR',
         originalCurrency: 'EUR',
         netRevenue: true
-      } as prebidjs.IGumGumBidResponse);
+      }) as prebidjs.IGumGumBidResponse;
 
     describe('gumgum mobile skin', () => {
       const config: modules.skin.SkinConfig = {
@@ -327,7 +327,7 @@ describe('Skin Module', () => {
         blockedAdSlotDomIds: ['sky-slot'],
         hideSkinAdSlot: false,
         hideBlockedSlots: false,
-        enableCpmComparison: false
+        enableCpmComparison: true
       };
       it('should return `BlockOtherSlots` if any response was found', () => {
         const skinConfigEffect = module.getConfigEffect(
@@ -357,6 +357,24 @@ describe('Skin Module', () => {
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
+      });
+
+      it('should return `BlockSkinSlot`if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
+        const skinConfigEffect = module.getConfigEffect(
+          config,
+          auctionObject({
+            'wp-slot': {
+              bids: [genericBidResponse('pubmatic', 5)]
+            },
+            'sky-slot': {
+              bids: [genericBidResponse('openx', 6.5), genericBidResponse('openx', 0.49)]
+            }
+          }),
+          noopLogger,
+          undefined
+        );
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
       });
     });
 
@@ -437,7 +455,7 @@ describe('Skin Module', () => {
             ]
           },
           'sky-slot': {
-            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
+            bids: [genericBidResponse('openx', 1.5), genericBidResponse('openx', 0.49)]
           },
           'sky-slot-2': {
             bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
@@ -452,6 +470,7 @@ describe('Skin Module', () => {
           trackSkinCpmLow
         );
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
+        expect(trackSkinCpmLow).to.have.been.calledOnce;
         expect(trackSkinCpmLow).to.have.been.calledOnceWithExactly(
           {
             skin: 1.5,
@@ -484,7 +503,7 @@ describe('Skin Module', () => {
               bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
             },
             'sky-slot': {
-              bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
+              bids: [genericBidResponse('openx', 1.5), genericBidResponse('openx', 0.49)]
             },
             'sky-slot-2': {
               bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
@@ -496,6 +515,38 @@ describe('Skin Module', () => {
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
         expect(trackSkinCpmLow).to.have.been.calledOnce;
+      });
+
+      it('should return `BlockOtherSlots` if the skin bid is higher than the bids on the to-be-removed slots combined', () => {
+        const configuredModule = new Skin();
+
+        const config: modules.skin.SkinConfig = {
+          formatFilter: [{ bidder: prebidjs.DSPX }],
+          skinAdSlotDomId: 'wp-slot',
+          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: true
+        };
+
+        const skinConfigEffect = configuredModule.getConfigEffect(
+          config,
+          auctionObject({
+            'wp-slot': {
+              bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
+            },
+            'sky-slot': {
+              bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 0.49)]
+            },
+            'sky-slot-2': {
+              bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
+            }
+          }),
+          noopLogger,
+          undefined
+        );
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
       });
     });
 

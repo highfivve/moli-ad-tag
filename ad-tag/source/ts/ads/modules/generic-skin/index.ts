@@ -83,7 +83,7 @@ import {
 } from '../../adPipeline';
 import { flatten, isNotNull, uniquePrimitiveFilter } from '../../../util/arrayUtils';
 import { googletag } from '../../../types/googletag';
-import { modules } from '../../../types/moliConfig';
+import { behaviour, modules } from '../../../types/moliConfig';
 
 export enum SkinConfigEffect {
   BlockSkinSlot = 'BlockSkinSlot',
@@ -151,7 +151,6 @@ export class Skin implements IModule {
     logger: MoliRuntime.MoliLogger,
     trackSkinCpmLow: modules.skin.SkinModuleConfig['trackSkinCpmLow']
   ): SkinConfigEffect => {
-    // const skinBidResponse = auctionObject[config.skinAdSlotDomId];
     const skinBidResponses = auctionObject.bidsReceived?.filter(
       bid => bid.adUnitCode === config.skinAdSlotDomId
     );
@@ -193,10 +192,7 @@ export class Skin implements IModule {
     const nonSkinBids = flatten(
       adSlotIds
         // filter out all dom ids that aren't affected by this skin.
-        // the skin must be included to allow for further checking later
-        .filter(
-          domId => [...config.blockedAdSlotDomIds, config.skinAdSlotDomId].indexOf(domId) > -1
-        )
+        .filter(domId => config.blockedAdSlotDomIds.indexOf(domId) > -1)
         // collect all bid responses for these ad slot dom ids
         .map(domId => ({
           adSlotId: domId,
@@ -206,7 +202,6 @@ export class Skin implements IModule {
         .map(bidObject =>
           bidObject
             .bids! // filter out skin bid to not include it in the non-skin cpm sum
-            .filter(bid => !isSkinBid(bid))
             // highest cpm bid goes first
             .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
             // take(1)
@@ -325,6 +320,53 @@ export class Skin implements IModule {
               );
               node.style.setProperty('display', 'none');
             });
+        }
+        const highestSkinBid = auctionObject.bidsReceived
+          ?.filter(bid => bid.adUnitCode === skinConfig.skinAdSlotDomId)
+          .sort((bid1, bid2) => bid2.cpm - bid1.cpm)[0];
+
+        // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
+        // the cleanup-module takes care of deleting the previous wallpaper
+        if (
+          skinConfig.adReload?.intervalMs &&
+          highestSkinBid?.bidder &&
+          skinConfig.adReload.allowed.includes(highestSkinBid.bidder)
+        ) {
+          const loadingBehaviorOfSlotsToRefresh = ctx.config.slots
+            .filter(
+              slots =>
+                slots.domId === skinConfig.skinAdSlotDomId ||
+                skinConfig.blockedAdSlotDomIds.includes(slots.domId)
+            )
+            .map(slot => slot.behaviour.loaded);
+
+          const allSlotsHaveSameLoadingBehavior = loadingBehaviorOfSlotsToRefresh.every(
+            loadingBehavior => loadingBehavior === loadingBehaviorOfSlotsToRefresh[0]
+          );
+
+          // only reload if blocked slots and skin slot all have the same loading behavior
+          if (
+            allSlotsHaveSameLoadingBehavior &&
+            loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
+          ) {
+            ctx.window.setTimeout(() => {
+              ctx.window.moli.refreshAdSlot(
+                [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
+                {
+                  loaded: loadingBehaviorOfSlotsToRefresh[0] as Exclude<
+                    behaviour.ISlotLoading['loaded'],
+                    'infinite'
+                  >
+                }
+              );
+            }, skinConfig.adReload?.intervalMs);
+          } else {
+            ctx.logger.error(
+              'SkinModule',
+              'Ad reload not possible because of different loading behaviors of the slots that should be refreshed:',
+              loadingBehaviorOfSlotsToRefresh
+            );
+          }
         }
       } else if (skinConfig.enableCpmComparison) {
         ctx.logger.debug(
