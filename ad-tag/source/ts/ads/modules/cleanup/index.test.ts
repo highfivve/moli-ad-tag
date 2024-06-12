@@ -6,12 +6,12 @@ import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
 import { dummySchainConfig } from '../../../stubs/schainStubs';
 import { expect } from 'chai';
 import { fullConsent } from '../../../stubs/consentStubs';
-import { createMoliTag } from "../../moli";
+import { createMoliTag } from '../../moli';
 import { AdSlot, modules, MoliConfig } from '../../../types/moliConfig';
-import { googletag } from "../../../types/googletag";
+import { googletag } from '../../../types/googletag';
 import IAdSlot = googletag.IAdSlot;
-import { MoliRuntime } from "../../../types/moliRuntime";
-import { AdPipelineContext } from "../../adPipeline";
+import { MoliRuntime } from '../../../types/moliRuntime';
+import { AdPipelineContext } from '../../adPipeline';
 
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();

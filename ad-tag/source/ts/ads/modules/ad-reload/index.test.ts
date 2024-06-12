@@ -536,7 +536,7 @@ describe('Moli Ad Reload Module', () => {
         advertiserId: 1,
         campaignId: 2,
         yieldGroupIds: [3]
-      } as ISlotRenderEndedEvent);
+      }) as ISlotRenderEndedEvent;
 
     const testCases: IncludesConfig[] = [
       {

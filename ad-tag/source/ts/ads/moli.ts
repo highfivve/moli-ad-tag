@@ -229,7 +229,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function getPageTargeting(): Readonly<Targeting> {
     return {
       keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
-      labels: [ ...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels ],
+      labels: [...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels],
       adUnitPathVariables: {
         ...state.config?.targeting?.adUnitPathVariables,
         ...state.runtimeConfig.adUnitPathVariables
@@ -361,7 +361,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               module.config()
             );
           } catch (e) {
-            log.error('MoliGlobal', `failed to configure ${module.moduleType} module ${module.name}`, e);
+            log.error(
+              'MoliGlobal',
+              `failed to configure ${module.moduleType} module ${module.name}`,
+              e
+            );
           }
         });
 
@@ -575,7 +579,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     domId: string | string[],
     options?: RefreshAdSlotsOptions
   ): Promise<'queued' | 'refreshed'> {
-    const domIds = typeof domId === 'string' ? [ domId ] : domId;
+    const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
       case 'configurable':
       case 'configured': {
@@ -656,7 +660,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             )
           };
           return adService
-            .refreshAdSlots([ domId ], state.config, state.runtimeConfig)
+            .refreshAdSlots([domId], state.config, state.runtimeConfig)
             .then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
@@ -680,7 +684,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           )
         };
         return adService
-          .refreshAdSlots([ domId ], state.config, state.runtimeConfig)
+          .refreshAdSlots([domId], state.config, state.runtimeConfig)
           .then(() => 'refreshed');
       }
       default: {
