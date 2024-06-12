@@ -33,9 +33,10 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        working-directory: examples/5-plain
+        working-directory: examples/esbuild
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Build
+        working-directory: examples/esbuild
         run: npm run build
