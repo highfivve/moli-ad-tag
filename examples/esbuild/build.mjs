@@ -31,6 +31,7 @@ switch (cmd) {
       target: target,
       outfile: 'dist/moli.mjs',
     });
+    await context.dispose();
     break
   case 'watch':
     await context.watch();
