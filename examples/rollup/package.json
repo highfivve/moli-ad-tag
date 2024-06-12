@@ -4,7 +4,7 @@
   "description": "Ad Tag build with rollup",
   "main": "index.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "BUILD_TARGET=production rollup -c",
     "start": "rollup -c --watch"
   },
   "keywords": [
@@ -16,6 +16,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@rollup/plugin-html": "^1.0.3",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "rollup": "^4.18.0",
