@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build examples
 
 on:
   push:
@@ -30,6 +30,11 @@ jobs:
           node-version: 20
           registry-url: https://npm.pkg.github.com
           scope: '@highfivve'
+
+      - name: Build ad tag lib
+        run: npm install && npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies
         run: npm install
