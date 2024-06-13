@@ -3,19 +3,27 @@ import html, { makeHtmlAttributes } from "@rollup/plugin-html";
 import terser from "@rollup/plugin-terser";
 import serve from 'rollup-plugin-serve';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import copy from 'rollup-plugin-copy'
+
 
 const isProduction = process.env.BUILD_TARGET === 'production';
 
 console.log('isProduction:', isProduction);
 
 const htmlPlugin = html({
+  meta: [
+    { charset: 'utf-8' },
+    { name: 'viewport', content: 'width=device-width' }
+  ],
   template: ({attributes, meta, files, publicPath, title}) => {
     // copied from the default template and added files.mjs
     // https://github.com/rollup/plugins/blob/master/packages/html/src/index.ts
     const scripts = [ ...(files.js || []), ...(files.mjs || []) ]
       .map(({fileName}) => {
         const attrs = makeHtmlAttributes(attributes.script);
-        return `<script src="${publicPath}${fileName}"${attrs}></script>`;
+
+        // Adding data attributes to the script tag for the configFromEndpoint implementation
+        return `<script id="moli-ad-tag" src="${publicPath}${fileName}"${attrs} data-version="prod" data-pub-code="foo" data-endpoint="localhost:8000"></script>`;
       })
       .join('\n');
 
@@ -58,7 +66,14 @@ export default {
   plugins: [ nodeResolve(), typescript(),
     ...(isProduction ?
         [ terser() ] :
-        [ htmlPlugin, serve({contentBase: 'dist', port: 8000,}) ]
+        [ htmlPlugin,
+          copy({
+            targets: [
+              { src: 'prod.json', dest: 'dist/foo' },
+            ]
+          }),
+          serve({contentBase: 'dist', port: 8000,})
+        ]
     )
   ]
 };
