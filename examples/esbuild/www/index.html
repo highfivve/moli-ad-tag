@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Page</title>
+
+  <!-- see https://tailwindcss.com/docs/installation/play-cdn -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="p-4">
+  <h1>Demo page</h1>
+  <div class="h-60 w-80 bg-gray-300" id="content_1">
+
+  </div>
+
+  <script async type="module" src="moli.mjs" data-pub-code="foo" data-version="prod" data-endpoint="localhost:8000" id="moli-ad-tag"></script>
+
+  <script>
+    // live reload: https://esbuild.github.io/api/#live-reload
+    new EventSource('/esbuild').addEventListener('change', () => location.reload())
+  </script>
+</body>
+</html>
