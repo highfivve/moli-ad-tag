@@ -1,11 +1,24 @@
+# Ad Tag Library
 
-# Building a publisher ad tag
+This library provides a set of components to orchestrate Google Ad Manager (GAM), Prebid and Amazon TAM.
 
-Add at least the `ad-tag` as a dependency.
+## Building a bundle
+
+An ad tag bundle is a set of modules bundled together in a single javascript file. This file can be included in a website to display ads.
+In order to create a bundle you need
+
+1. A JSON configuration file that contains the modules that should be included. All modules are in [ad-tag/source/ts/bundle](ad-tag/source/ts/bundle).
+   You can find examples bundles in [bundles](bundles).
+2. This repository cloned and installed at the version you want to build.
+
+Then run
 
 ```bash
-$ yarn add @highfivve/ad-tag
+npm ci
+npx ts-node bundle.ts --output adtag.mjs --config <path-to-config.json>
 ```
+
+This will generate an ES6 bundle.
 
 !! If you are using node.js 17+ you currently need to do this !!
 
@@ -14,15 +27,6 @@ export NODE_OPTIONS=--openssl-legacy-provider
 ```
 
 See [https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported](https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported)
-
-## moli release script
-
-Moli provides a release script that helps you build releases and a summary page.
-Add the binary with:
-
-```bash
-$ yarn add @highfivve/moli-release
-```
 
 ### Authentication
 [See github docs on authentication](https://docs.github.com/en/free-pro-team@latest/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages)
@@ -61,7 +65,7 @@ If you want to test code changes within the examples you have to start the modul
 
 ```bash
 # rebuild the module you change, e.g. ad-tag
-cd examples/minimal
+cd examples/esbuild
 npm start
 ```
 
