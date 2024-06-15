@@ -14,6 +14,16 @@ import type { MoliRuntime } from '../types/moliRuntime';
  * - `data-version` (default is `prod`) - The configuration version that should be loaded. Usually this is either `prod` or `staging`.
  *    You can also use a specific version number, like `15`.
  * - `data-endpoint` (optional) - The endpoint that should be called to load the configuration.
+ * - `data-endpoint-fallback` (optional) - The endpoint that should be called to load the configuration.
+ *
+ * ```html
+ * <script id="moli-ad-tag" src="path/to/your/ad-tag-bundle.js"
+ *         data-pub-code="yourCode"
+ *         data-version="prod"
+ *         data-endpoint="cdn.h5v.eu/publisher/config"
+ *         data-endpoint-fallback="cdn-fallback.h5v.eu/publisher/config"
+ * ></script>
+ * ```
  *
  * @module
  */
@@ -26,11 +36,17 @@ if (currentScript) {
   const publisherCode = currentScript.getAttribute('data-pub-code');
   const version = currentScript.getAttribute('data-version') ?? 'prod';
   const endpoint = currentScript.getAttribute('data-endpoint') ?? 'cdn.h5v.eu/publisher/config';
+  const fallback =
+    currentScript.getAttribute('data-endpoint-fallback') ?? 'cdn-fallback.h5v.eu/publisher/config';
 
   if (publisherCode) {
     const url = `//${endpoint}/${publisherCode}/${version}.json`;
     fetch(url)
       .then(response => response.json())
+      .catch(error => {
+        console.error(`Failed to load configuration from ${url}. Using fallback`, error);
+        return fetch(`//${fallback}/${publisherCode}/${version}.json`);
+      })
       .then(config => window.moli.configure(config))
       .catch(error => console.error(`Failed to load configuration from ${url}:`, error));
   } else {
