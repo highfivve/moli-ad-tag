@@ -1,5 +1,5 @@
 import type { MoliRuntime } from '../types/moliRuntime';
-import { Pubstack } from '../ads/modules/pubstack';
+import { Confiant } from '../ads/modules/confiant';
 
 declare const window: MoliRuntime.MoliWindow;
-window.moli.registerModule(new Pubstack());
+window.moli.registerModule(new Confiant());

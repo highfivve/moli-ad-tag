@@ -1,6 +1,12 @@
 {
   "modules": [
+    "adex",
+    "adReload",
+    "blocklistUrls",
+    "cleanup",
+    "confiant",
     "pubstack",
+    "skin",
     "instant",
     "configureFromEndpoint"
   ]

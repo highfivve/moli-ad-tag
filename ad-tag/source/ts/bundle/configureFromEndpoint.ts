@@ -1,6 +1,5 @@
 import type { MoliRuntime } from '../types/moliRuntime';
 import { QueryParameters } from '../util/queryParameters';
-import { parseQueryString } from '../util/query';
 import { resolveOverrides } from '../util/resolveOverrides';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 
