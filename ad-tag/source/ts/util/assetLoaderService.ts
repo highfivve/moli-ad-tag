@@ -1,5 +1,4 @@
 import domready from '../util/domready';
-import { IPerformanceMeasurementService, createPerformanceService } from './performanceService';
 
 /**
  * @internal
@@ -37,7 +36,7 @@ export interface IAssetLoaderService {
    * Loads the script and append it to the DOM.
    *
    * @param config
-   * @param parent [optional] the element to which the assetLoader should append the asset. defaults to document.head.
+   * @param parent - [optional] the element to which the assetLoader should append the asset. defaults to document.head.
    */
   loadScript(config: ILoadAssetParams, parent?: Element): Promise<void>;
 
@@ -54,30 +53,23 @@ export interface IAssetLoaderService {
  * @internal
  */
 export class AssetLoaderService implements IAssetLoaderService {
-  constructor(
-    private readonly performanceService: IPerformanceMeasurementService,
-    private readonly window: Window
-  ) {}
+  constructor(private readonly window: Window) {}
 
   public loadScript(
     config: ILoadAssetParams,
     parent: Element = this.window.document.head!
   ): Promise<void> {
-    return this.awaitDomReady()
-      .then(() => this.startPerformance(config.name))
-      .then(() => {
-        switch (config.loadMethod) {
-          case AssetLoadMethod.FETCH:
-            return this.loadAssetViaFetch(config, parent);
-          case AssetLoadMethod.TAG:
-            return this.loadAssetViaTag(config, parent);
-        }
-      })
-      .finally(() => this.measurePerformance(config.name));
+    return this.awaitDomReady().then(() => {
+      switch (config.loadMethod) {
+        case AssetLoadMethod.FETCH:
+          return this.loadAssetViaFetch(config, parent);
+        case AssetLoadMethod.TAG:
+          return this.loadAssetViaTag(config, parent);
+      }
+    });
   }
 
   public loadJson<T>(name: string, assetUrl: string): Promise<T> {
-    this.startPerformance(name);
     return this.window
       .fetch(assetUrl, {
         method: 'GET',
@@ -87,7 +79,6 @@ export class AssetLoaderService implements IAssetLoaderService {
         }
       })
       .then(response => {
-        this.measurePerformance(name);
         return response.ok
           ? response.json()
           : response
@@ -95,7 +86,6 @@ export class AssetLoaderService implements IAssetLoaderService {
               .then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
       })
       .catch(error => {
-        this.measurePerformance(name);
         return Promise.reject(error);
       });
   }
@@ -147,19 +137,10 @@ export class AssetLoaderService implements IAssetLoaderService {
       domready(this.window, resolve);
     });
   }
-
-  private startPerformance(name: string): void {
-    this.performanceService.mark(`${name}_load_start`);
-  }
-
-  private measurePerformance(name: string): void {
-    this.performanceService.mark(`${name}_load_stop`);
-    this.performanceService.measure(`${name}_load_time`, `${name}_load_start`, `${name}_load_stop`);
-  }
 }
 
 /**
  * @internal
  */
 export const createAssetLoaderService = (window: Window): IAssetLoaderService =>
-  new AssetLoaderService(createPerformanceService(window), window);
+  new AssetLoaderService(window);
