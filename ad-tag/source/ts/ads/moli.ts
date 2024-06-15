@@ -268,14 +268,14 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
 
         // if an override is available, update the environment in the runtime config
         if (envOverride) {
-          state.runtimeConfig.environment = envOverride.environment;
+          state.runtimeConfig.environment = envOverride.value;
         }
 
         // If the query params contain an environment override, save it in the session storage,
         // so that the override remains even if the query param is gone. This is helpful on SPAs or
         // if the site filters out query params.
         if (envOverride?.source === 'queryParam') {
-          setEnvironmentOverrideInStorage(envOverride.environment, window.sessionStorage);
+          setEnvironmentOverrideInStorage(envOverride.value, window.sessionStorage);
         }
 
         state = {

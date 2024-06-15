@@ -1,4 +1,8 @@
 import type { MoliRuntime } from '../types/moliRuntime';
+import { QueryParameters } from '../util/queryParameters';
+import { parseQueryString } from '../util/query';
+import { resolveOverrides } from '../util/resolveOverrides';
+import { BrowserStorageKeys } from '../util/browserStorageKeys';
 
 /**
  * # Configure from endpoint
@@ -32,9 +36,26 @@ declare const window: MoliRuntime.MoliWindow;
 const currentScript: HTMLElement | SVGScriptElement | null =
   window.document.currentScript ?? document.getElementById('moli-ad-tag');
 
+// fetch overrides if available. We use the first value if multiple are available, keeping the default precedence order,
+// which is query param > localStorage > sessionStorage.
+const pubCodeOverride = resolveOverrides(
+  window,
+  QueryParameters.moliPubCode,
+  BrowserStorageKeys.moliPubCode
+)[0]?.value;
+
+const versionOverride = resolveOverrides(
+  window,
+  QueryParameters.moliVersion,
+  BrowserStorageKeys.moliVersion
+)[0]?.value;
+
+// if we can't detect the current script, we can't load the configuration and something is really off
 if (currentScript) {
-  const publisherCode = currentScript.getAttribute('data-pub-code');
-  const version = currentScript.getAttribute('data-version') ?? 'prod';
+  // publisher code and version can be overridden via query parameters
+  const publisherCode = pubCodeOverride ?? currentScript.getAttribute('data-pub-code');
+  const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'prod';
+
   const endpoint = currentScript.getAttribute('data-endpoint') ?? 'cdn.h5v.eu/publisher/config';
   const fallback =
     currentScript.getAttribute('data-endpoint-fallback') ?? 'cdn-fallback.h5v.eu/publisher/config';
