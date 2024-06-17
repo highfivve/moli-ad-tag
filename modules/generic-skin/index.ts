@@ -449,6 +449,7 @@ export class Skin implements IModule {
             const highestSkinBid = bidResponses[skinConfig.skinAdSlotDomId]?.bids.sort(
               (bid1, bid2) => bid2.cpm - bid1.cpm
             )[0];
+            let timeoutId: number | null = null;
 
             // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
             // the cleanup-module takes care of deleting the previous wallpaper
@@ -474,7 +475,12 @@ export class Skin implements IModule {
                 allSlotsHaveSameLoadingBehavior &&
                 loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
               ) {
-                this.window.setTimeout(() => {
+                // Clear the last skin timeout if it exists (e.g. after navigation in a SPA)
+                if (timeoutId) {
+                  clearTimeout(timeoutId);
+                }
+
+                timeoutId = this.window.setTimeout(() => {
                   (this.window as Window & MoliWindow).moli.refreshAdSlot(
                     [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
                     {
