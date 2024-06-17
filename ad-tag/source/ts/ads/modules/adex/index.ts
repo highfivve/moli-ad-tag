@@ -85,7 +85,7 @@ import {
   toAdexStringOrNumberType
 } from './adex-mapping';
 import { isNotNull } from '../../../util/arrayUtils';
-import { GoogleAdManagerKeyValueMap, modules, Targeting } from '../../../types/moliConfig';
+import { modules } from '../../../types/moliConfig';
 import { sendAdvertisingID } from './sendAdvertisingId';
 import AdexConfig = modules.adex.AdexConfig;
 import { tcfapi } from '../../../types/tcfapi';

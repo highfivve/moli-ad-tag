@@ -8,16 +8,15 @@ import {
   toAdexMapType,
   toAdexStringOrNumberType
 } from './adex-mapping';
-import { Moli } from '../../../../../lib';
-import DfpKeyValueMap = Moli.DfpKeyValueMap;
 import { noopLogger } from '../../../stubs/moliStubs';
 import sinonChai from 'sinon-chai';
+import { GoogleAdManagerKeyValueMap } from '../../../types/moliConfig';
 
 use(sinonChai);
 
 describe('toAdexMapType', () => {
   it('should produce an AdexKeyValueMap with string value out of a DfpKeyValueMap', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannel: 'Pregnancy'
     };
@@ -37,7 +36,7 @@ describe('toAdexMapType', () => {
   });
 
   it('should produce an AdexKeyValueMap with number value out of a DfpKeyValueMap', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannelVersion: '1'
     };
@@ -57,7 +56,7 @@ describe('toAdexMapType', () => {
   });
 
   it('should correctly treat zero values in number mode', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannelVersion: '0'
     };
@@ -77,7 +76,7 @@ describe('toAdexMapType', () => {
   });
 
   it('should sort and join mapped values into a comma separated string', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannel: ['Pregnancy', 'ChildHealth']
     };
@@ -97,7 +96,7 @@ describe('toAdexMapType', () => {
   });
 
   it("shouldn't produce anything if the valueKey property is undefined", () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical'
     };
     const result = toAdexMapType(
@@ -115,7 +114,7 @@ describe('toAdexMapType', () => {
   });
 
   it("shouldn't produce anything if value is not a number", () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannel: 'Pregnancy'
     };
@@ -135,7 +134,7 @@ describe('toAdexMapType', () => {
 
   it('should use default if valueKey is not a number', () => {
     const warnSpy = Sinon.stub();
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannel: 'Pregnancy'
     };
@@ -165,7 +164,7 @@ describe('toAdexMapType', () => {
 
   it('should set the defaultValue if value is undefined', () => {
     const warnSpy = Sinon.stub();
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical'
     };
     const result = toAdexMapType(
@@ -194,8 +193,8 @@ describe('toAdexMapType', () => {
 });
 
 describe('toAdexStringOrNumberType', () => {
-  it('should produce an AdexKeyValuePair with string value out of a DfpKeyValueMap', () => {
-    const keyValues: DfpKeyValueMap = {
+  it('should produce an AdexKeyValuePair with string value out of a GoogleAdManagerKeyValueMap', () => {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannel: 'Pregnancy'
     };
@@ -212,8 +211,8 @@ describe('toAdexStringOrNumberType', () => {
     expect(result).to.deep.equal(expectedResult);
   });
 
-  it('should produce an AdexKeyValuePair with number value out of a DfpKeyValueMap', () => {
-    const keyValues: DfpKeyValueMap = {
+  it('should produce an AdexKeyValuePair with number value out of a GoogleAdManagerKeyValueMap', () => {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannelVersion: '1'
     };
@@ -231,7 +230,7 @@ describe('toAdexStringOrNumberType', () => {
   });
 
   it('should correctly treat zero values in number mode', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: 'Medical',
       subChannelVersion: '0'
     };
@@ -249,7 +248,7 @@ describe('toAdexStringOrNumberType', () => {
   });
 
   it("shouldn't produce anything if the value property is undefined", () => {
-    const keyValues: DfpKeyValueMap = {};
+    const keyValues: GoogleAdManagerKeyValueMap = {};
     const result = toAdexStringOrNumberType(
       keyValues,
       {
@@ -263,7 +262,7 @@ describe('toAdexStringOrNumberType', () => {
   });
 
   it("shouldn't produce anything if the value property is not a number but attributeType is number", () => {
-    const keyValues: DfpKeyValueMap = { channel: 'Medical' };
+    const keyValues: GoogleAdManagerKeyValueMap = { channel: 'Medical' };
     const result = toAdexStringOrNumberType(
       keyValues,
       {
@@ -277,7 +276,7 @@ describe('toAdexStringOrNumberType', () => {
   });
 
   it("shouldn't produce anything if the value should be a number but input is an array", () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: ['Pregnancy', 'Medical']
     };
     const result = toAdexStringOrNumberType(
@@ -294,7 +293,7 @@ describe('toAdexStringOrNumberType', () => {
 
   it('should set the defaultValue if number value is undefined', () => {
     const warnSpy = Sinon.stub();
-    const keyValues: DfpKeyValueMap = {};
+    const keyValues: GoogleAdManagerKeyValueMap = {};
     const result = toAdexStringOrNumberType(
       keyValues,
       {
@@ -319,7 +318,7 @@ describe('toAdexStringOrNumberType', () => {
 
   it('should set the defaultValue if string value is undefined', () => {
     const warnSpy = Sinon.stub();
-    const keyValues: DfpKeyValueMap = {};
+    const keyValues: GoogleAdManagerKeyValueMap = {};
     const result = toAdexStringOrNumberType(
       keyValues,
       {
@@ -343,7 +342,7 @@ describe('toAdexStringOrNumberType', () => {
   });
 
   it('should sort and join array values into a comma separated string', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channel: ['Pregnancy', 'Medical']
     };
     const result = toAdexStringOrNumberType(
@@ -361,8 +360,8 @@ describe('toAdexStringOrNumberType', () => {
 });
 
 describe('toAdexListType', () => {
-  it('should produce an AdexList with string values out of a DfpKeyValueMap', () => {
-    const keyValues: DfpKeyValueMap = {
+  it('should produce an AdexList with string values out of a GoogleAdManagerKeyValueMap', () => {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channels: ['Medical', 'Pregnancy']
     };
     const result = toAdexListType(
@@ -379,7 +378,7 @@ describe('toAdexListType', () => {
   });
 
   it("shouldn't produce anything if the value property is undefined", () => {
-    const keyValues: DfpKeyValueMap = {};
+    const keyValues: GoogleAdManagerKeyValueMap = {};
     const result = toAdexListType(
       keyValues,
       {
@@ -394,7 +393,7 @@ describe('toAdexListType', () => {
 
   it('should set the defaultValue if value is undefined', () => {
     const warnSpy = Sinon.stub();
-    const keyValues: DfpKeyValueMap = {};
+    const keyValues: GoogleAdManagerKeyValueMap = {};
     const result = toAdexListType(
       keyValues,
       {
@@ -419,7 +418,7 @@ describe('toAdexListType', () => {
 
   it('should yield undefined if the value is empty and defaultValue is an empty array', () => {
     const warnSpy = Sinon.stub();
-    const keyValues: DfpKeyValueMap = {};
+    const keyValues: GoogleAdManagerKeyValueMap = {};
     const result = toAdexListType(
       keyValues,
       {
@@ -440,7 +439,7 @@ describe('toAdexListType', () => {
   });
 
   it('should sort and join array values into an Adex list object', () => {
-    const keyValues: DfpKeyValueMap = {
+    const keyValues: GoogleAdManagerKeyValueMap = {
       channels: ['Pregnancy', 'Medical']
     };
     const result = toAdexListType(
