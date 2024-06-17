@@ -450,6 +450,12 @@ export class Skin implements IModule {
               (bid1, bid2) => bid2.cpm - bid1.cpm
             )[0];
             let timeoutId: number | null = null;
+            const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
+              const slots = (this.window as Window & googletag.IGoogleTagWindow).googletag
+                .pubads()
+                .getSlots();
+              return slots.find(slot => slot.getSlotElementId() === domId);
+            };
 
             // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
             // the cleanup-module takes care of deleting the previous wallpaper
@@ -489,6 +495,19 @@ export class Skin implements IModule {
                         'infinite'
                       >
                     }
+                  );
+
+                  // Set the native-reload targeting of the skin slot to true in order to track ad reload
+                  getGoogleAdSlotByDomId(skinConfig.skinAdSlotDomId)?.setTargeting(
+                    'native-reload',
+                    'true'
+                  );
+
+                  log.info(
+                    'SkinModule',
+                    'Ad reload for skin and blocked slots triggered',
+                    skinConfig.skinAdSlotDomId,
+                    skinConfig.blockedAdSlotDomIds
                   );
                 }, skinConfig.adReload?.intervalMs);
               } else {
