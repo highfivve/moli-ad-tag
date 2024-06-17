@@ -71,10 +71,13 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
+  mkConfigureStep,
   mkInitStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
 import {
+  AdexKeyValueMap,
+  AdexKeyValuePair,
   AdexKeyValues,
   MappingDefinition,
   toAdexListType,
@@ -82,7 +85,7 @@ import {
   toAdexStringOrNumberType
 } from './adex-mapping';
 import { isNotNull } from '../../../util/arrayUtils';
-import { modules } from '../../../types/moliConfig';
+import { GoogleAdManagerKeyValueMap, modules, Targeting } from '../../../types/moliConfig';
 import { sendAdvertisingID } from './sendAdvertisingId';
 import AdexConfig = modules.adex.AdexConfig;
 import { tcfapi } from '../../../types/tcfapi';
@@ -229,19 +232,26 @@ export class AdexModule implements IModule {
 
   initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
     const config = this.adexConfig;
-    if (config?.spaMode) {
+    if (config) {
       return [
         mkInitStep('DMP module setup', context => this.track(context, assetLoaderService, config))
       ];
-    } else if (config) {
-      return [
-        mkInitStep('DMP module setup', context => this.track(context, assetLoaderService, config))
-      ];
-    } else {
-      return [];
     }
+    return [];
   }
 
+  configureSteps(): ConfigureStep[] {
+    const config = this.adexConfig;
+    if (config?.spaMode) {
+      return [
+        mkConfigureStep('DMP module setup', context => {
+          this.configureAdexC(context, config);
+          return Promise.resolve();
+        })
+      ];
+    }
+    return [];
+  }
   /**
    * If consent was given, extract data for The Adex from key/value targeting information.
    *
@@ -256,47 +266,13 @@ export class AdexModule implements IModule {
     adexConfig: AdexConfig
   ): Promise<void> {
     const { adexCustomerId, adexTagId, mappingDefinitions, spaMode, appConfig } = adexConfig;
+    this.configureAdexC(context, adexConfig);
+    const adexKeyValues = this.getAdexKeyValues(context, adexConfig);
+
     const dfpKeyValues = context.config.targeting?.keyValues;
-    if (!dfpKeyValues) {
-      context.logger.warn('Adex DMP', 'targeting key/values are empty');
-      return Promise.resolve();
-    }
-
-    const adexKeyValues: Array<AdexKeyValues> = mappingDefinitions
-      .map(def => {
-        switch (def.adexValueType) {
-          case 'map':
-            return toAdexMapType(dfpKeyValues, def, context.logger);
-          case 'list':
-            return toAdexListType(dfpKeyValues, def, context.logger);
-          default:
-            return toAdexStringOrNumberType(dfpKeyValues, def, context.logger);
-        }
-      })
-      .filter(isNotNull);
-
-    if (mappingDefinitions.length === 0 && adexKeyValues.length === 0) {
-      context.logger.warn('Adex DMP', 'no Adex key/values produced');
-    }
-
-    this.window._adexc = this.window._adexc || [];
-    this.window._adexc.push([
-      `/${adexCustomerId}/${adexTagId}/`,
-      'ut', // usertrack
-      '_kv', // key values
-      [
-        adexKeyValues.reduce(
-          (aggregator: AdexKeyValues, additionalKeyValue: AdexKeyValues) =>
-            ({ ...aggregator, ...additionalKeyValue }) as AdexKeyValues,
-          {}
-        ),
-        // single page mode for logged-in
-        spaMode ? 1 : 0
-      ]
-    ]);
 
     // load script or make request (appMode) if consent is given
-    if (this.hasRequiredConsent(context.tcData) && !this.isLoaded) {
+    if (this.hasRequiredConsent(context.tcData) && !this.isLoaded && dfpKeyValues) {
       this.isLoaded = true;
 
       // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
@@ -315,6 +291,7 @@ export class AdexModule implements IModule {
         // only send request if advertisingId is a single string (no array)
         const advertisingIdValue = dfpKeyValues[appConfig.advertiserIdKey];
         typeof advertisingIdValue === 'string' &&
+          adexKeyValues &&
           sendAdvertisingID(
             adexCustomerId,
             appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
@@ -355,11 +332,54 @@ export class AdexModule implements IModule {
         TCPurpose.DEVELOP_IMPROVE_PRODUCTS
       ].every(purpose => tcData.purpose.consents[purpose]));
 
-  configureSteps(): ConfigureStep[] {
-    return [];
-  }
-
   prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
     return [];
   }
+
+  private getAdexKeyValues = (
+    context: AdPipelineContext,
+    config: modules.adex.AdexConfig
+  ): (AdexKeyValuePair | AdexKeyValueMap)[] | undefined => {
+    const dfpKeyValues = context.config.targeting?.keyValues;
+
+    if (dfpKeyValues) {
+      return config.mappingDefinitions
+        .map(def => {
+          switch (def.adexValueType) {
+            case 'map':
+              return toAdexMapType(dfpKeyValues, def, context.logger);
+            case 'list':
+              return toAdexListType(dfpKeyValues, def, context.logger);
+            default:
+              return toAdexStringOrNumberType(dfpKeyValues, def, context.logger);
+          }
+        })
+        .filter(isNotNull);
+    }
+  };
+
+  private configureAdexC = (context: AdPipelineContext, config: modules.adex.AdexConfig) => {
+    if (!context.config.targeting) {
+      context.logger.warn('Adex DMP', 'targeting key/values are empty');
+      return Promise.resolve();
+    } else {
+      const adexKeyValues = this.getAdexKeyValues(context, config);
+
+      adexKeyValues &&
+        this.window._adexc?.push([
+          `/${config.adexCustomerId}/${config.adexTagId}/`,
+          'ut', // usertrack
+          '_kv', // key values
+          [
+            adexKeyValues.reduce(
+              (aggregator: AdexKeyValues, additionalKeyValue: AdexKeyValues) =>
+                ({ ...aggregator, ...additionalKeyValue }) as AdexKeyValues,
+              {}
+            ),
+            // single page mode for logged-in
+            config.spaMode ? 1 : 0
+          ]
+        ]);
+    }
+  };
 }
