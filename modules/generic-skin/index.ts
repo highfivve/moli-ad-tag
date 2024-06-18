@@ -415,6 +415,7 @@ export class Skin implements IModule {
       return;
     }
 
+    let currentSetTimeoutId: number | null = null;
     config.prebid.listener = {
       preSetTargetingForGPTAsync: (bidResponses, timedOut, slotDefinitions) => {
         const skinConfigWithEffect = this.selectConfig(bidResponses);
@@ -449,7 +450,7 @@ export class Skin implements IModule {
             const highestSkinBid = bidResponses[skinConfig.skinAdSlotDomId]?.bids.sort(
               (bid1, bid2) => bid2.cpm - bid1.cpm
             )[0];
-            let timeoutId: number | null = null;
+
             const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
               const slots = (this.window as Window & googletag.IGoogleTagWindow).googletag
                 .pubads()
@@ -482,11 +483,11 @@ export class Skin implements IModule {
                 loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
               ) {
                 // Clear the last skin timeout if it exists (e.g. after navigation in a SPA)
-                if (timeoutId) {
-                  clearTimeout(timeoutId);
+                if (currentSetTimeoutId) {
+                  clearTimeout(currentSetTimeoutId);
                 }
 
-                timeoutId = this.window.setTimeout(() => {
+                currentSetTimeoutId = this.window.setTimeout(() => {
                   (this.window as Window & MoliWindow).moli.refreshAdSlot(
                     [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
                     {

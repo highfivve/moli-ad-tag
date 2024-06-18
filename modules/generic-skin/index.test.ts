@@ -11,6 +11,7 @@ import { FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
 import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
+import { useFakeTimers } from 'sinon';
 
 // setup sinon-chai
 use(sinonChai);
@@ -816,6 +817,148 @@ describe('Skin Module', () => {
               .map(slot => slot.adSlot)
           )
         );
+      });
+      describe('adReload', () => {
+        let clock: sinon.SinonFakeTimers;
+
+        beforeEach(() => {
+          clock = useFakeTimers();
+        });
+
+        afterEach(() => {
+          clock.restore();
+        });
+
+        it('should set a timeout if bidder is configured in adReload and is about to win the auction', () => {
+          const module = new Skin(
+            {
+              configs: [
+                {
+                  formatFilter: [{ bidder: prebidjs.DSPX }],
+                  skinAdSlotDomId: 'wp-slot',
+                  blockedAdSlotDomIds: ['sky-slot'],
+                  hideSkinAdSlot: false,
+                  hideBlockedSlots: false,
+                  enableCpmComparison: false,
+                  destroySkinSlot: true,
+                  adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
+                }
+              ]
+            },
+            jsDomWindow
+          );
+
+          const prebidConfig: Moli.headerbidding.PrebidConfig = {
+            config: pbjsTestConfig,
+            schain: { nodes: [] }
+          };
+
+          const config: Moli.MoliConfig = {
+            slots: slots,
+            prebid: prebidConfig,
+            schain: dummySchainConfig
+          };
+
+          // Spy on setTimeout
+          const setTimeoutSpy = Sinon.spy(global, 'setTimeout');
+
+          module.init(config, assetLoaderService);
+
+          expect(config.prebid?.listener).to.be.ok;
+
+          const preSetTargetingForGPTAsync = (
+            config.prebid!.listener as Moli.headerbidding.PrebidListener
+          ).preSetTargetingForGPTAsync!;
+
+          preSetTargetingForGPTAsync(
+            {
+              'wp-slot': {
+                bids: [genericBidResponse(prebidjs.DSPX, 1)]
+              }
+            },
+            false,
+            slotDefinitions
+          );
+
+          expect(setTimeoutSpy).to.have.been.calledOnce;
+        });
+
+        it('should clear an "old" timeout before activating a new one', () => {
+          const module = new Skin(
+            {
+              configs: [
+                {
+                  formatFilter: [{ bidder: prebidjs.DSPX }],
+                  skinAdSlotDomId: 'wp-slot',
+                  blockedAdSlotDomIds: ['sky-slot'],
+                  hideSkinAdSlot: false,
+                  hideBlockedSlots: false,
+                  enableCpmComparison: false,
+                  destroySkinSlot: true,
+                  adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
+                }
+              ]
+            },
+            jsDomWindow
+          );
+
+          const prebidConfig: Moli.headerbidding.PrebidConfig = {
+            config: pbjsTestConfig,
+            schain: { nodes: [] }
+          };
+
+          const config: Moli.MoliConfig = {
+            slots: slots,
+            prebid: prebidConfig,
+            schain: dummySchainConfig
+          };
+
+          let activeTimeouts = 0;
+          // Stub setTimeout
+          const originalSetTimeout = global.setTimeout;
+          const originalClearTimeout = global.clearTimeout;
+
+          Sinon.stub(global, 'setTimeout').callsFake((handler, timeout) => {
+            activeTimeouts++;
+            const id = originalSetTimeout(handler, timeout);
+            return id;
+          });
+
+          Sinon.stub(global, 'clearTimeout').callsFake(id => {
+            activeTimeouts--;
+            originalClearTimeout(id);
+          });
+
+          module.init(config, assetLoaderService);
+
+          expect(config.prebid?.listener).to.be.ok;
+
+          const preSetTargetingForGPTAsync = (
+            config.prebid!.listener as Moli.headerbidding.PrebidListener
+          ).preSetTargetingForGPTAsync!;
+
+          preSetTargetingForGPTAsync(
+            {
+              'wp-slot': {
+                bids: [genericBidResponse(prebidjs.DSPX, 1)]
+              }
+            },
+            false,
+            slotDefinitions
+          );
+
+          preSetTargetingForGPTAsync(
+            {
+              'wp-slot': {
+                bids: [genericBidResponse(prebidjs.DSPX, 1)]
+              }
+            },
+            false,
+            slotDefinitions
+          );
+
+          expect(activeTimeouts).to.equal(1);
+        });
       });
     });
   });
