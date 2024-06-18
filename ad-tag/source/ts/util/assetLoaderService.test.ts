@@ -63,7 +63,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await sleep();
+      await delay();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
@@ -84,7 +84,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await sleep();
+      await delay();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
@@ -104,7 +104,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await sleep();
+      await delay();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
@@ -124,7 +124,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await sleep();
+      await delay();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
