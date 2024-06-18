@@ -415,6 +415,7 @@ export class Skin implements IModule {
       return;
     }
 
+    let currentSetTimeoutId: number | null = null;
     config.prebid.listener = {
       preSetTargetingForGPTAsync: (bidResponses, timedOut, slotDefinitions) => {
         const skinConfigWithEffect = this.selectConfig(bidResponses);
@@ -450,6 +451,13 @@ export class Skin implements IModule {
               (bid1, bid2) => bid2.cpm - bid1.cpm
             )[0];
 
+            const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
+              const slots = (this.window as Window & googletag.IGoogleTagWindow).googletag
+                .pubads()
+                .getSlots();
+              return slots.find(slot => slot.getSlotElementId() === domId);
+            };
+
             // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
             // the cleanup-module takes care of deleting the previous wallpaper
             if (
@@ -474,7 +482,12 @@ export class Skin implements IModule {
                 allSlotsHaveSameLoadingBehavior &&
                 loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
               ) {
-                this.window.setTimeout(() => {
+                // Clear the last skin timeout if it exists (e.g. after navigation in a SPA)
+                if (currentSetTimeoutId) {
+                  clearTimeout(currentSetTimeoutId);
+                }
+
+                currentSetTimeoutId = this.window.setTimeout(() => {
                   (this.window as Window & MoliWindow).moli.refreshAdSlot(
                     [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
                     {
@@ -483,6 +496,20 @@ export class Skin implements IModule {
                         'infinite'
                       >
                     }
+                  );
+
+                  // Set the native-reload targeting of the skin slot to true in order to track ad reload
+                  // the key is configurable in the ad reload and should be tied to this setting in the future
+                  getGoogleAdSlotByDomId(skinConfig.skinAdSlotDomId)?.setTargeting(
+                    'native-reload',
+                    'true'
+                  );
+
+                  log.info(
+                    'SkinModule',
+                    'Ad reload for skin and blocked slots triggered',
+                    skinConfig.skinAdSlotDomId,
+                    skinConfig.blockedAdSlotDomIds
                   );
                 }, skinConfig.adReload?.intervalMs);
               } else {
