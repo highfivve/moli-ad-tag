@@ -819,7 +819,7 @@ describe('Skin Module', () => {
         );
       });
       describe('adReload', () => {
-        let clock: sinon.SinonFakeTimers;
+        let clock: Sinon.SinonFakeTimers;
 
         beforeEach(() => {
           clock = useFakeTimers();
