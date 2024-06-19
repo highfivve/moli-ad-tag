@@ -1,6 +1,5 @@
 import { expect, use } from 'chai';
 import * as sinon from 'sinon';
-import Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { AssetLoaderService, AssetLoadMethod, ILoadAssetParams } from './assetLoaderService';
@@ -14,7 +13,7 @@ const sleep = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 5)
 describe('AssetLoaderService', () => {
   let assetLoaderService: AssetLoaderService;
   let performanceService;
-  const sandbox = Sinon.createSandbox();
+  const sandbox = sinon.createSandbox();
 
   let dom = createDom();
   let jsDomWindow: Window = dom.window as any;
