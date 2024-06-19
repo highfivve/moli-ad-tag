@@ -9,10 +9,11 @@ import { createDom } from '../stubs/browserEnvSetup';
 // setup sinon-chai
 use(sinonChai);
 
+const sleep = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 5));
+
 describe('AssetLoaderService', () => {
   let assetLoaderService: AssetLoaderService;
   let performanceService;
-
   const sandbox = Sinon.createSandbox();
 
   let dom = createDom();
@@ -63,7 +64,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await delay();
+      await sleep();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
@@ -84,7 +85,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await delay();
+      await sleep();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
@@ -104,7 +105,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await delay();
+      await sleep();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
@@ -124,7 +125,7 @@ describe('AssetLoaderService', () => {
       const loadScriptPromise = assetLoaderService.loadScript(config);
 
       // there are a couple of side effects happening before the script element is there
-      await delay();
+      await sleep();
       const scriptElement = resolveOnLoadAndReturnScriptElement();
       await loadScriptPromise;
 
