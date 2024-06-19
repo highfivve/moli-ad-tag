@@ -11,6 +11,7 @@ import { FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
 import { createGoogletagStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
+import { useFakeTimers } from 'sinon';
 
 // setup sinon-chai
 use(sinonChai);
@@ -843,6 +844,154 @@ describe('Skin Module', () => {
               .map(slot => slot.adSlot)
           )
         );
+      });
+      describe('adReload', () => {
+        let clock: Sinon.SinonFakeTimers;
+
+        beforeEach(() => {
+          clock = useFakeTimers();
+        });
+
+        afterEach(() => {
+          clock.restore();
+        });
+
+        it('should set a timeout if bidder is configured in adReload and is about to win the auction', () => {
+          const module = new Skin(
+            {
+              configs: [
+                {
+                  formatFilter: [{ bidder: prebidjs.DSPX }],
+                  skinAdSlotDomId: 'wp-slot',
+                  blockedAdSlotDomIds: ['sky-slot'],
+                  hideSkinAdSlot: false,
+                  hideBlockedSlots: false,
+                  enableCpmComparison: false,
+                  destroySkinSlot: true,
+                  adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
+                }
+              ]
+            },
+            jsDomWindow
+          );
+
+          const prebidConfig: Moli.headerbidding.PrebidConfig = {
+            config: pbjsTestConfig,
+            schain: { nodes: [] },
+            distributionUrls: {
+              es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
+            }
+          };
+
+          const config: Moli.MoliConfig = {
+            slots: slots,
+            prebid: prebidConfig,
+            schain: dummySchainConfig
+          };
+
+          // Spy on setTimeout
+          const setTimeoutSpy = Sinon.spy(global, 'setTimeout');
+
+          module.init(config, assetLoaderService);
+
+          expect(config.prebid?.listener).to.be.ok;
+
+          const preSetTargetingForGPTAsync = (
+            config.prebid!.listener as Moli.headerbidding.PrebidListener
+          ).preSetTargetingForGPTAsync!;
+
+          preSetTargetingForGPTAsync(
+            {
+              'wp-slot': {
+                bids: [genericBidResponse(prebidjs.DSPX, 1)]
+              }
+            },
+            false,
+            slotDefinitions
+          );
+
+          expect(setTimeoutSpy).to.have.been.calledOnce;
+        });
+
+        it('should clear an "old" timeout before activating a new one', () => {
+          const module = new Skin(
+            {
+              configs: [
+                {
+                  formatFilter: [{ bidder: prebidjs.DSPX }],
+                  skinAdSlotDomId: 'wp-slot',
+                  blockedAdSlotDomIds: ['sky-slot'],
+                  hideSkinAdSlot: false,
+                  hideBlockedSlots: false,
+                  enableCpmComparison: false,
+                  destroySkinSlot: true,
+                  adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
+                }
+              ]
+            },
+            jsDomWindow
+          );
+
+          const prebidConfig: Moli.headerbidding.PrebidConfig = {
+            config: pbjsTestConfig,
+            schain: { nodes: [] },
+            distributionUrls: {
+              es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
+            }
+          };
+
+          const config: Moli.MoliConfig = {
+            slots: slots,
+            prebid: prebidConfig,
+            schain: dummySchainConfig
+          };
+
+          let activeTimeouts = 0;
+          // Stub setTimeout
+          const originalSetTimeout = global.setTimeout;
+          const originalClearTimeout = global.clearTimeout;
+
+          Sinon.stub(global, 'setTimeout').callsFake((handler, timeout) => {
+            activeTimeouts++;
+            const id = originalSetTimeout(handler, timeout);
+            return id;
+          });
+
+          Sinon.stub(global, 'clearTimeout').callsFake(id => {
+            activeTimeouts--;
+            originalClearTimeout(id);
+          });
+
+          module.init(config, assetLoaderService);
+
+          expect(config.prebid?.listener).to.be.ok;
+
+          const preSetTargetingForGPTAsync = (
+            config.prebid!.listener as Moli.headerbidding.PrebidListener
+          ).preSetTargetingForGPTAsync!;
+
+          preSetTargetingForGPTAsync(
+            {
+              'wp-slot': {
+                bids: [genericBidResponse(prebidjs.DSPX, 1)]
+              }
+            },
+            false,
+            slotDefinitions
+          );
+
+          preSetTargetingForGPTAsync(
+            {
+              'wp-slot': {
+                bids: [genericBidResponse(prebidjs.DSPX, 1)]
+              }
+            },
+            false,
+            slotDefinitions
+          );
+
+          expect(activeTimeouts).to.equal(1);
+        });
       });
     });
   });
