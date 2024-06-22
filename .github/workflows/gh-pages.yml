@@ -63,7 +63,7 @@ jobs:
 
       # Deploy website
       - name: Deploy
-        uses: s0/git-publish-subdir-action@2
+        uses: s0/git-publish-subdir-action@v2
         env:
           REPO: self
           BRANCH: gh-pages
