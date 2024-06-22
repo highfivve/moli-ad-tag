@@ -103,6 +103,8 @@ export class Skin implements IModule {
 
   private log?: MoliRuntime.MoliLogger;
 
+  private currentSkinAdReloadSetTimeoutId: number | null = null;
+
   config(): Object | null {
     return this.skinModuleConfig;
   }
@@ -295,6 +297,11 @@ export class Skin implements IModule {
   ) => {
     const skinConfigWithEffect = this.selectConfig(config, auctionObject, ctx.logger);
 
+    const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
+      const slots = ctx.window.googletag.pubads().getSlots();
+      return slots.find(slot => slot.getSlotElementId() === domId);
+    };
+
     if (skinConfigWithEffect) {
       const { skinConfig, configEffect } = skinConfigWithEffect;
 
@@ -349,7 +356,11 @@ export class Skin implements IModule {
             allSlotsHaveSameLoadingBehavior &&
             loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
           ) {
-            ctx.window.setTimeout(() => {
+            if (this.currentSkinAdReloadSetTimeoutId) {
+              clearTimeout(this.currentSkinAdReloadSetTimeoutId);
+            }
+
+            this.currentSkinAdReloadSetTimeoutId = ctx.window.setTimeout(() => {
               ctx.window.moli.refreshAdSlot(
                 [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
                 {
@@ -358,6 +369,19 @@ export class Skin implements IModule {
                     'infinite'
                   >
                 }
+              );
+              // Set the native-reload targeting of the skin slot to true in order to track ad reload
+              // the key is configurable in the ad reload and should be tied to this setting in the future
+              getGoogleAdSlotByDomId(skinConfig.skinAdSlotDomId)?.setTargeting(
+                'native-reload',
+                'true'
+              );
+
+              ctx.logger.info(
+                'SkinModule',
+                'Ad reload for skin and blocked slots triggered',
+                skinConfig.skinAdSlotDomId,
+                skinConfig.blockedAdSlotDomIds
               );
             }, skinConfig.adReload?.intervalMs);
           } else {

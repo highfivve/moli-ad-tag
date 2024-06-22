@@ -20,6 +20,7 @@ import { createPbjsStub, pbjsTestConfig } from '../../../stubs/prebidjsStubs';
 import { AdPipelineContext } from '../../adPipeline';
 import { fullConsent } from '../../../stubs/consentStubs';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
+import { useFakeTimers } from 'sinon';
 
 // setup sinon-chai
 use(sinonChai);
@@ -824,6 +825,106 @@ describe('Skin Module', () => {
         expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
           Sinon.match.array.deepEquals([skinSlot])
         );
+      });
+
+      describe('skin adReload', () => {
+        let clock: Sinon.SinonFakeTimers;
+
+        beforeEach(() => {
+          clock = useFakeTimers();
+        });
+
+        afterEach(() => {
+          clock.restore();
+        });
+
+        it('should set a timeout if bidder is configured in adReload and is about to win the auction', () => {
+          const module = skinModule({
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true,
+                adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
+              }
+            ]
+          });
+
+          const prebidConfig: headerbidding.PrebidConfig = {
+            config: pbjsTestConfig,
+            schain: { nodes: [] }
+          };
+
+          const config: MoliConfig = {
+            slots: slots,
+            prebid: prebidConfig,
+            schain: dummySchainConfig
+          };
+
+          // Spy on setTimeout
+          const setTimeoutSpy = Sinon.spy(global, 'setTimeout');
+
+          module.initSteps()[0](adPipelineContext(config));
+          pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
+          emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+
+          expect(setTimeoutSpy).to.have.been.calledOnce;
+        });
+
+        it('should clear an "old" timeout before activating a new one', () => {
+          const module = skinModule({
+            configs: [
+              {
+                formatFilter: [{ bidder: prebidjs.DSPX }],
+                skinAdSlotDomId: 'wp-slot',
+                blockedAdSlotDomIds: ['sky-slot'],
+                hideSkinAdSlot: false,
+                hideBlockedSlots: false,
+                enableCpmComparison: false,
+                destroySkinSlot: true,
+                adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
+              }
+            ]
+          });
+
+          const prebidConfig: headerbidding.PrebidConfig = {
+            config: pbjsTestConfig,
+            schain: { nodes: [] }
+          };
+
+          const config: MoliConfig = {
+            slots: slots,
+            prebid: prebidConfig,
+            schain: dummySchainConfig
+          };
+
+          let activeTimeouts = 0;
+          // Stub setTimeout
+          const originalSetTimeout = global.setTimeout;
+          const originalClearTimeout = global.clearTimeout;
+
+          Sinon.stub(global, 'setTimeout').callsFake((handler, timeout) => {
+            activeTimeouts++;
+            const id = originalSetTimeout(handler, timeout);
+            return id;
+          });
+
+          Sinon.stub(global, 'clearTimeout').callsFake(id => {
+            activeTimeouts--;
+            originalClearTimeout(id);
+          });
+
+          module.initSteps()[0](adPipelineContext(config));
+          pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
+          emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+          emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+
+          expect(activeTimeouts).to.equal(1);
+        });
       });
     });
   });
