@@ -18,6 +18,7 @@ import { execSync } from 'node:child_process';
 type OptionsValues = {
   readonly output: string;
   readonly config: string;
+  readonly failAfterWarnings: boolean;
 };
 
 type BundleConfig = {
@@ -37,6 +38,12 @@ const command = program
     'file containing the modules that should be part of the ad tag bundle',
     value => path.join(__dirname, value)
   )
+  .option(
+    '--failAfterWarnings <value>',
+    'if set, rollup will fail if there are any warnings',
+    value => value === 'true',
+    true
+  )
   .parse(process.argv);
 
 // parse modules.json
@@ -51,8 +58,17 @@ const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', 'bun
 fs.writeFileSync(entrypoint, modules.map(module => `import './${module}';`).join('\n'));
 
 try {
+  const cmd: string[] = [
+    'npx',
+    'rollup',
+    entrypoint,
+    '--file',
+    options.output,
+    '-c',
+    ...(options.failAfterWarnings ? ['--failAfterWarnings'] : [])
+  ];
   // bundle entrypoint file
-  execSync(`npx rollup ${entrypoint} --file ${options.output} --failAfterWarnings -c`, {
+  execSync(cmd.join(' '), {
     stdio: 'inherit'
   });
 } finally {

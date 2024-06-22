@@ -1,11 +1,10 @@
 import { expect } from 'chai';
 import { checkAdReloadConfig } from './adReloadValidations';
-import { ModuleMeta } from '@highfivve/ad-tag';
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
-import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
-import video = prebidjs.video;
 import { Message } from '../components/globalConfig';
-import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
+import { prebidjs } from '../../types/prebidjs';
+import type { AdSlot, GoogleAdManagerSlotSize, modules } from '../../types/moliConfig';
+import type { ModuleMeta } from '../../types/module';
+import video = prebidjs.video;
 
 describe('AdReload Validations', () => {
   const dspxBid: prebidjs.IDSPXBid = { bidder: prebidjs.DSPX, params: { placement: 'placebo' } };
@@ -19,10 +18,10 @@ describe('AdReload Validations', () => {
 
   const createAdSlot = (
     adUnitPath: string,
-    sizes: MoliRuntime.GoogleAdManagerSlotSize[],
+    sizes: GoogleAdManagerSlotSize[],
     bids: prebidjs.IBid[],
     isOutstream: boolean = false
-  ): MoliRuntime.AdSlot => {
+  ): AdSlot => {
     return {
       position: 'in-page',
       domId: 'prebid-adslot',
@@ -61,7 +60,8 @@ describe('AdReload Validations', () => {
   };
 
   const labels = ['label1, label2'];
-  const moduleConfig: AdReloadModuleConfig = {
+  const moduleConfig: modules.adreload.AdReloadModuleConfig = {
+    enabled: true,
     includeAdvertiserIds: [1],
     includeOrderIds: [1],
     excludeOrderIds: [2],

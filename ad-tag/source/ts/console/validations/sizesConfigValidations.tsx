@@ -1,8 +1,8 @@
-import { Message } from '../components/globalConfig';
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
 import React from 'react';
-import { flatten } from '@highfivve/ad-tag';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
+import { Message } from '../components/globalConfig';
+import { flatten } from '../../util/arrayUtils';
+import type { AdSlot } from '../../types/moliConfig';
 
 type MissingSizesType = {
   slotId: string;
@@ -11,7 +11,7 @@ type MissingSizesType = {
   unusedSupportedSizes?: string[];
 };
 
-export const checkSizesConfig = (messages: Message[], slots: MoliRuntime.AdSlot[], labels: string[]) => {
+export const checkSizesConfig = (messages: Message[], slots: AdSlot[], labels: string[]) => {
   const missingSizesInSlots: MissingSizesType[] = [];
   slots.map(slot => {
     const supportedSizesAsString: string[] = flatten(
@@ -46,15 +46,9 @@ export const checkSizesConfig = (messages: Message[], slots: MoliRuntime.AdSlot[
     // Prebid config
     if (slot.prebid) {
       const missingBannerSizes: string[] = [];
-      const bannerSizes = extractPrebidAdSlotConfigs(
-        {
-          keyValues: {},
-          floorPrice: undefined,
-          labels,
-          isMobile: !labels.includes('desktop')
-        },
-        slot.prebid
-      ).map(prebid => prebid.adUnit?.mediaTypes.banner?.sizes);
+      const bannerSizes = extractPrebidAdSlotConfigs(slot.prebid).map(
+        prebid => prebid.adUnit?.mediaTypes.banner?.sizes
+      );
 
       bannerSizes.map(bannerSize => {
         bannerSize?.map(value => {

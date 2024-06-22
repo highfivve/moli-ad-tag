@@ -1,9 +1,10 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 import { Tag } from './tag';
 
-import { tcfapi } from '@highfivve/ad-tag/source/ts/types/tcfapi';
 import { TCModel, TCString } from '@iabtcf/core';
+import { tcfapi } from '../../types/tcfapi';
+import { IdBoolTuple } from '@iabtcf/core/lib/mjs/model/Vector';
 
 type CmpVendor = {
   name: string;
@@ -52,33 +53,67 @@ type IConsentConfigState = {
 
 type Message = {
   kind: 'error' | 'warning';
-  text: string | JSX.Element;
+  text: string | React.ReactElement;
 };
 
-export class ConsentConfig extends Component<{}, IConsentConfigState> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      messages: []
-    };
-    this.checkConsentConfig(this.state.messages);
-  }
+export const ConsentConfig: React.FC = () => {
+  const [consentState, setConsentState] = React.useState<IConsentConfigState>({ messages: [] });
 
-  componentDidMount() {
-    this.initConsentData();
-  }
+  // componentDidMount - initialize consent data
+  React.useEffect(() => {
+    // update consent status
+    if (window.__tcfapi) {
+      // Update on changes
+      window.__tcfapi('addEventListener', 2, event => {
+        const tcModel = event.gdprApplies ? TCString.decode(event.tcString) : undefined;
+        setConsentState(prevState => ({
+          ...prevState,
+          cmpStatus: event.cmpStatus,
+          tcModel: tcModel,
+          tcString: event.gdprApplies ? event.tcString : 'none'
+        }));
+      });
+    } else {
+      setConsentState(prevState => ({
+        ...prevState,
+        cmpStatus: tcfapi.status.CmpStatus.ERROR
+      }));
+    }
 
-  render(): JSX.Element {
-    return (
-      <div>
-        {this.consent()}
-        {this.consentData()}
-      </div>
-    );
-  }
+    // if cmp is configured, there must be a cmp present
+    if (!isCmpFunctionAvailable()) {
+      const errorMessage: Message = {
+        kind: 'error',
+        text: 'no window.__tcfapi function found. Consent management and ads will not work!'
+      };
+      setConsentState(prevState => ({
+        ...prevState,
+        messages: [errorMessage, ...prevState.messages]
+      }));
+    }
+  });
 
-  private consent = (): JSX.Element => {
-    const { gdprApplies, tcModel } = this.state;
+  const cmpVendorTag = (): React.ReactElement => {
+    if (consentState.tcModel) {
+      const cmpVendor = cmpVendors[consentState.tcModel.cmpId.toString()];
+      if (cmpVendor) {
+        return (
+          <Tag variant="grey">
+            <a href={cmpVendor.website}>
+              {cmpVendor.name} (id: {consentState.tcModel.cmpId.toString()})
+            </a>
+          </Tag>
+        );
+      } else {
+        return <Tag variant="yellow">{consentState.tcModel.cmpId.toString()}</Tag>;
+      }
+    } else {
+      return <Tag variant="red">No defined</Tag>;
+    }
+  };
+
+  const consent = (): React.ReactElement => {
+    const { gdprApplies, tcModel } = consentState;
     return (
       <div>
         <div className="MoliDebug-tagContainer">
@@ -91,7 +126,7 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
           <span className="MoliDebug-tagLabel">
             <a href="https://iabeurope.eu/cmp-list/">CMP ID</a>
           </span>
-          {this.cmpVendorTag()}
+          {cmpVendorTag()}
         </div>
         <div className="MoliDebug-tagContainer">
           <span className="MoliDebug-tagLabel">Last updated</span>
@@ -112,58 +147,26 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
       </div>
     );
   };
+  const isCmpFunctionAvailable = () => window.__tcfapi || typeof window.__tcfapi === 'function';
 
-  private cmpVendorTag = (): JSX.Element => {
-    if (this.state.tcModel) {
-      const cmpVendor = cmpVendors[this.state.tcModel.cmpId.toString()];
-      if (cmpVendor) {
-        return (
-          <Tag variant="grey">
-            <a href={cmpVendor.website}>
-              {cmpVendor.name} (id: {this.state.tcModel.cmpId.toString()})
-            </a>
-          </Tag>
-        );
-      } else {
-        return <Tag variant="yellow">{this.state.tcModel.cmpId.toString()}</Tag>;
-      }
-    } else {
-      return <Tag variant="red">No defined</Tag>;
-    }
-  };
-
-  private initConsentData = (): void => {
-    if (window.__tcfapi) {
-      // Update on changes
-      window.__tcfapi('addEventListener', 2, event => {
-        const tcModel = event.gdprApplies ? TCString.decode(event.tcString) : undefined;
-        this.setState({
-          cmpStatus: event.cmpStatus,
-          tcModel: tcModel,
-          tcString: event.gdprApplies ? event.tcString : 'none'
-        });
-      });
-    } else {
-      this.setState({
-        cmpStatus: tcfapi.status.CmpStatus.ERROR
-      });
-    }
-  };
-
-  private consentData = (): JSX.Element | undefined => {
-    if (this.isCmpFunctionAvailable()) {
+  const consentData = (): React.ReactElement | undefined => {
+    if (isCmpFunctionAvailable()) {
       return (
         <div>
           <div className="MoliDebug-tagContainer">
             <span className="MoliDebug-tagLabel">vendor list version</span>
             <Tag>
-              {this.state.tcModel ? this.state.tcModel.vendorListVersion.toString() : 'not found'}
+              {consentState.tcModel
+                ? consentState.tcModel.vendorListVersion.toString()
+                : 'not found'}
             </Tag>
           </div>
           <div className="MoliDebug-tagContainer">
             <span className="MoliDebug-tagLabel">num vendors allowed</span>
             <Tag>
-              {this.state.tcModel ? this.state.tcModel.vendorConsents.size.toString() : 'not found'}
+              {consentState.tcModel
+                ? consentState.tcModel.vendorConsents.size.toString()
+                : 'not found'}
             </Tag>
           </div>
           <div className="MoliDebug-tagContainer">
@@ -177,8 +180,8 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
               allowed purposes
             </span>
             <Tag>
-              {this.state.tcModel
-                ? this.state.tcModel.purposeConsents.size.toString()
+              {consentState.tcModel
+                ? consentState.tcModel.purposeConsents.size.toString()
                 : 'not found'}
             </Tag>
 
@@ -187,14 +190,16 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
                 Purpose and Feature definitions
               </a>
               <br />
-              {this.state.tcModel &&
-                Array.from(this.state.tcModel.purposeConsents).map(([id, accepted]) => {
-                  return (
-                    <Tag key={id} variant={accepted ? 'green' : 'red'}>
-                      {id.toString()}: {accepted ? 'accepted' : 'denied'}
-                    </Tag>
-                  );
-                })}
+              {consentState.tcModel &&
+                Array.from<IdBoolTuple>(consentState.tcModel.purposeConsents).map(
+                  ([id, accepted]) => {
+                    return (
+                      <Tag key={id} variant={accepted ? 'green' : 'red'}>
+                        {id.toString()}: {accepted ? 'accepted' : 'denied'}
+                      </Tag>
+                    );
+                  }
+                )}
             </div>
           </div>
 
@@ -209,7 +214,7 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
               consent string
             </span>
             <div className="collapse" id="collapseConsentString">
-              <Tag>{this.state.tcString ? this.state.tcString : 'not found'}</Tag>
+              <Tag>{consentState.tcString ? consentState.tcString : 'not found'}</Tag>
             </div>
           </div>
         </div>
@@ -217,15 +222,10 @@ export class ConsentConfig extends Component<{}, IConsentConfigState> {
     }
   };
 
-  private isCmpFunctionAvailable = () => window.__tcfapi || typeof window.__tcfapi === 'function';
-
-  private checkConsentConfig = (messages: Message[]): void => {
-    // if cmp is configured, there must be a cmp present
-    if (!this.isCmpFunctionAvailable()) {
-      messages.push({
-        kind: 'error',
-        text: 'no window.__tcfapi function found. Consent management and ads will not work!'
-      });
-    }
-  };
-}
+  return (
+    <div>
+      {consent()}
+      {consentData()}
+    </div>
+  );
+};

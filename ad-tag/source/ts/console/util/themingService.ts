@@ -8,9 +8,13 @@ export type ThemeConfig = Theme | 'system';
  * Manages the debugger theme.
  */
 export class ThemingService {
-  constructor(private rootElement: Element) {}
+  constructor(private rootElement?: Element) {}
 
-  currentTheme = (): Theme => (this.rootElement.classList.contains('dark') ? 'dark' : 'light');
+  setRootElement = (rootElement: Element): void => {
+    this.rootElement = rootElement;
+  };
+
+  currentTheme = (): Theme => (this.rootElement?.classList.contains('dark') ? 'dark' : 'light');
 
   /**
    * Applies the given theme. Defaults to system.
@@ -31,9 +35,9 @@ export class ThemingService {
 
   private updateThemeCssClass = (theme: Theme) => {
     if (theme !== 'light') {
-      this.rootElement.classList.add(theme);
+      this.rootElement?.classList.add(theme);
     } else {
-      this.rootElement.classList.remove('dark');
+      this.rootElement?.classList.remove('dark');
     }
   };
 

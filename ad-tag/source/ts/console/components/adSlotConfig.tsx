@@ -1,26 +1,20 @@
-import React, { Component, Fragment } from 'react';
-
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
-import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
-import { SizeConfigService } from '@highfivve/ad-tag/source/ts/ads/sizeConfigService';
+import React, { Fragment } from 'react';
 
 import { classList } from '../util/stringUtils';
 
 import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
 
-import headerbidding = MoliRuntime.headerbidding;
-import AdSlot = MoliRuntime.AdSlot;
-import DfpSlotSize = MoliRuntime.GoogleAdManagerSlotSize;
-import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
+import { AdSlot, GoogleAdManagerSlotSize, headerbidding } from '../../types/moliConfig';
+import { LabelConfigService } from '../../ads/labelConfigService';
+import { SizeConfigService } from '../../ads/sizeConfigService';
+import { prebidjs } from '../../types/prebidjs';
 
 type IAdSlotConfigProps = {
   parentElement?: HTMLElement;
   slot: AdSlot;
   labelConfigService: LabelConfigService;
-  /** required to find measurements for this slot */
-  reportingConfig?: MoliRuntime.reporting.ReportingConfig;
 };
 type IAdSlotConfigState = {
   dimensions?: { width: number; height: number };
@@ -40,9 +34,9 @@ const defaultPanelState: Pick<
   showSizeConfig: false
 };
 
-type ValidatedSlotSize = { valid: boolean; size: DfpSlotSize };
+type ValidatedSlotSize = { valid: boolean; size: GoogleAdManagerSlotSize };
 
-export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigState> {
+export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotConfigState> {
   constructor(props: IAdSlotConfigProps) {
     super(props);
 
@@ -59,7 +53,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     }
   }
 
-  render(): JSX.Element {
+  render(): React.ReactNode {
     const { labelConfigService, slot, parentElement } = this.props;
     const { dimensions, showGeneral, showA9, showPrebid, showSizeConfig } = this.state;
     const slotValid =
@@ -226,12 +220,11 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     );
   }
 
-  private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): JSX.Element => {
+  private prebidConfig = (prebid: headerbidding.PrebidAdSlotConfigProvider): React.ReactElement => {
     const labels = this.props.labelConfigService.getSupportedLabels();
-    const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs(
-      { keyValues: {}, floorPrice: undefined, labels, isMobile: !labels.includes('desktop') },
-      prebid
-    ).map(config => config.adUnit);
+    const prebidAdUnits: prebidjs.IAdUnit[] = extractPrebidAdSlotConfigs(prebid).map(
+      config => config.adUnit
+    );
 
     const hasMultipleBids = prebidAdUnits.length > 1;
 
@@ -304,7 +297,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     }
   };
 
-  private a9Config = (a9: headerbidding.A9AdSlotConfig): JSX.Element => {
+  private a9Config = (a9: headerbidding.A9AdSlotConfig): React.ReactElement => {
     const slotSizeConfig = this.props.slot.sizeConfig;
     return (
       <div>
@@ -336,10 +329,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
 
     if (prebid) {
       const labels = this.props.labelConfigService.getSupportedLabels();
-      return extractPrebidAdSlotConfigs(
-        { keyValues: {}, floorPrice: undefined, labels, isMobile: !labels.includes('desktop') },
-        prebid
-      )
+      return extractPrebidAdSlotConfigs(prebid)
         .map(config => config.adUnit)
         .some(prebidAdUnit => {
           const video = prebidAdUnit.mediaTypes.video;
@@ -393,7 +383,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     );
   };
 
-  private validateSlotSizes = (sizes: DfpSlotSize[]): ValidatedSlotSize[] => {
+  private validateSlotSizes = (sizes: GoogleAdManagerSlotSize[]): ValidatedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
     const sizeConfigService = new SizeConfigService(
       slotSizeConfig,
@@ -410,7 +400,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
   private tagFromValidatedSlotSize = (
     slotSize: ValidatedSlotSize,
     hasSlotSizeConfig: boolean
-  ): JSX.Element => {
+  ): React.ReactElement => {
     const sizeString =
       slotSize.size === 'fluid' ? slotSize.size : `${slotSize.size[0]}x${slotSize.size[1]}`;
     return (
@@ -426,14 +416,14 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
     );
   };
 
-  private static isFixedSize(size: MoliRuntime.GoogleAdManagerSlotSize): size is [number, number] {
+  private static isFixedSize(size: GoogleAdManagerSlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 
   private labelConfig = (labelledSlot: {
     labelAll?: string[];
     labelAny?: string[];
-  }): JSX.Element => {
+  }): React.ReactElement => {
     const labelAll = labelledSlot.labelAll;
     const labelAny = labelledSlot.labelAny;
     const supportedLabels = this.props.labelConfigService.getSupportedLabels();

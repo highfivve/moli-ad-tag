@@ -26,8 +26,9 @@ jobs:
 
       ## type declarations need to be present for docs to work properly
       - name: setup project
-
-        run: npm run setup
+        run: |
+          npm run setup
+          npm run build
 
       # Build website
       - name: build website
@@ -42,27 +43,29 @@ jobs:
 
       # Build prebuilt ad-tag
       - name: build adtag
-        working-directory: ./prebuilt/ad-tag
         run: |
-          npm install
-          npm run build
-          cp dist/* ../../website/build/assets/js/
-          cp dist/* ../../website/build/assets/js/${{ env.RELEASE_VERSION }}/
+          npx ts-node bundle.ts --output website/build/assets/bundle/adtag.mjs --config bundles/all.json --failAfterWarnings false
+          npx ts-node bundle.ts --output website/build/assets/bundle/${{ env.RELEASE_VERSION }}/adtag.mjs --config bundles/all.json --failAfterWarnings false
 
       # Build ad tag console
       - name: build ad tag console / debugger
-        working-directory: ./moli-debugger
         run: |
-          npm install
-          npm run build
-          cp lib/* ../website/build/assets/js/
-          cp lib/* ../website/build/assets/js/${{ env.RELEASE_VERSION }}/
+          npm ci
+          npm run build:console
+          cp dist/console.js ../website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.js
+          cp dist/console.mjs ../website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.mjs
 
       # Deploy website
       - name: Deploy
-        uses: s0/git-publish-subdir-action@develop
+        uses: s0/git-publish-subdir-action@2
         env:
           REPO: self
           BRANCH: gh-pages
           FOLDER: website/build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # this overrides the default clearing behaviour (entire target directory, FOLDER) and allows to keep some files
+          # mainly the moli debugger and prebuilt bundles
+          CLEAR_GLOBS_FILE: |
+            'website/build/**/*'
+            '!.git'
+            '!website/build/assets/bundle/**/*'

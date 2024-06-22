@@ -1,15 +1,13 @@
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
-import { ModuleMeta, prebidjs } from '@highfivve/ad-tag';
-import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
-
-import { Message } from '../components/globalConfig';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
-import React from 'react';
-import { isNotNull } from '@highfivve/ad-tag/lib/util/arrayUtils';
+import type { AdSlot, headerbidding, modules } from '../../types/moliConfig';
+import { prebidjs } from '../../types/prebidjs';
+import { isNotNull } from '../../util/arrayUtils';
+import { Message } from '../components/globalConfig';
+import type { ModuleMeta } from '../../types/module';
 
 const isWallpaperSlot = (
-  slot: MoliRuntime.AdSlot,
-  prebidConfigs: MoliRuntime.headerbidding.PrebidAdSlotConfig[]
+  slot: AdSlot,
+  prebidConfigs: headerbidding.PrebidAdSlotConfig[]
 ): boolean => {
   const isFloorAd = slot.adUnitPath.includes('floor');
   const hasWallpaperInAdUnitPath = slot.adUnitPath.includes('wallpaper');
@@ -37,8 +35,8 @@ const isWallpaperSlot = (
 
 export const checkAdReloadConfig = (
   messages: Message[],
-  modules: ModuleMeta[],
-  slots: MoliRuntime.AdSlot[],
+  modules: ReadonlyArray<ModuleMeta>,
+  slots: AdSlot[],
   labels: string[]
 ): void => {
   const module = modules.find(module => module.moduleType === 'ad-reload');
@@ -48,21 +46,13 @@ export const checkAdReloadConfig = (
   }
 
   // this only works because there's a single ad reload module available right now
-  const adReloadConfig = module.config as AdReloadModuleConfig;
+  const adReloadConfig = module.config as modules.adreload.AdReloadModuleConfig;
 
   slots.forEach(slot => {
     if (!slot.prebid) {
       return;
     }
-    const prebidConfigs = extractPrebidAdSlotConfigs(
-      {
-        keyValues: {},
-        floorPrice: undefined,
-        labels,
-        isMobile: !labels.includes('desktop')
-      },
-      slot.prebid
-    );
+    const prebidConfigs = extractPrebidAdSlotConfigs(slot.prebid);
 
     // a wallpaper slot must be excluded from the ad reload
     if (

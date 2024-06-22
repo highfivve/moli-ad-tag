@@ -1,12 +1,4 @@
 import React, { Component, Fragment } from 'react';
-import { ReportingService } from '@highfivve/ad-tag/source/ts/ads/reportingService';
-import { LabelConfigService } from '@highfivve/ad-tag/source/ts/ads/labelConfigService';
-import { createPerformanceService } from '@highfivve/ad-tag/source/ts/util/performanceService';
-import {
-  getActiveEnvironmentOverride,
-  resetEnvironmentOverrides,
-  setEnvironmentOverrideInStorage
-} from '@highfivve/ad-tag/source/ts/util/environmentOverride';
 
 import { AdSlotConfig } from './adSlotConfig';
 import { Tag, TagLabel } from './tag';
@@ -14,10 +6,6 @@ import { classList } from '../util/stringUtils';
 import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
 import { Theme, ThemingService } from '../util/themingService';
 
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
-import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
-import { ModuleMeta } from '@highfivve/ad-tag/source/ts/types/module';
 import { ConsentConfig } from './consentConfig';
 import { LabelConfigDebug } from './labelConfigDebug';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
@@ -26,11 +14,29 @@ import {
   setDebugDelayToLocalStorage
 } from 'ad-tag/source/ts/util/debugDelay';
 import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
-import MoliConfig = MoliRuntime.MoliConfig;
-import AdSlot = MoliRuntime.AdSlot;
-import { checkBucketConfig, checkSkinConfig } from 'moli-debugger/validations/bucketValidations';
 import { checkAdReloadConfig } from '../validations/adReloadValidations';
 import { checkSizesConfig } from '../validations/sizesConfigValidations';
+import { prebidjs } from '../../types/prebidjs';
+import { googletag } from '../../types/googletag';
+import { MoliRuntime } from '../../types/moliRuntime';
+import {
+  AdSlot,
+  GoogleAdManagerKeyValueMap,
+  headerbidding,
+  LabelSizeConfigEntry,
+  MoliConfig
+} from '../../types/moliConfig';
+import type { ModuleMeta } from '../../types/module';
+import { LabelConfigService } from '../../ads/labelConfigService';
+import { checkBucketConfig, checkSkinConfig } from '../validations/bucketValidations';
+import {
+  getActiveEnvironmentOverride,
+  resetEnvironmentOverrides,
+  setEnvironmentOverrideInStorage
+} from '../../util/environmentOverride';
+
+// @ts-ignore
+import styles from './../debug.pcss';
 
 declare const window: Window &
   prebidjs.IPrebidjsWindow &
@@ -39,7 +45,8 @@ declare const window: Window &
 
 type IGlobalConfigProps = {
   config?: MoliConfig;
-  modules: Array<ModuleMeta>;
+  runtimeConfig: MoliRuntime.MoliRuntimeConfig;
+  modules: ReadonlyArray<ModuleMeta>;
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
   themingService: ThemingService;
@@ -54,7 +61,6 @@ type IGlobalConfigState = {
     prebid: boolean;
     a9: boolean;
     labelSizeConfig: boolean;
-    performance: boolean;
     consent: boolean;
     yieldOptimization: boolean;
     supplyChain: boolean;
@@ -70,7 +76,7 @@ type IGlobalConfigState = {
 
 export type Message = {
   kind: 'error' | 'warning' | 'optimization';
-  text: string | JSX.Element;
+  text: React.ReactNode;
 };
 
 const debugSidebarSelector = 'moli-debug-sidebar';
@@ -91,7 +97,6 @@ export class GlobalConfig
         prebid: false,
         a9: false,
         labelSizeConfig: false,
-        performance: false,
         consent: false,
         yieldOptimization: false,
         supplyChain: false
@@ -214,8 +219,8 @@ export class GlobalConfig
     });
   }
 
-  render(): JSX.Element {
-    const { config, modules, labelConfigService } = this.props;
+  render(): React.ReactElement {
+    const { config, runtimeConfig, modules, labelConfigService } = this.props;
 
     const adTagVersion = this.extractAdVersionFromS2sConfig(config?.prebid?.config?.s2sConfig);
 
@@ -236,7 +241,8 @@ export class GlobalConfig
     const switchToLightTheme = () => this.setTheme('light');
 
     return (
-      <>
+      <div id="moli-console-global-config">
+        <style>{styles}</style>
         <button
           className="MoliDebug-sidebar-closeHandle"
           title={showHideMessage}
@@ -283,7 +289,7 @@ export class GlobalConfig
                 <div>
                   <div className="MoliDebug-tagContainer">
                     <TagLabel>Mode</TagLabel>
-                    {config.environment === 'test' ? (
+                    {runtimeConfig.environment === 'test' ? (
                       <Tag variant="yellow">Test</Tag>
                     ) : (
                       <Tag variant="green">Production</Tag>
@@ -311,7 +317,7 @@ export class GlobalConfig
                       placeholder="in milliseconds"
                       value={debugDelay}
                       list="debug-delay-suggestions"
-                      disabled={config.environment !== 'test'}
+                      disabled={runtimeConfig.environment !== 'test'}
                       onChange={e =>
                         setDebugDelayToLocalStorage(window, e.currentTarget.valueAsNumber)
                       }
@@ -422,11 +428,7 @@ export class GlobalConfig
                       <div key={index}>
                         <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
                         <strong>{slot.domId}</strong>
-                        <AdSlotConfig
-                          labelConfigService={labelConfigService}
-                          reportingConfig={config.reporting}
-                          slot={slot}
-                        />
+                        <AdSlotConfig labelConfigService={labelConfigService} slot={slot} />
                       </div>
                     ) : null
                   )}
@@ -660,25 +662,6 @@ export class GlobalConfig
               )}
             </div>
 
-            {
-              <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--performance">
-                <h4>
-                  {this.collapseToggle('performance')}
-                  Performance
-                </h4>
-
-                {expandSection.performance && (
-                  <div>
-                    {this.singlePerformanceMeasure('ttfa')}
-                    {this.singlePerformanceMeasure('ttfr')}
-                    {this.singlePerformanceMeasure('prebidLoad')}
-                    {this.singlePerformanceMeasure('a9Load')}
-                    {this.singlePerformanceMeasure('dfpLoad')}
-                  </div>
-                )}
-              </div>
-            }
-
             <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--supplyChain">
               <h4>
                 {this.collapseToggle('supplyChain')}
@@ -762,7 +745,7 @@ export class GlobalConfig
             </div>
           </div>
         )}
-      </>
+      </div>
     );
   }
 
@@ -783,7 +766,7 @@ export class GlobalConfig
     window.location.reload();
   };
 
-  private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): JSX.Element => {
+  private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): React.ReactElement => {
     return (
       <Fragment>
         {Object.keys(moduleConfig).map((key, index) => {
@@ -832,7 +815,7 @@ export class GlobalConfig
   private setTheme = (theme: Theme) =>
     this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
 
-  private keyValues = (keyValues: MoliRuntime.GoogleAdManagerKeyValueMap): JSX.Element => {
+  private keyValues = (keyValues: GoogleAdManagerKeyValueMap): React.ReactElement => {
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (
@@ -865,7 +848,7 @@ export class GlobalConfig
     );
   };
 
-  private labels = (labels: string[] | undefined): JSX.Element => {
+  private labels = (labels: string[] | undefined): React.ReactElement => {
     return (
       <div className="MoliDebug-tagContainer">
         {labels &&
@@ -882,7 +865,7 @@ export class GlobalConfig
   private filterSetting = (
     name: string,
     filterSetting: prebidjs.userSync.IFilterSetting
-  ): JSX.Element => {
+  ): React.ReactElement => {
     return (
       <div>
         <strong>{name}</strong>
@@ -900,36 +883,12 @@ export class GlobalConfig
     );
   };
 
-  private standardTagFromString = (content: string): JSX.Element => {
+  private standardTagFromString = (content: string): React.ReactElement => {
     return <Tag key={content}>{content}</Tag>;
   };
 
   private toggleSidebar = (): void => {
     this.setState({ sidebarHidden: !this.state.sidebarHidden });
-  };
-
-  private singlePerformanceMeasure = (
-    name: 'dfpLoad' | 'prebidLoad' | 'a9Load' | 'ttfa' | 'ttfr'
-  ): JSX.Element => {
-    const measure = ReportingService.getSingleMeasurementMetricMeasureName(name);
-    const entry = createPerformanceService(window).getMeasure(measure);
-
-    if (entry) {
-      const color: 'green' | 'yellow' | 'red' =
-        entry.duration > 5000 ? 'red' : entry.duration > 2000 ? 'yellow' : 'green';
-      return (
-        <div className="MoliDebug-tagContainer">
-          <TagLabel>{name}</TagLabel>
-          <Tag variant={color}>{entry.duration.toFixed(0)} ms</Tag>
-        </div>
-      );
-    }
-    return (
-      <div className="MoliDebug-tagContainer">
-        <TagLabel>{name}</TagLabel>
-        <Tag variant="blue">no entry</Tag>
-      </div>
-    );
   };
 
   private collapseToggle = (
@@ -942,11 +901,10 @@ export class GlobalConfig
       | 'prebid'
       | 'a9'
       | 'labelSizeConfig'
-      | 'performance'
       | 'consent'
       | 'supplyChain'
     >
-  ): JSX.Element => {
+  ): React.ReactElement => {
     const toggleValue = (
       section: keyof Pick<
         IGlobalConfigState['expandSection'],
@@ -957,7 +915,6 @@ export class GlobalConfig
         | 'prebid'
         | 'a9'
         | 'labelSizeConfig'
-        | 'performance'
         | 'consent'
         | 'supplyChain'
       >
@@ -976,7 +933,7 @@ export class GlobalConfig
     );
   };
 
-  private iconForMessageKind = (kind: Message['kind'] | 'empty'): JSX.Element => {
+  private iconForMessageKind = (kind: Message['kind'] | 'empty'): React.ReactElement => {
     return (
       <span className="MoliDebug-configMessage-icon">
         {kind === 'error' && <span>&#x2757;</span>}
@@ -1020,7 +977,7 @@ export class GlobalConfig
     }
   };
 
-  private checkPrebidConfig = (messages: Message[], prebid: MoliRuntime.headerbidding.PrebidConfig) => {
+  private checkPrebidConfig = (messages: Message[], prebid: headerbidding.PrebidConfig) => {
     if (!prebid.config.consentManagement) {
       messages.push({
         kind: 'error',
@@ -1039,15 +996,7 @@ export class GlobalConfig
   private checkSlotPrebidConfig = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
       const labels = this.props.labelConfigService.getSupportedLabels();
-      extractPrebidAdSlotConfigs(
-        {
-          keyValues: {},
-          floorPrice: undefined,
-          labels,
-          isMobile: !labels.includes('desktop')
-        },
-        slot.prebid
-      ).forEach(prebidConfig => {
+      extractPrebidAdSlotConfigs(slot.prebid).forEach(prebidConfig => {
         const mediaTypes = prebidConfig.adUnit.mediaTypes;
 
         if (!!mediaTypes && !mediaTypes.banner && !mediaTypes.video) {
@@ -1062,7 +1011,7 @@ export class GlobalConfig
 
   private checkGlobalSizeConfigEntry =
     (messages: Message[]) =>
-    (entry: MoliRuntime.LabelSizeConfigEntry, _: number): void => {
+    (entry: LabelSizeConfigEntry, _: number): void => {
       if (entry.labelsSupported.length === 0) {
         messages.push({
           kind: 'warning',
@@ -1074,15 +1023,7 @@ export class GlobalConfig
   private checkForWrongPrebidCodeEntry = (messages: Message[], slot: AdSlot) => {
     if (slot.prebid) {
       const labels = this.props.labelConfigService.getSupportedLabels();
-      extractPrebidAdSlotConfigs(
-        {
-          keyValues: {},
-          floorPrice: undefined,
-          labels,
-          isMobile: !labels.includes('desktop')
-        },
-        slot.prebid
-      ).forEach(prebidConfig => {
+      extractPrebidAdSlotConfigs(slot.prebid).forEach(prebidConfig => {
         const code = prebidConfig.adUnit.code;
         if (code && code !== slot.domId) {
           messages.push({
