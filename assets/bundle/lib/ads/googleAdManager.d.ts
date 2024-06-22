@@ -1,0 +1,10 @@
+import { ConfigureStep, DefineSlotsStep, InitStep, PrepareRequestAdsStep, RequestAdsStep } from './adPipeline';
+import { IAssetLoaderService } from '../util/assetLoaderService';
+export declare const gptInit: (assetLoader: IAssetLoaderService) => InitStep;
+export declare const gptDestroyAdSlots: () => ConfigureStep;
+export declare const gptResetTargeting: () => ConfigureStep;
+export declare const gptConfigure: () => ConfigureStep;
+export declare const gptLDeviceLabelKeyValue: () => PrepareRequestAdsStep;
+export declare const gptConsentKeyValue: () => PrepareRequestAdsStep;
+export declare const gptDefineSlots: () => DefineSlotsStep;
+export declare const gptRequestAds: () => RequestAdsStep;
