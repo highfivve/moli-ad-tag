@@ -70,8 +70,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # this overrides the default clearing behaviour (entire target directory, FOLDER) and allows to keep some files
           # mainly the moli debugger and prebuilt bundles
-          CLEAR_GLOBS_FILE: |
-            '**/*'
-            '!.git'
-            '!assets/bundle/**/*'
-            '!assets/schema/**/*'
+          CLEAR_GLOBS_FILE: .github/.clear-target-files

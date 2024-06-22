@@ -1,0 +1,4 @@
+**/*
+!.git
+!assets/bundle/**/*
+!assets/schema/**/*
