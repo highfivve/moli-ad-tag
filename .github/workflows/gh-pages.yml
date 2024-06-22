@@ -51,10 +51,9 @@ jobs:
       # Build ad tag console
       - name: build ad tag console / debugger
         run: |
-          npm ci
           npm run build:console
-          cp dist/console.js ../website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.js
-          cp dist/console.mjs ../website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.mjs
+          cp dist/console.js website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.js
+          cp dist/console.mjs website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.mjs
 
       # Copy schema files
       - name: copy schema files
@@ -63,7 +62,7 @@ jobs:
 
       # Deploy website
       - name: Deploy
-        uses: s0/git-publish-subdir-action@develop
+        uses: s0/git-publish-subdir-action@v2.6.0
         env:
           REPO: self
           BRANCH: gh-pages
