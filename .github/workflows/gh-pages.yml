@@ -37,9 +37,10 @@ jobs:
           npm ci
           npm run build
 
-      - name: create versioned asset directory
+      - name: create versioned asset directories
         run: |
           mkdir -p website/build/assets/js/${{ env.RELEASE_VERSION }}
+          mkdir -p website/build/assets/schema/${{ env.RELEASE_VERSION }}
 
       # Build prebuilt ad-tag
       - name: build adtag
@@ -54,6 +55,11 @@ jobs:
           npm run build:console
           cp dist/console.js ../website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.js
           cp dist/console.mjs ../website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.mjs
+
+      # Copy schema files
+      - name: copy schema files
+        run: |
+          cp schema.json website/build/assets/schema/${{ env.RELEASE_VERSION }}/schema.json
 
       # Deploy website
       - name: Deploy
