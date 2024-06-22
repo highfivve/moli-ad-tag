@@ -71,6 +71,7 @@ jobs:
           # this overrides the default clearing behaviour (entire target directory, FOLDER) and allows to keep some files
           # mainly the moli debugger and prebuilt bundles
           CLEAR_GLOBS_FILE: |
-            'website/build/**/*'
+            '**/*'
             '!.git'
-            '!website/build/assets/bundle/**/*'
+            '!assets/bundle/**/*'
+            '!assets/schema/**/*'
