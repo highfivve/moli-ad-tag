@@ -5,6 +5,7 @@ import { UserActivityLevelControl } from '../ads/modules/ad-reload/userActivityS
 import { AdexAppConfig } from '../ads/modules/adex';
 import { MappingDefinition } from '../ads/modules/adex/adex-mapping';
 import { BlocklistProvider } from '../ads/modules/blocklist-url';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -1180,6 +1181,74 @@ export namespace modules {
     };
   }
 
+  export namespace yield_optimization {
+    export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
+
+    /**
+     * Available options to configure yield optimization
+     */
+    export type YieldOptimizationConfig =
+      | NoYieldOptimizationConfig
+      | StaticYieldOptimizationConfig
+      | DynamicYieldOptimizationConfig;
+
+    export type IYieldOptimizationConfig = IModuleConfig & {
+      readonly provider: YieldOptimizationConfigProvider;
+    };
+
+    /**
+     * No key values will be applied. The system is inactive.
+     */
+    export type NoYieldOptimizationConfig = IYieldOptimizationConfig & {
+      readonly provider: 'none';
+    };
+
+    /**
+     * A static configuration for all ad units. This is to emulate server requests
+     */
+    export type StaticYieldOptimizationConfig = IYieldOptimizationConfig & {
+      readonly provider: 'static';
+
+      readonly config: AdunitPriceRulesResponse;
+    };
+
+    /**
+     * A dynamic configuration
+     */
+    export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
+      readonly provider: 'dynamic';
+
+      /**
+       * URL to a json config file that contains a list of AdUnitPriceRules.
+       */
+      readonly configEndpoint: string;
+
+      /**
+       * AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.
+       */
+      readonly excludedAdUnitPaths: string[];
+    };
+
+    export type PriceRules = {
+      /**
+       * The ad unit that is being configured along with a price that was selected from the server
+       */
+      readonly [adUnitPath: string]: MoliRuntime.yield_optimization.PriceRule;
+    };
+
+    /**
+     * Response from the yield optimization server
+     */
+    export type AdunitPriceRulesResponse = {
+      readonly rules: PriceRules;
+      /**
+       * the browser that was detected on the backend.
+       * @example Chrome
+       */
+      readonly browser?: string;
+    };
+  }
+
   export interface ModulesConfig {
     readonly adReload?: adreload.AdReloadModuleConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
@@ -1190,6 +1259,7 @@ export namespace modules {
       | blocklist.BlocklistUrlsKeyValueConfig;
     readonly adex?: adex.AdexConfig;
     readonly skin?: skin.SkinModuleConfig;
+    readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
   }
 }
 

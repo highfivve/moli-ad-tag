@@ -1,10 +1,8 @@
-import { MoliRuntime } from 'ad-tag/source/ts/types/moliRuntime';
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import MoliLogger = MoliRuntime.MoliLogger;
-import IAdSlot = googletag.IAdSlot;
-import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
-import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
-import Device = MoliRuntime.Device;
+import { AdServer, AdUnitPathVariables, Device, modules } from 'ad-tag/types/moliConfig';
+import AdunitPriceRulesResponse = modules.yield_optimization.AdunitPriceRulesResponse;
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
+import { googletag } from 'ad-tag/types/googletag';
 
 /**
  * Extended representation which adds
@@ -50,25 +48,23 @@ export class YieldOptimizationService {
   /**
    *
    * @param yieldConfig the yield optimization config
-   * @param log
-   * @param window
    */
-  constructor(
-    private readonly yieldConfig: YieldOptimizationConfig,
-    private readonly log: MoliLogger,
-    private readonly window: Window
-  ) {}
+  constructor(private readonly yieldConfig: modules.yield_optimization.YieldOptimizationConfig) {}
 
   /**
    *
    * @param device - the device label for the LabelConfigService
    * @param adUnitPathVariables - from the config targeting object
    * @param adUnitPaths All adUnitPaths configured in the slot config.
+   * @param fetch
+   * @param logger
    */
   public init(
     device: Device,
     adUnitPathVariables: AdUnitPathVariables,
-    adUnitPaths: string[]
+    adUnitPaths: string[],
+    fetch: typeof window.fetch,
+    logger: MoliRuntime.MoliLogger
   ): Promise<void> {
     // if a desktop label is present, the yield optimization service will request desktop price rules
     // otherwise mobile
@@ -77,12 +73,12 @@ export class YieldOptimizationService {
 
     switch (this.yieldConfig.provider) {
       case 'none':
-        this.log.warn('YieldOptimizationService', 'Yield optimization is disabled!');
+        logger.warn('YieldOptimizationService', 'Yield optimization is disabled!');
         this.isEnabled = false;
         this.adUnitPricingRuleResponse = Promise.resolve(this.emptyAdUnitPriceRulesResponse);
         break;
       case 'static':
-        this.log.warn('YieldOptimizationService', 'Yield optimization is static!');
+        logger.warn('YieldOptimizationService', 'Yield optimization is static!');
         this.isEnabled = true;
         this.adUnitPricingRuleResponse = Promise.resolve({
           rules: this.yieldConfig.config.rules,
@@ -106,10 +102,11 @@ export class YieldOptimizationService {
         this.adUnitPricingRuleResponse = this.loadConfigWithRetry(
           this.yieldConfig.configEndpoint,
           3,
-          resolvedAdUnits
+          resolvedAdUnits,
+          fetch
         )
           .then(config => {
-            this.log.info(
+            logger.info(
               'YieldOptimizationService',
               `loaded pricing rules for device ${this.device}`,
               config
@@ -117,7 +114,7 @@ export class YieldOptimizationService {
             return config;
           })
           .catch(error => {
-            this.log.error('YieldOptimizationService', 'failed to initialize service', error);
+            logger.error('YieldOptimizationService', 'failed to initialize service', error);
             return this.emptyAdUnitPriceRulesResponse;
           });
         break;
@@ -158,14 +155,19 @@ export class YieldOptimizationService {
    *
    * @param adSlot
    * @param adServer
+   * @param logger
    */
-  public setTargeting(adSlot: IAdSlot, adServer: MoliRuntime.AdServer): Promise<PriceRule | undefined> {
+  public setTargeting(
+    adSlot: googletag.IAdSlot,
+    adServer: AdServer,
+    logger: MoliRuntime.MoliLogger
+  ): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
       if (adServer === 'gam') {
         if (rule) {
-          this.log.debug(
+          logger.debug(
             'YieldOptimizationService',
             `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
           );
@@ -175,7 +177,7 @@ export class YieldOptimizationService {
             adSlot.setTargeting('upr_main', 'true');
           }
         } else if (this.isEnabled) {
-          this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
+          logger.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
         }
       }
       return rule;
@@ -186,29 +188,29 @@ export class YieldOptimizationService {
     configEndpoint: string,
     retriesLeft: number,
     adUnitPaths: string[],
+    fetch: typeof window.fetch,
     lastError: any | null = null
   ): Promise<AdunitPriceRulesResponse> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
 
-    return this.window
-      .fetch(configEndpoint, {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        //
-        body: JSON.stringify({
-          device: this.device,
-          // GD-2996 - temporary migration to new key
-          key: 'adUnitPath',
-          // GD-3821 - send adUnitPaths for alarm on misconfigured adUnits
-          adUnitPaths: adUnitPaths
-        })
+    return fetch(configEndpoint, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      //
+      body: JSON.stringify({
+        device: this.device,
+        // GD-2996 - temporary migration to new key
+        key: 'adUnitPath',
+        // GD-3821 - send adUnitPaths for alarm on misconfigured adUnits
+        adUnitPaths: adUnitPaths
       })
+    })
       .then(response => {
         return response.ok
           ? response.json()
@@ -238,7 +240,7 @@ export class YieldOptimizationService {
         // for 3 retries the backoff time will be 33ms / 50ms / 100ms
         const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
         return exponentialBackoff.then(() =>
-          this.loadConfigWithRetry(configEndpoint, retriesLeft - 1, error)
+          this.loadConfigWithRetry(configEndpoint, retriesLeft - 1, adUnitPaths, fetch, error)
         );
       });
   }
@@ -247,11 +249,11 @@ export class YieldOptimizationService {
     return obj.hasOwnProperty('rules');
   }
 
-  private isPriceRules(obj: unknown): obj is PriceRules {
+  private isPriceRules(obj: unknown): obj is modules.yield_optimization.PriceRules {
     return typeof obj === 'object' && obj !== null;
   }
 
-  private validateRules(rules: unknown): rules is PriceRules {
+  private validateRules(rules: unknown): rules is modules.yield_optimization.PriceRules {
     if (!this.isPriceRules(rules)) {
       return false;
     }

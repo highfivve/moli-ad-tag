@@ -1,14 +1,18 @@
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, googletag, MoliRuntime } from '@highfivve/ad-tag';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
-
-import { YieldOptimization, StaticYieldOptimizationConfig } from './index';
+import { YieldOptimization } from './index';
 import { YieldOptimizationService } from './yieldOptimizationService';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { googletag } from 'ad-tag/types/googletag';
+import { AdSlot, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import StaticYieldOptimizationConfig = modules.yield_optimization.StaticYieldOptimizationConfig;
+import { emptyConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import YieldOptimizationConfig = modules.yield_optimization.YieldOptimizationConfig;
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,6 +27,7 @@ describe('Yield Optimization module', () => {
 
   const adUnitId = 'adUnit1';
   const yieldConfig: StaticYieldOptimizationConfig = {
+    enabled: true,
     provider: 'static',
     config: {
       rules: {
@@ -35,7 +40,7 @@ describe('Yield Optimization module', () => {
     }
   };
 
-  const adUnit = (adUnitPath: string, labelAll: string[]): MoliRuntime.AdSlot => {
+  const adUnit = (adUnitPath: string, labelAll: string[]): AdSlot => {
     return {
       domId: 'domId',
       position: 'in-page',
@@ -58,6 +63,16 @@ describe('Yield Optimization module', () => {
     };
   };
 
+  const createConfiguredModule = (
+    providedYieldConfig: YieldOptimizationConfig = yieldConfig
+  ): YieldOptimization => {
+    const module = new YieldOptimization();
+    module.configure({
+      yieldOptimization: providedYieldConfig
+    });
+    return module;
+  };
+
   afterEach(() => {
     dom = createDom();
     jsDomWindow = dom.window as any;
@@ -65,23 +80,17 @@ describe('Yield Optimization module', () => {
   });
 
   describe('init step', () => {
-    const module = new YieldOptimization(yieldConfig, jsDomWindow);
-
     it('should add yield-optimization optimization step', async () => {
-      const config = newEmptyConfig();
-      await module.init(config, assetLoader);
+      const module = createConfiguredModule();
+      let initSteps = module.initSteps(assetLoader);
 
-      expect(config.pipeline).to.be.ok;
-      expect(config.pipeline?.initSteps).to.be.ok;
-      expect(config.pipeline?.initSteps?.map(e => e.name)).to.include('yield-optimization-init');
+      expect(initSteps).to.have.length(1);
+      expect(initSteps.map(e => e.name)).to.include('yield-optimization-init');
     });
 
     it('should call init on the yield optimization service', async () => {
-      const yieldOptimizationService = new YieldOptimizationService(
-        yieldConfig,
-        noopLogger,
-        jsDomWindow
-      );
+      const module = new YieldOptimization();
+      const yieldOptimizationService = new YieldOptimizationService(yieldConfig);
 
       const labelConfigService: any = labelServiceMock();
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
@@ -92,7 +101,7 @@ describe('Yield Optimization module', () => {
         .returns('desktop');
 
       // a config with targeting labels set
-      const config: MoliRuntime.MoliConfig = {
+      const config: MoliConfig = {
         ...emptyConfig,
         targeting: {
           keyValues: {},
@@ -104,7 +113,8 @@ describe('Yield Optimization module', () => {
         config: config,
         logger: noopLogger,
         labelConfigService: labelConfigService,
-        adUnitPathVariables: { device: 'desktop', domain: 'example.com' }
+        adUnitPathVariables: { device: 'desktop', domain: 'example.com' },
+        window: jsDomWindow
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnce;
@@ -114,16 +124,15 @@ describe('Yield Optimization module', () => {
           device: 'desktop',
           domain: 'example.com'
         },
-        []
+        [],
+        jsDomWindow.fetch,
+        noopLogger
       );
     });
 
     it('should filter ad unit paths based on labels', async () => {
-      const yieldOptimizationService = new YieldOptimizationService(
-        yieldConfig,
-        noopLogger,
-        jsDomWindow
-      );
+      const module = new YieldOptimization();
+      const yieldOptimizationService = new YieldOptimizationService(yieldConfig);
 
       const labelConfigService: any = labelServiceMock();
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
@@ -141,7 +150,7 @@ describe('Yield Optimization module', () => {
         .returns(false);
 
       // a config with targeting labels set
-      const config: MoliRuntime.MoliConfig = {
+      const config: MoliConfig = {
         ...emptyConfig,
         slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/bar', ['mobile'])]
       };
@@ -151,22 +160,24 @@ describe('Yield Optimization module', () => {
         config: config,
         logger: noopLogger,
         labelConfigService: labelConfigService,
-        adUnitPathVariables: adUnitPathVariables
+        adUnitPathVariables: adUnitPathVariables,
+        window: jsDomWindow
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(filterSlotStub).to.have.been.calledTwice;
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', adUnitPathVariables, [
-        '/123/foo'
-      ]);
+      expect(initSpy).to.have.been.calledOnceWithExactly(
+        'desktop',
+        adUnitPathVariables,
+        ['/123/foo'],
+        jsDomWindow.fetch,
+        noopLogger
+      );
     });
 
     it('should filter out duplicated adUnitPaths before initializing yieldOptimizationService', async () => {
-      const yieldOptimizationService = new YieldOptimizationService(
-        yieldConfig,
-        noopLogger,
-        jsDomWindow
-      );
+      const module = new YieldOptimization();
+      const yieldOptimizationService = new YieldOptimizationService(yieldConfig);
 
       const labelConfigService: any = labelServiceMock();
       const initSpy = sandbox.spy(yieldOptimizationService, 'init');
@@ -182,7 +193,7 @@ describe('Yield Optimization module', () => {
         .returns(true);
 
       // a config with targeting labels set
-      const config: MoliRuntime.MoliConfig = {
+      const config: MoliConfig = {
         ...emptyConfig,
         slots: [adUnit('/123/foo', ['desktop']), adUnit('/123/foo', ['desktop'])]
       };
@@ -192,35 +203,32 @@ describe('Yield Optimization module', () => {
         config: config,
         logger: noopLogger,
         labelConfigService: labelConfigService,
-        adUnitPathVariables: adUnitPathVariables
+        adUnitPathVariables: adUnitPathVariables,
+        window: jsDomWindow
       } as any);
       expect(initSpy).to.have.been.calledOnce;
-      expect(initSpy).to.have.been.calledOnceWithExactly('desktop', adUnitPathVariables, [
-        '/123/foo'
-      ]);
+      expect(initSpy).to.have.been.calledOnceWithExactly(
+        'desktop',
+        adUnitPathVariables,
+        ['/123/foo'],
+        jsDomWindow.fetch,
+        noopLogger
+      );
     });
   });
 
   describe('prepare request ads step', () => {
     it('should add yield-optimization optimization step', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
-      const config = newEmptyConfig();
-      await module.init(config, assetLoader);
+      const module = createConfiguredModule();
+      let prepareRequestAdsSteps = module.prepareRequestAdsSteps();
 
-      expect(config.pipeline).to.be.ok;
-      expect(config.pipeline?.prepareRequestAdsSteps).to.be.ok;
-      expect(config.pipeline?.prepareRequestAdsSteps?.map(e => e.name)).to.include(
-        'yield-optimization'
-      );
+      expect(prepareRequestAdsSteps).to.have.length(1);
+      expect(prepareRequestAdsSteps.map(e => e.name)).to.include('yield-optimization');
     });
 
     it('set theTargeting on the google tag', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
-      const yieldOptimizationService = new YieldOptimizationService(
-        yieldConfig,
-        noopLogger,
-        jsDomWindow
-      );
+      const module = new YieldOptimization();
+      const yieldOptimizationService = new YieldOptimizationService(yieldConfig);
       const adSlot = googleAdSlotStub(`/123/${adUnitId}`, adUnitId);
 
       const slot: MoliRuntime.SlotDefinition = {
@@ -243,16 +251,12 @@ describe('Yield Optimization module', () => {
       expect(slot.priceRule).to.be.ok;
       expect(slot.priceRule).to.be.deep.equals(yieldConfig.config.rules[adUnitId]);
       expect(setTargetingStub).to.have.been.calledOnce;
-      expect(setTargetingStub).to.have.been.calledOnceWithExactly(adSlot, 'gam');
+      expect(setTargetingStub).to.have.been.calledOnceWithExactly(adSlot, 'gam', noopLogger);
     });
 
     it('sets the browser returned by getBrowser', async () => {
-      const module = new YieldOptimization(yieldConfig, jsDomWindow);
-      const yieldOptimizationService = new YieldOptimizationService(
-        yieldConfig,
-        noopLogger,
-        jsDomWindow
-      );
+      const module = new YieldOptimization();
+      const yieldOptimizationService = new YieldOptimizationService(yieldConfig);
 
       const setTargetingSpy = sandbox.spy();
 

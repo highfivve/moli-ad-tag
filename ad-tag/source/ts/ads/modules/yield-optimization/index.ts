@@ -58,87 +58,21 @@
  * ```
  * @module
  */
+import { YieldOptimizationService } from './yieldOptimizationService';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { modules } from 'ad-tag/types/moliConfig';
+import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import {
-  IModule,
-  ModuleType,
-  MoliRuntime,
-  getLogger,
-  IAssetLoaderService,
   AdPipelineContext,
+  ConfigureStep,
   HIGH_PRIORITY,
   InitStep,
   mkInitStep,
   mkPrepareRequestAdsStep,
-  PrepareRequestAdsStep,
-  uniquePrimitiveFilter
-} from '@highfivve/ad-tag';
-import { YieldOptimizationService } from './yieldOptimizationService';
-
-export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
-
-/**
- * Available options to configure yield optimization
- */
-export type YieldOptimizationConfig =
-  | NoYieldOptimizationConfig
-  | StaticYieldOptimizationConfig
-  | DynamicYieldOptimizationConfig;
-
-export type IYieldOptimizationConfig = {
-  readonly provider: YieldOptimizationConfigProvider;
-};
-
-/**
- * No key values will be applied. The system is inactive.
- */
-export type NoYieldOptimizationConfig = IYieldOptimizationConfig & {
-  readonly provider: 'none';
-};
-
-/**
- * A static configuration for all ad units. This is to emulate server requests
- */
-export type StaticYieldOptimizationConfig = IYieldOptimizationConfig & {
-  readonly provider: 'static';
-
-  readonly config: AdunitPriceRulesResponse;
-};
-
-/**
- * A dynamic configuration
- */
-export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
-  readonly provider: 'dynamic';
-
-  /**
-   * URL to a json config file that contains a list of AdUnitPriceRules.
-   */
-  readonly configEndpoint: string;
-
-  /**
-   * AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.
-   */
-  readonly excludedAdUnitPaths: string[];
-};
-
-export type PriceRules = {
-  /**
-   * The ad unit that is being configured along with a price that was selected from the server
-   */
-  readonly [adUnitPath: string]: MoliRuntime.yield_optimization.PriceRule;
-};
-
-/**
- * Response from the yield optimization server
- */
-export type AdunitPriceRulesResponse = {
-  readonly rules: PriceRules;
-  /**
-   * the browser that was detected on the backend.
-   * @example Chrome
-   */
-  readonly browser?: string;
-};
+  PrepareRequestAdsStep
+} from 'ad-tag/ads/adPipeline';
+import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
 
 /**
  * == Yield Optimization ==
@@ -154,40 +88,38 @@ export class YieldOptimization implements IModule {
   public readonly description: string = 'Provides floors and UPR ids';
   public readonly moduleType: ModuleType = 'yield';
 
-  private log?: MoliRuntime.MoliLogger;
+  private yieldModuleConfig: modules.yield_optimization.YieldOptimizationConfig | null = null;
 
-  constructor(
-    private readonly yieldModuleConfig: YieldOptimizationConfig,
-    private readonly window: Window
-  ) {}
+  private _initSteps: InitStep[] = [];
+  private _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
 
   config(): Object | null {
     return this.yieldModuleConfig;
   }
 
-  init(moliConfig: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    this.log = getLogger(moliConfig, this.window);
+  configure(moduleConfig?: modules.ModulesConfig): void {
+    if (moduleConfig?.yieldOptimization?.enabled) {
+      this.yieldModuleConfig = moduleConfig.yieldOptimization;
 
-    const yieldOptimizationService = new YieldOptimizationService(
-      this.yieldModuleConfig,
-      this.log,
-      this.window
-    );
+      const yieldOptimizationService = new YieldOptimizationService(moduleConfig.yieldOptimization);
 
-    // init additional pipeline steps if not already defined
-    moliConfig.pipeline = moliConfig.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
+      this._initSteps.push(this.yieldOptimizationInit(yieldOptimizationService));
+      this._prepareRequestAdsSteps.push(
+        this.yieldOptimizationPrepareRequestAds(yieldOptimizationService)
+      );
+    }
+  }
 
-    // initialize the yield optimization service
-    moliConfig.pipeline.initSteps.push(this.yieldOptimizationInit(yieldOptimizationService));
+  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+    return this._initSteps;
+  }
 
-    // set floor price key values
-    moliConfig.pipeline.prepareRequestAdsSteps.push(
-      this.yieldOptimizationPrepareRequestAds(yieldOptimizationService)
-    );
+  configureSteps(): ConfigureStep[] {
+    return [];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return this._prepareRequestAdsSteps;
   }
 
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
@@ -200,7 +132,9 @@ export class YieldOptimization implements IModule {
       return yieldOptimizationService.init(
         context.labelConfigService.getDeviceLabel(),
         context.adUnitPathVariables,
-        adUnitPaths
+        adUnitPaths,
+        context.window.fetch,
+        context.logger
       );
     });
 
@@ -221,7 +155,7 @@ export class YieldOptimization implements IModule {
         const adServer = context.config.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
-            .setTargeting(slot.adSlot, adServer)
+            .setTargeting(slot.adSlot, adServer, context.logger)
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)

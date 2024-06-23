@@ -125,9 +125,9 @@ module.exports = {
         name: 'Modules',
         entryPoints: [
           '../ad-tag/source/ts/ads/modules/ad-reload/index.ts',
-          // '../ad-tag/source/ts/ads/modules/adex/index.ts',
-          // '../ad-tag/source/ts/ads/modules/blocklist-urls/index.ts',
-          // '../ad-tag/source/ts/ads/modules/confiant/index.ts',
+          '../ad-tag/source/ts/ads/modules/adex/index.ts',
+          '../ad-tag/source/ts/ads/modules/blocklist-urls/index.ts',
+          '../ad-tag/source/ts/ads/modules/confiant/index.ts',
           // '../ad-tag/source/ts/ads/modules/emetriq/index.ts',
           // '../ad-tag/source/ts/ads/modules/emetriq/types/emetriq.ts',
           '../ad-tag/source/ts/ads/modules/generic-skin/index.ts',
@@ -135,11 +135,11 @@ module.exports = {
           // '../ad-tag/source/ts/ads/modules/identitylink/types/identitylink.d.ts',
           // '../ad-tag/source/ts/ads/modules/lazy-load/index.ts',
           // '../ad-tag/source/ts/ads/modules/prebid-first-party-data/index.ts',
-          '../ad-tag/source/ts/ads/modules/pubstack/index.ts'
+          '../ad-tag/source/ts/ads/modules/pubstack/index.ts',
           // '../ad-tag/source/ts/ads/modules/sticky-footer-ads/index.ts',
           // '../ad-tag/source/ts/ads/modules/sticky-footer-ads-v2/index.ts',
           // '../ad-tag/source/ts/ads/modules/sticky-header-ads/index.ts',
-          // '../ad-tag/source/ts/ads/modules/yield-optimization/index.ts',
+          '../ad-tag/source/ts/ads/modules/yield-optimization/index.ts'
           // '../ad-tag/source/ts/ads/modules/zeotap/zeotap.ts'
         ],
         exclude: ['**/node_modules/**', 'modules/**/*.test.ts'],
