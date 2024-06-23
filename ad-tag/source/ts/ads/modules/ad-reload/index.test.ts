@@ -89,7 +89,14 @@ describe('Moli Ad Reload Module', () => {
     isEmpty: false
   } as ISlotRenderEndedEvent;
 
+  after(() => {
+    // bring everything back to normal after tests
+    sandbox.restore();
+  });
+
   beforeEach(() => {
+    // AdService calls a setInterval method, which blocks tests before exiting.
+    sandbox.useFakeTimers();
     dom = createDom();
     jsDomWindow = dom.window as any;
     jsDomWindow.moli = {
@@ -103,6 +110,7 @@ describe('Moli Ad Reload Module', () => {
 
   afterEach(() => {
     sandbox.reset();
+    sandbox.clock.restore();
   });
 
   describe('initialize', () => {
@@ -122,10 +130,13 @@ describe('Moli Ad Reload Module', () => {
 
     it('should not initialize the ad reload in environment production', () => {
       const { module, moduleConfig } = createAdReloadModule();
+      console.log('module.isInitialized()', module.isInitialized());
       expect(module.isInitialized()).to.be.false;
       module.initialize(adPipelineContext(emptyConfig), moduleConfig, [], () => {
+        console.log('callback, called');
         return;
       });
+      console.log('module.isInitialized() #2', module.isInitialized());
       expect(module.isInitialized()).to.be.true;
     });
   });
