@@ -2,3 +2,4 @@
 !.git
 !assets/bundle/**/*
 !assets/schema/**/*
+!assets/js/moli-debug.min.js
