@@ -195,22 +195,6 @@ export class GlobalConfig
     }
   }
 
-  extractAdVersionFromS2sConfig(s2sConfig: prebidjs.IPrebidJsConfig['s2sConfig']): string {
-    if (!s2sConfig) {
-      return '?';
-    }
-
-    // see https://github.com/microsoft/TypeScript/issues/53395
-    // type casts are apparently necessary
-    if (Array.isArray(s2sConfig)) {
-      return (
-        (s2sConfig[0] as prebidjs.server.S2SConfig)?.extPrebid?.analytics?.h5v.adTagVersion ?? '?'
-      );
-    } else {
-      return (s2sConfig as prebidjs.server.S2SConfig).extPrebid?.analytics?.h5v.adTagVersion ?? '?';
-    }
-  }
-
   async componentDidMount() {
     const adsTxtDomain = this.props.config?.domain ?? window.location.hostname;
     this.setState({
@@ -222,7 +206,7 @@ export class GlobalConfig
   render(): React.ReactElement {
     const { config, runtimeConfig, modules, labelConfigService } = this.props;
 
-    const adTagVersion = this.extractAdVersionFromS2sConfig(config?.prebid?.config?.s2sConfig);
+    const adTagVersion = config?.version ?? 'not available';
 
     const {
       sidebarHidden,
@@ -234,7 +218,7 @@ export class GlobalConfig
     } = this.state;
     const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
-    const isEnvironmentOverriden = !!getActiveEnvironmentOverride(window);
+    const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
     const debugDelay = getDebugDelayFromLocalStorage(window);
     const isDarkTheme = theme === 'dark';
     const switchToDarkTheme = () => this.setTheme('dark');
@@ -294,7 +278,7 @@ export class GlobalConfig
                     ) : (
                       <Tag variant="green">Production</Tag>
                     )}
-                    {isEnvironmentOverriden ? (
+                    {isEnvironmentOverridden ? (
                       <button
                         className="MoliDebug-button MoliDebug-button--green"
                         onClick={this.resetEnvironmentOverrides}

@@ -486,6 +486,10 @@
         "targeting": {
           "$ref": "#/definitions/Targeting",
           "description": "optional key-value targeting for DFP"
+        },
+        "version": {
+          "description": "The version of the ad tag. This is used to identify the version of the ad tag that is served to the client. This is useful for debugging purposes.",
+          "type": "string"
         }
       },
       "required": [

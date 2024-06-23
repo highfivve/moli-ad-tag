@@ -1200,6 +1200,12 @@ export namespace modules {
  */
 export interface MoliConfig {
   /**
+   * The version of the ad tag. This is used to identify the version of the ad tag
+   * that is served to the client. This is useful for debugging purposes.
+   */
+  readonly version?: string;
+
+  /**
    * default is `gam`
    */
   readonly adServer?: AdServer;
