@@ -51,6 +51,25 @@ You require `npm` for developing.
 npm run setup
 ```
 
+## Running tests
+
+You can run tests with
+
+```bash
+npm test
+```
+
+If you do run tests in your IDE, you need to make sure that those two parameters are added to the Mocha runner
+
+```
+--require ts-node/register --require tsconfig-paths/register
+```
+
+The [tsconfig-paths](https://www.npmjs.com/package/tsconfig-paths) package is necessary to support the `compilerOptions.paths` in the `tsconfig.json`,
+which allow for more concise imports.
+
+For intellij see [https://www.jetbrains.com/help/idea/running-unit-tests-on-typescript.html#mocha](https://www.jetbrains.com/help/idea/running-unit-tests-on-typescript.html#mocha)
+
 ## Examples
 
 In order to run the examples you must create a production build of the modules.

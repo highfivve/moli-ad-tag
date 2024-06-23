@@ -37,3 +37,6 @@ pids
 node_modules
 .idea
 *.iml
+
+# intellij
+.run

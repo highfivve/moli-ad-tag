@@ -19,7 +19,10 @@
     "sourceMap": true,
     "noEmitOnError": true,
     "outDir": "./lib",
-    "rootDir": "ad-tag/source/ts"
+    "rootDir": "ad-tag/source/ts",
+    "paths": {
+      "ad-tag/*": ["ad-tag/source/ts/*"]
+    },
   },
   "include": ["ad-tag/source/**/*"],
   "exclude": ["node_modules", "**/lib", "tests"]
