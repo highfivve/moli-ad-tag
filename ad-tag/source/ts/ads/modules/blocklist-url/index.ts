@@ -92,18 +92,12 @@
  *
  * @module
  */
-import { IModule, ModuleType } from '../../../types/module';
-import { MoliRuntime } from '../../../types/moliRuntime';
-import { IAssetLoaderService } from '../../../util/assetLoaderService';
-import {
-  ConfigureStep,
-  InitStep,
-  mkConfigureStep,
-  mkInitStep,
-  PrepareRequestAdsStep
-} from '../../adPipeline';
-import { googletag } from '../../../types/googletag';
-import { modules } from '../../../types/moliConfig';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from '../../adPipeline';
+import { googletag } from 'ad-tag/types/googletag';
+import { modules } from 'ad-tag/types/moliConfig';
 
 export type BlocklistEntry = {
   /**

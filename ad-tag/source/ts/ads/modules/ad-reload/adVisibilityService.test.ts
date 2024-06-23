@@ -3,12 +3,12 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
-import { googletag } from '../../../types/googletag';
+import { googletag } from 'ad-tag/types/googletag';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { noopLogger } from '../../../stubs/moliStubs';
-import { createGoogletagStub, googleAdSlotStub } from '../../../stubs/googletagStubs';
-import { modules } from '../../../types/moliConfig';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { noopLogger } from 'ad-tag/stubs/moliStubs';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { modules } from 'ad-tag/types/moliConfig';
 import RefreshIntervalOverrides = modules.adreload.RefreshIntervalOverrides;
 
 use(sinonChai);

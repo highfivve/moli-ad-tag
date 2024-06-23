@@ -7,8 +7,8 @@ import {
   userActivityParametersForLevel,
   UserActivityService
 } from './userActivityService';
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { noopLogger } from '../../../stubs/moliStubs';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { noopLogger } from 'ad-tag/stubs/moliStubs';
 
 use(sinonChai);
 

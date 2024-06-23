@@ -20,8 +20,8 @@
  *
  * @module
  */
-import { IModule, ModuleType } from '../../../types/module';
-import { AssetLoadMethod, IAssetLoaderService } from '../../../util/assetLoaderService';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import {
   ConfigureStep,
   InitStep,
@@ -29,7 +29,7 @@ import {
   mkInitStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-import { modules } from '../../../types/moliConfig';
+import { modules } from 'ad-tag/types/moliConfig';
 
 /**
  * ## Pubstack Analytics
