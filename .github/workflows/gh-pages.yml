@@ -54,6 +54,8 @@ jobs:
           npm run build:console
           cp dist/console.js website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.js
           cp dist/console.mjs website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.mjs
+          # the previous debugger path in 4.x
+          cp dist/console.js website/build/assets/js/moli-debug.min.js
 
       # Copy schema files
       - name: copy schema files

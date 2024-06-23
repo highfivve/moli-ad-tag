@@ -1,6 +1,5 @@
 import typescript from '@rollup/plugin-typescript';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import babel from '@rollup/plugin-babel';
 import external from 'rollup-plugin-peer-deps-external';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
@@ -54,7 +53,7 @@ export default [
         preventAssignment: false,
         'process.env.NODE_ENV': JSON.stringify( 'production' )
       }),
-      // terser()
+      terser()
     ]
   }
 ]

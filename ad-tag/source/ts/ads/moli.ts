@@ -779,8 +779,9 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       default: {
         assetLoaderService
           .loadScript({
-            // FIXME this URLs must include the version of the ad tag library
-            assetUrl: path || 'https://highfivve.github.io/moli-ad-tag/assets/js/moli-debug.min.js',
+            assetUrl:
+              path ??
+              `https://highfivve.github.io/moli-ad-tag/assets/bundle/v${packageJson.version}/console.js`,
             loadMethod: AssetLoadMethod.TAG,
             name: 'moli-debugger'
           })
