@@ -65,8 +65,8 @@
  * @module
  */
 
-import { IModule, ModuleType } from '../../../types/module';
-import { AssetLoadMethod, IAssetLoaderService } from '../../../util/assetLoaderService';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -75,27 +75,22 @@ import {
   mkInitStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-import {
-  AdexKeyValueMap,
-  AdexKeyValuePair,
-  AdexKeyValues,
-  MappingDefinition,
-  toAdexListType,
-  toAdexMapType,
-  toAdexStringOrNumberType
-} from './adex-mapping';
-import { isNotNull } from '../../../util/arrayUtils';
-import { modules } from '../../../types/moliConfig';
+import { toAdexListType, toAdexMapType, toAdexStringOrNumberType } from './adex-mapping';
+import { isNotNull } from 'ad-tag/util/arrayUtils';
+import { modules } from 'ad-tag/types/moliConfig';
 import { sendAdvertisingID } from './sendAdvertisingId';
 import AdexConfig = modules.adex.AdexConfig;
-import { tcfapi } from '../../../types/tcfapi';
+import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
+import AdexKeyValues = modules.adex.AdexKeyValues;
+import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
+import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
 
 export interface ITheAdexWindow extends Window {
   /**
    * The Adex command queue.
    *
-   * Takes an array of plugin configurations that configure the The Adex
+   * Takes an array of plugin configurations that configure the TheAdex
    * tracking pixel.
    */
   _adexc?: IUserTrackPluginKeyValueConfiguration[];
@@ -163,49 +158,6 @@ interface IUserTrackPluginKeyValueConfiguration {
   };
 }
 
-export interface AdexAppConfig {
-  /**
-   * key within the moli config keyValues in which the client type is defined
-   */
-  readonly clientTypeKey: string;
-  /**
-   * key within the moli config keyValues in which the advertising id can be found
-   */
-  readonly advertiserIdKey: string;
-  /**
-   * extra tag id for the mobile endpoint data if distinction is wanted/necessary
-   */
-  readonly adexMobileTagId?: string;
-}
-
-/**
- * TheADEX module configuration.
- */
-export interface AdexModuleConfig {
-  /**
-   * Provided by your ADEX account manager.
-   */
-  readonly adexCustomerId: string;
-
-  /**
-   * Provided by your ADEX account manager.
-   */
-  readonly adexTagId: string;
-  /**
-   * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
-   * In regular mode, tracking is only executed once.
-   */
-  readonly spaMode: boolean;
-  /**
-   * extraction and conversion rules to produce Adex compatible data from key/value targeting.
-   */
-  readonly mappingDefinitions: Array<MappingDefinition>;
-  /**
-   * If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
-   */
-  readonly appConfig?: AdexAppConfig;
-}
-
 /**
  * Module to collect, convert and send key/value targeting data to The Adex DMP.
  */
@@ -220,7 +172,7 @@ export class AdexModule implements IModule {
 
   private isLoaded: boolean = false;
 
-  config(): AdexModuleConfig | null {
+  config(): modules.adex.AdexConfig | null {
     return this.adexConfig;
   }
 

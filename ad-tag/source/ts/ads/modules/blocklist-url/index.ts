@@ -98,84 +98,8 @@ import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from '../../adPipeline';
 import { googletag } from 'ad-tag/types/googletag';
 import { modules } from 'ad-tag/types/moliConfig';
-
-export type BlocklistEntry = {
-  /**
-   * A regex pattern for the complete href of the page
-   */
-  readonly pattern: string;
-
-  /**
-   * Defines how the pattern should be matched against the url
-   *
-   * - `regex` - transform the pattern into a regex and runs `regex.test(url)`
-   * - `contains` - checks if the url contains the given pattern string
-   * - `exact` - checks if the url exactly matches the given pattern string
-   */
-  readonly matchType: 'regex' | 'contains' | 'exact';
-};
-
-export type Blocklist = {
-  readonly urls: BlocklistEntry[];
-};
-
-/**
- * A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added
- */
-export type StaticBlocklistProvider = {
-  readonly provider: 'static';
-
-  readonly blocklist: Blocklist;
-};
-
-/**
- * The dynamic configuration provider that lets you update entries without updating the ad tag
- */
-export type DynamicBlocklistProvider = {
-  readonly provider: 'dynamic';
-
-  /**
-   * Fetch the blocklist json from the specified endpoint
-   */
-  readonly endpoint: string;
-};
-
-export type BlocklistProvider = StaticBlocklistProvider | DynamicBlocklistProvider;
-
-export type BlocklistUrlsBlockingConfig = {
-  /**
-   * `block` - this mode blocks ad requests entirely
-   * `key-value` - sets a specified key value
-   */
-  readonly mode: 'block';
-
-  /**
-   * blocklist content
-   */
-  readonly blocklist: BlocklistProvider;
-};
-
-export type BlocklistUrlsKeyValueConfig = {
-  /**
-   * `block` - this mode blocks ad requests entirely
-   * `key-value` - sets a specified key value
-   */
-  readonly mode: 'key-value';
-
-  readonly blocklist: BlocklistProvider;
-
-  /**
-   * The key that is used for the key value
-   */
-  readonly key: string;
-
-  /**
-   * The value that is sent when a URL is listed.
-   *
-   * default is `true`
-   */
-  readonly isBlocklistedValue?: string;
-};
+import Blocklist = modules.blocklist.Blocklist;
+import BlocklistProvider = modules.blocklist.BlocklistProvider;
 
 /**
  * ## Blocklisted URLs Module

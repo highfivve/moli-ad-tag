@@ -1,29 +1,7 @@
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-
-/**
- * Used to configure the strictness of user activity checks.
- */
-export type UserActivityLevelControl =
-  | { level: 'strict' }
-  | { level: 'moderate' }
-  | { level: 'lax' }
-  | ({ level: 'custom' } & UserActivityParameters);
-
-export type UserActivityParameters = {
-  /**
-   * The duration in milliseconds the page is considered to be "actively used" after the last user action. Changes to page visibility
-   * always directly set the state to inactive.
-   */
-  readonly userActivityDuration: number;
-
-  /**
-   * The duration in milliseconds after that we start listening for new user actions to keep the "active" state. This was introduced
-   * such that we don't keep up expensive listeners on all user actions all the time.
-   *
-   * Must be smaller than userActivityDuration.
-   */
-  readonly userBecomingInactiveDuration: number;
-};
+import { modules } from 'ad-tag/types/moliConfig';
+import UserActivityLevelControl = modules.adreload.UserActivityLevelControl;
+import UserActivityParameters = modules.adreload.UserActivityParameters;
 
 /**
  * Predefined timings when to check for user activity. Can be fully configured in "custom" mode only.

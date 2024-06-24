@@ -1,11 +1,7 @@
 import { prebidjs } from './prebidjs';
 import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
-import { UserActivityLevelControl } from '../ads/modules/ad-reload/userActivityService';
-import { AdexAppConfig } from '../ads/modules/adex';
-import { MappingDefinition } from '../ads/modules/adex/adex-mapping';
-import { BlocklistProvider } from '../ads/modules/blocklist-url';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { MoliRuntime } from './moliRuntime';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -866,6 +862,31 @@ export namespace modules {
       [slotDomId: string]: number;
     };
 
+    export type UserActivityParameters = {
+      /**
+       * The duration in milliseconds the page is considered to be "actively used" after the last user action. Changes to page visibility
+       * always directly set the state to inactive.
+       */
+      readonly userActivityDuration: number;
+
+      /**
+       * The duration in milliseconds after that we start listening for new user actions to keep the "active" state. This was introduced
+       * such that we don't keep up expensive listeners on all user actions all the time.
+       *
+       * Must be smaller than userActivityDuration.
+       */
+      readonly userBecomingInactiveDuration: number;
+    };
+
+    /**
+     * Used to configure the strictness of user activity checks.
+     */
+    export type UserActivityLevelControl =
+      | { level: 'strict' }
+      | { level: 'moderate' }
+      | { level: 'lax' }
+      | ({ level: 'custom' } & UserActivityParameters);
+
     export interface AdReloadModuleConfig extends IModuleConfig {
       /**
        * Ad slots that should never be reloaded
@@ -970,6 +991,79 @@ export namespace modules {
   }
 
   export namespace adex {
+    export interface AdexAppConfig {
+      /**
+       * key within the moli config keyValues in which the client type is defined
+       */
+      readonly clientTypeKey: string;
+      /**
+       * key within the moli config keyValues in which the advertising id can be found
+       */
+      readonly advertiserIdKey: string;
+      /**
+       * extra tag id for the mobile endpoint data if distinction is wanted/necessary
+       */
+      readonly adexMobileTagId?: string;
+    }
+
+    export type MappingDefinition =
+      | MappingDefinitionToAdexString
+      | MappingDefinitionToAdexNumber
+      | MappingDefinitionToAdexMap
+      | MappingDefinitionToAdexList;
+
+    export type AdexListObject = { [key: string]: 1 };
+
+    /**
+     * Adex lists are not really lists. They consist of objects with the list items as keys, and the
+     * literal 1 as value:
+     *
+     * @example
+     * {
+     *   "Automotive": 1,
+     *   "Oldtimers": 1,
+     *   "Car Repair": 1
+     * }
+     */
+    export type AdexList = {
+      [key: string]: AdexListObject;
+    };
+
+    export type AdexKeyValuePair = {
+      [key: string]: string | number;
+    };
+    export type AdexKeyValueMap = {
+      [key: string]: AdexKeyValuePair;
+    };
+    export type AdexKeyValues = AdexKeyValuePair | AdexKeyValueMap | AdexList;
+
+    export interface ToAdexMapping {
+      readonly key: string;
+      readonly attribute: string;
+    }
+
+    export interface MappingDefinitionToAdexList extends ToAdexMapping {
+      readonly adexValueType: 'list';
+      readonly defaultValue?: Array<string>;
+    }
+
+    export interface MappingDefinitionToAdexMap extends ToAdexMapping {
+      readonly adexValueType: 'map';
+      readonly valueKey: string;
+      readonly valueType: 'number' | 'string';
+      readonly defaultValue?: number | string;
+    }
+
+    export interface MappingDefinitionToAdexNumber extends ToAdexMapping {
+      readonly adexValueType: 'number';
+      readonly defaultValue?: number;
+    }
+
+    export interface MappingDefinitionToAdexString extends ToAdexMapping {
+      readonly adexValueType: 'string';
+      readonly defaultValue?: string;
+    }
+
     export interface AdexConfig extends IModuleConfig {
       /**
        * Provided by your ADEX account manager.
@@ -997,6 +1091,49 @@ export namespace modules {
   }
 
   export namespace blocklist {
+    export type BlocklistEntry = {
+      /**
+       * A regex pattern for the complete href of the page
+       */
+      readonly pattern: string;
+
+      /**
+       * Defines how the pattern should be matched against the url
+       *
+       * - `regex` - transform the pattern into a regex and runs `regex.test(url)`
+       * - `contains` - checks if the url contains the given pattern string
+       * - `exact` - checks if the url exactly matches the given pattern string
+       */
+      readonly matchType: 'regex' | 'contains' | 'exact';
+    };
+
+    export type Blocklist = {
+      readonly urls: BlocklistEntry[];
+    };
+
+    /**
+     * A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added
+     */
+    export type StaticBlocklistProvider = {
+      readonly provider: 'static';
+
+      readonly blocklist: Blocklist;
+    };
+
+    /**
+     * The dynamic configuration provider that lets you update entries without updating the ad tag
+     */
+    export type DynamicBlocklistProvider = {
+      readonly provider: 'dynamic';
+
+      /**
+       * Fetch the blocklist json from the specified endpoint
+       */
+      readonly endpoint: string;
+    };
+
+    export type BlocklistProvider = StaticBlocklistProvider | DynamicBlocklistProvider;
+
     export interface BlocklistUrlsBlockingConfig extends IModuleConfig {
       /**
        * `block` - this mode blocks ad requests entirely
@@ -1181,6 +1318,73 @@ export namespace modules {
     };
   }
 
+  export namespace prebid_first_party_data {
+    export type GptTargetingMapping = {
+      /**
+       * The `key` in the targeting map that contains the `cat` values.
+       *
+       * The targeting values should be an array of IAB content categories of the site.
+       */
+      readonly cat?: string;
+
+      /**
+       * The `key` in the targeting map that contains the `sectionCat` values.
+       *
+       * The targeting values should be an array of IAB content categories that describe the current section of the site.
+       * If not defined, `cat` will be used as a fallback
+       */
+      readonly sectionCat?: string;
+
+      /**
+       * The `key` in the targeting map that contains the `pageCat` values.
+       *
+       * The targeting values should be an array of IAB content categories that describe the current page or view of
+       * the site. if not defined, `cat` will be used as a fallback
+       */
+      readonly pageCat?: string;
+
+      /**
+       * The `key` in the targeting map that contains the `iabV2` segment values.
+       *
+       * The targeting values should be an array of IABV2 content category ids that describe the current page or view of
+       * the site. if not defined, we'll not set the data object.
+       */
+      readonly iabV2?: string;
+
+      /**
+       * The `key` in the targeting map that contains the `iabV3` segment values.
+       *
+       * The targeting values should be an array of IABV3 content category ids that describe the current page or view of
+       * the site. if not defined, we'll not set the data object.
+       */
+      readonly iabV3?: string;
+    };
+
+    export interface PrebidFirstPartyDataModuleConfig extends IModuleConfig {
+      /**
+       * A static OpenRTB2 config that is merged with the dynamic settings from
+       * the key value targetings
+       */
+      readonly staticPrebidFirstPartyData?: prebidjs.firstpartydata.PrebidFirstPartyData;
+
+      /**
+       * static mapping definitions for relevant OpenRTB 2.5 properties from
+       * gpt targetings.
+       *
+       * Use this to extract dynamic values set via `moli.setTargeting()`.
+       */
+      readonly gptTargetingMappings?: GptTargetingMapping;
+
+      /**
+       * Name of the provider that is used in the site.content.data segments as provider name.
+       * Usually, this is the name/domain of the publisher.
+       *
+       * https://docs.prebid.org/features/firstPartyData.html#segments-and-taxonomy
+       */
+      readonly iabDataProviderName?: string;
+    }
+  }
+
   export namespace yield_optimization {
     export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
@@ -1259,6 +1463,7 @@ export namespace modules {
       | blocklist.BlocklistUrlsKeyValueConfig;
     readonly adex?: adex.AdexConfig;
     readonly skin?: skin.SkinModuleConfig;
+    readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
   }
 }

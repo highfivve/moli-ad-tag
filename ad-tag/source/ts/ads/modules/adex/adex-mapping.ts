@@ -1,64 +1,15 @@
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
 import MoliLogger = MoliRuntime.MoliLogger;
-import { MoliRuntime } from '../../../types/moliRuntime';
-import { GoogleAdManagerKeyValueMap } from '../../../types/moliConfig';
-
-export type MappingDefinition =
-  | MappingDefinitionToAdexString
-  | MappingDefinitionToAdexNumber
-  | MappingDefinitionToAdexMap
-  | MappingDefinitionToAdexList;
-
-type AdexListObject = { [key: string]: 1 };
-
-/**
- * Adex lists are not really lists. They consist of objects with the list items as keys, and the
- * literal 1 as value:
- *
- * @example
- * {
- *   "Automotive": 1,
- *   "Oldtimers": 1,
- *   "Car Repair": 1
- * }
- */
-export type AdexList = {
-  [key: string]: AdexListObject;
-};
-
-export type AdexKeyValuePair = {
-  [key: string]: string | number;
-};
-export type AdexKeyValueMap = {
-  [key: string]: AdexKeyValuePair;
-};
-export type AdexKeyValues = AdexKeyValuePair | AdexKeyValueMap | AdexList;
-
-interface ToAdexMapping {
-  readonly key: string;
-  readonly attribute: string;
-}
-
-interface MappingDefinitionToAdexList extends ToAdexMapping {
-  readonly adexValueType: 'list';
-  readonly defaultValue?: Array<string>;
-}
-
-interface MappingDefinitionToAdexMap extends ToAdexMapping {
-  readonly adexValueType: 'map';
-  readonly valueKey: string;
-  readonly valueType: 'number' | 'string';
-  readonly defaultValue?: number | string;
-}
-
-interface MappingDefinitionToAdexNumber extends ToAdexMapping {
-  readonly adexValueType: 'number';
-  readonly defaultValue?: number;
-}
-
-interface MappingDefinitionToAdexString extends ToAdexMapping {
-  readonly adexValueType: 'string';
-  readonly defaultValue?: string;
-}
+import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
+import MappingDefinitionToAdexMap = modules.adex.MappingDefinitionToAdexMap;
+import MappingDefinitionToAdexString = modules.adex.MappingDefinitionToAdexString;
+import MappingDefinitionToAdexNumber = modules.adex.MappingDefinitionToAdexNumber;
+import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
+import MappingDefinitionToAdexList = modules.adex.MappingDefinitionToAdexList;
+import AdexList = modules.adex.AdexList;
+import AdexListObject = modules.adex.AdexListObject;
+import MappingDefinition = modules.adex.MappingDefinition;
 
 /**
  * Extract Adex map data objects from targeting key/values.
