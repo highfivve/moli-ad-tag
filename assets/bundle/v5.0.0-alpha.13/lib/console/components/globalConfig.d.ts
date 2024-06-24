@@ -1,0 +1,70 @@
+import React, { Component } from 'react';
+import { IWindowEventObserver, WindowResizeService } from '../util/windowResizeService';
+import { Theme, ThemingService } from '../util/themingService';
+import { MoliRuntime } from '../../types/moliRuntime';
+import { MoliConfig } from '../../types/moliConfig';
+import type { ModuleMeta } from '../../types/module';
+import { LabelConfigService } from '../../ads/labelConfigService';
+type IGlobalConfigProps = {
+    config?: MoliConfig;
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig;
+    modules: ReadonlyArray<ModuleMeta>;
+    labelConfigService: LabelConfigService;
+    windowResizeService: WindowResizeService;
+    themingService: ThemingService;
+};
+type IGlobalConfigState = {
+    sidebarHidden: boolean;
+    expandSection: {
+        slots: boolean;
+        moli: boolean;
+        modules: boolean;
+        targeting: boolean;
+        prebid: boolean;
+        a9: boolean;
+        labelSizeConfig: boolean;
+        consent: boolean;
+        yieldOptimization: boolean;
+        supplyChain: boolean;
+    };
+    messages: Message[];
+    browserResized: boolean;
+    showOnlyRenderedSlots: boolean;
+    theme: Theme;
+    adstxtEntry: string[];
+    adstxtDomain: string;
+    adstxtError: string;
+};
+export type Message = {
+    kind: 'error' | 'warning' | 'optimization';
+    text: React.ReactNode;
+};
+export declare class GlobalConfig extends Component<IGlobalConfigProps, IGlobalConfigState> implements IWindowEventObserver {
+    constructor(props: IGlobalConfigProps);
+    fetchAdsTxtEntries(hostname: string): Promise<string | undefined>;
+    parseAdsTxtEntries(adstxtEntries: string): string[] | undefined;
+    findPublisherEntryInAdsTxt(adsTxtDomain: string): Promise<string[] | undefined>;
+    componentDidMount(): Promise<void>;
+    render(): React.ReactElement;
+    listener: () => void;
+    componentWillUnmount: () => void;
+    private resetEnvironmentOverrides;
+    private overrideEnvironmentToTest;
+    private unwrapConfig;
+    private setTheme;
+    private keyValues;
+    private labels;
+    private filterSetting;
+    private standardTagFromString;
+    private toggleSidebar;
+    private collapseToggle;
+    private iconForMessageKind;
+    private reportMissingConfig;
+    private checkForDuplicateOrMissingSlots;
+    private checkPrebidConfig;
+    private checkSlotPrebidConfig;
+    private checkGlobalSizeConfigEntry;
+    private checkForWrongPrebidCodeEntry;
+    private isSlotRendered;
+}
+export {};
