@@ -58,6 +58,7 @@ jobs:
       # Copy schema files
       - name: copy schema files
         run: |
+          cp schema.json website/build/assets/schema/current/schema.json
           cp schema.json website/build/assets/schema/${{ env.RELEASE_VERSION }}/schema.json
 
       # Deploy website
