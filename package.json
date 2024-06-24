@@ -13,7 +13,7 @@
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "build:console": "npx rollup --config rollup.console.config.mjs",
     "clean": "rm -rf lib",
-    "setup": "npm run clean && npm ci && npm run codeGen && tsc --composite false",
+    "setup": "npm run clean && npm ci --engine-strict && npm run codeGen && npm run build",
     "start": "npm run watch",
     "watch": "tsc --composite false --watch",
     "compile": "tsc --noEmit",

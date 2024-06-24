@@ -33,7 +33,7 @@ jobs:
       # Validate and publish
       - name: npm setup and validation
         run: |
-          npm install
+          npm ci --engine-strict
           npm run setup
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
