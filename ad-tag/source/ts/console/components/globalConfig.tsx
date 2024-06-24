@@ -9,11 +9,6 @@ import { Theme, ThemingService } from '../util/themingService';
 import { ConsentConfig } from './consentConfig';
 import { LabelConfigDebug } from './labelConfigDebug';
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
-import {
-  getDebugDelayFromLocalStorage,
-  setDebugDelayToLocalStorage
-} from 'ad-tag/source/ts/util/debugDelay';
-import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/source/ts/util/test-slots';
 import { checkAdReloadConfig } from '../validations/adReloadValidations';
 import { checkSizesConfig } from '../validations/sizesConfigValidations';
 import { prebidjs } from '../../types/prebidjs';
@@ -34,6 +29,8 @@ import {
   resetEnvironmentOverrides,
   setEnvironmentOverrideInStorage
 } from '../../util/environmentOverride';
+import { getDebugDelayFromLocalStorage, setDebugDelayToLocalStorage } from 'ad-tag/util/debugDelay';
+import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/util/test-slots';
 
 // @ts-ignore
 import styles from './../debug.pcss';
