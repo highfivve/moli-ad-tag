@@ -7,7 +7,6 @@ import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
 
 
-// input and output are passed from the command line
 export default [
   {
     input: 'ad-tag/source/ts/console/debug.tsx',
@@ -49,6 +48,7 @@ export default [
           path: 'postcss.config.js'
         }
       }),
+      // react uses this variable to determine if it should be in dev mode, so we need to replace it
       replace({
         preventAssignment: false,
         'process.env.NODE_ENV': JSON.stringify( 'production' )
