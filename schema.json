@@ -89,76 +89,6 @@
       "description": "Add targeting information from the ad tag. Usually these are static values. Dynamic values should be added via the MoliTag API `setTargeting(key, value)` or `addLabel(label)`.",
       "type": "object"
     },
-    "AdexAppConfig": {
-      "additionalProperties": false,
-      "properties": {
-        "adexMobileTagId": {
-          "description": "extra tag id for the mobile endpoint data if distinction is wanted/necessary",
-          "type": "string"
-        },
-        "advertiserIdKey": {
-          "description": "key within the moli config keyValues in which the advertising id can be found",
-          "type": "string"
-        },
-        "clientTypeKey": {
-          "description": "key within the moli config keyValues in which the client type is defined",
-          "type": "string"
-        }
-      },
-      "required": [
-        "clientTypeKey",
-        "advertiserIdKey"
-      ],
-      "type": "object"
-    },
-    "Blocklist": {
-      "additionalProperties": false,
-      "properties": {
-        "urls": {
-          "items": {
-            "$ref": "#/definitions/BlocklistEntry"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "urls"
-      ],
-      "type": "object"
-    },
-    "BlocklistEntry": {
-      "additionalProperties": false,
-      "properties": {
-        "matchType": {
-          "description": "Defines how the pattern should be matched against the url\n\n- `regex` - transform the pattern into a regex and runs `regex.test(url)`\n- `contains` - checks if the url contains the given pattern string\n- `exact` - checks if the url exactly matches the given pattern string",
-          "enum": [
-            "regex",
-            "contains",
-            "exact"
-          ],
-          "type": "string"
-        },
-        "pattern": {
-          "description": "A regex pattern for the complete href of the page",
-          "type": "string"
-        }
-      },
-      "required": [
-        "pattern",
-        "matchType"
-      ],
-      "type": "object"
-    },
-    "BlocklistProvider": {
-      "anyOf": [
-        {
-          "$ref": "#/definitions/StaticBlocklistProvider"
-        },
-        {
-          "$ref": "#/definitions/DynamicBlocklistProvider"
-        }
-      ]
-    },
     "CSSDeletionMethod": {
       "additionalProperties": false,
       "description": "== Cleanup Module ==\n\nCleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.\n\nThe configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted or JS as a string that will be evaluated by the module in order to remove these elements.",
@@ -203,25 +133,6 @@
         "bidder",
         "domId",
         "deleteMethod"
-      ],
-      "type": "object"
-    },
-    "DynamicBlocklistProvider": {
-      "additionalProperties": false,
-      "description": "The dynamic configuration provider that lets you update entries without updating the ad tag",
-      "properties": {
-        "endpoint": {
-          "description": "Fetch the blocklist json from the specified endpoint",
-          "type": "string"
-        },
-        "provider": {
-          "const": "dynamic",
-          "type": "string"
-        }
-      },
-      "required": [
-        "provider",
-        "endpoint"
       ],
       "type": "object"
     },
@@ -308,124 +219,6 @@
       ],
       "type": "object"
     },
-    "MappingDefinition": {
-      "anyOf": [
-        {
-          "additionalProperties": false,
-          "properties": {
-            "adexValueType": {
-              "const": "string",
-              "type": "string"
-            },
-            "attribute": {
-              "type": "string"
-            },
-            "defaultValue": {
-              "type": "string"
-            },
-            "key": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "adexValueType",
-            "attribute",
-            "key"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "adexValueType": {
-              "const": "number",
-              "type": "string"
-            },
-            "attribute": {
-              "type": "string"
-            },
-            "defaultValue": {
-              "type": "number"
-            },
-            "key": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "adexValueType",
-            "attribute",
-            "key"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "adexValueType": {
-              "const": "map",
-              "type": "string"
-            },
-            "attribute": {
-              "type": "string"
-            },
-            "defaultValue": {
-              "type": [
-                "number",
-                "string"
-              ]
-            },
-            "key": {
-              "type": "string"
-            },
-            "valueKey": {
-              "type": "string"
-            },
-            "valueType": {
-              "enum": [
-                "number",
-                "string"
-              ],
-              "type": "string"
-            }
-          },
-          "required": [
-            "adexValueType",
-            "attribute",
-            "key",
-            "valueKey",
-            "valueType"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "adexValueType": {
-              "const": "list",
-              "type": "string"
-            },
-            "attribute": {
-              "type": "string"
-            },
-            "defaultValue": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "key": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "adexValueType",
-            "attribute",
-            "key"
-          ],
-          "type": "object"
-        }
-      ]
-    },
     "MoliConfig": {
       "additionalProperties": false,
       "description": "## Moli Configuration\n\nContains the configuration for the ad tag that is served from a backend.",
@@ -498,6 +291,38 @@
       ],
       "type": "object"
     },
+    "MoliRuntime.yield_optimization.PriceRule": {
+      "additionalProperties": false,
+      "properties": {
+        "floorprice": {
+          "description": "The floor price CPM in EUR if available.",
+          "type": "number"
+        },
+        "main": {
+          "description": "`true` if this is the main group, which shouldn't be selected for testing.\n\nIf `false` as key-value can be applied to only select the test cohorts.",
+          "type": "boolean"
+        },
+        "model": {
+          "description": "The model used to determine the price rule\n\n- `static`: price rules cohorts in A/B test\n- `ml`: super clever machine learning\n- `fixed`: 100% of the traffic gets this fixed price rule\n\nIf none is provided `static` is used as a fallback",
+          "enum": [
+            "static",
+            "ml",
+            "fixed"
+          ],
+          "type": "string"
+        },
+        "priceRuleId": {
+          "description": "Unique identifier for a pricing rule. This is will be sent as a key_value `upr_id` per ad unit and will trigger the matching unified pricing rule in Google Ad Manager.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "priceRuleId",
+        "floorprice",
+        "main"
+      ],
+      "type": "object"
+    },
     "SinglePageAppConfig": {
       "additionalProperties": false,
       "description": "Additional configuration for single page application publishers.",
@@ -561,24 +386,6 @@
       "required": [
         "mediaQuery",
         "sizesSupported"
-      ],
-      "type": "object"
-    },
-    "StaticBlocklistProvider": {
-      "additionalProperties": false,
-      "description": "A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added",
-      "properties": {
-        "blocklist": {
-          "$ref": "#/definitions/Blocklist"
-        },
-        "provider": {
-          "const": "static",
-          "type": "string"
-        }
-      },
-      "required": [
-        "provider",
-        "blocklist"
       ],
       "type": "object"
     },
@@ -688,73 +495,6 @@
         "keyValues"
       ],
       "type": "object"
-    },
-    "UserActivityLevelControl": {
-      "anyOf": [
-        {
-          "additionalProperties": false,
-          "properties": {
-            "level": {
-              "const": "strict",
-              "type": "string"
-            }
-          },
-          "required": [
-            "level"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "level": {
-              "const": "moderate",
-              "type": "string"
-            }
-          },
-          "required": [
-            "level"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "level": {
-              "const": "lax",
-              "type": "string"
-            }
-          },
-          "required": [
-            "level"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "level": {
-              "const": "custom",
-              "type": "string"
-            },
-            "userActivityDuration": {
-              "description": "The duration in milliseconds the page is considered to be \"actively used\" after the last user action. Changes to page visibility always directly set the state to inactive.",
-              "type": "number"
-            },
-            "userBecomingInactiveDuration": {
-              "description": "The duration in milliseconds after that we start listening for new user actions to keep the \"active\" state. This was introduced such that we don't keep up expensive listeners on all user actions all the time.\n\nMust be smaller than userActivityDuration.",
-              "type": "number"
-            }
-          },
-          "required": [
-            "level",
-            "userActivityDuration",
-            "userBecomingInactiveDuration"
-          ],
-          "type": "object"
-        }
-      ],
-      "description": "Used to configure the strictness of user activity checks."
     },
     "apstag.Currency": {
       "enum": [
@@ -1220,13 +960,41 @@
         "confiant": {
           "$ref": "#/definitions/modules.confiant.ConfiantConfig"
         },
+        "prebidFirstPartyData": {
+          "$ref": "#/definitions/modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig"
+        },
         "pubstack": {
           "$ref": "#/definitions/modules.pubstack.PubstackConfig"
         },
         "skin": {
           "$ref": "#/definitions/modules.skin.SkinModuleConfig"
+        },
+        "yieldOptimization": {
+          "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfig"
         }
       },
+      "type": "object"
+    },
+    "modules.adex.AdexAppConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "adexMobileTagId": {
+          "description": "extra tag id for the mobile endpoint data if distinction is wanted/necessary",
+          "type": "string"
+        },
+        "advertiserIdKey": {
+          "description": "key within the moli config keyValues in which the advertising id can be found",
+          "type": "string"
+        },
+        "clientTypeKey": {
+          "description": "key within the moli config keyValues in which the client type is defined",
+          "type": "string"
+        }
+      },
+      "required": [
+        "clientTypeKey",
+        "advertiserIdKey"
+      ],
       "type": "object"
     },
     "modules.adex.AdexConfig": {
@@ -1241,7 +1009,7 @@
           "type": "string"
         },
         "appConfig": {
-          "$ref": "#/definitions/AdexAppConfig",
+          "$ref": "#/definitions/modules.adex.AdexAppConfig",
           "description": "If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex"
         },
         "enabled": {
@@ -1251,7 +1019,7 @@
         "mappingDefinitions": {
           "description": "extraction and conversion rules to produce Adex compatible data from key/value targeting.",
           "items": {
-            "$ref": "#/definitions/MappingDefinition"
+            "$ref": "#/definitions/modules.adex.MappingDefinition"
           },
           "type": "array"
         },
@@ -1266,6 +1034,136 @@
         "enabled",
         "mappingDefinitions",
         "spaMode"
+      ],
+      "type": "object"
+    },
+    "modules.adex.MappingDefinition": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.adex.MappingDefinitionToAdexString"
+        },
+        {
+          "$ref": "#/definitions/modules.adex.MappingDefinitionToAdexNumber"
+        },
+        {
+          "$ref": "#/definitions/modules.adex.MappingDefinitionToAdexMap"
+        },
+        {
+          "$ref": "#/definitions/modules.adex.MappingDefinitionToAdexList"
+        }
+      ]
+    },
+    "modules.adex.MappingDefinitionToAdexList": {
+      "additionalProperties": false,
+      "properties": {
+        "adexValueType": {
+          "const": "list",
+          "type": "string"
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adexValueType",
+        "attribute",
+        "key"
+      ],
+      "type": "object"
+    },
+    "modules.adex.MappingDefinitionToAdexMap": {
+      "additionalProperties": false,
+      "properties": {
+        "adexValueType": {
+          "const": "map",
+          "type": "string"
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "key": {
+          "type": "string"
+        },
+        "valueKey": {
+          "type": "string"
+        },
+        "valueType": {
+          "enum": [
+            "number",
+            "string"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "adexValueType",
+        "attribute",
+        "key",
+        "valueKey",
+        "valueType"
+      ],
+      "type": "object"
+    },
+    "modules.adex.MappingDefinitionToAdexNumber": {
+      "additionalProperties": false,
+      "properties": {
+        "adexValueType": {
+          "const": "number",
+          "type": "string"
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": "number"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adexValueType",
+        "attribute",
+        "key"
+      ],
+      "type": "object"
+    },
+    "modules.adex.MappingDefinitionToAdexString": {
+      "additionalProperties": false,
+      "properties": {
+        "adexValueType": {
+          "const": "string",
+          "type": "string"
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adexValueType",
+        "attribute",
+        "key"
       ],
       "type": "object"
     },
@@ -1331,7 +1229,7 @@
           "description": "Configures an override for the default refresh interval configured in `refreshIntervalMs` per ad slot."
         },
         "userActivityLevelControl": {
-          "$ref": "#/definitions/UserActivityLevelControl",
+          "$ref": "#/definitions/modules.adreload.UserActivityLevelControl",
           "description": "Configure what defines a user as active / inactive."
         }
       },
@@ -1352,11 +1250,126 @@
       },
       "type": "object"
     },
+    "modules.adreload.UserActivityLevelControl": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "const": "strict",
+              "type": "string"
+            }
+          },
+          "required": [
+            "level"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "const": "moderate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "level"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "const": "lax",
+              "type": "string"
+            }
+          },
+          "required": [
+            "level"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "const": "custom",
+              "type": "string"
+            },
+            "userActivityDuration": {
+              "description": "The duration in milliseconds the page is considered to be \"actively used\" after the last user action. Changes to page visibility always directly set the state to inactive.",
+              "type": "number"
+            },
+            "userBecomingInactiveDuration": {
+              "description": "The duration in milliseconds after that we start listening for new user actions to keep the \"active\" state. This was introduced such that we don't keep up expensive listeners on all user actions all the time.\n\nMust be smaller than userActivityDuration.",
+              "type": "number"
+            }
+          },
+          "required": [
+            "level",
+            "userActivityDuration",
+            "userBecomingInactiveDuration"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "Used to configure the strictness of user activity checks."
+    },
+    "modules.blocklist.Blocklist": {
+      "additionalProperties": false,
+      "properties": {
+        "urls": {
+          "items": {
+            "$ref": "#/definitions/modules.blocklist.BlocklistEntry"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "urls"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.BlocklistEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "matchType": {
+          "description": "Defines how the pattern should be matched against the url\n\n- `regex` - transform the pattern into a regex and runs `regex.test(url)`\n- `contains` - checks if the url contains the given pattern string\n- `exact` - checks if the url exactly matches the given pattern string",
+          "enum": [
+            "regex",
+            "contains",
+            "exact"
+          ],
+          "type": "string"
+        },
+        "pattern": {
+          "description": "A regex pattern for the complete href of the page",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pattern",
+        "matchType"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.BlocklistProvider": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.blocklist.StaticBlocklistProvider"
+        },
+        {
+          "$ref": "#/definitions/modules.blocklist.DynamicBlocklistProvider"
+        }
+      ]
+    },
     "modules.blocklist.BlocklistUrlsBlockingConfig": {
       "additionalProperties": false,
       "properties": {
         "blocklist": {
-          "$ref": "#/definitions/BlocklistProvider",
+          "$ref": "#/definitions/modules.blocklist.BlocklistProvider",
           "description": "blocklist content"
         },
         "enabled": {
@@ -1380,7 +1393,7 @@
       "additionalProperties": false,
       "properties": {
         "blocklist": {
-          "$ref": "#/definitions/BlocklistProvider"
+          "$ref": "#/definitions/modules.blocklist.BlocklistProvider"
         },
         "enabled": {
           "description": "If set to true the module will be enabled.",
@@ -1405,6 +1418,43 @@
         "enabled",
         "key",
         "mode"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.DynamicBlocklistProvider": {
+      "additionalProperties": false,
+      "description": "The dynamic configuration provider that lets you update entries without updating the ad tag",
+      "properties": {
+        "endpoint": {
+          "description": "Fetch the blocklist json from the specified endpoint",
+          "type": "string"
+        },
+        "provider": {
+          "const": "dynamic",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "endpoint"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.StaticBlocklistProvider": {
+      "additionalProperties": false,
+      "description": "A fixed set of blocklisted urls. Requires an ad tag update if new entries should be added",
+      "properties": {
+        "blocklist": {
+          "$ref": "#/definitions/modules.blocklist.Blocklist"
+        },
+        "provider": {
+          "const": "static",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "blocklist"
       ],
       "type": "object"
     },
@@ -1448,6 +1498,57 @@
       },
       "required": [
         "assetUrl",
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.prebid_first_party_data.GptTargetingMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "cat": {
+          "description": "The `key` in the targeting map that contains the `cat` values.\n\nThe targeting values should be an array of IAB content categories of the site.",
+          "type": "string"
+        },
+        "iabV2": {
+          "description": "The `key` in the targeting map that contains the `iabV2` segment values.\n\nThe targeting values should be an array of IABV2 content category ids that describe the current page or view of the site. if not defined, we'll not set the data object.",
+          "type": "string"
+        },
+        "iabV3": {
+          "description": "The `key` in the targeting map that contains the `iabV3` segment values.\n\nThe targeting values should be an array of IABV3 content category ids that describe the current page or view of the site. if not defined, we'll not set the data object.",
+          "type": "string"
+        },
+        "pageCat": {
+          "description": "The `key` in the targeting map that contains the `pageCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current page or view of the site. if not defined, `cat` will be used as a fallback",
+          "type": "string"
+        },
+        "sectionCat": {
+          "description": "The `key` in the targeting map that contains the `sectionCat` values.\n\nThe targeting values should be an array of IAB content categories that describe the current section of the site. If not defined, `cat` will be used as a fallback",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "gptTargetingMappings": {
+          "$ref": "#/definitions/modules.prebid_first_party_data.GptTargetingMapping",
+          "description": "static mapping definitions for relevant OpenRTB 2.5 properties from gpt targetings.\n\nUse this to extract dynamic values set via `moli.setTargeting()`."
+        },
+        "iabDataProviderName": {
+          "description": "Name of the provider that is used in the site.content.data segments as provider name. Usually, this is the name/domain of the publisher.\n\nhttps://docs.prebid.org/features/firstPartyData.html#segments-and-taxonomy",
+          "type": "string"
+        },
+        "staticPrebidFirstPartyData": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
+          "description": "A static OpenRTB2 config that is merged with the dynamic settings from the key value targetings"
+        }
+      },
+      "required": [
         "enabled"
       ],
       "type": "object"
@@ -1730,6 +1831,123 @@
         "bidder"
       ],
       "type": "object"
+    },
+    "modules.yield_optimization.AdunitPriceRulesResponse": {
+      "additionalProperties": false,
+      "description": "Response from the yield optimization server",
+      "properties": {
+        "browser": {
+          "description": "the browser that was detected on the backend.",
+          "type": "string"
+        },
+        "rules": {
+          "$ref": "#/definitions/modules.yield_optimization.PriceRules"
+        }
+      },
+      "required": [
+        "rules"
+      ],
+      "type": "object"
+    },
+    "modules.yield_optimization.DynamicYieldOptimizationConfig": {
+      "additionalProperties": false,
+      "description": "A dynamic configuration",
+      "properties": {
+        "configEndpoint": {
+          "description": "URL to a json config file that contains a list of AdUnitPriceRules.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "excludedAdUnitPaths": {
+          "description": "AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "provider": {
+          "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+        }
+      },
+      "required": [
+        "configEndpoint",
+        "enabled",
+        "excludedAdUnitPaths",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "modules.yield_optimization.NoYieldOptimizationConfig": {
+      "additionalProperties": false,
+      "description": "No key values will be applied. The system is inactive.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "provider": {
+          "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+        }
+      },
+      "required": [
+        "enabled",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "modules.yield_optimization.PriceRules": {
+      "additionalProperties": {
+        "$ref": "#/definitions/MoliRuntime.yield_optimization.PriceRule",
+        "description": "The ad unit that is being configured along with a price that was selected from the server"
+      },
+      "type": "object"
+    },
+    "modules.yield_optimization.StaticYieldOptimizationConfig": {
+      "additionalProperties": false,
+      "description": "A static configuration for all ad units. This is to emulate server requests",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/modules.yield_optimization.AdunitPriceRulesResponse"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "provider": {
+          "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
+        }
+      },
+      "required": [
+        "config",
+        "enabled",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "modules.yield_optimization.YieldOptimizationConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.yield_optimization.NoYieldOptimizationConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.yield_optimization.StaticYieldOptimizationConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.yield_optimization.DynamicYieldOptimizationConfig"
+        }
+      ],
+      "description": "Available options to configure yield optimization"
+    },
+    "modules.yield_optimization.YieldOptimizationConfigProvider": {
+      "enum": [
+        "none",
+        "static",
+        "dynamic"
+      ],
+      "type": "string"
     },
     "prebidjs.BidderCode": {
       "description": "The bidder code is used to identify the different SSPs.",

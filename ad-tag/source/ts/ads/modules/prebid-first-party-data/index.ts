@@ -37,129 +37,63 @@
  *
  * @module
  */
-import {
-  AdPipeline,
-  AdPipelineContext,
-  getLogger,
-  IAssetLoaderService,
-  IModule,
-  mergeDeep,
-  mkConfigureStep,
-  ModuleType,
-  MoliRuntime,
-  prebidjs,
-  uniquePrimitiveFilter
-} from '@highfivve/ad-tag';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2Data = prebidjs.firstpartydata.OpenRtb2Data;
-
-export type GptTargetingMapping = {
-  /**
-   * The `key` in the targeting map that contains the `cat` values.
-   *
-   * The targeting values should be an array of IAB content categories of the site.
-   */
-  readonly cat?: string;
-
-  /**
-   * The `key` in the targeting map that contains the `sectionCat` values.
-   *
-   * The targeting values should be an array of IAB content categories that describe the current section of the site.
-   * If not defined, `cat` will be used as a fallback
-   */
-  readonly sectionCat?: string;
-
-  /**
-   * The `key` in the targeting map that contains the `pageCat` values.
-   *
-   * The targeting values should be an array of IAB content categories that describe the current page or view of
-   * the site. if not defined, `cat` will be used as a fallback
-   */
-  readonly pageCat?: string;
-
-  /**
-   * The `key` in the targeting map that contains the `iabV2` segment values.
-   *
-   * The targeting values should be an array of IABV2 content category ids that describe the current page or view of
-   * the site. if not defined, we'll not set the data object.
-   */
-  readonly iabV2?: string;
-
-  /**
-   * The `key` in the targeting map that contains the `iabV3` segment values.
-   *
-   * The targeting values should be an array of IABV3 content category ids that describe the current page or view of
-   * the site. if not defined, we'll not set the data object.
-   */
-  readonly iabV3?: string;
-};
-
-export type PrebidFirstPartyDataModuleConfig = {
-  /**
-   * A static OpenRTB2 config that is merged with the dynamic settings from
-   * the key value targetings
-   */
-  readonly staticPrebidFirstPartyData?: PrebidFirstPartyData;
-
-  /**
-   * static mapping definitions for relevant OpenRTB 2.5 properties from
-   * gpt targetings.
-   *
-   * Use this to extract dynamic values set via `moli.setTargeting()`.
-   */
-  readonly gptTargetingMappings?: GptTargetingMapping;
-
-  /**
-   * Name of the provider that is used in the site.content.data segments as provider name.
-   * Usually, this is the name/domain of the publisher.
-   *
-   * https://docs.prebid.org/features/firstPartyData.html#segments-and-taxonomy
-   */
-  readonly iabDataProviderName?: string;
-};
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  mkConfigureStep,
+  PrepareRequestAdsStep
+} from 'ad-tag/ads/adPipeline';
+import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
+import { mergeDeep } from 'ad-tag/util/objectUtils';
 
 export class PrebidFirstPartyDataModule implements IModule {
   readonly description = 'Module for passing first party data to prebid auctions';
   readonly moduleType: ModuleType = 'prebid';
   readonly name = 'prebid-first-party-data';
 
-  private log?: MoliRuntime.MoliLogger;
+  private moduleConfig: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null =
+    null;
+  private _configureSteps: ConfigureStep[] = [];
 
-  constructor(
-    private readonly moduleConfig: PrebidFirstPartyDataModuleConfig,
-    private readonly window: Window
-  ) {}
-
-  config(): PrebidFirstPartyDataModuleConfig {
+  config(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
     return this.moduleConfig;
   }
 
-  init(
-    moliConfig: MoliRuntime.MoliConfig,
-    assetLoaderService: IAssetLoaderService,
-    getAdPipeline: () => AdPipeline
-  ): void {
-    const log = getLogger(moliConfig, this.window);
-    this.log = log;
+  configure(moduleConfig?: modules.ModulesConfig): void {
+    if (moduleConfig?.prebidFirstPartyData?.enabled) {
+      const config = moduleConfig.prebidFirstPartyData;
+      this._configureSteps = [
+        mkConfigureStep('prebid-fpd-module-configure', context =>
+          PrebidFirstPartyDataModule.setPrebidFpdConfig(context, config, context.logger)
+        )
+      ];
+    }
+  }
 
-    // init additional pipeline steps if not already defined
-    moliConfig.pipeline = moliConfig.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
+  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+    return [];
+  }
 
-    moliConfig.pipeline.configureSteps.push(
-      mkConfigureStep('prebid-fpd-module-configure', context =>
-        PrebidFirstPartyDataModule.setPrebidFpdConfig(context, this.config(), log)
-      )
-    );
+  configureSteps(): ConfigureStep[] {
+    return this._configureSteps;
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
   }
 
   private static setPrebidFpdConfig(
     context: AdPipelineContext,
-    config: PrebidFirstPartyDataModuleConfig,
+    config: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig,
     log: MoliRuntime.MoliLogger
   ): Promise<void> {
     if (context.config.prebid) {
@@ -272,7 +206,7 @@ export class PrebidFirstPartyDataModule implements IModule {
 
   private static extractKeyValueArray(
     key: string,
-    keyValues: MoliRuntime.GoogleAdManagerKeyValueMap
+    keyValues: GoogleAdManagerKeyValueMap
   ): string[] {
     const value = keyValues[key];
     if (value) {
