@@ -1,0 +1,6 @@
+**/*
+!.git
+!assets/bundle/**/*
+!assets/schema/**/*
+# When 5.x is merged, this line must be present in this file to prevent breaking old ad tag versions
+# !assets/js/moli-debug.min.js

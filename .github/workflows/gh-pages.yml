@@ -60,9 +60,12 @@ jobs:
 
       # Deploy website
       - name: Deploy
-        uses: s0/git-publish-subdir-action@develop
+        uses: s0/git-publish-subdir-action@v2.6.0
         env:
           REPO: self
           BRANCH: gh-pages
           FOLDER: website/build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # this overrides the default clearing behaviour (entire target directory, FOLDER) and allows to keep some files
+          # mainly the moli debugger and prebuilt bundles
+          CLEAR_GLOBS_FILE: .github/.clear-target-files
