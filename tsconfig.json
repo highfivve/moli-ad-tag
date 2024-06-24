@@ -22,7 +22,7 @@
     "rootDir": "ad-tag/source/ts",
     "paths": {
       "ad-tag/*": ["ad-tag/source/ts/*"]
-    },
+    }
   },
   "include": ["ad-tag/source/**/*"],
   "exclude": ["node_modules", "**/lib", "tests"]
