@@ -372,8 +372,8 @@ export const prebidPrepareRequestAds = (
           });
           context.window.pbjs.que.push(() => {
             context.window.pbjs.addAdUnits(adUnits);
-            resolve();
           });
+          resolve();
         }
       })
   );
