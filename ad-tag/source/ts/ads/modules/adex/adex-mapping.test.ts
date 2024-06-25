@@ -1,16 +1,12 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import {
-  AdexKeyValueMap,
-  AdexKeyValuePair,
-  AdexList,
-  toAdexListType,
-  toAdexMapType,
-  toAdexStringOrNumberType
-} from './adex-mapping';
-import { noopLogger } from '../../../stubs/moliStubs';
+import { toAdexListType, toAdexMapType, toAdexStringOrNumberType } from './adex-mapping';
+import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import sinonChai from 'sinon-chai';
-import { GoogleAdManagerKeyValueMap } from '../../../types/moliConfig';
+import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
+import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
+import AdexList = modules.adex.AdexList;
 
 use(sinonChai);
 

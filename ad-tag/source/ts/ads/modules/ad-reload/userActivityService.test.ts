@@ -1,14 +1,12 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {
-  UserActivityLevelControl,
-  UserActivityParameters,
-  userActivityParametersForLevel,
-  UserActivityService
-} from './userActivityService';
+import { userActivityParametersForLevel, UserActivityService } from './userActivityService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
+import { modules } from 'ad-tag/types/moliConfig';
+import UserActivityLevelControl = modules.adreload.UserActivityLevelControl;
+import UserActivityParameters = modules.adreload.UserActivityParameters;
 
 use(sinonChai);
 
