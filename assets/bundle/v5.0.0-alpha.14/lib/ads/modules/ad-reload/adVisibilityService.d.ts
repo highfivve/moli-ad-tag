@@ -1,0 +1,32 @@
+import { UserActivityService } from './userActivityService';
+import { googletag } from 'ad-tag/types/googletag';
+import { modules } from 'ad-tag/types/moliConfig';
+import RefreshIntervalOverrides = modules.adreload.RefreshIntervalOverrides;
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+export declare class AdVisibilityService {
+    private readonly userActivityService;
+    private readonly refreshInterval;
+    private readonly refreshIntervalOverrides;
+    readonly useIntersectionObserver: boolean;
+    private readonly disableAdVisibilityChecks;
+    private readonly window;
+    private readonly logger?;
+    static readonly updateVisibilityInterval = 1000;
+    static readonly consecutiveDurationToRefresh = 1500;
+    private readonly minimalAdVisibilityRatio;
+    private visibilityRecords;
+    private readonly intersectionObserver?;
+    private visibilityUpdateTimer;
+    constructor(userActivityService: UserActivityService, refreshInterval: number, refreshIntervalOverrides: RefreshIntervalOverrides, useIntersectionObserver: boolean, disableAdVisibilityChecks: boolean, window: Window & googletag.IGoogleTagWindow, logger?: MoliRuntime.MoliLogger | undefined);
+    isSlotTracked: (domId: string) => boolean;
+    trackSlot(slot: googletag.IAdSlot, refreshCallback: (slot: googletag.IAdSlot) => void): void;
+    removeSlotTracking: (slot: googletag.IAdSlot) => void;
+    private setUpdateTimer;
+    private updateAdVisibilityDuration;
+    private handleGoogletagAdVisibilityChanged;
+    private handleObservedAdVisibilityChanged;
+    private updateVisibilityRecord;
+    private handleUserActivityChanged;
+    private visibilityRecordForEntry;
+    private visibilityRecordForGoogletagEvent;
+}
