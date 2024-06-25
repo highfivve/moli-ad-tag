@@ -64,9 +64,9 @@
  *
  * @module
  */
-
+import { modules } from 'ad-tag/types/moliConfig';
+import AdexKeyValues = modules.adex.AdexKeyValues;
 import { IModule, ModuleType } from 'ad-tag/types/module';
-import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -74,17 +74,20 @@ import {
   mkConfigureStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from '../../adPipeline';
-import { toAdexListType, toAdexMapType, toAdexStringOrNumberType } from './adex-mapping';
-import { isNotNull } from 'ad-tag/util/arrayUtils';
-import { modules } from 'ad-tag/types/moliConfig';
-import { sendAdvertisingID } from './sendAdvertisingId';
+} from 'ad-tag/ads/adPipeline';
+import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import AdexConfig = modules.adex.AdexConfig;
+import { isNotNull } from 'ad-tag/util/arrayUtils';
+import { sendAdvertisingID } from 'ad-tag/ads/modules/adex/sendAdvertisingId';
 import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
-import AdexKeyValues = modules.adex.AdexKeyValues;
 import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
 import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
+import {
+  toAdexListType,
+  toAdexMapType,
+  toAdexStringOrNumberType
+} from 'ad-tag/ads/modules/adex/adex-mapping';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -226,7 +229,6 @@ export class AdexModule implements IModule {
     // load script or make request (appMode) if consent is given
     if (this.hasRequiredConsent(context.tcData) && !this.isLoaded && dfpKeyValues) {
       this.isLoaded = true;
-
       // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
       const hasValidMobileKeyValues: boolean =
         // appConfig is not undefined or null
@@ -318,7 +320,7 @@ export class AdexModule implements IModule {
       const adexKeyValues = this.getAdexKeyValues(context, config);
 
       adexKeyValues &&
-        this.window._adexc?.push([
+        (context.window as ITheAdexWindow)._adexc?.push([
           `/${config.adexCustomerId}/${config.adexTagId}/`,
           'ut', // usertrack
           '_kv', // key values

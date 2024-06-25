@@ -20,6 +20,7 @@
     "lint": "eslint ./ad-tag/source --ext .ts,.tsx && npm run prettier",
     "lint:fix": "eslint ./ad-tag/source --ext .ts,.tsx --fix && npm run prettier:fix",
     "test": "mocha --require ts-node/register --require tsconfig-paths/register ad-tag/**/*.test.ts",
+    "test:single": "mocha --require ts-node/register --require tsconfig-paths/register",
     "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register source/**/*.test.ts",
     "prettier": "prettier --config .prettierrc --ignore-path .prettierignore --check \"ad-tag/source/**/*.ts*\"",
     "prettier:fix": "prettier --config .prettierrc --ignore-path .prettierignore --write --check \"ad-tag/source/**/*.ts*\"",
