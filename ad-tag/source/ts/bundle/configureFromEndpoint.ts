@@ -21,10 +21,10 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  *
  * ```html
  * <script id="moli-ad-tag" src="path/to/your/ad-tag-bundle.js"
- *         data-pub-code="yourCode"
+ *         data-publisher-code="yourCode"
  *         data-version="prod"
- *         data-endpoint="cdn.h5v.eu/publisher/config"
- *         data-endpoint-fallback="cdn-fallback.h5v.eu/publisher/config"
+ *         data-endpoint="cdn.h5v.eu/publishers"
+ *         data-endpoint-fallback="cdn-fallback.h5v.eu/publishers"
  * ></script>
  * ```
  *
@@ -52,12 +52,12 @@ const versionOverride = resolveOverrides(
 // if we can't detect the current script, we can't load the configuration and something is really off
 if (currentScript) {
   // publisher code and version can be overridden via query parameters
-  const publisherCode = pubCodeOverride ?? currentScript.getAttribute('data-pub-code');
+  const publisherCode = pubCodeOverride ?? currentScript.getAttribute('data-publisher-code');
   const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'prod';
 
-  const endpoint = currentScript.getAttribute('data-endpoint') ?? 'cdn.h5v.eu/publisher/config';
+  const endpoint = currentScript.getAttribute('data-endpoint') ?? 'cdn.h5v.eu/publishers';
   const fallback =
-    currentScript.getAttribute('data-endpoint-fallback') ?? 'cdn-fallback.h5v.eu/publisher/config';
+    currentScript.getAttribute('data-endpoint-fallback') ?? 'cdn-fallback.h5v.eu/publishers';
 
   if (publisherCode) {
     const url = `//${endpoint}/${publisherCode}/${version}.json`;
