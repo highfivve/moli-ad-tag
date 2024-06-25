@@ -1,4 +1,4 @@
-import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
+import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
 import { Moli } from '../types/moli';
 import {
@@ -184,30 +184,7 @@ export class AdService {
 
     // prebid
     if (config.prebid && env === 'production') {
-      // load prebid-dist if configured in the ad-tag config
-      this.assetService
-        .loadScript({
-          name: 'prebid-dist',
-          assetUrl: config.prebid.distributionUrls.es6,
-          loadMethod: AssetLoadMethod.TAG,
-          type: 'module'
-        })
-        .catch(error => config.logger?.error('AdService', 'Failed to load es6 prebid-dist', error));
-
-      // load prebid-dist if configured in the ad-tag config
-      config.prebid?.distributionUrls.es5 &&
-        this.assetService
-          .loadScript({
-            name: 'prebid-dist',
-            assetUrl: config.prebid?.distributionUrls.es5,
-            loadMethod: AssetLoadMethod.TAG,
-            type: 'nomodule'
-          })
-          .catch(error =>
-            config.logger?.error('AdService', 'Failed to load es5 prebid-dist', error)
-          );
-
-      init.push(prebidInit());
+      init.push(prebidInit(this.assetService));
 
       configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {

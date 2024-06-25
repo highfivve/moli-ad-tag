@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 
 import { createAssetLoaderService, googletag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
+import { moliPrebidTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 
 import { FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
@@ -106,13 +106,7 @@ describe('Skin Module', () => {
       const config: Moli.MoliConfig = {
         slots: slots,
         logger: noopLogger,
-        prebid: {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'http://cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        },
+        prebid: moliPrebidTestConfig,
         schain: dummySchainConfig
       };
 
@@ -151,13 +145,7 @@ describe('Skin Module', () => {
       const config: Moli.MoliConfig = {
         slots: slots,
         logger: noopLogger,
-        prebid: {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        },
+        prebid: moliPrebidTestConfig,
         schain: dummySchainConfig
       };
 
@@ -597,17 +585,10 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        };
 
         const config: Moli.MoliConfig = {
           slots: slots,
-          prebid: prebidConfig,
+          prebid: moliPrebidTestConfig,
           schain: dummySchainConfig
         };
         module.init(config, assetLoaderService);
@@ -641,17 +622,10 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        };
 
         const config: Moli.MoliConfig = {
           slots: slots,
-          prebid: prebidConfig,
+          prebid: moliPrebidTestConfig,
           schain: dummySchainConfig
         };
         module.init(config, assetLoaderService);
@@ -694,17 +668,10 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        };
 
         const config: Moli.MoliConfig = {
           slots: slots,
-          prebid: prebidConfig,
+          prebid: moliPrebidTestConfig,
           schain: dummySchainConfig
         };
         module.init(config, assetLoaderService);
@@ -754,17 +721,10 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        };
 
         const config: Moli.MoliConfig = {
           slots: slots,
-          prebid: prebidConfig,
+          prebid: moliPrebidTestConfig,
           schain: dummySchainConfig
         };
         module.init(config, assetLoaderService);
@@ -814,17 +774,10 @@ describe('Skin Module', () => {
         );
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          distributionUrls: {
-            es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-          },
-          schain: { nodes: [] }
-        };
 
         const config: Moli.MoliConfig = {
           slots: slots,
-          prebid: prebidConfig,
+          prebid: moliPrebidTestConfig,
           schain: dummySchainConfig
         };
         module.init(config, assetLoaderService);
@@ -875,17 +828,9 @@ describe('Skin Module', () => {
             jsDomWindow
           );
 
-          const prebidConfig: Moli.headerbidding.PrebidConfig = {
-            config: pbjsTestConfig,
-            schain: { nodes: [] },
-            distributionUrls: {
-              es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-            }
-          };
-
           const config: Moli.MoliConfig = {
             slots: slots,
-            prebid: prebidConfig,
+            prebid: moliPrebidTestConfig,
             schain: dummySchainConfig
           };
 
@@ -932,17 +877,9 @@ describe('Skin Module', () => {
             jsDomWindow
           );
 
-          const prebidConfig: Moli.headerbidding.PrebidConfig = {
-            config: pbjsTestConfig,
-            schain: { nodes: [] },
-            distributionUrls: {
-              es6: 'cdn.h5v.eu/prebid.js/build/dist1_es6_78/Prebid.js/build/dist/prebid.js?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OQVKDH6RSRHZPWO8QNJ1%2F20240606%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240606T152055Z&X-Amz-Expires=604800&X-Amz-Security-Token=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NLZXkiOiJPUVZLREg2UlNSSFpQV084UU5KMSIsImV4cCI6MTcxNzcyNTM4MSwicGFyZW50IjoiamVua2lucyJ9.-MoMIkxI89GPZt2NK_ZJDBduoK8nl74djxa_4rh9VoGn8n3ugrg6p4FWgtkmflHIIOMYeiIUEFjBwHIZq7C--g&X-Amz-SignedHeaders=host&versionId=8b815343-515c-434d-a166-ce011181c174&X-Amz-Signature=19cd11fa12307c8633852f67b973b9c7a9a738a79cffa3e0c361e5f7d63653a8'
-            }
-          };
-
           const config: Moli.MoliConfig = {
             slots: slots,
-            prebid: prebidConfig,
+            prebid: moliPrebidTestConfig,
             schain: dummySchainConfig
           };
 

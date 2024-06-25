@@ -21,6 +21,7 @@ import { isNotNull, uniquePrimitiveFilter } from '../util/arrayUtils';
 import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 import { createTestSlots } from '../util/test-slots';
+import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import IPrebidJs = prebidjs.IPrebidJs;
 
 // if we forget to remove prebid from the configuration.
@@ -37,11 +38,8 @@ const prebidTimeout = (context: AdPipelineContext) => {
   });
 };
 
-const prebidInitAndReady = (window: Window & prebidjs.IPrebidjsWindow) =>
-  new Promise<void>(resolve => {
-    window.pbjs = window.pbjs || ({ que: [] } as unknown as IPrebidJs);
-    window.pbjs.que.push(resolve);
-  });
+const prebidReady = (window: Window & prebidjs.IPrebidjsWindow) =>
+  new Promise<void>(resolve => window.pbjs.que.push(resolve));
 
 const isPrebidSlotDefinition = (
   slotDefinition: Moli.SlotDefinition
@@ -247,10 +245,28 @@ const createdAdUnits = (
   return prebidAdUnits.reduce((acc, adUnits) => [...acc, ...adUnits], []);
 };
 
-export const prebidInit = (): InitStep =>
-  mkInitStep('prebid-init', context =>
-    Promise.race([prebidInitAndReady(context.window), prebidTimeout(context)])
-  );
+export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
+  mkInitStep('prebid-init', context => {
+    context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
+    // if there's already prebid distribution loaded, just go ahead. Even if there's a distributionUrl set, we must not
+    // load the external resources as this would create unintentional conflicts.
+    if (context.window.pbjs.libLoaded) {
+      return Promise.resolve();
+    } else if (context.config.prebid?.distributionUrl) {
+      // load as a side effect and don't block the pipeline
+      assetService.loadScript({
+        name: 'prebid',
+        assetUrl: context.config.prebid.distributionUrl,
+        loadMethod: AssetLoadMethod.TAG
+      });
+      return Promise.resolve();
+    } else {
+      // if there's no distribution URL we assume that prebid is part of the ad tag itself.
+      // the timeout makes sure that even if there are issues with the included prebid distribution, the pipeline does
+      // not block forever.
+      return Promise.race([prebidReady(context.window), prebidTimeout(context)]);
+    }
+  });
 
 export const prebidRemoveAdUnits = (prebidConfig: Moli.headerbidding.PrebidConfig): ConfigureStep =>
   mkConfigureStep(
@@ -263,8 +279,10 @@ export const prebidRemoveAdUnits = (prebidConfig: Moli.headerbidding.PrebidConfi
           context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
           const adUnits = context.window.pbjs.adUnits;
           if (adUnits) {
-            context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
-            adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
+            context.window.pbjs.que.push(() => {
+              context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
+              adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
+            });
           }
         }
         resolve();
@@ -296,34 +314,33 @@ export const prebidConfigure = (
           if (prebidConfig.bidderSettings) {
             context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
           }
-          context.window.pbjs.setConfig({
-            ...prebidConfig.config,
-            // global schain configuration
-            ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
-            // for module priceFloors
-            ...{ floors: prebidConfig.config.floors || {} }
-          });
-          prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
-            const nodes = [schainConfig.supplyChainStartNode];
-            if (appendNode) {
-              nodes.push(node);
-            }
-            context.window.pbjs.que.push(() =>
+          context.window.pbjs.que.push(() => {
+            context.window.pbjs.setConfig({
+              ...prebidConfig.config,
+              // global schain configuration
+              ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
+              // for module priceFloors
+              ...{ floors: prebidConfig.config.floors || {} }
+            });
+
+            prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
+              const nodes = [schainConfig.supplyChainStartNode];
+              if (appendNode) {
+                nodes.push(node);
+              }
               context.window.pbjs.setBidderConfig(
                 { bidders: [bidder], config: { schain: mkSupplyChainConfig(nodes) } },
                 true
-              )
-            );
+              );
+            });
+
+            // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
+            // don't add this to the init step.
+            context.window.pbjs.registerSignalSources &&
+              context.window.pbjs.registerSignalSources();
           });
 
-          // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
-          // don't add this to the init step.
-          context.window.pbjs.que.push(
-            () =>
-              context.window.pbjs.registerSignalSources &&
-              context.window.pbjs.registerSignalSources()
-          );
-
+          // the resolve is intentionally not inside the pbjs.que.push. At this point we do not need to block the pipeline
           resolve();
         });
       }
@@ -361,16 +378,16 @@ export const prebidPrepareRequestAds = (
         if (prebidConfig.ephemeralAdUnits) {
           resolve();
         } else {
-          const adUnits = createdAdUnits(context, prebidConfig, slots);
-          adUnits.forEach(adUnit => {
-            context.logger.debug(
-              'Prebid',
-              context.requestId,
-              `Prebid add ad unit: [Code] ${adUnit.code}`,
-              adUnit
-            );
-          });
           context.window.pbjs.que.push(() => {
+            const adUnits = createdAdUnits(context, prebidConfig, slots);
+            adUnits.forEach(adUnit => {
+              context.logger.debug(
+                'Prebid',
+                context.requestId,
+                `Prebid add ad unit: [Code] ${adUnit.code}`,
+                adUnit
+              );
+            });
             context.window.pbjs.addAdUnits(adUnits);
           });
           resolve();
