@@ -1,5 +1,6 @@
-import { AdexKeyValues } from './adex-mapping';
-import { MoliRuntime } from '../../../types/moliRuntime';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { modules } from 'ad-tag/types/moliConfig';
+import AdexKeyValues = modules.adex.AdexKeyValues;
 
 type ValueOf<T> = T[keyof T];
 type AdexKeyValueObject = {
