@@ -82,7 +82,7 @@ describe('Skin Module', () => {
       getSlotElementId(): string {
         return domId;
       }
-    }) as googletag.IAdSlot & { domId: string };
+    } as googletag.IAdSlot & { domId: string });
 
   const auctionObject = (from: prebidjs.IBidResponsesMap): prebidjs.event.AuctionObject => ({
     auctionId: 'xxxx-xxxx-xxxx-xxxx',
@@ -116,7 +116,7 @@ describe('Skin Module', () => {
       currency: 'EUR',
       originalCurrency: 'EUR',
       netRevenue: true
-    }) as prebidjs.IGenericBidResponse;
+    } as prebidjs.IGenericBidResponse);
 
   const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
     genericBidResponse(prebidjs.DSPX, cpm);
@@ -217,7 +217,7 @@ describe('Skin Module', () => {
         currency: 'EUR',
         originalCurrency: 'EUR',
         netRevenue: true
-      }) as prebidjs.IGumGumBidResponse;
+      } as prebidjs.IGumGumBidResponse);
 
     describe('gumgum mobile skin', () => {
       const config: modules.skin.SkinConfig = {
