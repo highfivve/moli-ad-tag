@@ -911,6 +911,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
     }
   },
   prebid: {
+    distributionUrl: '/prebid.js',
     ephemeralAdUnits: true,
     // bidderSettings: bidderSettings,
     schain: {
