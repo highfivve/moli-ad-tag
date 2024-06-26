@@ -238,7 +238,12 @@ describe('prebid', () => {
           prebid: moliPrebidTestConfig
         })
       );
-      expect(loadSpy).to.have.be.been.called;
+
+      expect(loadSpy).to.have.be.been.calledOnceWithExactly({
+        name: 'prebid',
+        assetUrl: 'https://cdn.h5v.eu/prebid/dist/8.52.0/prebid.js',
+        loadMethod: 1
+      });
     });
   });
 
