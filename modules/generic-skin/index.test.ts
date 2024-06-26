@@ -820,7 +820,6 @@ describe('Skin Module', () => {
     });
 
     describe('adReload', () => {
-      let clock: Sinon.SinonFakeTimers;
       let refreshAdSlotSpy: Sinon.SinonSpy;
 
       const slots: Moli.AdSlot[] = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
@@ -833,10 +832,20 @@ describe('Skin Module', () => {
       }));
       const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
+      after(() => {
+        sandbox.restore();
+      });
+
       beforeEach(() => {
         initAdTag(jsDomWindow);
-        clock = Sinon.useFakeTimers();
         refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+        sandbox.useFakeTimers();
+      });
+
+      afterEach(() => {
+        sandbox.reset();
+        sandbox.clock.restore();
+        sandbox.clock.reset();
       });
 
       it('should reload the skin if bidder is configured in adReload and is about to win the auction', () => {
@@ -891,7 +900,7 @@ describe('Skin Module', () => {
           slotDefinitions
         );
 
-        clock.tick(31000);
+        sandbox.clock.tick(31000);
 
         expect(refreshAdSlotSpy).to.have.been.calledOnce;
       });
@@ -945,9 +954,9 @@ describe('Skin Module', () => {
         );
 
         // needed to make the test succeed if other tests have run before
-        clock.reset();
+        sandbox.clock.reset();
 
-        clock.tick(10000);
+        sandbox.clock.tick(10000);
 
         preSetTargetingForGPTAsync(
           {
@@ -959,10 +968,10 @@ describe('Skin Module', () => {
           slotDefinitions
         );
 
-        clock.tick(21000);
+        sandbox.clock.tick(21000);
         expect(refreshAdSlotSpy).to.have.not.been.called;
 
-        clock.tick(10000);
+        sandbox.clock.tick(10000);
         expect(refreshAdSlotSpy).to.have.been.calledOnce;
       });
     });
