@@ -146,10 +146,8 @@ export class AssetLoaderService implements IAssetLoaderService {
       if (config.assetUrl.endsWith('mjs')) {
         scriptTag.type = 'module';
       } else {
-        scriptTag.setAttribute('nomodule', '');
         scriptTag.type = 'text/javascript';
       }
-      // Todo - now the prebid dist has always the .js extension (es6/es5), once it is changed, nomodule attribute should be added to .js files
     }
     scriptTag.async = true;
     scriptTag.src = config.assetUrl;

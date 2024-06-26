@@ -131,7 +131,6 @@ describe('AssetLoaderService', () => {
       expect(createElementSpy).to.have.been.calledOnce;
       expect(scriptElement.type).to.equal('text/javascript');
       expect(scriptElement.src).to.equal(config.assetUrl);
-      expect(scriptElement.getAttribute('nomodule')).to.equal('');
     });
   });
 });
