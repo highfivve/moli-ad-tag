@@ -116,10 +116,10 @@ export class Cleanup implements IModule {
           try {
             context.logger.debug(
               'Cleanup Module',
-              `Try to execute JS line string: '${jsLineAsString}'`
+              `Try to execute string as JS: '${jsLineAsString}'`
             );
-            // eslint-disable-next-line no-eval
-            eval(jsLineAsString);
+            const jsFunction = new Function(jsLineAsString);
+            jsFunction();
           } catch (e) {
             context.logger.error(
               'Cleanup Module',
