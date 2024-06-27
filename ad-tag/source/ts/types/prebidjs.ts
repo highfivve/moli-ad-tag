@@ -1216,29 +1216,26 @@ export namespace prebidjs {
 
   export namespace event {
     export type EventName =
-      | 'auctionInit'
-      | 'auctionEnd'
-      | 'auctionTimeout'
-      | 'beforeRequestBids'
-      | 'bidRequested'
-      | 'bidResponse'
-      | 'bidAdjustment'
-      | 'bidWon'
-      | 'noBid'
-      | 'bidTimeout'
-      | 'setTargeting'
-      | 'requestBids'
       | 'addAdUnits'
       | 'adRenderFailed'
+      | 'adRenderSucceeded'
       | 'auctionDebug'
+      | 'auctionEnd'
+      | 'auctionInit'
+      | 'auctionTimeout'
+      | 'beforeRequestBids'
+      | 'beforeBidderHttp'
+      | 'bidAccepted'
+      | 'bidAdjustment'
       | 'bidderDone'
-      | 'tcf2Enforcement'
-      | 'beforeBidderHttp';
-
-    /**
-     * All events that have no type definitions
-     */
-    export type UntypedEventName = Exclude<EventName, 'bidWon'>;
+      | 'bidRequested'
+      | 'bidResponse'
+      | 'bidTimeout'
+      | 'bidWon'
+      | 'noBid'
+      | 'requestBids'
+      | 'setTargeting'
+      | 'tcf2Enforcement';
 
     export type OnEventHandler = {
       /**
@@ -1249,22 +1246,72 @@ export namespace prebidjs {
        * @param id - ad unit code
        */
 
-      (event: 'bidWon', handler: (bidResponse: BidResponse) => void, id?: string): void;
+      (event: 'addAdUnits', handler: () => void, id?: string): void;
 
-      (event: 'noBid', handler: (bid: NoBidObject) => void, id?: string): void;
+      (event: 'adRenderFailed', handler: (failure: RenderFailure) => void, id?: string): void;
 
-      (event: 'auctionInit', handler: (auction: AuctionObject) => void, id?: string): void;
+      (event: 'adRenderSucceeded', handler: (response: BidResponse) => void, id?: string): void;
 
-      (event: 'bidResponse', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidTimeout', handler: (bid: NoBidObject[]) => void, id?: string): void;
-
-      (event: 'auctionTimeout', handler: (auction: AuctionObject) => void, id?: string): void;
+      (event: 'auctionDebug', handler: (debugInfo: AuctionDebugInfo) => void, id?: string): void;
 
       (event: 'auctionEnd', handler: (auction: AuctionObject) => void, id?: string): void;
 
-      (event: UntypedEventName, bid: any, id?: string): void;
+      (event: 'auctionInit', handler: (auction: AuctionObject) => void, id?: string): void;
+
+      (event: 'auctionTimeout', handler: (auction: AuctionObject) => void, id?: string): void;
+
+      (event: 'beforeBidderHttp', handler: (adUnitInfo: BidderRequest) => void, id?: string): void;
+
+      (
+        event: 'beforeRequestBids',
+        handler: (adUnitInfo: BeforeRequestBidsAdUnitInfo) => void,
+        id?: string
+      ): void;
+
+      (event: 'bidAccepted', handler: (bidResponse: BidResponse) => void, id?: string): void;
+
+      (event: 'bidAdjustment', handler: (bidResponse: BidResponse) => void, id?: string): void;
+
+      (event: 'bidderDone', handler: (request: BidderRequest) => void, id?: string): void;
+
+      (event: 'bidRequested', handler: (request: BidderRequest) => void, id?: string): void;
+
+      (event: 'bidResponse', handler: (bidResponse: BidResponse) => void, id?: string): void;
+
+      (event: 'bidWon', handler: (bidResponse: BidResponse) => void, id?: string): void;
+
+      (event: 'bidTimeout', handler: (bid: NoBidObject[]) => void, id?: string): void;
+
+      (event: 'noBid', handler: (bid: NoBidObject) => void, id?: string): void;
+
+      (event: 'requestBids', handler: () => void, id?: string): void;
+
+      (
+        event: 'setTargeting',
+        handler: (targetingInfo: { [key: string]: AdServerTargeting }) => void,
+        id?: string
+      ): void;
+
+      (event: 'tcf2Enforcement', handler: (blocked: TCF2Enforcement) => void, id?: string): void;
     };
+
+    export type TCF2Enforcement = {
+      readonly storageBlocked: string[];
+      readonly bidderBlocked: string[];
+      readonly analyticsBlocked: string[];
+    };
+
+    export type RenderFailure = { readonly reason?: string; readonly message?: string };
+
+    export type AuctionDebugInfo = {
+      readonly type: 'WARNING' | 'ERROR';
+      readonly arguments?: any[];
+    };
+
+    export interface BeforeRequestBidsAdUnitInfo extends IAdUnit {
+      readonly sizes?: [number, number][];
+      readonly transactionId?: string;
+    }
 
     export type GdprConsent = {
       readonly addtlConsent?: string;
@@ -5456,7 +5503,7 @@ export namespace prebidjs {
     /**
      * Status of the bid. Possible values: targetingSet, rendered
      */
-    readonly status: 'rendered' | 'targetingSet';
+    readonly status?: 'rendered' | 'targetingSet';
 
     /**
      *  The bid’s status message
@@ -5500,16 +5547,7 @@ export namespace prebidjs {
     /**
      * Contains all the adserver targeting parameters
      */
-    readonly adserverTargeting: {
-      readonly hb_bidder: string;
-      readonly hb_adid: string;
-      readonly hb_pb: string;
-      readonly hb_size: string;
-      readonly hb_source: string;
-      readonly hb_format: string;
-      readonly hb_adomain: string;
-    };
-
+    readonly adserverTargeting: AdServerTargeting;
     readonly responseTimestamp: number;
     readonly requestTimestamp: number;
     readonly timeToRespond: number;
@@ -5570,6 +5608,16 @@ export namespace prebidjs {
      */
     readonly pbCg: string;
   }
+
+  export type AdServerTargeting = {
+    readonly hb_bidder: string;
+    readonly hb_adid: string;
+    readonly hb_pb: string;
+    readonly hb_size: string;
+    readonly hb_source: string;
+    readonly hb_format: string;
+    readonly hb_adomain: string;
+  };
 
   export interface IGenericBidResponse extends IBidResponse {
     /**
