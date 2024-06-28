@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ES6",
-    "sourceMap": false
+    "sourceMap": false,
+    "declaration": false
   },
   "exclude": ["node_modules", "**/lib", "**/*.test.ts", "**/stubs"]
 }
