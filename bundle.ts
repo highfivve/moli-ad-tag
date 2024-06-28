@@ -23,6 +23,11 @@ type OptionsValues = {
   readonly output: string;
   readonly config?: string;
   readonly failAfterWarnings: boolean;
+
+  /**
+   * the format of the output file. Will be passed to rollup to override the default
+   */
+  readonly format: 'es' | 'iife'
 };
 
 type BundleConfig = {
@@ -49,6 +54,7 @@ const command = program
     value => value === 'true',
     true
   )
+  .option('-f, --format <format>', 'the format of the output file. Will be passed to rollup to override the default', 'es')
   .parse(process.argv);
 
 // parse modules.json
@@ -71,6 +77,7 @@ const selectedModules = (): string[] => {
 const modules = ['init', selectedModules()];
 
 console.log('Selected modules:', modules);
+console.log('Building format', options.format);
 
 // generate entrypoint file
 const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', 'bundle.ts');
@@ -84,6 +91,8 @@ try {
     '--file',
     options.output,
     '-c',
+    '--format',
+    options.format,
     ...(options.failAfterWarnings ? ['--failAfterWarnings'] : [])
   ];
   // bundle entrypoint file
