@@ -327,7 +327,7 @@ export class AdexModule implements IModule {
           [
             adexKeyValues.reduce(
               (aggregator: AdexKeyValues, additionalKeyValue: AdexKeyValues) =>
-                ({ ...aggregator, ...additionalKeyValue } as AdexKeyValues),
+                ({ ...aggregator, ...additionalKeyValue }) as AdexKeyValues,
               {}
             ),
             // single page mode for logged-in

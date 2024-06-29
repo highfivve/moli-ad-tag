@@ -16,7 +16,7 @@ import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { modules, Targeting } from 'ad-tag/types/moliConfig';
 import MappingDefinition = modules.adex.MappingDefinition;
 import AdexAppConfig = modules.adex.AdexAppConfig;
-import { tcfapi } from "ad-tag/types/tcfapi";
+import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
