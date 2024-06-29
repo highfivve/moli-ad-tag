@@ -40,7 +40,10 @@ describe('Skin Module', () => {
 
   const emitAuctionEnd = (bids: prebidjs.IBidResponsesMap): void => {
     expect(onEventSpy).to.have.been.calledOnce;
-    const [_, callback] = onEventSpy.firstCall.args;
+    const [event, callback] = onEventSpy.firstCall.args;
+    // typescript infers the wrong callback type for the sinonSpy. Maybe an EventMap implementation solves this.
+    // for now we have to disable the type check here
+    // @ts-ignore
     callback(auctionObject(bids));
   };
 
