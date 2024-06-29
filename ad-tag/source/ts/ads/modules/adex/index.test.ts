@@ -6,8 +6,6 @@ import { AdPipelineContext } from '../../adPipeline';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
 import { AdexModule, ITheAdexWindow } from './index';
-import { tcfapi } from '../../../../../lib';
-import TCData = tcfapi.responses.TCData;
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { googletag } from 'ad-tag/types/googletag';
@@ -18,6 +16,8 @@ import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { modules, Targeting } from 'ad-tag/types/moliConfig';
 import MappingDefinition = modules.adex.MappingDefinition;
 import AdexAppConfig = modules.adex.AdexAppConfig;
+import { tcfapi } from "ad-tag/types/tcfapi";
+import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
 use(chaiAsPromised);
