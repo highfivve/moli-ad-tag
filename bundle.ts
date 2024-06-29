@@ -41,8 +41,7 @@ const command = program
   .name('bundler')
   .description('Create a bundle from the given modules.json file and the given output file')
   .version('1.0.0')
-  .requiredOption('-o, --output <output>', 'output file')
-  .option('-m, --modules [...modules]', 'a list of modules that should be part of the ad tag bundle. The order of the modules is important. The `bundle/configureFromEndpoint` module must always be last. The config option will be ignored if modules are specified')
+  .option('-m, --modules [modules...]', 'a list of modules that should be part of the ad tag bundle. The order of the modules is important. The `bundle/configureFromEndpoint` module must always be last. The config option will be ignored if modules are specified')
   .option(
     '-c, --config <config>',
     'file containing the modules that should be part of the ad tag bundle',
@@ -54,46 +53,62 @@ const command = program
     value => value === 'true',
     true
   )
-  .option('-f, --format <format>', 'the format of the output file. Will be passed to rollup to override the default', 'es')
   .parse(process.argv);
 
 // parse modules.json
 const options = command.opts<OptionsValues>();
 
-const selectedModules = (): string[] => {
-  if(options.modules && options.modules.length > 0) {
-    return options.modules;
-  } else if (options.config) {
-    if(fs.existsSync(options.config)) {
-      const config = JSON.parse(fs.readFileSync(options.config, 'utf-8')) as BundleConfig;
-      return config.modules;
+const loadConfigFile = (): BundleConfig | null => {
+  if (options.config) {
+    if (fs.existsSync(options.config)) {
+      return JSON.parse(fs.readFileSync(options.config, 'utf-8')) as BundleConfig;
+    } else {
+      program.error(`Config file does not exist: ${options.config}`);
     }
-    program.error(`Config file does not exist: ${options.config}`);
   }
-
-  program.error('No modules or config file specified');
+  return null;
 }
 
-const modules = ['init', selectedModules()];
+const buildBundleConfig = (): BundleConfig => {
+  const bundleConfig = {
+    modules: [ 'init' ]
+  };
 
-console.log('Selected modules:', modules);
-console.log('Building format', options.format);
+  const bundleConfigFromFile = loadConfigFile();
+
+  // append modules from cli or config file
+  if (options.modules) {
+    console.log(`Appending ${options.modules.length} modules to the bundle from cli param`);
+    bundleConfig.modules.push(...options.modules);
+  } else if (bundleConfigFromFile) {
+    console.log(`Appending ${bundleConfigFromFile.modules.length} modules to the bundle from config`);
+    bundleConfig.modules.push(...bundleConfigFromFile.modules);
+  } else {
+    program.error('No modules or config file specified');
+  }
+  return bundleConfig
+}
+
+const bundleConfig = buildBundleConfig();
+
+console.log('Selected modules:', bundleConfig.modules);
+
+const moduleImports = bundleConfig.modules.map(module => `import './${module}';`).join('\n');
 
 // generate entrypoint file
 const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', 'bundle.ts');
-fs.writeFileSync(entrypoint, modules.map(module => `import './${module}';`).join('\n'));
+fs.writeFileSync(entrypoint, [ '// modules', moduleImports ].join('\n'));
 
 try {
+  // cleanup previous bundles
+  fs.rmSync(path.join(__dirname, 'dist'), { recursive: true, force: true });
+
   const cmd: string[] = [
     'npx',
     'rollup',
     entrypoint,
-    '--file',
-    options.output,
     '-c',
-    '--format',
-    options.format,
-    ...(options.failAfterWarnings ? ['--failAfterWarnings'] : [])
+    ...(options.failAfterWarnings ? [ '--failAfterWarnings' ] : [])
   ];
   // bundle entrypoint file
   execSync(cmd.join(' '), {
