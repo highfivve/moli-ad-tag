@@ -40,7 +40,7 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
-import { ConfiantConfig } from '@highfivve/module-confiant';
+import ConfiantConfig = modules.confiant.ConfiantConfig;
 
 /**
  * ## Confiant Ad Fraud Protection
