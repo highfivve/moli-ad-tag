@@ -79,11 +79,9 @@ describe('The Adex DMP Module', () => {
     sandbox.restore();
   });
 
-  const createAdexModule = (): AdexModule => new AdexModule();
-
   describe('init step', () => {
     it('should add an init step', () => {
-      const module = createAdexModule();
+      const module = new AdexModule();
       module.configure(modulesConfig(false));
       const initSteps = module.initSteps(assetLoaderService);
 
@@ -92,7 +90,7 @@ describe('The Adex DMP Module', () => {
     });
 
     it('should not add an configure step in non-spa mode', async () => {
-      const module = createAdexModule();
+      const module = new AdexModule();
       module.configure(modulesConfig(false));
 
       const configureSteps = module.configureSteps();
@@ -100,7 +98,7 @@ describe('The Adex DMP Module', () => {
     });
 
     it('should add an configure step in spa mode', async () => {
-      const module = createAdexModule();
+      const module = new AdexModule();
       module.configure(modulesConfig(true));
 
       const configureSteps = module.configureSteps();
@@ -111,7 +109,7 @@ describe('The Adex DMP Module', () => {
   it("shouldn't load the script if no consent is given", async () => {
     const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
-    const module = createAdexModule();
+    const module = new AdexModule();
     module.configure(modulesConfig(true));
     const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
@@ -128,7 +126,7 @@ describe('The Adex DMP Module', () => {
   it("shouldn't load the script if no targeting is given", async () => {
     const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
-    const module = createAdexModule();
+    const module = new AdexModule();
     module.configure(modulesConfig(true));
     const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
@@ -143,7 +141,7 @@ describe('The Adex DMP Module', () => {
   it("shouldn't load the script if no adex data can be produced with the given mappings", async () => {
     const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
-    const module = createAdexModule();
+    const module = new AdexModule();
     module.configure(
       modulesConfig(true, [{ key: 'subChannel', attribute: 'iab_cat', adexValueType: 'string' }])
     );
@@ -172,7 +170,7 @@ describe('The Adex DMP Module', () => {
   consentSituations.forEach(situation =>
     it(`should load the script if ${situation.description}`, async () => {
       const assetLoaderService = createAssetLoaderService(jsDomWindow);
-      const module = createAdexModule();
+      const module = new AdexModule();
       module.configure(
         modulesConfig(true, [{ key: 'channel', attribute: 'iab_cat', adexValueType: 'string' }])
       );
@@ -208,7 +206,7 @@ describe('The Adex DMP Module', () => {
 
   it('should load the script only once despite multiple trackings in SPA mode', async () => {
     const assetLoaderService = createAssetLoaderService(jsDomWindow);
-    const module = createAdexModule();
+    const module = new AdexModule();
     module.configure(
       modulesConfig(true, [{ key: 'channel', attribute: 'iab_cat', adexValueType: 'string' }])
     );
@@ -256,7 +254,7 @@ describe('The Adex DMP Module', () => {
 
   it('should use the in-app endpoint instead of loading the script if there is an appConfig and clientType is either android or ios', async () => {
     const assetLoaderService = createAssetLoaderService(jsDomWindow);
-    const module = createAdexModule();
+    const module = new AdexModule();
     const moduleConfig = modulesConfig(
       true,
       [{ key: 'channel', attribute: 'iab_cat', adexValueType: 'string' }],
