@@ -19,7 +19,8 @@ use(sinonChai);
 
 describe('Confiant Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom, jsDomWindow, assetLoaderService;
+  let dom, assetLoaderService;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow;
 
   const setupDomAndServices = () => {
     dom = createDom();
