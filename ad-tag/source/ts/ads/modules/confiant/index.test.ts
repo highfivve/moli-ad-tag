@@ -26,8 +26,6 @@ describe('Confiant Module', () => {
     dom = createDom();
     jsDomWindow = dom.window as any;
     jsDomWindow.googletag = createGoogletagStub();
-    jsDomWindow.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
-      Promise.resolve(new Response());
     assetLoaderService = createAssetLoaderService(jsDomWindow);
   };
 
