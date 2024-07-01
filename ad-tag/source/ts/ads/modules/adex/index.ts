@@ -169,9 +169,6 @@ export class AdexModule implements IModule {
   public readonly description: string = 'Moli DMP module for The Adex.';
   public readonly moduleType: ModuleType = 'dmp';
   private adexConfig: modules.adex.AdexConfig | null = null;
-  private readonly window: ITheAdexWindow = {
-    _adexc: [['/', 'ut', '_kv', [{}, 0]]]
-  } as unknown as ITheAdexWindow;
 
   private isLoaded: boolean = false;
 

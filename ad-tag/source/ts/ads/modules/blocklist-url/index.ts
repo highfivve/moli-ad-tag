@@ -113,7 +113,6 @@ export class BlocklistedUrls implements IModule {
     | modules.blocklist.BlocklistUrlsBlockingConfig
     | modules.blocklist.BlocklistUrlsKeyValueConfig
     | null = null;
-  private readonly window: Window = {} as Window;
 
   config(): Object | null {
     return this.blocklistConfig;
@@ -139,8 +138,8 @@ export class BlocklistedUrls implements IModule {
                   assetLoaderService,
                   ctx.logger
                 )().then(blocklist => {
-                  if (this.isBlocklisted(blocklist, this.window.location.href, ctx.logger)) {
-                    (this.window as Window & googletag.IGoogleTagWindow).googletag
+                  if (this.isBlocklisted(blocklist, ctx.window.location.href, ctx.logger)) {
+                    (ctx.window as Window & googletag.IGoogleTagWindow).googletag
                       .pubads()
                       .setTargeting(key, value);
                   }
@@ -152,7 +151,7 @@ export class BlocklistedUrls implements IModule {
                   ctx.logger
                 )().then(blocklist => {
                   ctx.logger.debug(this.name, 'using blocklist', blocklist);
-                  if (this.isBlocklisted(blocklist, this.window.location.href, ctx.logger)) {
+                  if (this.isBlocklisted(blocklist, ctx.window.location.href, ctx.logger)) {
                     return Promise.reject('blocklisted url found. Abort ad pipeline run');
                   }
                 });
