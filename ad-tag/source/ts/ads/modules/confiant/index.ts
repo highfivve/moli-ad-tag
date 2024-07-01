@@ -40,6 +40,7 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
+import { ConfiantConfig } from '@highfivve/module-confiant';
 
 /**
  * ## Confiant Ad Fraud Protection
@@ -69,11 +70,15 @@ export class Confiant implements IModule {
   initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
     const config = this.confiantConfig;
     return config
-      ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, assetLoaderService))]
+      ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, assetLoaderService, config))]
       : [];
   }
 
-  loadConfiant(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
+  loadConfiant(
+    context: AdPipelineContext,
+    assetLoaderService: IAssetLoaderService,
+    config: ConfiantConfig
+  ): Promise<void> {
     // test environment doesn't require confiant
     if (context.env === 'test') {
       return Promise.resolve();
@@ -93,7 +98,7 @@ export class Confiant implements IModule {
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl: this.gvlid
+        assetUrl: config.assetUrl
       })
       .catch(error => context.logger.error('failed to load confiant', error));
     return Promise.resolve();
