@@ -28,47 +28,17 @@
  *
  * @module
  */
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { ATS } from 'ad-tag/types/identitylink';
+import { modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
-  AssetLoadMethod,
-  IAssetLoaderService,
-  IModule,
+  ConfigureStep,
+  InitStep,
   mkInitStep,
-  ModuleType,
-  MoliRuntime
-} from '@highfivve/ad-tag';
-import { ATS } from './types/identitylink';
-
-export type IdentityLinkModuleConfig = {
-  /**
-   * The launchPadID references a bunch of services from LiveRamp that are
-   * loaded dynamically.
-   *
-   * It is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io
-   *
-   * @example `f865e2a1-5e8f-4011-ae31-079cbb0b1d8e`
-   * @see https://launch.liveramp.com/launchpad/[launchPadId]
-   * @see https://launchpad-wrapper.privacymanager.io/[launchPadId]/launchpad-liveramp.js
-   */
-  readonly launchPadId: string;
-
-  /**
-   * md5, sha1, and sha256 hashes of the user's email address.
-   *
-   * From the docs
-   *
-   * > While the ATS script only needs one hash to create the envelope, we highly recommend providing the ATS Library with
-   * > all three email hash types to get the best match rate. If you are only able to provide one hash, use SHA256 for
-   * > EU/EAA and SHA1 for U.S.
-   *
-   * Ordering seems important.
-   *
-   * - "EMAIL_HASH_SHA1",
-   * - "EMAIL_HASH_SHA256",
-   * - "EMAIL_HASH_MD5"
-   */
-  readonly hashedEmailAddresses: string[];
-};
+  PrepareRequestAdsStep
+} from 'ad-tag/ads/adPipeline';
+import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 /**
  * # IdentityLink Module
@@ -84,36 +54,48 @@ export class IdentityLink implements IModule {
     "Provides LiveRamp's ATS (authenticated traffic solution) functionality to Moli.";
   public readonly moduleType: ModuleType = 'identity';
 
-  private readonly window: ATS.ATSWindow;
-
   private readonly gvlid: string = '97';
 
-  constructor(private readonly moduleConfig: IdentityLinkModuleConfig, window: Window) {
-    this.window = window as ATS.ATSWindow;
+  private identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig | null = null;
+
+  constructor() {}
+
+  config(): modules.identitylink.IdentityLinkModuleConfig | null {
+    return this.identityLinkConfig;
   }
 
-  config(): IdentityLinkModuleConfig {
-    return this.moduleConfig;
+  configure(moduleConfig?: modules.ModulesConfig) {
+    if (moduleConfig?.identitylink && moduleConfig.identitylink.enabled) {
+      this.identityLinkConfig = moduleConfig.identitylink;
+    }
   }
 
-  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    // init additional pipeline steps if not already defined
-    config.pipeline = config.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
-
-    config.pipeline.initSteps.push(
-      mkInitStep(this.name, ctx => {
-        // async loading - prebid takes care of auction delay
-        this.loadAts(ctx, assetLoaderService);
-        return Promise.resolve();
-      })
-    );
+  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+    const config = this.identityLinkConfig;
+    return config
+      ? [
+          mkInitStep(this.name, ctx => {
+            // async loading - prebid takes care of auction delay
+            this.loadAts(ctx, assetLoaderService, config);
+            return Promise.resolve();
+          })
+        ]
+      : [];
   }
 
-  loadAts(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
+  configureSteps(): ConfigureStep[] {
+    return [];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
+  }
+
+  loadAts(
+    context: AdPipelineContext,
+    assetLoaderService: IAssetLoaderService,
+    moduleConfig: modules.identitylink.IdentityLinkModuleConfig
+  ): Promise<void> {
     // test environment doesn't require confiant
     if (context.env === 'test') {
       return Promise.resolve();
@@ -124,13 +106,14 @@ export class IdentityLink implements IModule {
       return Promise.resolve();
     }
 
+    const window = context.window as unknown as ATS.ATSWindow;
     // register event lister for email module
     // see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html#envelopemoduleready
-    this.window.addEventListener('envelopeModuleReady', () => {
+    window.addEventListener('envelopeModuleReady', () => {
       // For example, you can directly feed it emails, like so:
-      this.window.atsenvelopemodule.setAdditionalData({
+      window.atsenvelopemodule.setAdditionalData({
         type: 'emailHashes',
-        id: this.moduleConfig.hashedEmailAddresses
+        id: moduleConfig.hashedEmailAddresses
       });
     });
 
@@ -138,7 +121,7 @@ export class IdentityLink implements IModule {
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl: `https://launchpad-wrapper.privacymanager.io/${this.moduleConfig.launchPadId}/launchpad-liveramp.js`
+        assetUrl: `https://launchpad-wrapper.privacymanager.io/${moduleConfig.launchPadId}/launchpad-liveramp.js`
       })
       .catch(error => context.logger.error('failed to load emetriq', error));
   }

@@ -1529,6 +1529,39 @@ export namespace modules {
     };
   }
 
+  export namespace identitylink {
+    export interface IdentityLinkModuleConfig extends IModuleConfig {
+      /**
+       * The launchPadID references a bunch of services from LiveRamp that are
+       * loaded dynamically.
+       *
+       * It is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io
+       *
+       * @example `f865e2a1-5e8f-4011-ae31-079cbb0b1d8e`
+       * @see https://launch.liveramp.com/launchpad/[launchPadId]
+       * @see https://launchpad-wrapper.privacymanager.io/[launchPadId]/launchpad-liveramp.js
+       */
+      readonly launchPadId: string;
+
+      /**
+       * md5, sha1, and sha256 hashes of the user's email address.
+       *
+       * From the docs
+       *
+       * > While the ATS script only needs one hash to create the envelope, we highly recommend providing the ATS Library with
+       * > all three email hash types to get the best match rate. If you are only able to provide one hash, use SHA256 for
+       * > EU/EAA and SHA1 for U.S.
+       *
+       * Ordering seems important.
+       *
+       * - "EMAIL_HASH_SHA1",
+       * - "EMAIL_HASH_SHA256",
+       * - "EMAIL_HASH_MD5"
+       */
+      readonly hashedEmailAddresses: string[];
+    }
+  }
+
   export namespace yield_optimization {
     export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
@@ -1610,6 +1643,7 @@ export namespace modules {
     readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
+    readonly identitylink?: identitylink.IdentityLinkModuleConfig;
   }
 }
 

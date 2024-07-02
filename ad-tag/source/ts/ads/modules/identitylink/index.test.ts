@@ -1,18 +1,16 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import {
-  AssetLoadMethod,
-  createAssetLoaderService
-} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-import { ATS } from './types/identitylink';
 
-import { IdentityLink } from './index';
-import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { AdPipelineContext } from '@highfivve/ad-tag';
-import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
-import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { createAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { modules } from 'ad-tag/types/moliConfig';
+import { ATS } from 'ad-tag/types/identitylink';
+import { IdentityLink } from 'ad-tag/ads/modules/identitylink/index';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { noopLogger, emptyConfig, emptyRuntimeConfig } from 'ad-tag/stubs/moliStubs';
+import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 
 // setup sinon-chai
 use(sinonChai);
@@ -42,14 +40,17 @@ describe('IdentityLink Module', () => {
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
-  const createIdentityLink = (): IdentityLink =>
-    new IdentityLink(
-      {
-        hashedEmailAddresses: ['somehashedaddress'],
-        launchPadId: 'aaaa-bbbb-0000-cccc'
-      },
-      jsDomWindow
-    );
+  const createIdentityLink = (): IdentityLink => new IdentityLink();
+  const identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig = {
+    enabled: true,
+    hashedEmailAddresses: ['somehashedaddress'],
+    launchPadId: 'aaaa-bbbb-0000-cccc'
+  };
+  const modulesConfig: modules.ModulesConfig = {
+    identitylink: {
+      ...identityLinkConfig
+    }
+  };
 
   beforeEach(() => {
     loadScriptStub.resolves();
@@ -61,13 +62,11 @@ describe('IdentityLink Module', () => {
 
   it('should add an init step', async () => {
     const module = createIdentityLink();
-    const config = newEmptyConfig();
+    module.configure(modulesConfig);
+    const initSteps = module.initSteps(assetLoaderService);
 
-    module.init(config, assetLoaderService);
-
-    expect(config.pipeline).to.be.ok;
-    expect(config.pipeline?.initSteps).to.have.length(1);
-    expect(config.pipeline?.initSteps[0].name).to.be.eq('identitylink');
+    expect(initSteps).to.have.length(1);
+    expect(initSteps[0].name).to.be.eq('identitylink');
   });
 
   describe('loadAts', () => {
@@ -82,7 +81,7 @@ describe('IdentityLink Module', () => {
         window: jsDomWindow as any,
         // no service dependencies required
         labelConfigService: null as any,
-        reportingService: null as any,
+        runtimeConfig: emptyRuntimeConfig,
         tcData: fullConsent({ 97: true }),
         adUnitPathVariables: {},
         auction: new GlobalAuctionContext(jsDomWindow as any)
@@ -90,14 +89,19 @@ describe('IdentityLink Module', () => {
     };
 
     it('not load anything in a test environment', async () => {
-      await module.loadAts({ ...adPipelineContext(), env: 'test' }, assetLoaderService);
+      await module.loadAts(
+        { ...adPipelineContext(), env: 'test' },
+        assetLoaderService,
+        identityLinkConfig
+      );
       expect(loadScriptStub).to.have.not.been.called;
     });
 
     it('not load anything if gdpr applies and vendor 97 has no consent', async () => {
       await module.loadAts(
         { ...adPipelineContext(), tcData: fullConsent({ 97: false }) },
-        assetLoaderService
+        assetLoaderService,
+        identityLinkConfig
       );
       expect(loadScriptStub).to.have.not.been.called;
     });
@@ -106,7 +110,7 @@ describe('IdentityLink Module', () => {
       it(`load ats if gdpr ${
         context.tcData.gdprApplies ? 'applies' : 'does not apply'
       }`, async () => {
-        await module.loadAts(context, assetLoaderService);
+        await module.loadAts(context, assetLoaderService, identityLinkConfig);
 
         expect(addEventListerSpy).to.have.been.calledOnce;
         expect(envelopeModuleSetAdditionalDataStub).to.have.not.been.called;
