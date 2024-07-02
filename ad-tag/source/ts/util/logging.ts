@@ -77,7 +77,6 @@ function getSourceLabelStyle(
     | 'AdPipeline'
     | 'GAM'
     | 'Prebid'
-    | 'Faktor CMP'
     | 'MoliGlobal'
     | 'AdVisibilityService'
     | 'UserActivityService'
@@ -88,8 +87,6 @@ function getSourceLabelStyle(
       return getLabelStyle('#74ABC6');
     case 'GAM':
       return getLabelStyle('#BA0E5F');
-    case 'Faktor CMP':
-      return getLabelStyle('#9374C6');
     case 'MoliGlobal':
       return getLabelStyle('#403073');
     case 'Prebid':
