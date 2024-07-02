@@ -78,6 +78,7 @@ import { trackInApp } from './trackInApp';
 import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 import EmetriqWebConfig = modules.emetriq.EmetriqWebConfig;
+import SyncDelay = modules.emetriq.SyncDelay;
 import { ModuleType, IModule } from 'ad-tag/types/module';
 import {
   AdPipelineContext,
@@ -86,8 +87,6 @@ import {
   mkConfigureStepOncePerRequestAdsCycle,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
-
-export type SyncDelay = number | 'pbjs';
 
 /* from https://github.com/piotrwitek/utility-types */
 type Mutable<T> = {

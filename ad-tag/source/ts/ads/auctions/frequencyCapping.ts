@@ -1,6 +1,6 @@
-import { prebidjs } from 'ad-tag/types/prebidjs';
+import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
-import { auction } from "ad-tag/types/moliConfig";
+import { auction } from '../../types/moliConfig';
 
 export class FrequencyCapping {
   /**
@@ -14,7 +14,8 @@ export class FrequencyCapping {
   constructor(
     private readonly config: auction.FrequencyCappingConfig,
     private readonly _window: Window
-  ) {}
+  ) {
+  }
 
   onBidWon(bid: prebidjs.BidResponse, configs: auction.BidderFrequencyConfig[]) {
     configs.forEach(config => {

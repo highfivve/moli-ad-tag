@@ -136,6 +136,122 @@
       ],
       "type": "object"
     },
+    "EmetriqAdditionalIdentifier": {
+      "additionalProperties": false,
+      "description": "Configure additional identifiers",
+      "properties": {
+        "id_amxid": {
+          "type": "string"
+        },
+        "id_digitrust": {
+          "type": "string"
+        },
+        "id_id5": {
+          "type": "string"
+        },
+        "id_justid": {
+          "type": "string"
+        },
+        "id_liveramp": {
+          "type": "string"
+        },
+        "id_netid": {
+          "type": "string"
+        },
+        "id_panoramaid": {
+          "type": "string"
+        },
+        "id_sharedid": {
+          "type": "string"
+        },
+        "id_tmi": {
+          "type": "string"
+        },
+        "id_uid1": {
+          "type": "string"
+        },
+        "id_uid2": {
+          "type": "string"
+        },
+        "id_yocid": {
+          "type": "string"
+        },
+        "id_zeotap": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "EmetriqCustomParam": {
+      "type": "string"
+    },
+    "EmetriqParams": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Configuration for the emetriq data collection script.",
+      "properties": {
+        "agerange": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "id_amxid": {
+          "type": "string"
+        },
+        "id_digitrust": {
+          "type": "string"
+        },
+        "id_id5": {
+          "type": "string"
+        },
+        "id_justid": {
+          "type": "string"
+        },
+        "id_liveramp": {
+          "type": "string"
+        },
+        "id_netid": {
+          "type": "string"
+        },
+        "id_panoramaid": {
+          "type": "string"
+        },
+        "id_sharedid": {
+          "type": "string"
+        },
+        "id_tmi": {
+          "type": "string"
+        },
+        "id_uid1": {
+          "type": "string"
+        },
+        "id_uid2": {
+          "type": "string"
+        },
+        "id_yocid": {
+          "type": "string"
+        },
+        "id_zeotap": {
+          "type": "string"
+        },
+        "sid": {
+          "description": "Account ID provided by emetriq.",
+          "type": "number"
+        },
+        "yob": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sid"
+      ],
+      "type": "object"
+    },
     "GoogleAdManagerKeyValueMap": {
       "additionalProperties": {
         "anyOf": [
@@ -549,6 +665,50 @@
       ],
       "type": "object"
     },
+    "auction.BidderFrequencyConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bidder": {
+          "description": "bidder that should receive the frequency capping",
+          "type": "string"
+        },
+        "blockedForMs": {
+          "description": "milliseconds until a bidder can become active again",
+          "type": "number"
+        },
+        "domId": {
+          "description": "domId of the slot that should receive the capping",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bidder",
+        "domId",
+        "blockedForMs"
+      ],
+      "type": "object"
+    },
+    "auction.FrequencyCappingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "configs": {
+          "description": "capping configuration for bidders and positions",
+          "items": {
+            "$ref": "#/definitions/auction.BidderFrequencyConfig"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "description": "enable or disable this feature",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "configs"
+      ],
+      "type": "object"
+    },
     "auction.GlobalAuctionContextConfig": {
       "additionalProperties": false,
       "properties": {
@@ -559,6 +719,10 @@
         "biddersDisabling": {
           "$ref": "#/definitions/auction.BidderDisablingConfig",
           "description": "Disable bidders that lack auction participation"
+        },
+        "frequencyCap": {
+          "$ref": "#/definitions/auction.FrequencyCappingConfig",
+          "description": "Set frequency capping for a specific slot and bidder"
         }
       },
       "type": "object"
@@ -959,6 +1123,12 @@
         },
         "confiant": {
           "$ref": "#/definitions/modules.confiant.ConfiantConfig"
+        },
+        "emetriq": {
+          "$ref": "#/definitions/modules.emetriq.EmetriqModuleConfig"
+        },
+        "identitylink": {
+          "$ref": "#/definitions/modules.identitylink.IdentityLinkModuleConfig"
         },
         "prebidFirstPartyData": {
           "$ref": "#/definitions/modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig"
@@ -1502,6 +1672,294 @@
       ],
       "type": "object"
     },
+    "modules.emetriq.EmetriqAppConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "additionalIdentifier": {
+          "$ref": "#/definitions/EmetriqAdditionalIdentifier",
+          "description": "Configure additional identifiers"
+        },
+        "advertiserIdKey": {
+          "description": "Key within the moli config keyValues in which the advertising id can be found.\n\nUsed to infer the `device_id` parameter. > `device_id`: Optional. Mobile identifier (IDFA or ADID). In lower case. > This field can be omitted if it is not possible to obtain the identifier.",
+          "type": "string"
+        },
+        "appId": {
+          "description": "App id of app store",
+          "type": "string"
+        },
+        "customKeywords": {
+          "additionalProperties": false,
+          "description": "Additional parameters (i.e. hardfacts), which could be provided from a partner. (i.e. `gender=frau&age=25`)",
+          "properties": {
+            "agerange": {
+              "type": "string"
+            },
+            "gender": {
+              "type": "string"
+            },
+            "id_amxid": {
+              "type": "string"
+            },
+            "id_digitrust": {
+              "type": "string"
+            },
+            "id_id5": {
+              "type": "string"
+            },
+            "id_justid": {
+              "type": "string"
+            },
+            "id_liveramp": {
+              "type": "string"
+            },
+            "id_netid": {
+              "type": "string"
+            },
+            "id_panoramaid": {
+              "type": "string"
+            },
+            "id_sharedid": {
+              "type": "string"
+            },
+            "id_tmi": {
+              "type": "string"
+            },
+            "id_uid1": {
+              "type": "string"
+            },
+            "id_uid2": {
+              "type": "string"
+            },
+            "id_yocid": {
+              "type": "string"
+            },
+            "id_zeotap": {
+              "type": "string"
+            },
+            "yob": {
+              "type": "string"
+            },
+            "zip": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "customMappingDefinition": {
+          "description": "Optional mapping definitions. Map values from the key-value targeting map to a custom parameter that is sent to emetriq.",
+          "items": {
+            "$ref": "#/definitions/modules.emetriq.EmetriqMappingDefinition"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "linkOrKeyword": {
+          "$ref": "#/definitions/modules.emetriq.EmetriqAppKeywordOrLinkConfig",
+          "description": "At least one of the config properties `link` or `keywords` must be set."
+        },
+        "login": {
+          "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
+          "description": "Optional configuration for login events"
+        },
+        "os": {
+          "description": "inApp configuration Required parameter for app tracking",
+          "enum": [
+            "android",
+            "ios"
+          ],
+          "type": "string"
+        },
+        "sid": {
+          "type": "number"
+        },
+        "syncDelay": {
+          "$ref": "#/definitions/modules.emetriq.SyncDelay",
+          "default": "if not set, there is no delay",
+          "description": "Defines a delay for the user-sync\n\n- `pbjs` (recommended)    uses the prebid.js `auctionEnd` event to fire the user sync.\n- `number`    delay in `ms` before the script is loaded. Use this if prebid is not    available"
+        }
+      },
+      "required": [
+        "os",
+        "sid",
+        "appId",
+        "linkOrKeyword",
+        "advertiserIdKey"
+      ],
+      "type": "object"
+    },
+    "modules.emetriq.EmetriqAppKeywordOrLinkConfig": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "keywords": {
+              "type": "string"
+            },
+            "link": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "link",
+            "keywords"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "keywords": {
+              "not": {}
+            },
+            "link": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "link"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "keywords": {
+              "type": "string"
+            },
+            "link": {
+              "not": {}
+            }
+          },
+          "required": [
+            "keywords"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "modules.emetriq.EmetriqLoginEventConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "guid": {
+          "description": "a `Base64` encoded `SHA-256` of user’s email address (in lower case and UTF-8 encoded). For event imports it is necessary to URL encode it. See [Example GUID hashing](https://docs.xdn.emetriq.de/#hashing) for comparing your implementation with expected results.",
+          "type": "string"
+        },
+        "partner": {
+          "description": "This is a special ID assigned to the partner by emetriq.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "partner",
+        "guid"
+      ],
+      "type": "object"
+    },
+    "modules.emetriq.EmetriqMappingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "description": "key matching a key-value in the targeting object, that contains the param value for emetriq.\n\nstring arrays will be mapped to a single, comma separated string.\n\nIf a key is not available in the targeting map, it will be ommited.",
+          "type": "string"
+        },
+        "param": {
+          "$ref": "#/definitions/EmetriqCustomParam",
+          "description": "custom parameter provided to emetriq"
+        }
+      },
+      "required": [
+        "param",
+        "key"
+      ],
+      "type": "object"
+    },
+    "modules.emetriq.EmetriqModuleConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.emetriq.EmetriqAppConfig"
+        },
+        {
+          "$ref": "#/definitions/modules.emetriq.EmetriqWebConfig"
+        }
+      ]
+    },
+    "modules.emetriq.EmetriqWebConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "_enqAdpParam": {
+          "$ref": "#/definitions/EmetriqParams",
+          "description": "Global parameter on window"
+        },
+        "customMappingDefinition": {
+          "description": "Optional mapping definitions. Map values from the key-value targeting map to a custom parameter that is sent to emetriq.",
+          "items": {
+            "$ref": "#/definitions/modules.emetriq.EmetriqMappingDefinition"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "login": {
+          "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
+          "description": "Optional configuration for login events"
+        },
+        "os": {
+          "const": "web",
+          "description": "specifies that the emetriq js should be loaded",
+          "type": "string"
+        },
+        "syncDelay": {
+          "$ref": "#/definitions/modules.emetriq.SyncDelay",
+          "default": "if not set, there is no delay",
+          "description": "Defines a delay for the user-sync\n\n- `pbjs` (recommended)    uses the prebid.js `auctionEnd` event to fire the user sync.\n- `number`    delay in `ms` before the script is loaded. Use this if prebid is not    available"
+        }
+      },
+      "required": [
+        "os",
+        "_enqAdpParam"
+      ],
+      "type": "object"
+    },
+    "modules.emetriq.SyncDelay": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "const": "pbjs",
+          "type": "string"
+        }
+      ]
+    },
+    "modules.identitylink.IdentityLinkModuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "hashedEmailAddresses": {
+          "description": "md5, sha1, and sha256 hashes of the user's email address.\n\nFrom the docs\n\n> While the ATS script only needs one hash to create the envelope, we highly recommend providing the ATS Library with > all three email hash types to get the best match rate. If you are only able to provide one hash, use SHA256 for > EU/EAA and SHA1 for U.S.\n\nOrdering seems important.\n\n- \"EMAIL_HASH_SHA1\",\n- \"EMAIL_HASH_SHA256\",\n- \"EMAIL_HASH_MD5\"",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "launchPadId": {
+          "description": "The launchPadID references a bunch of services from LiveRamp that are loaded dynamically.\n\nIt is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "hashedEmailAddresses",
+        "launchPadId"
+      ],
+      "type": "object"
+    },
     "modules.prebid_first_party_data.GptTargetingMapping": {
       "additionalProperties": false,
       "properties": {
@@ -1948,6 +2406,42 @@
         "dynamic"
       ],
       "type": "string"
+    },
+    "prebidjs.AdServerTargeting": {
+      "additionalProperties": false,
+      "properties": {
+        "hb_adid": {
+          "type": "string"
+        },
+        "hb_adomain": {
+          "type": "string"
+        },
+        "hb_bidder": {
+          "type": "string"
+        },
+        "hb_format": {
+          "type": "string"
+        },
+        "hb_pb": {
+          "type": "string"
+        },
+        "hb_size": {
+          "type": "string"
+        },
+        "hb_source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "hb_bidder",
+        "hb_adid",
+        "hb_pb",
+        "hb_size",
+        "hb_source",
+        "hb_format",
+        "hb_adomain"
+      ],
+      "type": "object"
     },
     "prebidjs.BidderCode": {
       "description": "The bidder code is used to identify the different SSPs.",
@@ -2773,41 +3267,8 @@
           "type": "string"
         },
         "adserverTargeting": {
-          "additionalProperties": false,
-          "description": "Contains all the adserver targeting parameters",
-          "properties": {
-            "hb_adid": {
-              "type": "string"
-            },
-            "hb_adomain": {
-              "type": "string"
-            },
-            "hb_bidder": {
-              "type": "string"
-            },
-            "hb_format": {
-              "type": "string"
-            },
-            "hb_pb": {
-              "type": "string"
-            },
-            "hb_size": {
-              "type": "string"
-            },
-            "hb_source": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "hb_bidder",
-            "hb_adid",
-            "hb_pb",
-            "hb_size",
-            "hb_source",
-            "hb_format",
-            "hb_adomain"
-          ],
-          "type": "object"
+          "$ref": "#/definitions/prebidjs.AdServerTargeting",
+          "description": "Contains all the adserver targeting parameters"
         },
         "auctionId": {
           "description": "the unique prebid auction ID in which this bid response was created",
@@ -3064,7 +3525,6 @@
         "currency",
         "originalCurrency",
         "netRevenue",
-        "status",
         "statusMessage",
         "native",
         "adserverTargeting",
@@ -6946,7 +7406,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-180187-180190-248365657-180180-180190-248365657-180148-180976-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-182125-182128-248365657-182118-182128-248365657-182086-182914-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162%3E"
           },
           "type": "array"
         }
@@ -6956,7 +7416,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-179091-179261-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241149092559&alias-248365657-179261-179394-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559&alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -6966,7 +7426,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-179091-179261-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241149092559%26alias-248365657-179261-179394-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559%26alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)%3E"
           },
           "type": "array"
         }
@@ -6976,7 +7436,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-178664-178850-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-19322498888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -6986,7 +7446,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-178664-178850-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-19322498888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365%3E"
           },
           "type": "array"
         }
@@ -6996,7 +7456,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -7006,7 +7466,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E"
           },
           "type": "array"
         }
@@ -7016,7 +7476,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-179091-179261-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241149092559&alias-248365657-179261-179394-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559&alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7079,7 +7539,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-178664-178850-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-19322498888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7138,7 +7598,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7193,7 +7653,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-180187-180190-248365657-180180-180190-248365657-180148-180976-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-182125-182128-248365657-182118-182128-248365657-182086-182914-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7249,7 +7709,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-178664-178850-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-19322498888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -7261,7 +7721,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -7269,23 +7729,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-179091-179261-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241149092559%26alias-248365657-179261-179394-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-1932241210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559%26alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-178850-179091-248365657-178083-184158-248365657-177968-184158-248365657-190-193223-248365657-163-193223-248365657-0-193224187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },

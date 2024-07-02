@@ -2,12 +2,11 @@ import { prebidjs } from './prebidjs';
 import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
-import { SyncDelay } from 'ad-tag/ads/modules/emetriq';
 import {
   EmetriqAdditionalIdentifier,
   EmetriqParams,
   EmetriqCustomParam
-} from 'ad-tag/types/emetriq';
+} from './emetriq';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -1413,6 +1412,8 @@ export namespace modules {
 
   export namespace emetriq {
     export type EmetriqModuleConfig = EmetriqAppConfig | EmetriqWebConfig;
+
+    export type SyncDelay = number | 'pbjs';
 
     export interface IEmetriqModuleConfig {
       readonly enabled?: boolean;
