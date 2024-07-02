@@ -11,9 +11,9 @@ import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliSt
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { Confiant } from 'ad-tag/ads/modules/confiant/index';
 import { modules, Targeting } from 'ad-tag/types/moliConfig';
-import { tcfapi } from '../../../../../lib';
-import TCData = tcfapi.responses.TCData;
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+import { tcfapi } from "ad-tag/types/tcfapi";
+import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
 
