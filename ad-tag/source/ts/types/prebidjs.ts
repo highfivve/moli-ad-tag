@@ -1054,7 +1054,7 @@ export namespace prebidjs {
       /**
        * Max amount of time (in seconds) before looking into storage for data
        */
-      readonly maxDelayTime: number;
+      readonly maxDelayTime?: number;
     }
 
     /**
