@@ -80,7 +80,8 @@ export namespace tcfapi {
       MEASURE_AD_PERFORMANCE = 7,
       MEASURE_CONTENT_PERFORMANCE = 8,
       APPLY_MARKET_RESEARCH = 9,
-      DEVELOP_IMPROVE_PRODUCTS = 10
+      DEVELOP_IMPROVE_PRODUCTS = 10,
+      USE_LIMITED_DATA_TO_SElECT_CONTENT = 11
     }
     export type PurposeVector = {
       [purpose in TCPurpose]: boolean;

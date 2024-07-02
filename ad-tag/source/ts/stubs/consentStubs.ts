@@ -38,7 +38,8 @@ export const fullConsent = (
         '7': true,
         '8': true,
         '9': true,
-        '10': true
+        '10': true,
+        '11': true
       },
       legitimateInterests: {
         '1': false,
@@ -50,7 +51,8 @@ export const fullConsent = (
         '7': true,
         '8': true,
         '9': true,
-        '10': true
+        '10': true,
+        '11': true
       }
     },
     vendor: {

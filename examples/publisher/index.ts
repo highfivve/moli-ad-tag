@@ -29,7 +29,6 @@ import 'prebid.js/modules/priceFloors';
 import { StickyHeaderAds } from '@highfivve/module-sticky-header-ads';
 import { Cleanup } from '@highfivve/ad-tag/lib/ads/modules/cleanup';
 import { Skin } from '@highfivve/module-generic-skin';
-
 prebid.processQueue();
 
 const moli = initAdTag(window);
@@ -266,7 +265,13 @@ moli.registerModule(
     window
   )
 );
+
 moli.addLabel('dspx');
+moli.addLabel('criteo');
+moli.addLabel('pubmatic');
+moli.addLabel('gumgum');
+moli.addLabel('rubicon');
+moli.addLabel('orbidder');
 
 window.pbjs = window.pbjs || { que: [] };
 window.pbjs.que.push(() => {

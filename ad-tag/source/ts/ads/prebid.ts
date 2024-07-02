@@ -144,13 +144,17 @@ const createdAdUnits = (
                 ? !context.auction.biddersDisabling.isBidderDisabled(moliSlot.domId, bid.bidder)
                 : true;
             })
+            .filter((bid: prebidjs.IBid) => {
+              return bid.bidder && context.auction.frequencyCapping
+                ? !context.auction.isBidderFrequencyCappedOnSlot(moliSlot.domId, bid.bidder)
+                : true;
+            })
             .map(bid => {
               // we remove the labelAll and labelAny fields from the bid object to ensure that prebid doesn't
               // interfere with the label filtering from our end
               const { labelAny: _, labelAll: __, ...bidCopy } = bid;
               return bidCopy;
             });
-
           const videoDimensionsWH =
             videoSizes.length > 0 && !mediaTypeVideo?.w && !mediaTypeVideo?.h
               ? {
@@ -373,6 +377,7 @@ export const prebidRequestBids = (
         const slotsToRefresh = slots.filter(
           slot => !context.auction.isSlotThrottled(slot.moliSlot.domId)
         );
+
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
           ? {
               adUnits: createdAdUnits(context, prebidConfig, slotsToRefresh)

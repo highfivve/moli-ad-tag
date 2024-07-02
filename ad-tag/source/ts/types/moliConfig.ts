@@ -405,6 +405,21 @@ export namespace auction {
     /** milliseconds until a bidder becomes active again  */
     readonly reactivationPeriod: number;
   }
+  export interface BidderFrequencyConfig {
+    /** bidder that should receive the frequency capping  */
+    readonly bidder: string;
+    /** domId of the slot that should receive the capping  */
+    readonly domId: string;
+    /** milliseconds until a bidder can become active again  */
+    readonly blockedForMs: number;
+  }
+
+  export interface FrequencyCappingConfig {
+    /** enable or disable this feature */
+    readonly enabled: boolean;
+    /** capping configuration for bidders and positions */
+    readonly configs: BidderFrequencyConfig[];
+  }
 
   export interface GlobalAuctionContextConfig {
     /**
@@ -418,6 +433,11 @@ export namespace auction {
      * misuses `React.useEffect` or similar implementations that constantly re-render and thus trigger ad requests.
      */
     readonly adRequestThrottling?: AdRequestThrottlingConfig;
+
+    /**
+     * Set frequency capping for a specific slot and bidder
+     */
+    readonly frequencyCap?: FrequencyCappingConfig;
   }
 }
 

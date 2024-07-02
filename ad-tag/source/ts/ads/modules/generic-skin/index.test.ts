@@ -15,7 +15,8 @@ import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { AdPipelineContext } from '../../adPipeline';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { useFakeTimers } from 'sinon';
+import { initAdTag } from "ad-tag/ads/moliGlobal";
+import { MoliRuntime } from "ad-tag/types/moliRuntime";
 
 // setup sinon-chai
 use(sinonChai);
@@ -28,7 +29,7 @@ type SimpleFormatFilterBidder = Exclude<modules.skin.FormatFilter['bidder'], 'gu
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
+  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow & MoliRuntime.MoliWindow =
     dom.window as any;
   jsDomWindow.googletag = createGoogletagStub();
   jsDomWindow.pbjs = createPbjsStub();
@@ -826,17 +827,35 @@ describe('Skin Module', () => {
       });
 
       describe('skin adReload', () => {
-        let clock: Sinon.SinonFakeTimers;
+        let refreshAdSlotSpy: Sinon.SinonSpy;
+
+        const slots: AdSlot[] = createAdSlots(['wp-slot', 'sky-slot']);
+        const slotDefinitions: MoliRuntime.SlotDefinition[] = slots.map(slot => ({
+          moliSlot: slot,
+          adSlot: {
+            getSlotElementId: () => slot.domId
+          } as googletag.IAdSlot,
+          filterSupportedSizes: () => []
+        }));
+        const assetLoaderService = createAssetLoaderService(jsDomWindow);
+
+        after(() => {
+          sandbox.restore();
+        });
 
         beforeEach(() => {
-          clock = useFakeTimers();
+          initAdTag(jsDomWindow);
+          refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+          sandbox.useFakeTimers();
         });
 
         afterEach(() => {
-          clock.restore();
+          sandbox.reset();
+          sandbox.clock.restore();
+          sandbox.clock.reset();
         });
 
-        it('should set a timeout if bidder is configured in adReload and is about to win the auction', () => {
+        it('should reload the skin if bidder is configured in adReload and is about to win the auction', () => {
           const module = skinModule({
             configs: [
               {

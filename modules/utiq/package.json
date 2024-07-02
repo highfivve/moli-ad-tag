@@ -1,8 +1,8 @@
 {
-  "name": "@highfivve/module-sticky-footer-ads",
+  "name": "@highfivve/module-utiq",
   "version": "4.22.0",
   "license": "Apache-2.0",
-  "description": "Business logic for sticky footer ads",
+  "description": "Utiq userId module",
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "files": [
@@ -23,13 +23,13 @@
   "repository": {
     "type": "git",
     "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
-    "directory": "modules/sticky-footer-ads"
+    "directory": "modules/utiq"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
   "engines": {
-    "node": ">=16.0"
+    "node": ">=8.0"
   },
   "devDependencies": {
     "@types/chai": "4.2.18",
