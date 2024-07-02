@@ -3,6 +3,7 @@ import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
 import { BiddersDisabling } from './auctions/biddersDisabling';
 import { AdRequestThrottling } from './auctions/adRequestThrottling';
+import { FrequencyCapping } from './auctions/frequencyCapping';
 
 /**
  * ## Global Auction Context
@@ -12,6 +13,7 @@ import { AdRequestThrottling } from './auctions/adRequestThrottling';
  *
  * - Bidders Disabling
  * - Ad Request Throttling
+ * - Frequency Capping
  *
  * ## Note for implementors
  *
@@ -21,6 +23,7 @@ import { AdRequestThrottling } from './auctions/adRequestThrottling';
 export class GlobalAuctionContext {
   readonly biddersDisabling?: BiddersDisabling;
   readonly adRequestThrottling?: AdRequestThrottling;
+  readonly frequencyCapping?: FrequencyCapping;
 
   constructor(
     private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
@@ -32,6 +35,10 @@ export class GlobalAuctionContext {
 
     if (config.adRequestThrottling?.enabled) {
       this.adRequestThrottling = new AdRequestThrottling(config.adRequestThrottling, this.window);
+    }
+
+    if (config.frequencyCap?.enabled) {
+      this.frequencyCapping = new FrequencyCapping(config.frequencyCap, this.window);
     }
 
     // FIXME we need to make sure that pbjs.que and googletag.que are initialized globally in moli ad tag, so we don't
@@ -56,10 +63,24 @@ export class GlobalAuctionContext {
         });
       });
     }
+
+    if (this.config.frequencyCap?.enabled) {
+      this.window.pbjs.que.push(() => {
+        this.window.pbjs.onEvent('bidWon', bid => {
+          if (this.config.frequencyCap) {
+            this.frequencyCapping?.onBidWon(bid, this.config.frequencyCap.configs);
+          }
+        });
+      });
+    }
   }
 
   isSlotThrottled(slotId: string): boolean {
     return this.adRequestThrottling?.isThrottled(slotId) ?? false;
+  }
+
+  isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
+    return this.frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
   }
 
   private handleAuctionEndEvent(auction: any) {

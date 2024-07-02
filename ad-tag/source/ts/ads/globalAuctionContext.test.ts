@@ -93,7 +93,7 @@ describe('Global auction context', () => {
       });
 
       it('should add slotRequested event listener', () => {
-        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
         expect(googletagAddEventListenerSpy).to.have.been.calledOnce;
         expect(googletagAddEventListenerSpy).to.have.been.calledOnceWithExactly(
           'slotRequested',
@@ -123,6 +123,67 @@ describe('Global auction context', () => {
       it('should not add slotRequested event listener if disabled', () => {
         new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
         expect(googletagAddEventListenerSpy).to.have.not.been.called;
+      });
+    });
+  });
+  describe('frequencyCapping', () => {
+    describe('enabled', () => {
+      const auctionContextConfig = {
+        frequencyCap: {
+          enabled: true,
+          configs: [
+            {
+              bidder: 'dspx',
+              domId: 'wp-slot',
+              blockedForMs: 10000
+            }
+          ]
+        }
+      };
+
+      it('should instantiate frequencyCapping', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.frequencyCapping).to.be.ok;
+      });
+
+      it('should never frequency-cap in initial state', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.isBidderFrequencyCappedOnSlot('slot-1', 'dspx')).to.be.false;
+      });
+
+      it('should add bidWon event listener', () => {
+        new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(pbjsOnEventSpy).to.have.been.calledOnce;
+        expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
+      });
+    });
+    describe('disabled', () => {
+      const auctionContextConfig = {
+        frequencyCap: {
+          enabled: false,
+          configs: [
+            {
+              bidder: 'dspx',
+              domId: 'wp-slot',
+              blockedForMs: 10000
+            }
+          ]
+        }
+      };
+
+      it('should not instantiate frequencyCapping', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.frequencyCapping).to.be.undefined;
+      });
+
+      it('should never throttle/frequency-cap requests', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.isBidderFrequencyCappedOnSlot('slot-1', 'dspx')).to.be.false;
+      });
+
+      it('should not add bidWon event listener if disabled', () => {
+        new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(pbjsOnEventSpy).to.have.not.been.called;
       });
     });
   });
