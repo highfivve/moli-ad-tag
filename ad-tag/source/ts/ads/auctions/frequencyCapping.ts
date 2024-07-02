@@ -1,4 +1,4 @@
-import { prebidjs } from '../../types/prebidjs';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { auction } from "ad-tag/types/moliConfig";
 
