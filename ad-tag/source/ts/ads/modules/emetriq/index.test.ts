@@ -1,27 +1,19 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import {
-  AssetLoadMethod,
-  createAssetLoaderService
-} from '@highfivve/ad-tag/source/ts/util/assetLoaderService';
-
-import {
-  Emetriq,
-  EmetriqAppConfig,
-  EmetriqLoginEventConfig,
-  EmetriqModuleConfig,
-  EmetriqWebConfig
-} from './index';
-import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { AdPipelineContext, prebidjs } from '@highfivve/ad-tag';
-import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
-import { EmetriqWindow } from './types/emetriq';
-import { trackInApp } from './trackInApp';
-import { createPbjsStub } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
-import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
-import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
+import { EmetriqWindow } from 'ad-tag/types/emetriq';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { Emetriq } from 'ad-tag/ads/modules/emetriq/index';
+import { modules } from 'ad-tag/types/moliConfig';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { trackInApp } from 'ad-tag/ads/modules/emetriq/trackInApp';
+import { shouldTrackLoginEvent, trackLoginEvent } from 'ad-tag/ads/modules/emetriq/trackLoginEvent';
+import { createPbjsStub } from 'ad-tag/stubs/prebidjsStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -37,12 +29,16 @@ describe('Emetriq Module', () => {
   const syncDelaySpy = sandbox.spy(Emetriq, 'syncDelay');
 
   const sid = 1337;
-  const webConfig: EmetriqWebConfig = {
-    os: 'web',
-    _enqAdpParam: { sid }
-  };
-  const createEmetriqWeb = (): Emetriq => new Emetriq(webConfig, jsDomWindow);
   const tcDataWithConsent = fullConsent({ 213: true });
+  const createEmetriq = (): Emetriq => new Emetriq();
+
+  const webConfig: modules.emetriq.EmetriqWebConfig = { os: 'web', _enqAdpParam: { sid } };
+  const modulesConfig: modules.ModulesConfig = {
+    emetriq: {
+      enabled: true,
+      ...webConfig
+    }
+  };
 
   const adPipelineContext = (): AdPipelineContext => {
     return {
@@ -52,9 +48,9 @@ describe('Emetriq Module', () => {
       logger: noopLogger,
       config: emptyConfig,
       window: jsDomWindow as any,
+      runtimeConfig: emptyRuntimeConfig,
       // no service dependencies required
       labelConfigService: null as any,
-      reportingService: null as any,
       tcData: tcDataWithConsent,
       adUnitPathVariables: {},
       auction: new GlobalAuctionContext(jsDomWindow as any)
@@ -69,24 +65,22 @@ describe('Emetriq Module', () => {
     sandbox.reset();
   });
 
-  it('should add an configure step step', async () => {
-    const module = createEmetriqWeb();
-    const config = newEmptyConfig();
+  it('should add an configure step', async () => {
+    const module = createEmetriq();
+    module.configure(modulesConfig);
+    const configureSteps = module.configureSteps(assetLoaderService);
 
-    module.init(config, assetLoaderService);
-
-    expect(config.pipeline).to.be.ok;
-    expect(config.pipeline?.configureSteps).to.have.length(1);
-    expect(config.pipeline?.configureSteps[0].name).to.be.eq('emetriq');
+    expect(configureSteps).to.have.length(1);
+    expect(configureSteps[0].name).to.be.eq('emetriq');
   });
 
   describe('configure step', () => {
     it('should execute nothing in test mode', async () => {
-      const module = createEmetriqWeb();
-      const config = newEmptyConfig();
-      module.init(config, assetLoaderService);
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+      const configureSteps = module.configureSteps(assetLoaderService);
 
-      const step = config.pipeline?.configureSteps[0];
+      const step = configureSteps[0];
       expect(step).to.be.ok;
 
       await step!({ ...adPipelineContext(), env: 'test' }, []);
@@ -95,11 +89,11 @@ describe('Emetriq Module', () => {
     });
 
     it('should execute nothing if consent is not provided', async () => {
-      const module = createEmetriqWeb();
-      const config = newEmptyConfig();
-      module.init(config, assetLoaderService);
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+      const configureSteps = module.configureSteps(assetLoaderService);
 
-      const step = config.pipeline?.configureSteps[0];
+      const step = configureSteps[0];
       expect(step).to.be.ok;
 
       await step!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) }, []);
@@ -109,7 +103,8 @@ describe('Emetriq Module', () => {
   });
 
   describe('loadEmetriq', () => {
-    const module = createEmetriqWeb();
+    const module = createEmetriq();
+    module.configure(modulesConfig);
 
     [adPipelineContext(), { ...adPipelineContext(), tcData: tcDataNoGdpr }].forEach(context =>
       it(`load emetriq if gdpr ${
@@ -126,7 +121,7 @@ describe('Emetriq Module', () => {
     );
 
     it('should set window._enqAdpParam from config', async () => {
-      const moduleConfig: EmetriqWebConfig = {
+      const webConfig: modules.emetriq.EmetriqWebConfig = {
         os: 'web',
         _enqAdpParam: {
           sid: 55,
@@ -136,15 +131,24 @@ describe('Emetriq Module', () => {
           id_sharedid: '123'
         }
       };
-      const module = new Emetriq(moduleConfig, jsDomWindow);
-      await module.loadEmetriqScript(adPipelineContext(), moduleConfig, {}, {}, assetLoaderService);
+
+      const modulesConfig: modules.ModulesConfig = {
+        emetriq: {
+          enabled: true,
+          ...webConfig
+        }
+      };
+
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+      await module.loadEmetriqScript(adPipelineContext(), webConfig, {}, {}, assetLoaderService);
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
-      expect(jsDomWindow._enqAdpParam).to.be.deep.eq(moduleConfig._enqAdpParam);
+      expect(jsDomWindow._enqAdpParam).to.be.deep.eq(webConfig._enqAdpParam);
     });
 
     it('should merge additionalIdentifiers', async () => {
-      const moduleConfig: EmetriqWebConfig = {
+      const webConfig: modules.emetriq.EmetriqWebConfig = {
         os: 'web',
         _enqAdpParam: {
           sid: 55,
@@ -155,10 +159,20 @@ describe('Emetriq Module', () => {
           id_liveramp: 'xxx'
         }
       };
-      const module = new Emetriq(moduleConfig, jsDomWindow);
+
+      const modulesConfig: modules.ModulesConfig = {
+        emetriq: {
+          enabled: true,
+          ...webConfig
+        }
+      };
+
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+
       await module.loadEmetriqScript(
         adPipelineContext(),
-        moduleConfig,
+        webConfig,
         {
           id_liveramp: '567',
           id_id5: '1010'
@@ -174,7 +188,7 @@ describe('Emetriq Module', () => {
     });
 
     it('should merge additional custom parameters', async () => {
-      const moduleConfig: EmetriqWebConfig = {
+      const webConfig: modules.emetriq.EmetriqWebConfig = {
         os: 'web',
         _enqAdpParam: {
           sid: 55,
@@ -183,10 +197,20 @@ describe('Emetriq Module', () => {
           c_awesome: 'yes'
         }
       };
-      const module = new Emetriq(moduleConfig, jsDomWindow);
+
+      const modulesConfig: modules.ModulesConfig = {
+        emetriq: {
+          enabled: true,
+          ...webConfig
+        }
+      };
+
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+
       await module.loadEmetriqScript(
         adPipelineContext(),
-        moduleConfig,
+        webConfig,
         {},
         {
           c_iabV3Ids: 'override',
@@ -219,19 +243,21 @@ describe('Emetriq Module', () => {
       return img;
     };
 
-    // beforeEach(() => {
-    //   createElementSpy = sandbox.spy(jsDomWindow.document, 'createElement');
-    //   bodyAppendSpy = sandbox.spy(jsDomWindow.document.body, 'append');
-    // });
-
     describe('trackInApp', () => {
-      const appConfig: EmetriqAppConfig = {
+      const appConfig: modules.emetriq.EmetriqAppConfig = {
         sid: 123,
         os: 'android',
         appId: 'com.highfivve.app',
         advertiserIdKey: 'advertiserId',
         linkOrKeyword: {
           keywords: 'pokemon'
+        }
+      };
+
+      const modulesConfig: modules.ModulesConfig = {
+        emetriq: {
+          enabled: true,
+          ...appConfig
         }
       };
 
@@ -373,11 +399,11 @@ describe('Emetriq Module', () => {
     });
 
     describe('trackLoginEvent', () => {
-      const loginConfig: EmetriqLoginEventConfig = {
+      const loginConfig: modules.emetriq.EmetriqLoginEventConfig = {
         partner: 'partner-123',
         guid: 'abc123efg456'
       };
-      const loginWebConfig: EmetriqWebConfig = {
+      const loginWebConfig: modules.emetriq.EmetriqWebConfig = {
         ...webConfig,
         login: loginConfig
       };
@@ -452,7 +478,7 @@ describe('Emetriq Module', () => {
 
       it('should call endpoint with idfa for iOS config', async () => {
         const advertiserId = 'xxxx-yyyy-zzzz';
-        const iosConfig: EmetriqAppConfig = {
+        const iosConfig: modules.emetriq.EmetriqAppConfig = {
           os: 'ios',
           sid: sid,
           appId: 'com.example.app',
@@ -478,7 +504,7 @@ describe('Emetriq Module', () => {
 
       it('should call endpoint with adid for android config', async () => {
         const advertiserId = 'xxxx-yyyy-zzzz';
-        const iosConfig: EmetriqAppConfig = {
+        const iosConfig: modules.emetriq.EmetriqAppConfig = {
           os: 'android',
           sid: sid,
           appId: 'com.example.app',

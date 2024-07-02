@@ -1,9 +1,10 @@
-import { AdPipelineContext, MoliRuntime } from '@highfivve/ad-tag';
-import { EmetriqModuleConfig } from './index';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { modules } from 'ad-tag/types/moliConfig';
 
 const extractAdIdOrIdfa = (
   context: AdPipelineContext,
-  moduleConfig: EmetriqModuleConfig
+  moduleConfig: modules.emetriq.EmetriqModuleConfig
 ): string | undefined => {
   if (moduleConfig.os === 'web') {
     return;
@@ -62,7 +63,7 @@ export const shouldTrackLoginEvent = (
  */
 export const trackLoginEvent = (
   context: AdPipelineContext,
-  moduleConfig: EmetriqModuleConfig,
+  moduleConfig: modules.emetriq.EmetriqModuleConfig,
   document: Document,
   logger: MoliRuntime.MoliLogger
 ): void => {

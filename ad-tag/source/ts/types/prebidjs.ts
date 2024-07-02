@@ -1237,6 +1237,11 @@ export namespace prebidjs {
       | 'setTargeting'
       | 'tcf2Enforcement';
 
+    /**
+     * All events that have no type definitions
+     */
+    export type UntypedEventName = Exclude<EventName, 'bidWon'>;
+
     export type OnEventHandler = {
       /**
        * Triggered when a prebid bid has won the entire auction.
@@ -1293,6 +1298,8 @@ export namespace prebidjs {
       ): void;
 
       (event: 'tcf2Enforcement', handler: (blocked: TCF2Enforcement) => void, id?: string): void;
+
+      (event: UntypedEventName, bid: any, id?: string): void;
     };
 
     export type TCF2Enforcement = {

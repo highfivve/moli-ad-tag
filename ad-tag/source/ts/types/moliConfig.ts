@@ -2,6 +2,12 @@ import { prebidjs } from './prebidjs';
 import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
+import { SyncDelay } from 'ad-tag/ads/modules/emetriq';
+import {
+  EmetriqAdditionalIdentifier,
+  EmetriqParams,
+  EmetriqCustomParam
+} from 'ad-tag/types/emetriq';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -1385,6 +1391,144 @@ export namespace modules {
     }
   }
 
+  export namespace emetriq {
+    export type EmetriqModuleConfig = EmetriqAppConfig | EmetriqWebConfig;
+
+    export interface IEmetriqModuleConfig {
+      readonly enabled?: boolean;
+      /**
+       * Defines a delay for the user-sync
+       *
+       * - `pbjs` (recommended)
+       *    uses the prebid.js `auctionEnd` event to fire the user sync.
+       * - `number`
+       *    delay in `ms` before the script is loaded. Use this if prebid is not
+       *    available
+       *
+       * @default if not set, there is no delay
+       */
+      readonly syncDelay?: SyncDelay;
+
+      /**
+       * Optional mapping definitions. Map values from the key-value targeting map
+       * to a custom parameter that is sent to emetriq.
+       */
+      readonly customMappingDefinition?: EmetriqMappingDefinition[];
+
+      /**
+       * Optional configuration for login events
+       * @see https://docs.xdn.emetriq.de/#event-import
+       */
+      readonly login?: EmetriqLoginEventConfig;
+    }
+
+    export interface EmetriqAppConfig extends IEmetriqModuleConfig {
+      /**
+       * inApp configuration
+       * Required parameter for app tracking
+       */
+      readonly os: 'android' | 'ios';
+
+      readonly sid: number;
+
+      /**
+       * App id of app store
+       * @example `de.emetriq.exampleApp`
+       */
+      readonly appId: string;
+
+      /**
+       * At least one of the config properties `link` or `keywords` must be set.
+       */
+      readonly linkOrKeyword: EmetriqAppKeywordOrLinkConfig;
+
+      /**
+       * Key within the moli config keyValues in which the advertising id can be found.
+       *
+       * Used to infer the `device_id` parameter.
+       * > `device_id`: Optional. Mobile identifier (IDFA or ADID). In lower case.
+       * > This field can be omitted if it is not possible to obtain the identifier.
+       */
+      readonly advertiserIdKey: string;
+
+      /**
+       * Configure additional identifiers
+       *
+       * @see https://doc.emetriq.de/#/profiling/identifiers
+       */
+      readonly additionalIdentifier?: EmetriqAdditionalIdentifier;
+
+      /**
+       * Additional parameters (i.e. hardfacts), which could be provided from a partner. (i.e. `gender=frau&age=25`)
+       *
+       * @see https://doc.emetriq.de/#/inapp/integration
+       */
+      readonly customKeywords?: Omit<EmetriqParams, 'sid'>;
+    }
+
+    export interface EmetriqWebConfig extends IEmetriqModuleConfig {
+      /**
+       * specifies that the emetriq js should be loaded
+       */
+      readonly os: 'web';
+
+      /**
+       * Global parameter on window
+       */
+      readonly _enqAdpParam: EmetriqParams;
+    }
+
+    export type EmetriqAppKeywordOrLinkConfig =
+      | {
+          /** @see EmetriqAppKeywordOrLinkConfig docs */
+          readonly link: string;
+          /** @see EmetriqAppKeywordOrLinkConfig docs */
+          readonly keywords: string;
+        }
+      | {
+          /** @see EmetriqAppKeywordOrLinkConfig docs */
+          readonly link: string;
+          readonly keywords?: undefined;
+        }
+      | {
+          readonly link?: undefined;
+          /** @see EmetriqAppKeywordOrLinkConfig docs */
+          readonly keywords: string;
+        };
+
+    export interface EmetriqLoginEventConfig {
+      /**
+       * This is a special ID assigned to the partner by emetriq.
+       */
+      readonly partner: string;
+
+      /**
+       * a `Base64` encoded `SHA-256` of user’s email address (in lower case and UTF-8 encoded). For event imports it is
+       * necessary to URL encode it. See [Example GUID hashing](https://docs.xdn.emetriq.de/#hashing) for comparing your implementation with expected results.
+       *
+       * @see https://docs.xdn.emetriq.de/#hashing
+       */
+      readonly guid: string;
+    }
+
+    export type EmetriqMappingDefinition = {
+      /**
+       * custom parameter provided to emetriq
+       */
+      readonly param: EmetriqCustomParam;
+
+      /**
+       * key matching a key-value in the targeting object, that contains the param
+       * value for emetriq.
+       *
+       * string arrays will be mapped to a single, comma separated string.
+       *
+       * If a key is not available in the targeting map, it will be ommited.
+       */
+      readonly key: string;
+    };
+  }
+
   export namespace yield_optimization {
     export type YieldOptimizationConfigProvider = 'none' | 'static' | 'dynamic';
 
@@ -1465,6 +1609,7 @@ export namespace modules {
     readonly skin?: skin.SkinModuleConfig;
     readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
+    readonly emetriq?: emetriq.EmetriqModuleConfig;
   }
 }
 

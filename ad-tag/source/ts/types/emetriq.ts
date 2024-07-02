@@ -50,7 +50,7 @@ export type EmetriqParams = EmetriqAdditionalIdentifier & {
   /**
    * It is also possible to use any number of custom-parameters, to transfer specific data.
    *
-   * @example `custom1`
+   * @example `custom1`x
    */
   readonly [key: EmetriqCustomParam]: string;
 };

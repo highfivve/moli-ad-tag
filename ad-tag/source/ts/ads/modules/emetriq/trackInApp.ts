@@ -1,6 +1,7 @@
-import { AdPipelineContext, MoliRuntime } from '@highfivve/ad-tag';
-import { EmetriqAppConfig } from './index';
-import { EmetriqAdditionalIdentifier, EmetriqCustomParams } from './types/emetriq';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { modules } from 'ad-tag/types/moliConfig';
+import EmetriqAppConfig = modules.emetriq.EmetriqAppConfig;
+import { EmetriqAdditionalIdentifier, EmetriqCustomParams } from 'ad-tag/types/emetriq';
 
 const extractDeviceIdParam = (
   context: AdPipelineContext,
