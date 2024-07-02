@@ -289,7 +289,7 @@ export class AdPipeline {
     private readonly logger: Moli.MoliLogger,
     private readonly window: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
     private readonly reportingService: IReportingService,
-    public readonly auction: GlobalAuctionContext
+    private readonly auction: GlobalAuctionContext
   ) {}
 
   /**
