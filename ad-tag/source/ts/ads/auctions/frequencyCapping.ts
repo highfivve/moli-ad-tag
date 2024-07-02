@@ -7,7 +7,9 @@ import BidderCode = prebidjs.BidderCode;
 
 export class FrequencyCapping {
   /**
-   * stores the information if a slot was requested and should not be requested again
+   * Stores the information that a bidder should not be requested again on a slot in the given time interval.
+   *
+   * Useful to prevent continuous reloads of a bidder on a slot, e.g. on the wallpaper or interstitial.
    * @private
    */
   private frequencyCaps: Set<string> = new Set();
@@ -21,7 +23,7 @@ export class FrequencyCapping {
     configs.forEach(config => {
       if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
         const key = `${bid.adUnitCode}-${bid.bidder}`;
-        this.frequencyCaps.add(`${key}`);
+        this.frequencyCaps.add(key);
 
         this._window.setTimeout(() => {
           this.frequencyCaps.delete(key);
