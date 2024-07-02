@@ -14,8 +14,7 @@ export class FrequencyCapping {
   constructor(
     private readonly config: auction.FrequencyCappingConfig,
     private readonly _window: Window
-  ) {
-  }
+  ) {}
 
   onBidWon(bid: prebidjs.BidResponse, configs: auction.BidderFrequencyConfig[]) {
     configs.forEach(config => {

@@ -15,8 +15,8 @@ import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { AdPipelineContext } from '../../adPipeline';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { initAdTag } from "ad-tag/ads/moliGlobal";
-import { MoliRuntime } from "ad-tag/types/moliRuntime";
+import { initAdTag } from 'ad-tag/ads/moliGlobal';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 // setup sinon-chai
 use(sinonChai);
@@ -29,8 +29,10 @@ type SimpleFormatFilterBidder = Exclude<modules.skin.FormatFilter['bidder'], 'gu
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow & MoliRuntime.MoliWindow =
-    dom.window as any;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    MoliRuntime.MoliWindow = dom.window as any;
   jsDomWindow.googletag = createGoogletagStub();
   jsDomWindow.pbjs = createPbjsStub();
   let assetLoaderService = createAssetLoaderService(jsDomWindow);

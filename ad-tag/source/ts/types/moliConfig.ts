@@ -2,11 +2,7 @@ import { prebidjs } from './prebidjs';
 import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
-import {
-  EmetriqAdditionalIdentifier,
-  EmetriqParams,
-  EmetriqCustomParam
-} from './emetriq';
+import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 

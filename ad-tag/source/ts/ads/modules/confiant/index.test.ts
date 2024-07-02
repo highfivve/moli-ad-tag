@@ -12,7 +12,7 @@ import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { Confiant } from 'ad-tag/ads/modules/confiant/index';
 import { modules, Targeting } from 'ad-tag/types/moliConfig';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
-import { tcfapi } from "ad-tag/types/tcfapi";
+import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
