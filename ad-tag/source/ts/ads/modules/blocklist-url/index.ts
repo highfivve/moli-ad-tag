@@ -212,6 +212,7 @@ export class BlocklistedUrls implements IModule {
         };
     }
   }
+  private blocklistCache: Promise<Blocklist> | null = null;
 
   private loadConfigWithRetry(
     assetLoaderService: IAssetLoaderService,
@@ -223,13 +224,18 @@ export class BlocklistedUrls implements IModule {
       return Promise.reject(lastError);
     }
 
-    return assetLoaderService.loadJson<Blocklist>('blocklist-urls.json', endpoint).catch(error => {
-      // for 3 retries the backoff time will be 33ms / 50ms / 100ms
-      const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
-      return exponentialBackoff.then(() =>
-        this.loadConfigWithRetry(assetLoaderService, endpoint, retriesLeft - 1, error)
-      );
-    });
+    if (!this.blocklistCache) {
+      this.blocklistCache = assetLoaderService
+        .loadJson<Blocklist>('blocklist-urls.json', endpoint)
+        .catch(error => {
+          const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
+          return exponentialBackoff.then(() =>
+            this.loadConfigWithRetry(assetLoaderService, endpoint, retriesLeft - 1, error)
+          );
+        });
+    }
+
+    return this.blocklistCache;
   }
 
   configureSteps(): ConfigureStep[] {
