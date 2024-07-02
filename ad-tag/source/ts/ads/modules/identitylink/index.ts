@@ -58,8 +58,6 @@ export class IdentityLink implements IModule {
 
   private identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig | null = null;
 
-  constructor() {}
-
   config(): modules.identitylink.IdentityLinkModuleConfig | null {
     return this.identityLinkConfig;
   }

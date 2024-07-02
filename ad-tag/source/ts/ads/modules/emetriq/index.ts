@@ -136,8 +136,6 @@ export class Emetriq implements IModule {
 
   private emetriqConfig: modules.emetriq.EmetriqModuleConfig | null = null;
 
-  constructor() {}
-
   config(): modules.emetriq.EmetriqModuleConfig | null {
     return this.emetriqConfig;
   }
