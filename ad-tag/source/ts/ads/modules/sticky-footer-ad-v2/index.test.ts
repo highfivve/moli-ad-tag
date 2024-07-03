@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { AdPipelineContext, ConfigureStep, PrepareRequestAdsStep } from '../../adPipeline';
+import { AdPipelineContext, PrepareRequestAdsStep } from '../../adPipeline';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { googletag } from '../../../types/googletag';
 import {
