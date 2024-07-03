@@ -32,10 +32,13 @@ describe('Emetriq Module', () => {
   const tcDataWithConsent = fullConsent({ 213: true });
   const createEmetriq = (): Emetriq => new Emetriq();
 
-  const webConfig: modules.emetriq.EmetriqWebConfig = { os: 'web', _enqAdpParam: { sid } };
+  const webConfig: modules.emetriq.EmetriqWebConfig = {
+    enabled: true,
+    os: 'web',
+    _enqAdpParam: { sid }
+  };
   const modulesConfig: modules.ModulesConfig = {
     emetriq: {
-      enabled: true,
       ...webConfig
     }
   };
@@ -122,6 +125,7 @@ describe('Emetriq Module', () => {
 
     it('should set window._enqAdpParam from config', async () => {
       const webConfig: modules.emetriq.EmetriqWebConfig = {
+        enabled: true,
         os: 'web',
         _enqAdpParam: {
           sid: 55,
@@ -134,7 +138,6 @@ describe('Emetriq Module', () => {
 
       const modulesConfig: modules.ModulesConfig = {
         emetriq: {
-          enabled: true,
           ...webConfig
         }
       };
@@ -149,6 +152,7 @@ describe('Emetriq Module', () => {
 
     it('should merge additionalIdentifiers', async () => {
       const webConfig: modules.emetriq.EmetriqWebConfig = {
+        enabled: true,
         os: 'web',
         _enqAdpParam: {
           sid: 55,
@@ -162,7 +166,6 @@ describe('Emetriq Module', () => {
 
       const modulesConfig: modules.ModulesConfig = {
         emetriq: {
-          enabled: true,
           ...webConfig
         }
       };
@@ -189,6 +192,7 @@ describe('Emetriq Module', () => {
 
     it('should merge additional custom parameters', async () => {
       const webConfig: modules.emetriq.EmetriqWebConfig = {
+        enabled: true,
         os: 'web',
         _enqAdpParam: {
           sid: 55,
@@ -200,7 +204,6 @@ describe('Emetriq Module', () => {
 
       const modulesConfig: modules.ModulesConfig = {
         emetriq: {
-          enabled: true,
           ...webConfig
         }
       };
@@ -245,19 +248,13 @@ describe('Emetriq Module', () => {
 
     describe('trackInApp', () => {
       const appConfig: modules.emetriq.EmetriqAppConfig = {
+        enabled: true,
         sid: 123,
         os: 'android',
         appId: 'com.highfivve.app',
         advertiserIdKey: 'advertiserId',
         linkOrKeyword: {
           keywords: 'pokemon'
-        }
-      };
-
-      const modulesConfig: modules.ModulesConfig = {
-        emetriq: {
-          enabled: true,
-          ...appConfig
         }
       };
 
@@ -479,6 +476,7 @@ describe('Emetriq Module', () => {
       it('should call endpoint with idfa for iOS config', async () => {
         const advertiserId = 'xxxx-yyyy-zzzz';
         const iosConfig: modules.emetriq.EmetriqAppConfig = {
+          enabled: true,
           os: 'ios',
           sid: sid,
           appId: 'com.example.app',
@@ -505,6 +503,7 @@ describe('Emetriq Module', () => {
       it('should call endpoint with adid for android config', async () => {
         const advertiserId = 'xxxx-yyyy-zzzz';
         const iosConfig: modules.emetriq.EmetriqAppConfig = {
+          enabled: true,
           os: 'android',
           sid: sid,
           appId: 'com.example.app',
