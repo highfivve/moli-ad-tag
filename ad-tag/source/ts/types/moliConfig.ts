@@ -428,6 +428,11 @@ export namespace auction {
      * misuses `React.useEffect` or similar implementations that constantly re-render and thus trigger ad requests.
      */
     readonly adRequestThrottling?: AdRequestThrottlingConfig;
+
+    /**
+     * Set frequency capping for a specific slot and bidder
+     */
+    readonly frequencyCap?: FrequencyCappingConfig;
   }
 }
 
