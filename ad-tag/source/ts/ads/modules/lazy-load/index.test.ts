@@ -1,25 +1,28 @@
-import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { createMoliTag, MoliRuntime } from '@highfivve/ad-tag';
-import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
-import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { LazyLoad } from './index';
+import { LazyLoad } from '../../../ads/modules/lazy-load/index';
 import sinonChai from 'sinon-chai';
-
+import { AdSlot, MoliConfig } from '../../../types/moliConfig';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { createMoliTag } from '../../../ads/moli';
+import { emptyRuntimeConfig, newNoopLogger } from '../../../stubs/moliStubs';
+import { fullConsent } from '../../../stubs/consentStubs';
+import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
+import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
+import { dummySchainConfig } from '../../../stubs/schainStubs';
+import { AdPipelineContext } from '../../../ads/adPipeline';
 const createAdSlots = (
   window: Window,
   domIds: string[],
   behaviour?: 'eager' | 'manual',
   bucket?: string
-): MoliRuntime.AdSlot[] => {
+): AdSlot[] => {
   return domIds.map(domId => {
     const div = window.document.createElement('div');
     div.id = domId;
     window.document.body.appendChild(div);
 
-    const slot: MoliRuntime.AdSlot = {
+    const slot: AdSlot = {
       domId: domId,
       adUnitPath: domId,
       position: 'in-page',
@@ -47,7 +50,7 @@ const createInfiniteAdSlotInDOM = (
 };
 
 const createInfiniteAdSlotinConfig = (infiniteSlotClassSelector: string) => {
-  const slot: MoliRuntime.AdSlot = {
+  const slot: AdSlot = {
     domId: 'infinite-loading-adslot',
     adUnitPath: 'infinite-loading-adslot',
     position: 'in-page',
@@ -64,7 +67,10 @@ const MockIntersectionObserver = class MockIntersectionObserver implements Inter
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '0';
   readonly thresholds: ReadonlyArray<number> = [];
-  constructor(private readonly callback, private readonly options) {}
+  constructor(
+    private readonly callback,
+    private readonly options
+  ) {}
   observe() {
     return;
   }
@@ -112,7 +118,7 @@ describe('Lazy-load Module', () => {
   const createIntersectionObserverEntry = (
     isIntersecting: boolean,
     targetId: string
-  ): IntersectionObserverEntry => ({ isIntersecting, target: { id: targetId } } as any);
+  ): IntersectionObserverEntry => ({ isIntersecting, target: { id: targetId } }) as any;
 
   beforeEach(() => {
     sandbox = Sinon.createSandbox();
@@ -135,14 +141,13 @@ describe('Lazy-load Module', () => {
     sandbox.restore();
   });
 
-  const mkConfig = (slots): MoliRuntime.MoliConfig => {
+  const mkConfig = (slots): MoliConfig => {
     return {
       slots: slots,
       buckets: {
         enabled: true,
         bucket: { lazy_bucket: { timeout: 3000 }, another_lazy_bucket: { timeout: 3000 } }
       },
-      logger: noopLogger,
       prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
       schain: dummySchainConfig
     };
@@ -152,33 +157,57 @@ describe('Lazy-load Module', () => {
   const domId2 = 'lazy-2';
   const infiniteSelector1 = '.ad-infinite';
 
-  describe('Lazy-slots', () => {
-    it('Add init pipeline step', () => {
-      const module = new LazyLoad({ slots: [], buckets: [] }, jsDomWindow);
-      const config = mkConfig([]);
-      module.init(config);
+  const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
+    return {
+      requestId: 0,
+      requestAdsCalls: 1,
+      env: 'production',
+      logger: noopLogger,
+      config: config,
+      runtimeConfig: emptyRuntimeConfig,
+      window: jsDomWindow as any,
+      // no service dependencies required
+      labelConfigService: null as any,
+      tcData: fullConsent(),
+      adUnitPathVariables: {},
+      auction: new GlobalAuctionContext(jsDomWindow as any)
+    };
+  };
 
-      // TO Do - fix lazyload when there is no other slots on the page
-      expect(config.pipeline).to.be.ok;
-      // expect(config.pipeline?.initSteps).length(1);
-      const initStep = config.pipeline?.initSteps[0];
-      // expect(initStep?.name).to.be.eq('moli-lazy-load');
+  describe('Lazy-slots', () => {
+    it('Add configure pipeline step', () => {
+      const module = new LazyLoad();
+      const modulesConfig = {
+        lazyload: {
+          enabled: true,
+          slots: [{ domIds: [domId1], options: {} }],
+          buckets: []
+        }
+      };
+      module.configure(modulesConfig);
+      const configureSteps = module.configureSteps();
+
+      expect(configureSteps).length(1);
+      const configureStep = configureSteps[0];
+      expect(configureStep?.name).to.be.eq('lazy-module-configuration');
     });
 
     it('Observe only domIds that are in the module config, i.e., lazy-1', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
-      const module = new LazyLoad(
-        {
-          slots: [{ domIds: [domId1], options: {} }],
-          buckets: []
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [{ domIds: [domId1], options: {} }],
+        buckets: []
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
-      module.init(mkConfig(slots));
-      module.registerIntersectionObservers(mkConfig(slots));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
@@ -198,16 +227,18 @@ describe('Lazy-load Module', () => {
 
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
-      const module = new LazyLoad(
-        {
-          slots: [{ domIds: [domId1, domId2], options: {} }],
-          buckets: []
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [{ domIds: [domId1, domId2], options: {} }],
+        buckets: []
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
-      module.init(mkConfig(slots));
-      module.registerIntersectionObservers(mkConfig(slots));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       const callback = getIntersectionObserverCallback(0);
 
@@ -228,18 +259,24 @@ describe('Lazy-load Module', () => {
     it('Observe only slots that have a manual behaviour', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
 
-      const module = new LazyLoad(
-        {
-          slots: [{ domIds: [domId1, domId2], options: {} }],
-          buckets: []
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [{ domIds: [domId1, domId2], options: {} }],
+        buckets: []
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
       const eagerSlot = createAdSlots(jsDomWindow, [domId1], 'eager');
       const manualSlot = createAdSlots(jsDomWindow, [domId2], 'manual');
 
-      module.registerIntersectionObservers(mkConfig([...manualSlot, ...eagerSlot]));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(
+        adPipelineContext(mkConfig([...manualSlot, ...eagerSlot])),
+        lazyConfig
+      );
 
       expect(errorLogSpy).to.have.not.been.called;
       expect(oberserveSpy).to.have.been.calledOnce;
@@ -251,25 +288,27 @@ describe('Lazy-load Module', () => {
     it('Every slot should consider its own observer options', () => {
       const slots = createAdSlots(jsDomWindow, ['lazy-1', 'lazy-2']);
 
-      const module = new LazyLoad(
-        {
-          slots: [
-            {
-              domIds: [domId1],
-              options: { threshold: 0.5, rootMargin: undefined }
-            },
-            {
-              domIds: [domId2],
-              options: { rootId: 'bla' }
-            }
-          ],
-          buckets: []
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [
+          {
+            domIds: [domId1],
+            options: { threshold: 0.5, rootMargin: undefined }
+          },
+          {
+            domIds: [domId2],
+            options: { rootId: 'bla' }
+          }
+        ],
+        buckets: []
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
-      module.init(mkConfig(slots));
-      module.registerIntersectionObservers(mkConfig(slots));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       const callback = getIntersectionObserverCallback(0);
       const options = getIntersectionObserverArgs(0);
@@ -290,16 +329,18 @@ describe('Lazy-load Module', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2], 'manual', 'lazy_bucket');
 
-      const module = new LazyLoad(
-        {
-          slots: [],
-          buckets: [{ bucket: 'lazy_bucket', observedDomId: domId3, options: {} }]
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [],
+        buckets: [{ bucket: 'lazy_bucket', observedDomId: domId3, options: {} }]
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
-      module.init(mkConfig(slots));
-      module.registerIntersectionObservers(mkConfig(slots));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
@@ -312,35 +353,31 @@ describe('Lazy-load Module', () => {
     });
 
     it('Should observe multiple buckets and refresh buckets as expected', () => {
-      /*
-      const oberserveSpy = sandbox.spy(observer, 'observe');
-      const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
-      const infiniteSlot = createInfiniteAdSlotinConfig(infiniteSelector1);
-      createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
-      createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
-      */
       const domId4 = 'lazy-4-in-another-bucket';
 
-      const oberserveSpy = sandbox.spy(observer, 'observe');
-      const unOberserveSpy = sandbox.spy(observer, 'unobserve');
+      const observerSpy = sandbox.spy(observer, 'observe');
+      const unObserverSpy = sandbox.spy(observer, 'unobserve');
 
       const slots = [
         ...createAdSlots(jsDomWindow, [domId1, domId2, domId3], 'manual', 'lazy_bucket'),
         ...createAdSlots(jsDomWindow, [domId4], 'manual', 'another_lazy_bucket')
       ];
 
-      const module = new LazyLoad(
-        {
-          slots: [],
-          buckets: [
-            { bucket: 'lazy_bucket', observedDomId: domId3, options: {} },
-            { bucket: 'another_lazy_bucket', observedDomId: domId4, options: {} }
-          ]
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [],
+        buckets: [
+          { bucket: 'lazy_bucket', observedDomId: domId3, options: {} },
+          { bucket: 'another_lazy_bucket', observedDomId: domId4, options: {} }
+        ]
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
-      module.registerIntersectionObservers(mkConfig(slots));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
@@ -352,13 +389,13 @@ describe('Lazy-load Module', () => {
       expect(errorLogSpy).to.have.not.been.called;
       expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
 
-      expect(oberserveSpy).callCount(2);
-      expect(oberserveSpy.firstCall).calledWithExactly(htmlElement(domId3));
-      expect(oberserveSpy.secondCall).calledWithExactly(htmlElement(domId4));
+      expect(observerSpy).callCount(2);
+      expect(observerSpy.firstCall).calledWithExactly(htmlElement(domId3));
+      expect(observerSpy.secondCall).calledWithExactly(htmlElement(domId4));
 
-      expect(unOberserveSpy).to.have.been.calledTwice;
-      expect(unOberserveSpy.firstCall).to.have.been.calledWith({ id: 'lazy-3' });
-      expect(unOberserveSpy.secondCall).to.have.been.calledWith({
+      expect(unObserverSpy).to.have.been.calledTwice;
+      expect(unObserverSpy.firstCall).to.have.been.calledWith({ id: 'lazy-3' });
+      expect(unObserverSpy.secondCall).to.have.been.calledWith({
         id: 'lazy-4-in-another-bucket'
       });
 
@@ -370,36 +407,42 @@ describe('Lazy-load Module', () => {
 
   describe('Infinite ad slots', () => {
     it('Observe only infinite ad slots that have the correct className which identifies them as such infinite slots, i.e. ad-infinite', () => {
-      const oberserveSpy = sandbox.spy(observer, 'observe');
+      const observerSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
       const infiniteSlot = createInfiniteAdSlotinConfig(infiniteSelector1);
       createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
       createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
 
-      const module = new LazyLoad(
-        {
-          slots: [{ domIds: [], options: {} }],
-          buckets: [],
-          infiniteSlots: [{ selector: infiniteSelector1, options: {} }]
-        },
-        jsDomWindow
-      );
+      const module = new LazyLoad();
+      const lazyConfig = {
+        enabled: true,
+        slots: [{ domIds: [], options: {} }],
+        buckets: [],
+        infiniteSlots: [{ selector: infiniteSelector1, options: {} }]
+      };
+      const modulesConfig = {
+        lazyload: lazyConfig
+      };
 
-      module.registerIntersectionObservers(mkConfig([...slots, infiniteSlot]));
+      module.configure(modulesConfig);
+      module.registerIntersectionObservers(
+        adPipelineContext(mkConfig([...slots, infiniteSlot])),
+        lazyConfig
+      );
 
       // trigger an intersection event
       const callback = getIntersectionObserverCallback(0);
       callback([createIntersectionObserverEntry(true, 'infinite-loading-adSlot-1')], observer);
       callback([createIntersectionObserverEntry(true, 'infinite-loading-adSlot-2')], observer);
 
-      const argsCall1 = oberserveSpy.firstCall.firstArg;
-      const argsCall2 = oberserveSpy.secondCall.firstArg;
+      const argsCall1 = observerSpy.firstCall.firstArg;
+      const argsCall2 = observerSpy.secondCall.firstArg;
 
       const infiniteSlotsInDom = jsDomWindow.document.querySelectorAll(infiniteSelector1);
 
       expect(errorLogSpy).to.have.not.been.called;
       expect(intersectionObserverConstructorStub).to.have.been.calledTwice;
-      expect(oberserveSpy).to.have.been.calledTwice;
+      expect(observerSpy).to.have.been.calledTwice;
       expect(argsCall1).to.equal(infiniteSlotsInDom[0]);
       expect(argsCall2).to.equal(infiniteSlotsInDom[1]);
     });

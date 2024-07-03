@@ -43,82 +43,19 @@
  *
  * @module
  */
-import {
-  IModule,
-  ModuleType,
-  MoliRuntime,
-  getLogger,
-  mkConfigureStepOncePerRequestAdsCycle
-} from '@highfivve/ad-tag';
+
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import MoliWindow = MoliRuntime.MoliWindow;
-import { selectInfiniteSlot } from './selectInfiniteSlot';
-
-type LazyLoadModuleOptionsType = {
-  /**
-   * The element that is used as the viewport for checking visibility of the target.
-   * Must be the ancestor of the target. Defaults to the browser viewport if not specified or if null.
-   */
-  readonly rootId?: string;
-
-  /**
-   * Margin around the root. Can have values similar to the CSS margin property,
-   * e.g. "10px 20px 30px 40px". The values can be percentages.
-   * This set of values serves to grow or shrink each side of the root element's bounding box
-   * before computing intersections. Defaults to all zeros.
-   */
-  readonly rootMargin?: string;
-
-  /**
-   * Either a single number or an array of numbers which indicate at what percentage
-   * of the target's visibility the observer's callback should be executed.
-   * If you only want to detect when visibility passes the 50% mark, you can use a value of 0.5.
-   * If you want the callback to run every time visibility passes another 25%,
-   * you would specify the array [0, 0.25, 0.5, 0.75, 1].
-   * The default is 0 (meaning as soon as even one pixel is visible, the callback will be run).
-   * A value of 1.0 means that the threshold isn't considered passed until every pixel is visible.
-   */
-  readonly threshold?: number;
-};
-
-export type LazyLoadModuleSlotsConfig = {
-  /**
-   * DomIds that should be observed for lazy loading
-   */
-  readonly domIds: string[];
-  readonly options: LazyLoadModuleOptionsType;
-};
-
-export type LazyLoadModuleBucketsConfig = {
-  /**
-   * Buckets that should be observed for lazy loading
-   */
-  readonly bucket: string;
-
-  /**
-   * This ID identifies the DOM element that should be observed
-   * by the intersection observer.
-   */
-  readonly observedDomId: string;
-  readonly options: LazyLoadModuleOptionsType;
-};
-
-export type InfiniteSlotsSelector = {
-  /**
-   * CSS selector for divs in the document that should be considered as infinite loading slots
-   */
-  readonly selector: string;
-
-  /**
-   * Options for the IntersectionObserver
-   */
-  readonly options: LazyLoadModuleOptionsType;
-};
-
-export type LazyLoadModuleConfig = {
-  readonly slots: LazyLoadModuleSlotsConfig[];
-  readonly buckets: LazyLoadModuleBucketsConfig[];
-  readonly infiniteSlots?: InfiniteSlotsSelector[];
-};
+import { modules } from 'ad-tag/types/moliConfig';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  PrepareRequestAdsStep
+} from 'ad-tag/ads/adPipeline';
+import { IModule, ModuleType } from '../../../types/module';
+import { mkConfigureStepOncePerRequestAdsCycle } from '../../../ads/adPipeline';
+import { selectInfiniteSlot } from '../../../ads/modules/lazy-load/selectInfiniteSlot';
 
 /**
  * To solve the Intersection Observer API typescript error
@@ -142,8 +79,6 @@ export class LazyLoad implements IModule {
   public readonly name: string = 'moli-lazy-load';
   public readonly description: string = 'Moli implementation of an ad lazy load module.';
   public readonly moduleType: ModuleType = 'lazy-load';
-  private logger?: MoliRuntime.MoliLogger;
-  private readonly window: LazyLoadWindow;
 
   /**
    * Prevents multiple initialization, which would ap pend multiple googletag event listeners.
@@ -155,66 +90,74 @@ export class LazyLoad implements IModule {
    */
   private readonly observers: IntersectionObserver[] = [];
 
-  constructor(
-    private readonly moduleConfig: LazyLoadModuleConfig,
-    private readonly _window: Window & MoliWindow
-  ) {
-    // typescript does not yet have the IntersectionObserver on the lib.dom.ts
-    // @see https://github.com/Microsoft/TypeScript/issues/16255
-    this.window = _window as LazyLoadWindow;
+  private lazyloadConfig: modules.lazyload.LazyLoadModuleConfig | null = null;
+
+  constructor() {}
+
+  config(): modules.lazyload.LazyLoadModuleConfig | null {
+    return this.lazyloadConfig;
   }
 
-  config(): LazyLoadModuleConfig {
-    return this.moduleConfig;
+  configure(moduleConfig?: modules.ModulesConfig): void {
+    if (moduleConfig?.lazyload && moduleConfig.lazyload.enabled) {
+      this.lazyloadConfig = moduleConfig.lazyload;
+    }
   }
 
-  init(config: MoliRuntime.MoliConfig): void {
-    this.logger = getLogger(config, this.window);
-    // init additional pipeline steps if not already defined
-    config.pipeline = config.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
-
-    config.pipeline.configureSteps.push(
-      mkConfigureStepOncePerRequestAdsCycle('lazy-module-configuration', context => {
-        this.initialized = false;
-        // Disconnect all initialized observers at every requestAd(), useful for SPA apps
-        this.observers.forEach(observer => observer.disconnect());
-        this.observers.length = 0;
-        this.registerIntersectionObservers(config);
-        return Promise.resolve();
-      })
-    );
+  initSteps(): InitStep[] {
+    return [];
   }
 
-  registerIntersectionObservers = (moliConfig: MoliRuntime.MoliConfig) => {
+  configureSteps(): ConfigureStep[] {
+    const config = this.lazyloadConfig;
+    return config
+      ? [
+          mkConfigureStepOncePerRequestAdsCycle('lazy-module-configuration', context => {
+            this.initialized = false;
+            // Disconnect all initialized observers at every requestAd(), useful for SPA apps
+            this.observers.forEach(observer => observer.disconnect());
+            this.observers.length = 0;
+            this.registerIntersectionObservers(context, config);
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
+  }
+
+  registerIntersectionObservers = (
+    context: AdPipelineContext,
+    moduleConfig: modules.lazyload.LazyLoadModuleConfig
+  ) => {
     if (this.initialized) {
       return;
     }
     this.initialized = true;
-    this.logger?.debug(this.name, 'initialize moli lazy load module');
+    context.logger?.debug(this.name, 'initialize moli lazy load module');
 
-    const slotsConfig = this.moduleConfig.slots;
-    const bucketsConfig = this.moduleConfig.buckets;
-    const infiniteSlotsConfig = this.moduleConfig.infiniteSlots;
+    const slotsConfig = moduleConfig.slots;
+    const bucketsConfig = moduleConfig.buckets;
+    const infiniteSlotsConfig = moduleConfig.infiniteSlots;
 
+    const window = context.window as unknown as LazyLoadWindow;
     slotsConfig.forEach(config => {
-      const observer = new this.window.IntersectionObserver(
+      const observer = new window.IntersectionObserver(
         entries => {
-          this.logger?.debug(this.name, 'lazy-load slots called with', entries);
+          context.logger?.debug(this.name, 'lazy-load slots called with', entries);
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
-              this.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
-              this.window.moli.refreshAdSlot(entry.target.id);
+              context.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
+              window.moli.refreshAdSlot(entry.target.id);
               observer.unobserve(entry.target);
             }
           });
         },
         {
           root: config.options.rootId
-            ? this.window.document.getElementById(config.options.rootId)
+            ? window.document.getElementById(config.options.rootId)
             : null,
           threshold: config.options.threshold,
           rootMargin: config.options.rootMargin
@@ -223,45 +166,45 @@ export class LazyLoad implements IModule {
       this.observers.push(observer);
 
       config.domIds.forEach(domId => {
-        const slot = moliConfig.slots.find(slot => slot.domId === domId);
+        const slot = context.config.slots.find(slot => slot.domId === domId);
         if (!slot) {
-          this.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
+          context.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
         } else if (slot.behaviour.loaded !== 'manual') {
-          this.logger?.warn(
+          context.logger?.warn(
             this.name,
             `Lazy-load configured for slot without manual loading behaviour. ${domId}`
           );
         } else if (slot.behaviour.loaded === 'manual') {
-          const elementToObserve = this.window.document.querySelector(`#${domId}`);
+          const elementToObserve = window.document.querySelector(`#${domId}`);
           elementToObserve && observer.observe(elementToObserve);
         }
       });
     });
 
     bucketsConfig.forEach(config => {
-      const observer = new this.window.IntersectionObserver(
+      const observer = new window.IntersectionObserver(
         entries => {
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting && entry.target.id === config.observedDomId) {
               // sanity check
-              const correspondingBucket = moliConfig.slots.find(
+              const correspondingBucket = context.config.slots.find(
                 slot => slot.domId === config.observedDomId
               )?.behaviour.bucket;
 
               if (correspondingBucket !== config.bucket) {
-                this.logger?.warn(
+                context.logger?.warn(
                   this.name,
                   `${config.observedDomId} doesn't belong to ${config.bucket}`
                 );
               } else {
-                const domIdsInCorrespondingBucket = moliConfig.slots
+                const domIdsInCorrespondingBucket = context.config.slots
                   .filter(slot => slot.behaviour.bucket === config.bucket)
                   .map(slot => slot.domId);
-                this.logger?.debug(
+                context.logger?.debug(
                   `Refresh ${config.bucket}`,
                   `Trigger ad slots with DOM IDs [${domIdsInCorrespondingBucket.join(', ')}]`
                 );
-                this.window.moli.refreshBucket(config.bucket);
+                window.moli.refreshBucket(config.bucket);
 
                 observer.unobserve(entry.target);
               }
@@ -278,25 +221,28 @@ export class LazyLoad implements IModule {
       );
       this.observers.push(observer);
 
-      if (!moliConfig.buckets?.enabled) {
-        this.logger?.warn(this.name, "GlobalBucket config isn't enabled");
+      if (!context.config.buckets?.enabled) {
+        context.logger?.warn(this.name, "GlobalBucket config isn't enabled");
       }
 
-      if (!(moliConfig.buckets?.bucket && moliConfig.buckets.bucket[config.bucket])) {
-        this.logger?.error(this.name, `Lazy-load non-existing bucket with name ${config.bucket}`);
+      if (!(context.config.buckets?.bucket && context.config.buckets.bucket[config.bucket])) {
+        context.logger?.error(
+          this.name,
+          `Lazy-load non-existing bucket with name ${config.bucket}`
+        );
       } else {
-        const elementToObserve = this.window.document.querySelector(`#${config.observedDomId}`);
+        const elementToObserve = window.document.querySelector(`#${config.observedDomId}`);
         elementToObserve && observer.observe(elementToObserve);
       }
     });
 
-    const { configuredInfiniteSlots, findSlot } = selectInfiniteSlot(moliConfig.slots);
+    const { configuredInfiniteSlots, findSlot } = selectInfiniteSlot(context.config.slots);
 
     (infiniteSlotsConfig || []).forEach(config => {
       const serialNumberLabel = 'data-h5-serial-number';
 
       if (configuredInfiniteSlots.length > 0) {
-        const observer = new this.window.IntersectionObserver(
+        const observer = new window.IntersectionObserver(
           entries => {
             entries.forEach((entry: IntersectionObserverEntry) => {
               if (entry.isIntersecting) {
@@ -307,17 +253,14 @@ export class LazyLoad implements IModule {
                     entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
                   const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
                   entry.target.setAttribute('id', createdDomId);
-                  this.logger?.debug(
+                  context.logger?.debug(
                     this.name,
                     `Trigger ad slot with newly created DOM ID ${createdDomId}`
                   );
-                  this.window.moli.refreshInfiniteAdSlot(
-                    createdDomId,
-                    configuredInfiniteSlot.domId
-                  );
+                  window.moli.refreshInfiniteAdSlot(createdDomId, configuredInfiniteSlot.domId);
                   observer.unobserve(entry.target);
                 } else {
-                  this.logger?.error(
+                  context.logger?.error(
                     this.name,
                     `No infinite-scrolling slot configured for ${configSlotDomId}`
                   );
@@ -328,7 +271,7 @@ export class LazyLoad implements IModule {
           },
           {
             root: config.options.rootId
-              ? this.window.document.getElementById(config.options.rootId)
+              ? window.document.getElementById(config.options.rootId)
               : null,
             threshold: config.options.threshold,
             rootMargin: config.options.rootMargin
@@ -336,13 +279,13 @@ export class LazyLoad implements IModule {
         );
         this.observers.push(observer);
 
-        const infiniteElements = this.window.document.querySelectorAll(config.selector);
+        const infiniteElements = window.document.querySelectorAll(config.selector);
         infiniteElements.forEach((element, index) => {
           element.setAttribute(serialNumberLabel, `${index + 1}`);
           element && observer.observe(element);
         });
       } else {
-        this.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
+        context.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
       }
     });
   };

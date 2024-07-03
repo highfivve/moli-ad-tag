@@ -1641,6 +1641,75 @@ export namespace modules {
     };
   }
 
+  export namespace lazyload {
+    export interface LazyLoadModuleConfig extends IModuleConfig {
+      readonly slots: LazyLoadModuleSlotsConfig[];
+      readonly buckets: LazyLoadModuleBucketsConfig[];
+      readonly infiniteSlots?: InfiniteSlotsSelector[];
+    }
+
+    type LazyLoadModuleOptionsType = {
+      /**
+       * The element that is used as the viewport for checking visibility of the target.
+       * Must be the ancestor of the target. Defaults to the browser viewport if not specified or if null.
+       */
+      readonly rootId?: string;
+
+      /**
+       * Margin around the root. Can have values similar to the CSS margin property,
+       * e.g. "10px 20px 30px 40px". The values can be percentages.
+       * This set of values serves to grow or shrink each side of the root element's bounding box
+       * before computing intersections. Defaults to all zeros.
+       */
+      readonly rootMargin?: string;
+
+      /**
+       * Either a single number or an array of numbers which indicate at what percentage
+       * of the target's visibility the observer's callback should be executed.
+       * If you only want to detect when visibility passes the 50% mark, you can use a value of 0.5.
+       * If you want the callback to run every time visibility passes another 25%,
+       * you would specify the array [0, 0.25, 0.5, 0.75, 1].
+       * The default is 0 (meaning as soon as even one pixel is visible, the callback will be run).
+       * A value of 1.0 means that the threshold isn't considered passed until every pixel is visible.
+       */
+      readonly threshold?: number;
+    };
+
+    export type LazyLoadModuleSlotsConfig = {
+      /**
+       * DomIds that should be observed for lazy loading
+       */
+      readonly domIds: string[];
+      readonly options: LazyLoadModuleOptionsType;
+    };
+
+    export type LazyLoadModuleBucketsConfig = {
+      /**
+       * Buckets that should be observed for lazy loading
+       */
+      readonly bucket: string;
+
+      /**
+       * This ID identifies the DOM element that should be observed
+       * by the intersection observer.
+       */
+      readonly observedDomId: string;
+      readonly options: LazyLoadModuleOptionsType;
+    };
+
+    export type InfiniteSlotsSelector = {
+      /**
+       * CSS selector for divs in the document that should be considered as infinite loading slots
+       */
+      readonly selector: string;
+
+      /**
+       * Options for the IntersectionObserver
+       */
+      readonly options: LazyLoadModuleOptionsType;
+    };
+  }
+
   export interface ModulesConfig {
     readonly adReload?: adreload.AdReloadModuleConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
@@ -1655,6 +1724,7 @@ export namespace modules {
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
+    readonly lazyload?: lazyload.LazyLoadModuleConfig;
   }
 }
 

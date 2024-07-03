@@ -1,7 +1,7 @@
-import { MoliRuntime } from '@highfivve/ad-tag';
+import { AdSlot } from 'ad-tag/types/moliConfig';
 
 type FindSlotResult = {
-  configuredInfiniteSlot: MoliRuntime.AdSlot | undefined;
+  configuredInfiniteSlot: AdSlot | undefined;
   configSlotDomId: string | null;
 };
 
@@ -10,17 +10,17 @@ type FindSlotResult = {
  * that is observed.
  * @param slots
  */
-export const selectInfiniteSlot: (slots: MoliRuntime.AdSlot[]) => {
+export const selectInfiniteSlot: (slots: AdSlot[]) => {
   /**
    * List of configured infinite slots
    */
-  configuredInfiniteSlots: MoliRuntime.AdSlot[];
+  configuredInfiniteSlots: AdSlot[];
   /**
    * Method to find the proper infinite slot based on the target element. Looks for data-h5-slot-dom-id attribute
    * @param target - The target element that is observed via an IntersectionObserver
    */
   findSlot: (target: Element) => FindSlotResult;
-} = (slots: MoliRuntime.AdSlot[]) => {
+} = (slots: AdSlot[]) => {
   const configuredInfiniteSlots = slots.filter(slot => slot.behaviour.loaded === 'infinite');
 
   const findSlot = (target: Element) => {

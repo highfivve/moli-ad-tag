@@ -2,7 +2,8 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { selectInfiniteSlot } from './selectInfiniteSlot';
-import { MoliRuntime } from '@highfivve/ad-tag';
+import { AdSlot, behaviour } from 'ad-tag/types/moliConfig';
+import SlotLoading = behaviour.SlotLoading;
 
 // setup sinon-chai
 use(sinonChai);
@@ -21,11 +22,11 @@ describe('select infinite slots', () => {
     sandbox.restore();
   });
 
-  const createSlot = (domId: string, loaded: MoliRuntime.behaviour.SlotLoading['loaded']): MoliRuntime.AdSlot =>
+  const createSlot = (domId: string, loaded: SlotLoading['loaded']): AdSlot =>
     ({
       domId,
       behaviour: { loaded }
-    } as MoliRuntime.AdSlot);
+    }) as AdSlot;
 
   it('should return no ad slot if slots are empty', () => {
     const { configuredInfiniteSlots } = selectInfiniteSlot([]);
