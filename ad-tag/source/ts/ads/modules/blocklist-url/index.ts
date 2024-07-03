@@ -224,6 +224,7 @@ export class BlocklistedUrls implements IModule {
       return Promise.reject(lastError);
     }
 
+    // for three retries the backoff time will be 100ms, 200ms, 300ms
     if (!this.blocklistCache) {
       this.blocklistCache = assetLoaderService
         .loadJson<Blocklist>('blocklist-urls.json', endpoint)
