@@ -68,25 +68,26 @@
  * @module
  */
 
-import { IAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { IAssetLoaderService, AssetLoadMethod } from '../../../util/assetLoaderService';
 import {
   EmetriqAdditionalIdentifier,
   EmetriqWindow,
   EmetriqCustomParams
-} from 'ad-tag/types/emetriq';
+} from '../../../types/emetriq';
 import { trackInApp } from './trackInApp';
-import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import { GoogleAdManagerKeyValueMap, modules } from '../../../types/moliConfig';
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 import EmetriqWebConfig = modules.emetriq.EmetriqWebConfig;
 import SyncDelay = modules.emetriq.SyncDelay;
-import { ModuleType, IModule } from 'ad-tag/types/module';
+import { ModuleType, IModule } from '../../../types/module';
 import {
   AdPipelineContext,
   InitStep,
   ConfigureStep,
   mkConfigureStepOncePerRequestAdsCycle,
-  PrepareRequestAdsStep
-} from 'ad-tag/ads/adPipeline';
+  PrepareRequestAdsStep,
+  mkInitStep
+} from '../../../ads/adPipeline';
 
 /* from https://github.com/piotrwitek/utility-types */
 type Mutable<T> = {
@@ -146,34 +147,24 @@ export class Emetriq implements IModule {
     }
   }
 
-  initSteps(): InitStep[] {
-    return [];
-  }
-
-  configureSteps(assetLoaderService: IAssetLoaderService): ConfigureStep[] {
+  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
     const config = this.emetriqConfig;
     return config
       ? [
-          mkConfigureStepOncePerRequestAdsCycle('emetriq', ctx => {
+          mkInitStep('load-emetriq', ctx => {
             const customParams = Emetriq.staticCustomParams(
               ctx.config.targeting?.keyValues,
               config.customMappingDefinition
             );
-            // test environment doesn't require confiant
+
+            // test environment doesn't require emetriq
             if (ctx.env === 'test') {
               return Promise.resolve();
             }
-            // no consent
-            if (ctx.tcData.gdprApplies && !ctx.tcData.vendor.consents[this.gvlid]) {
-              ctx.logger.warn(this.name, 'missing consent');
-              return Promise.resolve();
-            }
 
-            if (
-              config.login &&
-              shouldTrackLoginEvent(ctx.window.sessionStorage, Date.now(), ctx.logger)
-            ) {
-              trackLoginEvent(ctx, config, ctx.window.document, ctx.logger);
+            // no consent
+            if (this.checkIfConsentIsMissing(ctx)) {
+              return Promise.resolve();
             }
 
             Emetriq.syncDelay(ctx, config.syncDelay).then(additionalIdentifier => {
@@ -187,6 +178,42 @@ export class Emetriq implements IModule {
                     assetLoaderService
                   );
                   break;
+              }
+            });
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  }
+
+  configureSteps(): ConfigureStep[] {
+    const config = this.emetriqConfig;
+    return config
+      ? [
+          mkConfigureStepOncePerRequestAdsCycle('track-emetriq', ctx => {
+            const customParams = Emetriq.staticCustomParams(
+              ctx.config.targeting?.keyValues,
+              config.customMappingDefinition
+            );
+            // test environment doesn't require emetriq
+            if (ctx.env === 'test') {
+              return Promise.resolve();
+            }
+
+            // no consent
+            if (this.checkIfConsentIsMissing(ctx)) {
+              return Promise.resolve();
+            }
+
+            if (
+              config.login &&
+              shouldTrackLoginEvent(ctx.window.sessionStorage, Date.now(), ctx.logger)
+            ) {
+              trackLoginEvent(ctx, config, ctx.window.document, ctx.logger);
+            }
+
+            Emetriq.syncDelay(ctx, config.syncDelay).then(additionalIdentifier => {
+              switch (config.os) {
                 case 'android':
                 case 'ios':
                   trackInApp(ctx, config, additionalIdentifier, customParams, ctx.window.document);
@@ -202,6 +229,14 @@ export class Emetriq implements IModule {
 
   prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
     return [];
+  }
+
+  checkIfConsentIsMissing(ctx: AdPipelineContext): boolean {
+    if (ctx.tcData.gdprApplies && !ctx.tcData.vendor.consents[this.gvlid]) {
+      ctx.logger.warn(this.name, 'missing consent');
+      return true;
+    }
+    return false;
   }
 
   loadEmetriqScript(

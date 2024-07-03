@@ -1,19 +1,22 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
-import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { EmetriqWindow } from 'ad-tag/types/emetriq';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
-import { Emetriq } from 'ad-tag/ads/modules/emetriq/index';
-import { modules } from 'ad-tag/types/moliConfig';
-import { prebidjs } from 'ad-tag/types/prebidjs';
-import { trackInApp } from 'ad-tag/ads/modules/emetriq/trackInApp';
-import { shouldTrackLoginEvent, trackLoginEvent } from 'ad-tag/ads/modules/emetriq/trackLoginEvent';
-import { createPbjsStub } from 'ad-tag/stubs/prebidjsStubs';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { AssetLoadMethod, createAssetLoaderService } from '../../../util/assetLoaderService';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../../../stubs/moliStubs';
+import { AdPipelineContext } from '../../../ads/adPipeline';
+import { fullConsent, tcDataNoGdpr } from '../../../stubs/consentStubs';
+import { EmetriqWindow } from '../../../types/emetriq';
+import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
+import { Emetriq } from '../../../ads/modules/emetriq/index';
+import { modules } from '../../../types/moliConfig';
+import { prebidjs } from '../../../types/prebidjs';
+import { trackInApp } from '../../../ads/modules/emetriq/trackInApp';
+import {
+  shouldTrackLoginEvent,
+  trackLoginEvent
+} from '../../../ads/modules/emetriq/trackLoginEvent';
+import { createPbjsStub } from '../../../stubs/prebidjsStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -68,25 +71,28 @@ describe('Emetriq Module', () => {
     sandbox.reset();
   });
 
-  it('should add an configure step', async () => {
+  it('should add an init and a configure step', async () => {
     const module = createEmetriq();
     module.configure(modulesConfig);
-    const configureSteps = module.configureSteps(assetLoaderService);
+    const initSteps = module.initSteps(assetLoaderService);
+    const configureSteps = module.configureSteps();
 
+    expect(initSteps).to.have.length(1);
+    expect(initSteps[0].name).to.be.eq('load-emetriq');
     expect(configureSteps).to.have.length(1);
-    expect(configureSteps[0].name).to.be.eq('emetriq');
+    expect(configureSteps[0].name).to.be.eq('track-emetriq');
   });
 
-  describe('configure step', () => {
+  describe('init step', () => {
     it('should execute nothing in test mode', async () => {
       const module = createEmetriq();
       module.configure(modulesConfig);
-      const configureSteps = module.configureSteps(assetLoaderService);
+      const initSteps = module.initSteps(assetLoaderService);
 
-      const step = configureSteps[0];
+      const step = initSteps[0];
       expect(step).to.be.ok;
 
-      await step!({ ...adPipelineContext(), env: 'test' }, []);
+      await step!({ ...adPipelineContext(), env: 'test' });
       expect(syncDelaySpy).to.have.not.been.called;
       expect(loadScriptStub).to.have.not.been.called;
     });
@@ -94,14 +100,48 @@ describe('Emetriq Module', () => {
     it('should execute nothing if consent is not provided', async () => {
       const module = createEmetriq();
       module.configure(modulesConfig);
-      const configureSteps = module.configureSteps(assetLoaderService);
+      const initSteps = module.initSteps(assetLoaderService);
+
+      const step = initSteps[0];
+      expect(step).to.be.ok;
+
+      await step!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) });
+      expect(syncDelaySpy).to.have.not.been.called;
+      expect(loadScriptStub).to.have.not.been.called;
+    });
+  });
+
+  describe('configure step', () => {
+    it('should track nothing in test mode', async () => {
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+      const configureSteps = module.configureSteps();
+      const trackInAppSpy = sandbox.spy(trackInApp);
+      const trackLoginEventSpy = sandbox.spy(trackLoginEvent);
+
+      const step = configureSteps[0];
+      expect(step).to.be.ok;
+
+      await step!({ ...adPipelineContext(), env: 'test' }, []);
+      expect(syncDelaySpy).to.have.not.been.called;
+      expect(trackInAppSpy).to.have.not.been.called;
+      expect(trackLoginEventSpy).to.have.not.been.called;
+    });
+
+    it('should execute nothing if consent is not provided', async () => {
+      const module = createEmetriq();
+      module.configure(modulesConfig);
+      const configureSteps = module.configureSteps();
+      const trackInAppSpy = sandbox.spy(trackInApp);
+      const trackLoginEventSpy = sandbox.spy(trackLoginEvent);
 
       const step = configureSteps[0];
       expect(step).to.be.ok;
 
       await step!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) }, []);
       expect(syncDelaySpy).to.have.not.been.called;
-      expect(loadScriptStub).to.have.not.been.called;
+      expect(trackInAppSpy).to.have.not.been.called;
+      expect(trackLoginEventSpy).to.have.not.been.called;
     });
   });
 
