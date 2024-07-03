@@ -92,8 +92,6 @@ export class LazyLoad implements IModule {
 
   private lazyloadConfig: modules.lazyload.LazyLoadModuleConfig | null = null;
 
-  constructor() {}
-
   config(): modules.lazyload.LazyLoadModuleConfig | null {
     return this.lazyloadConfig;
   }
