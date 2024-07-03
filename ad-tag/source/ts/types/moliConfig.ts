@@ -3,6 +3,7 @@ import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
+import { FooterDomIds } from 'ad-tag/ads/modules/sticky-footer-ad-v2';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -1191,6 +1192,21 @@ export namespace modules {
     }
   }
 
+  export namespace stickyFooterAdV2 {
+    export type StickyFooterAdConfig = {
+      readonly enabled: boolean;
+      readonly stickyFooterDomIds: FooterDomIds;
+
+      /**
+       * Disable rendering the footer ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       */
+      readonly disallowedAdvertiserIds: number[];
+
+      readonly closingButtonText?: string;
+    };
+  }
+
   export namespace skin {
     export interface SkinModuleConfig extends IModuleConfig {
       /**
@@ -1729,6 +1745,7 @@ export namespace modules {
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
+    readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
   }
 }

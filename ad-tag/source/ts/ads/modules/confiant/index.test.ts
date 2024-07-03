@@ -74,6 +74,7 @@ describe('Confiant Module', () => {
     const loadScriptStub = sandbox
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
+
     const init = module.initSteps(assetLoaderService)[0];
     expect(init).to.be.ok;
 

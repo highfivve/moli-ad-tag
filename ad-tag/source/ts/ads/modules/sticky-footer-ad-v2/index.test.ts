@@ -2,28 +2,28 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
-import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
-import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
-import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { AdPipelineContext, ConfigureStep, PrepareRequestAdsStep } from '../../adPipeline';
+import { GlobalAuctionContext } from '../../globalAuctionContext';
+import { googletag } from '../../../types/googletag';
 import {
-  googletag,
-  prebidjs,
-  MoliRuntime,
-  AdPipeline,
-  AdPipelineContext,
-  IAdPipelineConfiguration,
-  createAssetLoaderService
-} from '@highfivve/ad-tag';
-
-import Device = MoliRuntime.Device;
-import { FooterDomIds, StickyFooterAdsV2 } from './index';
+  emptyConfig,
+  emptyRuntimeConfig,
+  newEmptyConfig,
+  noopLogger
+} from '../../../stubs/moliStubs';
 import * as stickyAdModule from './footerStickyAd';
-import { initAdSticky } from './footerStickyAd';
+
+import { createGoogletagStub, googleAdSlotStub } from '../../../stubs/googletagStubs';
+import { prebidjs } from '../../../types/prebidjs';
+import { fullConsent } from '../../../stubs/consentStubs';
+import { AdSlot, Device, MoliConfig } from '../../../types/moliConfig';
+import { MoliRuntime } from '../../../types/moliRuntime';
+import { FooterDomIds, StickyFooterAdsV2 } from '../../../ads/modules/sticky-footer-ad-v2/index';
+import SlotDefinition = MoliRuntime.SlotDefinition;
+import { createDom } from '../../../stubs/browserEnvSetup';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
-import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { initAdSticky } from './footerStickyAd';
 
 // setup sinon-chai
 use(sinonChai);
@@ -32,37 +32,30 @@ const sandbox = Sinon.createSandbox();
 let dom = createDom();
 let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow = dom.window as any;
 
-const assetLoaderService = createAssetLoaderService(jsDomWindow);
-const reportingService = reportingServiceStub();
-const stickyAdSpy = Sinon.spy(stickyAdModule, 'initAdSticky');
+const stickyAdSpy = sandbox.spy(stickyAdModule, 'initAdSticky');
 
-const emptyPipelineConfig: IAdPipelineConfiguration = {
-  init: [],
-  configure: [],
-  defineSlots: () => Promise.resolve([]),
-  prepareRequestAds: [],
-  requestBids: [],
-  requestAds: () => Promise.resolve()
-};
-const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
-  return {
-    requestId: 0,
-    requestAdsCalls: 1,
-    env: 'production',
-    logger: noopLogger,
-    config: config,
-    window: jsDomWindow,
-    // no service dependencies required
-    labelConfigService: null as any,
-    reportingService: null as any,
-    tcData: null as any,
-    adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow)
-  };
+const setupDomAndServices = () => {
+  dom = createDom();
+  jsDomWindow = dom.window as any;
+  jsDomWindow.googletag = createGoogletagStub();
 };
 
-const createAdSlotConfig = (domId: string, device: Device) => {
-  const slot: MoliRuntime.AdSlot = {
+const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
+  requestId: 0,
+  requestAdsCalls: 1,
+  env: 'production',
+  logger: noopLogger,
+  config: config ?? emptyConfig,
+  runtimeConfig: emptyRuntimeConfig,
+  window: jsDomWindow as any,
+  labelConfigService: null as any,
+  tcData: fullConsent(),
+  adUnitPathVariables: {},
+  auction: new GlobalAuctionContext(jsDomWindow as any)
+});
+
+const createAdSlotConfig = (domId: string, device: Device): SlotDefinition => {
+  const adSlot: AdSlot = {
     domId: domId,
     adUnitPath: 'path',
     position: 'in-page',
@@ -77,51 +70,64 @@ const createAdSlotConfig = (domId: string, device: Device) => {
       }
     ]
   };
-  return slot;
+
+  return {
+    moliSlot: adSlot,
+    adSlot: {
+      getSlotElementId: () => adSlot.domId
+    } as googletag.IAdSlot,
+    filterSupportedSizes: () => []
+  };
 };
 
-const createStickyFooterAdModule = (
+const createAndConfigureModule = (
   stickyFooterDomIds: FooterDomIds = {},
   disallowedAdvertiserIds: number[] = [],
   closingButtonText?: string
-): StickyFooterAdsV2 => {
-  return new StickyFooterAdsV2({
-    stickyFooterDomIds,
-    disallowedAdvertiserIds,
-    closingButtonText
+) => {
+  const module = new StickyFooterAdsV2();
+  module.configure({
+    stickyFooterAdV2: {
+      enabled: true,
+      stickyFooterDomIds,
+      disallowedAdvertiserIds,
+      closingButtonText
+    }
   });
+  return module;
 };
 
-const initModule = (
-  module: StickyFooterAdsV2,
-  configPipeline?: MoliRuntime.pipeline.PipelineConfig,
-  moliSlot?: MoliRuntime.AdSlot[]
-) => {
-  const moliConfig: MoliRuntime.MoliConfig = {
-    slots: moliSlot ? [...moliSlot] : [{ domId: 'foo' } as MoliRuntime.AdSlot],
-    pipeline: configPipeline,
-    logger: noopLogger,
-    schain: dummySchainConfig
-  };
-
-  const adPipeline = new AdPipeline(
-    emptyPipelineConfig,
-    noopLogger,
-    jsDomWindow,
-    reportingService,
-    new GlobalAuctionContext(jsDomWindow)
+const createInitializedModule = (
+  moduleConfig: {
+    stickyFooterDomIds: FooterDomIds;
+    disallowedAdvertiserIds: number[];
+    closingButtonText?: string;
+  },
+  slots: AdSlot[] = []
+): {
+  prepareSteps: PrepareRequestAdsStep;
+  module: StickyFooterAdsV2;
+  config: MoliConfig;
+} => {
+  const config = newEmptyConfig(slots);
+  const module = createAndConfigureModule(
+    moduleConfig.stickyFooterDomIds,
+    moduleConfig.disallowedAdvertiserIds,
+    moduleConfig.closingButtonText
   );
 
-  return { moliConfig, adPipeline };
+  const prepareSteps = module.prepareRequestAdsSteps();
+  expect(prepareSteps).to.be.ok;
+  expect(prepareSteps).to.have.lengthOf(1);
+
+  return { prepareSteps: prepareSteps[0], module, config };
 };
 
 beforeEach(() => {
-  jsDomWindow.googletag = createGoogletagStub();
+  setupDomAndServices();
 });
 
 afterEach(() => {
-  dom = createDom();
-  jsDomWindow = dom.window as any;
   sandbox.reset();
   sandbox.resetHistory();
 });
@@ -129,59 +135,47 @@ afterEach(() => {
 describe('Sticky-footer-v2 Module', () => {
   describe('Initialize sticky-footer-v2', () => {
     it('should add an init step', async () => {
-      const module = createStickyFooterAdModule({
-        desktop: 'ad-desktop-sticky',
-        mobile: 'ad-mobile-sticky'
+      const { prepareSteps } = createInitializedModule({
+        stickyFooterDomIds: { desktop: 'ad-desktop-sticky', mobile: 'ad-mobile-sticky' },
+        disallowedAdvertiserIds: []
       });
 
-      const desktopSlot = createAdSlotConfig('ad-desktop-sticky', 'desktop');
-      const { moliConfig, adPipeline } = initModule(module, undefined, [desktopSlot]);
-
-      module.init(moliConfig, assetLoaderService, () => adPipeline);
-
-      expect(moliConfig.pipeline).to.be.ok;
-      expect(moliConfig.pipeline?.prepareRequestAdsSteps).to.have.lengthOf(1);
-      expect(moliConfig.pipeline?.prepareRequestAdsSteps[0].name).to.be.eq('sticky-footer-ads-v2');
+      expect(prepareSteps.name).to.be.eq('sticky-footer-ads-v2');
     });
 
     it('should initiate stickyFooterAd only with mobile slot if the two devices were found', async () => {
-      const module = createStickyFooterAdModule(
-        {
-          desktop: 'ad-desktop-sticky',
-          mobile: 'ad-mobile-sticky'
-        },
-        [111],
-        'close'
-      );
-
       const desktopSlot = createAdSlotConfig('ad-desktop-sticky', 'desktop');
       const mobileSlot = createAdSlotConfig('ad-mobile-sticky', 'mobile');
-
-      const { moliConfig, adPipeline } = initModule(module, undefined, [desktopSlot, mobileSlot]);
-
-      module.init(moliConfig, assetLoaderService, () => adPipeline);
 
       const mobileGoogleAdSlot = googleAdSlotStub('/1/ad-mobile-sticky', 'ad-mobile-sticky');
       const desktopGoogleAdSlot = googleAdSlotStub('/1/ad-desktop-sticky', 'ad-desktop-sticky');
 
+      const { prepareSteps, config, module } = createInitializedModule(
+        {
+          stickyFooterDomIds: { desktop: 'ad-desktop-sticky', mobile: 'ad-mobile-sticky' },
+          disallowedAdvertiserIds: [111],
+          closingButtonText: 'close'
+        },
+        [desktopSlot.moliSlot, mobileSlot.moliSlot]
+      );
+
       const mobileAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
-        moliSlot: mobileSlot,
+        moliSlot: mobileSlot.moliSlot,
         adSlot: mobileGoogleAdSlot,
         filterSupportedSizes: {} as any
       };
       const desktopAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
-        moliSlot: desktopSlot,
+        moliSlot: desktopSlot.moliSlot,
         adSlot: desktopGoogleAdSlot,
         filterSupportedSizes: {} as any
       };
-      const initStickyAd = moliConfig.pipeline?.prepareRequestAdsSteps[0];
-      await initStickyAd!(adPipelineContext(moliConfig), [
+
+      await prepareSteps(adPipelineContext(config), [
         mobileAdSlotDefinition,
         desktopAdSlotDefinition
       ]);
 
-      expect(stickyAdSpy.calledOnce).to.be.true;
-
+      expect(stickyAdSpy).to.have.been.calledOnce;
       expect(
         stickyAdSpy.calledWithExactly(
           jsDomWindow,
@@ -195,29 +189,25 @@ describe('Sticky-footer-v2 Module', () => {
     });
 
     it('should initiate stickyFooterAd with desktop', async () => {
-      const module = createStickyFooterAdModule(
-        {
-          desktop: 'ad-desktop-sticky'
-        },
-        [111]
-      );
-
       const desktopSlot = createAdSlotConfig('ad-desktop-sticky', 'desktop');
-
-      const { moliConfig, adPipeline } = initModule(module, undefined, [desktopSlot]);
-
-      module.init(moliConfig, assetLoaderService, () => adPipeline);
-
       const desktopGoogleAdSlot = googleAdSlotStub('/1/ad-desktop-sticky', 'ad-desktop-sticky');
-
       const desktopAdSlotDefinition: MoliRuntime.SlotDefinition<any> = {
         moliSlot: desktopSlot,
         adSlot: desktopGoogleAdSlot,
         filterSupportedSizes: {} as any
       };
-      const initStickyAd = moliConfig.pipeline?.prepareRequestAdsSteps[0];
-      await initStickyAd!(adPipelineContext(moliConfig), [desktopAdSlotDefinition]);
 
+      const { prepareSteps, config, module } = createInitializedModule(
+        {
+          stickyFooterDomIds: { desktop: 'ad-desktop-sticky' },
+          disallowedAdvertiserIds: [111]
+        },
+        [desktopSlot.moliSlot]
+      );
+
+      await prepareSteps(adPipelineContext(config), [desktopAdSlotDefinition]);
+
+      expect(stickyAdSpy).to.have.been.calledOnce;
       expect(
         stickyAdSpy.calledOnceWithExactly(
           jsDomWindow,

@@ -1,6 +1,6 @@
-import { googletag, MoliRuntime } from '@highfivve/ad-tag';
-import { Moli } from '@highfivve/ad-tag/source/ts';
-import Environment = Moli.Environment;
+import { googletag } from 'ad-tag/types/googletag';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { Environment } from 'ad-tag/types/moliConfig';
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
@@ -18,7 +18,6 @@ type RenderEventResult = 'empty' | 'disallowed' | 'standard';
  * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
  */
 const stickyRenderedEvent = (
-  adSticky: HTMLElement | undefined,
   mobileStickyDomId: string,
   disallowedAdvertiserIds: number[],
   window: Window & googletag.IGoogleTagWindow
@@ -158,7 +157,7 @@ export const initAdSticky = (
         // wait for the results
 
         const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
-        return stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
+        return stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, window)
           .then(result =>
             result === 'empty' || result === 'disallowed'
               ? Promise.resolve(result)
@@ -174,7 +173,7 @@ export const initAdSticky = (
       if (footerStickyDomId) {
         const stickyOnLoadEventPromise = stickyOnLoadEvent(footerStickyDomId, window);
 
-        stickyRenderedEvent(adSticky, footerStickyDomId, disallowedAdvertiserIds, window)
+        stickyRenderedEvent(footerStickyDomId, disallowedAdvertiserIds, window)
           .then(result =>
             result === 'empty' || result === 'disallowed'
               ? Promise.resolve(result)
