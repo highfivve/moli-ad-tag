@@ -24,13 +24,6 @@ import {
   ResolveAdUnitPathOptions,
   Targeting
 } from '../types/moliConfig';
-import IStateMachine = MoliRuntime.state.IStateMachine;
-import IFinished = MoliRuntime.state.IFinished;
-import IError = MoliRuntime.state.IError;
-import IConfigurable = MoliRuntime.state.IConfigurable;
-import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
-import RefreshAdSlotsOptions = MoliRuntime.RefreshAdSlotsOptions;
-import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -41,12 +34,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   /**
    * Initial state is configurable
    */
-  let state: IStateMachine = {
+  let state: MoliRuntime.state.IStateMachine = {
     state: 'configurable',
     initialize: false,
     runtimeConfig: newEmptyRuntimeConfig(),
     modules: []
-  } as IConfigurable;
+  } as MoliRuntime.state.IConfigurable;
 
   function setTargeting(key: string, value: string | string[]): void {
     switch (state.state) {
@@ -323,7 +316,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
-  function requestAds(): Promise<IConfigurable | ISinglePageApp | IFinished | IError> {
+  function requestAds(): Promise<
+    | MoliRuntime.state.IConfigurable
+    | MoliRuntime.state.ISinglePageApp
+    | MoliRuntime.state.IFinished
+    | MoliRuntime.state.IError
+  > {
     switch (state.state) {
       case 'configurable': {
         state.initialize = true;
@@ -415,7 +413,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                   state.runtimeConfig
                 );
                 afterRequestAds.forEach(hook => hook('spa-finished'));
-                const finishedState: ISinglePageApp = {
+                const finishedState: MoliRuntime.state.ISinglePageApp = {
                   ...state,
                   state: 'spa-finished',
                   // reset the runtime config for the next requestAds() call cycle
@@ -577,7 +575,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
 
   function refreshAdSlot(
     domId: string | string[],
-    options?: RefreshAdSlotsOptions
+    options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<'queued' | 'refreshed'> {
     const domIds = typeof domId === 'string' ? [domId] : domId;
     switch (state.state) {
@@ -842,7 +840,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
    * @param options
    */
   function newEmptyRuntimeConfig(
-    previous?: MoliRuntimeConfig,
+    previous?: MoliRuntime.MoliRuntimeConfig,
     options?: {
       /** if true, the labels and keyValues are kept from the previous runtime config */
       keepTargeting: boolean;

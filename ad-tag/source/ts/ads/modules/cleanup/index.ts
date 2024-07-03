@@ -9,7 +9,6 @@ import {
 } from 'ad-tag/ads/adPipeline';
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import { CleanupConfig, modules } from 'ad-tag/types/moliConfig';
-import CleanupModuleConfig = modules.cleanup.CleanupModuleConfig;
 
 /**
  * # Cleanup Module
@@ -64,7 +63,7 @@ export class Cleanup implements IModule {
   public readonly description: string = 'cleanup out-of-page formats on navigation or ad-reload';
   public readonly moduleType: ModuleType = 'creatives';
 
-  private cleanupConfig: CleanupModuleConfig | null = null;
+  private cleanupConfig: modules.cleanup.CleanupModuleConfig | null = null;
 
   configure(modulesConfig?: modules.ModulesConfig) {
     if (modulesConfig?.cleanup && modulesConfig.cleanup.enabled) {

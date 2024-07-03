@@ -1,24 +1,14 @@
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
-import MoliLogger = MoliRuntime.MoliLogger;
-import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
-import MappingDefinitionToAdexMap = modules.adex.MappingDefinitionToAdexMap;
-import MappingDefinitionToAdexString = modules.adex.MappingDefinitionToAdexString;
-import MappingDefinitionToAdexNumber = modules.adex.MappingDefinitionToAdexNumber;
-import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
-import MappingDefinitionToAdexList = modules.adex.MappingDefinitionToAdexList;
-import AdexList = modules.adex.AdexList;
-import AdexListObject = modules.adex.AdexListObject;
-import MappingDefinition = modules.adex.MappingDefinition;
 
 /**
  * Extract Adex map data objects from targeting key/values.
  */
 export const toAdexMapType = (
   keyValueMap: GoogleAdManagerKeyValueMap,
-  mappingDefinition: MappingDefinitionToAdexMap,
-  logger: MoliLogger
-): AdexKeyValueMap | undefined => {
+  mappingDefinition: modules.adex.MappingDefinitionToAdexMap,
+  logger: MoliRuntime.MoliLogger
+): modules.adex.AdexKeyValueMap | undefined => {
   const mapKey = keyValueMap[mappingDefinition.key];
   const mapValue = extractStringOrNumber(
     keyValueMap,
@@ -61,9 +51,11 @@ export const toAdexMapType = (
  */
 export const toAdexStringOrNumberType = (
   keyValueMap: GoogleAdManagerKeyValueMap,
-  mappingDefinition: MappingDefinitionToAdexString | MappingDefinitionToAdexNumber,
-  logger: MoliLogger
-): AdexKeyValuePair | undefined => {
+  mappingDefinition:
+    | modules.adex.MappingDefinitionToAdexString
+    | modules.adex.MappingDefinitionToAdexNumber,
+  logger: MoliRuntime.MoliLogger
+): modules.adex.AdexKeyValuePair | undefined => {
   const value = extractStringOrNumber(
     keyValueMap,
     mappingDefinition.adexValueType,
@@ -100,9 +92,9 @@ export const toAdexStringOrNumberType = (
  */
 export const toAdexListType = (
   keyValueMap: GoogleAdManagerKeyValueMap,
-  mappingDefinition: MappingDefinitionToAdexList,
-  logger: MoliLogger
-): AdexList | undefined => {
+  mappingDefinition: modules.adex.MappingDefinitionToAdexList,
+  logger: MoliRuntime.MoliLogger
+): modules.adex.AdexList | undefined => {
   const value = extractStringOrNumber(keyValueMap, 'string', mappingDefinition.key);
 
   if (
@@ -127,7 +119,7 @@ export const toAdexListType = (
   };
 };
 
-const sortAndToListObject = (arr: Array<string>): AdexListObject =>
+const sortAndToListObject = (arr: Array<string>): modules.adex.AdexListObject =>
   Object.fromEntries(arr.sort().map(listValue => [listValue, 1]));
 
 const sortAndJoin = (arr: Array<string>) => arr.sort().join(',');
@@ -140,8 +132,11 @@ const extractStringOrNumber = (
 
 const convertToAdexTargetValue = (
   value: string | number | Array<string> | undefined,
-  mappingDefinition: Exclude<MappingDefinition, MappingDefinitionToAdexList>,
-  logger: MoliLogger
+  mappingDefinition: Exclude<
+    modules.adex.MappingDefinition,
+    modules.adex.MappingDefinitionToAdexList
+  >,
+  logger: MoliRuntime.MoliLogger
 ) =>
   // if the value is truthy, ...
   value !== undefined && !Number.isNaN(value)
@@ -156,12 +151,14 @@ const convertToAdexTargetValue = (
 
 const convertToAdexListValue = (
   value: string | Array<string> | undefined,
-  mappingDefinition: MappingDefinitionToAdexList,
-  logger: MoliLogger
-): AdexListObject | undefined => {
+  mappingDefinition: modules.adex.MappingDefinitionToAdexList,
+  logger: MoliRuntime.MoliLogger
+): modules.adex.AdexListObject | undefined => {
   if (value === undefined) {
     // if the value is falsy, use the default as fallback.
-    return logAndUseDefaultValue(mappingDefinition, logger) as AdexListObject | undefined;
+    return logAndUseDefaultValue(mappingDefinition, logger) as
+      | modules.adex.AdexListObject
+      | undefined;
   }
 
   // if the value is truthy, ...
@@ -173,7 +170,10 @@ const convertToAdexListValue = (
       { [value]: 1 };
 };
 
-const logAndUseDefaultValue = (mappingDefinition: MappingDefinition, logger: MoliLogger) => {
+const logAndUseDefaultValue = (
+  mappingDefinition: modules.adex.MappingDefinition,
+  logger: MoliRuntime.MoliLogger
+) => {
   logger.warn(
     'Adex DMP',
     'using defaultValue',

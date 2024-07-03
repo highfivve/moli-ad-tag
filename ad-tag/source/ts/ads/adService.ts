@@ -44,7 +44,6 @@ import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, Environment, MoliConfig } from '../types/moliConfig';
-import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 /**
  * @internal
@@ -84,7 +83,7 @@ export class AdService {
     )
   );
 
-  private static getEnvironment(config: MoliRuntimeConfig): Environment {
+  private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
     return config.environment || 'production';
   }
 
@@ -234,7 +233,7 @@ export class AdService {
    */
   public requestAds = async (
     config: Readonly<MoliConfig>,
-    runtimeConfig: Readonly<MoliRuntimeConfig>
+    runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>
   ): Promise<AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
     const { refreshSlots, refreshInfiniteSlots } = runtimeConfig;
@@ -301,7 +300,7 @@ export class AdService {
   public refreshAdSlots(
     domIds: string[],
     config: MoliConfig,
-    runtimeConfig: MoliRuntimeConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig,
     options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<void> {
     if (domIds.length === 0) {
@@ -351,7 +350,7 @@ export class AdService {
   public refreshBucket(
     bucket: string,
     config: MoliConfig,
-    runtimeConfig: MoliRuntimeConfig
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig
   ): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();

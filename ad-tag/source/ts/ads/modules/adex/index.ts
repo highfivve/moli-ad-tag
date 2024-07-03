@@ -65,7 +65,6 @@
  * @module
  */
 import { modules } from 'ad-tag/types/moliConfig';
-import AdexKeyValues = modules.adex.AdexKeyValues;
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import {
   AdPipelineContext,
@@ -76,13 +75,10 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import AdexConfig = modules.adex.AdexConfig;
 import { isNotNull } from 'ad-tag/util/arrayUtils';
 import { sendAdvertisingID } from 'ad-tag/ads/modules/adex/sendAdvertisingId';
 import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
-import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
-import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
 import {
   toAdexListType,
   toAdexMapType,
@@ -151,7 +147,7 @@ interface IUserTrackPluginKeyValueConfiguration {
    *
    */
   [3]: {
-    [0]: AdexKeyValues;
+    [0]: modules.adex.AdexKeyValues;
 
     /**
      * 0: (default) - user track can only be called once
@@ -215,7 +211,7 @@ export class AdexModule implements IModule {
   public track(
     context: AdPipelineContext,
     assetLoaderService: IAssetLoaderService,
-    adexConfig: AdexConfig
+    adexConfig: modules.adex.AdexConfig
   ): Promise<void> {
     const { adexCustomerId, adexTagId, mappingDefinitions, spaMode, appConfig } = adexConfig;
     this.configureAdexC(context, adexConfig);
@@ -290,7 +286,7 @@ export class AdexModule implements IModule {
   private getAdexKeyValues = (
     context: AdPipelineContext,
     config: modules.adex.AdexConfig
-  ): (AdexKeyValuePair | AdexKeyValueMap)[] | undefined => {
+  ): (modules.adex.AdexKeyValuePair | modules.adex.AdexKeyValueMap)[] | undefined => {
     const dfpKeyValues = context.config.targeting?.keyValues;
 
     if (dfpKeyValues) {
@@ -323,8 +319,10 @@ export class AdexModule implements IModule {
           '_kv', // key values
           [
             adexKeyValues.reduce(
-              (aggregator: AdexKeyValues, additionalKeyValue: AdexKeyValues) =>
-                ({ ...aggregator, ...additionalKeyValue }) as AdexKeyValues,
+              (
+                aggregator: modules.adex.AdexKeyValues,
+                additionalKeyValue: modules.adex.AdexKeyValues
+              ) => ({ ...aggregator, ...additionalKeyValue }) as modules.adex.AdexKeyValues,
               {}
             ),
             // single page mode for logged-in

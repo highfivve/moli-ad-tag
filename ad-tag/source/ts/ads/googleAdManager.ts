@@ -18,8 +18,6 @@ import { isNotNull } from '../util/arrayUtils';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
-import SlotDefinition = MoliRuntime.SlotDefinition;
-import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
 import { AdSlot, consent, GoogleAdManagerKeyValueMap, Targeting } from '../types/moliConfig';
 
@@ -99,12 +97,12 @@ const useStandardGpt = (
   return (
     !tcData.gdprApplies ||
     (tcData.vendor.consents[755] &&
-      tcData.purpose.consents[TCPurpose.STORE_INFORMATION_ON_DEVICE] &&
+      tcData.purpose.consents[tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE] &&
       [
-        TCPurpose.SELECT_BASIC_ADS,
-        TCPurpose.MEASURE_AD_PERFORMANCE,
-        TCPurpose.APPLY_MARKET_RESEARCH,
-        TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+        tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
+        tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
+        tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
+        tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
       ].every(
         purposeId =>
           tcData.purpose.consents[purposeId] || tcData.purpose.legitimateInterests[purposeId]
@@ -283,16 +281,16 @@ export const gptConsentKeyValue = (): PrepareRequestAdsStep =>
       const fullConsent =
         !tcData.gdprApplies ||
         [
-          TCPurpose.STORE_INFORMATION_ON_DEVICE,
-          TCPurpose.SELECT_BASIC_ADS,
-          TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
-          TCPurpose.SELECT_PERSONALISED_ADS,
-          TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
-          TCPurpose.SELECT_PERSONALISED_CONTENT,
-          TCPurpose.MEASURE_AD_PERFORMANCE,
-          TCPurpose.MEASURE_CONTENT_PERFORMANCE,
-          TCPurpose.APPLY_MARKET_RESEARCH,
-          TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+          tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
+          tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
+          tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+          tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS,
+          tcfapi.responses.TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
+          tcfapi.responses.TCPurpose.SELECT_PERSONALISED_CONTENT,
+          tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
+          tcfapi.responses.TCPurpose.MEASURE_CONTENT_PERFORMANCE,
+          tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
+          tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
         ].every(purpose => tcData.purpose.consents[purpose]);
       ctx.window.googletag.pubads().setTargeting('consent', fullConsent ? 'full' : 'none');
       resolve();
@@ -384,7 +382,11 @@ export const gptDefineSlots =
               'GAM',
               `Register slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
             );
-            return Promise.resolve<SlotDefinition>({ moliSlot, adSlot, filterSupportedSizes });
+            return Promise.resolve<MoliRuntime.SlotDefinition>({
+              moliSlot,
+              adSlot,
+              filterSupportedSizes
+            });
           } else if (
             moliSlot.position === 'out-of-page-interstitial' ||
             moliSlot.position === 'out-of-page-top-anchor' ||
@@ -398,7 +400,7 @@ export const gptDefineSlots =
             return Promise.reject(new Error(error));
           }
         case 'test':
-          return Promise.resolve<SlotDefinition>({
+          return Promise.resolve<MoliRuntime.SlotDefinition>({
             moliSlot,
             adSlot: testAdSlot(moliSlot.domId, moliSlot.adUnitPath),
             filterSupportedSizes
@@ -412,7 +414,7 @@ export const gptDefineSlots =
   };
 
 export const gptRequestAds =
-  (): RequestAdsStep => (context: AdPipelineContext, slots: SlotDefinition[]) =>
+  (): RequestAdsStep => (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) =>
     new Promise<void>(resolve => {
       context.logger.debug('GAM', 'requestAds');
       switch (context.env) {

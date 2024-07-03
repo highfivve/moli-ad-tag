@@ -1,10 +1,9 @@
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { modules } from 'ad-tag/types/moliConfig';
-import AdexKeyValues = modules.adex.AdexKeyValues;
 
 type ValueOf<T> = T[keyof T];
 type AdexKeyValueObject = {
-  [key: string]: ValueOf<AdexKeyValues>;
+  [key: string]: ValueOf<modules.adex.AdexKeyValues>;
 };
 
 const getAdvertisingIdIFAType = (clientType: string | undefined): 'aaid' | 'idfa' | undefined => {
@@ -21,7 +20,7 @@ export const sendAdvertisingID = (
   adexCustomerId: string,
   adexTagId: string,
   advertisingId: string,
-  adexAttributes: Array<AdexKeyValues>,
+  adexAttributes: Array<modules.adex.AdexKeyValues>,
   clientType: string | string[],
   fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
   logger: MoliRuntime.MoliLogger,
