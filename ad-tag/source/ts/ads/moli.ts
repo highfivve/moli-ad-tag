@@ -235,9 +235,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configurable':
       case 'configured': {
         state.modules.push(module);
-        state.runtimeConfig.adPipelineConfig.initSteps.push(
-          ...module.initSteps(assetLoaderService)
-        );
+        state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps());
         state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps());
         state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
           ...module.prepareRequestAdsSteps()

@@ -37,23 +37,21 @@
  *
  * @module
  */
-import { prebidjs } from 'ad-tag/types/prebidjs';
-import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
+import { prebidjs } from '../../../types/prebidjs';
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2Data = prebidjs.firstpartydata.OpenRtb2Data;
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import { IModule, ModuleType } from '../../../types/module';
+import { MoliRuntime } from '../../../types/moliRuntime';
+import { GoogleAdManagerKeyValueMap, modules } from '../../../types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
   mkConfigureStep,
   PrepareRequestAdsStep
-} from 'ad-tag/ads/adPipeline';
-import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
-import { mergeDeep } from 'ad-tag/util/objectUtils';
+} from '../../../ads/adPipeline';
+import { uniquePrimitiveFilter } from '../../../util/arrayUtils';
+import { mergeDeep } from '../../../util/objectUtils';
 
 export class PrebidFirstPartyDataModule implements IModule {
   readonly description = 'Module for passing first party data to prebid auctions';
@@ -79,7 +77,7 @@ export class PrebidFirstPartyDataModule implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     return [];
   }
 

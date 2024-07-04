@@ -113,7 +113,7 @@ export class StickyFooterAd implements IModule {
     return [];
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     return [];
   }
 }

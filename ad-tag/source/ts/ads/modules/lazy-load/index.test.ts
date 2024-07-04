@@ -11,6 +11,7 @@ import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
 import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
 import { dummySchainConfig } from '../../../stubs/schainStubs';
 import { AdPipelineContext } from '../../../ads/adPipeline';
+import { createAssetLoaderService } from '../../../util/assetLoaderService';
 const createAdSlots = (
   window: Window,
   domIds: string[],
@@ -170,7 +171,8 @@ describe('Lazy-load Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any)
+      auction: new GlobalAuctionContext(jsDomWindow as any),
+      assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
 

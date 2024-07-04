@@ -6,21 +6,21 @@ import { modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import Blocklist = modules.blocklist.Blocklist;
 import StaticBlocklistProvider = modules.blocklist.StaticBlocklistProvider;
 import DynamicBlocklistProvider = modules.blocklist.DynamicBlocklistProvider;
-import { BlocklistedUrls } from 'ad-tag/ads/modules/blocklist-url/index';
-import { googletag } from 'ad-tag/types/googletag';
-import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { BlocklistedUrls } from '../blocklist-url/index';
+import { googletag } from '../../../types/googletag';
+import { createAssetLoaderService } from '../../../util/assetLoaderService';
 import BlocklistUrlsBlockingConfig = modules.blocklist.BlocklistUrlsBlockingConfig;
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { createGoogletagStub } from '../../../stubs/googletagStubs';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
   noopLogger
-} from 'ad-tag/stubs/moliStubs';
-import { AdPipelineContext, ConfigureStep } from 'ad-tag/ads/adPipeline';
-import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+} from '../../../stubs/moliStubs';
+import { AdPipelineContext, ConfigureStep } from '../../../ads/adPipeline';
+import { fullConsent } from '../../../stubs/consentStubs';
+import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
 import BlocklistUrlsKeyValueConfig = modules.blocklist.BlocklistUrlsKeyValueConfig;
 
@@ -35,7 +35,7 @@ describe('BlocklistedUrls Module', () => {
 
   const setupDomAndServices = () => {
     dom = createDom();
-    jsDomWindow = dom.window as any;
+    jsDomWindow = dom.window;
     assetLoaderService = createAssetLoaderService(jsDomWindow);
     loadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');
     googleTagStub = createGoogletagStub();
@@ -54,7 +54,8 @@ describe('BlocklistedUrls Module', () => {
     labelConfigService: null as any,
     tcData: fullConsent(),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any)
+    auction: new GlobalAuctionContext(jsDomWindow as any),
+    assetLoaderService: assetLoaderService
   });
 
   const blocklist = (
@@ -96,6 +97,7 @@ describe('BlocklistedUrls Module', () => {
 
   afterEach(() => {
     sandbox.reset();
+    sandbox.restore();
   });
 
   const createAndConfigureModule = (
@@ -108,7 +110,7 @@ describe('BlocklistedUrls Module', () => {
 
   it('should configure nothing in test mode', async () => {
     const module = createAndConfigureModule();
-    const init = module.initSteps(assetLoaderService)[0];
+    const init = module.initSteps()[0];
     expect(init).to.be.ok;
   });
 
@@ -126,10 +128,10 @@ describe('BlocklistedUrls Module', () => {
 
       const module = createAndConfigureModule(blocklistConfig);
 
-      const init = module.initSteps(assetLoaderService)[0];
+      const init = module.initSteps()[0];
       expect(init).to.be.ok;
 
-      const initSteps = module.initSteps(assetLoaderService);
+      const initSteps = module.initSteps();
       expect(initSteps).to.have.length(1);
 
       return { configureStep: initSteps[0], module, config };
@@ -183,12 +185,12 @@ describe('BlocklistedUrls Module', () => {
 
       const module = createAndConfigureModule(blocklistConfig);
 
-      const init = module.initSteps(assetLoaderService)[0];
+      const init = module.initSteps()[0];
       loadJsonStub.resolves(blocklist(patterns));
 
       expect(init).to.be.ok;
 
-      const initSteps = module.initSteps(assetLoaderService);
+      const initSteps = module.initSteps();
       expect(initSteps).to.have.length(1);
 
       return { configureStep: initSteps[0], module, config };
@@ -273,12 +275,12 @@ describe('BlocklistedUrls Module', () => {
 
         const module = createAndConfigureModule(blocklistConfig);
 
-        const init = module.initSteps(assetLoaderService)[0];
+        const init = module.initSteps()[0];
         loadJsonStub.resolves(blocklist(patterns));
 
         expect(init).to.be.ok;
 
-        const initSteps = module.initSteps(assetLoaderService);
+        const initSteps = module.initSteps();
         expect(initSteps).to.have.length(1);
 
         return { configureStep: initSteps[0], module, config };

@@ -4,15 +4,15 @@ import sinonChai from 'sinon-chai';
 
 import { AdPipelineContext } from '../../adPipeline';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { googletag } from 'ad-tag/types/googletag';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
-import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { Confiant } from 'ad-tag/ads/modules/confiant/index';
-import { modules, Targeting } from 'ad-tag/types/moliConfig';
-import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
-import { tcfapi } from 'ad-tag/types/tcfapi';
+import { AssetLoadMethod, createAssetLoaderService } from '../../../util/assetLoaderService';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { googletag } from '../../../types/googletag';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../../../stubs/moliStubs';
+import { fullConsent, tcDataNoGdpr } from '../../../stubs/consentStubs';
+import { Confiant } from '../../../ads/modules/confiant/index';
+import { modules, Targeting } from '../../../types/moliConfig';
+import { createGoogletagStub } from '../../../stubs/googletagStubs';
+import { tcfapi } from '../../../types/tcfapi';
 import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
@@ -48,7 +48,8 @@ describe('Confiant Module', () => {
     labelConfigService: null as any,
     tcData: tcData ?? fullConsent({ '44': true }),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any)
+    auction: new GlobalAuctionContext(jsDomWindow as any),
+    assetLoaderService: assetLoaderService
   });
 
   beforeEach(() => {
@@ -75,7 +76,7 @@ describe('Confiant Module', () => {
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
 
-    const init = module.initSteps(assetLoaderService)[0];
+    const init = module.initSteps()[0];
     expect(init).to.be.ok;
 
     await init(context);
@@ -94,7 +95,7 @@ describe('Confiant Module', () => {
 
   it('should add an init step', async () => {
     const module = createAndConfigureModule();
-    const initSteps = module.initSteps(assetLoaderService);
+    const initSteps = module.initSteps();
     expect(initSteps).to.have.length(1);
     expect(initSteps[0].name).to.be.eq('confiant-init');
   });

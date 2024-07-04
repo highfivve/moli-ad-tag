@@ -49,8 +49,8 @@
  */
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityService } from './userActivityService';
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { googletag } from 'ad-tag/types/googletag';
+import { IModule, ModuleType } from '../../../types/module';
+import { googletag } from '../../../types/googletag';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -58,8 +58,8 @@ import {
   mkConfigureStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-import { AdSlot, GoogleAdManagerSlotSize, modules } from 'ad-tag/types/moliConfig';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { AdSlot, GoogleAdManagerSlotSize, modules } from '../../../types/moliConfig';
+import { MoliRuntime } from '../../../types/moliRuntime';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
  */

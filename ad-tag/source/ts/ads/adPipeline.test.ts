@@ -24,6 +24,7 @@ import SlotDefinition = MoliRuntime.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -79,7 +80,8 @@ describe('AdPipeline', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow),
+      assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
 

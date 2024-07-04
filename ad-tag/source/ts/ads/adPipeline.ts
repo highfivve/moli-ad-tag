@@ -9,6 +9,7 @@ import TCPurpose = tcfapi.responses.TCPurpose;
 import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliConfig';
+import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoaderService';
 
 /**
  * Context passed to every pipeline step.
@@ -84,6 +85,11 @@ export type AdPipelineContext = {
    * If not set, the global auction context is undefined
    */
   readonly auction: GlobalAuctionContext;
+
+  /**
+   * Takes care of loading (external) assets
+   */
+  readonly assetLoaderService: IAssetLoaderService;
 };
 
 /**
@@ -370,7 +376,8 @@ export class AdPipeline {
         tcData: consentData,
         bucket: bucketConfig,
         adUnitPathVariables: adUnitPathVariables,
-        auction: this.auction
+        auction: this.auction,
+        assetLoaderService: createAssetLoaderService(this.window)
       };
 
       this.init = this.init

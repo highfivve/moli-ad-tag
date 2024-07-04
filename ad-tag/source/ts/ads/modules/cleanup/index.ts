@@ -6,9 +6,9 @@ import {
   mkConfigureStepOncePerRequestAdsCycle,
   AdPipelineContext,
   InitStep
-} from 'ad-tag/ads/adPipeline';
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { CleanupConfig, modules } from 'ad-tag/types/moliConfig';
+} from '../../../ads/adPipeline';
+import { IModule, ModuleType } from '../../../types/module';
+import { CleanupConfig, modules } from '../../../types/moliConfig';
 
 /**
  * # Cleanup Module

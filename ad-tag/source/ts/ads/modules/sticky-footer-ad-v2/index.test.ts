@@ -24,6 +24,7 @@ import { createDom } from '../../../stubs/browserEnvSetup';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
 import { initAdSticky } from './footerStickyAd';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -51,7 +52,8 @@ const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
   labelConfigService: null as any,
   tcData: fullConsent(),
   adUnitPathVariables: {},
-  auction: new GlobalAuctionContext(jsDomWindow as any)
+  auction: new GlobalAuctionContext(jsDomWindow as any),
+  assetLoaderService: createAssetLoaderService(jsDomWindow)
 });
 
 const createAdSlotConfig = (domId: string, device: Device): SlotDefinition => {

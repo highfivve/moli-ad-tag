@@ -23,6 +23,7 @@ import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -61,7 +62,8 @@ describe('prebid', () => {
           minBidRequests: 1,
           reactivationPeriod: 1000
         }
-      })
+      }),
+      assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
 

@@ -110,7 +110,7 @@ export class YieldOptimization implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     return this._initSteps;
   }
 

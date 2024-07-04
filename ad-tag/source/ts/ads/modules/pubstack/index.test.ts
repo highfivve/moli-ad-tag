@@ -3,19 +3,19 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { Pubstack } from './index';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
-import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
+import { AssetLoadMethod, createAssetLoaderService } from '../../../util/assetLoaderService';
+import { AdPipelineContext } from '../../../ads/adPipeline';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
   noopLogger
-} from 'ad-tag/stubs/moliStubs';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
-import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { modules } from 'ad-tag/types/moliConfig';
+} from '../../../stubs/moliStubs';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { createGoogletagStub } from '../../../stubs/googletagStubs';
+import { fullConsent } from '../../../stubs/consentStubs';
+import { modules } from '../../../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -31,7 +31,7 @@ describe('Pubstack Module', () => {
   dom.window.googletag = googletagStub;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
-  const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
+  const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
 
   const adPipelineContext = (): AdPipelineContext => {
     return {
@@ -46,7 +46,8 @@ describe('Pubstack Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any)
+      auction: new GlobalAuctionContext(jsDomWindow as any),
+      assetLoaderService: assetLoaderService
     };
   };
 
@@ -70,7 +71,7 @@ describe('Pubstack Module', () => {
     it('should add an init step', async () => {
       const module = createPubstack();
       module.configure(modulesConfig);
-      const initSteps = module.initSteps(assetLoaderService);
+      const initSteps = module.initSteps();
 
       expect(initSteps).to.have.length(1);
       expect(initSteps[0].name).to.be.eq('pubstack-init');
@@ -80,7 +81,7 @@ describe('Pubstack Module', () => {
       const module = createPubstack();
       module.configure(modulesConfig);
 
-      const init = module.initSteps(assetLoaderService)[0];
+      const init = module.initSteps()[0];
       expect(init).to.be.ok;
 
       await init(adPipelineContext());
@@ -95,7 +96,7 @@ describe('Pubstack Module', () => {
         const module = createPubstack();
         const config = newEmptyConfig();
 
-        const init = module.initSteps(assetLoaderService)[0];
+        const init = module.initSteps()[0];
         expect(init).to.be.ok;
 
         await init({ ...adPipelineContext(), env: 'test' });

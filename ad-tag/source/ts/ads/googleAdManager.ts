@@ -110,7 +110,7 @@ const useStandardGpt = (
   );
 };
 
-export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
+export const gptInit = (): InitStep => {
   let result: Promise<void>;
   return mkInitStep('gpt-init', (context: AdPipelineContext) => {
     if (context.env === 'test') {
@@ -126,7 +126,7 @@ export const gptInit = (assetLoader: IAssetLoaderService): InitStep => {
         context.window.googletag.cmd = context.window.googletag.cmd || [];
         context.window.googletag.cmd.push(resolve);
 
-        assetLoader
+        context.assetLoaderService
           .loadScript({
             name: 'gpt',
             loadMethod: AssetLoadMethod.TAG,

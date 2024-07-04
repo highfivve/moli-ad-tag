@@ -61,7 +61,8 @@ describe('a9', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow),
+      assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
 

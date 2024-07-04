@@ -30,16 +30,16 @@
  *
  * @module
  */
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { IModule, ModuleType } from '../../../types/module';
+import { AssetLoadMethod } from '../../../util/assetLoaderService';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from 'ad-tag/ads/adPipeline';
-import { modules } from 'ad-tag/types/moliConfig';
+} from '../../../ads/adPipeline';
+import { modules } from '../../../types/moliConfig';
 
 /**
  * ## Confiant Ad Fraud Protection
@@ -66,18 +66,12 @@ export class Confiant implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     const config = this.confiantConfig;
-    return config
-      ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, assetLoaderService, config))]
-      : [];
+    return config ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, config))] : [];
   }
 
-  loadConfiant(
-    context: AdPipelineContext,
-    assetLoaderService: IAssetLoaderService,
-    config: modules.confiant.ConfiantConfig
-  ): Promise<void> {
+  loadConfiant(context: AdPipelineContext, config: modules.confiant.ConfiantConfig): Promise<void> {
     // test environment doesn't require confiant
     if (context.env === 'test') {
       return Promise.resolve();
@@ -93,7 +87,7 @@ export class Confiant implements IModule {
     ) {
       return Promise.resolve();
     }
-    assetLoaderService
+    context.assetLoaderService
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,

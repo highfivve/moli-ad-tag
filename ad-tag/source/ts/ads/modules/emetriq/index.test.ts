@@ -59,7 +59,8 @@ describe('Emetriq Module', () => {
       labelConfigService: null as any,
       tcData: tcDataWithConsent,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any)
+      auction: new GlobalAuctionContext(jsDomWindow as any),
+      assetLoaderService: assetLoaderService
     };
   };
 
@@ -74,7 +75,7 @@ describe('Emetriq Module', () => {
   it('should add an init and a configure step', async () => {
     const module = createEmetriq();
     module.configure(modulesConfig);
-    const initSteps = module.initSteps(assetLoaderService);
+    const initSteps = module.initSteps();
     const configureSteps = module.configureSteps();
 
     expect(initSteps).to.have.length(1);
@@ -87,7 +88,7 @@ describe('Emetriq Module', () => {
     it('should execute nothing in test mode', async () => {
       const module = createEmetriq();
       module.configure(modulesConfig);
-      const initSteps = module.initSteps(assetLoaderService);
+      const initSteps = module.initSteps();
 
       const step = initSteps[0];
       expect(step).to.be.ok;
@@ -100,7 +101,7 @@ describe('Emetriq Module', () => {
     it('should execute nothing if consent is not provided', async () => {
       const module = createEmetriq();
       module.configure(modulesConfig);
-      const initSteps = module.initSteps(assetLoaderService);
+      const initSteps = module.initSteps();
 
       const step = initSteps[0];
       expect(step).to.be.ok;
@@ -153,7 +154,7 @@ describe('Emetriq Module', () => {
       it(`load emetriq if gdpr ${
         context.tcData.gdprApplies ? 'applies' : 'does not apply'
       }`, async () => {
-        await module.loadEmetriqScript(context, webConfig, {}, {}, assetLoaderService);
+        await module.loadEmetriqScript(context, webConfig, {}, {});
 
         expect(loadScriptStub).to.have.been.calledOnceWithExactly({
           name: module.name,
@@ -184,7 +185,7 @@ describe('Emetriq Module', () => {
 
       const module = createEmetriq();
       module.configure(modulesConfig);
-      await module.loadEmetriqScript(adPipelineContext(), webConfig, {}, {}, assetLoaderService);
+      await module.loadEmetriqScript(adPipelineContext(), webConfig, {}, {});
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
       expect(jsDomWindow._enqAdpParam).to.be.deep.eq(webConfig._enqAdpParam);
@@ -220,8 +221,7 @@ describe('Emetriq Module', () => {
           id_liveramp: '567',
           id_id5: '1010'
         },
-        {},
-        assetLoaderService
+        {}
       );
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
@@ -258,8 +258,7 @@ describe('Emetriq Module', () => {
         {
           c_iabV3Ids: 'override',
           c_new: 'new'
-        },
-        assetLoaderService
+        }
       );
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;

@@ -145,7 +145,7 @@ export class Emetriq implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     const config = this.emetriqConfig;
     return config
       ? [
@@ -168,13 +168,7 @@ export class Emetriq implements IModule {
             Emetriq.syncDelay(ctx, config.syncDelay).then(additionalIdentifier => {
               switch (config.os) {
                 case 'web':
-                  this.loadEmetriqScript(
-                    ctx,
-                    config,
-                    additionalIdentifier,
-                    customParams,
-                    assetLoaderService
-                  );
+                  this.loadEmetriqScript(ctx, config, additionalIdentifier, customParams);
                   break;
               }
             });
@@ -241,8 +235,7 @@ export class Emetriq implements IModule {
     context: AdPipelineContext,
     webConfig: modules.emetriq.EmetriqWebConfig,
     additionalIdentifier: EmetriqAdditionalIdentifier,
-    additionalCustomParams: EmetriqCustomParams,
-    assetLoaderService: IAssetLoaderService
+    additionalCustomParams: EmetriqCustomParams
   ): Promise<void> {
     const window = context.window as EmetriqWindow;
     window._enqAdpParam = {
@@ -251,7 +244,7 @@ export class Emetriq implements IModule {
       ...additionalCustomParams
     };
 
-    return assetLoaderService
+    return context.assetLoaderService
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,

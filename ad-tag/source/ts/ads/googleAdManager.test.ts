@@ -59,7 +59,8 @@ describe('google ad manager', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow),
+      assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -103,12 +104,12 @@ describe('google ad manager', () => {
 
   describe('gptInit', () => {
     it('should not load anything in test mode', async () => {
-      const step = gptInit(assetLoaderService);
+      const step = gptInit();
       await step(adPipelineContext('test'));
       expect(loadScriptStub).not.been.called;
     });
     it('should set the window.googletag', async () => {
-      const step = gptInit(assetLoaderService);
+      const step = gptInit();
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;
 
@@ -120,7 +121,7 @@ describe('google ad manager', () => {
     });
 
     it('should set the window.google only once', async () => {
-      const step = gptInit(assetLoaderService);
+      const step = gptInit();
       (dom.window as any).googletag = undefined;
       expect(dom.window.googletag).to.be.undefined;
 

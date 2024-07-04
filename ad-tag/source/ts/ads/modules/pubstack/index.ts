@@ -20,8 +20,8 @@
  *
  * @module
  */
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { IModule, ModuleType } from '../../../types/module';
+import { AssetLoadMethod } from '../../../util/assetLoaderService';
 import {
   ConfigureStep,
   InitStep,
@@ -29,7 +29,7 @@ import {
   mkInitStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-import { modules } from 'ad-tag/types/moliConfig';
+import { modules } from '../../../types/moliConfig';
 
 /**
  * ## Pubstack Analytics
@@ -55,7 +55,7 @@ export class Pubstack implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     const config = this.pubstackConfig;
     return config
       ? [
@@ -64,7 +64,7 @@ export class Pubstack implements IModule {
               return Promise.resolve();
             }
             // load the pubstack script
-            assetLoaderService
+            ctx.assetLoaderService
               .loadScript({
                 name: 'pubstack',
                 loadMethod: AssetLoadMethod.TAG,

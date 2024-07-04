@@ -36,7 +36,7 @@ export interface IModule {
   /**
    * Returns a list of steps that should be executed in the ad pipeline.
    */
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[];
+  initSteps(): InitStep[];
 
   /**
    * Returns a list of steps that should be executed in the ad pipeline.

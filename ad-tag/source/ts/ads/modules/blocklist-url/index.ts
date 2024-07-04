@@ -122,7 +122,7 @@ export class BlocklistedUrls implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     const config = this.blocklistConfig;
     return config
       ? [
@@ -133,7 +133,7 @@ export class BlocklistedUrls implements IModule {
                 const value = this.blocklistConfig.isBlocklistedValue || 'true';
                 return this.getBlocklist(
                   this.blocklistConfig.blocklist,
-                  assetLoaderService,
+                  ctx.assetLoaderService,
                   ctx.logger
                 )().then(blocklist => {
                   if (this.isBlocklisted(blocklist, ctx.window.location.href, ctx.logger)) {
@@ -145,7 +145,7 @@ export class BlocklistedUrls implements IModule {
               case 'block':
                 return this.getBlocklist(
                   this.blocklistConfig.blocklist,
-                  assetLoaderService,
+                  ctx.assetLoaderService,
                   ctx.logger
                 )().then(blocklist => {
                   ctx.logger.debug(this.name, 'using blocklist', blocklist);
@@ -181,7 +181,6 @@ export class BlocklistedUrls implements IModule {
             return matched;
           } catch (e) {
             log.error(this.name, `Invalid pattern ${pattern}`, e);
-            console.log(this.name, `Invalid pattern ${pattern}`, e);
             return false;
           }
       }

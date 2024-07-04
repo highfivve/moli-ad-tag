@@ -28,17 +28,17 @@
  *
  * @module
  */
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { ATS } from 'ad-tag/types/identitylink';
-import { modules } from 'ad-tag/types/moliConfig';
+import { IModule, ModuleType } from '../../../types/module';
+import { ATS } from '../../../types/identitylink';
+import { modules } from '../../../types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from 'ad-tag/ads/adPipeline';
-import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+} from '../../../ads/adPipeline';
+import { AssetLoadMethod } from '../../../util/assetLoaderService';
 
 /**
  * # IdentityLink Module
@@ -68,13 +68,13 @@ export class IdentityLink implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     const config = this.identityLinkConfig;
     return config
       ? [
           mkInitStep(this.name, ctx => {
             // async loading - prebid takes care of auction delay
-            this.loadAts(ctx, assetLoaderService, config);
+            this.loadAts(ctx, config);
             return Promise.resolve();
           })
         ]
@@ -91,7 +91,6 @@ export class IdentityLink implements IModule {
 
   loadAts(
     context: AdPipelineContext,
-    assetLoaderService: IAssetLoaderService,
     moduleConfig: modules.identitylink.IdentityLinkModuleConfig
   ): Promise<void> {
     // test environment doesn't require confiant
@@ -115,7 +114,7 @@ export class IdentityLink implements IModule {
       });
     });
 
-    return assetLoaderService
+    return context.assetLoaderService
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,

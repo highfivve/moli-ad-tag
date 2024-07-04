@@ -22,9 +22,6 @@ describe('Yield Optimization module', () => {
   let dom = createDom();
   let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
 
-  // unused
-  const assetLoader = createAssetLoaderService(jsDomWindow);
-
   const adUnitId = 'adUnit1';
   const yieldConfig: StaticYieldOptimizationConfig = {
     enabled: true,
@@ -82,7 +79,7 @@ describe('Yield Optimization module', () => {
   describe('init step', () => {
     it('should add yield-optimization optimization step', async () => {
       const module = createConfiguredModule();
-      let initSteps = module.initSteps(assetLoader);
+      let initSteps = module.initSteps();
 
       expect(initSteps).to.have.length(1);
       expect(initSteps.map(e => e.name)).to.include('yield-optimization-init');

@@ -64,8 +64,8 @@
  *
  * @module
  */
-import { modules } from 'ad-tag/types/moliConfig';
-import { IModule, ModuleType } from 'ad-tag/types/module';
+import { modules } from '../../../types/moliConfig';
+import { IModule, ModuleType } from '../../../types/module';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -73,17 +73,17 @@ import {
   mkConfigureStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from 'ad-tag/ads/adPipeline';
-import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { isNotNull } from 'ad-tag/util/arrayUtils';
-import { sendAdvertisingID } from 'ad-tag/ads/modules/adex/sendAdvertisingId';
-import { tcfapi } from 'ad-tag/types/tcfapi';
+} from '../../../ads/adPipeline';
+import { AssetLoadMethod } from '../../../util/assetLoaderService';
+import { isNotNull } from '../../../util/arrayUtils';
+import { sendAdvertisingID } from '../../../ads/modules/adex/sendAdvertisingId';
+import { tcfapi } from '../../../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import {
   toAdexListType,
   toAdexMapType,
   toAdexStringOrNumberType
-} from 'ad-tag/ads/modules/adex/adex-mapping';
+} from '../../../ads/modules/adex/adex-mapping';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -178,12 +178,10 @@ export class AdexModule implements IModule {
     }
   }
 
-  initSteps(assetLoaderService: IAssetLoaderService): InitStep[] {
+  initSteps(): InitStep[] {
     const config = this.adexConfig;
     if (config) {
-      return [
-        mkInitStep('DMP module setup', context => this.track(context, assetLoaderService, config))
-      ];
+      return [mkInitStep('DMP module setup', context => this.track(context, config))];
     }
     return [];
   }
@@ -208,11 +206,7 @@ export class AdexModule implements IModule {
    * - key/value targeting is empty
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
-  public track(
-    context: AdPipelineContext,
-    assetLoaderService: IAssetLoaderService,
-    adexConfig: modules.adex.AdexConfig
-  ): Promise<void> {
+  public track(context: AdPipelineContext, adexConfig: modules.adex.AdexConfig): Promise<void> {
     const { adexCustomerId, adexTagId, mappingDefinitions, spaMode, appConfig } = adexConfig;
     this.configureAdexC(context, adexConfig);
     const adexKeyValues = this.getAdexKeyValues(context, adexConfig);
@@ -250,7 +244,7 @@ export class AdexModule implements IModule {
             consentString
           );
       } else {
-        assetLoaderService
+        context.assetLoaderService
           .loadScript({
             name: this.name,
             assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
