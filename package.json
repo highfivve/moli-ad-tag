@@ -9,9 +9,10 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && npx rollup --config rollup.console.config.mjs",
+    "build": "tsc -p tsconfig.build.json && npm run build:bundle:all && npm run build:console",
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "build:console": "npx rollup --config rollup.console.config.mjs",
+    "build:bundle:all": "npx ts-node bundle.ts --config bundles/all.json",
     "clean": "rm -rf lib",
     "setup": "npm run clean && npm ci --engine-strict && npm run codeGen && npm run build",
     "start": "npm run watch",
@@ -49,6 +50,7 @@
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.2",
     "@babel/preset-react": "^7.24.7",
+    "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
@@ -75,6 +77,7 @@
     "chai-as-promised": "^7.1.1",
     "commander": "^12.1.0",
     "cssnano": "^5.0.2",
+    "esbuild": "^0.23.0",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-jsdoc": "^34.8.1",

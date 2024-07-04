@@ -13,7 +13,8 @@
 import fs from 'fs';
 import path from 'path';
 import { program } from 'commander';
-import { execSync } from 'node:child_process';
+import * as esbuild from 'esbuild';
+import packageJson from './package.json';
 
 type OptionsValues = {
   /**
@@ -25,9 +26,14 @@ type OptionsValues = {
   readonly failAfterWarnings: boolean;
 
   /**
+   * @see https://esbuild.github.io/api/#target for possible values
+   */
+  readonly target: string[];
+
+  /**
    * the format of the output file. Will be passed to rollup to override the default
    */
-  readonly format: 'es' | 'iife'
+  readonly format: 'esm' | 'iife' | 'cjs';
 };
 
 type BundleConfig = {
@@ -41,12 +47,26 @@ const command = program
   .name('bundler')
   .description('Create a bundle from the given modules.json file and the given output file')
   .version('1.0.0')
-  .option('-m, --modules [modules...]', 'a list of modules that should be part of the ad tag bundle. The order of the modules is important. The `bundle/configureFromEndpoint` module must always be last. The config option will be ignored if modules are specified')
+  .option(
+    '-f, --format <format>',
+    'the format of the output file. Will be passed to esbuild to override the default (esm). Allowed values are esm, iife, cjs',
+    'esm'
+  )
+  .option(
+    '-m, --modules [modules...]',
+    'a list of modules that should be part of the ad tag bundle. The order of the modules is important. The `bundle/configureFromEndpoint` module must always be last. The config option will be ignored if modules are specified'
+  )
   .option(
     '-c, --config <config>',
     'file containing the modules that should be part of the ad tag bundle',
     value => path.join(__dirname, value)
   )
+  .option(
+    '-t, --target [target...]',
+    'the target of the output file. Will be passed to esbuild to override the default (es6).',
+    ['es6']
+  )
+  .option('-o, --output <output>', 'the output file of the bundle', 'dist/bundle.js')
   .option(
     '--failAfterWarnings <value>',
     'if set, rollup will fail if there are any warnings',
@@ -67,11 +87,11 @@ const loadConfigFile = (): BundleConfig | null => {
     }
   }
   return null;
-}
+};
 
 const buildBundleConfig = (): BundleConfig => {
   const bundleConfig = {
-    modules: [ 'init' ]
+    modules: ['init']
   };
 
   const bundleConfigFromFile = loadConfigFile();
@@ -81,38 +101,44 @@ const buildBundleConfig = (): BundleConfig => {
     console.log(`Appending ${options.modules.length} modules to the bundle from cli param`);
     bundleConfig.modules.push(...options.modules);
   } else if (bundleConfigFromFile) {
-    console.log(`Appending ${bundleConfigFromFile.modules.length} modules to the bundle from config`);
+    console.log(
+      `Appending ${bundleConfigFromFile.modules.length} modules to the bundle from config`
+    );
     bundleConfig.modules.push(...bundleConfigFromFile.modules);
   } else {
     program.error('No modules or config file specified');
   }
-  return bundleConfig
-}
+  return bundleConfig;
+};
 
 const bundleConfig = buildBundleConfig();
 
-console.log('Selected modules:', bundleConfig.modules);
+console.log(packageJson);
+console.log('Selected modules:', bundleConfig.modules.join(', '));
+console.log('Moli Library Version:', packageJson.version);
 
 const moduleImports = bundleConfig.modules.map(module => `import './${module}';`).join('\n');
 
 // generate entrypoint file
 const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', 'bundle.ts');
-fs.writeFileSync(entrypoint, [ '// modules', moduleImports ].join('\n'));
+fs.writeFileSync(entrypoint, ['// modules', moduleImports].join('\n'));
 
 try {
   // cleanup previous bundles
   fs.rmSync(path.join(__dirname, 'dist'), { recursive: true, force: true });
 
-  const cmd: string[] = [
-    'npx',
-    'rollup',
-    entrypoint,
-    '-c',
-    ...(options.failAfterWarnings ? [ '--failAfterWarnings' ] : [])
-  ];
-  // bundle entrypoint file
-  execSync(cmd.join(' '), {
-    stdio: 'inherit'
+  esbuild.buildSync({
+    entryPoints: [entrypoint],
+    tsconfig: 'tsconfig.build.json',
+    bundle: true,
+    minify: true,
+    target: options.target,
+    outfile: options.output,
+    format: options.format,
+    platform: 'browser',
+    banner: {
+      js: `/* ad tag library ${packageJson.version} by highfivve.com */`
+    }
   });
 } finally {
   // cleanup

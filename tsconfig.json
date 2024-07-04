@@ -25,5 +25,10 @@
     }
   },
   "include": ["ad-tag/source/**/*"],
-  "exclude": ["node_modules", "**/lib", "tests"]
+  "exclude": ["node_modules", "**/lib", "tests"],
+  "ts-node": {
+    "compilerOptions": {
+      "resolveJsonModule": true
+    }
+  }
 }

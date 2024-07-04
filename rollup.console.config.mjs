@@ -6,7 +6,18 @@ import terser from '@rollup/plugin-terser';
 import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
 
-
+/**
+ * Why do we have a different bundler for the moli console?
+ * Well, esbuild generates properly minified code with all classes and functions minified, which rollup and terser
+ * somehow cannot do.
+ *
+ * What esbuild is not capable of is to inject the CSS into the JS file, so we need to use rollup for that.
+ * There are some and unmaintained plugins for esbuild that may be able to do that, but they are barely used.
+ * ESBuild's take on this is to load the CSS from somewhere else. Sure, we could do that, but that means a separate
+ * file and url that we need to manage.
+ *
+ * @type {import('rollup').RollupOptions}
+ */
 export default [
   {
     input: 'ad-tag/source/ts/console/debug.tsx',
