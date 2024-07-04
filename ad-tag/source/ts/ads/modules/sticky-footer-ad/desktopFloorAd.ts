@@ -1,6 +1,6 @@
-import { googletag, MoliRuntime } from '@highfivve/ad-tag';
-import { Moli } from '@highfivve/ad-tag/source/ts';
-import Environment = Moli.Environment;
+import { googletag } from 'ad-tag/types/googletag';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { Environment } from 'ad-tag/types/moliConfig';
 
 const closeButtonDataRef = 'footer-ad-close-button';
 const containerDataRefSelector = '[data-ref=h5-footer-ad-container]';

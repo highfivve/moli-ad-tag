@@ -1192,6 +1192,28 @@ export namespace modules {
     }
   }
 
+  export namespace stickyFooterAd {
+    export type StickyFooterAdConfig = {
+      readonly enabled: boolean;
+      readonly mobileStickyDomId?: string;
+      readonly desktopFloorAdDomId?: string;
+      /**
+       * Disable rendering the footer ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       *
+       */
+      readonly disallowedAdvertiserIds: number[];
+
+      /**
+       * Only applies to the mobile sticky ad. If true, the mobile sticky ad will remain hidden if initialized and only
+       * set to `display: block` if an actual ad renders.
+       *
+       * Default is `false`
+       */
+      readonly initiallyHidden?: boolean;
+    };
+  }
+
   export namespace stickyFooterAdV2 {
     export type StickyFooterAdConfig = {
       readonly enabled: boolean;
@@ -1745,6 +1767,7 @@ export namespace modules {
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
+    readonly stickyFooterAd?: stickyFooterAd.StickyFooterAdConfig;
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
   }
