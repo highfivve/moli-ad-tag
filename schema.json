@@ -136,23 +136,6 @@
       ],
       "type": "object"
     },
-    "DataKeyValue": {
-      "additionalProperties": false,
-      "description": "Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the Zeotap request URL.\n\nFor example, if you want to transfer a key/value pair with the key `xyz` to Zeotap under the name `abc`, the respective DataKeyValue object would be:\n\n```ts const transferXyz: DataKeyValue = {   keyValueKey: 'xyz',   parameterKey: 'abc' } ```ts",
-      "properties": {
-        "keyValueKey": {
-          "type": "string"
-        },
-        "parameterKey": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "keyValueKey",
-        "parameterKey"
-      ],
-      "type": "object"
-    },
     "EmetriqAdditionalIdentifier": {
       "additionalProperties": false,
       "description": "Configure additional identifiers",
@@ -267,35 +250,6 @@
       "required": [
         "sid"
       ],
-      "type": "object"
-    },
-    "ExclusionKeyValue": {
-      "additionalProperties": false,
-      "description": "Used to specify key/value pairs that will disable data collection (i.e. disable loading the Zeotap script).\n\nFor example, if you want to disable data collection on sensitive content like medical content, the respective ExclusionKeyValue object could look like this:\n\n```ts const excludeMedical: ExclusionKeyValue = {   keyValueKey: 'contentType',   disableOnValue: 'MedicalTopic' } ```",
-      "properties": {
-        "disableOnValue": {
-          "type": "string"
-        },
-        "keyValueKey": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "keyValueKey",
-        "disableOnValue"
-      ],
-      "type": "object"
-    },
-    "FooterDomIds": {
-      "additionalProperties": false,
-      "properties": {
-        "desktop": {
-          "type": "string"
-        },
-        "mobile": {
-          "type": "string"
-        }
-      },
       "type": "object"
     },
     "GoogleAdManagerKeyValueMap": {
@@ -2520,6 +2474,24 @@
       ],
       "type": "object"
     },
+    "modules.stickyFooterAdV2.FooterDomIds": {
+      "additionalProperties": false,
+      "properties": {
+        "android": {
+          "type": "string"
+        },
+        "desktop": {
+          "type": "string"
+        },
+        "ios": {
+          "type": "string"
+        },
+        "mobile": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "modules.stickyFooterAdV2.StickyFooterAdConfig": {
       "additionalProperties": false,
       "properties": {
@@ -2537,7 +2509,7 @@
           "type": "boolean"
         },
         "stickyFooterDomIds": {
-          "$ref": "#/definitions/FooterDomIds"
+          "$ref": "#/definitions/modules.stickyFooterAdV2.FooterDomIds"
         }
       },
       "required": [
@@ -2664,6 +2636,40 @@
       ],
       "type": "string"
     },
+    "modules.zeotap.DataKeyValue": {
+      "additionalProperties": false,
+      "description": "Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the Zeotap request URL.\n\nFor example, if you want to transfer a key/value pair with the key `xyz` to Zeotap under the name `abc`, the respective DataKeyValue object would be:\n\n```ts const transferXyz: DataKeyValue = {   keyValueKey: 'xyz',   parameterKey: 'abc' } ```ts",
+      "properties": {
+        "keyValueKey": {
+          "type": "string"
+        },
+        "parameterKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "keyValueKey",
+        "parameterKey"
+      ],
+      "type": "object"
+    },
+    "modules.zeotap.ExclusionKeyValue": {
+      "additionalProperties": false,
+      "description": "Used to specify key/value pairs that will disable data collection (i.e. disable loading the Zeotap script).\n\nFor example, if you want to disable data collection on sensitive content like medical content, the respective ExclusionKeyValue object could look like this:\n\n```ts const excludeMedical: ExclusionKeyValue = {   keyValueKey: 'contentType',   disableOnValue: 'MedicalTopic' } ```",
+      "properties": {
+        "disableOnValue": {
+          "type": "string"
+        },
+        "keyValueKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "keyValueKey",
+        "disableOnValue"
+      ],
+      "type": "object"
+    },
     "modules.zeotap.ZeotapModuleConfig": {
       "additionalProperties": false,
       "properties": {
@@ -2678,7 +2684,7 @@
         "dataKeyValues": {
           "description": "Specifies which keys to extract from moli's targeting (key/value pairs) and which key then to use to transfer the extracted data in the Zeotap request URL.",
           "items": {
-            "$ref": "#/definitions/DataKeyValue"
+            "$ref": "#/definitions/modules.zeotap.DataKeyValue"
           },
           "type": "array"
         },
@@ -2689,7 +2695,7 @@
         "exclusionKeyValues": {
           "description": "Specifies which key/value pairs should prevent the Zeotap script from being loaded, e.g. to prevent data collection in pages with sensitive topics such as medical/health content.",
           "items": {
-            "$ref": "#/definitions/ExclusionKeyValue"
+            "$ref": "#/definitions/modules.zeotap.ExclusionKeyValue"
           },
           "type": "array"
         },

@@ -47,56 +47,19 @@
  */
 import TCDataNoGDPR = tcfapi.responses.TCDataNoGDPR;
 import TCDataWithGDPR = tcfapi.responses.TCDataWithGDPR;
-import { GoogleAdManagerKeyValueMap, modules } from '../../../types/moliConfig';
+import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
 import {
   InitStep,
   ConfigureStep,
   PrepareRequestAdsStep,
   mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep
-} from '../../../ads/adPipeline';
-import { AssetLoadMethod, IAssetLoaderService } from '../../../util/assetLoaderService';
-import { tcfapi } from '../../../types/tcfapi';
-import { IModule, ModuleType } from '../../../types/module';
-import { MoliRuntime } from '../../../types/moliRuntime';
-import { MoliConfig } from '../../../types/moliConfig';
-
-/**
- * Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the
- * Zeotap request URL.
- *
- * For example, if you want to transfer a key/value pair with the key `xyz` to Zeotap under the name `abc`, the
- * respective DataKeyValue object would be:
- *
- * ```ts
- * const transferXyz: DataKeyValue = {
- *   keyValueKey: 'xyz',
- *   parameterKey: 'abc'
- * }
- * ```ts
- */
-export type DataKeyValue = {
-  keyValueKey: string;
-  parameterKey: string;
-};
-
-/**
- * Used to specify key/value pairs that will disable data collection (i.e. disable loading the Zeotap script).
- *
- * For example, if you want to disable data collection on sensitive content like medical content, the respective
- * ExclusionKeyValue object could look like this:
- *
- * ```ts
- * const excludeMedical: ExclusionKeyValue = {
- *   keyValueKey: 'contentType',
- *   disableOnValue: 'MedicalTopic'
- * }
- * ```
- */
-export type ExclusionKeyValue = {
-  keyValueKey: string;
-  disableOnValue: string;
-};
+} from 'ad-tag/ads/adPipeline';
+import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { tcfapi } from 'ad-tag/types/tcfapi';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { MoliConfig } from 'ad-tag/types/moliConfig';
 
 /**
  * # Zeotap / ID+
@@ -240,7 +203,7 @@ export class Zeotap implements IModule {
    * Make a param=value pair string from a DataKeyValue object.
    */
   private parameterFromKeyValue = (
-    kv: DataKeyValue,
+    kv: modules.zeotap.DataKeyValue,
     keyValuesMap: Map<string, string | Array<string>>
   ): string => {
     const value = keyValuesMap.get(kv.keyValueKey);
@@ -256,7 +219,7 @@ export class Zeotap implements IModule {
    * Check if the key/values map from the moli config contains the given ExclusionKeyValue.
    */
   private isExclusionKeyValueSet = (
-    kv: ExclusionKeyValue,
+    kv: modules.zeotap.ExclusionKeyValue,
     keyValuesMap: Map<string, string | Array<string>>
   ): boolean => {
     const value = keyValuesMap.get(kv.keyValueKey);

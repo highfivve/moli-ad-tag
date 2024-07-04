@@ -21,21 +21,17 @@
  *
  * @module
  */
-import { IModule, ModuleType } from '../../../types/module';
+import { IModule, ModuleType } from 'ad-tag/types/module';
 import {
   ConfigureStep,
   InitStep,
   LOW_PRIORITY,
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
-} from '../../../ads/adPipeline';
-import { modules } from '../../../types/moliConfig';
+} from 'ad-tag/ads/adPipeline';
+import { modules } from 'ad-tag/types/moliConfig';
 
 import { initAdSticky } from './footerStickyAd';
-
-export type Device = 'mobile' | 'desktop';
-
-export type FooterDomIds = { [device in Device]?: string };
 
 /**
  * ## Sticky Footer Ads

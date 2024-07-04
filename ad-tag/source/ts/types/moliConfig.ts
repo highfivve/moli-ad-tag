@@ -3,8 +3,6 @@ import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
-import { DataKeyValue, ExclusionKeyValue } from '../ads/modules/zeotap';
-import { FooterDomIds } from '../ads/modules/sticky-footer-ad-v2';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -1216,6 +1214,8 @@ export namespace modules {
   }
 
   export namespace stickyFooterAdV2 {
+    export type FooterDomIds = { [device in Device]?: string };
+
     export type StickyFooterAdConfig = {
       readonly enabled: boolean;
       readonly stickyFooterDomIds: FooterDomIds;
@@ -1755,6 +1755,43 @@ export namespace modules {
   }
 
   export namespace zeotap {
+    /**
+     * Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the
+     * Zeotap request URL.
+     *
+     * For example, if you want to transfer a key/value pair with the key `xyz` to Zeotap under the name `abc`, the
+     * respective DataKeyValue object would be:
+     *
+     * ```ts
+     * const transferXyz: DataKeyValue = {
+     *   keyValueKey: 'xyz',
+     *   parameterKey: 'abc'
+     * }
+     * ```ts
+     */
+    export type DataKeyValue = {
+      keyValueKey: string;
+      parameterKey: string;
+    };
+
+    /**
+     * Used to specify key/value pairs that will disable data collection (i.e. disable loading the Zeotap script).
+     *
+     * For example, if you want to disable data collection on sensitive content like medical content, the respective
+     * ExclusionKeyValue object could look like this:
+     *
+     * ```ts
+     * const excludeMedical: ExclusionKeyValue = {
+     *   keyValueKey: 'contentType',
+     *   disableOnValue: 'MedicalTopic'
+     * }
+     * ```
+     */
+    export type ExclusionKeyValue = {
+      keyValueKey: string;
+      disableOnValue: string;
+    };
+
     export interface ZeotapModuleConfig extends IModuleConfig {
       /**
        * Points to the Zeotap script, containing only env, eventType and zdid parameters. The other parameters (country
