@@ -30,16 +30,16 @@
  *
  * @module
  */
-import { IModule, ModuleType } from '../../../types/module';
-import { AssetLoadMethod } from '../../../util/assetLoaderService';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from '../../../ads/adPipeline';
-import { modules } from '../../../types/moliConfig';
+} from 'ad-tag/ads/adPipeline';
+import { modules } from 'ad-tag/types/moliConfig';
 
 /**
  * ## Confiant Ad Fraud Protection
