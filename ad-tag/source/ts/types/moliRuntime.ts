@@ -140,7 +140,7 @@ export namespace MoliRuntime {
      * @param config the ad configuration
      * @returns a promise which resolves when the content of all eagerly initialized slots are loaded
      */
-    configure(config: MoliConfig): void;
+    configure(config: MoliConfig): Promise<MoliRuntime.state.IStateMachine | null>;
 
     /**
      * Start requesting ads as soon as the tag has been configured.

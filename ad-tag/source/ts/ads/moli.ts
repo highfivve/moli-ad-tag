@@ -250,7 +250,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
-  function configure(config: MoliConfig): void {
+  function configure(config: MoliConfig): Promise<MoliRuntime.state.IStateMachine | null> {
     switch (state.state) {
       case 'configurable': {
         const shouldInitialize = state.initialize;
@@ -276,10 +276,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           modules: modules
         };
 
-        if (shouldInitialize) {
-          requestAds();
+        if (shouldInitialize || config.requestAds !== false) {
+          return requestAds();
         }
-        break;
+        return Promise.resolve(state);
       }
       case 'configured': {
         getLogger(state.runtimeConfig, window).error(
@@ -287,21 +287,21 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           'Trying to configure moli tag twice. Already configured.',
           state.config
         );
-        break;
+        return Promise.resolve(state);
       }
       case 'requestAds': {
         getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to configure moli tag twice. Already requesting ads.'
         );
-        break;
+        return Promise.resolve(state);
       }
       case 'finished': {
         getLogger(state.runtimeConfig, window).error(
           'MoliGlobal',
           'Trying to configure moli tag twice. Already finished.'
         );
-        break;
+        return Promise.resolve(state);
       }
       case 'error': {
         getLogger(state.runtimeConfig, window).error(
@@ -309,9 +309,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           'Trying to configure moli tag twice. Already finished, but with an error.',
           state.error
         );
-        break;
+        return Promise.resolve(state);
       }
     }
+    return Promise.resolve(null);
   }
 
   function requestAds(): Promise<

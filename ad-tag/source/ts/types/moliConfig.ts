@@ -1871,6 +1871,19 @@ export interface MoliConfig {
   readonly adServer?: AdServer;
 
   /**
+   * If set to true, ads will immediately requested after the ad tag is loaded.
+   * This is usually called `instant` mode. If no provided the default is `true`.
+   *
+   * Set this to `false` if the publisher calls `moli.requestAds()` on their and, because they need to
+   *
+   * 1. configure additional parameters via the `set*` and `add*` API on the `moli` global
+   * 2. want to defer ad loading to a certain point
+   *
+   * We call this the `publisherMode`
+   */
+  readonly requestAds?: boolean;
+
+  /**
    * Set the domain on which this ad tag runs. This should be the "top private domain", which is the `subdomain` + `public prefix`.
    * The notion "top private domain" comes from the Google Guava library.
    *

@@ -1416,6 +1416,29 @@ describe('moli', () => {
     });
   });
 
+  describe('configure', () => {
+    it('should call requestAds if config contains requestAds === true', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const result = await adTag.configure({ ...defaultConfig, requestAds: true });
+      expect(result).to.be.ok;
+      expect(result?.state).to.be.eq('finished');
+    });
+
+    it('should call requestAds if config contains requestAds === undefined', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const result = await adTag.configure({ ...defaultConfig, requestAds: undefined });
+      expect(result).to.be.ok;
+      expect(result?.state).to.be.eq('finished');
+    });
+
+    it('should call requestAds if config contains requestAds === false', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const result = await adTag.configure({ ...defaultConfig, requestAds: false });
+      expect(result).to.be.ok;
+      expect(result?.state).to.be.eq('configured');
+    });
+  });
+
   describe('requestAds', () => {
     describe('configurable state', () => {
       it('should add localhost as domain label in config', async () => {
