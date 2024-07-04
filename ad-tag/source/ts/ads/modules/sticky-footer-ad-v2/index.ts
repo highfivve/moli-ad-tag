@@ -73,10 +73,10 @@ export class StickyFooterAdsV2 implements IModule {
           mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
             // determine the slot to init sticky ad for
             const desktopSlot = slots.find(
-              slot => slot.moliSlot.domId === this.stickyFooterAdConfig?.stickyFooterDomIds.desktop
+              slot => slot.moliSlot.domId === config.stickyFooterDomIds.desktop
             );
             const mobileSlot = slots.find(
-              slot => slot.moliSlot.domId === this.stickyFooterAdConfig?.stickyFooterDomIds.mobile
+              slot => slot.moliSlot.domId === config.stickyFooterDomIds.mobile
             );
             // mobile traffic is usually a lot higher than desktop, so we opt for mobile as default if both are set.
             // this is usually a configuration error in the ad tag and should not happen
@@ -85,14 +85,14 @@ export class StickyFooterAdsV2 implements IModule {
               ctx.logger.warn(this.name, 'mobile and desktop sticky footer are called!');
             }
 
-            if (footerAdSlot && this.stickyFooterAdConfig) {
+            if (footerAdSlot) {
               initAdSticky(
                 ctx.window,
                 ctx.env,
                 ctx.logger,
                 footerAdSlot.moliSlot.domId,
-                this.stickyFooterAdConfig.disallowedAdvertiserIds,
-                this.stickyFooterAdConfig.closingButtonText
+                config.disallowedAdvertiserIds,
+                config.closingButtonText
               );
             }
             return Promise.resolve();
