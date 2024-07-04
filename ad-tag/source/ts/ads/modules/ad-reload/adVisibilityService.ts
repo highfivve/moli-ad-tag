@@ -1,8 +1,6 @@
 import { UserActivityService } from './userActivityService';
 import { googletag } from 'ad-tag/types/googletag';
-import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
 import { modules } from 'ad-tag/types/moliConfig';
-import RefreshIntervalOverrides = modules.adreload.RefreshIntervalOverrides;
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 /**
@@ -44,7 +42,7 @@ export class AdVisibilityService {
   constructor(
     private readonly userActivityService: UserActivityService,
     private readonly refreshInterval: number,
-    private readonly refreshIntervalOverrides: RefreshIntervalOverrides,
+    private readonly refreshIntervalOverrides: modules.adreload.RefreshIntervalOverrides,
     readonly useIntersectionObserver: boolean,
     private readonly disableAdVisibilityChecks: boolean,
     private readonly window: Window & googletag.IGoogleTagWindow,
@@ -178,7 +176,9 @@ export class AdVisibilityService {
       });
   }
 
-  private handleGoogletagAdVisibilityChanged = (event: ISlotVisibilityChangedEvent): void => {
+  private handleGoogletagAdVisibilityChanged = (
+    event: googletag.events.ISlotVisibilityChangedEvent
+  ): void => {
     const slot = event.slot;
     const visibilityRecord = this.visibilityRecordForGoogletagEvent(event);
 
@@ -258,7 +258,7 @@ export class AdVisibilityService {
   }
 
   private visibilityRecordForGoogletagEvent = (
-    event: ISlotVisibilityChangedEvent
+    event: googletag.events.ISlotVisibilityChangedEvent
   ): VisibilityRecord | undefined => this.visibilityRecords.get(event.slot.getSlotElementId());
 }
 

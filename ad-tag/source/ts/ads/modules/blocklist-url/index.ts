@@ -98,8 +98,6 @@ import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from '../../adPipeline';
 import { googletag } from 'ad-tag/types/googletag';
 import { modules } from 'ad-tag/types/moliConfig';
-import Blocklist = modules.blocklist.Blocklist;
-import BlocklistProvider = modules.blocklist.BlocklistProvider;
 
 /**
  * ## Blocklisted URLs Module
@@ -163,7 +161,11 @@ export class BlocklistedUrls implements IModule {
       : [];
   }
 
-  isBlocklisted = (blocklist: Blocklist, href: string, log: MoliRuntime.MoliLogger): boolean => {
+  isBlocklisted = (
+    blocklist: modules.blocklist.Blocklist,
+    href: string,
+    log: MoliRuntime.MoliLogger
+  ): boolean => {
     return blocklist.urls.some(({ pattern, matchType }) => {
       switch (matchType) {
         case 'exact':
@@ -187,15 +189,15 @@ export class BlocklistedUrls implements IModule {
   };
 
   private getBlocklist(
-    blocklist: BlocklistProvider,
+    blocklist: modules.blocklist.BlocklistProvider,
     assetLoaderService: IAssetLoaderService,
     log: MoliRuntime.MoliLogger
-  ): () => Promise<Blocklist> {
+  ): () => Promise<modules.blocklist.Blocklist> {
     switch (blocklist.provider) {
       case 'static':
         return () => Promise.resolve(blocklist.blocklist);
       case 'dynamic':
-        let cachedResult: Promise<Blocklist>;
+        let cachedResult: Promise<modules.blocklist.Blocklist>;
         return () => {
           if (!cachedResult) {
             cachedResult = this.loadConfigWithRetry(
@@ -212,14 +214,14 @@ export class BlocklistedUrls implements IModule {
         };
     }
   }
-  private blocklistCache: Promise<Blocklist> | null = null;
+  private blocklistCache: Promise<modules.blocklist.Blocklist> | null = null;
 
   private loadConfigWithRetry(
     assetLoaderService: IAssetLoaderService,
     endpoint: string,
     retriesLeft: number,
     lastError: any | null = null
-  ): Promise<Blocklist> {
+  ): Promise<modules.blocklist.Blocklist> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
@@ -227,7 +229,7 @@ export class BlocklistedUrls implements IModule {
     // for three retries the backoff time will be 100ms, 200ms, 300ms
     if (!this.blocklistCache) {
       this.blocklistCache = assetLoaderService
-        .loadJson<Blocklist>('blocklist-urls.json', endpoint)
+        .loadJson<modules.blocklist.Blocklist>('blocklist-urls.json', endpoint)
         .catch(error => {
           const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
           return exponentialBackoff.then(() =>

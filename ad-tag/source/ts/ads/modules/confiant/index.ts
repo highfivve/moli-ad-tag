@@ -40,7 +40,6 @@ import {
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
-import ConfiantConfig = modules.confiant.ConfiantConfig;
 
 /**
  * ## Confiant Ad Fraud Protection
@@ -77,7 +76,7 @@ export class Confiant implements IModule {
   loadConfiant(
     context: AdPipelineContext,
     assetLoaderService: IAssetLoaderService,
-    config: ConfiantConfig
+    config: modules.confiant.ConfiantConfig
   ): Promise<void> {
     // test environment doesn't require confiant
     if (context.env === 'test') {

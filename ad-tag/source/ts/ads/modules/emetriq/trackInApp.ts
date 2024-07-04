@@ -1,6 +1,5 @@
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
-import EmetriqAppConfig = modules.emetriq.EmetriqAppConfig;
 import { EmetriqAdditionalIdentifier, EmetriqCustomParams } from 'ad-tag/types/emetriq';
 
 const extractDeviceIdParam = (
@@ -27,7 +26,7 @@ const extractDeviceIdParam = (
  */
 export const trackInApp = (
   context: AdPipelineContext,
-  appConfig: EmetriqAppConfig,
+  appConfig: modules.emetriq.EmetriqAppConfig,
   additionalIdentifier: EmetriqAdditionalIdentifier,
   additionalCustomParams: EmetriqCustomParams,
   document: Document

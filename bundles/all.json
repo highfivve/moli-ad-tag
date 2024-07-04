@@ -5,9 +5,15 @@
     "blocklistUrls",
     "cleanup",
     "confiant",
+    "emetriq",
+    "identityLink",
+    "lazyLoad",
+    "prebidFirstPartyData",
     "pubstack",
+    "stickyFooterAds",
     "skin",
     "instant",
+    "yieldOptimization",
     "configureFromEndpoint"
   ]
 }

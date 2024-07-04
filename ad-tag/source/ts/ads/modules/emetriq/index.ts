@@ -68,18 +68,16 @@
  * @module
  */
 
-import { IAssetLoaderService, AssetLoadMethod } from '../../../util/assetLoaderService';
+import { IAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 import {
   EmetriqAdditionalIdentifier,
   EmetriqWindow,
   EmetriqCustomParams
-} from '../../../types/emetriq';
+} from 'ad-tag/types/emetriq';
 import { trackInApp } from './trackInApp';
-import { GoogleAdManagerKeyValueMap, modules } from '../../../types/moliConfig';
+import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
-import EmetriqWebConfig = modules.emetriq.EmetriqWebConfig;
-import SyncDelay = modules.emetriq.SyncDelay;
-import { ModuleType, IModule } from '../../../types/module';
+import { ModuleType, IModule } from 'ad-tag/types/module';
 import {
   AdPipelineContext,
   InitStep,
@@ -87,7 +85,7 @@ import {
   mkConfigureStepOncePerRequestAdsCycle,
   PrepareRequestAdsStep,
   mkInitStep
-} from '../../../ads/adPipeline';
+} from 'ad-tag/ads/adPipeline';
 
 /* from https://github.com/piotrwitek/utility-types */
 type Mutable<T> = {
@@ -241,7 +239,7 @@ export class Emetriq implements IModule {
 
   loadEmetriqScript(
     context: AdPipelineContext,
-    webConfig: EmetriqWebConfig,
+    webConfig: modules.emetriq.EmetriqWebConfig,
     additionalIdentifier: EmetriqAdditionalIdentifier,
     additionalCustomParams: EmetriqCustomParams,
     assetLoaderService: IAssetLoaderService
@@ -270,7 +268,7 @@ export class Emetriq implements IModule {
    */
   static syncDelay(
     ctx: AdPipelineContext,
-    delay?: SyncDelay
+    delay?: modules.emetriq.SyncDelay
   ): Promise<EmetriqAdditionalIdentifier> {
     if (delay) {
       if (typeof delay === 'number') {

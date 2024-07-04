@@ -1,14 +1,12 @@
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { modules } from 'ad-tag/types/moliConfig';
-import UserActivityLevelControl = modules.adreload.UserActivityLevelControl;
-import UserActivityParameters = modules.adreload.UserActivityParameters;
 
 /**
  * Predefined timings when to check for user activity. Can be fully configured in "custom" mode only.
  */
 export const userActivityParametersForLevel = new Map<
-  Exclude<UserActivityLevelControl['level'], 'custom'>,
-  UserActivityParameters
+  Exclude<modules.adreload.UserActivityLevelControl['level'], 'custom'>,
+  modules.adreload.UserActivityParameters
 >([
   ['strict', { userActivityDuration: 10 * 1000, userBecomingInactiveDuration: 5 * 1000 }],
   ['moderate', { userActivityDuration: 12 * 1000, userBecomingInactiveDuration: 8 * 1000 }],
@@ -28,7 +26,7 @@ export type UserActivityListener = (userActivity: boolean) => void;
  * User activities are: mouse, touch, scroll, keyboard press. The lack of one of these events causes the user to enter
  * an inactive state. Hiding the browser/switching the tab also causes the user to instantly become inactive.
  */
-export class UserActivityService implements UserActivityParameters {
+export class UserActivityService implements modules.adreload.UserActivityParameters {
   /**
    * Events that are tracked to determine user activity.
    */
@@ -46,7 +44,9 @@ export class UserActivityService implements UserActivityParameters {
 
   constructor(
     private readonly window: Window,
-    private readonly userActivityLevelControl: UserActivityLevelControl = { level: 'strict' },
+    private readonly userActivityLevelControl: modules.adreload.UserActivityLevelControl = {
+      level: 'strict'
+    },
     private readonly logger?: MoliRuntime.MoliLogger
   ) {
     this.listener = [];

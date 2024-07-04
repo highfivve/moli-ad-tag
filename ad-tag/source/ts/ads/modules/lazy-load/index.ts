@@ -45,7 +45,6 @@
  */
 
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import MoliWindow = MoliRuntime.MoliWindow;
 import { modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
@@ -53,16 +52,16 @@ import {
   InitStep,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
-import { IModule, ModuleType } from '../../../types/module';
-import { mkConfigureStepOncePerRequestAdsCycle } from '../../../ads/adPipeline';
-import { selectInfiniteSlot } from '../../../ads/modules/lazy-load/selectInfiniteSlot';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { mkConfigureStepOncePerRequestAdsCycle } from 'ad-tag/ads/adPipeline';
+import { selectInfiniteSlot } from 'ad-tag/ads/modules/lazy-load/selectInfiniteSlot';
 
 /**
  * To solve the Intersection Observer API typescript error
  * @see https://github.com/microsoft/TypeScript/issues/16255
  */
 export type LazyLoadWindow = Window &
-  MoliWindow & {
+  MoliRuntime.MoliWindow & {
     IntersectionObserver: {
       prototype: IntersectionObserver;
       new (

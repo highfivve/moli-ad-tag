@@ -1,5 +1,4 @@
 import { AdServer, AdUnitPathVariables, Device, modules } from 'ad-tag/types/moliConfig';
-import AdunitPriceRulesResponse = modules.yield_optimization.AdunitPriceRulesResponse;
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
 import { googletag } from 'ad-tag/types/googletag';
@@ -18,17 +17,17 @@ type PriceRule = MoliRuntime.yield_optimization.PriceRule & {
 };
 
 export class YieldOptimizationService {
-  private readonly emptyAdUnitPriceRulesResponse: AdunitPriceRulesResponse = {
-    rules: {},
-    browser: 'None'
-  };
+  private readonly emptyAdUnitPriceRulesResponse: modules.yield_optimization.AdunitPriceRulesResponse =
+    {
+      rules: {},
+      browser: 'None'
+    };
 
   /**
    * initialized with an resolved promise and no rules
    */
-  private adUnitPricingRuleResponse: Promise<AdunitPriceRulesResponse> = Promise.resolve(
-    this.emptyAdUnitPriceRulesResponse
-  );
+  private adUnitPricingRuleResponse: Promise<modules.yield_optimization.AdunitPriceRulesResponse> =
+    Promise.resolve(this.emptyAdUnitPriceRulesResponse);
 
   /**
    * true if the yield optimization is enabled (provider is not `none`) and init() was called.
@@ -190,7 +189,7 @@ export class YieldOptimizationService {
     adUnitPaths: string[],
     fetch: typeof window.fetch,
     lastError: any | null = null
-  ): Promise<AdunitPriceRulesResponse> {
+  ): Promise<modules.yield_optimization.AdunitPriceRulesResponse> {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
@@ -245,7 +244,9 @@ export class YieldOptimizationService {
       });
   }
 
-  private isAdunitPricesRulesResponse(obj: Object): obj is AdunitPriceRulesResponse {
+  private isAdunitPricesRulesResponse(
+    obj: Object
+  ): obj is modules.yield_optimization.AdunitPriceRulesResponse {
     return obj.hasOwnProperty('rules');
   }
 
