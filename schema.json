@@ -286,6 +286,18 @@
       ],
       "type": "object"
     },
+    "FooterDomIds": {
+      "additionalProperties": false,
+      "properties": {
+        "desktop": {
+          "type": "string"
+        },
+        "mobile": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "GoogleAdManagerKeyValueMap": {
       "additionalProperties": {
         "anyOf": [
@@ -1175,6 +1187,12 @@
         },
         "skin": {
           "$ref": "#/definitions/modules.skin.SkinModuleConfig"
+        },
+        "stickyFooterAd": {
+          "$ref": "#/definitions/modules.stickyFooterAd.StickyFooterAdConfig"
+        },
+        "stickyFooterAdV2": {
+          "$ref": "#/definitions/modules.stickyFooterAdV2.StickyFooterAdConfig"
         },
         "yieldOptimization": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfig"
@@ -2469,6 +2487,63 @@
       },
       "required": [
         "bidder"
+      ],
+      "type": "object"
+    },
+    "modules.stickyFooterAd.StickyFooterAdConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "desktopFloorAdDomId": {
+          "type": "string"
+        },
+        "disallowedAdvertiserIds": {
+          "description": "Disable rendering the footer ad format for certain advertisers by specifying them here. Most of the time you would use this for partners who ship their own special format or behaviour.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "initiallyHidden": {
+          "description": "Only applies to the mobile sticky ad. If true, the mobile sticky ad will remain hidden if initialized and only set to `display: block` if an actual ad renders.\n\nDefault is `false`",
+          "type": "boolean"
+        },
+        "mobileStickyDomId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "disallowedAdvertiserIds"
+      ],
+      "type": "object"
+    },
+    "modules.stickyFooterAdV2.StickyFooterAdConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "closingButtonText": {
+          "type": "string"
+        },
+        "disallowedAdvertiserIds": {
+          "description": "Disable rendering the footer ad format for certain advertisers by specifying them here. Most of the time you would use this for partners who ship their own special format or behaviour.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "stickyFooterDomIds": {
+          "$ref": "#/definitions/FooterDomIds"
+        }
+      },
+      "required": [
+        "enabled",
+        "stickyFooterDomIds",
+        "disallowedAdvertiserIds"
       ],
       "type": "object"
     },
