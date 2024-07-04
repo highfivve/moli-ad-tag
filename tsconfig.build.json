@@ -2,11 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ES6",
-    "esModuleInterop": false,
-    "isolatedModules": false,
     "sourceMap": false,
     "declaration": false
   },
-  // excluding "**/console/**/*.tsx" is necessary, because react messes up the build with es6 interop issues.
-  "exclude": ["node_modules", "**/lib", "**/*.test.ts", "**/stubs", "**/console/**/*.tsx"]
+  "exclude": ["node_modules", "**/lib", "**/*.test.ts", "**/stubs"]
 }
