@@ -3,6 +3,7 @@ import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
+import { DataKeyValue, ExclusionKeyValue } from '../ads/modules/zeotap';
 import { FooterDomIds } from 'ad-tag/ads/modules/sticky-footer-ad-v2';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
@@ -1753,6 +1754,47 @@ export namespace modules {
     };
   }
 
+  export namespace zeotap {
+    export interface ZeotapModuleConfig extends IModuleConfig {
+      /**
+       * Points to the Zeotap script, containing only env, eventType and zdid parameters. The other parameters (country
+       * code, idp, hashed email address, and custom parameters) are added through configuration parameters.
+       *
+       * @example //spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337
+       */
+      readonly assetUrl: string;
+
+      /**
+       * Optional Alpha-ISO3 country code, e.g. "DEU". If empty, Zeotap will guess the country from the requests's IP
+       * address.
+       */
+      readonly countryCode?: string;
+
+      /**
+       * sha-256 hash of the user's email address. If you pass an email address here, the idplus module will be activated.
+       */
+      readonly hashedEmailAddress?: string;
+
+      /**
+       * The mode defines if the Zeotap script can be loaded repeatedly with updated parameters (in spa/single page
+       * application mode) or just once (for sever side rendered pages, mode = default).
+       */
+      readonly mode: 'spa' | 'default';
+
+      /**
+       * Specifies which keys to extract from moli's targeting (key/value pairs) and which key then to use to transfer the
+       * extracted data in the Zeotap request URL.
+       */
+      readonly dataKeyValues: Array<DataKeyValue>;
+
+      /**
+       * Specifies which key/value pairs should prevent the Zeotap script from being loaded, e.g. to prevent data collection
+       * in pages with sensitive topics such as medical/health content.
+       */
+      readonly exclusionKeyValues: Array<ExclusionKeyValue>;
+    }
+  }
+
   export interface ModulesConfig {
     readonly adReload?: adreload.AdReloadModuleConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
@@ -1770,6 +1812,7 @@ export namespace modules {
     readonly stickyFooterAd?: stickyFooterAd.StickyFooterAdConfig;
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
+    readonly zeotap?: zeotap.ZeotapModuleConfig;
   }
 }
 

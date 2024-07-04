@@ -2,22 +2,20 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-
-import {
-  AdPipelineContext,
-  AssetLoadMethod,
-  createAssetLoaderService,
-  googletag,
-  MoliRuntime,
-  prebidjs
-} from '@highfivve/ad-tag';
-
-import { Zeotap } from './zeotap';
-import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
-import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
-import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { createAssetLoaderService } from '../../../util/assetLoaderService';
+import { GoogleAdManagerKeyValueMap, modules, MoliConfig } from '../../../types/moliConfig';
+import { AdPipelineContext } from '../../../ads/adPipeline';
+import { googletag } from '../../../types/googletag';
+import { Zeotap } from '../../../ads/modules/zeotap/index';
+import { AssetLoadMethod } from '../../../util/assetLoaderService';
+import { createDom } from '../../../stubs/browserEnvSetup';
+import { prebidjs } from '../../../types/prebidjs';
+import { emptyRuntimeConfig, noopLogger } from '../../../stubs/moliStubs';
+import { fullConsent } from '../../../stubs/consentStubs';
+import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
+import { dummySchainConfig } from '../../../stubs/schainStubs';
+import { MoliRuntime } from '../../../types/moliRuntime';
+import MoliWindow = MoliRuntime.MoliWindow;
 
 // setup sinon-chai
 use(sinonChai);
@@ -26,19 +24,13 @@ use(chaiAsPromised);
 describe('Zeotap Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
+  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow & MoliWindow =
     dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
-  const emptyConfigPipeline = (): MoliRuntime.pipeline.PipelineConfig => ({
-    initSteps: [],
-    configureSteps: [],
-    prepareRequestAdsSteps: []
-  });
-
-  const adPipelineContext = (config: MoliRuntime.MoliConfig): AdPipelineContext => {
+  const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
       requestId: 0,
       requestAdsCalls: 1,
@@ -48,31 +40,24 @@ describe('Zeotap Module', () => {
       window: jsDomWindow,
       // no service dependencies required
       labelConfigService: null as any,
-      reportingService: null as any,
+      runtimeConfig: emptyRuntimeConfig,
       tcData: fullConsent({ 301: true }),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow),
+      assetLoaderService: assetLoaderService
     };
   };
 
-  const initModule = (
-    module: Zeotap,
-    keyValues: MoliRuntime.GoogleAdManagerKeyValueMap,
-    configPipeline?: MoliRuntime.pipeline.PipelineConfig
-  ): MoliRuntime.MoliConfig => {
-    const moliConfig: MoliRuntime.MoliConfig = {
+  const createZeotap = (): Zeotap => new Zeotap();
+
+  const moliConfig = (keyValues: GoogleAdManagerKeyValueMap): MoliConfig => {
+    return {
       slots: [],
-      pipeline: configPipeline,
-      logger: noopLogger,
       targeting: {
         keyValues
       },
       schain: dummySchainConfig
     };
-
-    module.init(moliConfig, assetLoaderService);
-
-    return moliConfig;
   };
 
   beforeEach(() => {
@@ -84,8 +69,9 @@ describe('Zeotap Module', () => {
   });
 
   it('should fetch the zeotap script and encode parameters into the URL', async () => {
-    const module = new Zeotap(
-      {
+    const modulesConfig: modules.ModulesConfig = {
+      zeotap: {
+        enabled: true,
         assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
         hashedEmailAddress: 'somehashedaddress',
         mode: 'default',
@@ -95,21 +81,22 @@ describe('Zeotap Module', () => {
           { keyValueKey: 'tags', parameterKey: 'zcid' }
         ],
         exclusionKeyValues: []
-      },
-      jsDomWindow
-    );
+      }
+    };
+    const module = createZeotap();
+    module.configure(modulesConfig);
 
-    const moliConfig = initModule(
-      module,
-      {
-        channel: 'VideoGaming',
-        subChannel: 'PCGames',
-        tags: ['technik', 'computer', 'technologie', 'pc', 'smartphone', 'internet']
-      },
-      emptyConfigPipeline()
-    );
+    const init = module.initSteps()[0];
 
-    await moliConfig.pipeline?.initSteps[0](adPipelineContext(moliConfig));
+    await init(
+      adPipelineContext(
+        moliConfig({
+          channel: 'VideoGaming',
+          subChannel: 'PCGames',
+          tags: ['technik', 'computer', 'technologie', 'pc', 'smartphone', 'internet']
+        })
+      )
+    );
 
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
       name: module.name,
@@ -120,8 +107,9 @@ describe('Zeotap Module', () => {
   });
 
   it('should disable idp if no hashed email address is given', async () => {
-    const module = new Zeotap(
-      {
+    const modulesConfig: modules.ModulesConfig = {
+      zeotap: {
+        enabled: true,
         assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
         hashedEmailAddress: undefined,
         countryCode: 'DEU',
@@ -131,20 +119,21 @@ describe('Zeotap Module', () => {
           { keyValueKey: 'tags', parameterKey: 'zcid' }
         ],
         exclusionKeyValues: []
-      },
-      jsDomWindow
-    );
+      }
+    };
+    const module = createZeotap();
+    module.configure(modulesConfig);
 
-    const moliConfig = initModule(
-      module,
-      {
-        channel: 'TechnologyAndComputing',
-        tags: ['hardware', 'roboter']
-      },
-      emptyConfigPipeline()
-    );
+    const init = module.initSteps()[0];
 
-    await moliConfig.pipeline?.initSteps[0](adPipelineContext(moliConfig));
+    await init(
+      adPipelineContext(
+        moliConfig({
+          channel: 'TechnologyAndComputing',
+          tags: ['hardware', 'roboter']
+        })
+      )
+    );
 
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
       name: module.name,
@@ -155,8 +144,9 @@ describe('Zeotap Module', () => {
   });
 
   it('should allow multiple loading of the script if running in spa mode', async () => {
-    const module = new Zeotap(
-      {
+    const modulesConfig: modules.ModulesConfig = {
+      zeotap: {
+        enabled: true,
         assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
         hashedEmailAddress: 'somehashedaddress',
         countryCode: 'DEU',
@@ -166,20 +156,22 @@ describe('Zeotap Module', () => {
           { keyValueKey: 'tags', parameterKey: 'zcid' }
         ],
         exclusionKeyValues: []
-      },
-      jsDomWindow
-    );
+      }
+    };
+    const module = createZeotap();
+    module.configure(modulesConfig);
 
-    const moliConfig = initModule(
-      module,
-      {
-        channel: 'VideoGaming',
-        tags: ['technik', 'computer', 'technologie', 'pc', 'smartphone', 'internet']
-      },
-      emptyConfigPipeline()
-    );
+    const configureStep = module.configureSteps()[0];
 
-    await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), []);
+    await configureStep(
+      adPipelineContext(
+        moliConfig({
+          channel: 'VideoGaming',
+          tags: ['technik', 'computer', 'technologie', 'pc', 'smartphone', 'internet']
+        })
+      ),
+      []
+    );
 
     // id+ should be active on first call
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
@@ -189,16 +181,12 @@ describe('Zeotap Module', () => {
         '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337&idp=1&zcat=VideoGaming&zcid=technik%2Ccomputer%2Ctechnologie%2Cpc%2Csmartphone%2Cinternet&ctry=DEU&z_e_sha2_l=somehashedaddress'
     });
 
-    await moliConfig.pipeline?.configureSteps[0](
-      adPipelineContext({
-        ...moliConfig,
-        targeting: {
-          keyValues: {
-            channel: 'TechnologyAndComputing',
-            tags: ['hardware', 'roboter']
-          }
-        }
-      }),
+    const configure = module.configureSteps()[0];
+
+    await configure(
+      adPipelineContext(
+        moliConfig({ channel: 'TechnologyAndComputing', tags: ['hardware', 'roboter'] })
+      ),
       []
     );
 
@@ -213,27 +201,27 @@ describe('Zeotap Module', () => {
   });
 
   it('should only allow loading of the script one time if running in default mode', async () => {
-    const module = new Zeotap(
-      {
+    const modulesConfig: modules.ModulesConfig = {
+      zeotap: {
+        enabled: true,
         assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
         mode: 'default',
         dataKeyValues: [],
         exclusionKeyValues: []
-      },
-      jsDomWindow
-    );
+      }
+    };
+    const module = createZeotap();
+    module.configure(modulesConfig);
 
-    const moliConfig = initModule(
-      module,
-      {
-        channel: 'TechnologyAndComputing',
-        tags: ['hardware', 'roboter']
-      },
-      emptyConfigPipeline()
-    );
+    const init = module.initSteps()[0];
 
-    await moliConfig.pipeline?.initSteps[0](adPipelineContext(moliConfig));
-    await moliConfig.pipeline?.initSteps[0](adPipelineContext(moliConfig));
+    const config = moliConfig({
+      channel: 'TechnologyAndComputing',
+      tags: ['hardware', 'roboter']
+    });
+
+    await init(adPipelineContext(config));
+    await init(adPipelineContext(config));
 
     expect(loadScriptStub).to.have.been.calledOnceWithExactly({
       name: module.name,
@@ -243,56 +231,60 @@ describe('Zeotap Module', () => {
   });
 
   it("shouldn't load the script if targeting exclusions match", async () => {
-    const module = new Zeotap(
-      {
+    const modulesConfig: modules.ModulesConfig = {
+      zeotap: {
+        enabled: true,
         assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
         mode: 'default',
         dataKeyValues: [],
         exclusionKeyValues: [{ keyValueKey: 'subChannel', disableOnValue: 'Pornography' }]
-      },
-      jsDomWindow
-    );
+      }
+    };
+    const module = createZeotap();
+    module.configure(modulesConfig);
 
-    const moliConfig = initModule(
-      module,
-      {
-        channel: 'NonStandardContent',
-        subChannel: 'Pornography'
-      },
-      emptyConfigPipeline()
-    );
+    const init = module.initSteps()[0];
 
-    await moliConfig.pipeline?.initSteps[0](adPipelineContext(moliConfig));
+    await init(
+      adPipelineContext(
+        moliConfig({
+          channel: 'NonStandardContent',
+          subChannel: 'Pornography'
+        })
+      )
+    );
 
     expect(loadScriptStub).to.not.have.been.called;
   });
 
   it("shouldn't load the script if consent is missing", async () => {
-    const module = new Zeotap(
-      {
+    const modulesConfig: modules.ModulesConfig = {
+      zeotap: {
+        enabled: true,
         assetUrl: '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337',
         mode: 'default',
         dataKeyValues: [],
         exclusionKeyValues: [{ keyValueKey: 'subChannel', disableOnValue: 'Pornography' }]
-      },
-      jsDomWindow
-    );
+      }
+    };
+    const module = createZeotap();
+    module.configure(modulesConfig);
 
-    const moliConfig = initModule(
-      module,
-      {
-        channel: 'NonStandardContent',
-        subChannel: 'Pornography'
-      },
-      emptyConfigPipeline()
-    );
+    const init = module.initSteps()[0];
+
+    const config = moliConfig({
+      channel: 'NonStandardContent',
+      subChannel: 'Pornography'
+    });
+
+    await init(adPipelineContext(config));
 
     const context: AdPipelineContext = {
-      ...adPipelineContext(moliConfig),
+      ...adPipelineContext(config),
       tcData: fullConsent()
     };
 
-    await moliConfig.pipeline?.initSteps[0](context);
+    await init(context);
 
     expect(loadScriptStub).to.not.have.been.called;
   });

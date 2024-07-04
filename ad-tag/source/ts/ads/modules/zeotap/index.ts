@@ -45,19 +45,21 @@
  *
  * @module zeotap
  */
-import {
-  AssetLoadMethod,
-  IAssetLoaderService,
-  getLogger,
-  IModule,
-  ModuleType,
-  mkConfigureStep,
-  mkInitStep,
-  MoliRuntime,
-  tcfapi
-} from '@highfivve/ad-tag';
 import TCDataNoGDPR = tcfapi.responses.TCDataNoGDPR;
 import TCDataWithGDPR = tcfapi.responses.TCDataWithGDPR;
+import { GoogleAdManagerKeyValueMap, modules } from '../../../types/moliConfig';
+import {
+  InitStep,
+  ConfigureStep,
+  PrepareRequestAdsStep,
+  mkConfigureStepOncePerRequestAdsCycle,
+  mkInitStep
+} from '../../../ads/adPipeline';
+import { AssetLoadMethod, IAssetLoaderService } from '../../../util/assetLoaderService';
+import { tcfapi } from '../../../types/tcfapi';
+import { IModule, ModuleType } from '../../../types/module';
+import { MoliRuntime } from '../../../types/moliRuntime';
+import { MoliConfig } from '../../../types/moliConfig';
 
 /**
  * Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the
@@ -96,45 +98,6 @@ export type ExclusionKeyValue = {
   disableOnValue: string;
 };
 
-export type ZeotapModuleConfig = {
-  /**
-   * Points to the Zeotap script, containing only env, eventType and zdid parameters. The other parameters (country
-   * code, idp, hashed email address, and custom parameters) are added through configuration parameters.
-   *
-   * @example //spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337
-   */
-  readonly assetUrl: string;
-
-  /**
-   * Optional Alpha-ISO3 country code, e.g. "DEU". If empty, Zeotap will guess the country from the requests's IP
-   * address.
-   */
-  readonly countryCode?: string;
-
-  /**
-   * sha-256 hash of the user's email address. If you pass an email address here, the idplus module will be activated.
-   */
-  readonly hashedEmailAddress?: string;
-
-  /**
-   * The mode defines if the Zeotap script can be loaded repeatedly with updated parameters (in spa/single page
-   * application mode) or just once (for sever side rendered pages, mode = default).
-   */
-  readonly mode: 'spa' | 'default';
-
-  /**
-   * Specifies which keys to extract from moli's targeting (key/value pairs) and which key then to use to transfer the
-   * extracted data in the Zeotap request URL.
-   */
-  readonly dataKeyValues: Array<DataKeyValue>;
-
-  /**
-   * Specifies which key/value pairs should prevent the Zeotap script from being loaded, e.g. to prevent data collection
-   * in pages with sensitive topics such as medical/health content.
-   */
-  readonly exclusionKeyValues: Array<ExclusionKeyValue>;
-};
-
 /**
  * # Zeotap / ID+
  *
@@ -148,8 +111,6 @@ export class Zeotap implements IModule {
     'Provides Zeotap functionality (data collection and identity plus) to Moli.';
   public readonly moduleType: ModuleType = 'identity';
 
-  private readonly window: Window;
-  private assetLoaderService: IAssetLoaderService | undefined;
   private logger: MoliRuntime.MoliLogger | undefined;
 
   private gvlid: number = 301;
@@ -159,44 +120,51 @@ export class Zeotap implements IModule {
    */
   private loadScriptCount: number = 0;
 
-  constructor(private readonly moduleConfig: ZeotapModuleConfig, window: Window) {
-    this.window = window;
+  private zeotapConfig: modules.zeotap.ZeotapModuleConfig | null = null;
+
+  config(): modules.zeotap.ZeotapModuleConfig | null {
+    return this.zeotapConfig;
   }
 
-  config(): ZeotapModuleConfig {
-    return this.moduleConfig;
-  }
-
-  init(config: MoliRuntime.MoliConfig, assetLoaderService: IAssetLoaderService): void {
-    this.assetLoaderService = assetLoaderService;
-    this.logger = getLogger(config, this.window);
-
-    // init additional pipeline steps if not already defined
-    config.pipeline = config.pipeline || {
-      initSteps: [],
-      configureSteps: [],
-      prepareRequestAdsSteps: []
-    };
-
-    if (this.moduleConfig.mode === 'default') {
-      config.pipeline.initSteps.push(
-        mkInitStep(this.name, context => {
-          if (this.hasConsent(context.tcData)) {
-            this.loadScript(context.config).catch(error => context.logger.error(this.name, error));
-          }
-
-          return Promise.resolve();
-        })
-      );
-    } else {
-      config.pipeline.configureSteps.push(
-        mkConfigureStep(this.name, context => {
-          this.loadScript(context.config).catch(error => context.logger.error(this.name, error));
-
-          return Promise.resolve();
-        })
-      );
+  configure(moduleConfig?: modules.ModulesConfig): void {
+    if (moduleConfig?.zeotap && moduleConfig.zeotap.enabled) {
+      this.zeotapConfig = moduleConfig.zeotap;
     }
+  }
+
+  initSteps(): InitStep[] {
+    const config = this.zeotapConfig;
+    return config && config.mode === 'default'
+      ? [
+          mkInitStep(this.name, context => {
+            if (this.hasConsent(context.tcData)) {
+              this.loadScript(context.config, context.assetLoaderService, config).catch(error =>
+                context.logger.error(this.name, error)
+              );
+            }
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  }
+
+  configureSteps(): ConfigureStep[] {
+    const config = this.zeotapConfig;
+    return config && config.mode === 'spa'
+      ? [
+          mkConfigureStepOncePerRequestAdsCycle(this.name, context => {
+            this.loadScript(context.config, context.assetLoaderService, config).catch(error =>
+              context.logger.error(this.name, error)
+            );
+
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  }
+
+  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+    return [];
   }
 
   private hasConsent = (tcData: TCDataNoGDPR | TCDataWithGDPR): boolean => {
@@ -222,11 +190,15 @@ export class Zeotap implements IModule {
    * The script is only loaded if the targeting exclusions don't match the provided targeting key/values from the moli
    * config.
    */
-  private loadScript = (config: MoliRuntime.MoliConfig): Promise<void> => {
+  private loadScript = (
+    config: MoliConfig,
+    assetLoaderService: IAssetLoaderService,
+    moduleConfig: modules.zeotap.ZeotapModuleConfig
+  ): Promise<void> => {
     const { mode, dataKeyValues, exclusionKeyValues, assetUrl, hashedEmailAddress, countryCode } =
-      this.moduleConfig;
+      moduleConfig;
 
-    if (!this.assetLoaderService) {
+    if (!assetLoaderService) {
       return Promise.reject('Zeotap module :: no asset loader found, module not initialized yet?');
     }
 
@@ -246,8 +218,7 @@ export class Zeotap implements IModule {
       .join('&');
 
     // load id+ only on the first call and if a hashed email is available
-    const loadIdPlus: boolean =
-      !!this.moduleConfig.hashedEmailAddress && this.loadScriptCount === 0;
+    const loadIdPlus: boolean = !!moduleConfig.hashedEmailAddress && this.loadScriptCount === 0;
 
     const url =
       assetUrl +
@@ -258,7 +229,7 @@ export class Zeotap implements IModule {
 
     this.loadScriptCount++;
 
-    return this.assetLoaderService.loadScript({
+    return assetLoaderService.loadScript({
       name: this.name,
       loadMethod: AssetLoadMethod.TAG,
       assetUrl: url
@@ -301,7 +272,7 @@ export class Zeotap implements IModule {
    * Convert the key/values object from the moli config to an actual map, filtering out entries with falsy values.
    */
   private makeKeyValuesMap = (
-    keyValues: MoliRuntime.GoogleAdManagerKeyValueMap | undefined
+    keyValues: GoogleAdManagerKeyValueMap | undefined
   ): Map<string, string | Array<string>> => {
     return keyValues
       ? new Map(

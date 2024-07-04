@@ -136,6 +136,23 @@
       ],
       "type": "object"
     },
+    "DataKeyValue": {
+      "additionalProperties": false,
+      "description": "Used to specify which keys to extract from moli's targeting (key/value pairs) and which key then to use in the Zeotap request URL.\n\nFor example, if you want to transfer a key/value pair with the key `xyz` to Zeotap under the name `abc`, the respective DataKeyValue object would be:\n\n```ts const transferXyz: DataKeyValue = {   keyValueKey: 'xyz',   parameterKey: 'abc' } ```ts",
+      "properties": {
+        "keyValueKey": {
+          "type": "string"
+        },
+        "parameterKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "keyValueKey",
+        "parameterKey"
+      ],
+      "type": "object"
+    },
     "EmetriqAdditionalIdentifier": {
       "additionalProperties": false,
       "description": "Configure additional identifiers",
@@ -249,6 +266,23 @@
       },
       "required": [
         "sid"
+      ],
+      "type": "object"
+    },
+    "ExclusionKeyValue": {
+      "additionalProperties": false,
+      "description": "Used to specify key/value pairs that will disable data collection (i.e. disable loading the Zeotap script).\n\nFor example, if you want to disable data collection on sensitive content like medical content, the respective ExclusionKeyValue object could look like this:\n\n```ts const excludeMedical: ExclusionKeyValue = {   keyValueKey: 'contentType',   disableOnValue: 'MedicalTopic' } ```",
+      "properties": {
+        "disableOnValue": {
+          "type": "string"
+        },
+        "keyValueKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "keyValueKey",
+        "disableOnValue"
       ],
       "type": "object"
     },
@@ -1144,6 +1178,9 @@
         },
         "yieldOptimization": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfig"
+        },
+        "zeotap": {
+          "$ref": "#/definitions/modules.zeotap.ZeotapModuleConfig"
         }
       },
       "type": "object"
@@ -2551,6 +2588,57 @@
         "dynamic"
       ],
       "type": "string"
+    },
+    "modules.zeotap.ZeotapModuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "assetUrl": {
+          "description": "Points to the Zeotap script, containing only env, eventType and zdid parameters. The other parameters (country code, idp, hashed email address, and custom parameters) are added through configuration parameters.",
+          "type": "string"
+        },
+        "countryCode": {
+          "description": "Optional Alpha-ISO3 country code, e.g. \"DEU\". If empty, Zeotap will guess the country from the requests's IP address.",
+          "type": "string"
+        },
+        "dataKeyValues": {
+          "description": "Specifies which keys to extract from moli's targeting (key/value pairs) and which key then to use to transfer the extracted data in the Zeotap request URL.",
+          "items": {
+            "$ref": "#/definitions/DataKeyValue"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "exclusionKeyValues": {
+          "description": "Specifies which key/value pairs should prevent the Zeotap script from being loaded, e.g. to prevent data collection in pages with sensitive topics such as medical/health content.",
+          "items": {
+            "$ref": "#/definitions/ExclusionKeyValue"
+          },
+          "type": "array"
+        },
+        "hashedEmailAddress": {
+          "description": "sha-256 hash of the user's email address. If you pass an email address here, the idplus module will be activated.",
+          "type": "string"
+        },
+        "mode": {
+          "description": "The mode defines if the Zeotap script can be loaded repeatedly with updated parameters (in spa/single page application mode) or just once (for sever side rendered pages, mode = default).",
+          "enum": [
+            "spa",
+            "default"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "assetUrl",
+        "dataKeyValues",
+        "enabled",
+        "exclusionKeyValues",
+        "mode"
+      ],
+      "type": "object"
     },
     "prebidjs.AdServerTargeting": {
       "additionalProperties": false,
