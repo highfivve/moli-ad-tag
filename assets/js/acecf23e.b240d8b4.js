@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[7393],{1838:e=>{e.exports=JSON.parse('{"blogBasePath":"/moli-ad-tag/blog","blogTitle":"Blog"}')}}]);
