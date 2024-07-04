@@ -21,7 +21,7 @@
  *
  * @module
  */
-import { IModule, ModuleType } from 'ad-tag/types/module';
+import { IModule, ModuleType } from '../../../types/module';
 import {
   ConfigureStep,
   InitStep,
@@ -29,7 +29,7 @@ import {
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
 } from '../../../ads/adPipeline';
-import { modules } from 'ad-tag/types/moliConfig';
+import { modules } from '../../../types/moliConfig';
 
 import { initAdSticky } from './footerStickyAd';
 

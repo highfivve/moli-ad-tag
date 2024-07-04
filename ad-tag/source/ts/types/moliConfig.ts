@@ -4,7 +4,7 @@ import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
 import { DataKeyValue, ExclusionKeyValue } from '../ads/modules/zeotap';
-import { FooterDomIds } from 'ad-tag/ads/modules/sticky-footer-ad-v2';
+import { FooterDomIds } from '../ads/modules/sticky-footer-ad-v2';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 

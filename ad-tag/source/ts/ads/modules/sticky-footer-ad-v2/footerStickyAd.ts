@@ -1,6 +1,6 @@
-import { googletag } from 'ad-tag/types/googletag';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import { Environment } from 'ad-tag/types/moliConfig';
+import { googletag } from '../../../types/googletag';
+import { MoliRuntime } from '../../../types/moliRuntime';
+import { Environment } from '../../../types/moliConfig';
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
