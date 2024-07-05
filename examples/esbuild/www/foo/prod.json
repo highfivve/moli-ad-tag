@@ -1,5 +1,6 @@
 {
   "version": "1",
+  "requestAds": true,
   "slots": [
     {
       "domId": "content_1",
