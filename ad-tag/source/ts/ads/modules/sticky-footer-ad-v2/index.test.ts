@@ -4,25 +4,22 @@ import sinonChai from 'sinon-chai';
 
 import { AdPipelineContext, PrepareRequestAdsStep } from '../../adPipeline';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { googletag } from '../../../types/googletag';
+import { googletag } from 'ad-tag/types/googletag';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
   noopLogger
-} from '../../../stubs/moliStubs';
+} from 'ad-tag/stubs/moliStubs';
 import * as stickyAdModule from './footerStickyAd';
 
-import { createGoogletagStub, googleAdSlotStub } from '../../../stubs/googletagStubs';
-import { prebidjs } from '../../../types/prebidjs';
-import { fullConsent } from '../../../stubs/consentStubs';
-import { AdSlot, Device, MoliConfig } from '../../../types/moliConfig';
-import { MoliRuntime } from '../../../types/moliRuntime';
-import { FooterDomIds, StickyFooterAdsV2 } from '../../../ads/modules/sticky-footer-ad-v2/index';
-import SlotDefinition = MoliRuntime.SlotDefinition;
-import { createDom } from '../../../stubs/browserEnvSetup';
-import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
-import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { AdSlot, Device, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { StickyFooterAdsV2 } from 'ad-tag/ads/modules/sticky-footer-ad-v2/index';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { initAdSticky } from './footerStickyAd';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
@@ -56,7 +53,7 @@ const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
   assetLoaderService: createAssetLoaderService(jsDomWindow)
 });
 
-const createAdSlotConfig = (domId: string, device: Device): SlotDefinition => {
+const createAdSlotConfig = (domId: string, device: Device): MoliRuntime.SlotDefinition => {
   const adSlot: AdSlot = {
     domId: domId,
     adUnitPath: 'path',
@@ -83,7 +80,7 @@ const createAdSlotConfig = (domId: string, device: Device): SlotDefinition => {
 };
 
 const createAndConfigureModule = (
-  stickyFooterDomIds: FooterDomIds = {},
+  stickyFooterDomIds: modules.stickyFooterAdV2.FooterDomIds = {},
   disallowedAdvertiserIds: number[] = [],
   closingButtonText?: string
 ) => {
@@ -101,7 +98,7 @@ const createAndConfigureModule = (
 
 const createInitializedModule = (
   moduleConfig: {
-    stickyFooterDomIds: FooterDomIds;
+    stickyFooterDomIds: modules.stickyFooterAdV2.FooterDomIds;
     disallowedAdvertiserIds: number[];
     closingButtonText?: string;
   },
@@ -226,31 +223,31 @@ describe('Sticky-footer-v2 Module', () => {
   describe('initialize initAdSticky function', () => {
     const errorLogSpy = sandbox.spy(noopLogger, 'warn');
 
-    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+    const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
       slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
       advertiserId: 111,
       campaignId: 42
-    } as ISlotRenderEndedEvent;
+    } as googletag.events.ISlotRenderEndedEvent;
 
-    const slotLoadedEvent: ISlotOnloadEvent = {
+    const slotLoadedEvent: googletag.events.ISlotOnloadEvent = {
       slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
       serviceName: 'gpt'
-    } as ISlotOnloadEvent;
+    } as googletag.events.ISlotOnloadEvent;
 
     const slotRenderedCallback: (
-      event: ISlotRenderEndedEvent,
+      event: googletag.events.ISlotRenderEndedEvent,
       listenerSpy: Sinon.SinonSpy
-    ) => void = (event: ISlotRenderEndedEvent, listenerSpy: Sinon.SinonSpy) =>
+    ) => void = (event: googletag.events.ISlotRenderEndedEvent, listenerSpy: Sinon.SinonSpy) =>
       listenerSpy.args.find(args => (args[0] as string) === 'slotRenderEnded')?.[1] as unknown as (
-        event: ISlotRenderEndedEvent
+        event: googletag.events.ISlotRenderEndedEvent
       ) => void;
 
-    const slotLoadedCallback: (event: ISlotOnloadEvent, listenerSpy: Sinon.SinonSpy) => void = (
-      event: ISlotOnloadEvent,
+    const slotLoadedCallback: (
+      event: googletag.events.ISlotOnloadEvent,
       listenerSpy: Sinon.SinonSpy
-    ) =>
+    ) => void = (event: googletag.events.ISlotOnloadEvent, listenerSpy: Sinon.SinonSpy) =>
       listenerSpy.args.find(args => (args[0] as string) === 'slotOnload')?.[1] as unknown as (
-        event: ISlotOnloadEvent
+        event: googletag.events.ISlotOnloadEvent
       ) => void;
 
     const adSticky = jsDomWindow.document.createElement('div');
@@ -327,24 +324,26 @@ describe('Sticky-footer-v2 Module', () => {
 
       await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
-      const slotRenderEndedEvent: ISlotRenderEndedEvent = {
+      const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
         slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
         advertiserId: 111,
         campaignId: 42
-      } as ISlotRenderEndedEvent;
+      } as googletag.events.ISlotRenderEndedEvent;
 
-      const slotLoadedEvent: ISlotOnloadEvent = {
+      const slotLoadedEvent: googletag.events.ISlotOnloadEvent = {
         slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
         serviceName: 'gpt'
-      } as ISlotOnloadEvent;
+      } as googletag.events.ISlotOnloadEvent;
 
-      const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
-        args => (args[0] as string) === 'slotRenderEnded'
-      )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+      const slotRenderedCallback: (event: googletag.events.ISlotRenderEndedEvent) => void =
+        listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: googletag.events.ISlotRenderEndedEvent) => void;
 
-      const slotLoadedCallback: (event: ISlotOnloadEvent) => void = listenerSpy.args.find(
-        args => (args[0] as string) === 'slotOnload'
-      )?.[1] as unknown as (event: ISlotOnloadEvent) => void;
+      const slotLoadedCallback: (event: googletag.events.ISlotOnloadEvent) => void =
+        listenerSpy.args.find(args => (args[0] as string) === 'slotOnload')?.[1] as unknown as (
+          event: googletag.events.ISlotOnloadEvent
+        ) => void;
 
       slotRenderedCallback(slotRenderEndedEvent);
       slotLoadedCallback(slotLoadedEvent);
@@ -409,16 +408,17 @@ describe('Sticky-footer-v2 Module', () => {
 
       await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
-      const emptySlotRenderEndedEvent: ISlotRenderEndedEvent = {
+      const emptySlotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
         slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
         advertiserId: 999,
         campaignId: 42,
         isEmpty: true
-      } as ISlotRenderEndedEvent;
+      } as googletag.events.ISlotRenderEndedEvent;
 
-      const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
-        args => (args[0] as string) === 'slotRenderEnded'
-      )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+      const slotRenderedCallback: (event: googletag.events.ISlotRenderEndedEvent) => void =
+        listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: googletag.events.ISlotRenderEndedEvent) => void;
 
       slotRenderedCallback(emptySlotRenderEndedEvent);
 
