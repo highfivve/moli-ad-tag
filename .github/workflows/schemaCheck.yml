@@ -38,6 +38,9 @@ jobs:
       - name: Generate JSON Schema
         run: npm run schema
 
+      - name: Show git diff
+        run: git diff --exit-code
+
       - name: Verify JSON Schema unchanged
         uses: tj-actions/verify-changed-files@v20
         id: verify-changed-files
