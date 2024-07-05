@@ -136,9 +136,15 @@ console.log('Selected modules:', bundleConfig.modules.join(', '));
 console.log('Moli Library Version:', packageJson.version);
 
 const moduleImports = bundleConfig.modules.map(module => `import './${module}';`).join('\n');
+const entrypointName = options.output.replace('js$', 'ts$').split('/').pop();
+
+if (!entrypointName) {
+  program.error(`Could not figure out entrypoint name from output file: ${options.output}`);
+}
 
 // generate entrypoint file
-const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', `${options.output}.ts`);
+const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', entrypointName);
+console.log('Generated entrypoint file:', entrypoint);
 fs.writeFileSync(entrypoint, ['// modules', moduleImports].join('\n'));
 
 try {
