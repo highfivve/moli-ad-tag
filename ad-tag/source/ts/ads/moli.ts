@@ -276,7 +276,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           modules: modules
         };
 
-        if (shouldInitialize || config.requestAds !== false) {
+        if (shouldInitialize || config.requestAds === true) {
           return requestAds();
         }
         return Promise.resolve(state);

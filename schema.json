@@ -378,7 +378,8 @@
           "description": "optional prebid configuration"
         },
         "requestAds": {
-          "description": "If set to true, ads will immediately requested after the ad tag is loaded. This is usually called `instant` mode. If no provided the default is `true`.\n\nSet this to `false` if the publisher calls `moli.requestAds()` on their and, because they need to\n\n1. configure additional parameters via the `set*` and `add*` API on the `moli` global 2. want to defer ad loading to a certain point\n\nWe call this the `publisherMode`",
+          "default": "`false` (publisherMode)",
+          "description": "If set to true, ads will immediately requested after the ad tag is loaded. This is usually called `instant` mode.\n\nSet this to `false` if the publisher calls `moli.requestAds()` on their and, because they need to\n\n1. configure additional parameters via the `set*` and `add*` API on the `moli` global 2. want to defer ad loading to a certain point\n\nWe call this the `publisherMode`",
           "type": "boolean"
         },
         "schain": {

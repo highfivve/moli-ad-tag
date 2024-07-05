@@ -1424,14 +1424,14 @@ describe('moli', () => {
       expect(result?.state).to.be.eq('finished');
     });
 
-    it('should call requestAds if config contains requestAds === undefined', async () => {
+    it('should not call requestAds if config contains requestAds === undefined', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const result = await adTag.configure({ ...defaultConfig, requestAds: undefined });
       expect(result).to.be.ok;
-      expect(result?.state).to.be.eq('finished');
+      expect(result?.state).to.be.eq('configured');
     });
 
-    it('should call requestAds if config contains requestAds === false', async () => {
+    it('should not call requestAds if config contains requestAds === false', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const result = await adTag.configure({ ...defaultConfig, requestAds: false });
       expect(result).to.be.ok;

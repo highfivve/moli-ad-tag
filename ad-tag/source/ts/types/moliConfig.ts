@@ -1872,7 +1872,7 @@ export interface MoliConfig {
 
   /**
    * If set to true, ads will immediately requested after the ad tag is loaded.
-   * This is usually called `instant` mode. If no provided the default is `true`.
+   * This is usually called `instant` mode.
    *
    * Set this to `false` if the publisher calls `moli.requestAds()` on their and, because they need to
    *
@@ -1880,6 +1880,8 @@ export interface MoliConfig {
    * 2. want to defer ad loading to a certain point
    *
    * We call this the `publisherMode`
+   *
+   * @default `false` (publisherMode)
    */
   readonly requestAds?: boolean;
 
