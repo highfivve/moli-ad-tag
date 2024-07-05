@@ -1,13 +1,11 @@
 {
-  "description": "This contains all the modules that are available in the system",
+  "description": "This bundle contains all relevant modules for publishers that have no authenticated traffic.",
   "modules": [
     "adex",
     "adReload",
     "blocklistUrls",
     "cleanup",
     "confiant",
-    "emetriq",
-    "identityLink",
     "lazyLoad",
     "prebidFirstPartyData",
     "pubstack",
@@ -15,7 +13,6 @@
     "stickyFooterAds2",
     "skin",
     "yieldOptimization",
-    "zeotap",
     "configureFromEndpoint"
   ]
 }

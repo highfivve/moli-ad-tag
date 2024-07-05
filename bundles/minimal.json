@@ -1,0 +1,12 @@
+{
+  "description": "This bundle contains modules that don't require any external system or vendor. Only exception is the configureFromEndpoint module which is used to configure the ad tag bundle.",
+  "modules": [
+    "adReload",
+    "cleanup",
+    "lazyLoad",
+    "prebidFirstPartyData",
+    "stickyFooterAds2",
+    "skin",
+    "configureFromEndpoint"
+  ]
+}
