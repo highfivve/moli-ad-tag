@@ -38,9 +38,14 @@ type OptionsValues = {
 
 type BundleConfig = {
   /**
+   * a description of the bundle
+   */
+  description?: string;
+
+  /**
    * contains bundle modules that should be part of the bundle.
    */
-  readonly modules: string[];
+  modules: string[];
 };
 
 const command = program
@@ -90,7 +95,7 @@ const loadConfigFile = (): BundleConfig | null => {
 };
 
 const buildBundleConfig = (): BundleConfig => {
-  const bundleConfig = {
+  const bundleConfig: BundleConfig = {
     modules: ['init']
   };
 
@@ -105,6 +110,7 @@ const buildBundleConfig = (): BundleConfig => {
       `Appending ${bundleConfigFromFile.modules.length} modules to the bundle from config`
     );
     bundleConfig.modules.push(...bundleConfigFromFile.modules);
+    bundleConfig.description = bundleConfigFromFile.description;
   } else {
     program.error('No modules or config file specified');
   }
@@ -113,7 +119,9 @@ const buildBundleConfig = (): BundleConfig => {
 
 const bundleConfig = buildBundleConfig();
 
-console.log(packageJson);
+if (bundleConfig.description) {
+  console.log('Bundle description:', bundleConfig.description);
+}
 console.log('Selected modules:', bundleConfig.modules.join(', '));
 console.log('Moli Library Version:', packageJson.version);
 
