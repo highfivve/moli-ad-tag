@@ -18,12 +18,22 @@ import packageJson from './package.json';
 
 type OptionsValues = {
   /**
-   * a list of modules to be build
+   * a list of modules to be build. `modules` or `config` must be specified.
    */
   readonly modules: string[];
+
+  /**
+   * the output file of the bundle, e.g. 'dist/bundle.js'
+   */
   readonly output: string;
+
+  /**
+   * the config file containing the modules that should be part of the bundle.
+   * Shape of the config must be of type `BundleConfig`.
+   *
+   * Value is optional if `modules` is specified.
+   */
   readonly config?: string;
-  readonly failAfterWarnings: boolean;
 
   /**
    * @see https://esbuild.github.io/api/#target for possible values
@@ -128,7 +138,7 @@ console.log('Moli Library Version:', packageJson.version);
 const moduleImports = bundleConfig.modules.map(module => `import './${module}';`).join('\n');
 
 // generate entrypoint file
-const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', 'bundle.ts');
+const entrypoint = path.join(__dirname, 'ad-tag', 'source', 'ts', 'bundle', `${options.output}.ts`);
 fs.writeFileSync(entrypoint, ['// modules', moduleImports].join('\n'));
 
 try {
