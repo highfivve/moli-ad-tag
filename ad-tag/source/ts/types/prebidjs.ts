@@ -817,9 +817,13 @@ export namespace prebidjs {
       | IPubCommonIdProvider
       | IZeotapIdPlusIdProvider
       | IUtiqIdProvider
+      | IUtiqMtpIdProvider
       | ISharedIdProvider
       | IPairIdProvider;
 
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#basic-configuration
+     */
     interface IUserIdProvider<N extends string> {
       /**
        * the provider name
@@ -832,6 +836,17 @@ export namespace prebidjs {
        * the ID system is managing its own storage
        */
       readonly storage?: IUserIdStorage;
+
+      /**
+       * An array of bidder codes to which this user ID may be sent.
+       */
+      readonly bidders?: BidderCode[];
+
+      /**
+       * Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the
+       * values to be sent to the adapters.
+       */
+      readonly value?: any;
     }
 
     /**
@@ -1032,24 +1047,30 @@ export namespace prebidjs {
      */
     export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {}
 
+    /**
+     * Params are identical for UtiqId and UtiqMtpId
+     */
     export interface IUtiqIdProviderParams {
       /**
        * Max amount of time (in seconds) before looking into storage for data
        */
-      readonly maxDelayTime: number;
+      readonly maxDelayTime?: number;
     }
 
     /**
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiq.html
+     * @see https://docs.utiq.com/docs/programmatic-integration
      */
     export interface IUtiqIdProvider
-      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiq'> {
-      /**
-       * An array of bidder codes to which this user ID may be sent.
-       * Currently, required and supporting AdformOpenRTB
-       */
-      readonly bidders: BidderCode[];
-    }
+      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiq'> {}
+    /**
+     * MTP stands for MarTechPass.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiqMtp.html
+     * @see https://docs.utiq.com/docs/programmatic-integration
+     */
+    export interface IUtiqMtpIdProvider
+      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiqMtpId'> {}
 
     /**
      * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
