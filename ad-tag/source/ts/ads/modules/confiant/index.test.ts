@@ -6,7 +6,7 @@ import { AdPipelineContext } from '../../adPipeline';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { googletag } from '../../../types/googletag';
+import { googletag } from 'ad-tag/types/googletag';
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { Confiant } from 'ad-tag/ads/modules/confiant/index';

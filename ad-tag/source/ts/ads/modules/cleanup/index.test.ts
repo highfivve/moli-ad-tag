@@ -195,7 +195,6 @@ describe('Cleanup Module', () => {
       ]
     };
 
-    const config = mkConfig(slots);
     module.configure({ cleanup: cleanupConfig });
     const configure = module.configureSteps()[0];
 
@@ -212,7 +211,6 @@ describe('Cleanup Module', () => {
   });
   it('should remove the configured element only if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
     const module = new Cleanup();
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
     const cleanupConfig: modules.cleanup.CleanupModuleConfig = {
       enabled: true,
       configs: [

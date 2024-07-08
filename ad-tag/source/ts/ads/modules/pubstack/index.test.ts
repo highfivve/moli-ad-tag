@@ -94,7 +94,6 @@ describe('Pubstack Module', () => {
 
       it('should not load script in init step if env is test', async () => {
         const module = createPubstack();
-        const config = newEmptyConfig();
 
         const init = module.initSteps()[0];
         expect(init).to.be.ok;

@@ -126,8 +126,6 @@ describe('Skin Module', () => {
 
   const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
     genericBidResponse(prebidjs.DSPX, cpm);
-  const visxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
-    genericBidResponse(prebidjs.Visx, cpm);
 
   const adPipelineContext = (config: MoliConfig = emptyConfig): AdPipelineContext => {
     return {
@@ -833,14 +831,6 @@ describe('Skin Module', () => {
         let refreshAdSlotSpy: Sinon.SinonSpy;
 
         const slots: AdSlot[] = createAdSlots(['wp-slot', 'sky-slot']);
-        const slotDefinitions: MoliRuntime.SlotDefinition[] = slots.map(slot => ({
-          moliSlot: slot,
-          adSlot: {
-            getSlotElementId: () => slot.domId
-          } as googletag.IAdSlot,
-          filterSupportedSizes: () => []
-        }));
-        const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
         after(() => {
           sandbox.restore();
