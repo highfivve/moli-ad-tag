@@ -1378,6 +1378,94 @@ export namespace modules {
     };
   }
 
+  export namespace utiq {
+    /**
+     * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript
+     * object that can be set up before the Utiq loader script is loaded. The configuration object is available under
+     * the `Utiq.config` namespace.
+     *
+     * All the configuration options below are optional and can be omitted if not needed.
+     *
+     * ## Event Listeners
+     *
+     * Utiq made the design choice to add event listeners to the config object, which makes it impossible to configure them
+     * server side. If a publisher wants to add event listeners, they have to do it in the client side code and make sure
+     * that the ad tag or `requestAds` call is made after the event listener are added. Otherwise, the Utiq script might
+     * already be available and not pick the listeners up.
+     *
+     * We merged the `Utiq.config
+     *
+     * ## Customization Options
+     *
+     * Those will be merged top level with any existing `customizationOptions` options.
+     *
+     * @see https://docs.utiq.com/docs/configuration-options
+     * @see https://docs.utiq.com/docs/event-listeners
+     */
+    export interface UtiqConfigOptions {
+      /**
+       * The Utiq loader configuration automatically detects the currently accessed host for setting up connections and
+       * managing data. However, you can use a custom host for staging environments that do not fall under the CNAME setups
+       * created for existing Utiq domains. The customUtiqHost configuration entry allows the use of a host different from
+       * the one accessed when visiting a specific website.
+       *
+       * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-customUtiqHost
+       */
+      readonly customUtiqHost?: string;
+
+      /**
+       * You can configure the following Utiq pop-up customized styling: buttons background color, buttons text colors,
+       * buttons corners radius and pop-up text colors.
+       * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-customizationOptions
+       */
+      readonly customizationOptions?: {
+        readonly buttons: {
+          readonly bodyColor: string;
+          readonly textColor: string;
+          readonly radius: number;
+        };
+        readonly contentTextColor: string;
+      };
+
+      /**
+       * This configuration option allows to specify a custom origin (string value) for the Utiq consent manager script.
+       * This is useful when the consent manager is hosted on a different domain than the one where the Utiq loader script
+       * is loaded from. The value must be a valid origin, e.g. `https://subdomain.other-utiq-enabled-source-domain.com`.
+       *
+       * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-consentManagerOrigin
+       */
+      readonly consentManagerOrigin?: string;
+
+      /**
+       * When using the [Utiq Consent Manager](https://docs.utiq.com/docs/1b-consent-experience-utiq-separate-pop-up-model-u)
+       * you can enable event tracking for the pop-up actions by adding a consentManagerDataLayer configuration.
+       *
+       * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-consentManagerDataLayer
+       */
+      readonly consentManagerDataLayer?: boolean;
+    }
+
+    /**
+     * ## Utiq Configuration
+     *
+     * The configuration for the utiq module. Contains all utiq configuration properties as well as moli ad tag modules, too.
+     */
+    export type UtiqConfig = {
+      readonly enabled: boolean;
+
+      /**
+       * Utiq loads a single javascript. It will only load if consent for **all** purposes is given.
+       */
+      readonly assetUrl: string;
+
+      /**
+       * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript
+       * @see https://docs.utiq.com/docs/configuration-options
+       */
+      readonly options?: UtiqConfigOptions;
+    };
+  }
+
   export namespace prebid_first_party_data {
     export type GptTargetingMapping = {
       /**
@@ -1833,19 +1921,20 @@ export namespace modules {
   }
 
   export interface ModulesConfig {
+    readonly adex?: adex.AdexConfig;
     readonly adReload?: adreload.AdReloadModuleConfig;
-    readonly cleanup?: cleanup.CleanupModuleConfig;
-    readonly pubstack?: pubstack.PubstackConfig;
-    readonly confiant?: confiant.ConfiantConfig;
     readonly blocklist?:
       | blocklist.BlocklistUrlsBlockingConfig
       | blocklist.BlocklistUrlsKeyValueConfig;
-    readonly adex?: adex.AdexConfig;
-    readonly skin?: skin.SkinModuleConfig;
-    readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
-    readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
+    readonly cleanup?: cleanup.CleanupModuleConfig;
+    readonly confiant?: confiant.ConfiantConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
+    readonly pubstack?: pubstack.PubstackConfig;
+    readonly skin?: skin.SkinModuleConfig;
+    readonly utiq?: utiq.UtiqConfig;
+    readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
+    readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;
     readonly stickyFooterAd?: stickyFooterAd.StickyFooterAdConfig;
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;

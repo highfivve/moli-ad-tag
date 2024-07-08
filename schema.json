@@ -1153,6 +1153,9 @@
         "stickyFooterAdV2": {
           "$ref": "#/definitions/modules.stickyFooterAdV2.StickyFooterAdConfig"
         },
+        "utiq": {
+          "$ref": "#/definitions/modules.utiq.UtiqConfig"
+        },
         "yieldOptimization": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfig"
         },
@@ -2522,6 +2525,81 @@
         "stickyFooterDomIds",
         "disallowedAdvertiserIds"
       ],
+      "type": "object"
+    },
+    "modules.utiq.UtiqConfig": {
+      "additionalProperties": false,
+      "description": "## Utiq Configuration\n\nThe configuration for the utiq module. Contains all utiq configuration properties as well as moli ad tag modules, too.",
+      "properties": {
+        "assetUrl": {
+          "description": "Utiq loads a single javascript. It will only load if consent for **all** purposes is given.",
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "options": {
+          "$ref": "#/definitions/modules.utiq.UtiqConfigOptions",
+          "description": "The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript"
+        }
+      },
+      "required": [
+        "enabled",
+        "assetUrl"
+      ],
+      "type": "object"
+    },
+    "modules.utiq.UtiqConfigOptions": {
+      "additionalProperties": false,
+      "description": "The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript object that can be set up before the Utiq loader script is loaded. The configuration object is available under the `Utiq.config` namespace.\n\nAll the configuration options below are optional and can be omitted if not needed.\n\n## Event Listeners\n\nUtiq made the design choice to add event listeners to the config object, which makes it impossible to configure them server side. If a publisher wants to add event listeners, they have to do it in the client side code and make sure that the ad tag or `requestAds` call is made after the event listener are added. Otherwise, the Utiq script might already be available and not pick the listeners up.\n\nWe merged the `Utiq.config\n\n## Customization Options\n\nThose will be merged top level with any existing `customizationOptions` options.",
+      "properties": {
+        "consentManagerDataLayer": {
+          "description": "When using the [Utiq Consent Manager](https://docs.utiq.com/docs/1b-consent-experience-utiq-separate-pop-up-model-u) you can enable event tracking for the pop-up actions by adding a consentManagerDataLayer configuration.",
+          "type": "boolean"
+        },
+        "consentManagerOrigin": {
+          "description": "This configuration option allows to specify a custom origin (string value) for the Utiq consent manager script. This is useful when the consent manager is hosted on a different domain than the one where the Utiq loader script is loaded from. The value must be a valid origin, e.g. `https://subdomain.other-utiq-enabled-source-domain.com`.",
+          "type": "string"
+        },
+        "customUtiqHost": {
+          "description": "The Utiq loader configuration automatically detects the currently accessed host for setting up connections and managing data. However, you can use a custom host for staging environments that do not fall under the CNAME setups created for existing Utiq domains. The customUtiqHost configuration entry allows the use of a host different from the one accessed when visiting a specific website.",
+          "type": "string"
+        },
+        "customizationOptions": {
+          "additionalProperties": false,
+          "description": "You can configure the following Utiq pop-up customized styling: buttons background color, buttons text colors, buttons corners radius and pop-up text colors.",
+          "properties": {
+            "buttons": {
+              "additionalProperties": false,
+              "properties": {
+                "bodyColor": {
+                  "type": "string"
+                },
+                "radius": {
+                  "type": "number"
+                },
+                "textColor": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "bodyColor",
+                "textColor",
+                "radius"
+              ],
+              "type": "object"
+            },
+            "contentTextColor": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "buttons",
+            "contentTextColor"
+          ],
+          "type": "object"
+        }
+      },
       "type": "object"
     },
     "modules.yield_optimization.AdunitPriceRulesResponse": {
@@ -7725,7 +7803,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-182125-182128-248365657-182118-182128-248365657-182086-182914-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-182864-182867-248365657-182857-182867-248365657-182825-183653-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901%3E"
           },
           "type": "array"
         }
@@ -7735,7 +7813,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559&alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-181768-181938-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011149092559&alias-248365657-181938-182071-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -7745,7 +7823,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559%26alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-181768-181938-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011149092559%26alias-248365657-181938-182071-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011210238678)%3E"
           },
           "type": "array"
         }
@@ -7755,7 +7833,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-181341-181527-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-19590198888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -7765,7 +7843,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-181341-181527-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-19590198888365%3E"
           },
           "type": "array"
         }
@@ -7775,7 +7853,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -7785,7 +7863,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090%3E"
           },
           "type": "array"
         }
@@ -7795,7 +7873,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559&alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-181768-181938-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011149092559&alias-248365657-181938-182071-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7858,7 +7936,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-181341-181527-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-19590198888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7917,7 +7995,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -7972,7 +8050,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-182125-182128-248365657-182118-182128-248365657-182086-182914-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-182864-182867-248365657-182857-182867-248365657-182825-183653-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8028,7 +8106,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180602-180788-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-19516298888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-181341-181527-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-19590198888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -8040,7 +8118,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -8048,23 +8126,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-181029-181199-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621149092559%26alias-248365657-181199-181332-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-1951621210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-181768-181938-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011149092559%26alias-248365657-181938-182071-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-1959011210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-180788-181029-248365657-180021-186096-248365657-179906-186096-248365657-190-195161-248365657-163-195161-248365657-0-195162187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-181527-181768-248365657-180760-186835-248365657-180645-186835-248365657-190-195900-248365657-163-195900-248365657-0-195901187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -9823,6 +9901,13 @@
     "prebidjs.userSync.ICriteoProvider": {
       "additionalProperties": false,
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "criteo",
           "description": "the provider name",
@@ -9831,6 +9916,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -9841,6 +9929,13 @@
     "prebidjs.userSync.IDigitTrustProvider": {
       "additionalProperties": false,
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "digitrust",
           "description": "the provider name",
@@ -9853,6 +9948,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10003,6 +10101,13 @@
       "additionalProperties": false,
       "description": "The ID5 Universal ID that is delivered to Prebid will be encrypted by ID5 with a rotating key to avoid unauthorized usage and to enforce privacy requirements. Therefore, we strongly recommend setting `storage.refreshInSeconds` to 8 hours (8*3600 seconds) to ensure all demand partners receive an ID that has been encrypted with the latest key, has up-to-date privacy signals, and allows them to transact against it.",
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "id5Id",
           "description": "the provider name",
@@ -10015,6 +10120,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10047,6 +10155,13 @@
       "additionalProperties": false,
       "description": "IdentityLink, provided by LiveRamp is a single person-based identifier which allows marketers, platforms and publishers to perform personalized segmentation, targeting and measurement use cases that require a consistent, cross-channel view of the user in anonymous spaces.",
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "identityLink",
           "description": "the provider name",
@@ -10059,6 +10174,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10110,6 +10228,13 @@
       "additionalProperties": false,
       "description": "Developed by and for use with Display and Video 360, PAIR (Publisher Advertiser Identity Reconciliation) is a secure and privacy-forward way for enabling advertisers and publishers to reconcile their first-party data for marketing use cases via advanced data encryption methods without the reliance on third-party cookies. PAIR can help advertisers and publishers maintain control of first-party data while ensuring there is no pooling of data, no leakage of data, no leakage of insights, durability for the future using secure encryption methods, and no user tracking across publishers.",
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "pairId",
           "description": "the provider name",
@@ -10122,6 +10247,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10133,6 +10261,13 @@
     "prebidjs.userSync.IPubCommonIdProvider": {
       "additionalProperties": false,
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "pubCommonId",
           "description": "the provider name",
@@ -10141,6 +10276,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10169,6 +10307,13 @@
     "prebidjs.userSync.ISharedIdProvider": {
       "additionalProperties": false,
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "sharedId",
           "description": "the provider name",
@@ -10181,6 +10326,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10192,6 +10340,13 @@
     "prebidjs.userSync.IUnifiedIdProvider": {
       "additionalProperties": false,
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "unifiedId",
           "description": "the provider name",
@@ -10204,6 +10359,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10332,7 +10490,7 @@
       "additionalProperties": false,
       "properties": {
         "bidders": {
-          "description": "An array of bidder codes to which this user ID may be sent. Currently, required and supporting AdformOpenRTB",
+          "description": "An array of bidder codes to which this user ID may be sent.",
           "items": {
             "$ref": "#/definitions/prebidjs.BidderCode"
           },
@@ -10350,10 +10508,12 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
-        "bidders",
         "name",
         "params"
       ],
@@ -10361,14 +10521,46 @@
     },
     "prebidjs.userSync.IUtiqIdProviderParams": {
       "additionalProperties": false,
+      "description": "Params are identical for UtiqId and UtiqMtpId",
       "properties": {
         "maxDelayTime": {
           "description": "Max amount of time (in seconds) before looking into storage for data",
           "type": "number"
         }
       },
+      "type": "object"
+    },
+    "prebidjs.userSync.IUtiqMtpIdProvider": {
+      "additionalProperties": false,
+      "description": "MTP stands for MarTechPass.",
+      "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
+        "name": {
+          "const": "utiqMtpId",
+          "description": "the provider name",
+          "type": "string"
+        },
+        "params": {
+          "$ref": "#/definitions/prebidjs.userSync.IUtiqIdProviderParams",
+          "description": "provider specific params"
+        },
+        "storage": {
+          "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
+          "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
+        }
+      },
       "required": [
-        "maxDelayTime"
+        "name",
+        "params"
       ],
       "type": "object"
     },
@@ -10376,6 +10568,13 @@
       "additionalProperties": false,
       "description": "ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers and a fast-changing regulatory landscape. ID+ is an open invitation to the entire industry to build the future of identity together.",
       "properties": {
+        "bidders": {
+          "description": "An array of bidder codes to which this user ID may be sent.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
         "name": {
           "const": "zeotapIdPlus",
           "description": "the provider name",
@@ -10384,6 +10583,9 @@
         "storage": {
           "$ref": "#/definitions/prebidjs.userSync.IUserIdStorage",
           "description": "The publisher can specify some kind of local storage in which to store the results of the call to get the user ID. This can be either cookie or HTML5 storage. This is not needed when value is specified or the ID system is managing its own storage"
+        },
+        "value": {
+          "description": "Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the values to be sent to the adapters."
         }
       },
       "required": [
@@ -10416,6 +10618,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.userSync.IUtiqIdProvider"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.userSync.IUtiqMtpIdProvider"
         },
         {
           "$ref": "#/definitions/prebidjs.userSync.ISharedIdProvider"
