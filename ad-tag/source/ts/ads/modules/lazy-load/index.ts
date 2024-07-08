@@ -44,17 +44,17 @@
  * @module
  */
 
-import { MoliRuntime } from '../../../types/moliRuntime';
-import { modules } from '../../../types/moliConfig';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
   PrepareRequestAdsStep
-} from '../../../ads/adPipeline';
-import { IModule, ModuleType } from '../../../types/module';
-import { mkConfigureStepOncePerRequestAdsCycle } from '../../../ads/adPipeline';
-import { selectInfiniteSlot } from '../../../ads/modules/lazy-load/selectInfiniteSlot';
+} from 'ad-tag/ads/adPipeline';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { mkConfigureStepOncePerRequestAdsCycle } from 'ad-tag/ads/adPipeline';
+import { selectInfiniteSlot } from './selectInfiniteSlot';
 
 /**
  * To solve the Intersection Observer API typescript error

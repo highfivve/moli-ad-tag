@@ -4,9 +4,6 @@ import { toAdexListType, toAdexMapType, toAdexStringOrNumberType } from './adex-
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import sinonChai from 'sinon-chai';
 import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
-import AdexKeyValueMap = modules.adex.AdexKeyValueMap;
-import AdexKeyValuePair = modules.adex.AdexKeyValuePair;
-import AdexList = modules.adex.AdexList;
 
 use(sinonChai);
 
@@ -27,7 +24,7 @@ describe('toAdexMapType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 'Pregnancy' } };
+    const expectedResult: modules.adex.AdexKeyValueMap = { iab_cat: { Medical: 'Pregnancy' } };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -47,7 +44,7 @@ describe('toAdexMapType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 1 } };
+    const expectedResult: modules.adex.AdexKeyValueMap = { iab_cat: { Medical: 1 } };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -67,7 +64,7 @@ describe('toAdexMapType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 0 } };
+    const expectedResult: modules.adex.AdexKeyValueMap = { iab_cat: { Medical: 0 } };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -87,7 +84,9 @@ describe('toAdexMapType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 'ChildHealth,Pregnancy' } };
+    const expectedResult: modules.adex.AdexKeyValueMap = {
+      iab_cat: { Medical: 'ChildHealth,Pregnancy' }
+    };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -146,7 +145,7 @@ describe('toAdexMapType', () => {
       },
       { ...noopLogger, warn: warnSpy }
     );
-    const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 1337 } };
+    const expectedResult: modules.adex.AdexKeyValueMap = { iab_cat: { Medical: 1337 } };
     expect(result).to.deep.equal(expectedResult);
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
@@ -175,7 +174,7 @@ describe('toAdexMapType', () => {
       },
       { ...noopLogger, warn: warnSpy }
     );
-    const expectedResult: AdexKeyValueMap = { iab_cat: { Medical: 1337 } };
+    const expectedResult: modules.adex.AdexKeyValueMap = { iab_cat: { Medical: 1337 } };
     expect(result).to.deep.equal(expectedResult);
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
@@ -203,7 +202,7 @@ describe('toAdexStringOrNumberType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValuePair = { iab_cat: 'Medical' };
+    const expectedResult: modules.adex.AdexKeyValuePair = { iab_cat: 'Medical' };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -221,7 +220,7 @@ describe('toAdexStringOrNumberType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValuePair = { iab_cat: 1 };
+    const expectedResult: modules.adex.AdexKeyValuePair = { iab_cat: 1 };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -239,7 +238,7 @@ describe('toAdexStringOrNumberType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValuePair = { iab_cat: 0 };
+    const expectedResult: modules.adex.AdexKeyValuePair = { iab_cat: 0 };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -300,7 +299,7 @@ describe('toAdexStringOrNumberType', () => {
       },
       { ...noopLogger, warn: warnSpy }
     );
-    const expectedResult: AdexKeyValuePair = { iab_cat: 1337 };
+    const expectedResult: modules.adex.AdexKeyValuePair = { iab_cat: 1337 };
     expect(result).to.deep.equal(expectedResult);
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
@@ -325,7 +324,7 @@ describe('toAdexStringOrNumberType', () => {
       },
       { ...noopLogger, warn: warnSpy }
     );
-    const expectedResult: AdexKeyValuePair = { iab_cat: '1337' };
+    const expectedResult: modules.adex.AdexKeyValuePair = { iab_cat: '1337' };
     expect(result).to.deep.equal(expectedResult);
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
@@ -350,7 +349,7 @@ describe('toAdexStringOrNumberType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexKeyValuePair = { iab_cat: 'Medical,Pregnancy' };
+    const expectedResult: modules.adex.AdexKeyValuePair = { iab_cat: 'Medical,Pregnancy' };
     expect(result).to.deep.equal(expectedResult);
   });
 });
@@ -369,7 +368,7 @@ describe('toAdexListType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexList = { iab_cat: { Medical: 1, Pregnancy: 1 } };
+    const expectedResult: modules.adex.AdexList = { iab_cat: { Medical: 1, Pregnancy: 1 } };
     expect(result).to.deep.equal(expectedResult);
   });
 
@@ -400,7 +399,7 @@ describe('toAdexListType', () => {
       },
       { ...noopLogger, warn: warnSpy }
     );
-    const expectedResult: AdexList = { iab_cat: { '1337': 1 } };
+    const expectedResult: modules.adex.AdexList = { iab_cat: { '1337': 1 } };
     expect(result).to.deep.equal(expectedResult);
     // should warn about default value usage
     expect(warnSpy).to.have.been.calledOnceWithExactly(
@@ -447,7 +446,7 @@ describe('toAdexListType', () => {
       },
       noopLogger
     );
-    const expectedResult: AdexList = { iab_cat: { Medical: 1, Pregnancy: 1 } };
+    const expectedResult: modules.adex.AdexList = { iab_cat: { Medical: 1, Pregnancy: 1 } };
     expect(result).to.deep.equal(expectedResult);
   });
 });

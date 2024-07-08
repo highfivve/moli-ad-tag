@@ -1,17 +1,17 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import { LazyLoad } from '../../../ads/modules/lazy-load/index';
+import { LazyLoad } from 'ad-tag/ads/modules/lazy-load/index';
 import sinonChai from 'sinon-chai';
-import { AdSlot, MoliConfig } from '../../../types/moliConfig';
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { createMoliTag } from '../../../ads/moli';
-import { emptyRuntimeConfig, newNoopLogger } from '../../../stubs/moliStubs';
-import { fullConsent } from '../../../stubs/consentStubs';
-import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
-import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
-import { dummySchainConfig } from '../../../stubs/schainStubs';
-import { AdPipelineContext } from '../../../ads/adPipeline';
-import { createAssetLoaderService } from '../../../util/assetLoaderService';
+import { AdSlot, MoliConfig } from 'ad-tag/types/moliConfig';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createMoliTag } from 'ad-tag/ads/moli';
+import { emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
+import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 const createAdSlots = (
   window: Window,
   domIds: string[],

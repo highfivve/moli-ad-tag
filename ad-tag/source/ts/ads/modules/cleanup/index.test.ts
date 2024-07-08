@@ -1,18 +1,18 @@
 import * as Sinon from 'sinon';
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from '../../../stubs/moliStubs';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
 import { Cleanup } from './index';
-import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
-import { dummySchainConfig } from '../../../stubs/schainStubs';
+import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
+import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 import { expect } from 'chai';
-import { fullConsent } from '../../..//stubs/consentStubs';
-import { createMoliTag } from '../../../ads/moli';
-import { AdSlot, modules, MoliConfig } from '../../../types/moliConfig';
-import { googletag } from '../../../types/googletag';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { createMoliTag } from 'ad-tag/ads/moli';
+import { AdSlot, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { googletag } from 'ad-tag/types/googletag';
 import IAdSlot = googletag.IAdSlot;
-import { MoliRuntime } from '../../../types/moliRuntime';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
-import { createAssetLoaderService } from '../../../util/assetLoaderService';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();

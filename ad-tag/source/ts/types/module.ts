@@ -1,4 +1,3 @@
-import { IAssetLoaderService } from '../util/assetLoaderService';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 import { modules } from './moliConfig';
 

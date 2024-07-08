@@ -7,20 +7,20 @@ import Blocklist = modules.blocklist.Blocklist;
 import StaticBlocklistProvider = modules.blocklist.StaticBlocklistProvider;
 import DynamicBlocklistProvider = modules.blocklist.DynamicBlocklistProvider;
 import { BlocklistedUrls } from '../blocklist-url/index';
-import { googletag } from '../../../types/googletag';
-import { createAssetLoaderService } from '../../../util/assetLoaderService';
+import { googletag } from 'ad-tag/types/googletag';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import BlocklistUrlsBlockingConfig = modules.blocklist.BlocklistUrlsBlockingConfig;
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { createGoogletagStub } from '../../../stubs/googletagStubs';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
   noopLogger
-} from '../../../stubs/moliStubs';
-import { AdPipelineContext, ConfigureStep } from '../../../ads/adPipeline';
-import { fullConsent } from '../../../stubs/consentStubs';
-import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
+} from 'ad-tag/stubs/moliStubs';
+import { AdPipelineContext, ConfigureStep } from 'ad-tag/ads/adPipeline';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
 import BlocklistUrlsKeyValueConfig = modules.blocklist.BlocklistUrlsKeyValueConfig;
 

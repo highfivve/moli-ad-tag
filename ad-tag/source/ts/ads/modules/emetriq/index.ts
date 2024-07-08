@@ -68,7 +68,7 @@
  * @module
  */
 
-import { IAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 import {
   EmetriqAdditionalIdentifier,
   EmetriqWindow,

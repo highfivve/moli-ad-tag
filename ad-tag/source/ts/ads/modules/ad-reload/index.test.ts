@@ -5,17 +5,17 @@ import sinonChai from 'sinon-chai';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 import { AdReload } from './index';
-import { googletag } from '../../../types/googletag';
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { prebidjs } from '../../../types/prebidjs';
-import { MoliRuntime } from '../../../types/moliRuntime';
+import { googletag } from 'ad-tag/types/googletag';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../../../stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { AdSlot, behaviour, modules, MoliConfig } from '../../../types/moliConfig';
-import { createGoogletagStub, googleAdSlotStub } from '../../../stubs/googletagStubs';
+import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdVisibilityService } from './adVisibilityService';
-import { createAssetLoaderService } from '../../../util/assetLoaderService';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 use(sinonChai);
 

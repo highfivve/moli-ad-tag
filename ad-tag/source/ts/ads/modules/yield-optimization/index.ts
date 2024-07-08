@@ -62,7 +62,6 @@ import { YieldOptimizationService } from './yieldOptimizationService';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import { modules } from 'ad-tag/types/moliConfig';
-import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import {
   AdPipelineContext,
   ConfigureStep,

@@ -3,25 +3,20 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { Skin, SkinConfigEffect } from './index';
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { googletag } from '../../../types/googletag';
-import { createGoogletagStub } from '../../../stubs/googletagStubs';
-import { AdSlot, headerbidding, modules, MoliConfig } from '../../../types/moliConfig';
-import { prebidjs } from '../../../types/prebidjs';
-import {
-  emptyConfig,
-  emptyRuntimeConfig,
-  newNoopLogger,
-  noopLogger
-} from '../../../stubs/moliStubs';
-import { createAssetLoaderService } from '../../../util/assetLoaderService';
-import { dummySchainConfig } from '../../../stubs/schainStubs';
-import { createPbjsStub, pbjsTestConfig } from '../../../stubs/prebidjsStubs';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { googletag } from 'ad-tag/types/googletag';
+import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+import { AdSlot, headerbidding, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { emptyConfig, emptyRuntimeConfig, newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
+import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { AdPipelineContext } from '../../adPipeline';
-import { fullConsent } from '../../../stubs/consentStubs';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { initAdTag } from '../../../ads/moliGlobal';
-import { MoliRuntime } from '../../../types/moliRuntime';
+import { initAdTag } from 'ad-tag/ads/moliGlobal';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 // setup sinon-chai
 use(sinonChai);

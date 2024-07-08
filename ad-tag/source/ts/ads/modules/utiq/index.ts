@@ -28,7 +28,7 @@ import {
   mkInitStep,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
-import { AssetLoadMethod, IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 
 /**
  * The Utiq API object.

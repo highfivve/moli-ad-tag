@@ -3,19 +3,19 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { Pubstack } from './index';
-import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
-import { AssetLoadMethod, createAssetLoaderService } from '../../../util/assetLoaderService';
-import { AdPipelineContext } from '../../../ads/adPipeline';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
   noopLogger
-} from '../../../stubs/moliStubs';
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { createGoogletagStub } from '../../../stubs/googletagStubs';
-import { fullConsent } from '../../../stubs/consentStubs';
-import { modules } from '../../../types/moliConfig';
+} from 'ad-tag/stubs/moliStubs';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { modules } from 'ad-tag/types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);

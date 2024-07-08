@@ -2,15 +2,15 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, AssetLoadMethod } from '../../../util/assetLoaderService';
-import { modules } from '../../../types/moliConfig';
-import { ATS } from '../../../types/identitylink';
-import { IdentityLink } from '../../../ads/modules/identitylink/index';
-import { AdPipelineContext } from '../../../ads/adPipeline';
-import { noopLogger, emptyConfig, emptyRuntimeConfig } from '../../../stubs/moliStubs';
-import { fullConsent, tcDataNoGdpr } from '../../../stubs/consentStubs';
-import { GlobalAuctionContext } from '../../../ads/globalAuctionContext';
-import { createDom } from '../../../stubs/browserEnvSetup';
+import { createAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { modules } from 'ad-tag/types/moliConfig';
+import { ATS } from 'ad-tag/types/identitylink';
+import { IdentityLink } from 'ad-tag/ads/modules/identitylink/index';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { noopLogger, emptyConfig, emptyRuntimeConfig } from 'ad-tag/stubs/moliStubs';
+import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 
 // setup sinon-chai
 use(sinonChai);

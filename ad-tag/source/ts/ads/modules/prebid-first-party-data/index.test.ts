@@ -3,23 +3,23 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createDom } from '../../../stubs/browserEnvSetup';
-import { createAssetLoaderService } from '../../../util/assetLoaderService';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../../../stubs/moliStubs';
-import { fullConsent } from '../../../stubs/consentStubs';
-import { createPbjsStub, pbjsTestConfig } from '../../../stubs/prebidjsStubs';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 
-import { prebidjs } from '../../../types/prebidjs';
+import { prebidjs } from 'ad-tag/types/prebidjs';
 import { PrebidFirstPartyDataModule } from './index';
 import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
-import { AdPipelineContext, IAdPipelineConfiguration } from '../../adPipeline';
-import { modules, MoliConfig, Targeting } from '../../../types/moliConfig';
+import { AdPipelineContext } from '../../adPipeline';
+import { modules, MoliConfig, Targeting } from 'ad-tag/types/moliConfig';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { googletag } from '../../../types/googletag';
-import { dummySchainConfig } from '../../../stubs/schainStubs';
-import { MoliRuntime } from '../../../types/moliRuntime';
+import { googletag } from 'ad-tag/types/googletag';
+import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 use(sinonChai);
 use(chaiAsPromised);

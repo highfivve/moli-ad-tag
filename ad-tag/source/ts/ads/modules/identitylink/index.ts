@@ -28,17 +28,17 @@
  *
  * @module
  */
-import { IModule, ModuleType } from '../../../types/module';
-import { ATS } from '../../../types/identitylink';
-import { modules } from '../../../types/moliConfig';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { ATS } from 'ad-tag/types/identitylink';
+import { modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from '../../../ads/adPipeline';
-import { AssetLoadMethod } from '../../../util/assetLoaderService';
+} from 'ad-tag/ads/adPipeline';
+import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 
 /**
  * # IdentityLink Module

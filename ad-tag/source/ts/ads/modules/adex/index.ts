@@ -64,8 +64,8 @@
  *
  * @module
  */
-import { modules } from '../../../types/moliConfig';
-import { IModule, ModuleType } from '../../../types/module';
+import { modules } from 'ad-tag/types/moliConfig';
+import { IModule, ModuleType } from 'ad-tag/types/module';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -73,17 +73,17 @@ import {
   mkConfigureStep,
   mkInitStep,
   PrepareRequestAdsStep
-} from '../../../ads/adPipeline';
-import { AssetLoadMethod } from '../../../util/assetLoaderService';
-import { isNotNull } from '../../../util/arrayUtils';
-import { sendAdvertisingID } from '../../../ads/modules/adex/sendAdvertisingId';
-import { tcfapi } from '../../../types/tcfapi';
+} from 'ad-tag/ads/adPipeline';
+import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { isNotNull } from 'ad-tag/util/arrayUtils';
+import { sendAdvertisingID } from 'ad-tag/ads/modules/adex/sendAdvertisingId';
+import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import {
   toAdexListType,
   toAdexMapType,
   toAdexStringOrNumberType
-} from '../../../ads/modules/adex/adex-mapping';
+} from 'ad-tag/ads/modules/adex/adex-mapping';
 
 export interface ITheAdexWindow extends Window {
   /**

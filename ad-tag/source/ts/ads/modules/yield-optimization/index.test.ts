@@ -5,14 +5,11 @@ import sinonChai from 'sinon-chai';
 
 import { YieldOptimization } from './index';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { googletag } from 'ad-tag/types/googletag';
 import { AdSlot, modules, MoliConfig } from 'ad-tag/types/moliConfig';
-import StaticYieldOptimizationConfig = modules.yield_optimization.StaticYieldOptimizationConfig;
 import { emptyConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
-import YieldOptimizationConfig = modules.yield_optimization.YieldOptimizationConfig;
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,7 +20,7 @@ describe('Yield Optimization module', () => {
   let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
 
   const adUnitId = 'adUnit1';
-  const yieldConfig: StaticYieldOptimizationConfig = {
+  const yieldConfig: modules.yield_optimization.StaticYieldOptimizationConfig = {
     enabled: true,
     provider: 'static',
     config: {
@@ -61,7 +58,7 @@ describe('Yield Optimization module', () => {
   };
 
   const createConfiguredModule = (
-    providedYieldConfig: YieldOptimizationConfig = yieldConfig
+    providedYieldConfig: modules.yield_optimization.YieldOptimizationConfig = yieldConfig
   ): YieldOptimization => {
     const module = new YieldOptimization();
     module.configure({

@@ -71,9 +71,9 @@
  *
  * @module
  */
-import { prebidjs } from '../../../types/prebidjs';
-import { IModule, ModuleType } from '../../../types/module';
-import { MoliRuntime } from '../../../types/moliRuntime';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { IModule, ModuleType } from 'ad-tag/types/module';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -81,9 +81,9 @@ import {
   mkInitStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-import { flatten, isNotNull, uniquePrimitiveFilter } from '../../../util/arrayUtils';
-import { googletag } from '../../../types/googletag';
-import { behaviour, modules } from '../../../types/moliConfig';
+import { flatten, isNotNull, uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
+import { googletag } from 'ad-tag/types/googletag';
+import { behaviour, modules } from 'ad-tag/types/moliConfig';
 
 export enum SkinConfigEffect {
   BlockSkinSlot = 'BlockSkinSlot',

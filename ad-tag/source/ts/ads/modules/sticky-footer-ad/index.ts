@@ -36,11 +36,10 @@ import {
   LOW_PRIORITY,
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
-} from '../../../ads/adPipeline';
+} from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
 import { setupFooterAdListener } from './desktopFloorAd';
 import { initMobileAdSticky } from './mobileSticky';
-import { IAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 /**
  * ## Sticky Footer Ads
