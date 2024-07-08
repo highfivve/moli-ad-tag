@@ -176,14 +176,12 @@ describe('Cleanup Module', () => {
           bidder: 'dspx',
           domId: domId3,
           deleteMethod: {
-            jsAsString: [
-              'something broken',
-              `context.window.document.querySelectorAll('.${specialFormatClass3}').forEach(element => element.remove());`
-            ]
+            jsAsString: [`globalThis.console.log('JS for slot ${domId3} is being executed');`]
           }
         }
       ]
     });
+    const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
     const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
 
     const config = mkConfig(slots);
@@ -197,11 +195,11 @@ describe('Cleanup Module', () => {
 
     const specialFormatElementsInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`),
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass3}`)
+      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
     ];
 
     expect(specialFormatElementsInDom).to.have.length(0);
+    expect(consoleLogSpy.calledWith(`JS for slot ${domId3} is being executed`)).to.be.true;
   });
   it('should remove the configured element only if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
     const module = new Cleanup({
@@ -245,6 +243,7 @@ describe('Cleanup Module', () => {
     expect(specialFormatElementsSeedtagInDom[0].classList.contains(specialFormatClass2)).to.be.true;
   });
   it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {
+    const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
     const module = new Cleanup({
       enabled: true,
       configs: [
@@ -253,8 +252,8 @@ describe('Cleanup Module', () => {
           domId: domId1,
           deleteMethod: {
             jsAsString: [
-              `context.window.document.querySelctrAll('.${specialFormatClass3}').forEach(element => element.remove());`,
-              `const test = context.window.document.createElement('div'); test.classList.add('test-element'); context.window.document.body.appendChild(test);`
+              `globalThis.csole.log('This is broken');`,
+              `globalThis.console.log('This is not broken');`
             ]
           }
         }
@@ -272,13 +271,8 @@ describe('Cleanup Module', () => {
       await configure({ ...adPipelineContext() }, slots);
     }
 
-    const specialFormatElementsInDom = jsDomWindow.document.querySelectorAll(
-      `.${specialFormatClass3}`
-    );
-    const getTestElement = jsDomWindow.document.querySelector('.test-element');
-
     expect(errorLogSpy.called).to.be.true;
-    expect(getTestElement).to.not.be.undefined;
-    expect(specialFormatElementsInDom).to.have.length(1);
+    expect(consoleLogSpy.calledWith(`This is broken`)).to.be.false;
+    expect(consoleLogSpy.calledWith(`This is not broken`)).to.be.true;
   });
 });
