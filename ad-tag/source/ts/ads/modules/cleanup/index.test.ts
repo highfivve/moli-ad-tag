@@ -2,8 +2,6 @@ import * as Sinon from 'sinon';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
 import { Cleanup } from './index';
-import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
-import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 import { expect } from 'chai';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createMoliTag } from 'ad-tag/ads/moli';
@@ -55,19 +53,6 @@ describe('Cleanup Module', () => {
   afterEach(() => {
     sandbox.restore();
   });
-
-  const mkConfig = (slots: AdSlot[]): MoliConfig => {
-    return {
-      slots: slots,
-      buckets: {
-        enabled: true,
-        bucket: { lazy_bucket: { timeout: 3000 }, another_lazy_bucket: { timeout: 3000 } }
-      },
-      prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
-      schain: dummySchainConfig,
-      spa: { enabled: true, validateLocation: 'href' }
-    };
-  };
 
   const createAdSlots = (
     window: Window,
@@ -186,14 +171,12 @@ describe('Cleanup Module', () => {
           bidder: 'dspx',
           domId: domId3,
           deleteMethod: {
-            jsAsString: [
-              'something broken',
-              `context.window.document.querySelectorAll('.${specialFormatClass3}').forEach(element => element.remove());`
-            ]
+            jsAsString: [`globalThis.console.log('JS for slot ${domId3} is being executed');`]
           }
         }
       ]
     };
+    const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     module.configure({ cleanup: cleanupConfig });
     const configure = module.configureSteps()[0];
@@ -203,11 +186,11 @@ describe('Cleanup Module', () => {
 
     const specialFormatElementsInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`),
-      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass3}`)
+      ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass2}`)
     ];
 
     expect(specialFormatElementsInDom).to.have.length(0);
+    expect(consoleLogSpy.calledWith(`JS for slot ${domId3} is being executed`)).to.be.true;
   });
   it('should remove the configured element only if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
     const module = new Cleanup();
@@ -258,13 +241,14 @@ describe('Cleanup Module', () => {
           domId: domId1,
           deleteMethod: {
             jsAsString: [
-              `context.window.document.querySelctrAll('.${specialFormatClass3}').forEach(element => element.remove());`,
-              `const test = context.window.document.createElement('div'); test.classList.add('test-element'); context.window.document.body.appendChild(test);`
+              `globalThis.csole.log('This is broken');`,
+              `globalThis.console.log('This is not broken');`
             ]
           }
         }
       ]
     };
+    const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     module.configure({ cleanup: cleanupConfig });
 
@@ -273,13 +257,8 @@ describe('Cleanup Module', () => {
     expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
     await configure({ ...adPipelineContext() }, slots);
 
-    const specialFormatElementsInDom = jsDomWindow.document.querySelectorAll(
-      `.${specialFormatClass3}`
-    );
-    const getTestElement = jsDomWindow.document.querySelector('.test-element');
-
     expect(errorLogSpy.called).to.be.true;
-    expect(getTestElement).to.not.be.undefined;
-    expect(specialFormatElementsInDom).to.have.length(1);
+    expect(consoleLogSpy.calledWith(`This is broken`)).to.be.false;
+    expect(consoleLogSpy.calledWith(`This is not broken`)).to.be.true;
   });
 });
