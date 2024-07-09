@@ -1378,6 +1378,94 @@ export namespace modules {
     };
   }
 
+  export namespace stickyHeaderAd {
+    /**
+     * Configure intersection observer that controls the fade out behaviour
+     */
+    export type StickyHeaderFadeOutConfig = {
+      /**
+       * The recommendation is to use the first content slot DOM ID as a selector.
+       *
+       * Other values may be chosen if
+       *
+       * - no content slots available
+       * - hide earlier based on another element
+       *
+       * Note: You can also use multiple selectors, e.g. `#content_1, #content_2`.  The first element that is found will be used.
+       */
+      readonly selector: string;
+
+      /**
+       * NOTE: this is a server generated config and can only contain static values, thus we pick only properties that
+       *       are representable as JSON values.
+       */
+      readonly options?: Pick<IntersectionObserverInit, 'rootMargin' | 'threshold'>;
+    };
+
+    export interface StickyHeaderAdConfig extends IModuleConfig {
+      /**
+       * References the ad slot in the moli config
+       */
+      readonly headerAdDomId: string;
+
+      /**
+       * The class name, which triggers the fade out transition
+       */
+      readonly fadeOutClassName: string;
+
+      /**
+       * Optional configuration for publishers that have a navbar that hides on scroll or is not sticky.
+       * If set, the ad slot will receive the `navbarHiddenClassName` class when the navbar is hidden.
+       */
+      readonly navbarConfig?: {
+        /**
+         * how to find the navbar element
+         */
+        readonly selector: string;
+
+        /**
+         * the class name that will be added to the ad slot when the navbar is hidden
+         */
+        readonly navbarHiddenClassName: string;
+      };
+
+      /**
+       * If set to `true` this will additional remove the entire ad slot from the DOM
+       * and not just `googletag.destorySlots([slot])`
+       */
+      readonly destroySlot?: boolean;
+
+      /**
+       * If set, setting css classes will be delayed by the amount of milliseconds
+       * specified here.
+       *
+       * If `waitForRendering` is set to `true`, the timer starts after the ad has
+       * been rendered.
+       */
+      readonly minVisibleDurationMs?: number;
+
+      /**
+       * By default, the first content position will be used; content_1 if available, or else content_2 and so on.
+       * As soon as the ad slot is visible, the header ad slot will receive the `fadeOutClassName` class.
+       *
+       * Ad tags may customize this:
+       *
+       * - no content slots available
+       * - hide earlier based on another element
+       *
+       * If `false` is specified, not intersection observer will be registered and the ad slot is always visible.
+       * It's only recommended to use this, if there's no mobile sticky ad slot.
+       */
+      readonly fadeOutTrigger: StickyHeaderFadeOutConfig | false;
+
+      /**
+       * Disable rendering the footer ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       */
+      readonly disallowedAdvertiserIds: number[];
+    }
+  }
+
   export namespace utiq {
     /**
      * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript
@@ -1932,6 +2020,7 @@ export namespace modules {
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly skin?: skin.SkinModuleConfig;
+    readonly stickyHeaderAd?: stickyHeaderAd.StickyHeaderAdConfig;
     readonly utiq?: utiq.UtiqConfig;
     readonly prebidFirstPartyData?: prebid_first_party_data.PrebidFirstPartyDataModuleConfig;
     readonly yieldOptimization?: yield_optimization.YieldOptimizationConfig;

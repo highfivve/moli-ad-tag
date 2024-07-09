@@ -5,7 +5,8 @@
     "cleanup",
     "lazyLoad",
     "prebidFirstPartyData",
-    "stickyFooterAds2",
+    "stickyFooterAd",
+    "stickyHeaderAd",
     "skin",
     "configureFromEndpoint"
   ]

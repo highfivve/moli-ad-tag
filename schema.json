@@ -1153,6 +1153,9 @@
         "stickyFooterAdV2": {
           "$ref": "#/definitions/modules.stickyFooterAdV2.StickyFooterAdConfig"
         },
+        "stickyHeaderAd": {
+          "$ref": "#/definitions/modules.stickyHeaderAd.StickyHeaderAdConfig"
+        },
         "utiq": {
           "$ref": "#/definitions/modules.utiq.UtiqConfig"
         },
@@ -2524,6 +2527,114 @@
         "enabled",
         "stickyFooterDomIds",
         "disallowedAdvertiserIds"
+      ],
+      "type": "object"
+    },
+    "modules.stickyHeaderAd.StickyHeaderAdConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "destroySlot": {
+          "description": "If set to `true` this will additional remove the entire ad slot from the DOM and not just `googletag.destorySlots([slot])`",
+          "type": "boolean"
+        },
+        "disallowedAdvertiserIds": {
+          "description": "Disable rendering the footer ad format for certain advertisers by specifying them here. Most of the time you would use this for partners who ship their own special format or behaviour.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "fadeOutClassName": {
+          "description": "The class name, which triggers the fade out transition",
+          "type": "string"
+        },
+        "fadeOutTrigger": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/modules.stickyHeaderAd.StickyHeaderFadeOutConfig"
+            },
+            {
+              "const": false,
+              "type": "boolean"
+            }
+          ],
+          "description": "By default, the first content position will be used; content_1 if available, or else content_2 and so on. As soon as the ad slot is visible, the header ad slot will receive the `fadeOutClassName` class.\n\nAd tags may customize this:\n\n- no content slots available\n- hide earlier based on another element\n\nIf `false` is specified, not intersection observer will be registered and the ad slot is always visible. It's only recommended to use this, if there's no mobile sticky ad slot."
+        },
+        "headerAdDomId": {
+          "description": "References the ad slot in the moli config",
+          "type": "string"
+        },
+        "minVisibleDurationMs": {
+          "description": "If set, setting css classes will be delayed by the amount of milliseconds specified here.\n\nIf `waitForRendering` is set to `true`, the timer starts after the ad has been rendered.",
+          "type": "number"
+        },
+        "navbarConfig": {
+          "additionalProperties": false,
+          "description": "Optional configuration for publishers that have a navbar that hides on scroll or is not sticky. If set, the ad slot will receive the `navbarHiddenClassName` class when the navbar is hidden.",
+          "properties": {
+            "navbarHiddenClassName": {
+              "description": "the class name that will be added to the ad slot when the navbar is hidden",
+              "type": "string"
+            },
+            "selector": {
+              "description": "how to find the navbar element",
+              "type": "string"
+            }
+          },
+          "required": [
+            "selector",
+            "navbarHiddenClassName"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "disallowedAdvertiserIds",
+        "enabled",
+        "fadeOutClassName",
+        "fadeOutTrigger",
+        "headerAdDomId"
+      ],
+      "type": "object"
+    },
+    "modules.stickyHeaderAd.StickyHeaderFadeOutConfig": {
+      "additionalProperties": false,
+      "description": "Configure intersection observer that controls the fade out behaviour",
+      "properties": {
+        "options": {
+          "additionalProperties": false,
+          "description": "NOTE: this is a server generated config and can only contain static values, thus we pick only properties that       are representable as JSON values.",
+          "properties": {
+            "rootMargin": {
+              "type": "string"
+            },
+            "threshold": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "selector": {
+          "description": "The recommendation is to use the first content slot DOM ID as a selector.\n\nOther values may be chosen if\n\n- no content slots available\n- hide earlier based on another element\n\nNote: You can also use multiple selectors, e.g. `#content_1, #content_2`.  The first element that is found will be used.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "selector"
       ],
       "type": "object"
     },

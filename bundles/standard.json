@@ -9,8 +9,9 @@
     "lazyLoad",
     "prebidFirstPartyData",
     "pubstack",
-    "stickyFooterAds",
+    "stickyFooterAd",
     "stickyFooterAds2",
+    "stickyHeaderAd",
     "skin",
     "yieldOptimization",
     "configureFromEndpoint"

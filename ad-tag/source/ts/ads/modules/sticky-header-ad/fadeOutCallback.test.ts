@@ -1,11 +1,12 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { googletag, prebidjs } from '@highfivve/ad-tag';
 import { RenderEventResult } from './renderResult';
 import { intersectionObserverFadeOutCallback } from './fadeOutCallback';
 import * as process from 'node:process';
+import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { googletag } from 'ad-tag/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
@@ -50,7 +51,7 @@ describe('intersection observer fadeOut callback', () => {
       boundingClientRect: {
         y
       } as any
-    } as any);
+    }) as any;
 
   afterEach(() => {
     dom = createDom();
