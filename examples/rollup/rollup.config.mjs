@@ -23,7 +23,7 @@ const htmlPlugin = html({
         const attrs = makeHtmlAttributes(attributes.script);
 
         // Adding data attributes to the script tag for the configFromEndpoint implementation
-        return `<script id="moli-ad-tag" src="${publicPath}${fileName}"${attrs} data-version="prod" data-pub-code="foo" data-endpoint="localhost:8000"></script>`;
+        return `<script id="moli-ad-tag" src="${publicPath}${fileName}"${attrs} data-version="prod" data-publisher-code="foo" data-endpoint="localhost:8000"></script>`;
       })
       .join('\n');
 
