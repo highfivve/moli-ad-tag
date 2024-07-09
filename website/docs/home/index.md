@@ -1,10 +1,9 @@
 ---
 title: Introduction
-slug: /
 ---
 
 Moli is an ad tag library that helps you to build your own ad setup.
-It's built from publishers for publishers. Checkout the [5 minute setup guide](getting-started/quick-start)
+It's built from publishers for publishers. Checkout the [5-minute setup guide](getting-started/quick-start)
 to get a glance on how things work.
 
 ## Features
