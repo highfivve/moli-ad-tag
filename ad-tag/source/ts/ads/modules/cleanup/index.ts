@@ -15,10 +15,11 @@ import { IModule, ModuleType } from '../../../types/module';
  * Cleans up special formats if enabled (on user navigation and ad reload), especially developed for SPAs.
  *
  * The configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted
- * or JS as single strings that contain the logic that removes the special format.
+ * or JS as single strings that contain the logic to remove the special format.
  *
  * Please note: if you want to execute more than one statement/line of JS, please provide each line as separate string in the array.
  * Like this we make sure that each line is tried to be executed and if one fails, the next one is still executed.
+ * Only global variables can be accessed in the JS strings!
  *
  * ## Integration
  *
@@ -116,10 +117,10 @@ export class Cleanup implements IModule {
           try {
             context.logger.debug(
               'Cleanup Module',
-              `Try to execute JS line string: '${jsLineAsString}'`
+              `Try to execute string as JS: '${jsLineAsString}'`
             );
-            // eslint-disable-next-line no-eval
-            eval(jsLineAsString);
+            const jsFunction = new Function(jsLineAsString);
+            jsFunction();
           } catch (e) {
             context.logger.error(
               'Cleanup Module',
