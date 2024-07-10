@@ -940,9 +940,14 @@ export namespace Moli {
     logger?: MoliLogger;
 
     /**
-     * Google publisher tag page settings configuration
+     * Google Publisher Tag configuration
      */
-    readonly gptPageSettingsConfig?: googletag.GptPageSettingsConfig;
+    readonly gpt?: {
+      /**
+       * GPT page settings configuration.
+       */
+      pageSettingsConfig?: googletag.GptPageSettingsConfig;
+    };
   }
 
   /**

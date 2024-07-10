@@ -211,8 +211,8 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             context.window.googletag.pubads().disableInitialLoad();
             context.window.googletag.pubads().enableSingleRequest();
 
-            if (context.config.gptPageSettingsConfig) {
-              context.window.googletag.setConfig(context.config.gptPageSettingsConfig);
+            if (context.config.gpt?.pageSettingsConfig) {
+              context.window.googletag.setConfig(context.config.gpt.pageSettingsConfig);
             }
 
             const limitedAds = !useStandardGpt(context.tcData, context.config.consent);
