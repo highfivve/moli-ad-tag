@@ -184,7 +184,7 @@ export class AdService {
 
     // prebid
     if (config.prebid && env === 'production') {
-      init.push(prebidInit());
+      init.push(prebidInit(this.assetService));
 
       configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {

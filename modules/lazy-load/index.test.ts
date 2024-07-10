@@ -1,6 +1,6 @@
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { createMoliTag, Moli } from '@highfivve/ad-tag';
-import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
+import { moliPrebidTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
@@ -143,7 +143,7 @@ describe('Lazy-load Module', () => {
         bucket: { lazy_bucket: { timeout: 3000 }, another_lazy_bucket: { timeout: 3000 } }
       },
       logger: noopLogger,
-      prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+      prebid: moliPrebidTestConfig,
       schain: dummySchainConfig
     };
   };

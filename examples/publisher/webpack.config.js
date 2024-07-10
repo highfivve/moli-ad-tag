@@ -112,6 +112,10 @@ module.exports = (_, argv) => ({
         response.sendFile(path.resolve(__dirname, 'yield-config', 'yield-config.json'));
       });
 
+      devServer.app.get('/prebid.js', (_, response) => {
+        response.sendFile(path.resolve(__dirname, 'prebid-dist', 'prebid.js'));
+      });
+
       return middlewares;
     }
   },

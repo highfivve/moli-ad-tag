@@ -23,6 +23,11 @@ export namespace prebidjs {
     };
 
     /**
+     * indicates that the Prebid library has been loaded
+     */
+    readonly libLoaded: boolean;
+
+    /**
      * Prebid version
      */
     readonly version: string;

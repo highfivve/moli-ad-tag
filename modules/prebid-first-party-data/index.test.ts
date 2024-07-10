@@ -12,7 +12,7 @@ import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { createPbjsStub, pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
+import { createPbjsStub, moliPrebidTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
 import { expect, use } from 'chai';
 
@@ -102,10 +102,7 @@ describe('Prebid First Party Data Module', () => {
       slots: [],
       pipeline: configPipeline,
       targeting,
-      prebid: {
-        config: pbjsTestConfig,
-        schain: { nodes: [] }
-      },
+      prebid: moliPrebidTestConfig,
       schain: dummySchainConfig,
       logger: noopLogger
     };

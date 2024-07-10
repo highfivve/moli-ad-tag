@@ -13,23 +13,9 @@ import { StickyFooterAdsV2 } from '@highfivve/module-sticky-footer-ads-v2';
 import { LazyLoad } from '@highfivve/module-moli-lazy-load';
 import { adConfiguration } from './source/ts/configuration';
 import MoliWindow = Moli.MoliWindow;
-import prebid from 'prebid.js';
-import 'prebid.js/modules/consentManagement';
-import 'prebid.js/modules/currency';
-import 'prebid.js/modules/appnexusBidAdapter';
-import 'prebid.js/modules/pubmaticBidAdapter';
-import 'prebid.js/modules/teadsBidAdapter';
-import 'prebid.js/modules/unrulyBidAdapter';
-import 'prebid.js/modules/ixBidAdapter';
-import 'prebid.js/modules/dspxBidAdapter';
-import 'prebid.js/modules/userId/index';
-import 'prebid.js/modules/unifiedIdSystem';
-import 'prebid.js/modules/rubiconBidAdapter';
-import 'prebid.js/modules/priceFloors';
 import { StickyHeaderAds } from '@highfivve/module-sticky-header-ads';
 import { Cleanup } from '@highfivve/ad-tag/lib/ads/modules/cleanup';
 import { Skin } from '@highfivve/module-generic-skin';
-prebid.processQueue();
 
 const moli = initAdTag(window);
 
@@ -265,13 +251,7 @@ moli.registerModule(
     window
   )
 );
-
 moli.addLabel('dspx');
-moli.addLabel('criteo');
-moli.addLabel('pubmatic');
-moli.addLabel('gumgum');
-moli.addLabel('rubicon');
-moli.addLabel('orbidder');
 
 window.pbjs = window.pbjs || { que: [] };
 window.pbjs.que.push(() => {

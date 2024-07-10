@@ -36,6 +36,7 @@ describe('AdService', () => {
           granularityMultiplier: 1
         }
       },
+      distributionUrl: 'https://cdn.h5v.eu/prebid/dist/8.52.0/prebid.js',
       schain: {
         nodes: []
       }

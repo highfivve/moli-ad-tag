@@ -3,7 +3,7 @@ import { createDom } from '../../../stubs/browserEnvSetup';
 import { AdPipelineContext, createMoliTag, Moli } from '../../../../ts/index';
 import { emptyConfig, newNoopLogger } from '../../../stubs/moliStubs';
 import { Cleanup } from './index';
-import { pbjsTestConfig } from '../../../stubs/prebidjsStubs';
+import { moliPrebidTestConfig } from '../../../stubs/prebidjsStubs';
 import { dummySchainConfig } from '../../../stubs/schainStubs';
 import { expect } from 'chai';
 import { fullConsent } from '../../../stubs/consentStubs';
@@ -60,7 +60,7 @@ describe('Cleanup Module', () => {
         bucket: { lazy_bucket: { timeout: 3000 }, another_lazy_bucket: { timeout: 3000 } }
       },
       logger: noopLogger,
-      prebid: { config: pbjsTestConfig, schain: { nodes: [] } },
+      prebid: moliPrebidTestConfig,
       schain: dummySchainConfig,
       spa: { enabled: true, validateLocation: 'href' }
     };
