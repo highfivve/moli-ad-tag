@@ -19,6 +19,46 @@ const teadsVerticalBid = (
   };
 };
 
+const orbidderBid = (adUnitName: string, labelAll: any[]): prebidjs.IOrbidderBid => {
+  return {
+    bidder: 'orbidder',
+    params: {
+      accountId: 'highfivve',
+      placementId: adUnitName,
+      keyValues: {}
+    },
+    labelAll: [prebidjs.Orbidder, ...labelAll]
+  };
+};
+
+const pubmaticBid = (adSlotId: string, labelsAll: Device[]): prebidjs.IPubMaticBid => ({
+  bidder: prebidjs.PubMatic,
+  params: {
+    publisherId: '156843',
+    adSlot: adSlotId,
+    currency: 'EUR'
+  },
+  labelAll: [prebidjs.PubMatic, ...labelsAll]
+});
+
+const gumgumBid = (zone: string, format: any, labelAll: any[]): prebidjs.IGumGumBid => ({
+  bidder: prebidjs.GumGum,
+  params: {
+    zone: zone,
+    ...format
+  },
+  labelAll: [prebidjs.GumGum, ...labelAll]
+});
+
+const criteoBid = (adUnitName: string, labelAllAdditional: Array<string>): prebidjs.ICriteoBid => ({
+  bidder: prebidjs.Criteo,
+  params: {
+    networkId: 864,
+    publisherSubId: adUnitName
+  },
+  labelAll: [prebidjs.Criteo, ...labelAllAdditional]
+});
+
 const unrulyBid = (siteId: number, targetingUUID: string): prebidjs.IUnrulyBid => {
   return {
     bidder: prebidjs.Unruly,
@@ -721,7 +761,10 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
                 sizes: [[1, 1]]
               }
             },
-            bids: [dspxBid('708', ['gutefrage'], 'gf_wallpaper_pixel')]
+            bids: [
+              dspxBid('708', ['gutefrage'], 'gf_wallpaper_pixel'),
+              gumgumBid('q7va5vor', { product: 'skins' }, ['gutefrage.net', 'desktop'])
+            ]
           }
         };
       }
@@ -821,7 +864,11 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
                 ]
               }
             },
-            bids: []
+            bids: [
+              criteoBid('gutefrage.sidebar_1.desktop', ['desktop']),
+              pubmaticBid('2479281', ['desktop']),
+              rubiconBid('1499118', ['desktop'])
+            ]
           }
         };
       },
@@ -852,10 +899,18 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
             pubstack: {},
             mediaTypes: {
               banner: {
-                sizes: []
+                sizes: [
+                  [300, 600],
+                  [160, 600],
+                  [120, 600]
+                ]
               }
             },
-            bids: []
+            bids: [
+              pubmaticBid('2479283', ['desktop']),
+              rubiconBid('1499124', ['desktop']),
+              orbidderBid('gutefrage.sidebar_2.desktop', ['desktop'])
+            ]
           }
         };
       },
@@ -1023,6 +1078,18 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       asi: 'highfivve.com',
       sid: '1111111',
       hp: 1
+    }
+  },
+  globalAuctionContext: {
+    frequencyCap: {
+      enabled: true,
+      configs: [
+        {
+          bidder: 'dspx',
+          domId: 'gf_wallpaper_pixel',
+          blockedForMs: 33000
+        }
+      ]
     }
   }
 });
