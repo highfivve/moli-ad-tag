@@ -10,6 +10,7 @@ import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs'
 import { AdPipelineContext } from './adPipeline';
 import {
   prebidConfigure,
+  prebidInit,
   prebidPrepareRequestAds,
   prebidRemoveAdUnits,
   prebidRequestBids
@@ -23,7 +24,7 @@ import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
-import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { createAssetLoaderService } from '../util/assetLoaderService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -38,6 +39,8 @@ describe('prebid', () => {
     googletag.IGoogleTagWindow &
     prebidjs.IPrebidjsWindow &
     MoliRuntime.MoliWindow = dom.window as any;
+
+  const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
   const adPipelineContext = (
     env: Environment = 'production',
@@ -63,7 +66,7 @@ describe('prebid', () => {
           reactivationPeriod: 1000
         }
       }),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      assetLoaderService: assetLoaderService
     };
   };
 
@@ -213,6 +216,37 @@ describe('prebid', () => {
   afterEach(() => {
     sandbox.reset();
     sandbox.clock.restore();
+  });
+
+  describe('prebid init step', () => {
+    const loadSpy = sandbox.spy(assetLoaderService, 'loadScript');
+
+    it('should not load prebid externally if prebid was already loaded', async () => {
+      dom.window.pbjs = { que: [], libLoaded: true };
+      await prebidInit(assetLoaderService)(
+        adPipelineContext(undefined, {
+          ...emptyConfig,
+          prebid: moliPrebidTestConfig
+        })
+      );
+      expect(loadSpy).to.have.not.been.called;
+    });
+
+    it('should load prebid externally if prebid was not already loaded and distributionUrl is defined', async () => {
+      dom.window.pbjs = { que: [] };
+      await prebidInit(assetLoaderService)(
+        adPipelineContext(undefined, {
+          ...emptyConfig,
+          prebid: moliPrebidTestConfig
+        })
+      );
+
+      expect(loadSpy).to.have.be.been.calledOnceWithExactly({
+        name: 'prebid',
+        assetUrl: 'https://cdn.h5v.eu/prebid/dist/8.52.0/prebid.js',
+        loadMethod: 1
+      });
+    });
   });
 
   describe('prebid configure step', () => {

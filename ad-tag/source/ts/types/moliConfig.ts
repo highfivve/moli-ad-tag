@@ -614,6 +614,9 @@ export namespace headerbidding {
     /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
     readonly config: prebidjs.IPrebidJsConfig;
 
+    /** External prebid distribution url */
+    readonly distributionUrl?: string;
+
     /** optional bidder settings */
     readonly bidderSettings?: prebidjs.IBidderSettings;
 

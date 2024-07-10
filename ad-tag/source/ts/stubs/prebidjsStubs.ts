@@ -9,6 +9,7 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
         callback();
       }
     },
+    libLoaded: true,
     version: 'none',
     adUnits: [],
     addAdUnits: (_adUnits: prebidjs.IAdUnit[]): void => {
@@ -102,6 +103,7 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
 
 export const moliPrebidTestConfig: headerbidding.PrebidConfig = {
   config: pbjsTestConfig,
+  distributionUrl: 'https://cdn.h5v.eu/prebid/dist/8.52.0/prebid.js',
   schain: {
     nodes: []
   }

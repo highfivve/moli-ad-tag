@@ -26,6 +26,12 @@ export interface ILoadAssetParams {
    * Configure how to the script is being loaded
    */
   loadMethod: AssetLoadMethod;
+
+  /**
+   * [optional] type of the script tag. Defaults to 'text/javascript'
+   * if not set, it should be detected from the extension of the assetUrl and set to 'module' if it is a .mjs file
+   */
+  type?: 'module' | 'nomodule';
 }
 
 /**
@@ -36,7 +42,7 @@ export interface IAssetLoaderService {
    * Loads the script and append it to the DOM.
    *
    * @param config
-   * @param parent - [optional] the element to which the assetLoader should append the asset. defaults to document.head.
+   * @param parent (optional) the element to which the assetLoader should append the asset. defaults to document.head.
    */
   loadScript(config: ILoadAssetParams, parent?: Element): Promise<void>;
 
@@ -110,7 +116,7 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 
   private loadAssetViaTag(config: ILoadAssetParams, parentElement: Element): Promise<void> {
-    const tag: HTMLElement = this.scriptTagWithSrc(config.assetUrl);
+    const tag: HTMLElement = this.scriptTag(config);
 
     return new Promise<void>((resolve: () => void, reject: () => void) => {
       tag.onload = resolve;
@@ -119,11 +125,22 @@ export class AssetLoaderService implements IAssetLoaderService {
     });
   }
 
-  private scriptTagWithSrc(src: string): HTMLScriptElement {
+  private scriptTag(config: ILoadAssetParams): HTMLScriptElement {
     const scriptTag = this.window.document.createElement('script');
-    scriptTag.type = 'text/javascript';
+    if (config.type === 'module') {
+      scriptTag.type = 'module';
+    } else if (config.type === 'nomodule') {
+      scriptTag.type = 'text/javascript';
+      scriptTag.setAttribute('nomodule', '');
+    } else {
+      if (config.assetUrl.endsWith('mjs')) {
+        scriptTag.type = 'module';
+      } else {
+        scriptTag.type = 'text/javascript';
+      }
+    }
     scriptTag.async = true;
-    scriptTag.src = src;
+    scriptTag.src = config.assetUrl;
     return scriptTag;
   }
 
