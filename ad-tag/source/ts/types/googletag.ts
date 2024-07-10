@@ -432,9 +432,15 @@ export namespace googletag {
      * called will be fetched in a single instance of googletag.display(). To force an ad slot not to display,
      * the entire div must be removed.
      *
-     * @param id
+     *  @param id
      */
     display(id: string | Element | IAdSlot): void;
+
+    /**
+     * Sets general configuration options for the page.
+     *
+     * @param config - Configuration object for the page (adExpansion, ppp, privacyTreatments).
+     */
 
     setConfig(config: GptPageSettingsConfig): void;
   }
