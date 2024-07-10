@@ -15,7 +15,7 @@ import { MoliRuntime } from '../types/moliRuntime';
 import { SizeConfigService } from './sizeConfigService';
 import { googletag } from '../types/googletag';
 import { isNotNull } from '../util/arrayUtils';
-import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
+import { AssetLoadMethod } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
@@ -222,6 +222,10 @@ export const gptConfigure = (): ConfigureStep => {
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
             context.window.googletag.pubads().enableSingleRequest();
+
+            if (context.config.gpt?.pageSettingsConfig) {
+              context.window.googletag.setConfig(context.config.gpt.pageSettingsConfig);
+            }
 
             const limitedAds = !useStandardGpt(context.tcData, context.config.consent);
             context.logger.debug('GAM', `use limited ads`, limitedAds);

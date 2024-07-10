@@ -3,6 +3,7 @@ import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
+import { googletag } from 'ad-tag/types/googletag';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
@@ -2150,4 +2151,14 @@ export interface MoliConfig {
    * Configure bucketing behaviour
    */
   readonly buckets?: bucket.GlobalBucketConfig;
+
+  /**
+   * Google Publisher Tag configuration
+   */
+  readonly gpt?: {
+    /**
+     * GPT page settings configuration.
+     */
+    pageSettingsConfig?: googletag.GptPageSettingsConfig;
+  };
 }
