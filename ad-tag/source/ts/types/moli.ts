@@ -938,6 +938,16 @@ export namespace Moli {
 
     /** configurable logger */
     logger?: MoliLogger;
+
+    /**
+     * Google Publisher Tag configuration
+     */
+    readonly gpt?: {
+      /**
+       * GPT page settings configuration.
+       */
+      pageSettingsConfig?: googletag.GptPageSettingsConfig;
+    };
   }
 
   /**

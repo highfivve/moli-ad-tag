@@ -19,7 +19,6 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import SlotDefinition = Moli.SlotDefinition;
-import IGoogleTag = googletag.IGoogleTag;
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
 
@@ -211,6 +210,10 @@ export const gptConfigure = (config: Moli.MoliConfig): ConfigureStep => {
             context.window.googletag.pubads().enableAsyncRendering();
             context.window.googletag.pubads().disableInitialLoad();
             context.window.googletag.pubads().enableSingleRequest();
+
+            if (context.config.gpt?.pageSettingsConfig) {
+              context.window.googletag.setConfig(context.config.gpt.pageSettingsConfig);
+            }
 
             const limitedAds = !useStandardGpt(context.tcData, context.config.consent);
             context.logger.debug('GAM', `use limited ads`, limitedAds);

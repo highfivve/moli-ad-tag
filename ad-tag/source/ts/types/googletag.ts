@@ -432,10 +432,38 @@ export namespace googletag {
      * called will be fetched in a single instance of googletag.display(). To force an ad slot not to display,
      * the entire div must be removed.
      *
-     * @param id
+     *  @param id
      */
     display(id: string | Element | IAdSlot): void;
+
+    /**
+     * Sets general configuration options for the page.
+     *
+     * @param config - Configuration object for the page (adExpansion, ppp, privacyTreatments).
+     */
+
+    setConfig(config: GptPageSettingsConfig): void;
   }
+
+  export type GptPageSettingsConfig = {
+    /**
+     * Settings to control/override ad expansion behavior.
+     */
+    readonly adExpansion?: { enabled: boolean };
+    /**
+     * Settings to control publisher privacy treatments.
+     */
+    readonly privacyTreatments?: { treatments: 'disablePersonalization'[] };
+    /**
+     * Settings to control publisher provided signals.
+     */
+    readonly pps?: {
+      taxonomies: {
+        IAB_AUDIENCE_1_1?: { values: string[] };
+        IAB_AUDIENCE_2_2?: { values: string[] };
+      };
+    };
+  };
 
   export namespace enums {
     /**
