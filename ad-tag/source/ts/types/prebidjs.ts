@@ -167,7 +167,11 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    onEvent: event.OnEventHandler;
+    onEvent<E extends keyof event.PrebidEventMap>(
+      event: E,
+      handler: (data: event.PrebidEvent<E>) => void,
+      id?: string
+    ): void;
 
     /**
      * Deregister
@@ -178,7 +182,11 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    offEvent(event: event.EventName, handler: Function, id?: any): void;
+    offEvent<E extends keyof event.PrebidEventMap>(
+      event: E,
+      handler: (data: event.PrebidEvent<E>) => void,
+      id?: string
+    ): void;
 
     /**
      * Convert a cpm from a currency to another one.
@@ -1241,92 +1249,30 @@ export namespace prebidjs {
   }
 
   export namespace event {
-    export type EventName =
-      | 'addAdUnits'
-      | 'adRenderFailed'
-      | 'adRenderSucceeded'
-      | 'auctionDebug'
-      | 'auctionEnd'
-      | 'auctionInit'
-      | 'auctionTimeout'
-      | 'beforeRequestBids'
-      | 'beforeBidderHttp'
-      | 'bidAccepted'
-      | 'bidAdjustment'
-      | 'bidderDone'
-      | 'bidRequested'
-      | 'bidResponse'
-      | 'bidTimeout'
-      | 'bidWon'
-      | 'noBid'
-      | 'requestBids'
-      | 'setTargeting'
-      | 'tcf2Enforcement';
+    export interface PrebidEventMap {
+      addAdUnits: void;
+      adRenderFailed: RenderFailure;
+      adRenderSucceeded: BidResponse;
+      auctionDebug: AuctionDebugInfo;
+      auctionEnd: AuctionObject;
+      auctionInit: AuctionObject;
+      auctionTimeout: AuctionObject;
+      beforeBidderHttp: BidderRequest;
+      beforeRequestBids: BeforeRequestBidsAdUnitInfo;
+      bidAccepted: BidResponse;
+      bidAdjustment: BidResponse;
+      bidderDone: BidderRequest;
+      bidRequested: BidderRequest;
+      bidResponse: BidResponse;
+      bidWon: BidResponse;
+      bidTimeout: NoBidObject[];
+      noBid: NoBidObject;
+      requestBids: void;
+      setTargeting: { [key: string]: AdServerTargeting };
+      tcf2Enforcement: TCF2Enforcement;
+    }
 
-    /**
-     * All events that have no type definitions
-     */
-    export type UntypedEventName = Exclude<EventName, 'bidWon'>;
-
-    export type OnEventHandler = {
-      /**
-       * Triggered when a prebid bid has won the entire auction.
-       *
-       * @param event
-       * @param handler
-       * @param id - ad unit code
-       */
-
-      (event: 'addAdUnits', handler: () => void, id?: string): void;
-
-      (event: 'adRenderFailed', handler: (failure: RenderFailure) => void, id?: string): void;
-
-      (event: 'adRenderSucceeded', handler: (response: BidResponse) => void, id?: string): void;
-
-      (event: 'auctionDebug', handler: (debugInfo: AuctionDebugInfo) => void, id?: string): void;
-
-      (event: 'auctionEnd', handler: (auction: AuctionObject) => void, id?: string): void;
-
-      (event: 'auctionInit', handler: (auction: AuctionObject) => void, id?: string): void;
-
-      (event: 'auctionTimeout', handler: (auction: AuctionObject) => void, id?: string): void;
-
-      (event: 'beforeBidderHttp', handler: (adUnitInfo: BidderRequest) => void, id?: string): void;
-
-      (
-        event: 'beforeRequestBids',
-        handler: (adUnitInfo: BeforeRequestBidsAdUnitInfo) => void,
-        id?: string
-      ): void;
-
-      (event: 'bidAccepted', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidAdjustment', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidderDone', handler: (request: BidderRequest) => void, id?: string): void;
-
-      (event: 'bidRequested', handler: (request: BidderRequest) => void, id?: string): void;
-
-      (event: 'bidResponse', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidWon', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidTimeout', handler: (bid: NoBidObject[]) => void, id?: string): void;
-
-      (event: 'noBid', handler: (bid: NoBidObject) => void, id?: string): void;
-
-      (event: 'requestBids', handler: () => void, id?: string): void;
-
-      (
-        event: 'setTargeting',
-        handler: (targetingInfo: { [key: string]: AdServerTargeting }) => void,
-        id?: string
-      ): void;
-
-      (event: 'tcf2Enforcement', handler: (blocked: TCF2Enforcement) => void, id?: string): void;
-
-      (event: UntypedEventName, bid: any, id?: string): void;
-    };
+    export type PrebidEvent<E extends keyof PrebidEventMap> = PrebidEventMap[E];
 
     export type TCF2Enforcement = {
       readonly storageBlocked: string[];
