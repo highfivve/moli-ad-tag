@@ -56,8 +56,6 @@ export type StickyFooterAdConfig = {
   readonly closingButtonText?: string;
 };
 
-const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
-
 /**
  * ## Sticky Footer Ads
  *
@@ -96,34 +94,16 @@ export class StickyFooterAdsV2 implements IModule {
 
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-        const adSticky = ctx.window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
-
         // determine the slot to init sticky ad for
         const desktopSlot = slots.find(
           slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.desktop
         );
-
-        if (!desktopSlot && this.stickyFooterAdConfig.stickyFooterDomIds.desktop) {
-          const floorAd = ctx.window.document.getElementById(
-            this.stickyFooterAdConfig.stickyFooterDomIds.desktop
-          );
-          floorAd && adSticky?.removeChild(floorAd);
-        }
-
         const mobileSlot = slots.find(
           slot => slot.moliSlot.domId === this.stickyFooterAdConfig.stickyFooterDomIds.mobile
         );
-
-        if (!mobileSlot && this.stickyFooterAdConfig.stickyFooterDomIds.mobile) {
-          const mobileStickyAd = ctx.window.document.getElementById(
-            this.stickyFooterAdConfig.stickyFooterDomIds.mobile
-          );
-          mobileStickyAd && adSticky?.removeChild(mobileStickyAd);
-        }
-
         // mobile traffic is usually a lot higher than desktop, so we opt for mobile as default if both are set.
         // this is usually a configuration error in the ad tag and should not happen
-        const footerAdSlot = mobileSlot ?? desktopSlot;
+        const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
 
         if (mobileSlot && desktopSlot) {
           ctx.logger.warn(this.name, 'mobile and desktop sticky footer are called!');
@@ -134,7 +114,6 @@ export class StickyFooterAdsV2 implements IModule {
             ctx.window,
             ctx.env,
             ctx.logger,
-            adStickyContainerDataRef,
             footerAdSlot.moliSlot.domId,
             this.stickyFooterAdConfig.disallowedAdvertiserIds,
             this.stickyFooterAdConfig.closingButtonText

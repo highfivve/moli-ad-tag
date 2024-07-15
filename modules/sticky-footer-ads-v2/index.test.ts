@@ -187,7 +187,6 @@ describe('Sticky-footer-v2 Module', () => {
           jsDomWindow,
           'production',
           noopLogger,
-          '[data-ref=h5v-sticky-ad]',
           'ad-mobile-sticky',
           [111],
           'close'
@@ -224,7 +223,6 @@ describe('Sticky-footer-v2 Module', () => {
           jsDomWindow,
           'production',
           noopLogger,
-          '[data-ref=h5v-sticky-ad]',
           'ad-desktop-sticky',
           [111],
           'close'
@@ -272,15 +270,7 @@ describe('Sticky-footer-v2 Module', () => {
     it('should throw a warning if there is no adSticky container in the html', function () {
       jsDomWindow.document.querySelector('[data-ref=h5v-sticky-ad]')?.remove();
       jsDomWindow.document.body.appendChild(closeButton);
-      initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111],
-        'close'
-      );
+      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
       expect(errorLogSpy.calledOnce).to.have.been.true;
       expect(errorLogSpy.args[0][0]).to.eq('[sticky-footer-ad]');
       expect(errorLogSpy.args[0][1]).to.eq(
@@ -289,15 +279,7 @@ describe('Sticky-footer-v2 Module', () => {
     });
 
     it('should throw a warning if there is no closeButton element in the html', function () {
-      initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111],
-        'close'
-      );
+      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
       expect(errorLogSpy.calledOnce).to.have.been.true;
       expect(errorLogSpy.args[0][0]).to.eq('[sticky-footer-ad]');
       expect(errorLogSpy.args[0][1]).to.eq(
@@ -310,15 +292,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(closeButton);
 
       const debugLogSpy = sandbox.spy(noopLogger, 'debug');
-      initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111],
-        'close'
-      );
+      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
       expect(debugLogSpy.calledOnce).to.have.been.true;
       expect(debugLogSpy.args.length).to.eq(1);
       expect(debugLogSpy.args[0][0]).to.eq('sticky-ad');
@@ -333,14 +307,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111]
-      );
+      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111]);
       expect(closeButton.childNodes.length).to.eq(1);
       expect(closeButton.childNodes[0].nodeName).to.eq('svg');
     });
@@ -356,14 +323,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111]
-      );
+      initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111]);
       expect(closeButton.childNodes.length).to.eq(1);
     });
 
@@ -373,15 +333,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111],
-        'close'
-      );
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
       const slotRenderEndedEvent: ISlotRenderEndedEvent = {
         slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
@@ -422,15 +374,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111],
-        'close'
-      );
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
       slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
       slotLoadedCallback(slotLoadedEvent, listenerSpy);
@@ -454,15 +398,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [999],
-        'close'
-      );
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [999], 'close');
 
       slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
       slotLoadedCallback(slotLoadedEvent, listenerSpy);
@@ -479,15 +415,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(
-        jsDomWindow,
-        'production',
-        noopLogger,
-        '[data-ref=h5v-sticky-ad]',
-        'h5v-sticky-ad',
-        [111],
-        'close'
-      );
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
       const emptySlotRenderEndedEvent: ISlotRenderEndedEvent = {
         slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,

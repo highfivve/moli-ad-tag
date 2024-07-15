@@ -1,5 +1,6 @@
 import { googletag, Moli } from '@highfivve/ad-tag';
 
+const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
 // is initialized after init
 const adStickyCloseButtonContent = '.h5v-closeButtonContent';
@@ -75,7 +76,6 @@ export const initAdSticky = (
   window: Window & googletag.IGoogleTagWindow,
   env: Moli.Environment,
   log: Moli.MoliLogger,
-  adStickyContainerDataRef: string,
   footerStickyDomId: string,
   disallowedAdvertiserIds: number[],
   closingButtonText?: string
