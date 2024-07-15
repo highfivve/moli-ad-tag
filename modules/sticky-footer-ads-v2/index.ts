@@ -96,7 +96,7 @@ export class StickyFooterAdsV2 implements IModule {
 
     config.pipeline.prepareRequestAdsSteps.push(
       mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-        const adSticky = window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
+        const adSticky = ctx.window.document.querySelector<HTMLElement>(adStickyContainerDataRef);
 
         // determine the slot to init sticky ad for
         const desktopSlot = slots.find(
@@ -104,7 +104,7 @@ export class StickyFooterAdsV2 implements IModule {
         );
 
         if (!desktopSlot && this.stickyFooterAdConfig.stickyFooterDomIds.desktop) {
-          const floorAd = document.getElementById(
+          const floorAd = ctx.window.document.getElementById(
             this.stickyFooterAdConfig.stickyFooterDomIds.desktop
           );
           floorAd && adSticky?.removeChild(floorAd);
@@ -115,7 +115,7 @@ export class StickyFooterAdsV2 implements IModule {
         );
 
         if (!mobileSlot && this.stickyFooterAdConfig.stickyFooterDomIds.mobile) {
-          const mobileStickyAd = document.getElementById(
+          const mobileStickyAd = ctx.window.document.getElementById(
             this.stickyFooterAdConfig.stickyFooterDomIds.mobile
           );
           mobileStickyAd && adSticky?.removeChild(mobileStickyAd);
