@@ -3,7 +3,7 @@ import { SupplyChainObject } from './supplyChainObject';
 import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
-import { googletag } from 'ad-tag/types/googletag';
+import { googletag } from './googletag';
 
 export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
 
