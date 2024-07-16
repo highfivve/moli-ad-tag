@@ -4174,11 +4174,13 @@ export namespace prebidjs {
     readonly params: IPrebidServerBidParams;
 
     readonly ortb2Imp: IOrtb2Imp & {
-      readonly prebid: IOrtb2ImpPrebid & {
-        /**
-         * stored request is required for prebid server calls
-         */
-        readonly storedrequest: IOrtb2ImpStoredRequest;
+      readonly ext?: {
+        readonly prebid: IOrtb2ImpPrebid & {
+          /**
+           * stored request is required for prebid server calls
+           */
+          readonly storedrequest: IOrtb2ImpStoredRequest;
+        };
       };
     };
   }

@@ -316,7 +316,7 @@ describe('Sticky-footer-v2 Module', () => {
       expect(closeButton.childNodes.length).to.eq(1);
     });
 
-    it('should hide the stickAd if the advertiser was disallowed', async function () {
+    it('should hide the stickyAd if the advertiser was disallowed', async function () {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
@@ -353,7 +353,7 @@ describe('Sticky-footer-v2 Module', () => {
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
     });
 
-    it('should hide the stickAd after clicking the close button', async function () {
+    it('should hide the stickyAd after clicking the close button', async function () {
       const adSticky = jsDomWindow.document.createElement('div');
       adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
 
@@ -377,7 +377,7 @@ describe('Sticky-footer-v2 Module', () => {
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
     });
 
-    it('should show the stickAd only if there was an ad', async function () {
+    it('should show the stickyAd only if there was an ad', async function () {
       const adSticky = jsDomWindow.document.createElement('div');
       adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
 
