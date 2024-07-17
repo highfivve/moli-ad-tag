@@ -390,7 +390,7 @@ export class Skin implements IModule {
       (this.window as Window & googletag.IGoogleTagWindow).googletag.destroySlots(adSlots);
     };
 
-  init(config: Moli.MoliConfig, assetLoaderService: IAssetLoaderService): void {
+  init(config: Moli.MoliConfig): void {
     const log = getLogger(config, this.window);
     this.log = log;
     if (!config.prebid) {
@@ -498,10 +498,10 @@ export class Skin implements IModule {
                     }
                   );
 
-                  // Set the native-reload targeting of the skin slot to true in order to track ad reload
+                  // Set the native-ad-reload targeting of the skin slot to true in order to track ad reload
                   // the key is configurable in the ad reload and should be tied to this setting in the future
                   getGoogleAdSlotByDomId(skinConfig.skinAdSlotDomId)?.setTargeting(
-                    'native-reload',
+                    'native-ad-reload',
                     'true'
                   );
 
