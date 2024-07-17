@@ -111,7 +111,7 @@ describe('Skin Module', () => {
 
       module.init(config);
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config, assetLoaderService);
+      expect(initSpy).to.have.been.calledOnceWithExactly(config);
       expect(errorLogSpy).to.have.not.been.called;
 
       expect(config.prebid!.listener).is.ok;
@@ -150,7 +150,7 @@ describe('Skin Module', () => {
 
       module.init(config);
 
-      expect(initSpy).to.have.been.calledOnceWithExactly(config, assetLoaderService);
+      expect(initSpy).to.have.been.calledOnceWithExactly(config);
       expect(errorLogSpy).to.have.been.called;
 
       expect(config.prebid!.listener).is.undefined;
