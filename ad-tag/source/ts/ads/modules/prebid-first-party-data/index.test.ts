@@ -379,6 +379,28 @@ describe('Prebid First Party Data Module', () => {
         expect(site.pagecat).to.deep.equals(['IAB-9']);
       });
 
+      it('should keep data in site.ext.data', async () => {
+        const module = createFpdModule({}, { cat: 'openrtb2_cat' });
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {
+            openrtb2_cat: ['IAB-9']
+          }
+        });
+
+        readConfigStub.returns({
+          ortb2: {
+            site: { ext: { data: { pagetype: 'my-page', category: 'my-cateogry' } } }
+          }
+        });
+
+        await module.configureSteps()[0](adPipelineContext(moliConfig), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.ext?.data?.pagetype).to.deep.equals('my-page');
+        expect(site.ext?.data?.category).to.deep.equals('my-cateogry');
+      });
+
       it('should write unique values', async () => {
         const module = createFpdModule({}, { cat: 'openrtb2_cat' });
 
