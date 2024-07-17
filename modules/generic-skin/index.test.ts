@@ -109,7 +109,7 @@ describe('Skin Module', () => {
         schain: dummySchainConfig
       };
 
-      module.init(config, assetLoaderService);
+      module.init(config);
 
       expect(initSpy).to.have.been.calledOnceWithExactly(config, assetLoaderService);
       expect(errorLogSpy).to.have.not.been.called;
@@ -148,7 +148,7 @@ describe('Skin Module', () => {
         schain: dummySchainConfig
       };
 
-      module.init(config, assetLoaderService);
+      module.init(config);
 
       expect(initSpy).to.have.been.calledOnceWithExactly(config, assetLoaderService);
       expect(errorLogSpy).to.have.been.called;
@@ -594,7 +594,7 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
@@ -635,7 +635,7 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
@@ -685,7 +685,7 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
@@ -742,7 +742,7 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
@@ -799,7 +799,7 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
@@ -878,7 +878,7 @@ describe('Skin Module', () => {
           schain: dummySchainConfig
         };
 
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
@@ -935,7 +935,7 @@ describe('Skin Module', () => {
           schain: dummySchainConfig
         };
 
-        module.init(config, assetLoaderService);
+        module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
 
