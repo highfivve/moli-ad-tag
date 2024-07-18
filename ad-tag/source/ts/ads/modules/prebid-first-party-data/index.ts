@@ -42,7 +42,7 @@ import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2Data = prebidjs.firstpartydata.OpenRtb2Data;
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
@@ -204,7 +204,7 @@ export class PrebidFirstPartyDataModule implements IModule {
 
   private static extractKeyValueArray(
     key: string,
-    keyValues: GoogleAdManagerKeyValueMap
+    keyValues: googleAdManager.KeyValueMap
   ): string[] {
     const value = keyValues[key];
     if (value) {

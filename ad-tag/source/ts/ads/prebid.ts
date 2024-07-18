@@ -23,7 +23,7 @@ import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredReques
 import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import IPrebidJs = prebidjs.IPrebidJs;
-import { AdServer, AdSlot, headerbidding, schain, Targeting } from '../types/moliConfig';
+import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise

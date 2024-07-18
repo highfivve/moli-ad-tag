@@ -8,7 +8,7 @@ import {
   InitStep
 } from 'ad-tag/ads/adPipeline';
 import { IModule, ModuleType } from 'ad-tag/types/module';
-import { CleanupConfig, modules } from 'ad-tag/types/moliConfig';
+import { modules } from 'ad-tag/types/moliConfig';
 
 /**
  * # Cleanup Module
@@ -112,7 +112,7 @@ export class Cleanup implements IModule {
       : [];
   }
 
-  private cleanUp = (context: AdPipelineContext, configs: CleanupConfig[]) => {
+  private cleanUp = (context: AdPipelineContext, configs: modules.cleanup.CleanupConfig[]) => {
     configs.forEach(config => {
       if ('cssSelectors' in config.deleteMethod) {
         config.deleteMethod.cssSelectors.forEach((selector: string) => {
@@ -157,7 +157,7 @@ export class Cleanup implements IModule {
 
   private hasBidderWonLastAuction = (
     context: AdPipelineContext,
-    config: CleanupConfig
+    config: modules.cleanup.CleanupConfig
   ): boolean => {
     const prebidWinningBids = context.window.pbjs.getAllWinningBids();
     const bidderThatWonLastAuctionOnSlot = prebidWinningBids.find(

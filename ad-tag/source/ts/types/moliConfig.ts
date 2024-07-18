@@ -5,15 +5,6 @@ import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
 import { googletag } from './googletag';
 
-export type GoogleAdManagerSlotSize = [number, number] | 'fluid';
-
-/**
- * KeyValue map. Last insert wins.
- */
-export interface GoogleAdManagerKeyValueMap {
-  [key: string]: string | string[] | undefined;
-}
-
 /**
  * Type for a device where Moli could possibly be run on.
  * Web mostly uses mobile or desktop the device.
@@ -52,168 +43,6 @@ export type AdUnitPathVariables = {
   readonly [key: string]: string;
 };
 
-export interface Targeting {
-  /** static or supplied key-values */
-  readonly keyValues: GoogleAdManagerKeyValueMap;
-
-  /**
-   * A list of key-value keys that should not be sent to the ad manager.
-   * This setting is not yet configurable via API as this should be static
-   * and defined in the ad tag.
-   */
-  readonly adManagerExcludes?: string[];
-
-  /** additional labels. Added in addition to the ones created by the sizeConfig. */
-  readonly labels?: string[];
-
-  /** ad unit path variables */
-  readonly adUnitPathVariables?: AdUnitPathVariables;
-}
-
-/**
- * Additional configuration for single page application publishers.
- */
-export interface SinglePageAppConfig {
-  /**
-   * Set to true if this publisher has a single page application.
-   */
-  readonly enabled: boolean;
-
-  /**
-   * If set to `false`, `requestAds` will not destroy all existing ad slots,
-   * but only the ones being requested.
-   *
-   * Use with caution and test properly.
-   *
-   * ## Use cases
-   *
-   * This setting can be used for publishers that have more "static" ad slots, like
-   * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
-   * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
-   * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
-   * publisher, while other content positions are refreshed on navigation.
-   *
-   * @default true
-   */
-  readonly destroyAllAdSlots?: boolean;
-
-  /**
-   * If set to `href`
-   * - the ad tag will only allow one `requestAds` call per `href`
-   * - requires `moli.requestAds()` to be called once per page, otherwise `moli.refreshAdSlot` will queue calls
-   *
-   * All available options are:
-   * - `href` - the ad tag will only allow one `requestAds` call per `href`
-   * - `path` - the ad tag will only allow one `requestAds` call per `path`
-   * - `none` - the ad tag will allow multiple `requestAds` calls
-   *
-   * ## Use cases
-   *
-   * The default is `true` to ensure that subsequent `refreshAdSlot` calls are queued and not executed, if the URL
-   * has already changed. This ensures that the `requestAds()` call has cleaned up all ad slots and state before
-   * loading new ones.
-   *
-   * However, there are publishers that change the URL, e.g. for putting filter settings into the query and do not
-   * call `moli.requestAds()`, because that's not a page change.
-   *
-   * @default true
-   */
-  readonly validateLocation: 'href' | 'path' | 'none';
-}
-
-/**
- * ## SizeConfig entry
- *
- * Configure sizes based on media queries for a single `IAdSlot`.
- *
- * This is the most complex part of a publisher ad tag setup. The size config defines
- *
- * - if an ad slot is loaded
- * - what sizes are requested
- *
- * This slot only supports the `mediaQuery` and `sizesSupported` property.
- * `labels` can only be defined globally as these can and should always be unique,
- * while the `sizesSupported` may overlap due to overlapping media queries.
- *
- * Example for overlapping configuration:
- *
- * ```typescript
- * [{
- *   // mobile devices support a medium rectangle
- *   mediaQuery: (max-width: 767px),
- *   sizesSupported: [[300,250]]
- * }, {
- *   // desktop sidebar supports medium rectangle
- *   mediaQuery: (min-width: 768px),
- *   sizesSupported: [[300,250]]
- * }]
- * ```
- *
- * This result in `[[300,250]]` being always supported, which may not be something you want.
- *
- * ### Using labels
- *
- * If you have the same slot on different page types with a different layout you can differentation size configs
- * via two properites
- *
- * - `labelAll` - all labels need to be present if this size config should be applied
- * - `labelNone` - none of the labels must be present if this size config should be applied
- *
- * ```typescript
- * [{
- *   // mobile devices support a medium rectangle
- *   mediaQuery: (max-width: 767px),
- *   labelAll: ['homepage'],
- *   sizesSupported: [[728,90]]
- * }, {
- *   // desktop sidebar supports medium rectangle
- *   mediaQuery: (min-width: 768px)
- *   labelNone: ['homepage']
- *   sizesSupported: [[728,90], [900,250]]
- * }]
- * ```
- *
- * ## Prebid API
- *
- * The API is identical to the Prebid size config feature. However, we do not pass the
- * size config down to prebid as we already apply the logic at a higher level. We only
- * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
- *
- *
- * @see [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
- * @see [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
- * @see [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
- * @see [requestBids with labels](https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
- */
-export interface SizeConfigEntry<Label = string> {
-  /** media query that must match if the sizes are applicable */
-  readonly mediaQuery: string;
-
-  /** optional array of labels. All labels must be present if the sizes should be applied */
-  readonly labelAll?: Label[];
-
-  /** optional array of labels. All labels must **not** be present if the sizes should be applied */
-  readonly labelNone?: Label[];
-
-  /** static sizes that are support if the media query matches */
-  readonly sizesSupported: GoogleAdManagerSlotSize[];
-}
-
-export interface LabelSizeConfigEntry {
-  /** media query that must match if the labels are applicable */
-  readonly mediaQuery: string;
-
-  /** labels that are available if the media query matches */
-  readonly labelsSupported: string[];
-}
-
-export type IPosition =
-  | 'in-page'
-  | 'out-of-page'
-  | 'out-of-page-interstitial'
-  | 'out-of-page-top-anchor'
-  | 'out-of-page-bottom-anchor';
-
 export interface AdSlot {
   /** id for the ad slot element */
   readonly domId: string;
@@ -222,22 +51,10 @@ export interface AdSlot {
   readonly adUnitPath: string;
 
   /** the sizes for this ad slot */
-  readonly sizes: GoogleAdManagerSlotSize[];
+  readonly sizes: googleAdManager.SlotSize[];
 
-  /**
-   * Configure the ad slot position
-   *
-   * - `in-page` is the standard display ad
-   * - `out-of-page` uses the `defineOutOfPageSlot` API
-   * - `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`
-   * - `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`
-   * - `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`
-   *
-   * @see [Display anchor ad](https://developers.google.com/publisher-tag/samples/display-anchor-ad)
-   * @see [OutOfPageFormat](https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat)
-   *
-   */
-  readonly position: IPosition;
+  /** the position of the ad slot */
+  readonly position: gpt.Position;
 
   /** configure how and when the slot should be loaded */
   readonly behaviour: behaviour.SlotLoading;
@@ -263,7 +80,7 @@ export interface AdSlot {
    *
    * @see [prebid configure responsive ads](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-Responsive-Ads)
    */
-  readonly sizeConfig: SizeConfigEntry[];
+  readonly sizeConfig: sizeConfigs.SizeConfigEntry[];
 
   /**
    * Supplementary gpt configuration.
@@ -336,6 +153,147 @@ export type ResolveAdUnitPathOptions = {
   readonly removeNetworkChildId?: boolean;
 };
 
+export namespace spa {
+  /**
+   * Additional configuration for single page application publishers.
+   */
+  export interface SinglePageAppConfig {
+    /**
+     * Set to true if this publisher has a single page application.
+     */
+    readonly enabled: boolean;
+
+    /**
+     * If set to `false`, `requestAds` will not destroy all existing ad slots,
+     * but only the ones being requested.
+     *
+     * Use with caution and test properly.
+     *
+     * ## Use cases
+     *
+     * This setting can be used for publishers that have more "static" ad slots, like
+     * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+     * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+     * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+     * publisher, while other content positions are refreshed on navigation.
+     *
+     * @default true
+     */
+    readonly destroyAllAdSlots?: boolean;
+
+    /**
+     * If set to `href`
+     * - the ad tag will only allow one `requestAds` call per `href`
+     * - requires `moli.requestAds()` to be called once per page, otherwise `moli.refreshAdSlot` will queue calls
+     *
+     * All available options are:
+     * - `href` - the ad tag will only allow one `requestAds` call per `href`
+     * - `path` - the ad tag will only allow one `requestAds` call per `path`
+     * - `none` - the ad tag will allow multiple `requestAds` calls
+     *
+     * ## Use cases
+     *
+     * The default is `true` to ensure that subsequent `refreshAdSlot` calls are queued and not executed, if the URL
+     * has already changed. This ensures that the `requestAds()` call has cleaned up all ad slots and state before
+     * loading new ones.
+     *
+     * However, there are publishers that change the URL, e.g. for putting filter settings into the query and do not
+     * call `moli.requestAds()`, because that's not a page change.
+     *
+     * @default true
+     */
+    readonly validateLocation: 'href' | 'path' | 'none';
+  }
+}
+
+export namespace sizeConfigs {
+  /**
+   * ## SizeConfig entry
+   *
+   * Configure sizes based on media queries for a single `IAdSlot`.
+   *
+   * This is the most complex part of a publisher ad tag setup. The size config defines
+   *
+   * - if an ad slot is loaded
+   * - what sizes are requested
+   *
+   * This slot only supports the `mediaQuery` and `sizesSupported` property.
+   * `labels` can only be defined globally as these can and should always be unique,
+   * while the `sizesSupported` may overlap due to overlapping media queries.
+   *
+   * Example for overlapping configuration:
+   *
+   * ```typescript
+   * [{
+   *   // mobile devices support a medium rectangle
+   *   mediaQuery: (max-width: 767px),
+   *   sizesSupported: [[300,250]]
+   * }, {
+   *   // desktop sidebar supports medium rectangle
+   *   mediaQuery: (min-width: 768px),g
+   *   sizesSupported: [[300,250]]
+   * }]<
+   * ```
+   *
+   * This result in `[[300,250]]` being always supported, which may not be something you want.
+   *
+   * ### Using labels
+   *
+   * If you have the same slot on different page types with a different layout you can differentation size configs
+   * via two properites
+   *
+   * - `labelAll` - all labels need to be present if this size config should be applied
+   * - `labelNone` - none of the labels must be present if this size config should be applied
+   *
+   * ```typescript
+   * [{
+   *   // mobile devices support a medium rectangle
+   *   mediaQuery: (max-width: 767px),
+   *   labelAll: ['homepage'],
+   *   sizesSupported: [[728,90]]
+   * }, {
+   *   // desktop sidebar supports medium rectangle
+   *   mediaQuery: (min-width: 768px)
+   *   labelNone: ['homepage']
+   *   sizesSupported: [[728,90], [900,250]]
+   * }]
+   * ```
+   *
+   * ## Prebid API
+   *
+   * The API is identical to the Prebid size config feature. However, we do not pass the
+   * size config down to prebid as we already apply the logic at a higher level. We only
+   * pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.
+   *
+   *
+   * @see [Configure-Responsive-Ads](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads)
+   * @see [Conditional Ad Units](https://prebid.org/dev-docs/conditional-ad-units.html)
+   * @see [Size Mapping](https://prebid.org/dev-docs/examples/size-mapping.html)
+   * @see [requestBids with labels](https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.requestBids)
+   */
+  export interface SizeConfigEntry<Label = string> {
+    /** media query that must match if the sizes are applicable */
+    readonly mediaQuery: string;
+
+    /** optional array of labels. All labels must be present if the sizes should be applied */
+    readonly labelAll?: Label[];
+
+    /** optional array of labels. All labels must **not** be present if the sizes should be applied */
+    readonly labelNone?: Label[];
+
+    /** static sizes that are support if the media query matches */
+    readonly sizesSupported: googleAdManager.SlotSize[];
+  }
+
+  export interface LabelSizeConfigEntry {
+    /** media query that must match if the labels are applicable */
+    readonly mediaQuery: string;
+
+    /** labels that are available if the media query matches */
+    readonly labelsSupported: string[];
+  }
+}
+
 /** consent configuration namespace */
 export namespace consent {
   /**
@@ -376,6 +334,35 @@ export namespace consent {
      * @see https://developers.google.com/publisher-tag/reference?hl=de#googletag.PrivacySettingsConfig_nonPersonalizedAds
      */
     readonly useLimitedAds?: boolean;
+  }
+}
+
+export namespace googleAdManager {
+  export type SlotSize = [number, number] | 'fluid';
+
+  /**
+   * KeyValue map. Last insert wins.
+   */
+  export interface KeyValueMap {
+    [key: string]: string | string[] | undefined;
+  }
+
+  export interface Targeting {
+    /** static or supplied key-values */
+    readonly keyValues: KeyValueMap;
+
+    /**
+     * A list of key-value keys that should not be sent to the ad manager.
+     * This setting is not yet configurable via API as this should be static
+     * and defined in the ad tag.
+     */
+    readonly adManagerExcludes?: string[];
+
+    /** additional labels. Added in addition to the ones created by the sizeConfig. */
+    readonly labels?: string[];
+
+    /** ad unit path variables */
+    readonly adUnitPathVariables?: AdUnitPathVariables;
   }
 }
 
@@ -570,6 +557,26 @@ export namespace behaviour {
 /** gpt types */
 export namespace gpt {
   /**
+   * Configure the ad slot position
+   *
+   * - `in-page` is the standard display ad
+   * - `out-of-page` uses the `defineOutOfPageSlot` API
+   * - `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`
+   * - `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`
+   * - `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`
+   *
+   * @see [Display anchor ad](https://developers.google.com/publisher-tag/samples/display-anchor-ad)
+   * @see [OutOfPageFormat](https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat)
+   *
+   */
+  export type Position =
+    | 'in-page'
+    | 'out-of-page'
+    | 'out-of-page-interstitial'
+    | 'out-of-page-top-anchor'
+    | 'out-of-page-bottom-anchor';
+
+  /**
    * ## Gpt ad slot configuration
    */
   export interface GptAdSlotConfig {
@@ -725,7 +732,7 @@ export namespace headerbidding {
      *
      * default: requesting all sizes that are defined in the adSlot configuration.
      */
-    readonly supportedSizes?: GoogleAdManagerSlotSize[];
+    readonly supportedSizes?: googleAdManager.SlotSize[];
 
     /**
      * Configure the Amazon _Publisher Audiences_ feature.
@@ -833,47 +840,6 @@ export namespace bucket {
   };
 }
 
-/**
- * == Cleanup Module ==
- *
- * Cleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.
- *
- * The configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted
- * or JS as a string that will be evaluated by the module in order to remove these elements.
- *
- * @see cleanup module
- */
-
-export interface CSSDeletionMethod {
-  /**
-   * The CSS selectors of the html elements in the DOM that should be removed.
-   */
-  readonly cssSelectors: string[];
-}
-
-export interface JSDeletionMethod {
-  /**
-   * JavaScript code as a string that will be executed as given
-   * (and most likely deletes the html elements of the special format).
-   */
-  readonly jsAsString: string[];
-}
-
-export interface CleanupConfig {
-  /**
-   * The bidder that offers the special format.
-   */
-  readonly bidder: prebidjs.BidderCode;
-  /**
-   * The domId of the slot on which the special format runs.
-   */
-  readonly domId: string;
-  /**
-   * The method how the special format should be cleaned up.
-   */
-  readonly deleteMethod: CSSDeletionMethod | JSDeletionMethod;
-}
-
 export namespace modules {
   export interface IModuleConfig {
     /**
@@ -974,6 +940,16 @@ export namespace modules {
   }
 
   export namespace cleanup {
+    /**
+     * == Cleanup Module ==
+     *
+     * Cleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.
+     *
+     * The configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted
+     * or JS as a string that will be evaluated by the module in order to remove these elements.
+     *
+     * @see cleanup module
+     */
     export interface CleanupModuleConfig extends IModuleConfig {
       /**
        * Information about whether the cleanup module is enabled or not.
@@ -983,6 +959,36 @@ export namespace modules {
        * A list of configurations.
        */
       readonly configs: CleanupConfig[];
+    }
+
+    export interface CSSDeletionMethod {
+      /**
+       * The CSS selectors of the html elements in the DOM that should be removed.
+       */
+      readonly cssSelectors: string[];
+    }
+
+    export interface JSDeletionMethod {
+      /**
+       * JavaScript code as a string that will be executed as given
+       * (and most likely deletes the html elements of the special format).
+       */
+      readonly jsAsString: string[];
+    }
+
+    export interface CleanupConfig {
+      /**
+       * The bidder that offers the special format.
+       */
+      readonly bidder: prebidjs.BidderCode;
+      /**
+       * The domId of the slot on which the special format runs.
+       */
+      readonly domId: string;
+      /**
+       * The method how the special format should be cleaned up.
+       */
+      readonly deleteMethod: CSSDeletionMethod | JSDeletionMethod;
     }
   }
 
@@ -2108,13 +2114,13 @@ export interface MoliConfig {
   /**
    * Optional configuration for single page
    */
-  readonly spa?: SinglePageAppConfig;
+  readonly spa?: spa.SinglePageAppConfig;
 
   /** supply chain object */
   readonly schain: schain.SupplyChainConfig;
 
   /** optional key-value targeting for DFP */
-  targeting?: Targeting;
+  targeting?: googleAdManager.Targeting;
 
   /**
    * Label configuration to support "responsive" ads.
@@ -2123,7 +2129,7 @@ export interface MoliConfig {
    *
    * https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads
    */
-  labelSizeConfig?: LabelSizeConfigEntry[];
+  labelSizeConfig?: sizeConfigs.LabelSizeConfigEntry[];
 
   readonly consent?: consent.ConsentConfig;
 

@@ -75,7 +75,7 @@ import {
   EmetriqCustomParams
 } from 'ad-tag/types/emetriq';
 import { trackInApp } from './trackInApp';
-import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 import { ModuleType, IModule } from 'ad-tag/types/module';
 import {
@@ -288,7 +288,7 @@ export class Emetriq implements IModule {
   }
 
   static staticCustomParams(
-    targeting: GoogleAdManagerKeyValueMap | undefined,
+    targeting: googleAdManager.KeyValueMap | undefined,
     mappings: modules.emetriq.EmetriqMappingDefinition[] | undefined
   ): EmetriqCustomParams {
     const keyValues = targeting ?? {};
