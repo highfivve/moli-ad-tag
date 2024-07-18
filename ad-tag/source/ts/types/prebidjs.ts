@@ -709,7 +709,39 @@ export namespace prebidjs {
       };
     }
 
+    /**
+     * This module can be used in combination with Adagio Bid Adapter (SSP) and/or with Adagio prebid server endpoint.
+     * It computes and collects data required to leverage Adagio viewability and attention prediction engine.
+     *
+     * > Disclosure: This module loads external code that is not open source and has not been reviewed by Prebid.org.
+     *
+     * NOTE: This is available since prebid 9.6.0 and is recommended
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/adagioRtdProvider.html
+     */
+    export interface IAdagioDataProviderModule extends IDataProvider {
+      readonly name: 'adagio';
+      readonly params: {
+        /**
+         * Account id provided by Adagio.
+         */
+        readonly organizationId: string;
+
+        /**
+         * Account site name provided by Adagio.
+         */
+        readonly site: string;
+
+        /**
+         * Programmatically set the `ortb2Imp.ext.data.placement` signal based on location.
+         * Possible values: ortb (default), code, gpid.
+         */
+        readonly placementSource?: 'ortb' | 'code' | 'gpid';
+      };
+    }
+
     type DataProvider =
+      | IAdagioDataProviderModule
       | IGeolocationDataProviderModule
       | ITimeoutDataProviderModule
       | IIntersectionDataProviderModule
@@ -1927,12 +1959,29 @@ export namespace prebidjs {
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
+       *
+       * @see https://docs.prebid.org/features/firstPartyData.html#supplying-bidder-specific-data
+       * @see https://adagioio.notion.site/Prebid-9-Adagio-required-updates-compatible-from-Prebid-9-5-f62d02d67d604e0187a800afefadb29d
        */
-      ext?: any;
+      ext?:
+        | any // basically anything can still be put here
+        | {
+            data?: {
+              /**
+               * used by adagio. Example would be `article`
+               */
+              pagetype?: string;
+
+              /**
+               * used by adagio. Example would be `economy`
+               */
+              category?: string;
+            };
+          };
     }
 
     /**
-     * Data segment that allos additional data about the related object (e.g. content).
+     * Data segment that allows additional data about the related object (e.g. content).
      */
     export interface OpenRtb2Data {
       /**
@@ -3452,6 +3501,25 @@ export namespace prebidjs {
      */
     readonly id?: string;
   }
+
+  /**
+   * Adagio moved some of their logic into an RTD Module with Prebid 9.5.0.
+   * The change also requires to put some additional information in the `adUnit.ortb2Imp.ext.data` object.
+   *
+   * @see https://adagioio.notion.site/Prebid-9-Adagio-required-updates-compatible-from-Prebid-9-5-f62d02d67d604e0187a800afefadb29d
+   */
+  export interface IOrtb2ImpDataAdagio {
+    /**
+     * Required - Former 'bids.params.adUnitElementId'
+     */
+    divId?: string;
+
+    /**
+     * Same as 'bids.params.placement'
+     */
+    placement?: string;
+  }
+
   /**
    * Values passed by prebid during a prebid server auction call.
    *
@@ -3460,7 +3528,7 @@ export namespace prebidjs {
    */
   export interface IOrtb2Imp {
     readonly ext?: {
-      readonly data?: any;
+      readonly data?: IOrtb2ImpDataAdagio | any;
 
       /**
        * custom prebid extensions
