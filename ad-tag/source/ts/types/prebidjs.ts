@@ -1784,8 +1784,17 @@ export namespace prebidjs {
          * Meta info about the versions of moli and of the publisher ad tag in use.
          */
         h5v: {
+          /** initial value comes from the server and is overridden during runtime by the ad tag */
           moliVersion: string;
-          adTagVersion: string | undefined;
+
+          /** replaced by configVersion */
+          adTagVersion?: string;
+
+          /** information will come from the server */
+          configVersion?: string;
+
+          /** information set by the configureFromEndpoint bundle */
+          configLabel?: string;
         };
       };
     };
