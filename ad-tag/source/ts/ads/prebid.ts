@@ -24,6 +24,7 @@ import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import IPrebidJs = prebidjs.IPrebidJs;
 import { AdServer, AdSlot, headerbidding, schain, Targeting } from '../types/moliConfig';
+import { packageJson } from 'ad-tag/gen/packageJson';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -304,6 +305,25 @@ export const prebidConfigure = (
           context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
         }
         context.window.pbjs.que.push(() => {
+          const s2sConfig = prebidConfig.config.s2sConfig;
+          if (s2sConfig) {
+            const s2sConfigs: prebidjs.server.S2SConfig[] = Array.isArray(
+              prebidConfig.config.s2sConfig
+            )
+              ? prebidConfig.config.s2sConfig
+              : [prebidConfig.config.s2sConfig];
+
+            // we are mutating the configuration in place, which is nasty, but is way easier than trying to copy this
+            // into a new object and then back into the prebid configuration.
+            s2sConfigs.forEach(s2sConfigEntry => {
+              const h5v = s2sConfigEntry.extPrebid?.analytics?.h5v;
+              if (h5v) {
+                h5v.configLabel = context.window.moli.configLabel;
+                h5v.moliVersion = packageJson.version;
+              }
+            });
+          }
+
           context.window.pbjs.setConfig({
             ...prebidConfig.config,
             // global schain configuration

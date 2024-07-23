@@ -53,7 +53,10 @@ const versionOverride = resolveOverrides(
 if (currentScript) {
   // publisher code and version can be overridden via query parameters
   const publisherCode = pubCodeOverride ?? currentScript.getAttribute('data-publisher-code');
-  const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'prod';
+  const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'production';
+
+  // make the configLabel available for the ad tag bundle. This info is sent along to prebid server for telemetry.
+  window.moli.configLabel = version;
 
   const endpoint = currentScript.getAttribute('data-endpoint') ?? 'api.h5v.eu/publishers';
   const fallback = currentScript.getAttribute('data-endpoint-fallback') ?? 'cdn.h5v.eu/publishers';
