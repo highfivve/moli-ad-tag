@@ -22,10 +22,13 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  * ```html
  * <script id="moli-ad-tag" src="path/to/your/ad-tag-bundle.js"
  *         data-publisher-code="yourCode"
- *         data-version="prod"
+ *         data-version="production"
  *         data-endpoint="cdn.h5v.eu/publishers"
  *         data-endpoint-fallback="cdn-fallback.h5v.eu/publishers"
  * ></script>
+ *
+ * !! Important !!
+ * Adding the `id="moli-ad-tag"` attribute to the script tag is highly recommended to ensure the script can find itself.
  * ```
  *
  * @module
