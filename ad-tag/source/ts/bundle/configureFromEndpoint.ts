@@ -13,7 +13,7 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  *
  * The following attributes are supported:
  *
- * - `data-pub-code` - The publisher code that should be used to load the configuration.
+ * - `data-publisher-code` - The publisher code that should be used to load the configuration.
  * - `data-version` (default is `prod`) - The configuration version that should be loaded. Usually this is either `prod` or `staging`.
  *    You can also use a specific version number, like `15`.
  * - `data-endpoint` (optional) - The endpoint that should be called to load the configuration.
@@ -74,7 +74,7 @@ if (currentScript) {
       .catch(error => console.error(`Failed to load configuration from ${url}:`, error));
   } else {
     console.error(
-      'No publisher code provided for ad tag configuration! Add the `data-pub-code="yourCode"` attribute to the script tag.'
+      'No publisher code provided for ad tag configuration! Add the `data-publisher-code="yourCode"` attribute to the script tag.'
     );
   }
 } else {
