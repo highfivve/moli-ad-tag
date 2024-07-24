@@ -5,26 +5,26 @@ import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
 import { SizeConfigService } from './sizeConfigService';
-import { AdSlot, GoogleAdManagerSlotSize, SizeConfigEntry } from '../types/moliConfig';
+import { AdSlot, googleAdManager, sizeConfigs } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
 
 describe('SizeConfigService', () => {
   const sandbox = Sinon.createSandbox();
-  const sizeConfigEntry1: SizeConfigEntry = {
+  const sizeConfigEntry1: sizeConfigs.SizeConfigEntry = {
     sizesSupported: [[205, 200], 'fluid'],
     mediaQuery: 'min-width: 300px'
   };
-  const sizeConfigEntry2: SizeConfigEntry = {
+  const sizeConfigEntry2: sizeConfigs.SizeConfigEntry = {
     sizesSupported: [[205, 200]],
     mediaQuery: 'min-width: 300px'
   };
-  const sizeConfigEntry3: SizeConfigEntry = {
+  const sizeConfigEntry3: sizeConfigs.SizeConfigEntry = {
     sizesSupported: [[985, 380], 'fluid'],
     mediaQuery: 'min-width: 300px'
   };
-  const sizeConfigEntryWithoutSizes: SizeConfigEntry = {
+  const sizeConfigEntryWithoutSizes: sizeConfigs.SizeConfigEntry = {
     sizesSupported: [],
     mediaQuery: 'min-width: 300px'
   };
@@ -53,10 +53,12 @@ describe('SizeConfigService', () => {
     sizeConfig: []
   };
 
-  const emptySizeConfig: SizeConfigEntry[] = [];
+  const emptySizeConfig: sizeConfigs.SizeConfigEntry[] = [];
   const jsDomWindow: Window = dom.window as any;
-  const newSizeConfigService = (sizeConfig: SizeConfigEntry[], supportedLabels: string[] = []) =>
-    new SizeConfigService(sizeConfig, supportedLabels, jsDomWindow);
+  const newSizeConfigService = (
+    sizeConfig: sizeConfigs.SizeConfigEntry[],
+    supportedLabels: string[] = []
+  ) => new SizeConfigService(sizeConfig, supportedLabels, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();
@@ -91,10 +93,9 @@ describe('SizeConfigService', () => {
     it('should filter out duplicate slots from the size config', () => {
       const sizeConfigService = newSizeConfigService([sizeConfigEntry1, sizeConfigEntry2]);
 
-      expect((sizeConfigService as any).supportedSizes as GoogleAdManagerSlotSize[]).to.deep.equal([
-        [205, 200],
-        'fluid'
-      ]);
+      expect((sizeConfigService as any).supportedSizes as googleAdManager.SlotSize[]).to.deep.equal(
+        [[205, 200], 'fluid']
+      );
     });
 
     it('should filter the given slots according to configuration', () => {
@@ -154,8 +155,11 @@ describe('SizeConfigService', () => {
   });
 
   describe('additional label filtering', () => {
-    const sizes: GoogleAdManagerSlotSize[] = [[300, 250], 'fluid'];
-    const newSizeConfigEntry = (labelAll?: string[], labelNone?: string[]): SizeConfigEntry => {
+    const sizes: googleAdManager.SlotSize[] = [[300, 250], 'fluid'];
+    const newSizeConfigEntry = (
+      labelAll?: string[],
+      labelNone?: string[]
+    ): sizeConfigs.SizeConfigEntry => {
       return {
         sizesSupported: sizes,
         mediaQuery: 'min-width: 300px',

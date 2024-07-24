@@ -15,7 +15,7 @@ import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
 import { AdPipelineContext } from '../../adPipeline';
-import { modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { googletag } from 'ad-tag/types/googletag';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
@@ -80,7 +80,7 @@ describe('Prebid First Party Data Module', () => {
     return module;
   };
 
-  const configWithTargeting = (targeting: Targeting): MoliConfig => ({
+  const configWithTargeting = (targeting: googleAdManager.Targeting): MoliConfig => ({
     ...emptyConfig,
     targeting,
     prebid: {

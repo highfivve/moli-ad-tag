@@ -5,22 +5,22 @@ import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
 import { LabelConfigService } from './labelConfigService';
-import { AdSlot, LabelSizeConfigEntry } from '../types/moliConfig';
+import { AdSlot, sizeConfigs } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
 
 describe('LabelConfigConfigService', () => {
   const sandbox = Sinon.createSandbox();
-  const labelConfigEntry1: LabelSizeConfigEntry = {
+  const labelConfigEntry1: sizeConfigs.LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
     labelsSupported: ['desktop', 'video']
   };
-  const labelConfigEntry2: LabelSizeConfigEntry = {
+  const labelConfigEntry2: sizeConfigs.LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
     labelsSupported: ['mobile', 'video', 'bottom']
   };
-  const labelConfigEntryWithoutLabels: LabelSizeConfigEntry = {
+  const labelConfigEntryWithoutLabels: sizeConfigs.LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
     labelsSupported: []
   };
@@ -66,8 +66,10 @@ describe('LabelConfigConfigService', () => {
 
   const jsDomWindow: Window = dom.window as any;
 
-  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[], extraLabels: string[] = []) =>
-    new LabelConfigService(labelConfig, extraLabels, jsDomWindow);
+  const newLabelConfigService = (
+    labelConfig: sizeConfigs.LabelSizeConfigEntry[],
+    extraLabels: string[] = []
+  ) => new LabelConfigService(labelConfig, extraLabels, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();
