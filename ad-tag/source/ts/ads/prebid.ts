@@ -25,6 +25,7 @@ import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService
 import IPrebidJs = prebidjs.IPrebidJs;
 import { AdServer, AdSlot, headerbidding, schain, Targeting } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
+import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -161,12 +162,18 @@ const createdAdUnits = (
                   h: videoSizes[0][1]
                 }
               : {};
+
+          const backupVideoRenderer = prebidConfig.backupVideoRenderer;
           const video: prebidjs.IMediaTypes | undefined = mediaTypeVideo
             ? {
                 video: {
                   ...mediaTypeVideo,
                   playerSize: videoSizes.length === 0 ? undefined : videoSizes,
-                  ...videoDimensionsWH
+                  ...videoDimensionsWH,
+                  // inject a backup video renderer if configured
+                  ...(backupVideoRenderer
+                    ? { renderer: prebidOutstreamRenderer(moliSlot.domId, backupVideoRenderer.url) }
+                    : {})
                 }
               }
             : undefined;

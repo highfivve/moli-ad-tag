@@ -69,13 +69,15 @@ export type PrebidOutstreamBid = Partial<{
  * ```
  *
  * @param domId Must match the domId of the respective ad slot.
+ * @param url URL to the outstream player.
  * @param config Configuration for the outstream player.
  */
 export const prebidOutstreamRenderer = (
   domId: string,
+  url: string,
   config: PrebidOutstreamConfiguration = {}
 ): prebidjs.IRenderer => ({
-  url: 'https://assets.h5v.eu/prebid-outstream/3/bundle.js',
+  url: url,
   render: bid => renderPrebidOutstream(bid, domId, config),
   backupOnly: true
 });
