@@ -235,11 +235,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configurable':
       case 'configured': {
         state.modules.push(module);
-        state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps());
-        state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps());
-        state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
-          ...module.prepareRequestAdsSteps()
-        );
         return;
       }
       default: {
@@ -268,6 +263,31 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         if (envOverride?.source === 'queryParam') {
           setEnvironmentOverrideInStorage(envOverride.value, window.sessionStorage);
         }
+
+        // configure modules
+        const log = getLogger(state.runtimeConfig, window);
+        log.debug('MoliGlobal', 'configure modules', config.modules ?? {});
+        modules.forEach(module => {
+          try {
+            module.configure(config.modules ?? {});
+            log.debug(
+              'MoliGlobal',
+              `configure ${module.moduleType} module ${module.name}`,
+              module.config()
+            );
+            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps());
+            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps());
+            state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
+              ...module.prepareRequestAdsSteps()
+            );
+          } catch (e) {
+            log.error(
+              'MoliGlobal',
+              `failed to configure ${module.moduleType} module ${module.name}`,
+              e
+            );
+          }
+        });
 
         state = {
           state: 'configured',
@@ -344,27 +364,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           });
         }
 
-        // initialize modules with the config from the ad tag.
-        // the config will be altered by this call
-        const modules = state.modules;
         const log = getLogger(state.runtimeConfig, window);
-        log.debug('MoliGlobal', 'configure modules', config.modules ?? {});
-        modules.forEach(module => {
-          try {
-            module.configure(config.modules ?? {});
-            log.debug(
-              'MoliGlobal',
-              `configure ${module.moduleType} module ${module.name}`,
-              module.config()
-            );
-          } catch (e) {
-            log.error(
-              'MoliGlobal',
-              `failed to configure ${module.moduleType} module ${module.name}`,
-              e
-            );
-          }
-        });
 
         // call the configured hooks
         if (state.runtimeConfig.hooks && state.runtimeConfig.hooks.beforeRequestAds) {
@@ -388,7 +388,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             state: 'spa-requestAds',
             config: config,
             initialized,
-            modules,
+            // modules are initialized in the configure() call
+            modules: state.modules,
             // store current state for all subsequent refreshAd calls in this requestAds cycle
             href: window.location.href,
             // reset the refreshed slots array as they are being batched until requestAds() is finished
@@ -438,7 +439,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           state = {
             state: 'requestAds',
             config: config,
-            modules,
+            modules: state.modules,
             runtimeConfig: Object.freeze(state.runtimeConfig)
           };
           return adService
@@ -449,7 +450,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 state: 'finished',
                 config: config,
                 runtimeConfig: state.runtimeConfig,
-                modules
+                modules: state.modules
               };
               afterRequestAds.forEach(hook => hook('finished'));
               return Promise.resolve(state);
@@ -461,7 +462,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 config: config,
                 runtimeConfig: state.runtimeConfig,
                 error: error,
-                modules
+                modules: state.modules
               };
               afterRequestAds.forEach(hook => hook('error'));
               return Promise.resolve(state);

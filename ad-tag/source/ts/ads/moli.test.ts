@@ -12,7 +12,6 @@ import IConfigurable = MoliRuntime.state.IConfigurable;
 import IFinished = MoliRuntime.state.IFinished;
 import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
 import { IModule } from '../types/module';
-import { IAssetLoaderService } from '../util/assetLoaderService';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
@@ -1436,6 +1435,62 @@ describe('moli', () => {
       const result = await adTag.configure({ ...defaultConfig, requestAds: false });
       expect(result).to.be.ok;
       expect(result?.state).to.be.eq('configured');
+    });
+
+    it('should configure modules and add steps to pipeline', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const configureSpy = sandbox.spy();
+      const initStepSpy = sandbox.spy();
+      const configureStepSpy = sandbox.spy();
+      const prepareRequestAdsStepSpy = sandbox.spy();
+      const prepareRequestAdsStep = mkPrepareRequestAdsStep(
+        'prep-step',
+        1,
+        prepareRequestAdsStepSpy
+      );
+
+      adTag.registerModule({
+        name: 'test-module',
+        moduleType: 'prebid',
+        description: 'test-module',
+        config(): Object | null {
+          return null;
+        },
+        configure: configureSpy,
+        initSteps(): InitStep[] {
+          return [initStepSpy];
+        },
+        configureSteps(): ConfigureStep[] {
+          return [configureStepSpy];
+        },
+        prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+          return [prepareRequestAdsStep];
+        }
+      });
+      const configWithModules: MoliConfig = {
+        ...defaultConfig,
+        modules: { pubstack: { enabled: true, tagId: 'xxxx' } }
+      };
+      const result = await adTag.configure(configWithModules);
+
+      expect(result).to.be.ok;
+      expect(result?.state).to.be.eq('configured');
+
+      expect(result?.modules).to.have.length(1);
+      expect(configureSpy).calledOnce;
+      expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
+
+      expect(result?.runtimeConfig.adPipelineConfig.initSteps).to.have.deep.equals([initStepSpy]);
+      expect(result?.runtimeConfig.adPipelineConfig.configureSteps).to.have.deep.equals([
+        configureStepSpy
+      ]);
+      expect(result?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.have.deep.equals([
+        prepareRequestAdsStep
+      ]);
+
+      expect(initStepSpy).to.have.not.been.called;
+      expect(configureStepSpy).to.have.not.been.called;
+      expect(prepareRequestAdsStepSpy).to.have.not.been.called;
     });
   });
 
