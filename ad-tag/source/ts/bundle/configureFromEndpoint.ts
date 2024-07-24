@@ -66,12 +66,12 @@ if (currentScript) {
 
   if (publisherCode) {
     const path = `/${publisherCode}/configs/${version}/config.json`;
-    const url = `//${endpoint}/${path}`;
+    const url = `//${endpoint}${path}`;
     fetch(url, { mode: 'cors' })
       .then(response => response.json())
       .catch(error => {
         console.error(`Failed to load configuration from ${url}. Using fallback`, error);
-        return fetch(`//${fallback}/${path}`, { mode: 'cors' });
+        return fetch(`//${fallback}${path}`, { mode: 'cors' });
       })
       .then(config => window.moli.configure(config))
       .catch(error => console.error(`Failed to load configuration from ${url}:`, error));
