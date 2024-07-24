@@ -5,9 +5,14 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 import { createAssetLoaderService } from '../util/assetLoaderService';
-import { IAdPipelineConfiguration } from './adPipeline';
+import { IAdPipelineConfiguration, mkPrepareRequestAdsStep } from './adPipeline';
 import { AdService } from './adService';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newEmptyRuntimeConfig,
+  noopLogger
+} from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
@@ -150,6 +155,37 @@ describe('AdService', () => {
       const pipeline = await initialize();
       const stepNames = pipeline.init.map(step => step.name);
       expect(stepNames).to.contain('gpt-init');
+    });
+
+    describe('modules', () => {
+      it('should add the modules-init step', async () => {
+        const initStepSpy = sandbox.spy();
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.initSteps.push(initStepSpy);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.init).to.deep.contain(initStepSpy);
+      });
+
+      it('should add the modules-configure step', async () => {
+        const configureStepSpy = sandbox.spy();
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.configureSteps.push(configureStepSpy);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.configure).to.deep.contain(configureStepSpy);
+      });
+
+      it('should add the modules-prepareRequestAds step', async () => {
+        const prepareRequestAdsStepSpy = sandbox.spy();
+        const prepareRequestAdsStep = mkPrepareRequestAdsStep(
+          'prep-test',
+          1,
+          prepareRequestAdsStepSpy
+        );
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(prepareRequestAdsStep);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.prepareRequestAds).to.deep.contain(prepareRequestAdsStepSpy);
+      });
     });
 
     describe('prebid', () => {

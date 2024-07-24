@@ -186,6 +186,11 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
+    // add module steps to pipeline
+    init.push(...runtimeConfig.adPipelineConfig.initSteps);
+    configure.push(...runtimeConfig.adPipelineConfig.configureSteps);
+    prepareRequestAds.push(...runtimeConfig.adPipelineConfig.prepareRequestAdsSteps);
+
     // delay ad requests for debugging
     if (env === 'test') {
       const debugDelay = getDebugDelayFromLocalStorage(this.window);
