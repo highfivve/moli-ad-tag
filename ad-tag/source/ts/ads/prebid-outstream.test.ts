@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe('prebidOutstreamRenderer', () => {
   it('the returned render function should invoke window.outstreamPlayer', () => {
-    prebidOutstreamRenderer(domId, config).render(bid);
+    prebidOutstreamRenderer(domId, 'https://localhost:8080', config).render(bid);
     expect(outstreamPlayerMock).calledWithExactly(bid, domId, config);
   });
 });

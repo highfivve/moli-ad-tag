@@ -60,10 +60,10 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void {
       return;
     },
-    onEvent: () => {
+    onEvent(_event: keyof prebidjs.event.PrebidEventMap, _handler: Function, _id?: any): void {
       return;
     },
-    offEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void {
+    offEvent(_event: keyof prebidjs.event.PrebidEventMap, _handler: Function, _id?: any): void {
       return;
     },
     convertCurrency(cpm: number, fromCurrency: string, toCurrency: string): number {

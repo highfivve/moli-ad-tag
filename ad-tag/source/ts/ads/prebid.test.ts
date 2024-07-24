@@ -25,6 +25,7 @@ import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 import { createAssetLoaderService } from '../util/assetLoaderService';
+import { packageJson } from 'ad-tag/gen/packageJson';
 
 // setup sinon-chai
 use(sinonChai);
@@ -268,6 +269,106 @@ describe('prebid', () => {
             }
           }
         }
+      });
+    });
+
+    describe('s2s config', () => {
+      afterEach(() => {
+        // remove any traces of moli
+        (jsDomWindow as any).moli = undefined;
+      });
+
+      const testS2SConfig = (): prebidjs.server.S2SConfig => ({
+        enabled: true,
+        adapter: 'prebidServer',
+        accountId: 'foo',
+        bidders: ['appnexus'],
+        timeout: 1000,
+        endpoint: { p1Consent: '//server', noP1Consent: '//server' },
+        syncEndpoint: { p1Consent: '//server', noP1Consent: '//server' }
+      });
+
+      const prebidConfigWithS2S = (
+        s2sConfig: prebidjs.server.S2SConfig | ReadonlyArray<prebidjs.server.S2SConfig>
+      ): headerbidding.PrebidConfig => ({
+        ...moliPrebidTestConfig,
+        config: { ...pbjsTestConfig, s2sConfig }
+      });
+
+      it('should not set prebid s2s config if none is defined', async () => {
+        const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
+        const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
+
+        await step(adPipelineContext(), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const config: prebidjs.IPrebidJsConfig = setConfigSpy.firstCall.args[0];
+
+        expect(config.s2sConfig).to.be.undefined;
+      });
+
+      it('should not set prebid s2s config with h5v analytics if the extPrebid property does not exist', async () => {
+        const step = prebidConfigure(prebidConfigWithS2S(testS2SConfig()), dummySchainConfig);
+        const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
+
+        await step(adPipelineContext(), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const config: prebidjs.IPrebidJsConfig = setConfigSpy.firstCall.args[0];
+        const s2sConfig = config.s2sConfig as prebidjs.server.S2SConfig;
+
+        expect(s2sConfig).to.be.ok;
+        expect(s2sConfig).to.be.an('object');
+        expect(s2sConfig.extPrebid).to.be.undefined;
+      });
+
+      it('should set prebid s2s config with h5v analytics if the extPrebid property does not exist', async () => {
+        jsDomWindow.moli = {
+          configLabel: 'staging'
+        } as MoliRuntime.MoliTag;
+
+        const step = prebidConfigure(
+          prebidConfigWithS2S({
+            ...testS2SConfig(),
+            extPrebid: { analytics: { h5v: { moliVersion: 'foo' } } }
+          }),
+          dummySchainConfig
+        );
+        const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
+
+        await step(adPipelineContext(), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const config: prebidjs.IPrebidJsConfig = setConfigSpy.firstCall.args[0];
+        const s2sConfig = config.s2sConfig as prebidjs.server.S2SConfig;
+
+        expect(s2sConfig).to.be.ok;
+        expect(s2sConfig).to.be.an('object');
+        expect(s2sConfig.extPrebid).to.be.ok;
+        expect(s2sConfig.extPrebid?.analytics?.h5v.configLabel).to.be.eq('staging');
+        expect(s2sConfig.extPrebid?.analytics?.h5v.moliVersion).to.be.eq(packageJson.version);
+      });
+
+      it('should set prebid s2s config with h5v analytics if s2s config is an array', async () => {
+        jsDomWindow.moli = {
+          configLabel: 'staging'
+        } as MoliRuntime.MoliTag;
+
+        const step = prebidConfigure(
+          prebidConfigWithS2S([
+            { ...testS2SConfig(), extPrebid: { analytics: { h5v: { moliVersion: 'foo' } } } }
+          ]),
+          dummySchainConfig
+        );
+        const setConfigSpy = sandbox.spy(dom.window.pbjs, 'setConfig');
+
+        await step(adPipelineContext(), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const config: prebidjs.IPrebidJsConfig = setConfigSpy.firstCall.args[0];
+        const s2sConfig = config.s2sConfig as prebidjs.server.S2SConfig[];
+
+        expect(s2sConfig).to.be.ok;
+        expect(s2sConfig).to.be.an('array');
+        expect(s2sConfig[0].extPrebid).to.be.ok;
+        expect(s2sConfig[0].extPrebid?.analytics?.h5v.configLabel).to.be.eq('staging');
+        expect(s2sConfig[0].extPrebid?.analytics?.h5v.moliVersion).to.be.eq(packageJson.version);
       });
     });
   });
@@ -695,111 +796,175 @@ describe('prebid', () => {
         });
       });
     });
-    describe('video playerSize consolidation', () => {
-      it('should set playerSize = undefined if no video sizes are given', async () => {
-        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+    describe('mediaType video', () => {
+      describe('fallback renderer', async () => {
+        it('should not add renderer if not configured in prebidConfig', async () => {
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
-        const domId = getDomId();
-        const adUnit = {
-          ...prebidVideoAdUnit(domId, [{ bidder: 'appnexus', params: { placementId: '123' } }], [])
-        };
-        const singleSlot = createSlotDefinitions(domId, { adUnit });
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidVideoAdUnit(
+              domId,
+              [{ bidder: 'appnexus', params: { placementId: '123' } }],
+              []
+            )
+          };
+          const singleSlot = createSlotDefinitions(domId, { adUnit });
 
-        await step(adPipelineContext(), [singleSlot]);
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          {
-            ...adUnit,
-            mediaTypes: {
-              video: { ...adUnit.mediaTypes.video, playerSize: undefined }
+          await step(adPipelineContext(), [singleSlot]);
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          const adUnitAdded = addAdUnitsSpy.firstCall.args[0][0] as prebidjs.IAdUnit;
+
+          expect(adUnitAdded).to.have.property('mediaTypes');
+          expect(adUnitAdded.mediaTypes).to.have.property('video');
+          expect(adUnitAdded.mediaTypes.video).to.not.have.property('renderer');
+        });
+
+        it('should add renderer if configured in prebidConfig', async () => {
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds({
+            ...moliPrebidTestConfig,
+            backupVideoRenderer: {
+              url: 'https://example.com/fallback.js'
             }
-          }
-        ]);
+          });
+
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidVideoAdUnit(
+              domId,
+              [{ bidder: 'appnexus', params: { placementId: '123' } }],
+              []
+            )
+          };
+          const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+          await step(adPipelineContext(), [singleSlot]);
+          expect(addAdUnitsSpy).to.have.been.calledOnce;
+          const adUnitAdded = addAdUnitsSpy.firstCall.args[0][0] as prebidjs.IAdUnit;
+
+          expect(adUnitAdded).to.have.property('mediaTypes');
+          expect(adUnitAdded.mediaTypes).to.have.property('video');
+          expect(adUnitAdded.mediaTypes.video).to.have.property('renderer');
+          expect(adUnitAdded.mediaTypes.video?.renderer).to.have.property('url');
+          expect(adUnitAdded.mediaTypes.video?.renderer?.url).to.be.eq(
+            'https://example.com/fallback.js'
+          );
+        });
       });
 
-      it('should set playerSize and w+h properties from a single size', async () => {
-        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+      describe('video playerSize consolidation', () => {
+        it('should set playerSize = undefined if no video sizes are given', async () => {
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
-        const domId = getDomId();
-        const adUnit = {
-          ...prebidVideoAdUnit(
-            domId,
-            [{ bidder: 'appnexus', params: { placementId: '123' } }],
-            [300, 250]
-          )
-        };
-        const singleSlot = createSlotDefinitions(domId, { adUnit });
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidVideoAdUnit(
+              domId,
+              [{ bidder: 'appnexus', params: { placementId: '123' } }],
+              []
+            )
+          };
+          const singleSlot = createSlotDefinitions(domId, { adUnit });
 
-        await step(adPipelineContext(), [singleSlot]);
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          {
-            ...adUnit,
-            mediaTypes: {
-              video: { ...adUnit.mediaTypes.video, playerSize: [[300, 250]], w: 300, h: 250 }
+          await step(adPipelineContext(), [singleSlot]);
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+            {
+              ...adUnit,
+              mediaTypes: {
+                video: { ...adUnit.mediaTypes.video, playerSize: undefined }
+              }
             }
-          }
-        ]);
-      });
+          ]);
+        });
 
-      it('should set playerSize and w+h properties from multiple sizes', async () => {
-        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+        it('should set playerSize and w+h properties from a single size', async () => {
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
-        const domId = getDomId();
-        const adUnit = {
-          ...prebidVideoAdUnit(
-            domId,
-            [{ bidder: 'appnexus', params: { placementId: '123' } }],
-            [
-              [300, 250],
-              [605, 340]
-            ]
-          )
-        };
-        const singleSlot = createSlotDefinitions(domId, { adUnit });
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidVideoAdUnit(
+              domId,
+              [{ bidder: 'appnexus', params: { placementId: '123' } }],
+              [300, 250]
+            )
+          };
+          const singleSlot = createSlotDefinitions(domId, { adUnit });
 
-        await step(adPipelineContext(), [singleSlot]);
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          {
-            ...adUnit,
-            mediaTypes: {
-              video: { ...adUnit.mediaTypes.video, w: 300, h: 250 }
+          await step(adPipelineContext(), [singleSlot]);
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+            {
+              ...adUnit,
+              mediaTypes: {
+                video: { ...adUnit.mediaTypes.video, playerSize: [[300, 250]], w: 300, h: 250 }
+              }
             }
-          }
-        ]);
-      });
+          ]);
+        });
 
-      it('should not overwrite w+h properties if set in adUnit', async () => {
-        const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
-        const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+        it('should set playerSize and w+h properties from multiple sizes', async () => {
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
 
-        const domId = getDomId();
-        const adUnit = {
-          ...prebidVideoAdUnit(
-            domId,
-            [{ bidder: 'appnexus', params: { placementId: '123' } }],
-            [
-              [300, 250],
-              [605, 340]
-            ],
-            1000,
-            1000
-          )
-        };
-        const singleSlot = createSlotDefinitions(domId, { adUnit });
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidVideoAdUnit(
+              domId,
+              [{ bidder: 'appnexus', params: { placementId: '123' } }],
+              [
+                [300, 250],
+                [605, 340]
+              ]
+            )
+          };
+          const singleSlot = createSlotDefinitions(domId, { adUnit });
 
-        await step(adPipelineContext(), [singleSlot]);
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          {
-            ...adUnit,
-            mediaTypes: {
-              video: { ...adUnit.mediaTypes.video, w: 1000, h: 1000 }
+          await step(adPipelineContext(), [singleSlot]);
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+            {
+              ...adUnit,
+              mediaTypes: {
+                video: { ...adUnit.mediaTypes.video, w: 300, h: 250 }
+              }
             }
-          }
-        ]);
+          ]);
+        });
+
+        it('should not overwrite w+h properties if set in adUnit', async () => {
+          const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');
+          const step = prebidPrepareRequestAds(moliPrebidTestConfig);
+
+          const domId = getDomId();
+          const adUnit = {
+            ...prebidVideoAdUnit(
+              domId,
+              [{ bidder: 'appnexus', params: { placementId: '123' } }],
+              [
+                [300, 250],
+                [605, 340]
+              ],
+              1000,
+              1000
+            )
+          };
+          const singleSlot = createSlotDefinitions(domId, { adUnit });
+
+          await step(adPipelineContext(), [singleSlot]);
+          expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
+            {
+              ...adUnit,
+              mediaTypes: {
+                video: { ...adUnit.mediaTypes.video, w: 1000, h: 1000 }
+              }
+            }
+          ]);
+        });
       });
     });
+
     describe('floors', () => {
       it('should not be filled if priceRule is not set', async () => {
         const addAdUnitsSpy = sandbox.spy(dom.window.pbjs, 'addAdUnits');

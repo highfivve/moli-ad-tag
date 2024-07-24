@@ -15,7 +15,7 @@ import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
 import { AdPipelineContext } from '../../adPipeline';
-import { modules, MoliConfig, Targeting } from 'ad-tag/types/moliConfig';
+import { modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { googletag } from 'ad-tag/types/googletag';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
@@ -377,6 +377,28 @@ describe('Prebid First Party Data Module', () => {
         expect(site.cat).to.deep.equals(['IAB-1', 'IAB-9']);
         expect(site.sectioncat).to.deep.equals(['IAB-9']);
         expect(site.pagecat).to.deep.equals(['IAB-9']);
+      });
+
+      it('should keep data in site.ext.data', async () => {
+        const module = createFpdModule({}, { cat: 'openrtb2_cat' });
+
+        const moliConfig: MoliConfig = configWithTargeting({
+          keyValues: {
+            openrtb2_cat: ['IAB-9']
+          }
+        });
+
+        readConfigStub.returns({
+          ortb2: {
+            site: { ext: { data: { pagetype: 'my-page', category: 'my-cateogry' } } }
+          }
+        });
+
+        await module.configureSteps()[0](adPipelineContext(moliConfig), []);
+        expect(setConfigSpy).to.have.been.calledOnce;
+        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        expect(site.ext?.data?.pagetype).to.deep.equals('my-page');
+        expect(site.ext?.data?.category).to.deep.equals('my-cateogry');
       });
 
       it('should write unique values', async () => {

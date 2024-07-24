@@ -167,7 +167,11 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    onEvent: event.OnEventHandler;
+    onEvent<E extends keyof event.PrebidEventMap>(
+      event: E,
+      handler: (data: event.PrebidEvent<E>) => void,
+      id?: string
+    ): void;
 
     /**
      * Deregister
@@ -178,7 +182,11 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    offEvent(event: event.EventName, handler: Function, id?: any): void;
+    offEvent<E extends keyof event.PrebidEventMap>(
+      event: E,
+      handler: (data: event.PrebidEvent<E>) => void,
+      id?: string
+    ): void;
 
     /**
      * Convert a cpm from a currency to another one.
@@ -701,7 +709,39 @@ export namespace prebidjs {
       };
     }
 
+    /**
+     * This module can be used in combination with Adagio Bid Adapter (SSP) and/or with Adagio prebid server endpoint.
+     * It computes and collects data required to leverage Adagio viewability and attention prediction engine.
+     *
+     * > Disclosure: This module loads external code that is not open source and has not been reviewed by Prebid.org.
+     *
+     * NOTE: This is available since prebid 9.6.0 and is recommended
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/adagioRtdProvider.html
+     */
+    export interface IAdagioDataProviderModule extends IDataProvider {
+      readonly name: 'adagio';
+      readonly params: {
+        /**
+         * Account id provided by Adagio.
+         */
+        readonly organizationId: string;
+
+        /**
+         * Account site name provided by Adagio.
+         */
+        readonly site: string;
+
+        /**
+         * Programmatically set the `ortb2Imp.ext.data.placement` signal based on location.
+         * Possible values: ortb (default), code, gpid.
+         */
+        readonly placementSource?: 'ortb' | 'code' | 'gpid';
+      };
+    }
+
     type DataProvider =
+      | IAdagioDataProviderModule
       | IGeolocationDataProviderModule
       | ITimeoutDataProviderModule
       | IIntersectionDataProviderModule
@@ -1241,92 +1281,30 @@ export namespace prebidjs {
   }
 
   export namespace event {
-    export type EventName =
-      | 'addAdUnits'
-      | 'adRenderFailed'
-      | 'adRenderSucceeded'
-      | 'auctionDebug'
-      | 'auctionEnd'
-      | 'auctionInit'
-      | 'auctionTimeout'
-      | 'beforeRequestBids'
-      | 'beforeBidderHttp'
-      | 'bidAccepted'
-      | 'bidAdjustment'
-      | 'bidderDone'
-      | 'bidRequested'
-      | 'bidResponse'
-      | 'bidTimeout'
-      | 'bidWon'
-      | 'noBid'
-      | 'requestBids'
-      | 'setTargeting'
-      | 'tcf2Enforcement';
+    export interface PrebidEventMap {
+      addAdUnits: void;
+      adRenderFailed: RenderFailure;
+      adRenderSucceeded: BidResponse;
+      auctionDebug: AuctionDebugInfo;
+      auctionEnd: AuctionObject;
+      auctionInit: AuctionObject;
+      auctionTimeout: AuctionObject;
+      beforeBidderHttp: BidderRequest;
+      beforeRequestBids: BeforeRequestBidsAdUnitInfo;
+      bidAccepted: BidResponse;
+      bidAdjustment: BidResponse;
+      bidderDone: BidderRequest;
+      bidRequested: BidderRequest;
+      bidResponse: BidResponse;
+      bidWon: BidResponse;
+      bidTimeout: NoBidObject[];
+      noBid: NoBidObject;
+      requestBids: void;
+      setTargeting: { [key: string]: AdServerTargeting };
+      tcf2Enforcement: TCF2Enforcement;
+    }
 
-    /**
-     * All events that have no type definitions
-     */
-    export type UntypedEventName = Exclude<EventName, 'bidWon'>;
-
-    export type OnEventHandler = {
-      /**
-       * Triggered when a prebid bid has won the entire auction.
-       *
-       * @param event
-       * @param handler
-       * @param id - ad unit code
-       */
-
-      (event: 'addAdUnits', handler: () => void, id?: string): void;
-
-      (event: 'adRenderFailed', handler: (failure: RenderFailure) => void, id?: string): void;
-
-      (event: 'adRenderSucceeded', handler: (response: BidResponse) => void, id?: string): void;
-
-      (event: 'auctionDebug', handler: (debugInfo: AuctionDebugInfo) => void, id?: string): void;
-
-      (event: 'auctionEnd', handler: (auction: AuctionObject) => void, id?: string): void;
-
-      (event: 'auctionInit', handler: (auction: AuctionObject) => void, id?: string): void;
-
-      (event: 'auctionTimeout', handler: (auction: AuctionObject) => void, id?: string): void;
-
-      (event: 'beforeBidderHttp', handler: (adUnitInfo: BidderRequest) => void, id?: string): void;
-
-      (
-        event: 'beforeRequestBids',
-        handler: (adUnitInfo: BeforeRequestBidsAdUnitInfo) => void,
-        id?: string
-      ): void;
-
-      (event: 'bidAccepted', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidAdjustment', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidderDone', handler: (request: BidderRequest) => void, id?: string): void;
-
-      (event: 'bidRequested', handler: (request: BidderRequest) => void, id?: string): void;
-
-      (event: 'bidResponse', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidWon', handler: (bidResponse: BidResponse) => void, id?: string): void;
-
-      (event: 'bidTimeout', handler: (bid: NoBidObject[]) => void, id?: string): void;
-
-      (event: 'noBid', handler: (bid: NoBidObject) => void, id?: string): void;
-
-      (event: 'requestBids', handler: () => void, id?: string): void;
-
-      (
-        event: 'setTargeting',
-        handler: (targetingInfo: { [key: string]: AdServerTargeting }) => void,
-        id?: string
-      ): void;
-
-      (event: 'tcf2Enforcement', handler: (blocked: TCF2Enforcement) => void, id?: string): void;
-
-      (event: UntypedEventName, bid: any, id?: string): void;
-    };
+    export type PrebidEvent<E extends keyof PrebidEventMap> = PrebidEventMap[E];
 
     export type TCF2Enforcement = {
       readonly storageBlocked: string[];
@@ -1806,8 +1784,17 @@ export namespace prebidjs {
          * Meta info about the versions of moli and of the publisher ad tag in use.
          */
         h5v: {
+          /** initial value comes from the server and is overridden during runtime by the ad tag */
           moliVersion: string;
-          adTagVersion: string | undefined;
+
+          /** replaced by configVersion */
+          adTagVersion?: string;
+
+          /** information will come from the server */
+          configVersion?: string;
+
+          /** information set by the configureFromEndpoint bundle */
+          configLabel?: string;
         };
       };
     };
@@ -1981,12 +1968,29 @@ export namespace prebidjs {
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
+       *
+       * @see https://docs.prebid.org/features/firstPartyData.html#supplying-bidder-specific-data
+       * @see https://adagioio.notion.site/Prebid-9-Adagio-required-updates-compatible-from-Prebid-9-5-f62d02d67d604e0187a800afefadb29d
        */
-      ext?: any;
+      ext?:
+        | any // basically anything can still be put here
+        | {
+            data?: {
+              /**
+               * used by adagio. Example would be `article`
+               */
+              pagetype?: string;
+
+              /**
+               * used by adagio. Example would be `economy`
+               */
+              category?: string;
+            };
+          };
     }
 
     /**
-     * Data segment that allos additional data about the related object (e.g. content).
+     * Data segment that allows additional data about the related object (e.g. content).
      */
     export interface OpenRtb2Data {
       /**
@@ -3506,6 +3510,25 @@ export namespace prebidjs {
      */
     readonly id?: string;
   }
+
+  /**
+   * Adagio moved some of their logic into an RTD Module with Prebid 9.5.0.
+   * The change also requires to put some additional information in the `adUnit.ortb2Imp.ext.data` object.
+   *
+   * @see https://adagioio.notion.site/Prebid-9-Adagio-required-updates-compatible-from-Prebid-9-5-f62d02d67d604e0187a800afefadb29d
+   */
+  export interface IOrtb2ImpDataAdagio {
+    /**
+     * Required - Former 'bids.params.adUnitElementId'
+     */
+    divId?: string;
+
+    /**
+     * Same as 'bids.params.placement'
+     */
+    placement?: string;
+  }
+
   /**
    * Values passed by prebid during a prebid server auction call.
    *
@@ -3514,7 +3537,7 @@ export namespace prebidjs {
    */
   export interface IOrtb2Imp {
     readonly ext?: {
-      readonly data?: any;
+      readonly data?: IOrtb2ImpDataAdagio | any;
 
       /**
        * custom prebid extensions

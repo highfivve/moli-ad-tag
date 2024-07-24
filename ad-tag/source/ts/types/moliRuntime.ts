@@ -70,6 +70,14 @@ export namespace MoliRuntime {
     version: string;
 
     /**
+     * The label that is used to identify the configuration in the ad tag.
+     *
+     * This value is set by the `configureFromEndpoint` bundle that reads the script tag information.
+     * It may be undefined if the ad tag is configured manually or the `configureFromEndpoint` bundle failed.
+     */
+    configLabel?: string;
+
+    /**
      * Set a key value. Can be used in DFP or prebid bids configuration.
      * @param key
      * @param value

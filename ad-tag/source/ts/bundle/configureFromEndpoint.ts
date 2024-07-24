@@ -13,7 +13,7 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  *
  * The following attributes are supported:
  *
- * - `data-pub-code` - The publisher code that should be used to load the configuration.
+ * - `data-publisher-code` - The publisher code that should be used to load the configuration.
  * - `data-version` (default is `prod`) - The configuration version that should be loaded. Usually this is either `prod` or `staging`.
  *    You can also use a specific version number, like `15`.
  * - `data-endpoint` (optional) - The endpoint that should be called to load the configuration.
@@ -22,10 +22,13 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  * ```html
  * <script id="moli-ad-tag" src="path/to/your/ad-tag-bundle.js"
  *         data-publisher-code="yourCode"
- *         data-version="prod"
+ *         data-version="production"
  *         data-endpoint="cdn.h5v.eu/publishers"
  *         data-endpoint-fallback="cdn-fallback.h5v.eu/publishers"
  * ></script>
+ *
+ * !! Important !!
+ * Adding the `id="moli-ad-tag"` attribute to the script tag is highly recommended to ensure the script can find itself.
  * ```
  *
  * @module
@@ -53,25 +56,28 @@ const versionOverride = resolveOverrides(
 if (currentScript) {
   // publisher code and version can be overridden via query parameters
   const publisherCode = pubCodeOverride ?? currentScript.getAttribute('data-publisher-code');
-  const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'prod';
+  const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'production';
+
+  // make the configLabel available for the ad tag bundle. This info is sent along to prebid server for telemetry.
+  window.moli.configLabel = version;
 
   const endpoint = currentScript.getAttribute('data-endpoint') ?? 'api.h5v.eu/publishers';
   const fallback = currentScript.getAttribute('data-endpoint-fallback') ?? 'cdn.h5v.eu/publishers';
 
   if (publisherCode) {
     const path = `/${publisherCode}/configs/${version}/config.json`;
-    const url = `//${endpoint}/${path}`;
+    const url = `//${endpoint}${path}`;
     fetch(url, { mode: 'cors' })
       .then(response => response.json())
       .catch(error => {
         console.error(`Failed to load configuration from ${url}. Using fallback`, error);
-        return fetch(`//${fallback}/${path}`, { mode: 'cors' });
+        return fetch(`//${fallback}${path}`, { mode: 'cors' });
       })
       .then(config => window.moli.configure(config))
       .catch(error => console.error(`Failed to load configuration from ${url}:`, error));
   } else {
     console.error(
-      'No publisher code provided for ad tag configuration! Add the `data-pub-code="yourCode"` attribute to the script tag.'
+      'No publisher code provided for ad tag configuration! Add the `data-publisher-code="yourCode"` attribute to the script tag.'
     );
   }
 } else {
