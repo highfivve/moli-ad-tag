@@ -648,6 +648,17 @@ export namespace headerbidding {
      */
     readonly failsafeTimeout?: number;
 
+    /**
+     * Optional property to configure a video renderer for outstream video ads.
+     * This is required for prebid server outstream to work.
+     */
+    readonly backupVideoRenderer?: {
+      /**
+       * The URL to the video renderer script.
+       */
+      readonly url: string;
+    };
+
     /** optional listener for prebid events */
     // FIXME must be moved somewhere else. This is a runtime config thing for modules
     //  listener?: PrebidListenerProvider;

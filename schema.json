@@ -1155,6 +1155,20 @@
     "headerbidding.PrebidConfig": {
       "additionalProperties": false,
       "properties": {
+        "backupVideoRenderer": {
+          "additionalProperties": false,
+          "description": "Optional property to configure a video renderer for outstream video ads. This is required for prebid server outstream to work.",
+          "properties": {
+            "url": {
+              "description": "The URL to the video renderer script.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "type": "object"
+        },
         "bidderSettings": {
           "$ref": "#/definitions/prebidjs.IBidderSettings",
           "description": "optional bidder settings"
