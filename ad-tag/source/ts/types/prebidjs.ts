@@ -3574,7 +3574,6 @@ export namespace prebidjs {
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
   export const StroeerCore = 'stroeerCore';
-  export const StailaMedia = 'stailamedia';
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
   export const Rubicon = 'rubicon';
@@ -3613,7 +3612,6 @@ export namespace prebidjs {
     | typeof Seedtag
     | typeof Spotx
     | typeof ShowHeroes
-    | typeof StailaMedia
     | typeof StroeerCore
     | typeof Xaxis
     | typeof DSPX
@@ -4055,24 +4053,17 @@ export namespace prebidjs {
   }
 
   /**
-   * All available app nexus bidder codes and aliases
-   *
-   * @see https://docs.prebid.org/dev-docs/bidders/stailamedia.html
-   */
-  type AppNexusAliases = typeof AppNexusAst | typeof AppNexus | typeof StailaMedia
-
-  /**
    * AppNexus bid object.
    */
   export interface IAppNexusASTBid
-    extends IBidObject<AppNexusAliases, IAppNexusASTParams> {}
+    extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {}
 
   export interface IGumGumParams {
     /**
      * TrackingID.
      * required for all bid requests tracking a single domain or site
      *
-     * @example `'ggumtest'`
+     * @example `'ggumtest`
      */
     readonly zone: string;
 
