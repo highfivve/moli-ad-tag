@@ -4151,13 +4151,12 @@ export namespace prebidjs {
    *
    * @see https://docs.prebid.org/dev-docs/bidders/stailamedia.html
    */
-  type AppNexusAliases = typeof AppNexusAst | typeof AppNexus | typeof StailaMedia
+  type AppNexusAliases = typeof AppNexusAst | typeof AppNexus | typeof StailaMedia;
 
   /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid
-    extends IBidObject<AppNexusAliases, IAppNexusASTParams> {}
+  export interface IAppNexusASTBid extends IBidObject<AppNexusAliases, IAppNexusASTParams> {}
 
   export interface IGumGumParams {
     /**
