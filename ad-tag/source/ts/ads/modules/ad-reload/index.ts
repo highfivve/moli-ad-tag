@@ -58,7 +58,7 @@ import {
   mkConfigureStep,
   PrepareRequestAdsStep
 } from '../../adPipeline';
-import { AdSlot, GoogleAdManagerSlotSize, modules } from 'ad-tag/types/moliConfig';
+import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
@@ -262,7 +262,7 @@ export class AdReload implements IModule {
       if (moliSlot && moliSlot.behaviour.loaded !== 'infinite') {
         ctx.logger.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
-        const sizesOverride: GoogleAdManagerSlotSize[] = this.maybeOptimizeSlotForCls(
+        const sizesOverride: googleAdManager.SlotSize[] = this.maybeOptimizeSlotForCls(
           config,
           moliSlot,
           googleTagSlot,
@@ -296,7 +296,7 @@ export class AdReload implements IModule {
     googleTagSlot: googletag.IAdSlot,
     logger: MoliRuntime.MoliLogger,
     _window: Window & googletag.IGoogleTagWindow
-  ): GoogleAdManagerSlotSize[] => {
+  ): googleAdManager.SlotSize[] => {
     const slotDomId = moliSlot.domId;
 
     if (config.optimizeClsScoreDomIds.indexOf(slotDomId) > -1) {

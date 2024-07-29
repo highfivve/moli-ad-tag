@@ -2,10 +2,10 @@ import React from 'react';
 
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
-import type { GoogleAdManagerSlotSize, SizeConfigEntry } from '../../types/moliConfig';
+import type { googleAdManager, sizeConfigs } from '../../types/moliConfig';
 
 type ISizeConfigProps = {
-  sizeConfig: Array<SizeConfigEntry>;
+  sizeConfig: Array<sizeConfigs.SizeConfigEntry>;
   supportedLabels: Array<string>;
 };
 
@@ -75,7 +75,7 @@ export const SizeConfigDebug: React.FC<ISizeConfigProps> = ({ sizeConfig, suppor
             )}
             <div className="MoliDebug-tagContainer">
               <span className="MoliDebug-tagLabel">Supported slot sizes</span>
-              {sizeConfigEntry.sizesSupported.map((slotSize: GoogleAdManagerSlotSize) => {
+              {sizeConfigEntry.sizesSupported.map((slotSize: googleAdManager.SlotSize) => {
                 const sizeString =
                   slotSize === 'fluid' ? slotSize : `${slotSize[0]}x${slotSize[1]}`;
                 return <Tag key={sizeString}>{sizeString}</Tag>;

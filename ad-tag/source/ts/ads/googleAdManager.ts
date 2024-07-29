@@ -19,7 +19,7 @@ import { AssetLoadMethod } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
-import { AdSlot, consent, GoogleAdManagerKeyValueMap, Targeting } from '../types/moliConfig';
+import { AdSlot, consent, googleAdManager } from '../types/moliConfig';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -64,8 +64,8 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
 
 const configureTargeting = (
   window: Window & googletag.IGoogleTagWindow,
-  runtimeKeyValues: GoogleAdManagerKeyValueMap,
-  serverSideTargeting: Targeting | undefined
+  runtimeKeyValues: googleAdManager.KeyValueMap,
+  serverSideTargeting: googleAdManager.Targeting | undefined
 ): void => {
   const staticKeyValues = serverSideTargeting ? serverSideTargeting.keyValues : {};
   const excludes = serverSideTargeting?.adManagerExcludes ?? [];

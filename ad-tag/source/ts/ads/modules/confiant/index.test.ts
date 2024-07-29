@@ -10,7 +10,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { Confiant } from 'ad-tag/ads/modules/confiant/index';
-import { modules, Targeting } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCData = tcfapi.responses.TCData;
@@ -37,7 +37,10 @@ describe('Confiant Module', () => {
     }
   });
 
-  const adPipelineContext = (tcData?: TCData, targeting?: Targeting): AdPipelineContext => ({
+  const adPipelineContext = (
+    tcData?: TCData,
+    targeting?: googleAdManager.Targeting
+  ): AdPipelineContext => ({
     requestId: 0,
     requestAdsCalls: 1,
     env: 'production',

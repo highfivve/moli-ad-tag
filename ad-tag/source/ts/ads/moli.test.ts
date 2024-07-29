@@ -7,7 +7,7 @@ import { createMoliTag } from './moli';
 import { initAdTag } from './moliGlobal';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
-import { emptyConfig, newEmptyConfig, newNoopLogger, noopLogger } from '../stubs/moliStubs';
+import { emptyConfig, newEmptyConfig, newNoopLogger } from '../stubs/moliStubs';
 import IConfigurable = MoliRuntime.state.IConfigurable;
 import IFinished = MoliRuntime.state.IFinished;
 import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
@@ -18,7 +18,7 @@ import { prebidjs } from '../types/prebidjs';
 import { BrowserStorageKeys } from '../util/browserStorageKeys';
 import { JSDOM } from 'jsdom';
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { AdSlot, Environment, modules, MoliConfig, SinglePageAppConfig } from '../types/moliConfig';
+import { AdSlot, Environment, modules, MoliConfig, spa } from '../types/moliConfig';
 import MoliTag = MoliRuntime.MoliTag;
 import state = MoliRuntime.state;
 import {
@@ -475,7 +475,7 @@ describe('moli', () => {
     });
 
     describe('single page application mode (spa)', () => {
-      const spa: SinglePageAppConfig = { enabled: true, validateLocation: 'href' };
+      const spa: spa.SinglePageAppConfig = { enabled: true, validateLocation: 'href' };
 
       it('should batch refresh calls before requestAds() is called', async () => {
         // create all slots

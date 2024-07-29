@@ -50,8 +50,8 @@
           "type": "boolean"
         },
         "position": {
-          "$ref": "#/definitions/IPosition",
-          "description": "Configure the ad slot position\n\n- `in-page` is the standard display ad\n- `out-of-page` uses the `defineOutOfPageSlot` API\n- `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`\n- `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`\n- `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`"
+          "$ref": "#/definitions/gpt.Position",
+          "description": "the position of the ad slot"
         },
         "prebid": {
           "$ref": "#/definitions/headerbidding.PrebidAdSlotConfigProvider",
@@ -60,14 +60,14 @@
         "sizeConfig": {
           "description": "Size configuration to support \"responsive\" ads.\n\nThe implementation matches the prebid.js specification for responsive ads. However, this information is not passed to prebid. The ad tag already takes care of filtering sizes.",
           "items": {
-            "$ref": "#/definitions/SizeConfigEntry"
+            "$ref": "#/definitions/sizeConfigs.SizeConfigEntry"
           },
           "type": "array"
         },
         "sizes": {
           "description": "the sizes for this ad slot",
           "items": {
-            "$ref": "#/definitions/GoogleAdManagerSlotSize"
+            "$ref": "#/definitions/googleAdManager.SlotSize"
           },
           "type": "array"
         }
@@ -87,53 +87,6 @@
         "type": "string"
       },
       "description": "Add targeting information from the ad tag. Usually these are static values. Dynamic values should be added via the MoliTag API `setTargeting(key, value)` or `addLabel(label)`.",
-      "type": "object"
-    },
-    "CSSDeletionMethod": {
-      "additionalProperties": false,
-      "description": "== Cleanup Module ==\n\nCleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.\n\nThe configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted or JS as a string that will be evaluated by the module in order to remove these elements.",
-      "properties": {
-        "cssSelectors": {
-          "description": "The CSS selectors of the html elements in the DOM that should be removed.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "cssSelectors"
-      ],
-      "type": "object"
-    },
-    "CleanupConfig": {
-      "additionalProperties": false,
-      "properties": {
-        "bidder": {
-          "$ref": "#/definitions/prebidjs.BidderCode",
-          "description": "The bidder that offers the special format."
-        },
-        "deleteMethod": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CSSDeletionMethod"
-            },
-            {
-              "$ref": "#/definitions/JSDeletionMethod"
-            }
-          ],
-          "description": "The method how the special format should be cleaned up."
-        },
-        "domId": {
-          "description": "The domId of the slot on which the special format runs.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "bidder",
-        "domId",
-        "deleteMethod"
-      ],
       "type": "object"
     },
     "EmetriqAdditionalIdentifier": {
@@ -252,89 +205,6 @@
       ],
       "type": "object"
     },
-    "GoogleAdManagerKeyValueMap": {
-      "additionalProperties": {
-        "anyOf": [
-          {
-            "type": "string"
-          },
-          {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          {
-            "not": {}
-          }
-        ]
-      },
-      "description": "KeyValue map. Last insert wins.",
-      "type": "object"
-    },
-    "GoogleAdManagerSlotSize": {
-      "anyOf": [
-        {
-          "items": {
-            "type": "number"
-          },
-          "maxItems": 2,
-          "minItems": 2,
-          "type": "array"
-        },
-        {
-          "const": "fluid",
-          "type": "string"
-        }
-      ]
-    },
-    "IPosition": {
-      "enum": [
-        "in-page",
-        "out-of-page",
-        "out-of-page-interstitial",
-        "out-of-page-top-anchor",
-        "out-of-page-bottom-anchor"
-      ],
-      "type": "string"
-    },
-    "JSDeletionMethod": {
-      "additionalProperties": false,
-      "properties": {
-        "jsAsString": {
-          "description": "JavaScript code as a string that will be executed as given (and most likely deletes the html elements of the special format).",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "jsAsString"
-      ],
-      "type": "object"
-    },
-    "LabelSizeConfigEntry": {
-      "additionalProperties": false,
-      "properties": {
-        "labelsSupported": {
-          "description": "labels that are available if the media query matches",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "mediaQuery": {
-          "description": "media query that must match if the labels are applicable",
-          "type": "string"
-        }
-      },
-      "required": [
-        "mediaQuery",
-        "labelsSupported"
-      ],
-      "type": "object"
-    },
     "MoliConfig": {
       "additionalProperties": false,
       "description": "## Moli Configuration\n\nContains the configuration for the ad tag that is served from a backend.",
@@ -376,7 +246,7 @@
         "labelSizeConfig": {
           "description": "Label configuration to support \"responsive\" ads. This is an alternative solution to custom () => DfpSlotSize[] functions and is taken from prebid.js.\n\nhttps://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads",
           "items": {
-            "$ref": "#/definitions/LabelSizeConfigEntry"
+            "$ref": "#/definitions/sizeConfigs.LabelSizeConfigEntry"
           },
           "type": "array"
         },
@@ -405,11 +275,11 @@
           "type": "array"
         },
         "spa": {
-          "$ref": "#/definitions/SinglePageAppConfig",
+          "$ref": "#/definitions/spa.SinglePageAppConfig",
           "description": "Optional configuration for single page"
         },
         "targeting": {
-          "$ref": "#/definitions/Targeting",
+          "$ref": "#/definitions/googleAdManager.Targeting",
           "description": "optional key-value targeting for DFP"
         },
         "version": {
@@ -452,72 +322,6 @@
         "priceRuleId",
         "floorprice",
         "main"
-      ],
-      "type": "object"
-    },
-    "SinglePageAppConfig": {
-      "additionalProperties": false,
-      "description": "Additional configuration for single page application publishers.",
-      "properties": {
-        "destroyAllAdSlots": {
-          "default": true,
-          "description": "If set to `false`, `requestAds` will not destroy all existing ad slots, but only the ones being requested.\n\nUse with caution and test properly.\n\n## Use cases\n\nThis setting can be used for publishers that have more \"static\" ad slots, like mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation and that have users that navigation a lot on the page, e.g. swiping through images or profiles. With this setting the more persistent ad slots are refreshed through ad reload or timed by the publisher, while other content positions are refreshed on navigation.",
-          "type": "boolean"
-        },
-        "enabled": {
-          "description": "Set to true if this publisher has a single page application.",
-          "type": "boolean"
-        },
-        "validateLocation": {
-          "default": true,
-          "description": "If set to `href`\n- the ad tag will only allow one `requestAds` call per `href`\n- requires `moli.requestAds()` to be called once per page, otherwise `moli.refreshAdSlot` will queue calls\n\nAll available options are:\n- `href` - the ad tag will only allow one `requestAds` call per `href`\n- `path` - the ad tag will only allow one `requestAds` call per `path`\n- `none` - the ad tag will allow multiple `requestAds` calls\n\n## Use cases\n\nThe default is `true` to ensure that subsequent `refreshAdSlot` calls are queued and not executed, if the URL has already changed. This ensures that the `requestAds()` call has cleaned up all ad slots and state before loading new ones.\n\nHowever, there are publishers that change the URL, e.g. for putting filter settings into the query and do not call `moli.requestAds()`, because that's not a page change.",
-          "enum": [
-            "href",
-            "path",
-            "none"
-          ],
-          "type": "string"
-        }
-      },
-      "required": [
-        "enabled",
-        "validateLocation"
-      ],
-      "type": "object"
-    },
-    "SizeConfigEntry": {
-      "additionalProperties": false,
-      "description": "## SizeConfig entry\n\nConfigure sizes based on media queries for a single `IAdSlot`.\n\nThis is the most complex part of a publisher ad tag setup. The size config defines\n\n- if an ad slot is loaded\n- what sizes are requested\n\nThis slot only supports the `mediaQuery` and `sizesSupported` property. `labels` can only be defined globally as these can and should always be unique, while the `sizesSupported` may overlap due to overlapping media queries.\n\nExample for overlapping configuration:\n\n```typescript [{   // mobile devices support a medium rectangle   mediaQuery: (max-width: 767px),   sizesSupported: [[300,250]] }, {   // desktop sidebar supports medium rectangle   mediaQuery: (min-width: 768px),   sizesSupported: [[300,250]] }] ```\n\nThis result in `[[300,250]]` being always supported, which may not be something you want.\n\n### Using labels\n\nIf you have the same slot on different page types with a different layout you can differentation size configs via two properites\n\n- `labelAll` - all labels need to be present if this size config should be applied\n- `labelNone` - none of the labels must be present if this size config should be applied\n\n```typescript [{   // mobile devices support a medium rectangle   mediaQuery: (max-width: 767px),   labelAll: ['homepage'],   sizesSupported: [[728,90]] }, {   // desktop sidebar supports medium rectangle   mediaQuery: (min-width: 768px)   labelNone: ['homepage']   sizesSupported: [[728,90], [900,250]] }] ```\n\n## Prebid API\n\nThe API is identical to the Prebid size config feature. However, we do not pass the size config down to prebid as we already apply the logic at a higher level. We only pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.",
-      "properties": {
-        "labelAll": {
-          "description": "optional array of labels. All labels must be present if the sizes should be applied",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "labelNone": {
-          "description": "optional array of labels. All labels must **not** be present if the sizes should be applied",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "mediaQuery": {
-          "description": "media query that must match if the sizes are applicable",
-          "type": "string"
-        },
-        "sizesSupported": {
-          "description": "static sizes that are support if the media query matches",
-          "items": {
-            "$ref": "#/definitions/GoogleAdManagerSlotSize"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "mediaQuery",
-        "sizesSupported"
       ],
       "type": "object"
     },
@@ -594,37 +398,6 @@
         "ver",
         "complete",
         "nodes"
-      ],
-      "type": "object"
-    },
-    "Targeting": {
-      "additionalProperties": false,
-      "properties": {
-        "adManagerExcludes": {
-          "description": "A list of key-value keys that should not be sent to the ad manager. This setting is not yet configurable via API as this should be static and defined in the ad tag.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "adUnitPathVariables": {
-          "$ref": "#/definitions/AdUnitPathVariables",
-          "description": "ad unit path variables"
-        },
-        "keyValues": {
-          "$ref": "#/definitions/GoogleAdManagerKeyValueMap",
-          "description": "static or supplied key-values"
-        },
-        "labels": {
-          "description": "additional labels. Added in addition to the ones created by the sizeConfig.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "required": [
-        "keyValues"
       ],
       "type": "object"
     },
@@ -893,6 +666,73 @@
       },
       "type": "object"
     },
+    "googleAdManager.KeyValueMap": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "not": {}
+          }
+        ]
+      },
+      "description": "KeyValue map. Last insert wins.",
+      "type": "object"
+    },
+    "googleAdManager.SlotSize": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        {
+          "const": "fluid",
+          "type": "string"
+        }
+      ]
+    },
+    "googleAdManager.Targeting": {
+      "additionalProperties": false,
+      "properties": {
+        "adManagerExcludes": {
+          "description": "A list of key-value keys that should not be sent to the ad manager. This setting is not yet configurable via API as this should be static and defined in the ad tag.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "adUnitPathVariables": {
+          "$ref": "#/definitions/AdUnitPathVariables",
+          "description": "ad unit path variables"
+        },
+        "keyValues": {
+          "$ref": "#/definitions/googleAdManager.KeyValueMap",
+          "description": "static or supplied key-values"
+        },
+        "labels": {
+          "description": "additional labels. Added in addition to the ones created by the sizeConfig.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "keyValues"
+      ],
+      "type": "object"
+    },
     "googletag.GptPageSettingsConfig": {
       "additionalProperties": false,
       "properties": {
@@ -986,6 +826,17 @@
       },
       "type": "object"
     },
+    "gpt.Position": {
+      "description": "Configure the ad slot position\n\n- `in-page` is the standard display ad\n- `out-of-page` uses the `defineOutOfPageSlot` API\n- `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`\n- `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`\n- `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`",
+      "enum": [
+        "in-page",
+        "out-of-page",
+        "out-of-page-interstitial",
+        "out-of-page-top-anchor",
+        "out-of-page-bottom-anchor"
+      ],
+      "type": "string"
+    },
     "headerbidding.A9AdSlotConfig": {
       "additionalProperties": false,
       "description": "## A9 ad slot configuration\n\nMost of the a9 configuration is derived from the [[IAdSlot]] definition that provides the configuration.\n\n- `slotID` - is defined by the slot `domId`\n- `slotName` - is defined by the slot `adUnitPath`\n- `sizes` - is defined by the slot `sizes`",
@@ -1057,7 +908,7 @@
         "supportedSizes": {
           "description": "all sizes that requests will be made for and are supported by a9.\n\ndefault: requesting all sizes that are defined in the adSlot configuration.",
           "items": {
-            "$ref": "#/definitions/GoogleAdManagerSlotSize"
+            "$ref": "#/definitions/googleAdManager.SlotSize"
           },
           "type": "array"
         },
@@ -1762,13 +1613,60 @@
       ],
       "type": "object"
     },
+    "modules.cleanup.CSSDeletionMethod": {
+      "additionalProperties": false,
+      "properties": {
+        "cssSelectors": {
+          "description": "The CSS selectors of the html elements in the DOM that should be removed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "cssSelectors"
+      ],
+      "type": "object"
+    },
+    "modules.cleanup.CleanupConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bidder": {
+          "$ref": "#/definitions/prebidjs.BidderCode",
+          "description": "The bidder that offers the special format."
+        },
+        "deleteMethod": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/modules.cleanup.CSSDeletionMethod"
+            },
+            {
+              "$ref": "#/definitions/modules.cleanup.JSDeletionMethod"
+            }
+          ],
+          "description": "The method how the special format should be cleaned up."
+        },
+        "domId": {
+          "description": "The domId of the slot on which the special format runs.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bidder",
+        "domId",
+        "deleteMethod"
+      ],
+      "type": "object"
+    },
     "modules.cleanup.CleanupModuleConfig": {
       "additionalProperties": false,
+      "description": "== Cleanup Module ==\n\nCleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.\n\nThe configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted or JS as a string that will be evaluated by the module in order to remove these elements.",
       "properties": {
         "configs": {
           "description": "A list of configurations.",
           "items": {
-            "$ref": "#/definitions/CleanupConfig"
+            "$ref": "#/definitions/modules.cleanup.CleanupConfig"
           },
           "type": "array"
         },
@@ -1780,6 +1678,22 @@
       "required": [
         "configs",
         "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.cleanup.JSDeletionMethod": {
+      "additionalProperties": false,
+      "properties": {
+        "jsAsString": {
+          "description": "JavaScript code as a string that will be executed as given (and most likely deletes the html elements of the special format).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "jsAsString"
       ],
       "type": "object"
     },
@@ -10994,6 +10908,93 @@
       },
       "required": [
         "supplyChainStartNode"
+      ],
+      "type": "object"
+    },
+    "sizeConfigs.LabelSizeConfigEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "labelsSupported": {
+          "description": "labels that are available if the media query matches",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "mediaQuery": {
+          "description": "media query that must match if the labels are applicable",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mediaQuery",
+        "labelsSupported"
+      ],
+      "type": "object"
+    },
+    "sizeConfigs.SizeConfigEntry": {
+      "additionalProperties": false,
+      "description": "## SizeConfig entry\n\nConfigure sizes based on media queries for a single `IAdSlot`.\n\nThis is the most complex part of a publisher ad tag setup. The size config defines\n\n- if an ad slot is loaded\n- what sizes are requested\n\nThis slot only supports the `mediaQuery` and `sizesSupported` property. `labels` can only be defined globally as these can and should always be unique, while the `sizesSupported` may overlap due to overlapping media queries.\n\nExample for overlapping configuration:\n\n```typescript [{   // mobile devices support a medium rectangle   mediaQuery: (max-width: 767px),   sizesSupported: [[300,250]] }, {   // desktop sidebar supports medium rectangle   mediaQuery: (min-width: 768px),g   sizesSupported: [[300,250]] }]< ```\n\nThis result in `[[300,250]]` being always supported, which may not be something you want.\n\n### Using labels\n\nIf you have the same slot on different page types with a different layout you can differentation size configs via two properites\n\n- `labelAll` - all labels need to be present if this size config should be applied\n- `labelNone` - none of the labels must be present if this size config should be applied\n\n```typescript [{   // mobile devices support a medium rectangle   mediaQuery: (max-width: 767px),   labelAll: ['homepage'],   sizesSupported: [[728,90]] }, {   // desktop sidebar supports medium rectangle   mediaQuery: (min-width: 768px)   labelNone: ['homepage']   sizesSupported: [[728,90], [900,250]] }] ```\n\n## Prebid API\n\nThe API is identical to the Prebid size config feature. However, we do not pass the size config down to prebid as we already apply the logic at a higher level. We only pass the `labels` to the`requestBids({ labels })` call. Sizes are already filtered.",
+      "properties": {
+        "labelAll": {
+          "description": "optional array of labels. All labels must be present if the sizes should be applied",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelNone": {
+          "description": "optional array of labels. All labels must **not** be present if the sizes should be applied",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "mediaQuery": {
+          "description": "media query that must match if the sizes are applicable",
+          "type": "string"
+        },
+        "sizesSupported": {
+          "description": "static sizes that are support if the media query matches",
+          "items": {
+            "$ref": "#/definitions/googleAdManager.SlotSize"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "mediaQuery",
+        "sizesSupported"
+      ],
+      "type": "object"
+    },
+    "spa.SinglePageAppConfig": {
+      "additionalProperties": false,
+      "description": "Additional configuration for single page application publishers.",
+      "properties": {
+        "destroyAllAdSlots": {
+          "default": true,
+          "description": "If set to `false`, `requestAds` will not destroy all existing ad slots, but only the ones being requested.\n\nUse with caution and test properly.\n\n## Use cases\n\nThis setting can be used for publishers that have more \"static\" ad slots, like mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation and that have users that navigation a lot on the page, e.g. swiping through images or profiles. With this setting the more persistent ad slots are refreshed through ad reload or timed by the publisher, while other content positions are refreshed on navigation.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "description": "Set to true if this publisher has a single page application.",
+          "type": "boolean"
+        },
+        "validateLocation": {
+          "default": true,
+          "description": "If set to `href`\n- the ad tag will only allow one `requestAds` call per `href`\n- requires `moli.requestAds()` to be called once per page, otherwise `moli.refreshAdSlot` will queue calls\n\nAll available options are:\n- `href` - the ad tag will only allow one `requestAds` call per `href`\n- `path` - the ad tag will only allow one `requestAds` call per `path`\n- `none` - the ad tag will allow multiple `requestAds` calls\n\n## Use cases\n\nThe default is `true` to ensure that subsequent `refreshAdSlot` calls are queued and not executed, if the URL has already changed. This ensures that the `requestAds()` call has cleaned up all ad slots and state before loading new ones.\n\nHowever, there are publishers that change the URL, e.g. for putting filter settings into the query and do not call `moli.requestAds()`, because that's not a page change.",
+          "enum": [
+            "href",
+            "path",
+            "none"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "validateLocation"
       ],
       "type": "object"
     }

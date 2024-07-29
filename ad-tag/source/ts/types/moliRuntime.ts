@@ -8,11 +8,9 @@ import {
   AdUnitPathVariables,
   behaviour,
   Environment,
-  GoogleAdManagerKeyValueMap,
-  GoogleAdManagerSlotSize,
+  googleAdManager,
   MoliConfig,
-  ResolveAdUnitPathOptions,
-  Targeting
+  ResolveAdUnitPathOptions
 } from './moliConfig';
 
 /**
@@ -278,7 +276,7 @@ export namespace MoliRuntime {
      *
      * @returns the current page targeting
      */
-    getPageTargeting(): Readonly<Targeting>;
+    getPageTargeting(): Readonly<googleAdManager.Targeting>;
 
     /**
      * @returns the current state name
@@ -342,7 +340,7 @@ export namespace MoliRuntime {
      * });
      *
      */
-    readonly keyValues: GoogleAdManagerKeyValueMap;
+    readonly keyValues: googleAdManager.KeyValueMap;
 
     /**
      * Additional labels. Insert with
@@ -414,7 +412,7 @@ export namespace MoliRuntime {
      * Note that only sizes can be used that are covered by a size configuration. Sizes that don't match any size config,
      * will be filtered out and may lead to the ad slot not being refreshed.
      */
-    readonly sizesOverride?: GoogleAdManagerSlotSize[];
+    readonly sizesOverride?: googleAdManager.SlotSize[];
   }
 
   /**
@@ -775,8 +773,8 @@ export namespace MoliRuntime {
   }
 
   export type FilterSupportedSizes = (
-    givenSizes: GoogleAdManagerSlotSize[]
-  ) => GoogleAdManagerSlotSize[];
+    givenSizes: googleAdManager.SlotSize[]
+  ) => googleAdManager.SlotSize[];
 
   /**
    * Combines the moli slot configuration (`Moli.AdSlot`) along with the actual `googletag.IAdSlot` definition.
@@ -819,7 +817,7 @@ export namespace MoliRuntime {
       /**
        * Access key-values
        */
-      readonly keyValues: GoogleAdManagerKeyValueMap;
+      readonly keyValues: googleAdManager.KeyValueMap;
 
       /**
        * Floor price in EUR
@@ -913,7 +911,7 @@ export namespace MoliRuntime {
       /**
        * Access key-values
        */
-      readonly keyValues: GoogleAdManagerKeyValueMap;
+      readonly keyValues: googleAdManager.KeyValueMap;
     }
   }
 
