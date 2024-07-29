@@ -2,10 +2,10 @@ import React from 'react';
 
 import { Tag } from './tag';
 import { classList } from '../util/stringUtils';
-import type { LabelSizeConfigEntry } from '../../types/moliConfig';
+import type { sizeConfigs } from '../../types/moliConfig';
 
 type ISLabelConfigProps = {
-  labelSizeConfig: Array<LabelSizeConfigEntry>;
+  labelSizeConfig: Array<sizeConfigs.LabelSizeConfigEntry>;
 };
 
 export const LabelConfigDebug: React.FC<ISLabelConfigProps> = ({ labelSizeConfig }) => {

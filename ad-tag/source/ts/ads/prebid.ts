@@ -23,7 +23,7 @@ import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredReques
 import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import IPrebidJs = prebidjs.IPrebidJs;
-import { AdServer, AdSlot, headerbidding, schain, Targeting } from '../types/moliConfig';
+import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 

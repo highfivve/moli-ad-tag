@@ -47,7 +47,7 @@
  */
 import TCDataNoGDPR = tcfapi.responses.TCDataNoGDPR;
 import TCDataWithGDPR = tcfapi.responses.TCDataWithGDPR;
-import { GoogleAdManagerKeyValueMap, modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import {
   InitStep,
   ConfigureStep,
@@ -235,7 +235,7 @@ export class Zeotap implements IModule {
    * Convert the key/values object from the moli config to an actual map, filtering out entries with falsy values.
    */
   private makeKeyValuesMap = (
-    keyValues: GoogleAdManagerKeyValueMap | undefined
+    keyValues: googleAdManager.KeyValueMap | undefined
   ): Map<string, string | Array<string>> => {
     return keyValues
       ? new Map(

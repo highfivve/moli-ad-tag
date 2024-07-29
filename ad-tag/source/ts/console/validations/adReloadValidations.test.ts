@@ -2,9 +2,10 @@ import { expect } from 'chai';
 import { checkAdReloadConfig } from './adReloadValidations';
 import { Message } from '../components/globalConfig';
 import { prebidjs } from '../../types/prebidjs';
-import type { AdSlot, GoogleAdManagerSlotSize, modules } from '../../types/moliConfig';
+import type { AdSlot, modules } from '../../types/moliConfig';
 import type { ModuleMeta } from '../../types/module';
 import video = prebidjs.video;
+import { googleAdManager } from '../../types/moliConfig';
 
 describe('AdReload Validations', () => {
   const dspxBid: prebidjs.IDSPXBid = { bidder: prebidjs.DSPX, params: { placement: 'placebo' } };
@@ -18,7 +19,7 @@ describe('AdReload Validations', () => {
 
   const createAdSlot = (
     adUnitPath: string,
-    sizes: GoogleAdManagerSlotSize[],
+    sizes: googleAdManager.SlotSize[],
     bids: prebidjs.IBid[],
     isOutstream: boolean = false
   ): AdSlot => {

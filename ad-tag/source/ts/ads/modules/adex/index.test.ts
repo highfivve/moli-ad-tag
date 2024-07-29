@@ -12,7 +12,7 @@ import { prebidjs } from 'ad-tag/types/prebidjs';
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
-import { modules, Targeting } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import MappingDefinition = modules.adex.MappingDefinition;
 import AdexAppConfig = modules.adex.AdexAppConfig;
 import { tcfapi } from 'ad-tag/types/tcfapi';
@@ -52,7 +52,10 @@ describe('The Adex DMP Module', () => {
     }
   });
 
-  const adPipelineContext = (tcData?: TCData, targeting?: Targeting): AdPipelineContext => ({
+  const adPipelineContext = (
+    tcData?: TCData,
+    targeting?: googleAdManager.Targeting
+  ): AdPipelineContext => ({
     requestId: 0,
     requestAdsCalls: 1,
     env: 'production',
