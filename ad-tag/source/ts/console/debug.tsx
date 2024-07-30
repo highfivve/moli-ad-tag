@@ -42,7 +42,7 @@ if (moliConfig) {
     <GlobalConfig
       config={moliConfig}
       runtimeConfig={window.moli.getRuntimeConfig()}
-      modules={modulesMeta}
+      modules={window.moli.getConfig()?.modules || {}}
       labelConfigService={labelConfigService}
       windowResizeService={new WindowResizeService()}
       themingService={themingService}

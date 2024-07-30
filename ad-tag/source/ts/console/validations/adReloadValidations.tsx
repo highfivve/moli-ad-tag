@@ -35,18 +35,15 @@ const isWallpaperSlot = (
 
 export const checkAdReloadConfig = (
   messages: Message[],
-  modules: ReadonlyArray<ModuleMeta>,
+  modules: modules.ModulesConfig | undefined,
   slots: AdSlot[],
   labels: string[]
 ): void => {
-  const module = modules.find(module => module.moduleType === 'ad-reload');
+  const adReloadConfig = modules?.adReload;
 
-  if (!module) {
+  if (!adReloadConfig) {
     return;
   }
-
-  // this only works because there's a single ad reload module available right now
-  const adReloadConfig = module.config as modules.adreload.AdReloadModuleConfig;
 
   slots.forEach(slot => {
     if (!slot.prebid) {

@@ -3,7 +3,6 @@ import { checkAdReloadConfig } from './adReloadValidations';
 import { Message } from '../components/globalConfig';
 import { prebidjs } from '../../types/prebidjs';
 import type { AdSlot, modules } from '../../types/moliConfig';
-import type { ModuleMeta } from '../../types/module';
 import video = prebidjs.video;
 import { googleAdManager } from '../../types/moliConfig';
 
@@ -70,18 +69,15 @@ describe('AdReload Validations', () => {
     excludeAdSlotDomIds: ['23'],
     optimizeClsScoreDomIds: ['22']
   };
-  const adReloadModuleMeta: ModuleMeta = {
-    moduleType: 'ad-reload',
-    name: 'test ad reload module',
-    description: 'test module',
-    config: moduleConfig
+  const adReloadModuleConfig: modules.ModulesConfig = {
+    adReload: moduleConfig
   };
 
   describe('wallpaper validation', () => {
     it('should return an error when a wallpaper slot is detected by ad unit path is not excluded from ad reload ', () => {
       const messages: Message[] = [];
       const adSlot = createAdSlot('wallpaper', [[12, 12]], []);
-      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      checkAdReloadConfig(messages, adReloadModuleConfig, [adSlot], labels);
       expect(messages).to.have.length(1);
       expect(messages[0].kind).to.eq('error');
       expect(messages[0].text).to.eq(
@@ -92,7 +88,7 @@ describe('AdReload Validations', () => {
     it('should return an error when a wallpaper slot is detected by bids config and is not excluded from ad reload', () => {
       const messages: Message[] = [];
       const adSlot = createAdSlot('path', [[12, 12]], [dspxBid, gumGum]);
-      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      checkAdReloadConfig(messages, adReloadModuleConfig, [adSlot], labels);
       expect(messages).to.have.length(1);
       expect(messages[0].kind).to.eq('error');
       expect(messages[0].text).to.eq(
@@ -103,7 +99,7 @@ describe('AdReload Validations', () => {
     it('should return an error when a wallpaper slot is detected by sizes and is not excluded from ad reload', () => {
       const messages: Message[] = [];
       const adSlot = createAdSlot('path', [[1, 1]], []);
-      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      checkAdReloadConfig(messages, adReloadModuleConfig, [adSlot], labels);
       expect(messages).to.have.length(1);
       expect(messages[0].kind).to.eq('error');
       expect(messages[0].text).to.eq(
@@ -114,7 +110,7 @@ describe('AdReload Validations', () => {
     it('should return no error if floor ad was accidentally detected', () => {
       const messages: Message[] = [];
       const adSlot = createAdSlot('floor', [[1, 1]], []);
-      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      checkAdReloadConfig(messages, adReloadModuleConfig, [adSlot], labels);
       expect(messages).to.have.length(
         0,
         'Got: ' + messages.map(error => `${error.kind}: ${error.text}`).join('\n')
@@ -126,7 +122,7 @@ describe('AdReload Validations', () => {
     it('should return an error when an oustream slot is detected by prebid media type and is not excluded from ad reload', () => {
       const messages: Message[] = [];
       const adSlot = createAdSlot('content_2', [[300, 250]], [criteo], true);
-      checkAdReloadConfig(messages, [adReloadModuleMeta], [adSlot], labels);
+      checkAdReloadConfig(messages, adReloadModuleConfig, [adSlot], labels);
       expect(messages).to.have.length(1);
       expect(messages[0].kind).to.eq('error');
       expect(messages[0].text).to.eq(

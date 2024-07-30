@@ -46,14 +46,13 @@ export const checkBucketConfig = (
 
 export const checkSkinConfig = (
   messages: Message[],
-  modules: ReadonlyArray<ModuleMeta>,
+  modules: modules.ModulesConfig | undefined,
   slots: AdSlot[]
 ) => {
-  const module = modules.find(module => module.name === 'skin');
+  const skinModuleConfig = modules?.skin;
 
-  if (module) {
-    const skinModule = module.config as unknown as modules.skin.SkinModuleConfig;
-    skinModule.configs.forEach(conf => {
+  if (skinModuleConfig) {
+    skinModuleConfig.configs.forEach(conf => {
       const skinAdSlotDomId = conf.skinAdSlotDomId;
       const blockedAdSlotDomIds = conf.blockedAdSlotDomIds;
 
