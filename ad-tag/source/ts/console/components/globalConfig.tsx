@@ -19,9 +19,9 @@ import {
   GoogleAdManagerKeyValueMap,
   headerbidding,
   LabelSizeConfigEntry,
+  modules,
   MoliConfig
 } from '../../types/moliConfig';
-import type { ModuleMeta } from '../../types/module';
 import { LabelConfigService } from '../../ads/labelConfigService';
 import { checkBucketConfig, checkSkinConfig } from '../validations/bucketValidations';
 import {
@@ -43,7 +43,7 @@ declare const window: Window &
 type IGlobalConfigProps = {
   config?: MoliConfig;
   runtimeConfig: MoliRuntime.MoliRuntimeConfig;
-  modules: ReadonlyArray<ModuleMeta>;
+  modules?: modules.ModulesConfig;
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
   themingService: ThemingService;
@@ -323,7 +323,7 @@ export class GlobalConfig
                     <br />
                     <br />
                   </div>
-                  {modules.length > 0 && (
+                  {modules && (
                     <>
                       <h5>
                         {this.collapseToggle('modules')}
@@ -331,24 +331,17 @@ export class GlobalConfig
                       </h5>
                       {expandSection.modules && (
                         <>
-                          {modules.map((module, index) => {
-                            const moduleConfig = module.config;
-
+                          {Object.entries(modules).map(([module, config], index) => {
+                            const moduleConfig = config as modules.IModuleConfig;
                             return (
                               <div key={index}>
                                 <div
                                   className="MoliDebug-tagContainer MoliDebug-module"
                                   data-module-key={index + 1}
                                 >
-                                  <Tag>{module.name}</Tag>
-                                </div>
-                                <div className="MoliDebug-tagContainer">
-                                  <TagLabel>Module Description</TagLabel>
-                                  <Tag variant="transparent">{module.description}</Tag>
-                                </div>
-                                <div className="MoliDebug-tagContainer">
-                                  <TagLabel>Module Type</TagLabel>
-                                  <Tag variant="blue">{module.moduleType}</Tag>
+                                  <Tag variant={moduleConfig.enabled ? 'green' : 'grey'}>
+                                    {module}
+                                  </Tag>
                                 </div>
                                 {moduleConfig && (
                                   <Fragment>
@@ -356,7 +349,7 @@ export class GlobalConfig
                                     {this.unwrapConfig(moduleConfig)}
                                   </Fragment>
                                 )}
-                                {index !== modules.length - 1 && <hr />}
+                                {index !== Object.keys(modules).length - 1 && <hr />}
                               </div>
                             );
                           })}
