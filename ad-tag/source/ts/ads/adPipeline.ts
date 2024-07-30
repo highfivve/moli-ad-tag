@@ -332,7 +332,7 @@ export class AdPipeline {
       : consentReady(consentConfig, this.window, this.logger, runtimeConfig.environment);
 
     return this.tcData.then(consentData => {
-      const extraLabels = [...(config.targeting?.labels || [])];
+      const extraLabels = [...(config.targeting?.labels || []), ...runtimeConfig.labels];
 
       // purpose 1: storing information on the user device (cookie, localstorage, etc)
       // this labels main purpose is to be able to only enable prebid partners that treat this correctly

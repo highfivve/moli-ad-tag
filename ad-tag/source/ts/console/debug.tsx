@@ -9,18 +9,16 @@ import './debug.pcss';
 import { ThemingService } from './util/themingService';
 import { WindowResizeService } from './util/windowResizeService';
 import type { MoliRuntime } from '../types/moliRuntime';
-import type { ModuleMeta } from '../types/module';
 import type { MoliConfig } from '../types/moliConfig';
 import { LabelConfigService } from '../ads/labelConfigService';
 
 declare const window: MoliRuntime.MoliWindow;
 
 const moliConfig: MoliConfig | null = window.moli.getConfig();
-const modulesMeta: ReadonlyArray<ModuleMeta> =
-  'getModuleMeta' in window.moli ? window.moli.getModuleMeta() : [];
 
 if (moliConfig) {
   const extraLabels = (moliConfig.targeting && moliConfig.targeting.labels) || [];
+  extraLabels.push(...window.moli.getRuntimeConfig().labels);
   const labelConfigService = new LabelConfigService(
     moliConfig.labelSizeConfig || [],
     extraLabels,
