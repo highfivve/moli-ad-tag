@@ -16,9 +16,9 @@ import { googletag } from '../../types/googletag';
 import { MoliRuntime } from '../../types/moliRuntime';
 import {
   AdSlot,
-  GoogleAdManagerKeyValueMap,
+  googleAdManager,
   headerbidding,
-  LabelSizeConfigEntry,
+  sizeConfigs,
   modules,
   MoliConfig
 } from '../../types/moliConfig';
@@ -789,7 +789,7 @@ export class GlobalConfig
   private setTheme = (theme: Theme) =>
     this.setState({ theme }, () => this.props.themingService.applyTheme(theme));
 
-  private keyValues = (keyValues: GoogleAdManagerKeyValueMap): React.ReactElement => {
+  private keyValues = (keyValues: googleAdManager.KeyValueMap): React.ReactElement => {
     const properties = Object.keys(keyValues);
 
     return properties.length > 0 ? (
@@ -985,7 +985,7 @@ export class GlobalConfig
 
   private checkGlobalSizeConfigEntry =
     (messages: Message[]) =>
-    (entry: LabelSizeConfigEntry, _: number): void => {
+    (entry: sizeConfigs.LabelSizeConfigEntry, _: number): void => {
       if (entry.labelsSupported.length === 0) {
         messages.push({
           kind: 'warning',

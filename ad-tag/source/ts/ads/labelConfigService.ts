@@ -1,5 +1,5 @@
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
-import { Device, LabelSizeConfigEntry } from '../types/moliConfig';
+import { Device, sizeConfigs } from '../types/moliConfig';
 
 /**
  * Conditionally select the ad unit based on labels.
@@ -41,7 +41,7 @@ export class LabelConfigService {
   private readonly possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
 
   constructor(
-    private readonly labelSizeConfig: LabelSizeConfigEntry[],
+    private readonly labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[],
     private readonly extraLabels: string[],
     private readonly window: Window
   ) {

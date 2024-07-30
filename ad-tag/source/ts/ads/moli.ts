@@ -22,7 +22,7 @@ import {
   AdUnitPathVariables,
   MoliConfig,
   ResolveAdUnitPathOptions,
-  Targeting
+  googleAdManager
 } from '../types/moliConfig';
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
@@ -219,7 +219,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     return state.runtimeConfig;
   }
 
-  function getPageTargeting(): Readonly<Targeting> {
+  function getPageTargeting(): Readonly<googleAdManager.Targeting> {
     return {
       keyValues: { ...state.config?.targeting?.keyValues, ...state.runtimeConfig.keyValues },
       labels: [...(state.config?.targeting?.labels ?? []), ...state.runtimeConfig.labels],

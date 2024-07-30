@@ -6,7 +6,7 @@ import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
 
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
-import { AdSlot, GoogleAdManagerSlotSize, headerbidding } from '../../types/moliConfig';
+import { AdSlot, googleAdManager, headerbidding } from '../../types/moliConfig';
 import { LabelConfigService } from '../../ads/labelConfigService';
 import { SizeConfigService } from '../../ads/sizeConfigService';
 import { prebidjs } from '../../types/prebidjs';
@@ -34,7 +34,7 @@ const defaultPanelState: Pick<
   showSizeConfig: false
 };
 
-type ValidatedSlotSize = { valid: boolean; size: GoogleAdManagerSlotSize };
+type ValidatedSlotSize = { valid: boolean; size: googleAdManager.SlotSize };
 
 export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotConfigState> {
   constructor(props: IAdSlotConfigProps) {
@@ -383,7 +383,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     );
   };
 
-  private validateSlotSizes = (sizes: GoogleAdManagerSlotSize[]): ValidatedSlotSize[] => {
+  private validateSlotSizes = (sizes: googleAdManager.SlotSize[]): ValidatedSlotSize[] => {
     const slotSizeConfig = this.props.slot.sizeConfig;
     const sizeConfigService = new SizeConfigService(
       slotSizeConfig,
@@ -416,7 +416,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
     );
   };
 
-  private static isFixedSize(size: GoogleAdManagerSlotSize): size is [number, number] {
+  private static isFixedSize(size: googleAdManager.SlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 

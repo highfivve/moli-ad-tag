@@ -3,7 +3,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { GoogleAdManagerKeyValueMap, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { googletag } from 'ad-tag/types/googletag';
 import { Zeotap } from 'ad-tag/ads/modules/zeotap/index';
@@ -50,7 +50,7 @@ describe('Zeotap Module', () => {
 
   const createZeotap = (): Zeotap => new Zeotap();
 
-  const moliConfig = (keyValues: GoogleAdManagerKeyValueMap): MoliConfig => {
+  const moliConfig = (keyValues: googleAdManager.KeyValueMap): MoliConfig => {
     return {
       slots: [],
       targeting: {
