@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main, 4.x ]
 
-env:
-  NODE_ENV: production
-
 jobs:
   build:
     name: Build
@@ -43,3 +40,5 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          NODE_ENV: production
