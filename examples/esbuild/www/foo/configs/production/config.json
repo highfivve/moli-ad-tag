@@ -1,0 +1,145 @@
+{
+  "version": "1",
+  "requestAds": true,
+  "slots": [
+    {
+      "domId": "content_1",
+      "adUnitPath": "/1/content_1",
+      "behaviour": {
+        "loaded": "eager"
+      },
+      "position": "in-page",
+      "sizes": [ [ 300, 250 ], [ 300, 600 ] ],
+      "sizeConfig": [
+        {
+          "mediaQuery": "(min-width: 0px)",
+          "sizesSupported": [ [ 300, 250 ], [ 300, 600 ] ]
+        }
+      ]
+    }
+  ],
+  "schain": {
+    "supplyChainStartNode": {
+      "sid": "1234",
+      "hp": 1,
+      "asi": "example.com"
+    }
+  },
+  "modules": {
+    "adex": {
+      "enabled": false,
+      "spaMode": false,
+      "adexTagId": "1234",
+      "adexCustomerId": "5678",
+      "mappingDefinitions": [
+        {
+          "key": "iab_v3",
+          "attribute": "foo_iab_v3",
+          "adexValueType": "list"
+        }, {
+          "key": "tags",
+          "attribute": "foo_page_tags",
+          "adexValueType": "string"
+        }, {
+          "key": "openrtb_page_cat",
+          "attribute": "foo_openrtb_page_cat",
+          "adexValueType": "string"
+        }
+      ]
+    },
+    "skin": {
+      "configs": [
+        {
+          "adReload": {
+            "allowed": [ "bidderA" ],
+            "intervalMs": 30000
+          },
+          "formatFilter": [
+            {
+              "bidder": "*"
+            }
+          ],
+          "hideSkinAdSlot": false,
+          "destroySkinSlot": true,
+          "skinAdSlotDomId": "ad_wallpaper_pixel",
+          "hideBlockedSlots": false,
+          "blockedAdSlotDomIds": [ "ad_header", "ad_sidebar", "ad_sidebar_left", "ad_floor" ],
+          "enableCpmComparison": true
+        }
+      ],
+      "enabled": true
+    },
+    "utiq": {
+      "enabled": false,
+      "options": {
+        "customizationOptions": {
+          "buttons": {
+            "radius": 5,
+            "bodyColor": "#000000",
+            "textColor": "#FFFFFF"
+          },
+          "contentTextColor": "#000000"
+        }
+      },
+      "assetUrl": "https://utiq.example.com/utiqLoader.js"
+    },
+    "cleanup": {
+      "configs": [
+        {
+          "domId": "ad_wallpaper_pixel",
+          "bidder": "bidderA",
+          "deleteMethod": {
+            "jsAsString": [ "window.cleanup()", "console.log('removed everything')" ]
+          }
+        }
+      ],
+      "enabled": true
+    },
+    "adReload": {
+      "enabled": false,
+      "excludeOrderIds": [ 111, 222, 333 ],
+      "includeOrderIds": [ 444, 555 ],
+      "refreshIntervalMs": 20000,
+      "excludeAdSlotDomIds": [ "ad_wallpaper_pixel", "ad_content_2" ],
+      "includeAdvertiserIds": [ 1222, 2333, 3444 ],
+      "includeYieldGroupIds": [ 443900, 412220, 108918 ],
+      "optimizeClsScoreDomIds": [ "ad_content_1", "ad_content_2", "ad_content_3", "ad_content_4", "ad_content_5", "ad_content_6", "ad_content_x" ],
+      "userActivityLevelControl": {
+        "level": "moderate"
+      }
+    },
+    "confiant": {
+      "enabled": false,
+      "assetUrl": "https://cdn.confiant-integrations.net/xxxxxxxxxxxxxxxxxxxxxxxx/gpt_and_prebid/config.js",
+      "checkGVLID": true
+    },
+    "pubstack": {
+      "tagId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "enabled": false
+    },
+    "stickyFooterAdV2": {
+      "enabled": true,
+      "stickyFooterDomIds": {
+        "mobile": "ad_mobile_sticky",
+        "desktop": "ad_floor"
+      },
+      "disallowedAdvertiserIds": [ 123, 456, 678 ]
+    },
+    "yieldOptimization": {
+      "enabled": false,
+      "provider": "dynamic",
+      "configEndpoint": "https://yield.h5v.eu/config/foo",
+      "excludedAdUnitPaths": [  ]
+    },
+    "prebidFirstPartyData": {
+      "enabled": true,
+      "iabDataProviderName": "example.com",
+      "gptTargetingMappings": {
+        "cat": "openrtb_page_cat",
+        "iabV3": "iab_v3",
+        "pageCat": "openrtb_page_cat",
+        "sectionCat": "openrtb_page_cat"
+      }
+    }
+  }
+}

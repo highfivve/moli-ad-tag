@@ -772,6 +772,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   function openConsole(path?: string): void {
     switch (state.state) {
       case 'configurable': {
+        getLogger(state.runtimeConfig, window).error(
+          'MoliGlobal',
+          'Cannot open console before configuration'
+        );
         break;
       }
       default: {

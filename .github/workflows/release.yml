@@ -41,6 +41,7 @@ jobs:
       - name: Publish New Package Version
         run: npm run github:publish
         env:
+          NODE_ENV: production
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Publish Release Notes

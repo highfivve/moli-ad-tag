@@ -15,6 +15,7 @@ Then run
 
 ```bash
 npm ci
+export NODE_ENV=production
 npx ts-node bundle.ts --output adtag.mjs --config <path-to-config.json>
 ```
 
@@ -86,6 +87,27 @@ If you want to test code changes within the examples you have to start the modul
 # rebuild the module you change, e.g. ad-tag
 cd examples/esbuild
 npm start
+```
+
+## Console
+
+You can build and test the console locally with
+
+```bash
+npm run build:console:watch
+```
+
+Then you can start the esbuild example with
+
+```bash
+cd examples/esbuild
+npm start
+```
+
+Open your browser at localhost:8080 , open your javascript console and run
+
+```javascript
+moli.openConsole('console.js');
 ```
 
 # Release

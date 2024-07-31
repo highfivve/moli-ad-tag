@@ -34,6 +34,9 @@ import { removeTestSlotSizeFromLocalStorage } from 'ad-tag/util/test-slots';
 
 // @ts-ignore
 import styles from './../debug.pcss';
+import { resolveOverrides } from 'ad-tag/util/resolveOverrides';
+import { QueryParameters } from 'ad-tag/util/queryParameters';
+import { BrowserStorageKeys } from 'ad-tag/util/browserStorageKeys';
 
 declare const window: Window &
   prebidjs.IPrebidjsWindow &
@@ -69,6 +72,7 @@ type IGlobalConfigState = {
   adstxtEntry: string[];
   adstxtDomain: string;
   adstxtError: string;
+  configVersion: string;
 };
 
 export type Message = {
@@ -104,7 +108,8 @@ export class GlobalConfig
       theme: props.themingService.currentTheme(),
       adstxtEntry: [],
       adstxtDomain: '',
-      adstxtError: ''
+      adstxtError: '',
+      configVersion: 'not available'
     };
 
     if (!props.config) {
@@ -196,14 +201,18 @@ export class GlobalConfig
     const adsTxtDomain = this.props.config?.domain ?? window.location.hostname;
     this.setState({
       adstxtDomain: adsTxtDomain,
-      adstxtEntry: (await this.findPublisherEntryInAdsTxt(adsTxtDomain)) ?? []
+      adstxtEntry: (await this.findPublisherEntryInAdsTxt(adsTxtDomain)) ?? [],
+      configVersion: this.props.config?.version ?? 'not available'
     });
   }
 
   render(): React.ReactElement {
     const { config, runtimeConfig, modules, labelConfigService } = this.props;
 
-    const adTagVersion = config?.version ?? 'not available';
+    const configLabel = window.moli.configLabel ?? 'not available';
+    const isVersionOverridden =
+      resolveOverrides(window, QueryParameters.moliVersion, BrowserStorageKeys.moliVersion).length >
+      0;
 
     const {
       sidebarHidden,
@@ -238,8 +247,36 @@ export class GlobalConfig
             <div className="MoliDebug-sidebarSection  MoliDebug-sidebarSection--moli">
               <div className="MoliDebug-tagContainer">
                 <div className="MoliDebug-tagContainer">
-                  <TagLabel>Ad Tag Version</TagLabel>
-                  <Tag>{adTagVersion}</Tag>
+                  <TagLabel>Config version</TagLabel>
+                  <Tag variant={isVersionOverridden ? 'yellow' : 'blue'}>
+                    {config.version ?? 'not available'}
+                  </Tag>
+                  <input
+                    type="text"
+                    value={this.state.configVersion}
+                    placeholder={this.state.configVersion}
+                    onChange={e => {
+                      this.setState({ configVersion: e.currentTarget.value });
+                    }}
+                  />
+                  <button
+                    className="MoliDebug-button"
+                    onClick={() => this.overrideConfigVersion(this.state.configVersion)}
+                    title="Reload"
+                  >
+                    load
+                  </button>
+                  <button
+                    className="MoliDebug-button MoliDebug-button--green"
+                    onClick={this.clearConfigVersionOverride}
+                    title="Reset"
+                  >
+                    reset
+                  </button>
+                </div>
+                <div className="MoliDebug-tagContainer">
+                  <TagLabel>Config label</TagLabel>
+                  <Tag>{configLabel}</Tag>
                 </div>
                 <br />
                 <TagLabel>Appearance</TagLabel>
@@ -738,6 +775,15 @@ export class GlobalConfig
   private overrideEnvironmentToTest = () => {
     setEnvironmentOverrideInStorage('test', localStorage);
     window.location.reload();
+  };
+
+  private overrideConfigVersion = (version: string) => {
+    window.localStorage.setItem(BrowserStorageKeys.moliVersion, version);
+    window.location.reload();
+  };
+
+  private clearConfigVersionOverride = () => {
+    window.localStorage.removeItem(BrowserStorageKeys.moliVersion);
   };
 
   private unwrapConfig = (moduleConfig: Object, subEntry: boolean = false): React.ReactElement => {
