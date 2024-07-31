@@ -88,6 +88,27 @@ cd examples/esbuild
 npm start
 ```
 
+## Console
+
+You can build and test the console locally with
+
+```bash
+npm run build:console:watch
+```
+
+Then you can start the esbuild example with
+
+```bash
+cd examples/esbuild
+npm start
+```
+
+Open your browser at localhost:8080 , open your javascript console and run
+
+```javascript
+moli.openConsole('console.js');
+```
+
 # Release
 
 Releases are automatically prepared and publish via github actions. To trigger a release run
