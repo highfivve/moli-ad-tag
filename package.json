@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && npm run build:bundle:all && npm run build:console",
     "build:watch": "tsc -p tsconfig.build.json --watch",
-    "build:console": "npx rollup --config rollup.console.config.mjs",
+    "build:console": "export NODE_ENV=production npx rollup --config rollup.console.config.mjs",
+    "build:console:watch": "npx rollup --config rollup.console.config.mjs --watch",
     "build:bundle:all": "npx ts-node bundle.ts --config bundles/all.json",
     "clean": "rm -rf lib",
     "setup": "npm run clean && npm ci --engine-strict && npm run codeGen && npm run build",

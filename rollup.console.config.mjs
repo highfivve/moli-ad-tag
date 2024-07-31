@@ -6,6 +6,10 @@ import terser from '@rollup/plugin-terser';
 import postcss from 'rollup-plugin-postcss';
 import replace from '@rollup/plugin-replace';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+console.log('is production', isProduction);
+
 /**
  * Why do we have a different bundler for the moli console?
  * Well, esbuild generates properly minified code with all classes and functions minified, which rollup and terser
@@ -62,9 +66,9 @@ export default [
       // react uses this variable to determine if it should be in dev mode, so we need to replace it
       replace({
         preventAssignment: false,
-        'process.env.NODE_ENV': JSON.stringify( 'production' )
+        'process.env.NODE_ENV': JSON.stringify( isProduction ? 'production' : 'development')
       }),
-      terser()
+      ...(isProduction ? [terser()] : [])
     ]
   }
 ]
