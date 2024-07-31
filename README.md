@@ -15,6 +15,7 @@ Then run
 
 ```bash
 npm ci
+export NODE_ENV=production
 npx ts-node bundle.ts --output adtag.mjs --config <path-to-config.json>
 ```
 
