@@ -22,11 +22,16 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     getAdserverTargeting: (): Object => {
       return {};
     },
-    requestBids: (requestParam?: prebidjs.IRequestObj): void => {
+    requestBids: (requestParam?: prebidjs.IRequestObj): Promise<prebidjs.IRequestBidsResult> => {
       // invoke bidsBackHandler immediately
       if (requestParam && requestParam.bidsBackHandler) {
-        requestParam.bidsBackHandler({}, false, requestParam.auctionId || 'auction-id');
+        requestParam.bidsBackHandler({}, false, requestParam.auctionId ?? 'auction-id');
       }
+      return Promise.resolve({
+        bidResponses: {},
+        timedOut: false,
+        auctionId: requestParam?.auctionId ?? 'auction-id'
+      });
     },
     getConfig: (): prebidjs.IPrebidJsConfig => ({
       currency: {

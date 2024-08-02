@@ -123,7 +123,7 @@ export namespace prebidjs {
     /**
      * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
      */
-    requestBids(requestParam?: IRequestObj): void;
+    requestBids(requestParam?: IRequestObj): Promise<IRequestBidsResult>;
 
     /**
      * This function returns the query string targeting parameters available at this moment for a given ad unit.
@@ -1353,6 +1353,12 @@ export namespace prebidjs {
     };
 
     export type AuctionObject = {
+      /**
+       * The ad unit codes that are participating in the auction.
+       *
+       * Note that ad unit codes may appear multiple times. This is likely caused by prebid
+       * twin ad unit feature
+       */
       readonly adUnitCodes: string[];
       readonly adUnits?: IAdUnit[];
       readonly auctionId: string;
@@ -5439,6 +5445,18 @@ export namespace prebidjs {
      * @see [`setConfig({ttlBuffer})`](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-ttlBuffer)
      */
     readonly ttlBuffer?: number;
+  }
+
+  /**
+   * Result returned from a requestBids call.
+   * You can either use this or the callback.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html#result
+   */
+  export interface IRequestBidsResult {
+    readonly bidResponses: IBidResponsesMap | undefined;
+    readonly timedOut: boolean;
+    readonly auctionId: string;
   }
 
   /**
