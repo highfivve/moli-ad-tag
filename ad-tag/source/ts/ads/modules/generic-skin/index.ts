@@ -91,6 +91,33 @@ export enum SkinConfigEffect {
   NoBlocking = 'NoBlocking'
 }
 
+export const filterHighestNonSkinBid = (
+  auctionObject: prebidjs.event.AuctionObject,
+  blockedAdSlotDomIds: string[]
+): prebidjs.BidResponse[] => {
+  const adSlotIds = auctionObject.adUnitCodes.filter(uniquePrimitiveFilter) || [];
+
+  return flatten(
+    adSlotIds
+      // filter out all dom ids that aren't affected by this skin.
+      .filter(domId => blockedAdSlotDomIds.indexOf(domId) > -1)
+      // collect all bid responses for these ad slot dom ids
+      .map(domId => ({
+        adSlotId: domId,
+        bids: auctionObject.bidsReceived?.filter(bid => bid.adUnitCode === domId)
+      }))
+      .filter(bidObject => isNotNull(bidObject.bids))
+      .map(bidObject =>
+        bidObject
+          .bids! // filter out skin bid to not include it in the non-skin cpm sum
+          // highest cpm bid goes first
+          .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
+          // take(1)
+          .slice(0, 1)
+      )
+  );
+};
+
 /**
  * # Skin Module
  */
@@ -190,26 +217,7 @@ export class Skin implements IModule {
     };
 
     // get all slot dom ids
-    const adSlotIds = auctionObject.adUnitCodes || [];
-    const nonSkinBids = flatten(
-      adSlotIds
-        // filter out all dom ids that aren't affected by this skin.
-        .filter(domId => config.blockedAdSlotDomIds.indexOf(domId) > -1)
-        // collect all bid responses for these ad slot dom ids
-        .map(domId => ({
-          adSlotId: domId,
-          bids: auctionObject.bidsReceived?.filter(bid => bid.adUnitCode === domId)
-        }))
-        .filter(bidObject => isNotNull(bidObject.bids))
-        .map(bidObject =>
-          bidObject
-            .bids! // filter out skin bid to not include it in the non-skin cpm sum
-            // highest cpm bid goes first
-            .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
-            // take(1)
-            .slice(0, 1)
-        )
-    );
+    const nonSkinBids = filterHighestNonSkinBid(auctionObject, config.blockedAdSlotDomIds);
 
     const combinedNonSkinCpm = nonSkinBids.reduce((prev, current) => prev + current.cpm, 0);
     const skinBids = skinBidResponses
