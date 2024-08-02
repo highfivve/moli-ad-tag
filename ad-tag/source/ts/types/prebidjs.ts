@@ -1353,6 +1353,12 @@ export namespace prebidjs {
     };
 
     export type AuctionObject = {
+      /**
+       * The ad unit codes that are participating in the auction.
+       *
+       * Note that ad unit codes may appear multiple times. This is likely caused by prebid
+       * twin ad unit feature
+       */
       readonly adUnitCodes: string[];
       readonly adUnits?: IAdUnit[];
       readonly auctionId: string;
