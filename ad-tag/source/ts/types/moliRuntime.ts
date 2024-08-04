@@ -2,7 +2,7 @@ import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 import { IModule, ModuleMeta } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
+import { ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from '../ads/adPipeline';
 import {
   AdSlot,
   AdUnitPathVariables,
@@ -937,6 +937,11 @@ export namespace MoliRuntime {
      *  Additional prepareRequestAdsSteps that should be executed in every AdPipeline run.
      */
     readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
+
+    /**
+     * Additional requestBidSteps that should be executed in every AdPipeline run.
+     */
+    readonly requestBidsSteps: RequestBidsStep[];
   }
 
   /**

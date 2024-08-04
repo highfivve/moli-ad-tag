@@ -1,4 +1,4 @@
-import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
+import { ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from '../ads/adPipeline';
 import { modules } from './moliConfig';
 
 export type ModuleType =
@@ -46,6 +46,17 @@ export interface IModule {
    * Returns a list of steps that should be executed in the ad pipeline.
    */
   prepareRequestAdsSteps(): PrepareRequestAdsStep[];
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   *
+   * This step is optional, as should have been all steps to reduce implementation complexity of
+   * modules.
+   *
+   * Note: prebid and amazon tam (a9) maybe implemented as modules in the future as they add those
+   *       steps to the ad pipeline.
+   */
+  requestBidsSteps?(): RequestBidsStep[];
 }
 
 export type ModuleMeta = Pick<IModule, 'name' | 'description' | 'moduleType'> & {

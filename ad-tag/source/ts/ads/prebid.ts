@@ -514,6 +514,9 @@ export const prebidRequestBids = (
         context.window.pbjs.que.push(() => {
           context.window.pbjs.requestBids({
             ...requestObject,
+            // we provide our own auctionId, so we can associate events with ad pipeline runs
+            auctionId: context.auctionId,
+            // buckets (group of ad units) may have a separate timeout override
             timeout: context.bucket?.timeout,
             bidsBackHandler: bidsBackHandler
           });

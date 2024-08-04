@@ -130,6 +130,7 @@ describe('Skin Module', () => {
 
   const adPipelineContext = (config: MoliConfig = emptyConfig): AdPipelineContext => {
     return {
+      auctionId: 'xxxx-xxxx-xxxx-xxxx',
       requestId: 0,
       requestAdsCalls: 1,
       env: 'production',
@@ -793,7 +794,7 @@ describe('Skin Module', () => {
       });
 
       [undefined, false].forEach(destroySkinSlot => {
-        it(`should not destroy the skin ad slot destroySkinSlot is set to ${destroySkinSlot}`, () => {
+        it(`should not destroy the skin ad slot destroySkinSlot is set to ${destroySkinSlot}`, async () => {
           const module = skinModule({
             configs: [
               {
@@ -818,16 +819,18 @@ describe('Skin Module', () => {
             prebid: prebidConfig,
             schain: dummySchainConfig
           };
-          module.initSteps()[0](adPipelineContext(config));
+          await module.initSteps()[0](adPipelineContext(config));
 
           pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
           emitAuctionEnd({});
+
+          await module.requestBidsSteps()[0](adPipelineContext(config), []);
 
           expect(destroyAdSlotSpy).to.have.not.been.called;
         });
       });
 
-      it('should not destroy the skin ad slot if set to true for a bidder and the other delivers', () => {
+      it('should not destroy the skin ad slot if set to true for a bidder and the other delivers', async () => {
         const module = skinModule({
           configs: [
             {
@@ -861,10 +864,12 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.initSteps()[0](adPipelineContext(config));
+        await module.initSteps()[0](adPipelineContext(config));
 
         pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
         emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+
+        await module.requestBidsSteps()[0](adPipelineContext(config), []);
 
         // only the sky slot should be destroyed
         expect(destroyAdSlotSpy).to.have.been.calledOnce;
@@ -873,7 +878,7 @@ describe('Skin Module', () => {
         );
       });
 
-      it('should destroy the skin ad slot if set to true', () => {
+      it('should destroy the skin ad slot if set to true', async () => {
         const module = skinModule({
           configs: [
             {
@@ -898,9 +903,11 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.initSteps()[0](adPipelineContext(config));
+        await module.initSteps()[0](adPipelineContext(config));
         pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
         emitAuctionEnd({});
+
+        await module.requestBidsSteps()[0](adPipelineContext(config), []);
 
         expect(destroyAdSlotSpy).to.have.been.calledOnce;
         expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
@@ -908,7 +915,7 @@ describe('Skin Module', () => {
         );
       });
 
-      it('should destroy the skin ad slot only once', () => {
+      it('should destroy the skin ad slot only once', async () => {
         const module = skinModule({
           configs: [
             {
@@ -942,9 +949,10 @@ describe('Skin Module', () => {
           prebid: prebidConfig,
           schain: dummySchainConfig
         };
-        module.initSteps()[0](adPipelineContext(config));
+        await module.initSteps()[0](adPipelineContext(config));
         pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
         emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+        await module.requestBidsSteps()[0](adPipelineContext(config), []);
 
         expect(destroyAdSlotSpy).to.have.been.calledOnce;
         expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
@@ -973,7 +981,7 @@ describe('Skin Module', () => {
           sandbox.clock.reset();
         });
 
-        it('should reload the skin if bidder is configured in adReload and is about to win the auction', () => {
+        it('should reload the skin if bidder is configured in adReload and is about to win the auction', async () => {
           const module = skinModule({
             configs: [
               {
@@ -1003,14 +1011,16 @@ describe('Skin Module', () => {
           // Spy on setTimeout
           const setTimeoutSpy = Sinon.spy(global, 'setTimeout');
 
-          module.initSteps()[0](adPipelineContext(config));
+          await module.initSteps()[0](adPipelineContext(config));
           pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
           emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+
+          await module.requestBidsSteps()[0](adPipelineContext(config), []);
 
           expect(setTimeoutSpy).to.have.been.calledOnce;
         });
 
-        it('should clear an "old" timeout before activating a new one', () => {
+        it('should clear an "old" timeout before activating a new one', async () => {
           const module = skinModule({
             configs: [
               {
@@ -1053,10 +1063,12 @@ describe('Skin Module', () => {
             originalClearTimeout(id);
           });
 
-          module.initSteps()[0](adPipelineContext(config));
+          await module.initSteps()[0](adPipelineContext(config));
           pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
           emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
           emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+
+          await module.requestBidsSteps()[0](adPipelineContext(config), []);
 
           expect(activeTimeouts).to.equal(1);
         });

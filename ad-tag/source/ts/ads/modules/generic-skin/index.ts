@@ -79,7 +79,9 @@ import {
   ConfigureStep,
   InitStep,
   mkInitStep,
-  PrepareRequestAdsStep
+  mkRequestBidsStep,
+  PrepareRequestAdsStep,
+  RequestBidsStep
 } from '../../adPipeline';
 import { flatten, isNotNull, uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
 import { googletag } from 'ad-tag/types/googletag';
@@ -132,6 +134,23 @@ export class Skin implements IModule {
 
   private currentSkinAdReloadSetTimeoutId: number | null = null;
 
+  /**
+   * Map of auction IDs to promises that resolve when the auction end event is emitted by prebid.
+   * The map also contains the `resolve` function, which is resolved in the actual auction end event listener.
+   *
+   * This map **only** contains auctions in which a skin slot has participated as we require the
+   * auctionEnd event to perform the skin slot blocking in time.
+   *
+   * @private
+   */
+  private readonly auctionEndPromiseMap: Map<
+    string,
+    {
+      promise: Promise<prebidjs.event.AuctionObject>;
+      resolve: (auctionObject: prebidjs.event.AuctionObject) => void;
+    }
+  > = new Map();
+
   config(): Object | null {
     return this.skinModuleConfig;
   }
@@ -150,9 +169,27 @@ export class Skin implements IModule {
             if (ctx.env === 'test') {
               return Promise.resolve();
             }
+
+            // This promise is resolved when the auction end event is emitted by prebid.
+            // Passing the resolve function around, requires this wacky code.
+            let auctionEndResolve: (
+              auctionObject:
+                | prebidjs.event.AuctionObject
+                | PromiseLike<prebidjs.event.AuctionObject>
+            ) => void = () => ({});
+            const auctionEndPromise = new Promise<prebidjs.event.AuctionObject>(resolve => {
+              auctionEndResolve = resolve;
+            });
+            // put the promise along with its resolve function into the map
+            // this allows the requestBidsStep to return the promise and the `pbjs.onEvent` listener to resolve it
+            this.auctionEndPromiseMap.set(ctx.auctionId, {
+              promise: auctionEndPromise,
+              resolve: auctionEndResolve
+            });
+
             ctx.window.pbjs.que.push(() => {
               ctx.window.pbjs.onEvent('auctionEnd', auctionObject => {
-                this.runSkinConfigs(config, auctionObject, ctx);
+                this.auctionEndPromiseMap.get(auctionObject.auctionId)?.resolve(auctionObject);
               });
             });
             return Promise.resolve();
@@ -167,6 +204,26 @@ export class Skin implements IModule {
 
   prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
     return [];
+  }
+
+  requestBidsSteps(): RequestBidsStep[] {
+    const config = this.skinModuleConfig;
+    return config
+      ? [
+          mkRequestBidsStep('skin-request-bids', ctx => {
+            const auctionEnd = this.auctionEndPromiseMap.get(ctx.auctionId);
+            if (auctionEnd) {
+              // don't leave any garbage behind
+              this.auctionEndPromiseMap.delete(ctx.auctionId);
+              return auctionEnd.promise.then(auctionObject => {
+                this.runSkinConfigs(config, auctionObject, ctx);
+              });
+            } else {
+              return Promise.resolve();
+            }
+          })
+        ]
+      : [];
   }
 
   /**

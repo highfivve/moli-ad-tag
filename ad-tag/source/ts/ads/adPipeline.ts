@@ -10,6 +10,7 @@ import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliConfig';
 import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoaderService';
+import { uuidV4 } from 'ad-tag/util/uuid';
 
 /**
  * Context passed to every pipeline step.
@@ -17,6 +18,14 @@ import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoad
  * Used to inject general purpose external dependencies
  */
 export type AdPipelineContext = {
+  /**
+   * Unique auction id for the current ad pipeline run.
+   *
+   * It can be used to associate a pipeline run with events, e.g. the `auctionInit` or `auctionEnd`
+   * event from prebid.
+   */
+  readonly auctionId: string;
+
   /**
    * an incremented id that identifies a pipeline run.
    *
@@ -365,6 +374,7 @@ export class AdPipeline {
 
       // the context is based on the consent data
       const context: AdPipelineContext = {
+        auctionId: uuidV4(this.window),
         requestId: currentRequestId,
         requestAdsCalls: requestAdsCalls,
         logger: this.logger,

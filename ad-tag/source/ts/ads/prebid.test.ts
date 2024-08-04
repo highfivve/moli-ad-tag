@@ -49,6 +49,7 @@ describe('prebid', () => {
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
+      auctionId: 'xxxx-xxxx-xxxx-xxxx',
       requestId: 0,
       requestAdsCalls: requestAdsCalls,
       env: env,
