@@ -71,19 +71,164 @@
  *
  * @module
  */
-import { prebidjs } from 'ad-tag/types/prebidjs';
-import { IModule, ModuleType } from 'ad-tag/types/module';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
-  mkInitStep,
   PrepareRequestAdsStep
-} from '../../adPipeline';
-import { flatten, isNotNull, uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
+} from 'ad-tag/ads/adPipeline';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { IModule, ModuleType } from 'ad-tag/types/module';
 import { googletag } from 'ad-tag/types/googletag';
 import { behaviour, modules } from 'ad-tag/types/moliConfig';
+import { flatten, isNotNull, uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
+
+export type SkinModuleConfig = {
+  /**
+   * A list of configurations. The first configuration with matching
+   * format filters will be used.
+   */
+  readonly configs: SkinConfig[];
+
+  /**
+   * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
+   * would be removed in its favour.
+   */
+  readonly trackSkinCpmLow?: (
+    cpms: { skin: number; combinedNonSkinSlots: number },
+    skinConfig: SkinConfig,
+    skinBid: prebidjs.IBidResponse
+  ) => void;
+};
+
+/**
+ * If this filter is added to the list of filters, then it will always apply.
+ * This filter is useful for "orchestration ad units" that don't serve ads, but
+ * orchestrate a format. Examples are
+ *
+ * - `wallpaper_pixel`
+ */
+export type AllFormatFilter = {
+  readonly bidder: '*';
+};
+
+export type GumGumFormatFilter = {
+  readonly bidder: typeof prebidjs.GumGum;
+
+  /**
+   * Stands for _ad id_ and contains the format delivered.
+   *
+   * - `59` = in-screen cascade (former mobile skin)
+   * - `39` = in-screen expandable (mobile expandable)
+   *
+   * If not set, then the `auid` will not be considered for filtering.
+   */
+  readonly auid?: number;
+};
+
+/**
+ * Azerion (fka Improve Digital) format filter
+ */
+export type AzerionFormatFilter = {
+  readonly bidder: typeof prebidjs.ImproveDigital;
+};
+
+export type DSPXFormatFilter = {
+  readonly bidder: typeof prebidjs.DSPX;
+};
+
+export type VisxFormatFilter = {
+  readonly bidder: typeof prebidjs.Visx;
+};
+
+/**
+ * Partners buying skin demand via the Xandr platform
+ */
+export type XandrFormatFilter = {
+  readonly bidder: typeof prebidjs.AppNexusAst | typeof prebidjs.AppNexus;
+};
+
+/**
+ * Partners buying skin demand via the Yieldlab platform
+ */
+export type YieldlabFormatFilter = {
+  readonly bidder: typeof prebidjs.Yieldlab;
+};
+
+export type FormatFilter =
+  | AllFormatFilter
+  | AzerionFormatFilter
+  | GumGumFormatFilter
+  | DSPXFormatFilter
+  | VisxFormatFilter
+  | YieldlabFormatFilter
+  | XandrFormatFilter;
+
+export type SkinConfig = {
+  /**
+   * A list of filters. If one of the filter applies then this
+   * configuration will be executed.
+   */
+  readonly formatFilter: FormatFilter[];
+
+  /**
+   * This is usually the dom id of the header ad slot.
+   *
+   * Some setups may have an ad slot only for the just premium skin.
+   * This is the case if there are direct campaign formats for wallpapers
+   * that require a DFP road block.
+   */
+  readonly skinAdSlotDomId: string;
+
+  /**
+   * dom ids of the ad slots that should not be requested when a just premium
+   * skin appears in the bid responses.
+   *
+   * Depending on the wallpaperAdSlot these are usually skyscrapers left and right
+   * and if there's a specific wallpaper ad slot the header as well.
+   */
+  readonly blockedAdSlotDomIds: string[];
+
+  /**
+   * if true, the ad slot will be set to display none
+   */
+  readonly hideSkinAdSlot: boolean;
+
+  /**
+   * if true, the blocked ad slots will be set to display: none
+   */
+  readonly hideBlockedSlots: boolean;
+
+  /**
+   * If the skin cpm comparison should be active, i.e. not only logging, but also preventing a skin render
+   * if the other slots have a higher combined cpm.
+   */
+  readonly enableCpmComparison: boolean;
+
+  /**
+   * Selector for an (additional) ad slot container that should be set to display: none
+   *
+   * e.g. mobile-sticky ads have another container wrapped around the ad slot container itself which can be hidden like this:
+   * hideBlockedSlotsSelector: '[data-ref="sticky-ad"]'
+   */
+
+  hideBlockedSlotsSelector?: string;
+
+  /**
+   * If set to true the ad slot that would load the skin is being destroyed.
+   * This is useful only for ad slots that serve as a special "skin ad slot"
+   * and have otherwise no other function.
+   *
+   * @default false
+   */
+  readonly destroySkinSlot?: boolean;
+
+  /**
+   * If set, the skin of the configured bidder reloads after the given interval (in ms).
+   */
+  readonly adReload?: { intervalMs: number; allowed: prebidjs.BidderCode[] };
+};
 
 export enum SkinConfigEffect {
   BlockSkinSlot = 'BlockSkinSlot',
@@ -92,25 +237,20 @@ export enum SkinConfigEffect {
 }
 
 export const filterHighestNonSkinBid = (
-  auctionObject: prebidjs.event.AuctionObject,
+  bidResponses: prebidjs.IBidResponsesMap,
   blockedAdSlotDomIds: string[]
 ): prebidjs.BidResponse[] => {
-  const adSlotIds = auctionObject.adUnitCodes.filter(uniquePrimitiveFilter) || [];
-
+  const adSlotIds = Object.keys(bidResponses);
   return flatten(
     adSlotIds
-      // filter out all dom ids that aren't affected by this skin.
-      .filter(domId => blockedAdSlotDomIds.indexOf(domId) > -1)
       // collect all bid responses for these ad slot dom ids
-      .map(domId => ({
-        adSlotId: domId,
-        bids: auctionObject.bidsReceived?.filter(bid => bid.adUnitCode === domId)
-      }))
+      .map(domId => ({ adSlotId: domId, ...bidResponses[domId] }))
+      // filter out all dom ids that aren't the configured blocked ad slots (non-skin ad slots)
+      .filter(bidObject => blockedAdSlotDomIds.indexOf(bidObject.adSlotId) > -1)
       .filter(bidObject => isNotNull(bidObject.bids))
       .map(bidObject =>
         bidObject
-          .bids! // filter out skin bid to not include it in the non-skin cpm sum
-          // highest cpm bid goes first
+          .bids! // highest cpm bid goes first
           .sort((bid1, bid2) => bid2.cpm - bid1.cpm)
           // take(1)
           .slice(0, 1)
@@ -127,10 +267,7 @@ export class Skin implements IModule {
   public readonly moduleType: ModuleType = 'prebid';
 
   private skinModuleConfig: modules.skin.SkinModuleConfig | null = null;
-
-  private log?: MoliRuntime.MoliLogger;
-
-  private currentSkinAdReloadSetTimeoutId: number | null = null;
+  private bidsBackHandler: MoliRuntime.PrebidBidsBackHandler[] = [];
 
   config(): Object | null {
     return this.skinModuleConfig;
@@ -139,26 +276,12 @@ export class Skin implements IModule {
   configure(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.skin && moduleConfig.skin.enabled) {
       this.skinModuleConfig = moduleConfig.skin;
+      this.bidsBackHandler.push(this.runSkinConfigs(moduleConfig.skin));
     }
   }
 
   initSteps(): InitStep[] {
-    const config = this.skinModuleConfig;
-    return config
-      ? [
-          mkInitStep('skin-init', ctx => {
-            if (ctx.env === 'test') {
-              return Promise.resolve();
-            }
-            ctx.window.pbjs.que.push(() => {
-              ctx.window.pbjs.onEvent('auctionEnd', auctionObject => {
-                this.runSkinConfigs(config, auctionObject, ctx);
-              });
-            });
-            return Promise.resolve();
-          })
-        ]
-      : [];
+    return [];
   }
 
   configureSteps(): ConfigureStep[] {
@@ -169,21 +292,22 @@ export class Skin implements IModule {
     return [];
   }
 
+  prebidBidsBackHandler(): MoliRuntime.PrebidBidsBackHandler[] {
+    return this.bidsBackHandler;
+  }
+
   /**
    * Check this skin config against the given bid responses to see if there are any skin bids inside, and if so (and
    * if the respective check is enabled), compare the highest-bidding skin cpm to the combined cpm of the other bids
    * to see if we'd be missing out on revenue if we applied the skin to the page.
    */
   getConfigEffect = (
-    config: modules.skin.SkinConfig,
-    auctionObject: prebidjs.event.AuctionObject,
-    logger: MoliRuntime.MoliLogger,
-    trackSkinCpmLow: modules.skin.SkinModuleConfig['trackSkinCpmLow']
+    config: SkinConfig,
+    bidResponses: prebidjs.IBidResponsesMap,
+    trackSkinCpmLow: SkinModuleConfig['trackSkinCpmLow'],
+    log: MoliRuntime.MoliLogger
   ): SkinConfigEffect => {
-    const skinBidResponses = auctionObject.bidsReceived?.filter(
-      bid => bid.adUnitCode === config.skinAdSlotDomId
-    );
-
+    const skinBidResponse = bidResponses[config.skinAdSlotDomId];
     const isSkinBid = (bid: prebidjs.BidResponse) => {
       // go through all filters and check if one matches
       const oneFilterApplied = config.formatFilter.some(filter => {
@@ -217,12 +341,12 @@ export class Skin implements IModule {
     };
 
     // get all slot dom ids
-    const nonSkinBids = filterHighestNonSkinBid(auctionObject, config.blockedAdSlotDomIds);
+    const nonSkinBids = filterHighestNonSkinBid(bidResponses, config.blockedAdSlotDomIds);
 
     const combinedNonSkinCpm = nonSkinBids.reduce((prev, current) => prev + current.cpm, 0);
-    const skinBids = skinBidResponses
+    const skinBids = skinBidResponse
       ? // sort the skin bids to ensure we compare the highest bidding skin to the other slots' cpms
-        skinBidResponses.filter(isSkinBid).sort((bid1, bid2) => bid2.cpm - bid1.cpm)
+        skinBidResponse.bids.filter(isSkinBid).sort((bid1, bid2) => bid2.cpm - bid1.cpm)
       : [];
 
     const skinConfigEffect: SkinConfigEffect =
@@ -235,8 +359,8 @@ export class Skin implements IModule {
         : // no skin config - that means no action should be taken.
           SkinConfigEffect.NoBlocking;
 
-    logger.debug(this.name, 'nonSkinBids', nonSkinBids);
-    logger.debug(this.name, 'skinBids', skinBids);
+    log.debug(this.name, 'nonSkinBids', nonSkinBids);
+    log.debug(this.name, 'skinBids', skinBids);
 
     if (trackSkinCpmLow && skinConfigEffect === SkinConfigEffect.BlockSkinSlot) {
       trackSkinCpmLow(
@@ -244,9 +368,7 @@ export class Skin implements IModule {
         config,
         skinBids[0]
       );
-      if (this.log) {
-        this.log.debug(this.name, 'trackSkinCpmLow', nonSkinBids);
-      }
+      log.debug(this.name, 'trackSkinCpmLow', nonSkinBids);
     }
 
     if (config.enableCpmComparison) {
@@ -258,24 +380,24 @@ export class Skin implements IModule {
 
   /**
    *
-   * @param moduleConfig
-   * @param auctionObject
-   * @param logger
+   * @param skinModuleConfig
+   * @param bidResponses
+   * @param log
    * @return the first skin config with matching filters. If no config matches, undefined is being returned
    */
   selectConfig = (
-    moduleConfig: modules.skin.SkinModuleConfig,
-    auctionObject: prebidjs.event.AuctionObject,
-    logger: MoliRuntime.MoliLogger
-  ): { skinConfig: modules.skin.SkinConfig; configEffect: SkinConfigEffect } | undefined =>
-    moduleConfig.configs
+    skinModuleConfig: modules.skin.SkinModuleConfig,
+    bidResponses: prebidjs.IBidResponsesMap,
+    log: MoliRuntime.MoliLogger
+  ): { skinConfig: SkinConfig; configEffect: SkinConfigEffect } | undefined =>
+    skinModuleConfig.configs
       .map(config => ({
         skinConfig: config,
         configEffect: this.getConfigEffect(
           config,
-          auctionObject,
-          logger,
-          moduleConfig.trackSkinCpmLow
+          bidResponses,
+          skinModuleConfig.trackSkinCpmLow,
+          log
         )
       }))
       .find(({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking);
@@ -285,146 +407,150 @@ export class Skin implements IModule {
    *
    * NOTE: Accesses the global gpt.js tag (window.googletag).
    *
-   * @param slotDomIds a list of slots to destroy
-   * @param _window required to access googletag
+   * @param slotDefinitions all available slots
+   * @param gWindow
+   * @return function that destroys a given adSlot by domId
    */
-  destroyAdSlots = (slotDomIds: string[], _window: googletag.IGoogleTagWindow) => {
-    const adSlots = _window.googletag
-      .pubads()
-      .getSlots()
-      .filter((slot: googletag.IAdSlot) => slotDomIds.includes(slot.getSlotElementId()));
-    if (adSlots.length > 0) {
-      _window.googletag.destroySlots(adSlots);
-    }
-  };
-
-  private runSkinConfigs = (
-    config: modules.skin.SkinModuleConfig,
-    auctionObject: prebidjs.event.AuctionObject,
-    ctx: AdPipelineContext
-  ) => {
-    const skinConfigWithEffect = this.selectConfig(config, auctionObject, ctx.logger);
-
-    const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
-      const slots = ctx.window.googletag.pubads().getSlots();
-      return slots.find(slot => slot.getSlotElementId() === domId);
+  destroyAdSlot =
+    (slotDefinitions: MoliRuntime.SlotDefinition[], gWindow: googletag.IGoogleTagWindow) =>
+    (adSlotDomId: string): void => {
+      const adSlots = slotDefinitions
+        .map(slot => slot.adSlot)
+        .filter((slot: googletag.IAdSlot) => slot.getSlotElementId() === adSlotDomId);
+      gWindow.googletag.destroySlots(adSlots);
     };
 
-    if (skinConfigWithEffect) {
-      const { skinConfig, configEffect } = skinConfigWithEffect;
+  runSkinConfigs =
+    (skinModuleConfig: modules.skin.SkinModuleConfig) =>
+    (
+      ctx: AdPipelineContext,
+      bidResponses: prebidjs.IBidResponsesMap,
+      slotDefinitions: MoliRuntime.SlotDefinition[]
+    ): void => {
+      let currentSetTimeoutId: number | null = null;
+      const skinConfigWithEffect = this.selectConfig(skinModuleConfig, bidResponses, ctx.logger);
 
-      if (configEffect === SkinConfigEffect.BlockOtherSlots) {
-        ctx.logger.debug('SkinModule', 'Skin configuration applied', skinConfig);
-        this.destroyAdSlots(skinConfig.blockedAdSlotDomIds, ctx.window);
+      if (skinConfigWithEffect) {
+        const { skinConfig, configEffect } = skinConfigWithEffect;
 
-        if (skinConfig.hideBlockedSlots) {
-          skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.logger, ctx.window));
-        }
+        if (configEffect === SkinConfigEffect.BlockOtherSlots) {
+          ctx.logger.debug('SkinModule', 'Skin configuration applied', skinConfig);
+          skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions, ctx.window));
 
-        if (skinConfig.hideSkinAdSlot) {
-          this.hideAdSlot(ctx.logger, ctx.window)(skinConfig.skinAdSlotDomId);
-        }
+          if (skinConfig.hideBlockedSlots) {
+            skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.window, ctx.logger));
+          }
 
-        if (skinConfig.hideBlockedSlotsSelector) {
-          ctx.window.document
-            .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
-            .forEach(node => {
-              ctx.logger.debug(
+          if (skinConfig.hideSkinAdSlot) {
+            this.hideAdSlot(ctx.window, ctx.logger)(skinConfig.skinAdSlotDomId);
+          }
+
+          if (skinConfig.hideBlockedSlotsSelector) {
+            ctx.window.document
+              .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
+              .forEach(node => {
+                ctx.logger.debug(
+                  'SkinModule',
+                  `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
+                );
+                node.style.setProperty('display', 'none');
+              });
+          }
+
+          const highestSkinBid = bidResponses[skinConfig.skinAdSlotDomId]?.bids.sort(
+            (bid1, bid2) => bid2.cpm - bid1.cpm
+          )[0];
+
+          const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
+            const slots = ctx.window.googletag.pubads().getSlots();
+            return slots.find(slot => slot.getSlotElementId() === domId);
+          };
+
+          // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
+          // the cleanup-module takes care of deleting the previous wallpaper
+          if (
+            skinConfig.adReload?.intervalMs &&
+            highestSkinBid?.bidder &&
+            skinConfig.adReload.allowed.includes(highestSkinBid.bidder)
+          ) {
+            const loadingBehaviorOfSlotsToRefresh = slotDefinitions
+              .filter(
+                definition =>
+                  definition.moliSlot.domId === skinConfig.skinAdSlotDomId ||
+                  skinConfig.blockedAdSlotDomIds.includes(definition.moliSlot.domId)
+              )
+              .map(slot => slot.moliSlot.behaviour.loaded);
+
+            const allSlotsHaveSameLoadingBehavior = loadingBehaviorOfSlotsToRefresh.every(
+              loadingBehavior => loadingBehavior === loadingBehaviorOfSlotsToRefresh[0]
+            );
+
+            // only reload if blocked slots and skin slot all have the same loading behavior
+            if (
+              allSlotsHaveSameLoadingBehavior &&
+              loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
+            ) {
+              // Clear the last skin timeout if it exists (e.g. after navigation in a SPA)
+              if (currentSetTimeoutId) {
+                clearTimeout(currentSetTimeoutId);
+              }
+
+              currentSetTimeoutId = ctx.window.setTimeout(() => {
+                ctx.window.moli.refreshAdSlot(
+                  [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
+                  {
+                    loaded: loadingBehaviorOfSlotsToRefresh[0] as Exclude<
+                      behaviour.ISlotLoading['loaded'],
+                      'infinite'
+                    >
+                  }
+                );
+
+                // Set the native-ad-reload targeting of the skin slot to true in order to track ad reload
+                // the key is configurable in the ad reload and should be tied to this setting in the future
+                getGoogleAdSlotByDomId(skinConfig.skinAdSlotDomId)?.setTargeting(
+                  'native-ad-reload',
+                  'true'
+                );
+
+                ctx.logger.info(
+                  'SkinModule',
+                  'Ad reload for skin and blocked slots triggered',
+                  skinConfig.skinAdSlotDomId,
+                  skinConfig.blockedAdSlotDomIds
+                );
+              }, skinConfig.adReload?.intervalMs);
+            } else {
+              ctx.logger.error(
                 'SkinModule',
-                `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
+                'Ad reload not possible because of different loading behaviors of the slots that should be refreshed:',
+                loadingBehaviorOfSlotsToRefresh
               );
-              node.style.setProperty('display', 'none');
-            });
-        }
-        const highestSkinBid = auctionObject.bidsReceived
-          ?.filter(bid => bid.adUnitCode === skinConfig.skinAdSlotDomId)
-          .sort((bid1, bid2) => bid2.cpm - bid1.cpm)[0];
-
-        // ad reload only for dspx wallpaper at the moment --> if dspx is about to win, we reload the wallpaper
-        // the cleanup-module takes care of deleting the previous wallpaper
-        if (
-          skinConfig.adReload?.intervalMs &&
-          highestSkinBid?.bidder &&
-          skinConfig.adReload.allowed.includes(highestSkinBid.bidder)
-        ) {
-          const loadingBehaviorOfSlotsToRefresh = ctx.config.slots
-            .filter(
-              slots =>
-                slots.domId === skinConfig.skinAdSlotDomId ||
-                skinConfig.blockedAdSlotDomIds.includes(slots.domId)
-            )
-            .map(slot => slot.behaviour.loaded);
-
-          const allSlotsHaveSameLoadingBehavior = loadingBehaviorOfSlotsToRefresh.every(
-            loadingBehavior => loadingBehavior === loadingBehaviorOfSlotsToRefresh[0]
+            }
+          }
+        } else if (skinConfig.enableCpmComparison) {
+          ctx.logger.debug(
+            'SkinModule',
+            'Skin configuration ignored because cpm was low',
+            skinConfig
           );
 
-          // only reload if blocked slots and skin slot all have the same loading behavior
-          if (
-            allSlotsHaveSameLoadingBehavior &&
-            loadingBehaviorOfSlotsToRefresh[0] !== 'infinite'
-          ) {
-            if (this.currentSkinAdReloadSetTimeoutId) {
-              clearTimeout(this.currentSkinAdReloadSetTimeoutId);
-            }
-
-            this.currentSkinAdReloadSetTimeoutId = ctx.window.setTimeout(() => {
-              ctx.window.moli.refreshAdSlot(
-                [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
-                {
-                  loaded: loadingBehaviorOfSlotsToRefresh[0] as Exclude<
-                    behaviour.ISlotLoading['loaded'],
-                    'infinite'
-                  >
-                }
-              );
-              // Set the native-ad-reload targeting of the skin slot to true in order to track ad reload
-              // the key is configurable in the ad reload and should be tied to this setting in the future
-              getGoogleAdSlotByDomId(skinConfig.skinAdSlotDomId)?.setTargeting(
-                'native-ad-reload',
-                'true'
-              );
-
-              ctx.logger.info(
-                'SkinModule',
-                'Ad reload for skin and blocked slots triggered',
-                skinConfig.skinAdSlotDomId,
-                skinConfig.blockedAdSlotDomIds
-              );
-            }, skinConfig.adReload?.intervalMs);
-          } else {
-            ctx.logger.error(
-              'SkinModule',
-              'Ad reload not possible because of different loading behaviors of the slots that should be refreshed:',
-              loadingBehaviorOfSlotsToRefresh
-            );
-          }
+          this.destroyAdSlot(slotDefinitions, ctx.window)(skinConfig.skinAdSlotDomId);
         }
-      } else if (skinConfig.enableCpmComparison) {
-        ctx.logger.debug(
-          'SkinModule',
-          'Skin configuration ignored because cpm was low',
-          skinConfig
-        );
-
-        this.destroyAdSlots([skinConfig.skinAdSlotDomId], ctx.window);
+      } else {
+        // there's no matching configuration so we check if there are any
+        // slots that should not be part of the ad request to save bandwidth,
+        // money and improve reporting
+        skinModuleConfig.configs
+          .filter(skinConfig => skinConfig.destroySkinSlot)
+          .map(skinConfig => skinConfig.skinAdSlotDomId)
+          .filter(uniquePrimitiveFilter)
+          .forEach(this.destroyAdSlot(slotDefinitions, ctx.window));
       }
-    } else {
-      // there's no matching configuration, so we check if there are any
-      // slots that should not be part of the ad request to save bandwidth,
-      // money and improve reporting
-      const unusedSlots = config.configs
-        .filter(skinConfig => skinConfig.destroySkinSlot)
-        .map(skinConfig => skinConfig.skinAdSlotDomId)
-        .filter(uniquePrimitiveFilter)
-        .filter(domId => auctionObject.adUnitCodes?.includes(domId) === false);
-
-      this.destroyAdSlots(unusedSlots, ctx.window);
-    }
-  };
+    };
 
   private hideAdSlot =
-    (log: MoliRuntime.MoliLogger, _window: Window) =>
+    (_window: Window, log: MoliRuntime.MoliLogger) =>
     (domId: string): void => {
       const element = _window.document.getElementById(domId);
       try {

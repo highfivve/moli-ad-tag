@@ -9,7 +9,6 @@ import { createGoogletagStub } from '../stubs/googletagStubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
 import { emptyConfig, newEmptyConfig, newNoopLogger } from '../stubs/moliStubs';
 import IConfigurable = MoliRuntime.state.IConfigurable;
-import IFinished = MoliRuntime.state.IFinished;
 import ISinglePageApp = MoliRuntime.state.ISinglePageApp;
 import { IModule } from '../types/module';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
@@ -28,7 +27,9 @@ import {
   mkConfigureStep,
   mkInitStep,
   mkPrepareRequestAdsStep,
-  PrepareRequestAdsStep
+  mkRequestBidsStep,
+  PrepareRequestAdsStep,
+  RequestBidsStep
 } from './adPipeline';
 
 // setup sinon-chai
@@ -134,14 +135,13 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('configured');
     });
 
-    it('should transition into requestAds state after requestAds()', () => {
+    it('should transition into requestAds state after requestAds()', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      adTag.configure(defaultConfig);
+      await adTag.configure(defaultConfig);
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('requestAds');
-      return finished.then(state => {
-        expect(state.state).to.be.eq('finished');
-      });
+      const finishedState = await finished;
+      expect(finishedState.state).to.be.eq('finished');
     });
 
     it('should stay in configurable state after requestAds() and set initialize to true', () => {
@@ -180,7 +180,7 @@ describe('moli', () => {
         url: 'https://localhost/page-one'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'none' } });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'none' } });
       expect(adTag.getState()).to.be.eq('configured');
       const state1 = await adTag.requestAds();
       expect(state1.state).to.be.eq('spa-finished');
@@ -266,7 +266,7 @@ describe('moli', () => {
       };
 
       adTag.registerModule(module);
-      adTag.configure(config);
+      await adTag.configure(config);
       await adTag.requestAds();
 
       expect(adTag.getRuntimeConfig().adPipelineConfig.initSteps).to.have.length(1);
@@ -294,7 +294,7 @@ describe('moli', () => {
       const config: MoliConfig = { ...newEmptyConfig(defaultSlots), modules: moduleConfig };
 
       adTag.registerModule(fakeModule);
-      adTag.configure(config);
+      await adTag.configure(config);
       await adTag.requestAds();
 
       expect(configureSpy).to.have.been.calledOnce;
@@ -314,22 +314,31 @@ describe('moli', () => {
         LOW_PRIORITY,
         () => Promise.resolve()
       );
+      const fakeRequestBidsSteps: RequestBidsStep = mkRequestBidsStep('fake-request-bids', () =>
+        Promise.resolve()
+      );
+
+      const fakePrebidBidsBackHandler: MoliRuntime.PrebidBidsBackHandler = () => ({});
 
       const configChangingModule = {
         ...fakeModule,
         initSteps: (): InitStep[] => [fakeInitStep],
         configureSteps: (): ConfigureStep[] => [fakeConfigureStep],
-        prepareRequestAdsSteps: (): PrepareRequestAdsStep[] => [fakePrepareRequestAdsStep]
+        prepareRequestAdsSteps: (): PrepareRequestAdsStep[] => [fakePrepareRequestAdsStep],
+        requestBidsSteps: () => [fakeRequestBidsSteps],
+        prebidBidsBackHandler: () => [fakePrebidBidsBackHandler]
       };
 
       expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
         initSteps: [],
         configureSteps: [],
-        prepareRequestAdsSteps: []
+        prepareRequestAdsSteps: [],
+        requestBidsSteps: [],
+        prebidBidsBackHandler: []
       });
 
       adTag.registerModule(configChangingModule);
-      adTag.configure(config);
+      await adTag.configure(config);
       const state = await adTag.requestAds();
 
       expect(adTag.getState()).to.be.eq(state.state);
@@ -337,7 +346,9 @@ describe('moli', () => {
       expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
         initSteps: [fakeInitStep],
         configureSteps: [fakeConfigureStep],
-        prepareRequestAdsSteps: [fakePrepareRequestAdsStep]
+        prepareRequestAdsSteps: [fakePrepareRequestAdsStep],
+        requestBidsSteps: [fakeRequestBidsSteps],
+        prebidBidsBackHandler: [fakePrebidBidsBackHandler]
       });
     });
 
@@ -349,7 +360,7 @@ describe('moli', () => {
       const errorLogSpy = sandbox.spy(logger, 'error');
 
       adTag.setLogger(logger);
-      adTag.configure(config);
+      await adTag.configure(config);
       await adTag.requestAds();
 
       adTag.registerModule(fakeModule);
@@ -372,7 +383,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      adTag.configure({
+      await adTag.configure({
         ...defaultConfig,
         slots: slots
       });
@@ -395,7 +406,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      adTag.configure({
+      await adTag.configure({
         ...defaultConfig,
         slots: slots
       });
@@ -410,7 +421,7 @@ describe('moli', () => {
 
   describe('refreshAds()', () => {
     describe('server side application mode', () => {
-      it('should batch slots until requestAds is called', () => {
+      it('should batch slots until requestAds is called', async () => {
         // create all slots
         const slots: AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
@@ -421,18 +432,16 @@ describe('moli', () => {
 
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.refreshAdSlot(slots[0].domId);
-        adTag.configure({ ...defaultConfig, slots: slots });
-        adTag.refreshAdSlot(slots[1].domId);
+        await adTag.refreshAdSlot(slots[0].domId);
+        await adTag.configure({ ...defaultConfig, slots: slots });
+        await adTag.refreshAdSlot(slots[1].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
-        return adTag.requestAds().then(state => {
-          expect(state.state).to.be.eq('finished');
-          expect(refreshSpy).to.have.been.calledOnce;
-          const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
-
-          expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
-        });
+        const state1 = await adTag.requestAds();
+        expect(state1.state).to.be.eq('finished');
+        expect(refreshSpy).to.have.been.calledOnce;
+        const domIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+        expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
       });
 
       it('should refresh ads after requestAds have been called', () => {
@@ -489,6 +498,7 @@ describe('moli', () => {
 
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
+        // intentionally not awaiting the refresh calls
         adTag.refreshAdSlot(slots[0].domId);
         adTag.refreshAdSlot(slots[1].domId);
         adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
@@ -777,7 +787,6 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('configured');
       const state = await adTag.requestAds();
       expect(state.state).to.be.eq('finished');
-      const finishedState: IFinished = state as IFinished;
 
       const keyValues = adTag.getPageTargeting().keyValues;
       expect(keyValues.ABtest).to.be.not.undefined;
@@ -796,7 +805,7 @@ describe('moli', () => {
       });
       const adTag = createMoliTag(jsDomWindow);
       adTag.setTargeting('dynamicKeyValuePre', 'value');
-      adTag.configure({
+      await adTag.configure({
         slots: defaultSlots,
         spa: { enabled: true, validateLocation: 'href' },
         targeting: {

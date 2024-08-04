@@ -70,6 +70,7 @@ describe('AdPipeline', () => {
     config: MoliConfig = emptyConfig
   ): AdPipelineContext => {
     return {
+      auctionId: 'xxxx-xxxx-xxxx-xxxx',
       requestId,
       requestAdsCalls: requestAdsCalls,
       env: env,

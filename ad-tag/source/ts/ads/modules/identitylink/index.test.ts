@@ -73,6 +73,7 @@ describe('IdentityLink Module', () => {
     const module = createIdentityLink();
     const adPipelineContext = (): AdPipelineContext => {
       return {
+        auctionId: 'xxxx-xxxx-xxxx-xxxx',
         requestId: 0,
         requestAdsCalls: 1,
         env: 'production',

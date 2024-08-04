@@ -186,6 +186,14 @@ describe('AdService', () => {
         const pipeline = await initialize(emptyConfig, runtimeConfig);
         expect(pipeline.prepareRequestAds).to.deep.contain(prepareRequestAdsStepSpy);
       });
+
+      it('should add the modules-requestsBids step', async () => {
+        const requestBidsStepSpy = sandbox.spy();
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.requestBidsSteps.push(requestBidsStepSpy);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.requestBids).to.deep.contain(requestBidsStepSpy);
+      });
     });
 
     describe('prebid', () => {

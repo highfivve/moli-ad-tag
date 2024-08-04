@@ -51,6 +51,7 @@ describe('a9', () => {
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
+      auctionId: 'xxxx-xxxx-xxxx-xxxx',
       requestId: 1,
       requestAdsCalls: requestAdsCalls,
       env: env,

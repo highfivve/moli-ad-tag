@@ -1,22 +1,22 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-
-import { filterHighestNonSkinBid, Skin, SkinConfigEffect } from './index';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { googletag } from 'ad-tag/types/googletag';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+
+import { filterHighestNonSkinBid, FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
 import { AdSlot, headerbidding, modules, MoliConfig } from 'ad-tag/types/moliConfig';
-import { prebidjs } from 'ad-tag/types/prebidjs';
-import { emptyConfig, emptyRuntimeConfig, newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
-import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
-import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
-import { AdPipelineContext } from '../../adPipeline';
-import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { initAdTag } from 'ad-tag/ads/moliGlobal';
+import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
+import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { fullConsent } from 'ad-tag/stubs/consentStubs';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { initAdTag } from 'ad-tag/ads/moliGlobal';
 
 // setup sinon-chai
 use(sinonChai);
@@ -24,49 +24,34 @@ use(sinonChai);
 /**
  * All bidders that require no additional configuration other than the bidder code
  */
-type SimpleFormatFilterBidder = Exclude<modules.skin.FormatFilter['bidder'], 'gumgum' | '*'>;
+type SimpleFormatFilterBidder = Exclude<FormatFilter['bidder'], 'gumgum' | '*'>;
 
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  let jsDomWindow: Window & googletag.IGoogleTagWindow & MoliRuntime.MoliWindow = dom.window as any;
   jsDomWindow.googletag = createGoogletagStub();
-  jsDomWindow.pbjs = createPbjsStub();
-  let assetLoaderService = createAssetLoaderService(jsDomWindow);
-  let pubadsGetSlotsStub = sandbox.stub(jsDomWindow.googletag.pubads(), 'getSlots');
 
-  let onEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
-  let destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
-
-  const emitAuctionEnd = (bids: prebidjs.IBidResponsesMap): void => {
-    expect(onEventSpy).to.have.been.calledOnce;
-    const [event, callback] = onEventSpy.firstCall.args;
-    // typescript infers the wrong callback type for the sinonSpy. Maybe an EventMap implementation solves this.
-    // for now we have to disable the type check here
-    // @ts-ignore
-    callback(auctionObject(bids));
+  const prebidConfig: headerbidding.PrebidConfig = {
+    config: pbjsTestConfig,
+    schain: { nodes: [] }
   };
 
+  let assetLoaderService = createAssetLoaderService(jsDomWindow);
+
   afterEach(() => {
-    sandbox.reset();
     dom = createDom();
     jsDomWindow = dom.window as any;
     jsDomWindow.googletag = createGoogletagStub();
-    jsDomWindow.pbjs = createPbjsStub();
     assetLoaderService = createAssetLoaderService(jsDomWindow);
-    pubadsGetSlotsStub = sandbox.stub(jsDomWindow.googletag.pubads(), 'getSlots');
-    onEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
-    destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+    sandbox.reset();
   });
 
-  const createAdSlots = (domIds: string[]): AdSlot[] => {
+  const createAdSlots = (window: Window, domIds: string[]): AdSlot[] => {
     return domIds.map(domId => {
-      const div = jsDomWindow.document.createElement('div');
+      const div = window.document.createElement('div');
       div.id = domId;
-      jsDomWindow.document.body.appendChild(div);
+      window.document.body.appendChild(div);
 
       const slot: AdSlot = {
         domId: domId,
@@ -82,32 +67,9 @@ describe('Skin Module', () => {
     });
   };
 
-  const createGoogleAdSlot = (domId: string): googletag.IAdSlot =>
-    ({
-      domId, // makes deepEquals output more readable
-      getSlotElementId(): string {
-        return domId;
-      }
-    }) as googletag.IAdSlot & { domId: string };
-
-  const auctionObject = (from: prebidjs.IBidResponsesMap): prebidjs.event.AuctionObject => ({
-    auctionId: 'xxxx-xxxx-xxxx-xxxx',
-    adUnitCodes: Object.keys(from),
-    bidsReceived: Object.entries(from).flatMap(([adUnitCode, bidResponses]) => {
-      return (bidResponses?.bids ?? []).map(bid => {
-        return {
-          ...bid,
-          adUnitCode: adUnitCode // set the adUnitCode as it's not provided in the bid responses all the time in the test setup
-        } as prebidjs.BidResponse;
-      });
-    }),
-    winningBids: []
-  });
-
   const genericBidResponse = (
     bidder: prebidjs.IGenericBidResponse['bidder'],
-    cpm: number,
-    adUnitCode?: string
+    cpm: number
   ): prebidjs.IGenericBidResponse =>
     ({
       bidder: bidder,
@@ -118,7 +80,7 @@ describe('Skin Module', () => {
       mediaType: 'banner',
       source: 'client',
       ad: '<h1>AD</h1>',
-      adUnitCode: adUnitCode ?? '',
+      adUnitCode: '',
       auctionId: '',
       currency: 'EUR',
       originalCurrency: 'EUR',
@@ -127,9 +89,12 @@ describe('Skin Module', () => {
 
   const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
     genericBidResponse(prebidjs.DSPX, cpm);
+  const visxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
+    genericBidResponse(prebidjs.Visx, cpm);
 
   const adPipelineContext = (config: MoliConfig = emptyConfig): AdPipelineContext => {
     return {
+      auctionId: 'xxxx-xxxx-xxxx-xxxx',
       requestId: 0,
       requestAdsCalls: 1,
       env: 'production',
@@ -162,43 +127,35 @@ describe('Skin Module', () => {
     return module;
   };
 
-  describe('init', () => {
-    it('should add an init step', async () => {
-      const module = skinModule();
-
-      const initSteps = module.initSteps();
-
-      expect(initSteps).to.have.length(1);
-      expect(initSteps[0].name).to.be.eq('skin-init');
+  describe('configure', () => {
+    it('should return no prebid bids back handler if not configured', () => {
+      const module = new Skin();
+      expect(module.prebidBidsBackHandler).to.be.ok;
+      expect(module.prebidBidsBackHandler()).to.have.length(0);
     });
 
-    it('should add pbjs.onEvent("auctionEnd") listener in production', async () => {
-      const noopLogger = newNoopLogger();
-      const module = skinModule();
-
-      const errorLogSpy = sandbox.spy(noopLogger, 'error');
-
-      const initSteps = module.initSteps();
-
-      await initSteps[0](adPipelineContext());
-
-      expect(errorLogSpy).to.have.not.been.called;
-      expect(onEventSpy).to.have.been.calledOnce;
-      expect(onEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', Sinon.match.func);
+    it('should return no prebid bids back handler if disabled', () => {
+      const module = new Skin();
+      module.configure({
+        skin: { enabled: false, configs: [] }
+      });
+      expect(module.prebidBidsBackHandler).to.be.ok;
+      expect(module.prebidBidsBackHandler()).to.have.length(0);
     });
 
-    it('should not add pbjs.onEvent("auctionEnd") listener in test', async () => {
-      const noopLogger = newNoopLogger();
+    it('should add a prebid bids back handler', () => {
       const module = skinModule();
+      expect(module.prebidBidsBackHandler).to.be.ok;
+      expect(module.prebidBidsBackHandler()).to.be.have.length(1);
+    });
 
-      const errorLogSpy = sandbox.spy(noopLogger, 'error');
-
-      const initSteps = module.initSteps();
-
-      await initSteps[0]({ ...adPipelineContext(), env: 'test' });
-
-      expect(errorLogSpy).to.have.not.been.called;
-      expect(onEventSpy).to.have.not.been.called;
+    it('should create only one bids back handler', () => {
+      const module = skinModule();
+      expect(module.prebidBidsBackHandler).to.be.ok;
+      const handler1 = module.prebidBidsBackHandler()[0];
+      const handler2 = module.prebidBidsBackHandler()[0];
+      expect(handler1).to.be.ok;
+      expect(handler1).to.equal(handler2);
     });
   });
 
@@ -224,9 +181,8 @@ describe('Skin Module', () => {
         originalCurrency: 'EUR',
         netRevenue: true
       }) as prebidjs.IGumGumBidResponse;
-
     describe('gumgum mobile skin', () => {
-      const config: modules.skin.SkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: 'gumgum', auid: 59 }],
         skinAdSlotDomId: 'mobile-skin-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -238,13 +194,13 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots` if a gumgum mobile skin was found', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'mobile-skin-slot': {
               bids: [gumgumBidResponse({ auid: 59 })]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -253,13 +209,13 @@ describe('Skin Module', () => {
       it('should return `NoBlocking` if a gumgum mobile skin was found but cpm 0', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'mobile-skin-slot': {
               bids: [{ ...gumgumBidResponse({ auid: 59 }), cpm: 0 }]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -268,13 +224,13 @@ describe('Skin Module', () => {
       it('should return `NoBlocking` if the gumgum format does not match was found', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'mobile-skin-slot': {
               bids: [gumgumBidResponse('some markup'), gumgumBidResponse({ auid: 39 })]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -282,7 +238,7 @@ describe('Skin Module', () => {
     });
 
     describe('gumgum no auid', () => {
-      const config: modules.skin.SkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: 'gumgum' }],
         skinAdSlotDomId: 'mobile-skin-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -294,13 +250,13 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots` if a gumgum mobile skin was found', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'mobile-skin-slot': {
               bids: [gumgumBidResponse({ auid: 59 })]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -309,13 +265,13 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots` if a gumgum mobile skin was found with markup', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'mobile-skin-slot': {
               bids: [gumgumBidResponse('markup')]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -323,7 +279,7 @@ describe('Skin Module', () => {
     });
 
     describe('* ( AllFormatFilter )', () => {
-      const config: modules.skin.SkinConfig = {
+      const config: SkinConfig = {
         formatFilter: [{ bidder: '*' }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -334,13 +290,13 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots` if any response was found', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'wp-slot': {
               bids: [genericBidResponse('ix', 10.0)]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -349,13 +305,13 @@ describe('Skin Module', () => {
       it('should return `NoBlocking` if a bid response was found but with cpm 0', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'wp-slot': {
               bids: [genericBidResponse('pubmatic', 0)]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -364,16 +320,16 @@ describe('Skin Module', () => {
       it('should return `BlockSkinSlot`if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
         const skinConfigEffect = module.getConfigEffect(
           config,
-          auctionObject({
+          {
             'wp-slot': {
               bids: [genericBidResponse('pubmatic', 5)]
             },
             'sky-slot': {
               bids: [genericBidResponse('openx', 6.5), genericBidResponse('openx', 0.49)]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          emptySkinModuleConfig.trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
@@ -392,7 +348,7 @@ describe('Skin Module', () => {
 
     bidders.forEach(bidder =>
       describe(bidder, () => {
-        const config: modules.skin.SkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [{ bidder: bidder }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot'],
@@ -403,13 +359,13 @@ describe('Skin Module', () => {
         it(`should return \`BlockOtherSlots\` if a ${bidder} response was found`, () => {
           const skinConfigEffect = module.getConfigEffect(
             config,
-            auctionObject({
+            {
               'wp-slot': {
                 bids: [genericBidResponse(bidder, 10.0)]
               }
-            }),
-            noopLogger,
-            undefined
+            },
+            emptySkinModuleConfig.trackSkinCpmLow,
+            noopLogger
           );
 
           expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
@@ -418,13 +374,13 @@ describe('Skin Module', () => {
         it(`should return \`NoBlocking\` if a ${bidder} response was found but with cpm 0`, () => {
           const skinConfigEffect = module.getConfigEffect(
             config,
-            auctionObject({
+            {
               'wp-slot': {
                 bids: [genericBidResponse(bidder, 0)]
               }
-            }),
-            noopLogger,
-            undefined
+            },
+            emptySkinModuleConfig.trackSkinCpmLow,
+            noopLogger
           );
 
           expect(skinConfigEffect).to.equal(SkinConfigEffect.NoBlocking);
@@ -440,7 +396,7 @@ describe('Skin Module', () => {
       it('should return `BlockOtherSlots`, but log the result if the skin bid is low but the comparison is disabled', () => {
         const configuredModule = skinModule({ configs: [], trackSkinCpmLow });
 
-        const config: modules.skin.SkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [{ bidder: prebidjs.GumGum }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
@@ -467,9 +423,9 @@ describe('Skin Module', () => {
 
         const skinConfigEffect = configuredModule.getConfigEffect(
           config,
-          auctionObject(bidResponses),
-          noopLogger,
-          trackSkinCpmLow
+          bidResponses,
+          trackSkinCpmLow,
+          noopLogger
         );
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
         expect(trackSkinCpmLow).to.have.been.calledOnce;
@@ -479,91 +435,14 @@ describe('Skin Module', () => {
             combinedNonSkinSlots: 1.51
           },
           config,
-          { ...gumgumBidResponse('<h1>skin</h1>'), cpm: 1.5, adUnitCode: 'wp-slot' }
+          { ...gumgumBidResponse('<h1>skin</h1>'), cpm: 1.5 }
         );
-      });
-
-      it('should select highest skin bid if there are multiple skin bids', () => {
-        const configuredModule = skinModule({
-          configs: [],
-          trackSkinCpmLow
-        });
-
-        const config: modules.skin.SkinConfig = {
-          formatFilter: [{ bidder: '*' }],
-          skinAdSlotDomId: 'wp-slot',
-          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
-          hideSkinAdSlot: false,
-          hideBlockedSlots: false,
-          enableCpmComparison: true
-        };
-
-        const bidResponses: prebidjs.IBidResponsesMap = {
-          'wp-slot': {
-            bids: [{ ...gumgumBidResponse('<h1>skin</h1>'), cpm: 9 }, dspxBidResponse(5.0)]
-          },
-          'sky-slot': {
-            bids: [genericBidResponse('openx', 0.5), genericBidResponse('openx', 3)]
-          },
-          'sky-slot-2': {
-            bids: [genericBidResponse('criteo', 0.5), genericBidResponse('connectad', 3)]
-          },
-          'sky-slot-3': {
-            bids: [genericBidResponse('yieldlab', 1.25), genericBidResponse('rubicon', 2)]
-          }
-        };
-
-        const skinConfigEffect = configuredModule.getConfigEffect(
-          config,
-          auctionObject(bidResponses),
-          noopLogger,
-          trackSkinCpmLow
-        );
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
-        expect(trackSkinCpmLow).to.not.have.been.called;
-      });
-
-      it('should return `BlockSkinSlot` if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
-        const configuredModule = skinModule({
-          configs: [],
-          trackSkinCpmLow
-        });
-
-        const config: modules.skin.SkinConfig = {
-          formatFilter: [{ bidder: prebidjs.DSPX }],
-          skinAdSlotDomId: 'wp-slot',
-          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
-          hideSkinAdSlot: false,
-          hideBlockedSlots: false,
-          enableCpmComparison: true
-        };
-
-        const skinConfigEffect = configuredModule.getConfigEffect(
-          config,
-          auctionObject({
-            'wp-slot': {
-              bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
-            },
-            'sky-slot': {
-              bids: [genericBidResponse('openx', 1.5), genericBidResponse('openx', 0.49)]
-            },
-            'sky-slot-2': {
-              bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
-            }
-          }),
-          noopLogger,
-          trackSkinCpmLow
-        );
-
-        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
-        expect(trackSkinCpmLow).to.have.been.calledOnce;
       });
 
       it('should return `BlockOtherSlots` if the skin bid is higher than the bids on the to-be-removed slots combined', () => {
-        const configuredModule = new Skin();
+        const configuredModule = skinModule({ configs: [], trackSkinCpmLow });
 
-        const config: modules.skin.SkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [{ bidder: prebidjs.DSPX }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
@@ -574,7 +453,7 @@ describe('Skin Module', () => {
 
         const skinConfigEffect = configuredModule.getConfigEffect(
           config,
-          auctionObject({
+          {
             'wp-slot': {
               bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
             },
@@ -584,17 +463,50 @@ describe('Skin Module', () => {
             'sky-slot-2': {
               bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
             }
-          }),
-          noopLogger,
-          undefined
+          },
+          trackSkinCpmLow,
+          noopLogger
         );
 
         expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
       });
+
+      it('should return `BlockSkinSlot` if the skin bid is lower than the bids on the to-be-removed slots combined', () => {
+        const configuredModule = skinModule({ configs: [], trackSkinCpmLow });
+
+        const config: SkinConfig = {
+          formatFilter: [{ bidder: prebidjs.DSPX }],
+          skinAdSlotDomId: 'wp-slot',
+          blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2'],
+          hideSkinAdSlot: false,
+          hideBlockedSlots: false,
+          enableCpmComparison: true
+        };
+
+        const skinConfigEffect = configuredModule.getConfigEffect(
+          config,
+          {
+            'wp-slot': {
+              bids: [dspxBidResponse(1.5), genericBidResponse('openx', 1)]
+            },
+            'sky-slot': {
+              bids: [genericBidResponse('openx', 1.5), genericBidResponse('openx', 0.49)]
+            },
+            'sky-slot-2': {
+              bids: [genericBidResponse('openx', 0.01), genericBidResponse('openx', 0)]
+            }
+          },
+          trackSkinCpmLow,
+          noopLogger
+        );
+
+        expect(skinConfigEffect).to.equal(SkinConfigEffect.BlockSkinSlot);
+        expect(trackSkinCpmLow).to.have.been.calledOnce;
+      });
     });
 
     describe('selectConfig filter selection', () => {
-      const wallpaperConfig: modules.skin.SkinConfig = {
+      const wallpaperConfig: SkinConfig = {
         formatFilter: [{ bidder: prebidjs.GumGum }],
         skinAdSlotDomId: 'wp-slot',
         blockedAdSlotDomIds: ['sky-slot'],
@@ -603,7 +515,7 @@ describe('Skin Module', () => {
         enableCpmComparison: false
       };
 
-      const mobileSkinConfig: modules.skin.SkinConfig = {
+      const mobileSkinConfig: SkinConfig = {
         formatFilter: [{ bidder: prebidjs.GumGum, auid: 59 }],
         skinAdSlotDomId: 'mobile-sticky',
         blockedAdSlotDomIds: ['content-1'],
@@ -613,17 +525,17 @@ describe('Skin Module', () => {
       };
 
       it('should select the first rule that applies', () => {
-        const config = modulesConfig({
+        const skinModuleConfig = modulesConfig({
           configs: [wallpaperConfig, mobileSkinConfig]
-        });
-        const configuredModule = skinModule(config.skin);
+        }).skin!;
+        const configuredModule = skinModule(skinModuleConfig);
 
         // select desktop wallpaper
         const wpConfig = configuredModule.selectConfig(
-          config.skin!,
-          auctionObject({
+          skinModuleConfig,
+          {
             'wp-slot': { bids: [gumgumBidResponse('<h1>skin</h1>')] }
-          }),
+          },
           noopLogger
         );
         expect(wpConfig?.skinConfig).to.equal(wallpaperConfig);
@@ -631,10 +543,10 @@ describe('Skin Module', () => {
 
         // select mobile skin
         const mobileConfig = configuredModule.selectConfig(
-          config.skin!,
-          auctionObject({
+          skinModuleConfig,
+          {
             'mobile-sticky': { bids: [gumgumBidResponse({ auid: 59 })] }
-          }),
+          },
           noopLogger
         );
         expect(mobileConfig?.skinConfig).to.equal(mobileSkinConfig);
@@ -642,10 +554,10 @@ describe('Skin Module', () => {
 
         // select wallpaper config skin
         const wp2Config = configuredModule.selectConfig(
-          config.skin!,
-          auctionObject({
+          skinModuleConfig,
+          {
             'wp-slot': { bids: [gumgumBidResponse('wp'), gumgumBidResponse('mt')] }
-          }),
+          },
           noopLogger
         );
         expect(wp2Config?.skinConfig).to.equal(wallpaperConfig);
@@ -655,7 +567,7 @@ describe('Skin Module', () => {
       it('should select the highest skin bid if there are multiple skin bids', () => {
         const trackSkinCpmLow = sandbox.stub();
 
-        const config: modules.skin.SkinConfig = {
+        const config: SkinConfig = {
           formatFilter: [{ bidder: prebidjs.GumGum }, { bidder: prebidjs.DSPX }],
           skinAdSlotDomId: 'wp-slot',
           blockedAdSlotDomIds: ['sky-slot', 'sky-slot-2', 'sky-slot-3'],
@@ -663,11 +575,12 @@ describe('Skin Module', () => {
           hideBlockedSlots: false,
           enableCpmComparison: true
         };
-        const moduleConfig = modulesConfig({
+
+        const skinModuleConfig = modulesConfig({
           configs: [config],
           trackSkinCpmLow
-        });
-        const configuredModule = skinModule(moduleConfig.skin);
+        }).skin!;
+        const configuredModule = skinModule(skinModuleConfig);
 
         // gumgum has 1.50 cpm
         // other bids combined have 1.51 cpm
@@ -686,91 +599,8 @@ describe('Skin Module', () => {
         };
 
         const skinConfig = configuredModule.selectConfig(
-          moduleConfig.skin!,
-          auctionObject(bidResponses),
-          noopLogger
-        );
-
-        expect(skinConfig?.skinConfig).to.equal(config);
-        expect(skinConfig?.configEffect).to.equal(SkinConfigEffect.BlockOtherSlots);
-        expect(trackSkinCpmLow).to.not.have.been.called;
-      });
-
-      it('should select the highest skin bid if there are duplicated ad unit codes in the auction object', () => {
-        const trackSkinCpmLow = sandbox.stub();
-
-        const config: modules.skin.SkinConfig = {
-          formatFilter: [{ bidder: '*' }],
-          skinAdSlotDomId: 'ad_wallpaper_pixel',
-          blockedAdSlotDomIds: ['ad_sidebar', 'ad_sidebar_left', 'ad_header', 'ad_floor'],
-          hideSkinAdSlot: false,
-          hideBlockedSlots: false,
-          enableCpmComparison: true
-        };
-        const moduleConfig = modulesConfig({
-          configs: [config],
-          trackSkinCpmLow
-        });
-        const configuredModule = skinModule(moduleConfig.skin);
-
-        // gumgum has 1.50 cpm
-        // other bids combined have 1.51 cpm
-        // dspx has 1.52 cpm and will be selected
-        const bidResponses: prebidjs.IBidResponsesMap = {
-          ad_wallpaper_pixel: {
-            bids: [{ ...gumgumBidResponse('<h1>skin</h1>'), cpm: 9 }, dspxBidResponse(5)]
-          },
-          ad_sidebar: {
-            bids: [
-              genericBidResponse('ix', 0.82, 'ad_sidebar'),
-              genericBidResponse('ix', 0.82, 'ad_sidebar'),
-              genericBidResponse('ix', 0.82, 'ad_sidebar')
-            ]
-          },
-          ad_sidebar_left: {
-            bids: [
-              genericBidResponse('stroeerCore', 0.6285727, 'ad_sidebar_left'),
-              genericBidResponse('stroeerCore', 0.6285727, 'ad_sidebar_left'),
-              genericBidResponse('stroeerCore', 0.6285727, 'ad_sidebar_left')
-            ]
-          },
-          ad_header: {
-            bids: [
-              genericBidResponse('yieldlab', 3.47, 'ad_header'),
-              genericBidResponse('yieldlab', 3.47, 'ad_header'),
-              genericBidResponse('yieldlab', 3.47, 'ad_header')
-            ]
-          },
-          ad_floor: {
-            bids: [
-              genericBidResponse('ix', 1.02, 'ad_floor'),
-              genericBidResponse('ix', 1.02, 'ad_floor'),
-              genericBidResponse('ix', 1.02, 'ad_floor')
-            ]
-          }
-        };
-
-        const auctionEndObject: prebidjs.event.AuctionObject = {
-          ...auctionObject(bidResponses),
-          adUnitCodes: [
-            'ad_sidebar',
-            'ad_sidebar',
-            'ad_sidebar',
-            'ad_sidebar_left',
-            'ad_sidebar_left',
-            'ad_sidebar_left',
-            'ad_floor',
-            'ad_floor',
-            'ad_floor',
-            'ad_header',
-            'ad_header',
-            'ad_header'
-          ]
-        };
-
-        const skinConfig = configuredModule.selectConfig(
-          moduleConfig.skin!,
-          auctionEndObject,
+          skinModuleConfig,
+          bidResponses,
           noopLogger
         );
 
@@ -781,50 +611,71 @@ describe('Skin Module', () => {
     });
 
     describe('destroySkinSlot', () => {
-      const sidebarDomId = 'sky-slot';
-      const skinDomId = 'wp-slot';
       let slots: AdSlot[] = [];
+      let slotDefinitions: MoliRuntime.SlotDefinition[] = [];
 
-      const sidebarSlot = createGoogleAdSlot(sidebarDomId);
-      const skinSlot = createGoogleAdSlot(skinDomId);
-
-      beforeEach(() => {
-        slots = createAdSlots([skinDomId, sidebarDomId]);
+      const moliConfig = (): MoliConfig => ({
+        slots: slots,
+        prebid: prebidConfig,
+        schain: dummySchainConfig
       });
 
-      [undefined, false].forEach(destroySkinSlot => {
-        it(`should not destroy the skin ad slot destroySkinSlot is set to ${destroySkinSlot}`, () => {
-          const module = skinModule({
-            configs: [
-              {
-                formatFilter: [{ bidder: prebidjs.DSPX }],
-                skinAdSlotDomId: skinDomId,
-                blockedAdSlotDomIds: [sidebarDomId],
-                hideSkinAdSlot: false,
-                hideBlockedSlots: false,
-                enableCpmComparison: false,
-                ...(destroySkinSlot !== undefined ? { destroySkinSlot } : {})
-              }
-            ]
-          });
+      beforeEach(() => {
+        slots = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
+        slotDefinitions = slots.map(slot => ({
+          moliSlot: slot,
+          adSlot: {
+            getSlotElementId: () => slot.domId
+          } as googletag.IAdSlot,
+          filterSupportedSizes: () => []
+        }));
+      });
 
-          const prebidConfig: headerbidding.PrebidConfig = {
-            config: pbjsTestConfig,
-            schain: { nodes: [] }
-          };
-
-          const config: MoliConfig = {
-            slots: slots,
-            prebid: prebidConfig,
-            schain: dummySchainConfig
-          };
-          module.initSteps()[0](adPipelineContext(config));
-
-          pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
-          emitAuctionEnd({});
-
-          expect(destroyAdSlotSpy).to.have.not.been.called;
+      it('should not destroy the skin ad slot if unset', () => {
+        const module = skinModule({
+          configs: [
+            {
+              formatFilter: [{ bidder: prebidjs.DSPX }],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
+              hideSkinAdSlot: false,
+              hideBlockedSlots: false,
+              enableCpmComparison: false
+            }
+          ]
         });
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
+
+        expect(destroyAdSlotSpy).to.have.not.been.called;
+      });
+
+      it('should not destroy the skin ad slot if set to false', () => {
+        const module = skinModule({
+          configs: [
+            {
+              formatFilter: [{ bidder: prebidjs.DSPX }],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
+              hideSkinAdSlot: false,
+              hideBlockedSlots: false,
+              enableCpmComparison: false,
+              destroySkinSlot: false
+            }
+          ]
+        });
+
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
+
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
+
+        expect(destroyAdSlotSpy).to.have.not.been.called;
       });
 
       it('should not destroy the skin ad slot if set to true for a bidder and the other delivers', () => {
@@ -832,8 +683,8 @@ describe('Skin Module', () => {
           configs: [
             {
               formatFilter: [{ bidder: prebidjs.Visx }],
-              skinAdSlotDomId: skinDomId,
-              blockedAdSlotDomIds: [sidebarDomId],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
               hideSkinAdSlot: false,
               hideBlockedSlots: false,
               enableCpmComparison: false,
@@ -841,8 +692,8 @@ describe('Skin Module', () => {
             },
             {
               formatFilter: [{ bidder: prebidjs.DSPX }],
-              skinAdSlotDomId: skinDomId,
-              blockedAdSlotDomIds: [sidebarDomId],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
               hideSkinAdSlot: false,
               hideBlockedSlots: false,
               enableCpmComparison: false,
@@ -851,25 +702,27 @@ describe('Skin Module', () => {
           ]
         });
 
-        const prebidConfig: headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          schain: { nodes: [] }
-        };
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const config: MoliConfig = {
-          slots: slots,
-          prebid: prebidConfig,
-          schain: dummySchainConfig
-        };
-        module.initSteps()[0](adPipelineContext(config));
-
-        pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
-        emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(
+          adPipelineContext(moliConfig()),
+          {
+            'wp-slot': {
+              bids: [dspxBidResponse(1)]
+            }
+          },
+          slotDefinitions
+        );
 
         // only the sky slot should be destroyed
-        expect(destroyAdSlotSpy).to.have.been.calledOnce;
         expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
-          Sinon.match.array.deepEquals([sidebarSlot])
+          Sinon.match.array.deepEquals(
+            slotDefinitions
+              .filter(slot => slot.moliSlot.domId === 'sky-slot')
+              .map(slot => slot.adSlot)
+          )
         );
       });
 
@@ -878,8 +731,8 @@ describe('Skin Module', () => {
           configs: [
             {
               formatFilter: [{ bidder: prebidjs.DSPX }],
-              skinAdSlotDomId: skinDomId,
-              blockedAdSlotDomIds: [sidebarDomId],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
               hideSkinAdSlot: false,
               hideBlockedSlots: false,
               enableCpmComparison: false,
@@ -888,23 +741,19 @@ describe('Skin Module', () => {
           ]
         });
 
-        const prebidConfig: headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          schain: { nodes: [] }
-        };
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const config: MoliConfig = {
-          slots: slots,
-          prebid: prebidConfig,
-          schain: dummySchainConfig
-        };
-        module.initSteps()[0](adPipelineContext(config));
-        pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
-        emitAuctionEnd({});
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
 
         expect(destroyAdSlotSpy).to.have.been.calledOnce;
         expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
-          Sinon.match.array.deepEquals([skinSlot])
+          Sinon.match.array.deepEquals(
+            slotDefinitions
+              .filter(slot => slot.moliSlot.domId === 'wp-slot')
+              .map(slot => slot.adSlot)
+          )
         );
       });
 
@@ -913,8 +762,8 @@ describe('Skin Module', () => {
           configs: [
             {
               formatFilter: [{ bidder: prebidjs.DSPX }],
-              skinAdSlotDomId: skinDomId,
-              blockedAdSlotDomIds: [skinDomId],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
               hideSkinAdSlot: false,
               hideBlockedSlots: false,
               enableCpmComparison: false,
@@ -922,8 +771,8 @@ describe('Skin Module', () => {
             },
             {
               formatFilter: [{ bidder: prebidjs.Visx }],
-              skinAdSlotDomId: skinDomId,
-              blockedAdSlotDomIds: [skinDomId],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
               hideSkinAdSlot: false,
               hideBlockedSlots: false,
               enableCpmComparison: false,
@@ -932,149 +781,157 @@ describe('Skin Module', () => {
           ]
         });
 
-        const prebidConfig: headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          schain: { nodes: [] }
-        };
+        const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const config: MoliConfig = {
-          slots: slots,
-          prebid: prebidConfig,
-          schain: dummySchainConfig
-        };
-        module.initSteps()[0](adPipelineContext(config));
-        pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
-        emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
 
         expect(destroyAdSlotSpy).to.have.been.calledOnce;
         expect(destroyAdSlotSpy).to.have.been.calledOnceWithExactly(
-          Sinon.match.array.deepEquals([skinSlot])
+          Sinon.match.array.deepEquals(
+            slotDefinitions
+              .filter(slot => slot.moliSlot.domId === 'wp-slot')
+              .map(slot => slot.adSlot)
+          )
         );
       });
+    });
 
-      describe('skin adReload', () => {
-        let refreshAdSlotSpy: Sinon.SinonSpy;
+    describe('adReload', () => {
+      let refreshAdSlotSpy: Sinon.SinonSpy;
 
-        const slots: AdSlot[] = createAdSlots(['wp-slot', 'sky-slot']);
+      const slots: AdSlot[] = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
+      const slotDefinitions: MoliRuntime.SlotDefinition[] = slots.map(slot => ({
+        moliSlot: slot,
+        adSlot: {
+          getSlotElementId: () => slot.domId
+        } as googletag.IAdSlot,
+        filterSupportedSizes: () => []
+      }));
 
-        after(() => {
-          sandbox.restore();
+      const config: MoliConfig = {
+        slots: slots,
+        prebid: prebidConfig,
+        schain: dummySchainConfig
+      };
+
+      after(() => {
+        sandbox.restore();
+      });
+
+      beforeEach(() => {
+        initAdTag(jsDomWindow);
+        refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
+        sandbox.useFakeTimers();
+      });
+
+      afterEach(() => {
+        sandbox.reset();
+        sandbox.clock.restore();
+        sandbox.clock.reset();
+      });
+
+      it('should reload the skin if bidder is configured in adReload and is about to win the auction', () => {
+        const module = skinModule({
+          configs: [
+            {
+              formatFilter: [{ bidder: prebidjs.DSPX }],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
+              hideSkinAdSlot: false,
+              hideBlockedSlots: false,
+              enableCpmComparison: false,
+              destroySkinSlot: true,
+              adReload: { allowed: [prebidjs.DSPX], intervalMs: 30000 }
+            }
+          ]
         });
 
-        beforeEach(() => {
-          initAdTag(jsDomWindow);
-          refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
-          sandbox.useFakeTimers();
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(
+          adPipelineContext(config),
+          {
+            'wp-slot': {
+              bids: [
+                genericBidResponse(prebidjs.DSPX, 1),
+                genericBidResponse(prebidjs.Seedtag, 0.5),
+                genericBidResponse(prebidjs.Criteo, 0.99)
+              ]
+            }
+          },
+          slotDefinitions
+        );
+
+        sandbox.clock.tick(31000);
+
+        expect(refreshAdSlotSpy).to.have.been.calledOnce;
+      });
+
+      it('should clear an "old" timeout before activating a new one', () => {
+        const module = skinModule({
+          configs: [
+            {
+              formatFilter: [{ bidder: prebidjs.DSPX }],
+              skinAdSlotDomId: 'wp-slot',
+              blockedAdSlotDomIds: ['sky-slot'],
+              hideSkinAdSlot: false,
+              hideBlockedSlots: false,
+              enableCpmComparison: false,
+              destroySkinSlot: true,
+              adReload: { allowed: [prebidjs.DSPX], intervalMs: 30000 }
+            }
+          ]
         });
 
-        afterEach(() => {
-          sandbox.reset();
-          sandbox.clock.restore();
-          sandbox.clock.reset();
-        });
+        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        expect(bidsBackHandler).to.be.ok;
+        bidsBackHandler(
+          adPipelineContext(config),
+          {
+            'wp-slot': {
+              bids: [genericBidResponse(prebidjs.DSPX, 1)]
+            }
+          },
+          slotDefinitions
+        );
 
-        it('should reload the skin if bidder is configured in adReload and is about to win the auction', () => {
-          const module = skinModule({
-            configs: [
-              {
-                formatFilter: [{ bidder: prebidjs.DSPX }],
-                skinAdSlotDomId: 'wp-slot',
-                blockedAdSlotDomIds: ['sky-slot'],
-                hideSkinAdSlot: false,
-                hideBlockedSlots: false,
-                enableCpmComparison: false,
-                destroySkinSlot: true,
-                adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
-              }
-            ]
-          });
+        // needed to make the test succeed if other tests have run before
+        sandbox.clock.reset();
 
-          const prebidConfig: headerbidding.PrebidConfig = {
-            config: pbjsTestConfig,
-            schain: { nodes: [] }
-          };
+        sandbox.clock.tick(10000);
 
-          const config: MoliConfig = {
-            slots: slots,
-            prebid: prebidConfig,
-            schain: dummySchainConfig
-          };
+        bidsBackHandler(
+          adPipelineContext(config),
+          {
+            'wp-slot': {
+              bids: [genericBidResponse(prebidjs.DSPX, 1)]
+            }
+          },
+          slotDefinitions
+        );
 
-          // Spy on setTimeout
-          const setTimeoutSpy = Sinon.spy(global, 'setTimeout');
+        sandbox.clock.tick(21000);
+        expect(refreshAdSlotSpy).to.have.not.been.called;
 
-          module.initSteps()[0](adPipelineContext(config));
-          pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
-          emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
-
-          expect(setTimeoutSpy).to.have.been.calledOnce;
-        });
-
-        it('should clear an "old" timeout before activating a new one', () => {
-          const module = skinModule({
-            configs: [
-              {
-                formatFilter: [{ bidder: prebidjs.DSPX }],
-                skinAdSlotDomId: 'wp-slot',
-                blockedAdSlotDomIds: ['sky-slot'],
-                hideSkinAdSlot: false,
-                hideBlockedSlots: false,
-                enableCpmComparison: false,
-                destroySkinSlot: true,
-                adReload: { allowed: [prebidjs.DSPX], intervalMs: 1000 }
-              }
-            ]
-          });
-
-          const prebidConfig: headerbidding.PrebidConfig = {
-            config: pbjsTestConfig,
-            schain: { nodes: [] }
-          };
-
-          const config: MoliConfig = {
-            slots: slots,
-            prebid: prebidConfig,
-            schain: dummySchainConfig
-          };
-
-          let activeTimeouts = 0;
-          // Stub setTimeout
-          const originalSetTimeout = global.setTimeout;
-          const originalClearTimeout = global.clearTimeout;
-
-          Sinon.stub(global, 'setTimeout').callsFake((handler, timeout) => {
-            activeTimeouts++;
-            const id = originalSetTimeout(handler, timeout);
-            return id;
-          });
-
-          Sinon.stub(global, 'clearTimeout').callsFake(id => {
-            activeTimeouts--;
-            originalClearTimeout(id);
-          });
-
-          module.initSteps()[0](adPipelineContext(config));
-          pubadsGetSlotsStub.returns([sidebarSlot, skinSlot]);
-          emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
-          emitAuctionEnd({ [skinDomId]: { bids: [dspxBidResponse(1)] } });
-
-          expect(activeTimeouts).to.equal(1);
-        });
+        sandbox.clock.tick(10000);
+        expect(refreshAdSlotSpy).to.have.been.calledOnce;
       });
     });
   });
 
   describe('filterHighestNonSkinBid', () => {
     it('should return an empty array if there are no bids', () => {
-      const nonSkinBids = filterHighestNonSkinBid(auctionObject({}), []);
+      const nonSkinBids = filterHighestNonSkinBid({}, []);
       expect(nonSkinBids).to.deep.equal([]);
     });
 
     it('should return an empty array if there are bids on an unblocked slot', () => {
       const nonSkinBids = filterHighestNonSkinBid(
-        auctionObject({
+        {
           'sky-slot': { bids: [genericBidResponse('openx', 1)] }
-        }),
+        },
         ['another-slot']
       );
       expect(nonSkinBids).to.deep.equal([]);
@@ -1082,11 +939,11 @@ describe('Skin Module', () => {
 
     it('should return a single bid if there is one', () => {
       const blockedSlotDomId = 'sky-slot';
-      const bidResponse = genericBidResponse('openx', 1, blockedSlotDomId);
+      const bidResponse = genericBidResponse('openx', 1);
       const nonSkinBids = filterHighestNonSkinBid(
-        auctionObject({
+        {
           [blockedSlotDomId]: { bids: [bidResponse] }
-        }),
+        },
         [blockedSlotDomId]
       );
       expect(nonSkinBids).to.have.length(1);
@@ -1095,28 +952,11 @@ describe('Skin Module', () => {
 
     it('should return the highest bid if there are multiple', () => {
       const blockedSlotDomId = 'sky-slot';
-      const bidResponse1 = genericBidResponse('openx', 1, blockedSlotDomId);
-      const bidResponse2 = genericBidResponse('openx', 2, blockedSlotDomId);
-      const nonSkinBids = filterHighestNonSkinBid(
-        auctionObject({
-          [blockedSlotDomId]: { bids: [bidResponse1, bidResponse2] }
-        }),
-        [blockedSlotDomId]
-      );
-      expect(nonSkinBids).to.have.length(1);
-      expect(nonSkinBids[0]).to.deep.equal(bidResponse2);
-    });
-
-    it('should return the highest bid if there are multiple bids and duplicated ad unit codes', () => {
-      const blockedSlotDomId = 'sky-slot';
-      const bidResponse1 = genericBidResponse('openx', 1, blockedSlotDomId);
-      const bidResponse2 = genericBidResponse('openx', 2, blockedSlotDomId);
+      const bidResponse1 = genericBidResponse('openx', 1);
+      const bidResponse2 = genericBidResponse('openx', 2);
       const nonSkinBids = filterHighestNonSkinBid(
         {
-          ...auctionObject({
-            [blockedSlotDomId]: { bids: [bidResponse1, bidResponse2] }
-          }),
-          adUnitCodes: [blockedSlotDomId, blockedSlotDomId]
+          [blockedSlotDomId]: { bids: [bidResponse1, bidResponse2] }
         },
         [blockedSlotDomId]
       );

@@ -2,7 +2,13 @@ import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
 import { IModule, ModuleMeta } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
-import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  PrepareRequestAdsStep,
+  RequestBidsStep
+} from '../ads/adPipeline';
 import {
   AdSlot,
   AdUnitPathVariables,
@@ -802,6 +808,18 @@ export namespace MoliRuntime {
     priceRule?: yield_optimization.PriceRule;
   }
 
+  /**
+   * ## Prebid BidsBackHandler
+   *
+   * This callback can be registered by modules to react on the prebid bids back event.
+   * It contains additional information from the ad pipeline run.
+   */
+  export type PrebidBidsBackHandler = (
+    context: AdPipelineContext,
+    bidResponses: prebidjs.IBidResponsesMap,
+    slotDefinitions: SlotDefinition<AdSlot>[]
+  ) => void;
+
   /** header bidding types */
   export namespace headerbidding {
     /**
@@ -937,6 +955,21 @@ export namespace MoliRuntime {
      *  Additional prepareRequestAdsSteps that should be executed in every AdPipeline run.
      */
     readonly prepareRequestAdsSteps: PrepareRequestAdsStep[];
+
+    /**
+     * Additional requestBidSteps that should be executed in every AdPipeline run.
+     */
+    readonly requestBidsSteps: RequestBidsStep[];
+
+    /**
+     * Synchronous callback immediately after bids have returned.
+     *
+     * Note: These callbacks should not perform any initialization code or only be created once
+     *       as this array will be accessed on every pbjs.requestBids() callback.
+     *
+     * @see IModule interface for more information
+     */
+    readonly prebidBidsBackHandler: PrebidBidsBackHandler[];
   }
 
   /**

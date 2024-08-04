@@ -496,6 +496,11 @@ export const prebidRequestBids = (
             adserverRequestSent = true;
 
             if (adServer === 'gam') {
+              // execute synchronous handlers before proceeding
+              context.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.forEach(handler =>
+                handler(context, bidResponses, slots)
+              );
+
               // set key-values for DFP to target the correct line items
               context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
             }
@@ -514,6 +519,9 @@ export const prebidRequestBids = (
         context.window.pbjs.que.push(() => {
           context.window.pbjs.requestBids({
             ...requestObject,
+            // we provide our own auctionId, so we can associate events with ad pipeline runs
+            auctionId: context.auctionId,
+            // buckets (group of ad units) may have a separate timeout override
             timeout: context.bucket?.timeout,
             bidsBackHandler: bidsBackHandler
           });
