@@ -5,7 +5,7 @@
 <meta name="generator" content="Docusaurus v3.4.0">
 <title data-rh="true">generic-skin | The Publisher Ad Tag</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="generic-skin | The Publisher Ad Tag"><meta data-rh="true" name="description" content="This module allows us to configure prebidResponse listener that when a just premium or dspx wallpaper has won the auction"><meta data-rh="true" property="og:description" content="This module allows us to configure prebidResponse listener that when a just premium or dspx wallpaper has won the auction"><link data-rh="true" rel="icon" href="/moli-ad-tag/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin" hreflang="en"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin" hreflang="x-default"><link rel="alternate" type="application/rss+xml" href="/moli-ad-tag/blog/rss.xml" title="The Publisher Ad Tag RSS Feed">
 <link rel="alternate" type="application/atom+xml" href="/moli-ad-tag/blog/atom.xml" title="The Publisher Ad Tag Atom Feed"><link rel="stylesheet" href="/moli-ad-tag/assets/css/styles.d64597c2.css">
-<script src="/moli-ad-tag/assets/js/runtime~main.df75aa3b.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/runtime~main.9a859d20.js" defer="defer"></script>
 <script src="/moli-ad-tag/assets/js/main.0592fbb3.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -103,71 +103,308 @@ Depending on the configuration the module may become active or inactive.</p>
 <p><code>ConfigureStep</code>[]</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-5">Implementation of<a class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of" href="/moli-ad-tag/docs/modules/generic-skin#implementation-of-5">​</a></h6>
 <p><code>IModule.configureSteps</code></p>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="destroyadslots">destroyAdSlots()<a class="hash-link" aria-label="Direct link to destroyAdSlots()" title="Direct link to destroyAdSlots()" href="/moli-ad-tag/docs/modules/generic-skin#destroyadslots">​</a></h5>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="destroyadslot">destroyAdSlot()<a class="hash-link" aria-label="Direct link to destroyAdSlot()" title="Direct link to destroyAdSlot()" href="/moli-ad-tag/docs/modules/generic-skin#destroyadslot">​</a></h5>
 <blockquote>
-<p><strong>destroyAdSlots</strong>(<code>slotDomIds</code>, <code>_window</code>): <code>void</code></p>
+<p><strong>destroyAdSlot</strong>(<code>slotDefinitions</code>, <code>gWindow</code>): (<code>adSlotDomId</code>) =&gt; <code>void</code></p>
 </blockquote>
 <p>Destroy the slot defined by the given DOM ID.</p>
 <p>NOTE: Accesses the global gpt.js tag (window.googletag).</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-1">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-1">​</a></h6>
-<p>• <strong>slotDomIds</strong>: <code>string</code>[]</p>
-<p>a list of slots to destroy</p>
-<p>• <strong>_window</strong>: <code>IGoogleTagWindow</code></p>
-<p>required to access googletag</p>
+<p>• <strong>slotDefinitions</strong>: <code>SlotDefinition</code>&lt;<code>AdSlot</code>&gt;[]</p>
+<p>all available slots</p>
+<p>• <strong>gWindow</strong>: <code>IGoogleTagWindow</code></p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-4">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-4">​</a></h6>
+<p><code>Function</code></p>
+<p>function that destroys a given adSlot by domId</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-2">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-2">​</a></h6>
+<p>• <strong>adSlotDomId</strong>: <code>string</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-5">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-5">​</a></h6>
 <p><code>void</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="getconfigeffect">getConfigEffect()<a class="hash-link" aria-label="Direct link to getConfigEffect()" title="Direct link to getConfigEffect()" href="/moli-ad-tag/docs/modules/generic-skin#getconfigeffect">​</a></h5>
 <blockquote>
-<p><strong>getConfigEffect</strong>(<code>config</code>, <code>auctionObject</code>, <code>logger</code>, <code>trackSkinCpmLow</code>): <a href="/moli-ad-tag/docs/modules/generic-skin#skinconfigeffect"><code>SkinConfigEffect</code></a></p>
+<p><strong>getConfigEffect</strong>(<code>config</code>, <code>bidResponses</code>, <code>trackSkinCpmLow</code>, <code>log</code>): <a href="/moli-ad-tag/docs/modules/generic-skin#skinconfigeffect"><code>SkinConfigEffect</code></a></p>
 </blockquote>
 <p>Check this skin config against the given bid responses to see if there are any skin bids inside, and if so (and
 if the respective check is enabled), compare the highest-bidding skin cpm to the combined cpm of the other bids
 to see if we&#x27;d be missing out on revenue if we applied the skin to the page.</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-2">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-2">​</a></h6>
-<p>• <strong>config</strong>: <code>SkinConfig</code></p>
-<p>• <strong>auctionObject</strong>: <code>AuctionObject</code></p>
-<p>• <strong>logger</strong>: <code>MoliLogger</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-3">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-3">​</a></h6>
+<p>• <strong>config</strong>: <a href="/moli-ad-tag/docs/modules/generic-skin#skinconfig"><code>SkinConfig</code></a></p>
+<p>• <strong>bidResponses</strong>: <code>IBidResponsesMap</code></p>
 <p>• <strong>trackSkinCpmLow</strong>: <code>undefined</code> | (<code>cpms</code>, <code>skinConfig</code>, <code>skinBid</code>) =&gt; <code>void</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-5">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-5">​</a></h6>
+<p>• <strong>log</strong>: <code>MoliLogger</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-6">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-6">​</a></h6>
 <p><a href="/moli-ad-tag/docs/modules/generic-skin#skinconfigeffect"><code>SkinConfigEffect</code></a></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="initsteps">initSteps()<a class="hash-link" aria-label="Direct link to initSteps()" title="Direct link to initSteps()" href="/moli-ad-tag/docs/modules/generic-skin#initsteps">​</a></h5>
 <blockquote>
 <p><strong>initSteps</strong>(): <code>InitStep</code>[]</p>
 </blockquote>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-6">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-6">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-7">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-7">​</a></h6>
 <p><code>InitStep</code>[]</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-6">Implementation of<a class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of" href="/moli-ad-tag/docs/modules/generic-skin#implementation-of-6">​</a></h6>
 <p><code>IModule.initSteps</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="prebidbidsbackhandler">prebidBidsBackHandler()<a class="hash-link" aria-label="Direct link to prebidBidsBackHandler()" title="Direct link to prebidBidsBackHandler()" href="/moli-ad-tag/docs/modules/generic-skin#prebidbidsbackhandler">​</a></h5>
+<blockquote>
+<p><strong>prebidBidsBackHandler</strong>(): <code>PrebidBidsBackHandler</code>[]</p>
+</blockquote>
+<p>This method is called in the bidsBackHandler of prebid.</p>
+<p>A module may provide those callbacks if it needs to alter the requests send to the ad server.
+The <code>auctionEnd</code> event cannot be used for this, as there&#x27;s no guarantee the event handler
+will run before the <code>requestAds</code> step.</p>
+<p>Note: Amazon TAM (A9) also has a callback that could be used for similar things. Unfortunately
+does the callback not provide the necessary information to implement any meaningful
+business logic. Especially the <code>cpm</code> parameter and <code>bidder</code></p>
+<p>The callback receives additional information coming from the ad pipeline run.</p>
+<p>Note: These callbacks should not perform any initialization code or only be created once
+as this array will be accessed on every pbjs.requestBids() callback.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="use-cases">Use cases<a class="hash-link" aria-label="Direct link to Use cases" title="Direct link to Use cases" href="/moli-ad-tag/docs/modules/generic-skin#use-cases">​</a></h2>
+<p>The <code>generic-skin</code> module provides prebid bids back handlers to block certain ad units from
+being requested.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-8">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-8">​</a></h6>
+<p><code>PrebidBidsBackHandler</code>[]</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="see">See<a class="hash-link" aria-label="Direct link to See" title="Direct link to See" href="/moli-ad-tag/docs/modules/generic-skin#see">​</a></h6>
+<ul>
+<li><a href="https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html" target="_blank" rel="noopener noreferrer">https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html</a></li>
+<li><a href="https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids" target="_blank" rel="noopener noreferrer">https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids</a></li>
+</ul>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-7">Implementation of<a class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of" href="/moli-ad-tag/docs/modules/generic-skin#implementation-of-7">​</a></h6>
+<p><code>IModule.prebidBidsBackHandler</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="preparerequestadssteps">prepareRequestAdsSteps()<a class="hash-link" aria-label="Direct link to prepareRequestAdsSteps()" title="Direct link to prepareRequestAdsSteps()" href="/moli-ad-tag/docs/modules/generic-skin#preparerequestadssteps">​</a></h5>
 <blockquote>
 <p><strong>prepareRequestAdsSteps</strong>(): <code>PrepareRequestAdsStep</code>[]</p>
 </blockquote>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-7">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-7">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-9">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-9">​</a></h6>
 <p><code>PrepareRequestAdsStep</code>[]</p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-7">Implementation of<a class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of" href="/moli-ad-tag/docs/modules/generic-skin#implementation-of-7">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-8">Implementation of<a class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of" href="/moli-ad-tag/docs/modules/generic-skin#implementation-of-8">​</a></h6>
 <p><code>IModule.prepareRequestAdsSteps</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="runskinconfigs">runSkinConfigs()<a class="hash-link" aria-label="Direct link to runSkinConfigs()" title="Direct link to runSkinConfigs()" href="/moli-ad-tag/docs/modules/generic-skin#runskinconfigs">​</a></h5>
+<blockquote>
+<p><strong>runSkinConfigs</strong>(<code>skinModuleConfig</code>): (<code>ctx</code>, <code>bidResponses</code>, <code>slotDefinitions</code>) =&gt; <code>void</code></p>
+</blockquote>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-4">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-4">​</a></h6>
+<p>• <strong>skinModuleConfig</strong>: <code>SkinModuleConfig</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-10">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-10">​</a></h6>
+<p><code>Function</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-5">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-5">​</a></h6>
+<p>• <strong>ctx</strong>: <code>AdPipelineContext</code></p>
+<p>• <strong>bidResponses</strong>: <code>IBidResponsesMap</code></p>
+<p>• <strong>slotDefinitions</strong>: <code>SlotDefinition</code>&lt;<code>AdSlot</code>&gt;[]</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-11">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-11">​</a></h6>
+<p><code>void</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="selectconfig">selectConfig()<a class="hash-link" aria-label="Direct link to selectConfig()" title="Direct link to selectConfig()" href="/moli-ad-tag/docs/modules/generic-skin#selectconfig">​</a></h5>
 <blockquote>
-<p><strong>selectConfig</strong>(<code>moduleConfig</code>, <code>auctionObject</code>, <code>logger</code>): <code>undefined</code> | <code>object</code></p>
+<p><strong>selectConfig</strong>(<code>skinModuleConfig</code>, <code>bidResponses</code>, <code>log</code>): <code>undefined</code> | <code>object</code></p>
 </blockquote>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-3">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-3">​</a></h6>
-<p>• <strong>moduleConfig</strong>: <code>SkinModuleConfig</code></p>
-<p>• <strong>auctionObject</strong>: <code>AuctionObject</code></p>
-<p>• <strong>logger</strong>: <code>MoliLogger</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-8">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-8">​</a></h6>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-6">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-6">​</a></h6>
+<p>• <strong>skinModuleConfig</strong>: <code>SkinModuleConfig</code></p>
+<p>• <strong>bidResponses</strong>: <code>IBidResponsesMap</code></p>
+<p>• <strong>log</strong>: <code>MoliLogger</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-12">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-12">​</a></h6>
 <p><code>undefined</code> | <code>object</code></p>
 <p>the first skin config with matching filters. If no config matches, undefined is being returned</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="type-aliases">Type Aliases<a class="hash-link" aria-label="Direct link to Type Aliases" title="Direct link to Type Aliases" href="/moli-ad-tag/docs/modules/generic-skin#type-aliases">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="allformatfilter">AllFormatFilter<a class="hash-link" aria-label="Direct link to AllFormatFilter" title="Direct link to AllFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#allformatfilter">​</a></h3>
+<blockquote>
+<p><strong>AllFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<p>If this filter is added to the list of filters, then it will always apply.
+This filter is useful for &quot;orchestration ad units&quot; that don&#x27;t serve ads, but
+orchestrate a format. Examples are</p>
+<ul>
+<li><code>wallpaper_pixel</code></li>
+</ul>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <code>&quot;*&quot;</code></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="azerionformatfilter">AzerionFormatFilter<a class="hash-link" aria-label="Direct link to AzerionFormatFilter" title="Direct link to AzerionFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#azerionformatfilter">​</a></h3>
+<blockquote>
+<p><strong>AzerionFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<p>Azerion (fka Improve Digital) format filter</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-1">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-1">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder-1">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder-1">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <em>typeof</em> <code>prebidjs.ImproveDigital</code></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="dspxformatfilter">DSPXFormatFilter<a class="hash-link" aria-label="Direct link to DSPXFormatFilter" title="Direct link to DSPXFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#dspxformatfilter">​</a></h3>
+<blockquote>
+<p><strong>DSPXFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-2">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-2">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder-2">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder-2">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <em>typeof</em> <code>prebidjs.DSPX</code></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="formatfilter">FormatFilter<a class="hash-link" aria-label="Direct link to FormatFilter" title="Direct link to FormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#formatfilter">​</a></h3>
+<blockquote>
+<p><strong>FormatFilter</strong>: <a href="/moli-ad-tag/docs/modules/generic-skin#allformatfilter"><code>AllFormatFilter</code></a> | <a href="/moli-ad-tag/docs/modules/generic-skin#azerionformatfilter"><code>AzerionFormatFilter</code></a> | <a href="/moli-ad-tag/docs/modules/generic-skin#gumgumformatfilter"><code>GumGumFormatFilter</code></a> | <a href="/moli-ad-tag/docs/modules/generic-skin#dspxformatfilter"><code>DSPXFormatFilter</code></a> | <a href="/moli-ad-tag/docs/modules/generic-skin#visxformatfilter"><code>VisxFormatFilter</code></a> | <a href="/moli-ad-tag/docs/modules/generic-skin#yieldlabformatfilter"><code>YieldlabFormatFilter</code></a> | <a href="/moli-ad-tag/docs/modules/generic-skin#xandrformatfilter"><code>XandrFormatFilter</code></a></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="gumgumformatfilter">GumGumFormatFilter<a class="hash-link" aria-label="Direct link to GumGumFormatFilter" title="Direct link to GumGumFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#gumgumformatfilter">​</a></h3>
+<blockquote>
+<p><strong>GumGumFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-3">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-3">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="auid">auid?<a class="hash-link" aria-label="Direct link to auid?" title="Direct link to auid?" href="/moli-ad-tag/docs/modules/generic-skin#auid">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>auid</strong>: <code>number</code></p>
+</blockquote>
+<p>Stands for <em>ad id</em> and contains the format delivered.</p>
+<ul>
+<li><code>59</code> = in-screen cascade (former mobile skin)</li>
+<li><code>39</code> = in-screen expandable (mobile expandable)</li>
+</ul>
+<p>If not set, then the <code>auid</code> will not be considered for filtering.</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder-3">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder-3">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <em>typeof</em> <code>prebidjs.GumGum</code></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="skinconfig">SkinConfig<a class="hash-link" aria-label="Direct link to SkinConfig" title="Direct link to SkinConfig" href="/moli-ad-tag/docs/modules/generic-skin#skinconfig">​</a></h3>
+<blockquote>
+<p><strong>SkinConfig</strong>: <code>object</code></p>
+</blockquote>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-4">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-4">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="adreload">adReload?<a class="hash-link" aria-label="Direct link to adReload?" title="Direct link to adReload?" href="/moli-ad-tag/docs/modules/generic-skin#adreload">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>adReload</strong>: <code>object</code></p>
+</blockquote>
+<p>If set, the skin of the configured bidder reloads after the given interval (in ms).</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="adreloadallowed">adReload.allowed<a class="hash-link" aria-label="Direct link to adReload.allowed" title="Direct link to adReload.allowed" href="/moli-ad-tag/docs/modules/generic-skin#adreloadallowed">​</a></h5>
+<blockquote>
+<p><strong>allowed</strong>: <code>prebidjs.BidderCode</code>[]</p>
+</blockquote>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="adreloadintervalms">adReload.intervalMs<a class="hash-link" aria-label="Direct link to adReload.intervalMs" title="Direct link to adReload.intervalMs" href="/moli-ad-tag/docs/modules/generic-skin#adreloadintervalms">​</a></h5>
+<blockquote>
+<p><strong>intervalMs</strong>: <code>number</code></p>
+</blockquote>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="blockedadslotdomids">blockedAdSlotDomIds<a class="hash-link" aria-label="Direct link to blockedAdSlotDomIds" title="Direct link to blockedAdSlotDomIds" href="/moli-ad-tag/docs/modules/generic-skin#blockedadslotdomids">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>blockedAdSlotDomIds</strong>: <code>string</code>[]</p>
+</blockquote>
+<p>dom ids of the ad slots that should not be requested when a just premium
+skin appears in the bid responses.</p>
+<p>Depending on the wallpaperAdSlot these are usually skyscrapers left and right
+and if there&#x27;s a specific wallpaper ad slot the header as well.</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="destroyskinslot">destroySkinSlot?<a class="hash-link" aria-label="Direct link to destroySkinSlot?" title="Direct link to destroySkinSlot?" href="/moli-ad-tag/docs/modules/generic-skin#destroyskinslot">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>destroySkinSlot</strong>: <code>boolean</code></p>
+</blockquote>
+<p>If set to true the ad slot that would load the skin is being destroyed.
+This is useful only for ad slots that serve as a special &quot;skin ad slot&quot;
+and have otherwise no other function.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="default">Default<a class="hash-link" aria-label="Direct link to Default" title="Direct link to Default" href="/moli-ad-tag/docs/modules/generic-skin#default">​</a></h6>
+<div class="language-ts codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-ts codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token boolean" style="color:#36acaa">false</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="enablecpmcomparison">enableCpmComparison<a class="hash-link" aria-label="Direct link to enableCpmComparison" title="Direct link to enableCpmComparison" href="/moli-ad-tag/docs/modules/generic-skin#enablecpmcomparison">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>enableCpmComparison</strong>: <code>boolean</code></p>
+</blockquote>
+<p>If the skin cpm comparison should be active, i.e. not only logging, but also preventing a skin render
+if the other slots have a higher combined cpm.</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="formatfilter-1">formatFilter<a class="hash-link" aria-label="Direct link to formatFilter" title="Direct link to formatFilter" href="/moli-ad-tag/docs/modules/generic-skin#formatfilter-1">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>formatFilter</strong>: <a href="/moli-ad-tag/docs/modules/generic-skin#formatfilter"><code>FormatFilter</code></a>[]</p>
+</blockquote>
+<p>A list of filters. If one of the filter applies then this
+configuration will be executed.</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="hideblockedslots">hideBlockedSlots<a class="hash-link" aria-label="Direct link to hideBlockedSlots" title="Direct link to hideBlockedSlots" href="/moli-ad-tag/docs/modules/generic-skin#hideblockedslots">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>hideBlockedSlots</strong>: <code>boolean</code></p>
+</blockquote>
+<p>if true, the blocked ad slots will be set to display: none</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="hideblockedslotsselector">hideBlockedSlotsSelector?<a class="hash-link" aria-label="Direct link to hideBlockedSlotsSelector?" title="Direct link to hideBlockedSlotsSelector?" href="/moli-ad-tag/docs/modules/generic-skin#hideblockedslotsselector">​</a></h5>
+<blockquote>
+<p><code>optional</code> <strong>hideBlockedSlotsSelector</strong>: <code>string</code></p>
+</blockquote>
+<p>Selector for an (additional) ad slot container that should be set to display: none</p>
+<p>e.g. mobile-sticky ads have another container wrapped around the ad slot container itself which can be hidden like this:
+hideBlockedSlotsSelector: &#x27;[data-ref=&quot;sticky-ad&quot;]&#x27;</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="hideskinadslot">hideSkinAdSlot<a class="hash-link" aria-label="Direct link to hideSkinAdSlot" title="Direct link to hideSkinAdSlot" href="/moli-ad-tag/docs/modules/generic-skin#hideskinadslot">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>hideSkinAdSlot</strong>: <code>boolean</code></p>
+</blockquote>
+<p>if true, the ad slot will be set to display none</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="skinadslotdomid">skinAdSlotDomId<a class="hash-link" aria-label="Direct link to skinAdSlotDomId" title="Direct link to skinAdSlotDomId" href="/moli-ad-tag/docs/modules/generic-skin#skinadslotdomid">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>skinAdSlotDomId</strong>: <code>string</code></p>
+</blockquote>
+<p>This is usually the dom id of the header ad slot.</p>
+<p>Some setups may have an ad slot only for the just premium skin.
+This is the case if there are direct campaign formats for wallpapers
+that require a DFP road block.</p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="skinmoduleconfig">SkinModuleConfig<a class="hash-link" aria-label="Direct link to SkinModuleConfig" title="Direct link to SkinModuleConfig" href="/moli-ad-tag/docs/modules/generic-skin#skinmoduleconfig">​</a></h3>
+<blockquote>
+<p><strong>SkinModuleConfig</strong>: <code>object</code></p>
+</blockquote>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-5">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-5">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="configs">configs<a class="hash-link" aria-label="Direct link to configs" title="Direct link to configs" href="/moli-ad-tag/docs/modules/generic-skin#configs">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>configs</strong>: <a href="/moli-ad-tag/docs/modules/generic-skin#skinconfig"><code>SkinConfig</code></a>[]</p>
+</blockquote>
+<p>A list of configurations. The first configuration with matching
+format filters will be used.</p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="trackskincpmlow">trackSkinCpmLow()?<a class="hash-link" aria-label="Direct link to trackSkinCpmLow()?" title="Direct link to trackSkinCpmLow()?" href="/moli-ad-tag/docs/modules/generic-skin#trackskincpmlow">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <code>optional</code> <strong>trackSkinCpmLow</strong>: (<code>cpms</code>, <code>skinConfig</code>, <code>skinBid</code>) =&gt; <code>void</code></p>
+</blockquote>
+<p>Function to track when the skin cpm is lower than the combined cpm of the ad slots that
+would be removed in its favour.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-7">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-7">​</a></h6>
+<p>• <strong>cpms</strong></p>
+<p>• <strong>cpms.combinedNonSkinSlots</strong>: <code>number</code></p>
+<p>• <strong>cpms.skin</strong>: <code>number</code></p>
+<p>• <strong>skinConfig</strong>: <a href="/moli-ad-tag/docs/modules/generic-skin#skinconfig"><code>SkinConfig</code></a></p>
+<p>• <strong>skinBid</strong>: <code>prebidjs.IBidResponse</code></p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-13">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-13">​</a></h6>
+<p><code>void</code></p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="visxformatfilter">VisxFormatFilter<a class="hash-link" aria-label="Direct link to VisxFormatFilter" title="Direct link to VisxFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#visxformatfilter">​</a></h3>
+<blockquote>
+<p><strong>VisxFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-6">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-6">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder-4">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder-4">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <em>typeof</em> <code>prebidjs.Visx</code></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="xandrformatfilter">XandrFormatFilter<a class="hash-link" aria-label="Direct link to XandrFormatFilter" title="Direct link to XandrFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#xandrformatfilter">​</a></h3>
+<blockquote>
+<p><strong>XandrFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<p>Partners buying skin demand via the Xandr platform</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-7">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-7">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder-5">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder-5">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <em>typeof</em> <code>prebidjs.AppNexusAst</code> | <em>typeof</em> <code>prebidjs.AppNexus</code></p>
+</blockquote>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="yieldlabformatfilter">YieldlabFormatFilter<a class="hash-link" aria-label="Direct link to YieldlabFormatFilter" title="Direct link to YieldlabFormatFilter" href="/moli-ad-tag/docs/modules/generic-skin#yieldlabformatfilter">​</a></h3>
+<blockquote>
+<p><strong>YieldlabFormatFilter</strong>: <code>object</code></p>
+</blockquote>
+<p>Partners buying skin demand via the Yieldlab platform</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="type-declaration-8">Type declaration<a class="hash-link" aria-label="Direct link to Type declaration" title="Direct link to Type declaration" href="/moli-ad-tag/docs/modules/generic-skin#type-declaration-8">​</a></h4>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="bidder-6">bidder<a class="hash-link" aria-label="Direct link to bidder" title="Direct link to bidder" href="/moli-ad-tag/docs/modules/generic-skin#bidder-6">​</a></h5>
+<blockquote>
+<p><code>readonly</code> <strong>bidder</strong>: <em>typeof</em> <code>prebidjs.Yieldlab</code></p>
+</blockquote>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" href="/moli-ad-tag/docs/modules/generic-skin#functions">​</a></h2>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="filterhighestnonskinbid">filterHighestNonSkinBid()<a class="hash-link" aria-label="Direct link to filterHighestNonSkinBid()" title="Direct link to filterHighestNonSkinBid()" href="/moli-ad-tag/docs/modules/generic-skin#filterhighestnonskinbid">​</a></h3>
 <blockquote>
-<p><strong>filterHighestNonSkinBid</strong>(<code>auctionObject</code>, <code>blockedAdSlotDomIds</code>): <code>BidResponse</code>[]</p>
+<p><strong>filterHighestNonSkinBid</strong>(<code>bidResponses</code>, <code>blockedAdSlotDomIds</code>): <code>BidResponse</code>[]</p>
 </blockquote>
-<h4 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-4">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-4">​</a></h4>
-<p>• <strong>auctionObject</strong>: <code>AuctionObject</code></p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="parameters-8">Parameters<a class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters" href="/moli-ad-tag/docs/modules/generic-skin#parameters-8">​</a></h4>
+<p>• <strong>bidResponses</strong>: <code>IBidResponsesMap</code></p>
 <p>• <strong>blockedAdSlotDomIds</strong>: <code>string</code>[]</p>
-<h4 class="anchor anchorWithStickyNavbar_LWe7" id="returns-9">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-9">​</a></h4>
-<p><code>BidResponse</code>[]</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/highfivve/moli-ad-tag/docs/modules/generic-skin.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/moli-ad-tag/docs/modules/emetriq"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">emetriq</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/moli-ad-tag/docs/modules/identitylink"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">identitylink</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#integration">Integration</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skin-optimization">Skin optimization</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#enumerations">Enumerations</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skinconfigeffect">SkinConfigEffect</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#classes">Classes</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skin">Skin</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#functions">Functions</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#filterhighestnonskinbid">filterHighestNonSkinBid()</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/">Getting Started</a></li><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/api">API</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://stackoverflow.com/questions/tagged/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">Stack Overflow<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://twitter.com/gutefrageIT" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">Company</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://highfivve.com" target="_blank" rel="noopener noreferrer" class="footer__link-item">Highfivve</a></li><li class="footer__item"><a href="https://github.com/highfivve/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 Highfivve, Inc. Built with Docusaurus.</div></div></div></footer></div>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="returns-14">Returns<a class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns" href="/moli-ad-tag/docs/modules/generic-skin#returns-14">​</a></h4>
+<p><code>BidResponse</code>[]</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/highfivve/moli-ad-tag/docs/modules/generic-skin.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/moli-ad-tag/docs/modules/emetriq"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">emetriq</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/moli-ad-tag/docs/modules/identitylink"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">identitylink</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#integration">Integration</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skin-optimization">Skin optimization</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#enumerations">Enumerations</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skinconfigeffect">SkinConfigEffect</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#classes">Classes</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skin">Skin</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#use-cases">Use cases</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#type-aliases">Type Aliases</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#allformatfilter">AllFormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#azerionformatfilter">AzerionFormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#dspxformatfilter">DSPXFormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#formatfilter">FormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#gumgumformatfilter">GumGumFormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skinconfig">SkinConfig</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#skinmoduleconfig">SkinModuleConfig</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#visxformatfilter">VisxFormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#xandrformatfilter">XandrFormatFilter</a></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#yieldlabformatfilter">YieldlabFormatFilter</a></li></ul></li><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#functions">Functions</a><ul><li><a class="table-of-contents__link toc-highlight" href="/moli-ad-tag/docs/modules/generic-skin#filterhighestnonskinbid">filterHighestNonSkinBid()</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/">Getting Started</a></li><li class="footer__item"><a class="footer__link-item" href="/moli-ad-tag/docs/api">API</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://stackoverflow.com/questions/tagged/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">Stack Overflow<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://twitter.com/gutefrageIT" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">Company</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://highfivve.com" target="_blank" rel="noopener noreferrer" class="footer__link-item">Highfivve</a></li><li class="footer__item"><a href="https://github.com/highfivve/moli-ad-tag" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 Highfivve, Inc. Built with Docusaurus.</div></div></div></footer></div>
 </body>
 </html>
