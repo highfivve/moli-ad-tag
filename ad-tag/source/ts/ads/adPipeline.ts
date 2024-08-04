@@ -10,7 +10,7 @@ import { AdUnitPathVariables, generateAdUnitPathVariables } from './adUnitPath';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliConfig';
 import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoaderService';
-import { uuidV4 } from 'ad-tag/util/uuid';
+import { uuidV4 } from '../util/uuid';
 
 /**
  * Context passed to every pipeline step.
