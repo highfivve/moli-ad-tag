@@ -40,7 +40,8 @@ export const newEmptyRuntimeConfig = (): MoliRuntime.MoliRuntimeConfig => ({
     initSteps: [],
     configureSteps: [],
     prepareRequestAdsSteps: [],
-    requestBidsSteps: []
+    requestBidsSteps: [],
+    prebidBidsBackHandler: []
   },
   hooks: {
     beforeRequestAds: [],

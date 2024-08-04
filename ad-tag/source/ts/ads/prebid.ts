@@ -496,6 +496,11 @@ export const prebidRequestBids = (
             adserverRequestSent = true;
 
             if (adServer === 'gam') {
+              // execute synchronous handlers before proceeding
+              context.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.forEach(handler =>
+                handler(context, bidResponses, slots)
+              );
+
               // set key-values for DFP to target the correct line items
               context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
             }

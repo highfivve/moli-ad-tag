@@ -17,7 +17,10 @@ export const apstagStub: apstag.IApsTag = {
   init: (_config: apstag.IInitConfig): void => {
     return;
   },
-  fetchBids: (_config: apstag.IBidConfig, callback: (bids: Object[]) => void): void => {
+  fetchBids: (
+    _config: apstag.IBidConfig,
+    callback: (bids: apstag.IApsBidObject[]) => void
+  ): void => {
     callback([]);
   },
   setDisplayBids: () => {

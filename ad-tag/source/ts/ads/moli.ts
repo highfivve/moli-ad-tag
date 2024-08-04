@@ -285,6 +285,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 ...module.requestBidsSteps()
               );
             }
+            if (module.prebidBidsBackHandler) {
+              state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
+                ...module.prebidBidsBackHandler()
+              );
+            }
           } catch (e) {
             log.error(
               'MoliGlobal',
@@ -876,7 +881,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         initSteps: [],
         configureSteps: [],
         prepareRequestAdsSteps: [],
-        requestBidsSteps: []
+        requestBidsSteps: [],
+        prebidBidsBackHandler: []
       }
     };
   }

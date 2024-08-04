@@ -1,6 +1,57 @@
 import { SupplyChainObject } from './supplyChainObject';
 
 export namespace apstag {
+  export interface IApsBidObject {
+    /**
+     * The div ID of the slot that will render the creative
+     *
+     * bid types: Display/Video
+     */
+    readonly slotID: string;
+    /**
+     * An encoded bid value
+     *
+     * bid types: Display/Video
+     */
+    readonly amznbid: string;
+    /**
+     * A UUID associated with the bid
+     *
+     * bid types: Display/Video
+     */
+    readonly amzniid: string;
+    /**
+     * The size associated with the display bid
+     *
+     * bid types: Display
+     */
+    readonly amznsz: string;
+    /**
+     * Indicates the partner associated with the bid
+     *
+     * bid types: Display
+     */
+    readonly amznp: string;
+    /**
+     * Video Indicates the type of bid
+     *
+     * bid types: Video
+     */
+    readonly mediaType: string;
+    /**
+     * An ampersand separated string of targeting keys
+     *
+     * bid types: Video
+     */
+    readonly qsParams: string;
+    /**
+     * A URL encoded version of qsParams
+     *
+     * bid types: Video
+     */
+    readonly encodedQsParams: string;
+  }
+
   export interface IApsTag {
     /**
      * Command queue on the 'apstag' window object
@@ -25,7 +76,7 @@ export namespace apstag {
      *
      * NOTE: The slot IDs and sizes on your site may vary by page/template
      */
-    fetchBids(bidConfig: IBidConfig, callback: (bids: Object[]) => void): void;
+    fetchBids(bidConfig: IBidConfig, callback: (bids: IApsBidObject[]) => void): void;
 
     /**
      * If you have set googletag as the config.adServer in apstag.init(), this method will set the bid targeting on the
