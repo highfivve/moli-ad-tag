@@ -190,6 +190,7 @@ export class AdService {
     init.push(...runtimeConfig.adPipelineConfig.initSteps);
     configure.push(...runtimeConfig.adPipelineConfig.configureSteps);
     prepareRequestAds.push(...runtimeConfig.adPipelineConfig.prepareRequestAdsSteps);
+    requestBids.push(...runtimeConfig.adPipelineConfig.requestBidsSteps);
 
     // delay ad requests for debugging
     if (env === 'test') {
