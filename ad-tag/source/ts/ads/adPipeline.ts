@@ -327,10 +327,11 @@ export class AdPipeline {
     // increase the prebid request count
     this.requestId = this.requestId + 1;
     const currentRequestId = this.requestId;
+    const auctionId = uuidV4(this.window);
 
     this.logger.debug(
       'AdPipeline',
-      `starting run with requestId ${currentRequestId} on ${requestAdsCalls}. call`,
+      `starting run with requestId ${currentRequestId} on ${requestAdsCalls}. call. AuctionId ${auctionId}`,
       slots
     );
 
@@ -374,7 +375,7 @@ export class AdPipeline {
 
       // the context is based on the consent data
       const context: AdPipelineContext = {
-        auctionId: uuidV4(this.window),
+        auctionId: auctionId,
         requestId: currentRequestId,
         requestAdsCalls: requestAdsCalls,
         logger: this.logger,
