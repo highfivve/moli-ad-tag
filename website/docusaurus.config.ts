@@ -1,6 +1,8 @@
 import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
 
-module.exports = {
+const config: Config = {
   title: 'The Publisher Ad Tag',
   tagline: 'An open ad tag for publishers',
   url: 'https://highfivve.github.io',
@@ -11,11 +13,11 @@ module.exports = {
   organizationName: 'highfivve', // Usually your GitHub org/user name.
   projectName: 'the publisher ad tag', // Usually your repo name.
   themeConfig: {
-    colorMode: {
-      defaultMode: 'light',
-      disableSwitch: false,
-      respectPrefersColorScheme: true
-    },
+    // colorMode: {
+    //   defaultMode: 'light',
+    //   disableSwitch: false,
+    //   respectPrefersColorScheme: true
+    // },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula
@@ -95,25 +97,28 @@ module.exports = {
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Highfivve, Inc. Built with Docusaurus.`
     }
+  } satisfies Preset.ThemeConfig,
+
+  // Even if you don't use internationalization, you can use this field to set
+  // useful metadata like html lang. For example, if your site is Chinese, you
+  // may want to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en']
   },
   presets: [
     [
       '@docusaurus/preset-classic',
       {
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: require.resolve('./sidebars.ts'),
           // Please change this to your repo.
           editUrl: 'https://github.com/highfivve/moli-ad-tag'
         },
-        // blog: {
-        //   showReadingTime: true,
-        //   // Please change this to your repo.
-        //   editUrl: 'https://github.com/highfivve/moli-ad-tag'
-        // },
         theme: {
-          customCss: require.resolve('./src/css/custom.css')
+          customCss: './src/css/custom.css'
         }
-      }
+      } satisfies Preset.Options
     ]
   ],
   plugins: [
@@ -172,3 +177,5 @@ module.exports = {
     ]
   ]
 };
+
+export default config;

@@ -147,7 +147,7 @@ function Home() {
               ))}
             </div>
             <div className="row margin-top--lg">
-              <div class="col col--12 padding--md">
+              <div className="col col--12 padding--md">
                 <h1>Is this for me?</h1>
                 <p>
                   You are a <strong>publisher</strong> and want to take control of your
@@ -160,13 +160,13 @@ function Home() {
               </div>
             </div>
 
-            <div class="row">
+            <div className="row">
               <div className="col col--12">
                 <h1>What is supported?</h1>
               </div>
             </div>
 
-            <div class="row">
+            <div className="row">
               {demandSources.map((props, idx) => (
                 <DemandSource key={idx} {...props} />
               ))}
