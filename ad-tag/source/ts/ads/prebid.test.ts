@@ -321,7 +321,7 @@ describe('prebid', () => {
         expect(s2sConfig.extPrebid).to.be.undefined;
       });
 
-      it('should set prebid s2s config with h5v analytics if the extPrebid property does not exist', async () => {
+      it('should set prebid s2s config with h5v analytics if the extPrebid property does exist', async () => {
         jsDomWindow.moli = {
           configLabel: 'staging'
         } as MoliRuntime.MoliTag;
