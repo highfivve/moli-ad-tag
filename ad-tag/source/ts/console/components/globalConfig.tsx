@@ -210,6 +210,7 @@ export class GlobalConfig
     const { config, runtimeConfig, modules, labelConfigService } = this.props;
 
     const configLabel = window.moli.configLabel ?? 'not available';
+    const currentConfigVersion = window.moli.getConfig()?.version ?? 'not available';
     const isVersionOverridden =
       resolveOverrides(window, QueryParameters.moliVersion, BrowserStorageKeys.moliVersion).length >
       0;
@@ -249,12 +250,12 @@ export class GlobalConfig
                 <div className="MoliDebug-tagContainer">
                   <TagLabel>Config version</TagLabel>
                   <Tag variant={isVersionOverridden ? 'yellow' : 'blue'}>
-                    {config.version ?? 'not available'}
+                    {currentConfigVersion ?? 'not available'}
                   </Tag>
                   <input
                     type="text"
                     value={this.state.configVersion}
-                    placeholder={this.state.configVersion}
+                    placeholder={currentConfigVersion}
                     onChange={e => {
                       this.setState({ configVersion: e.currentTarget.value });
                     }}
