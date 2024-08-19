@@ -12,6 +12,31 @@ const config: Config = {
   favicon: 'img/favicon.ico',
   organizationName: 'highfivve', // Usually your GitHub org/user name.
   projectName: 'the publisher ad tag', // Usually your repo name.
+
+  // Even if you don't use internationalization, you can use this field to set
+  // useful metadata like html lang. For example, if your site is Chinese, you
+  // may want to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en']
+  },
+
+  presets: [
+    [
+      '@docusaurus/preset-classic',
+      {
+        docs: {
+          sidebarPath: require.resolve('./sidebars.ts'),
+          // Please change this to your repo.
+          editUrl: 'https://github.com/highfivve/moli-ad-tag'
+        },
+        theme: {
+          customCss: './src/css/custom.css'
+        }
+      } satisfies Preset.Options
+    ]
+  ],
+
   themeConfig: {
     // colorMode: {
     //   defaultMode: 'light',
@@ -44,7 +69,6 @@ const config: Config = {
           label: 'Modules',
           position: 'left'
         },
-        // { to: 'blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/highfivve/moli-ad-tag',
           label: 'GitHub',
@@ -99,28 +123,6 @@ const config: Config = {
     }
   } satisfies Preset.ThemeConfig,
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
-  i18n: {
-    defaultLocale: 'en',
-    locales: ['en']
-  },
-  presets: [
-    [
-      '@docusaurus/preset-classic',
-      {
-        docs: {
-          sidebarPath: require.resolve('./sidebars.ts'),
-          // Please change this to your repo.
-          editUrl: 'https://github.com/highfivve/moli-ad-tag'
-        },
-        theme: {
-          customCss: './src/css/custom.css'
-        }
-      } satisfies Preset.Options
-    ]
-  ],
   plugins: [
     // Typedoc configuration
     [
@@ -161,7 +163,7 @@ const config: Config = {
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad-v2/index.ts',
           '../ad-tag/source/ts/ads/modules/utiq/index.ts',
-          '../ad-tag/source/ts/ads/modules/sticky-header-ads/index.ts',
+          '../ad-tag/source/ts/ads/modules/sticky-header-ad/index.ts',
           '../ad-tag/source/ts/ads/modules/yield-optimization/index.ts',
           '../ad-tag/source/ts/ads/modules/zeotap/index.ts'
         ],
