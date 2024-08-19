@@ -1,6 +1,8 @@
 import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
 
-module.exports = {
+const config: Config = {
   title: 'The Publisher Ad Tag',
   tagline: 'An open ad tag for publishers',
   url: 'https://highfivve.github.io',
@@ -10,12 +12,37 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'highfivve', // Usually your GitHub org/user name.
   projectName: 'the publisher ad tag', // Usually your repo name.
+
+  // Even if you don't use internationalization, you can use this field to set
+  // useful metadata like html lang. For example, if your site is Chinese, you
+  // may want to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en']
+  },
+
+  presets: [
+    [
+      '@docusaurus/preset-classic',
+      {
+        docs: {
+          sidebarPath: require.resolve('./sidebars.ts'),
+          // Please change this to your repo.
+          editUrl: 'https://github.com/highfivve/moli-ad-tag'
+        },
+        theme: {
+          customCss: './src/css/custom.css'
+        }
+      } satisfies Preset.Options
+    ]
+  ],
+
   themeConfig: {
-    colorMode: {
-      defaultMode: 'light',
-      disableSwitch: false,
-      respectPrefersColorScheme: true
-    },
+    // colorMode: {
+    //   defaultMode: 'light',
+    //   disableSwitch: false,
+    //   respectPrefersColorScheme: true
+    // },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula
@@ -42,7 +69,6 @@ module.exports = {
           label: 'Modules',
           position: 'left'
         },
-        // { to: 'blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/highfivve/moli-ad-tag',
           label: 'GitHub',
@@ -95,27 +121,8 @@ module.exports = {
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Highfivve, Inc. Built with Docusaurus.`
     }
-  },
-  presets: [
-    [
-      '@docusaurus/preset-classic',
-      {
-        docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          editUrl: 'https://github.com/highfivve/moli-ad-tag'
-        },
-        // blog: {
-        //   showReadingTime: true,
-        //   // Please change this to your repo.
-        //   editUrl: 'https://github.com/highfivve/moli-ad-tag'
-        // },
-        theme: {
-          customCss: require.resolve('./src/css/custom.css')
-        }
-      }
-    ]
-  ],
+  } satisfies Preset.ThemeConfig,
+
   plugins: [
     // Typedoc configuration
     [
@@ -156,7 +163,7 @@ module.exports = {
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad-v2/index.ts',
           '../ad-tag/source/ts/ads/modules/utiq/index.ts',
-          '../ad-tag/source/ts/ads/modules/sticky-header-ads/index.ts',
+          '../ad-tag/source/ts/ads/modules/sticky-header-ad/index.ts',
           '../ad-tag/source/ts/ads/modules/yield-optimization/index.ts',
           '../ad-tag/source/ts/ads/modules/zeotap/index.ts'
         ],
@@ -172,3 +179,5 @@ module.exports = {
     ]
   ]
 };
+
+export default config;
