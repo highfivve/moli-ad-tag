@@ -140,7 +140,7 @@ const config: Config = {
         cleanOutputDir: true,
         disableSources: true,
         excludeInternal: true,
-        outputFileStrategy: 'modules'
+        outputFileStrategy: 'members'
       }
     ],
     [
