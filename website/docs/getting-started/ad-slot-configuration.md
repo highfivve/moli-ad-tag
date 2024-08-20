@@ -124,7 +124,7 @@ refresh.
 
 #### Usage
 
-The [`EventTrigger`](../api/types/moliConfig/namespaces/behaviour.md#eventtrigger) configures when the ad slot should be loaded.
+The [`EventTrigger`](../api/types/moliConfig/namespaces/behaviour/interfaces/EventTrigger.md) configures when the ad slot should be loaded.
 
 ```js
 behaviour: {
@@ -192,7 +192,7 @@ behaviour: {
 
 ## Size Config
 
-The `sizeConfig` property configures _what_ sizes the ad tag requests It is an array of [SizeConfig entries](../api/types/moliConfig/namespaces/sizeConfigs.md#sizeconfig-entry).
+The `sizeConfig` property configures _what_ sizes the ad tag requests It is an array of [SizeConfig entries](../api/types/moliConfig/namespaces/sizeConfigs/interfaces/SizeConfigEntry.md).
 The spec is almost identical to the [prebid sizeConfig](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#sizeConfig-How-it-Works).
 
 This is what a simple configuration might look like
