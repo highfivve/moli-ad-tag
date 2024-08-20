@@ -657,7 +657,9 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       // until the next requestAds() call arrives
       case 'spa-finished':
         // user hasn't navigated yet so we directly refresh the slot
-        if (state.href === window.location.href) {
+        const validateLocation = state.config.spa?.validateLocation ?? 'href';
+        console.log('boyaaa');
+        if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
           state = {
             ...state,
             config: addNewInfiniteSlotToConfig(
