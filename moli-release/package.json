@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/moli-release",
-  "version": "4.22.11",
+  "version": "4.22.12",
   "license": "Apache-2.0",
   "description": "Moli release tools",
   "bin": {
