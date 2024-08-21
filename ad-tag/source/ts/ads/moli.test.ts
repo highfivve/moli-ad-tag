@@ -326,6 +326,30 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('finished');
       expect(refreshSpy).to.have.not.been.called;
     });
+
+    describe('single page application', () => {
+      it('should check through allowRefreshAdSlot if refreshing is allowed', async () => {
+        const slots: Moli.AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } }
+        ];
+
+        const adTag = createMoliTag(jsDomWindow);
+        const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+        adTag.configure({
+          ...defaultConfig,
+          spa: { enabled: true, validateLocation: 'href' },
+          slots: slots
+        });
+        await adTag.requestAds();
+        await adTag.refreshBucket('one');
+
+        // refresh after requestAds has been called
+        expect(adTag.getState()).to.be.eq('spa-finished');
+        expect(allowRefreshAdSlotSpy).to.have.been.called;
+      });
+    });
   });
 
   describe('refreshAds()', () => {
@@ -1447,7 +1471,7 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
 
-        await adTag.configure({
+        adTag.configure({
           ...defaultConfig,
           spa: { enabled: true, validateLocation: 'href' },
           slots: slots
