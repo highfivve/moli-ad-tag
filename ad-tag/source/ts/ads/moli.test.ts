@@ -70,11 +70,11 @@ describe('moli', () => {
 
   after(() => {
     // bring everything back to normal after tests
-    sandbox.restore();
+    sandbox.reset();
   });
 
   afterEach(() => {
-    sandbox.reset();
+    sandbox.restore();
   });
 
   describe('init ad tag', () => {
@@ -223,6 +223,7 @@ describe('moli', () => {
     const initSpy = sandbox.spy(fakeModule, 'init');
 
     it('should init modules in the requestAds call', async () => {
+      const initSpy = sandbox.spy(fakeModule, 'init');
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
 
@@ -270,6 +271,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
       const logger = config.logger!;
+      const initSpy = sandbox.spy(fakeModule, 'init');
 
       const errorLogSpy = sandbox.spy(logger, 'error');
 
@@ -335,7 +337,6 @@ describe('moli', () => {
 
         const adTag = createMoliTag(jsDomWindow);
         const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
-        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
         adTag.configure({
           ...defaultConfig,
