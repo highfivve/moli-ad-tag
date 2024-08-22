@@ -1,8 +1,10 @@
 import * as Sinon from 'sinon';
+import { expect, use } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
 import { Cleanup } from './index';
-import { expect } from 'chai';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createMoliTag } from 'ad-tag/ads/moli';
 import { AdSlot, modules, MoliConfig } from 'ad-tag/types/moliConfig';
@@ -11,6 +13,10 @@ import IAdSlot = googletag.IAdSlot;
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+
+// setup sinon-chai
+use(sinonChai);
+use(chaiAsPromised);
 
 describe('Cleanup Module', () => {
   let sandbox = Sinon.createSandbox();
@@ -26,6 +32,12 @@ describe('Cleanup Module', () => {
   const specialFormatClass1 = 'seedtag-container1';
   const specialFormatClass2 = 'seedtag-container2';
   const specialFormatClass3 = 'other-container';
+
+  const createAndConfigureModule = (cleanup: modules.cleanup.CleanupModuleConfig): Cleanup => {
+    const module = new Cleanup();
+    module.configure({ cleanup });
+    return module;
+  };
 
   beforeEach(() => {
     sandbox = Sinon.createSandbox();
@@ -136,10 +148,9 @@ describe('Cleanup Module', () => {
     expect(configureSteps.length).to.equal(0);
     expect(prepareRequestAdsSteps.length).to.equal(0);
   });
-  it('should add a configure and prepare request ads pipeline step', () => {
-    const module = new Cleanup();
 
-    module.configure({ cleanup: { enabled: true, configs: [] } });
+  it('should add a configure and prepare request ads pipeline step', () => {
+    const module = createAndConfigureModule({ enabled: true, configs: [] });
 
     const configureSteps = module.configureSteps();
     const prepareRequestAdsSteps = module.prepareRequestAdsSteps();
@@ -148,10 +159,29 @@ describe('Cleanup Module', () => {
     expect(prepareRequestAdsSteps.length).to.equal(1);
   });
 
+  it('should not call cleanup if environment is test', async () => {
+    const module = createAndConfigureModule({ enabled: true, configs: [] });
+    const cleanupSpy = sandbox.spy(module, 'cleanUp');
+
+    const configure = module.configureSteps()[0];
+    await configure(
+      { ...adPipelineContext(), runtimeConfig: { ...emptyRuntimeConfig, environment: 'test' } },
+      []
+    );
+    expect(cleanupSpy).to.have.not.been.called;
+
+    const prepareRequestAds = module.prepareRequestAdsSteps()[0];
+    expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
+
+    await prepareRequestAds(
+      { ...adPipelineContext(), runtimeConfig: { ...emptyRuntimeConfig, environment: 'test' } },
+      []
+    );
+    expect(cleanupSpy).to.not.have.been.called;
+  });
+
   it('should remove all elements with the configured CSS selectors from the dom or execute the configured JS in the configure step', async () => {
-    const module = new Cleanup();
-    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
-    const cleanupConfig: modules.cleanup.CleanupModuleConfig = {
+    const module = createAndConfigureModule({
       enabled: true,
       configs: [
         {
@@ -176,13 +206,11 @@ describe('Cleanup Module', () => {
           }
         }
       ]
-    };
+    });
+    const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
-    module.configure({ cleanup: cleanupConfig });
     const configure = module.configureSteps()[0];
-
-    expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
     await configure({ ...adPipelineContext() }, slots);
 
     const specialFormatElementsInDom = [
@@ -193,9 +221,9 @@ describe('Cleanup Module', () => {
     expect(specialFormatElementsInDom).to.have.length(0);
     expect(consoleLogSpy.calledWith(`JS for slot ${domId3} is being executed`)).to.be.true;
   });
+
   it('should remove the configured element only if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
-    const module = new Cleanup();
-    const cleanupConfig: modules.cleanup.CleanupModuleConfig = {
+    const module = createAndConfigureModule({
       enabled: true,
       configs: [
         {
@@ -213,9 +241,8 @@ describe('Cleanup Module', () => {
           }
         }
       ]
-    };
+    });
 
-    module.configure({ cleanup: cleanupConfig });
     const prepareRequestAds = module.prepareRequestAdsSteps()[0];
 
     expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
@@ -232,9 +259,7 @@ describe('Cleanup Module', () => {
     expect(specialFormatElementsSeedtagInDom[0].classList.contains(specialFormatClass2)).to.be.true;
   });
   it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {
-    const module = new Cleanup();
-    const slots = createAdSlots(jsDomWindow, [domId1]);
-    const cleanupConfig: modules.cleanup.CleanupModuleConfig = {
+    const module = createAndConfigureModule({
       enabled: true,
       configs: [
         {
@@ -248,10 +273,9 @@ describe('Cleanup Module', () => {
           }
         }
       ]
-    };
+    });
+    const slots = createAdSlots(jsDomWindow, [domId1]);
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
-
-    module.configure({ cleanup: cleanupConfig });
 
     const configure = module.configureSteps()[0];
 

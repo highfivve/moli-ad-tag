@@ -87,6 +87,9 @@ export class Cleanup implements IModule {
           mkConfigureStepOncePerRequestAdsCycle(
             'destroy-out-of-page-ad-format',
             (context: AdPipelineContext) => {
+              if (context.runtimeConfig.environment === 'test') {
+                return Promise.resolve();
+              }
               this.cleanUp(context, config.configs);
               return Promise.resolve();
             }
@@ -100,6 +103,9 @@ export class Cleanup implements IModule {
     return config
       ? [
           mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
+            if (context.runtimeConfig.environment === 'test') {
+              return Promise.resolve();
+            }
             const configsOfDomIdsThatNeedToBeCleaned = config.configs
               .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
               .filter(config => this.hasBidderWonLastAuction(context, config));
@@ -112,7 +118,10 @@ export class Cleanup implements IModule {
       : [];
   }
 
-  private cleanUp = (context: AdPipelineContext, configs: modules.cleanup.CleanupConfig[]) => {
+  /**
+   * Public for testing and spying purposes
+   */
+  cleanUp = (context: AdPipelineContext, configs: modules.cleanup.CleanupConfig[]) => {
     configs.forEach(config => {
       if ('cssSelectors' in config.deleteMethod) {
         config.deleteMethod.cssSelectors.forEach((selector: string) => {
