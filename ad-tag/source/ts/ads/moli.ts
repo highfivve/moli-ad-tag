@@ -573,7 +573,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             .then(() => {
               // check if we are still on the same page and in the spa-requestAds state
               // if not the user has already navigated to another page, and we discard everything here
-              if (state.state === 'spa-requestAds' && state.href === window.location.href) {
+              const validateLocation = config.spa?.validateLocation ?? 'href';
+              if (
+                state.state === 'spa-requestAds' &&
+                allowRefreshAdSlot(validateLocation, state.href, window.location)
+              ) {
                 adService.refreshAdSlots(state.refreshSlots, state.config);
                 afterRequestAds.forEach(hook => hook('spa-finished'));
                 const finishedState: ISinglePageApp = {
