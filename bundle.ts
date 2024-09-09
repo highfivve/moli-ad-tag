@@ -162,7 +162,8 @@ try {
     platform: 'browser',
     banner: {
       js: `/* ad tag library ${packageJson.version} by highfivve.com */`
-    }
+    },
+    keepNames: true
   });
 } finally {
   // cleanup
