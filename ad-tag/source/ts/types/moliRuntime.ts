@@ -985,8 +985,12 @@ export namespace MoliRuntime {
   export namespace yield_optimization {
     export interface PriceRule {
       /**
-       * Unique identifier for a pricing rule. This is will be sent as a key_value `upr_id` per ad unit
+       * Unique identifier for a pricing rule. This will be sent as a key_value `upr_id` per ad unit
        * and will trigger the matching unified pricing rule in Google Ad Manager.
+       *
+       * The `upr_id` can be a unique id that is associated with a specific cpm or the cpm itself in cents.
+       * The cpm in cents is used when "previous bid cpms" is enabled in the global auction context.
+       * The cpm is then calculated based on previous bids on the position. In order to avoid a mapping of the calculated cpm and the corresponding unique id, the calculated cpm in cents is directly set as `upr_id`.
        */
       readonly priceRuleId: number;
 
