@@ -45,11 +45,11 @@ export const calculateDynamicFloorPrice = (
 };
 
 export const calculateDynamicPriceRule = (
-  strategy: 'max' | 'min' | 'second-highest',
+  strategy: 'max' | 'min' | 'second-highest' | undefined,
   previousCpms: number[] | undefined,
   standardRule: PriceRule
 ): PriceRule => {
-  if (previousCpms) {
+  if (previousCpms && strategy) {
     const calculatedFloorPrice = calculateDynamicFloorPrice(strategy, previousCpms);
     return {
       ...standardRule,

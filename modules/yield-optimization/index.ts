@@ -228,7 +228,7 @@ export class YieldOptimization implements IModule {
         const adServer = context.config.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
-            .setTargeting(slot.adSlot, adServer, context.auction)
+            .setTargeting(slot.adSlot, adServer, context.auction, this.yieldModuleConfig)
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)

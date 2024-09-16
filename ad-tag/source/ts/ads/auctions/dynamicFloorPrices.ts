@@ -1,5 +1,3 @@
-import { Moli } from '../../types/moli';
-import auction = Moli.auction;
 import { prebidjs } from '../../types/prebidjs';
 import BidResponse = prebidjs.event.BidResponse;
 
@@ -12,10 +10,7 @@ export class DynamicFloorPrices {
    */
   private lastBidCpms: Map<string, number[]> = new Map();
 
-  constructor(
-    private readonly config: auction.DynamicFloorPricesConfig,
-    private readonly _window: Window
-  ) {}
+  constructor() {}
 
   /**
    * Processes a list of bid responses and groups them by their adUnitCode.
