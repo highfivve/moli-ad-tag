@@ -65,7 +65,7 @@ const command = program
   .option(
     '-f, --format <format>',
     'the format of the output file. Will be passed to esbuild to override the default (esm). Allowed values are esm, iife, cjs',
-    'esm'
+    'iife'
   )
   .option(
     '-m, --modules [modules...]',

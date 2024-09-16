@@ -31,6 +31,7 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
+import * as spaModule from 'ad-tag/ads/spa';
 
 // setup sinon-chai
 use(sinonChai);
@@ -1344,10 +1345,7 @@ describe('moli', () => {
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'infinite', selector: '.ad-infinite' } }
       ];
 
-      adTag.configure({
-        ...defaultConfig,
-        slots: slots
-      });
+      await adTag.configure({ ...defaultConfig, slots: slots });
 
       await adTag.requestAds();
       await adTag.refreshInfiniteAdSlot('infinite-adslot-1', 'dom-id-2');
@@ -1372,10 +1370,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      adTag.configure({
-        ...defaultConfig,
-        slots: slots
-      });
+      await adTag.configure({ ...defaultConfig, slots: slots });
 
       // Add div with domIdOfNewInfiniteSlot to DOM
       const div = jsDomWindow.document.createElement('div');
@@ -1407,20 +1402,52 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      adTag.configure({
-        ...defaultConfig,
-        slots: slots
-      });
+      await adTag.configure({ ...defaultConfig, slots: slots });
 
       // Add div with domIdOfNewInfiniteSlot to DOM
       const div = jsDomWindow.document.createElement('div');
       div.setAttribute('id', domIdOfNewInfiniteSlot);
       jsDomWindow.document.body.append(div);
 
-      await adTag.refreshInfiniteAdSlot(domIdOfNewInfiniteSlot, idNotInTheConfig);
+      const response = await adTag.refreshInfiniteAdSlot(domIdOfNewInfiniteSlot, idNotInTheConfig);
       await adTag.requestAds();
 
+      expect(response).to.be.eq('queued');
+
       expect(refreshSpy).to.have.not.been.called;
+    });
+
+    describe('single page application', () => {
+      it('should check through allowRefreshAdSlot if refreshing is allowed', async () => {
+        const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
+        const idOfConfiguredInfiniteSlot = 'my-id';
+
+        const slots: AdSlot[] = [
+          {
+            ...mkAdSlotInDOM(),
+            behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
+            domId: idOfConfiguredInfiniteSlot
+          }
+        ];
+
+        const adTag = createMoliTag(jsDomWindow);
+        const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+
+        await adTag.configure({
+          ...defaultConfig,
+          spa: { enabled: true, validateLocation: 'href' },
+          slots: slots
+        });
+
+        await adTag.requestAds();
+        const response = await adTag.refreshInfiniteAdSlot(
+          domIdOfNewInfiniteSlot,
+          idOfConfiguredInfiniteSlot
+        );
+
+        expect(response).to.be.eq('refreshed');
+        expect(allowRefreshAdSlotSpy).to.have.been.called;
+      });
     });
   });
 

@@ -1103,11 +1103,14 @@ export namespace prebidjs {
     }
 
     /**
+     * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
+     * unintended behaviour, because prebid filters out unconfigured modules.
+     *
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiq.html
      * @see https://docs.utiq.com/docs/programmatic-integration
      */
     export interface IUtiqIdProvider
-      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiq'> {}
+      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiqId'> {}
     /**
      * MTP stands for MarTechPass.
      *
