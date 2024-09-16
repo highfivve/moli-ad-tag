@@ -250,7 +250,7 @@ export class GlobalConfig
                 <div className="MoliDebug-tagContainer">
                   <TagLabel>Config version</TagLabel>
                   <Tag variant={isVersionOverridden ? 'yellow' : 'blue'}>
-                    {currentConfigVersion ?? 'not available'}
+                    {currentConfigVersion}
                   </Tag>
                   <input
                     type="text"
