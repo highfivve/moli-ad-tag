@@ -4,6 +4,7 @@ import { googletag } from '../types/googletag';
 import { BiddersDisabling } from './auctions/biddersDisabling';
 import { AdRequestThrottling } from './auctions/adRequestThrottling';
 import { FrequencyCapping } from './auctions/frequencyCapping';
+import { DynamicFloorPrices } from './auctions/dynamicFloorPrices';
 
 /**
  * ## Global Auction Context
@@ -24,6 +25,7 @@ export class GlobalAuctionContext {
   readonly biddersDisabling?: BiddersDisabling;
   readonly adRequestThrottling?: AdRequestThrottling;
   readonly frequencyCapping?: FrequencyCapping;
+  readonly dynamicFloorPrices?: DynamicFloorPrices;
 
   constructor(
     private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
@@ -39,6 +41,10 @@ export class GlobalAuctionContext {
 
     if (config.frequencyCap?.enabled) {
       this.frequencyCapping = new FrequencyCapping(config.frequencyCap, this.window);
+    }
+
+    if (config.dynamicFloorPrices?.enabled) {
+      this.dynamicFloorPrices = new DynamicFloorPrices(config.dynamicFloorPrices, this.window);
     }
 
     // FIXME we need to make sure that pbjs.que and googletag.que are initialized globally in moli ad tag, so we don't
@@ -73,6 +79,17 @@ export class GlobalAuctionContext {
         });
       });
     }
+
+    if (this.config.dynamicFloorPrices?.enabled) {
+      this.window.pbjs.que.push(() => {
+        this.window.pbjs.onEvent('auctionEnd', auction => {
+          console.log('auction', auction);
+          if (auction.bidsReceived) {
+            this.dynamicFloorPrices?.onAuctionEnd(auction.bidsReceived);
+          }
+        });
+      });
+    }
   }
 
   isSlotThrottled(slotId: string): boolean {
@@ -81,6 +98,10 @@ export class GlobalAuctionContext {
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
     return this.frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
+  }
+
+  getLastBidCpmsOfAdUnit(adUnitCode: string): number[] {
+    return this.dynamicFloorPrices?.getLastBidCpms(adUnitCode) ?? [];
   }
 
   private handleAuctionEndEvent(auction: any) {

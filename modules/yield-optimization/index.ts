@@ -119,6 +119,11 @@ export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
    * AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.
    */
   readonly excludedAdUnitPaths: string[];
+
+  /**
+   * Stategy how to determine a dynamic floor price based on previous bids/cpms.
+   */
+  readonly dynamicFloorStrategy?: DynamicFloorPriceStrategy;
 };
 
 export type PriceRules = {
@@ -127,6 +132,8 @@ export type PriceRules = {
    */
   readonly [adUnitPath: string]: Moli.yield_optimization.PriceRule;
 };
+
+export type DynamicFloorPriceStrategy = 'max' | 'min' | 'second-highest';
 
 /**
  * Response from the yield optimization server
@@ -221,7 +228,7 @@ export class YieldOptimization implements IModule {
         const adServer = context.config.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
-            .setTargeting(slot.adSlot, adServer)
+            .setTargeting(slot.adSlot, adServer, context.auction)
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)

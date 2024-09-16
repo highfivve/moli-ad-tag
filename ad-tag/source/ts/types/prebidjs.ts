@@ -1358,7 +1358,7 @@ export namespace prebidjs {
       readonly auctionId?: string;
       readonly auctionStatus?: 'inProgress' | 'completed';
       readonly bidderRequests?: BidderRequest[];
-      readonly bidsReceived?: BidObject[];
+      readonly bidsReceived?: BidResponse[];
       readonly bidsRejected?: BidObject[];
       /**
        * different functions to manage metrics

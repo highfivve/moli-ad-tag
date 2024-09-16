@@ -19,6 +19,32 @@ const teadsVerticalBid = (
   };
 };
 
+const seedtagBid = (
+  publisherId: string,
+  adUnitId: string,
+  placement: 'inScreen' | 'inArticle' | 'inBanner',
+  labelAll: any[]
+): prebidjs.ISeedtagBid => ({
+  bidder: prebidjs.Seedtag,
+  params: {
+    publisherId,
+    adUnitId,
+    placement
+  },
+  labelAll: [...labelAll, prebidjs.Seedtag]
+});
+
+const teadsBid = (pageId: number, placementId: number, labelAll: any[]): any => {
+  return {
+    bidder: prebidjs.Teads,
+    params: {
+      placementId: placementId,
+      pageId: pageId
+    },
+    labelAll: [prebidjs.Teads, ...labelAll]
+  };
+};
+
 const orbidderBid = (adUnitName: string, labelAll: any[]): prebidjs.IOrbidderBid => {
   return {
     bidder: 'orbidder',
@@ -82,6 +108,17 @@ const spotxBid = (channelId: string, slot: string): prebidjs.ISpotXBid => {
       }
     },
     labelAll: [prebidjs.Spotx]
+  };
+};
+
+export const yieldlabBid = (adslotId: string, labelAllAdditional: any): prebidjs.IYieldlabBid => {
+  return {
+    bidder: prebidjs.Yieldlab,
+    params: {
+      adslotId,
+      supplyId: '7103487'
+    },
+    labelAll: ['yieldlab', ...labelAllAdditional]
   };
 };
 
@@ -207,6 +244,408 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       }
     },
     {
+      domId: 'gf_content_1',
+      adUnitPath: '/33559401,22597236956/gutefrage/gf_content_1/{device}/{domain}',
+      position: 'in-page',
+      labelAny: ['mobile'],
+      sizes: [
+        [300, 600],
+        [320, 480],
+        [300, 250],
+        [320, 100],
+        [320, 50],
+        [300, 50],
+        [300, 300],
+        [372, 280],
+        [336, 280],
+        [320, 250],
+        [250, 250],
+        [316, 185],
+        [280, 180],
+        [300, 150],
+        [300, 100],
+        [300, 75],
+        [1, 1],
+        'fluid'
+      ],
+      sizeConfig: [
+        // based on named size config: contentMobile372
+        {
+          mediaQuery: '(min-width: 392px) and (max-width: 767px)',
+          sizesSupported: [[336, 280], [372, 280], 'fluid']
+        },
+        // based on named size config: contentMobile
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [
+            [1, 1],
+            [250, 250],
+            [280, 180],
+            [300, 100],
+            [300, 150],
+            [300, 250],
+            [300, 300],
+            [300, 50],
+            [300, 600],
+            [300, 75],
+            [316, 185],
+            [320, 100],
+            [320, 250],
+            [320, 480],
+            [320, 50],
+            'fluid'
+          ]
+        }
+      ],
+      behaviour: {
+        loaded: 'eager',
+        bucket: 'content'
+      },
+      gpt: {
+        // prevent collapsing this div because it hurts the CLS score
+        collapseEmptyDiv: false
+      },
+      a9: {
+        labelAll: ['a9']
+      },
+      prebid: [
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'gf_content_1'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [300, 600],
+                  [320, 480],
+                  [300, 250],
+                  [320, 100],
+                  [320, 50],
+                  [300, 50],
+                  [300, 300],
+                  [372, 280],
+                  [336, 280],
+                  [320, 250]
+                ]
+              }
+            },
+            bids: [pubmaticBid('2479272', ['mobile'])]
+          }
+        },
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'gf_content_1'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [300, 600],
+                  [320, 480],
+                  [300, 250],
+                  [320, 100],
+                  [320, 50],
+                  [300, 50],
+                  [300, 300],
+                  [372, 280],
+                  [336, 280],
+                  [320, 250],
+                  [250, 250],
+                  [316, 185],
+                  [280, 180],
+                  [300, 150],
+                  [300, 100],
+                  [300, 75],
+                  [1, 1]
+                ]
+              }
+            },
+            bids: [orbidderBid('gutefrage.content_1.mobile', ['mobile'])]
+          }
+        },
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'gf_content_1'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [300, 600],
+                  [320, 480],
+                  [300, 250],
+                  [320, 100],
+                  [320, 50],
+                  [300, 50],
+                  [300, 300],
+                  [372, 280],
+                  [336, 280],
+                  [320, 250],
+                  [250, 250],
+                  [316, 185],
+                  [280, 180],
+                  [300, 150],
+                  [300, 100],
+                  [300, 75],
+                  [1, 1]
+                ]
+              }
+            },
+            ortb2Imp: {
+              ext: {
+                prebid: {
+                  storedrequest: {
+                    id: '/33559401/gutefrage/gf_content_1/{device}/{domain}'
+                  }
+                }
+              }
+            },
+            bids: [
+              criteoBid('gutefrage.content_1.mobile', ['mobile']),
+              seedtagBid('6362-7352-01', '30233167', 'inBanner', ['gutefrage.net', 'mobile']),
+              seedtagBid('9939-9908-01', '30233349', 'inBanner', ['finanzfrage.net', 'mobile']),
+              seedtagBid('2345-0896-01', '30234050', 'inBanner', [
+                'gesundheitsfrage.net',
+                'mobile'
+              ]),
+              seedtagBid('2988-1608-01', '30235113', 'inBanner', ['reisefrage.net', 'mobile']),
+              seedtagBid('5098-9593-01', '30235155', 'inBanner', ['autofrage.net', 'mobile']),
+              seedtagBid('4102-1591-01', '30234568', 'inBanner', ['sportlerfrage.net', 'mobile']),
+              seedtagBid('1725-9562-01', '30235171', 'inBanner', ['computerfrage.net', 'mobile']),
+              seedtagBid('0014-9774-01', '30234175', 'inBanner', ['motorradfrage.net', 'mobile']),
+              teadsBid(121330, 131650, ['mobile', 'gutefrage.net']),
+              teadsBid(121413, 131743, ['mobile', 'finanzfrage.net']),
+              teadsBid(121396, 131726, ['mobile', 'gesundheitsfrage.net']),
+              teadsBid(121484, 131821, ['mobile', 'reisefrage.net']),
+              teadsBid(121496, 131833, ['mobile', 'autofrage.net']),
+              teadsBid(121466, 131803, ['mobile', 'sportlerfrage.net']),
+              teadsBid(121447, 131777, ['mobile', 'computerfrage.net']),
+              teadsBid(121428, 131758, ['mobile', 'motorradfrage.net'])
+            ]
+          }
+        }
+      ]
+    },
+    {
+      domId: 'gf_content_3',
+      adUnitPath: '/33559401,22597236956/gutefrage/gf_content_3/{device}/{domain}',
+      position: 'in-page',
+      labelAny: ['mobile', 'desktop'],
+      sizes: [
+        [320, 480],
+        [300, 250],
+        [320, 100],
+        [320, 50],
+        [300, 50],
+        [300, 300],
+        [372, 280],
+        [336, 280],
+        [320, 250],
+        [250, 250],
+        [316, 185],
+        [280, 180],
+        [300, 150],
+        [300, 100],
+        [300, 75],
+        [1, 1],
+        [800, 250],
+        [728, 90],
+        [580, 400],
+        [605, 165],
+        [536, 165]
+      ],
+      sizeConfig: [
+        // based on named size config: contentDesktop800
+        {
+          mediaQuery: '(min-width: 836px)',
+          sizesSupported: [[800, 250], 'fluid']
+        },
+        // based on named size config: contentDesktop
+        {
+          mediaQuery: '(min-width: 768px)',
+          sizesSupported: [[536, 165], [580, 400], [605, 165], [728, 90], 'fluid']
+        },
+        // based on named size config: contentMobile372
+        {
+          mediaQuery: '(min-width: 392px) and (max-width: 767px)',
+          sizesSupported: [[336, 280], [372, 280], 'fluid']
+        },
+        // based on named size config: contentMobile
+        {
+          mediaQuery: '(max-width: 767px)',
+          sizesSupported: [
+            [1, 1],
+            [250, 250],
+            [280, 180],
+            [300, 100],
+            [300, 150],
+            [300, 250],
+            [300, 300],
+            [300, 50],
+            [300, 75],
+            [316, 185],
+            [320, 100],
+            [320, 250],
+            [320, 480],
+            [320, 50],
+            'fluid'
+          ]
+        }
+      ],
+      behaviour: {
+        loaded: 'eager',
+        bucket: 'content'
+      },
+      gpt: {
+        // prevent collapsing this div because it hurts the CLS score
+        collapseEmptyDiv: false
+      },
+      a9: {
+        labelAll: ['a9']
+      },
+      prebid: [
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'gf_content_3'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [320, 480],
+                  [800, 250],
+                  [300, 250],
+                  [320, 100],
+                  [728, 90],
+                  [320, 50],
+                  [300, 50],
+                  [580, 400],
+                  [300, 300],
+                  [372, 280]
+                ]
+              }
+            },
+            bids: [pubmaticBid('2479275', ['mobile']), pubmaticBid('2479276', ['desktop'])]
+          }
+        },
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'gf_content_3'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [320, 480],
+                  [300, 250],
+                  [320, 100],
+                  [320, 50],
+                  [300, 50],
+                  [300, 300],
+                  [372, 280],
+                  [336, 280],
+                  [320, 250],
+                  [250, 250],
+                  [316, 185],
+                  [280, 180],
+                  [300, 150],
+                  [300, 100],
+                  [300, 75],
+                  [1, 1],
+                  [800, 250],
+                  [728, 90],
+                  [580, 400],
+                  [605, 165],
+                  [536, 165]
+                ]
+              }
+            },
+            bids: [
+              orbidderBid('gutefrage.content_3.mobile', ['mobile']),
+              orbidderBid('gutefrage.content_3.desktop', ['desktop']),
+              yieldlabBid('9830412', ['mobile']),
+              yieldlabBid('9830413', ['desktop'])
+            ]
+          }
+        },
+        {
+          adUnit: {
+            pubstack: {
+              adUnitName: 'gf_content_3'
+            },
+            mediaTypes: {
+              banner: {
+                sizes: [
+                  [320, 480],
+                  [300, 250],
+                  [320, 100],
+                  [320, 50],
+                  [300, 50],
+                  [300, 300],
+                  [372, 280],
+                  [336, 280],
+                  [320, 250],
+                  [250, 250],
+                  [316, 185],
+                  [280, 180],
+                  [300, 150],
+                  [300, 100],
+                  [300, 75],
+                  [1, 1],
+                  [800, 250],
+                  [728, 90],
+                  [580, 400],
+                  [605, 165],
+                  [536, 165]
+                ]
+              }
+            },
+            ortb2Imp: {
+              ext: {
+                prebid: {
+                  storedrequest: {
+                    id: '/33559401/gutefrage/gf_content_3/{device}/{domain}'
+                  }
+                }
+              }
+            },
+            bids: [
+              criteoBid('gutefrage.content_3.mobile', ['mobile']),
+              criteoBid('gutefrage.content_3.desktop', ['desktop']),
+              seedtagBid('6362-7352-01', '30233174', 'inBanner', ['gutefrage.net', 'mobile']),
+              seedtagBid('9939-9908-01', '30233359', 'inBanner', ['finanzfrage.net', 'mobile']),
+              seedtagBid('2345-0896-01', '30234064', 'inBanner', [
+                'gesundheitsfrage.net',
+                'mobile'
+              ]),
+              seedtagBid('2988-1608-01', '30235115', 'inBanner', ['reisefrage.net', 'mobile']),
+              seedtagBid('5098-9593-01', '30235157', 'inBanner', ['autofrage.net', 'mobile']),
+              seedtagBid('4102-1591-01', '30234686', 'inBanner', ['sportlerfrage.net', 'mobile']),
+              seedtagBid('1725-9562-01', '30235173', 'inBanner', ['computerfrage.net', 'mobile']),
+              seedtagBid('0014-9774-01', '30234232', 'inBanner', ['motorradfrage.net', 'mobile']),
+              teadsBid(121330, 131650, ['mobile', 'gutefrage.net']),
+              teadsBid(121330, 131650, ['desktop', 'gutefrage.net']),
+              teadsBid(121413, 131743, ['mobile', 'finanzfrage.net']),
+              teadsBid(121413, 131743, ['desktop', 'finanzfrage.net']),
+              teadsBid(121396, 131726, ['mobile', 'gesundheitsfrage.net']),
+              teadsBid(121396, 131726, ['desktop', 'gesundheitsfrage.net']),
+              teadsBid(121484, 131821, ['mobile', 'reisefrage.net']),
+              teadsBid(121484, 131821, ['desktop', 'reisefrage.net']),
+              teadsBid(121496, 131833, ['mobile', 'autofrage.net']),
+              teadsBid(121496, 131833, ['desktop', 'autofrage.net']),
+              teadsBid(121466, 131803, ['mobile', 'sportlerfrage.net']),
+              teadsBid(121466, 131803, ['desktop', 'sportlerfrage.net']),
+              teadsBid(121447, 131777, ['mobile', 'computerfrage.net']),
+              teadsBid(121447, 131777, ['desktop', 'computerfrage.net']),
+              teadsBid(121428, 131758, ['mobile', 'motorradfrage.net']),
+              teadsBid(121428, 131758, ['desktop', 'motorradfrage.net'])
+            ]
+          }
+        }
+      ]
+    },
+    {
       domId: 'ad-content-1',
       position: 'in-page',
       labelAny: ['mobile', 'desktop'],
@@ -263,6 +702,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
+
     {
       domId: 'ad-mobile-sticky',
       adUnitPath: '/55155651/mobile-sticky/{device}-{domain}',
@@ -1090,6 +1530,9 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
           blockedForMs: 33000
         }
       ]
+    },
+    dynamicFloorPrices: {
+      enabled: true
     }
   }
 });
