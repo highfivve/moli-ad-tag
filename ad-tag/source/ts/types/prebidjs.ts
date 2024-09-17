@@ -1495,7 +1495,7 @@ export namespace prebidjs {
       readonly pbAg: string;
       /**
        * price bucket: 'dense granularity'
-       */ number;
+       */
       readonly pbDg: string;
       /**
        * price bucket: 'custom granularity'
