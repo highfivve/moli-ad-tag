@@ -25,6 +25,7 @@ const sidebars: SidebarsConfig = {
         'features/targeting',
         'features/labels',
         'features/buckets',
+        'features/single-page-app',
         'features/debugging',
         'features/logger',
         'features/environments',
