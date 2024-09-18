@@ -7,7 +7,7 @@
  *    1. The `bundle/init` module is always first and is added automatically
  *    2. The `bundle/configureFromEndpoint` module is always last
  * 3. Generates an entrypoint file that imports all the modules in the correct order
- * 4. Bundles the entrypoint file using rollup
+ * 4. Bundles the entrypoint file using esbuild
  */
 
 import fs from 'fs';
@@ -41,7 +41,9 @@ type OptionsValues = {
   readonly target: string[];
 
   /**
-   * the format of the output file. Will be passed to rollup to override the default
+   * the format of the output file. Will be passed to esbuild to override the default.
+   *
+   * NOTE: if you are using `esm` format, esbuild will create top level variables that pollute the global scope.
    */
   readonly format: 'esm' | 'iife' | 'cjs';
 };
@@ -82,12 +84,6 @@ const command = program
     ['es6']
   )
   .option('-o, --output <output>', 'the output file of the bundle', 'dist/bundle.js')
-  .option(
-    '--failAfterWarnings <value>',
-    'if set, rollup will fail if there are any warnings',
-    value => value === 'true',
-    true
-  )
   .parse(process.argv);
 
 // parse modules.json
