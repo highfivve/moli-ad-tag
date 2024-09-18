@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import { DynamicFloorPrices } from './dynamicFloorPrices';
+import { PreviousBidCpms } from './previousBidCpms';
 import { prebidjs } from '../../types/prebidjs';
 import BidResponse = prebidjs.event.BidResponse;
 
 describe('DynamicFloorPrices', () => {
-  let dynamicFloorPrices: DynamicFloorPrices;
+  let dynamicFloorPrices: PreviousBidCpms;
   const exampleResponse: BidResponse = {
     bidder: 'criteo',
     bidderCode: 'criteo',
@@ -61,7 +61,7 @@ describe('DynamicFloorPrices', () => {
   };
 
   beforeEach(() => {
-    dynamicFloorPrices = new DynamicFloorPrices();
+    dynamicFloorPrices = new PreviousBidCpms();
   });
 
   describe('groupReceivedBidsByAdUnitCode', () => {
@@ -105,7 +105,7 @@ describe('DynamicFloorPrices', () => {
     it('should handle empty bids received', () => {
       dynamicFloorPrices.onAuctionEnd([]);
 
-      expect(dynamicFloorPrices.getLastBidCpms('unit1')).to.be.null;
+      expect(dynamicFloorPrices.getLastBidCpms('content_1')).to.be.null;
     });
   });
 

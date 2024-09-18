@@ -1,7 +1,7 @@
 import { prebidjs } from '../../types/prebidjs';
 import BidResponse = prebidjs.event.BidResponse;
 
-export class DynamicFloorPrices {
+export class PreviousBidCpms {
   /**
    * Stores the information about previous bid cpms.
    *
@@ -29,7 +29,6 @@ export class DynamicFloorPrices {
 
   onAuctionEnd(bidsReceived: BidResponse[]) {
     const bidsOfLastAuction = this.groupReceivedBidsByAdUnitCode(bidsReceived);
-    console.log('bidsOfLastAuction', bidsOfLastAuction);
     Object.entries(bidsOfLastAuction).forEach(([adUnitCode, cpms]) => {
       this.lastBidCpms.set(adUnitCode, cpms);
     });

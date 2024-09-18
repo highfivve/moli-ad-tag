@@ -1353,7 +1353,7 @@ export namespace Moli {
       readonly configs: BidderFrequencyConfig[];
     }
 
-    export interface DynamicFloorPricesConfig {
+    export interface PreviousBidCpmsConfig {
       /** enable or disable this feature */
       readonly enabled: boolean;
     }
@@ -1379,7 +1379,7 @@ export namespace Moli {
       /**
        * Enable dynamic floor prices based on cpms of last prebid auction on this position (if in yield optimization main group)
        */
-      readonly dynamicFloorPrices?: DynamicFloorPricesConfig;
+      readonly previousBidCpms?: PreviousBidCpmsConfig;
     }
   }
 
