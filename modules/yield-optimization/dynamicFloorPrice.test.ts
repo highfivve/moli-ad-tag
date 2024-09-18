@@ -7,7 +7,7 @@ import {
   previousMinCpm,
   previousSecondHighestCpm
 } from './dynamicFloorPrice';
-import { Moli } from '../types/moli';
+import { Moli } from '@highfivve/ad-tag/lib/types/moli';
 import PriceRule = Moli.yield_optimization.PriceRule;
 
 describe('dynamicFloorPrice', () => {

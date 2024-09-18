@@ -5,8 +5,8 @@ import IAdSlot = googletag.IAdSlot;
 import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
 import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
 import Device = Moli.Device;
-import { calculateDynamicPriceRule } from '@highfivve/ad-tag/lib/ads/dynamicFloorPrice';
-import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { calculateDynamicPriceRule } from 'modules/yield-optimization/dynamicFloorPrice';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/source/ts/ads/auctions/globalAuctionContext';
 import { isYieldConfigDynamic } from './isYieldOptimizationConfigDynamic';
 
 /**

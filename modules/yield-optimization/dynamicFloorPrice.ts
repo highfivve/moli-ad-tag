@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { Moli } from '@highfivve/ad-tag/lib/types/moli';
 import PriceRule = Moli.yield_optimization.PriceRule;
 
 export const previousMaxCpm = (cpms: number[]): null | number => {
