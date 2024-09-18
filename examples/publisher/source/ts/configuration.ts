@@ -1531,7 +1531,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
         }
       ]
     },
-    dynamicFloorPrices: {
+    previousBidCpms: {
       enabled: true
     }
   }

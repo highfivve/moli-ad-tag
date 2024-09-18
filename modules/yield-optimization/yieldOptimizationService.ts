@@ -5,8 +5,8 @@ import IAdSlot = googletag.IAdSlot;
 import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
 import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
 import Device = Moli.Device;
-import { calculateDynamicPriceRule } from 'modules/yield-optimization/dynamicFloorPrice';
-import { GlobalAuctionContext } from '@highfivve/ad-tag/source/ts/ads/auctions/globalAuctionContext';
+import { calculateDynamicPriceRule } from './dynamicFloorPrice';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 import { isYieldConfigDynamic } from './isYieldOptimizationConfigDynamic';
 
 /**
@@ -161,12 +161,14 @@ export class YieldOptimizationService {
    *
    * @param adSlot
    * @param adServer
+   * @param yieldOptimizationConfig - needed to determine if the price rule should be calculated dynamically
+   * @param auctionContext - place where previous bid cpms in order to determine dynamic floor price are saved
    */
   public setTargeting(
     adSlot: IAdSlot,
     adServer: Moli.AdServer,
-    auctionContext: GlobalAuctionContext,
-    yieldOptimizationConfig: YieldOptimizationConfig
+    yieldOptimizationConfig: YieldOptimizationConfig,
+    auctionContext?: GlobalAuctionContext
   ): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
@@ -176,13 +178,12 @@ export class YieldOptimizationService {
           adSlot.setTargeting('upr_model', rule.model || 'static');
           if (rule.main) {
             adSlot.setTargeting('upr_main', 'true');
-            const lastBidCpmsOnPosition: number[] = auctionContext.getLastBidCpmsOfAdUnit(
-              adSlot.getSlotElementId()
-            );
+            const lastBidCpmsOnPosition: number[] | undefined =
+              auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
 
             /*
-              If in main group, the price should be calculated based on the previous cpms
-              saved in the dynamicFloorPrices extension of the global auction context.
+              If in main group and if there were last bids on the position, the price should be calculated based on the previous cpms
+              saved in the previousBidCpms extension of the global auction context.
               The strategy is dependent on the dynamic yield optimization config.
             */
             if (lastBidCpmsOnPosition && isYieldConfigDynamic(yieldOptimizationConfig)) {

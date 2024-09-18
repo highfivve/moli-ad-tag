@@ -17,9 +17,7 @@ import {
 } from '@highfivve/ad-tag';
 
 import Device = Moli.Device;
-import { StickyHeaderAds, StickyHeaderAdConfig, StickyHeaderFadeOutConfig } from './index';
-import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
-import ISlotOnloadEvent = googletag.events.ISlotOnloadEvent;
+import { StickyHeaderAds } from './index';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 
 // setup sinon-chai
