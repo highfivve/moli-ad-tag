@@ -1377,7 +1377,7 @@ export namespace Moli {
       readonly frequencyCap?: FrequencyCappingConfig;
 
       /**
-       * Enable dynamic floor prices based on cpms of last prebid auction on this position (if in yield optimization main group)
+       * Save previous prebid bid cpms on this position
        */
       readonly previousBidCpms?: PreviousBidCpmsConfig;
     }
@@ -2232,7 +2232,7 @@ export namespace Moli {
        * and will trigger the matching unified pricing rule in Google Ad Manager.
        *
        * The `upr_id` can be a unique id that is associated with a specific cpm or the cpm itself in cents.
-       * The cpm in cents is used when "dynamic floor prices" is enabled in the global auction context.
+       * The cpm in cents is used when "previous bid cpms" is enabled in the global auction context and the floor price is set dynamically.
        * The cpm is then calculated based on previous bids on the position. In order to avoid a mapping of the calculated cpm and the corresponding unique id, the calculated cpm in cents is directly set as `upr_id`.
        */
       readonly priceRuleId: number;
