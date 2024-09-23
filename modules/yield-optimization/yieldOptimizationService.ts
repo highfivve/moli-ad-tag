@@ -188,7 +188,13 @@ export class YieldOptimizationService {
              */
             if (lastBidCpmsOnPosition && isYieldConfigDynamic(yieldOptimizationConfig)) {
               const strategy = yieldOptimizationConfig.dynamicFloorStrategy;
-              const newRule = calculateDynamicPriceRule(strategy, lastBidCpmsOnPosition, rule);
+              const newRule = calculateDynamicPriceRule(
+                strategy,
+                lastBidCpmsOnPosition,
+                rule,
+                5,
+                500
+              );
               this.log.debug(
                 'YieldOptimizationService',
                 `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Stategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`
