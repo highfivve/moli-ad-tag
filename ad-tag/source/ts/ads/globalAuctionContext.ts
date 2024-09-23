@@ -54,10 +54,15 @@ export class GlobalAuctionContext {
       this.window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
 
     // Register events, if enabled
-    if (this.config.biddersDisabling?.enabled) {
+    if (this.config.biddersDisabling?.enabled || this.config.previousBidCpms?.enabled) {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('auctionEnd', auction => {
-          this.handleAuctionEndEvent(auction);
+          if (this.config.biddersDisabling?.enabled) {
+            this.handleAuctionEndEvent(auction);
+          }
+          if (this.config.previousBidCpms?.enabled && auction.bidsReceived) {
+            this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
+          }
         });
       });
     }
@@ -75,16 +80,6 @@ export class GlobalAuctionContext {
         this.window.pbjs.onEvent('bidWon', bid => {
           if (this.config.frequencyCap) {
             this.frequencyCapping?.onBidWon(bid, this.config.frequencyCap.configs);
-          }
-        });
-      });
-    }
-
-    if (this.config.previousBidCpms?.enabled) {
-      this.window.pbjs.que.push(() => {
-        this.window.pbjs.onEvent('auctionEnd', auction => {
-          if (auction.bidsReceived) {
-            this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
           }
         });
       });
