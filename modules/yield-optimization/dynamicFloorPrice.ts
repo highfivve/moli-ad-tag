@@ -1,5 +1,6 @@
 import { Moli } from '@highfivve/ad-tag/lib/types/moli';
 import PriceRule = Moli.yield_optimization.PriceRule;
+import { DynamicFloorPriceStrategy } from './index';
 
 export const previousMaxCpm = (cpms: number[]): null | number => {
   if (cpms.length === 0) {
@@ -29,7 +30,7 @@ export const previousSecondHighestCpm = (cpms: number[]): null | number => {
 };
 
 export const calculateDynamicFloorPrice = (
-  strategy: 'max' | 'min' | 'second-highest',
+  strategy: DynamicFloorPriceStrategy | undefined,
   previousCpms: number[]
 ): number | null => {
   switch (strategy) {
@@ -45,7 +46,7 @@ export const calculateDynamicFloorPrice = (
 };
 
 export const calculateDynamicPriceRule = (
-  strategy: 'max' | 'min' | 'second-highest' | undefined,
+  strategy: DynamicFloorPriceStrategy | undefined,
   previousCpms: number[] | undefined,
   standardRule: PriceRule
 ): PriceRule => {

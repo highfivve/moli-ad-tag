@@ -9,6 +9,7 @@ import {
 } from './dynamicFloorPrice';
 import { Moli } from '@highfivve/ad-tag/lib/types/moli';
 import PriceRule = Moli.yield_optimization.PriceRule;
+import { DynamicFloorPriceStrategy } from './index';
 
 describe('dynamicFloorPrice', () => {
   describe('previousMaxCpm', () => {
@@ -45,11 +46,12 @@ describe('dynamicFloorPrice', () => {
   });
 
   describe('calculateDynamicFloorPrice', () => {
-    it('should return null if there was no bid', () => {
-      const strategy = 'max';
-      const bidCpms = [];
-      expect(calculateDynamicFloorPrice(strategy, bidCpms)).to.equal(null);
-    });
+    const strategies: DynamicFloorPriceStrategy[] = ['max', 'min', 'second-highest'];
+    strategies.forEach(strategy =>
+      it(`should return null if there was no bid for strategy ${strategy}`, () => {
+        expect(calculateDynamicFloorPrice(strategy, [])).to.equal(null);
+      })
+    );
     it('should return the highest cpm of all bids if strategy is max', () => {
       const strategy = 'max';
       const bidCpms = [0.3, 1.43, 1.44, 0.8];

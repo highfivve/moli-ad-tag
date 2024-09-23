@@ -182,10 +182,10 @@ export class YieldOptimizationService {
               auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
 
             /*
-              If in main group and if there were last bids on the position, the price should be calculated based on the previous cpms
-              saved in the previousBidCpms extension of the global auction context.
-              The strategy is dependent on the dynamic yield optimization config.
-            */
+             * If in main group and if there were bids on the position, the price should be calculated based on the previous cpms
+             * saved in the previousBidCpms extension of the global auction context.
+             * The strategy is dependent on the dynamic yield optimization config.
+             */
             if (lastBidCpmsOnPosition && isYieldConfigDynamic(yieldOptimizationConfig)) {
               const strategy = yieldOptimizationConfig.dynamicFloorStrategy;
               const newRule = calculateDynamicPriceRule(strategy, lastBidCpmsOnPosition, rule);

@@ -121,10 +121,21 @@ export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
   readonly excludedAdUnitPaths: string[];
 
   /**
-   * Stategy how to determine a dynamic floor price based on previous bids/cpms.
+   * Strategy how to determine a dynamic floor price based on previous bids/cpms.
    */
   readonly dynamicFloorStrategy?: DynamicFloorPriceStrategy;
 };
+
+/**
+ * Defines the strategy used to determine the dynamic floor price based on bid CPMs in the last auctions on the same position.
+ *
+ * Available strategies:
+ * - 'max': Selects the highest previous bid CPM.
+ * - 'min': Selects the lowest previous bid CPM.
+ * - 'second-highest': Selects the second highest bid CPM.
+ */
+
+export type DynamicFloorPriceStrategy = 'max' | 'min' | 'second-highest';
 
 export type PriceRules = {
   /**
@@ -132,8 +143,6 @@ export type PriceRules = {
    */
   readonly [adUnitPath: string]: Moli.yield_optimization.PriceRule;
 };
-
-export type DynamicFloorPriceStrategy = 'max' | 'min' | 'second-highest';
 
 /**
  * Response from the yield optimization server
