@@ -16,6 +16,51 @@
           "sizesSupported": [ [ 300, 250 ], [ 300, 600 ] ]
         }
       ]
+    },
+    {
+      "domId": "content_2",
+      "adUnitPath": "/1/content_2",
+      "behaviour": {
+        "loaded": "eager"
+      },
+      "position": "in-page",
+      "sizes": [ [ 300, 250 ], [ 300, 600 ] ],
+      "sizeConfig": [
+        {
+          "mediaQuery": "(min-width: 0px)",
+          "sizesSupported": [ [ 300, 250 ], [ 300, 600 ] ]
+        }
+      ]
+    },
+    {
+      "domId": "mobile_stickyad",
+      "adUnitPath": "/1/mobile_stickyad",
+      "behaviour": {
+        "loaded": "eager"
+      },
+      "position": "in-page",
+      "sizes": [ [ 300, 50 ], [ 320, 50 ]],
+      "sizeConfig": [
+        {
+          "mediaQuery": "(max-width: 767px)",
+          "sizesSupported": [ [ 300, 50 ], [ 320, 50 ]]
+        }
+      ]
+    },
+    {
+      "domId": "floorad",
+      "adUnitPath": "/1/floorad",
+      "behaviour": {
+        "loaded": "eager"
+      },
+      "position": "in-page",
+      "sizes": [[728,90]],
+      "sizeConfig": [
+        {
+          "mediaQuery": "(min-width: 768px)",
+          "sizesSupported": [[728,90]]
+        }
+      ]
     }
   ],
   "schain": {
@@ -26,27 +71,6 @@
     }
   },
   "modules": {
-    "adex": {
-      "enabled": false,
-      "spaMode": false,
-      "adexTagId": "1234",
-      "adexCustomerId": "5678",
-      "mappingDefinitions": [
-        {
-          "key": "iab_v3",
-          "attribute": "foo_iab_v3",
-          "adexValueType": "list"
-        }, {
-          "key": "tags",
-          "attribute": "foo_page_tags",
-          "adexValueType": "string"
-        }, {
-          "key": "openrtb_page_cat",
-          "attribute": "foo_openrtb_page_cat",
-          "adexValueType": "string"
-        }
-      ]
-    },
     "skin": {
       "configs": [
         {
@@ -68,20 +92,6 @@
         }
       ],
       "enabled": true
-    },
-    "utiq": {
-      "enabled": false,
-      "options": {
-        "customizationOptions": {
-          "buttons": {
-            "radius": 5,
-            "bodyColor": "#000000",
-            "textColor": "#FFFFFF"
-          },
-          "contentTextColor": "#000000"
-        }
-      },
-      "assetUrl": "https://utiq.example.com/utiqLoader.js"
     },
     "cleanup": {
       "configs": [
@@ -108,11 +118,6 @@
         "level": "moderate"
       }
     },
-    "confiant": {
-      "enabled": false,
-      "assetUrl": "https://cdn.confiant-integrations.net/xxxxxxxxxxxxxxxxxxxxxxxx/gpt_and_prebid/config.js",
-      "checkGVLID": true
-    },
     "pubstack": {
       "tagId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
       "enabled": false
@@ -120,8 +125,8 @@
     "stickyFooterAdV2": {
       "enabled": true,
       "stickyFooterDomIds": {
-        "mobile": "ad_mobile_sticky",
-        "desktop": "ad_floor"
+        "mobile": "mobile_stickyad",
+        "desktop": "floorad"
       },
       "disallowedAdvertiserIds": [ 123, 456, 678 ]
     },

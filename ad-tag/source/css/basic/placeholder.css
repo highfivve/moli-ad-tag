@@ -1,0 +1,14 @@
+.h5v-placeholder:not([data-google-query-id]) {
+  /** required to position placeholder properly */
+  position: relative;
+
+  &::after {
+    /* you might need to adjust those styles depending on your placeholder image */
+    content: var(--h5v-placeholder-content);
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--h5v-placeholder-width); /* width of the placeholder */
+  }
+}

@@ -45,8 +45,8 @@ jobs:
       # Build prebuilt ad-tag
       - name: build adtag
         run: |
-          npx ts-node bundle.ts --output website/build/assets/bundle/adtag.mjs --config bundles/all.json --failAfterWarnings false
-          npx ts-node bundle.ts --output website/build/assets/bundle/${{ env.RELEASE_VERSION }}/adtag.mjs --config bundles/all.json --failAfterWarnings false
+          npx ts-node bundle.ts --output website/build/assets/bundle/adtag.mjs --config bundles/all.json
+          npx ts-node bundle.ts --output website/build/assets/bundle/${{ env.RELEASE_VERSION }}/adtag.mjs --config bundles/all.json
 
       # Build ad tag console
       - name: build ad tag console / debugger
@@ -54,6 +54,14 @@ jobs:
           npm run build:console
           cp dist/console.js website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.js
           cp dist/console.mjs website/build/assets/bundle/${{ env.RELEASE_VERSION }}/console.mjs
+
+      # Build styles
+      - name: build styles
+        run: |
+          npm run build:css
+          cp dist/vars.css website/build/assets/bundle/${{ env.RELEASE_VERSION }}/vars.css
+          cp dist/styles.css website/build/assets/bundle/${{ env.RELEASE_VERSION }}/styles.css
+          cp dist/styles.novars.css website/build/assets/bundle/${{ env.RELEASE_VERSION }}/styles.novars.css
 
       # Copy schema files
       - name: copy schema files

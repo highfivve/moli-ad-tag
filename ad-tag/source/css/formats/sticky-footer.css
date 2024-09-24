@@ -1,0 +1,42 @@
+.h5v-sticky-ad-container {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  left: 0;
+  right: 0;
+  height: fit-content;
+  bottom: 0;
+  z-index: 1;
+  background-color: var(--h5v-sticky-footer-bg);
+  padding: 0.5rem 0;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+}
+
+.h5v-sticky-ad-close-button {
+  position: absolute;
+  background-color: var(--h5v-sticky-footer-bg);
+  top: 0;
+  right: 0;
+  height: 28px;
+  border: none;
+  padding: 0.1rem 1rem;
+  cursor: pointer;
+  border-top-left-radius: 0.8rem;
+  transform: translateY(-100%); /* Above the footerAd container */
+
+  &:before {
+    bottom: 0;
+    content: '';
+    left: var(--h5v-sticky-footer-close-clickable-area);
+    position: absolute;
+    right: 0;
+    top: var(--h5v-sticky-footer-close-clickable-area);
+  }
+}
+
+/* Hide the footer ad on close click */
+.h5v-footerAd--hidden {
+  transform: translateY(300%);
+  transition: transform 5s ease-in-out;
+}
