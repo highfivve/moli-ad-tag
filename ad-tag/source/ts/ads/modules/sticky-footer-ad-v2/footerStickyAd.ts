@@ -117,7 +117,6 @@ export const initAdSticky = (
     }
 
     closeButton.addEventListener('click', () => {
-      hideAdSlot(adSticky); // Hide the footer including the close button
       adSticky.addEventListener(
         'transitionend',
         function () {
@@ -137,6 +136,8 @@ export const initAdSticky = (
         },
         { once: true }
       ); // Ensure the event listener is executed only once
+
+      hideAdSlot(adSticky); // Hide the footer including the close button
     });
 
     const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {

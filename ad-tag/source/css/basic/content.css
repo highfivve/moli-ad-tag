@@ -1,0 +1,24 @@
+.h5v-content {
+  display: flex;
+  justify-content: center;
+
+  /** sticky content */
+  & > div {
+    top: 0;
+    position: sticky;
+  }
+
+  /** cls optimizations */
+  &.h5v-content-50 {
+    min-height: 50px;
+  }
+  &.h5v-content-250 {
+    min-height: 250px;
+  }
+  &.h5v-content-300 {
+    min-height: 300px;
+  }
+  &.h5v-content-600 {
+    min-height: 600px;
+  }
+}

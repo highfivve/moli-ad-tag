@@ -8,11 +8,22 @@
   <!-- see https://tailwindcss.com/docs/installation/play-cdn -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <link rel="stylesheet" href="moli.css">
+
 </head>
 <body class="p-4">
-  <h1>Demo page</h1>
-  <div class="h-60 w-80 bg-gray-300" id="content_1">
+  <h1 class="text-3xl">Demo page</h1>
+  <hr class="mb-4"/>
+  <h2 class="text-2xl mb-2">Content 1</h2>
+  <div class="flex items-start w-80 bg-gray-300 h5v-content h5v-placeholder h5v-content-600" id="content_1"></div>
+  <h2 class="text-2xl mb-2">Content 2</h2>
+  <div class="flex items-start w-80 bg-gray-300 h5v-content h5v-content-600" id="content_2"></div>
 
+  <h2 class="text-2xl mb-2">Footer Ads</h2>
+  <div class="h5v-sticky-ad-container" data-ref="h5v-sticky-ad">
+    <div id="floorad"></div>
+    <div id="mobile_stickyad"></div>
+    <button class="h5v-sticky-ad-close-button" data-ref="h5v-sticky-ad-close"></button>
   </div>
 
   <script async type="module" src="moli.mjs" data-publisher-code="foo" data-version="production" data-endpoint="localhost:8000" id="moli-ad-tag"></script>
