@@ -180,7 +180,6 @@ export class YieldOptimizationService {
             adSlot.setTargeting('upr_main', 'true');
             const lastBidCpmsOnPosition: number[] | undefined =
               auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
-
             /*
              * If in main group and if there were bids on the position, the price should be calculated based on the previous cpms
              * saved in the previousBidCpms extension of the global auction context.
@@ -193,7 +192,8 @@ export class YieldOptimizationService {
                 lastBidCpmsOnPosition,
                 rule,
                 5,
-                500
+                500,
+                5
               );
               this.log.debug(
                 'YieldOptimizationService',

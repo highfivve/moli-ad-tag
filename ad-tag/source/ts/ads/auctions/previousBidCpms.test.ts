@@ -3,7 +3,7 @@ import { PreviousBidCpms } from './previousBidCpms';
 import { prebidjs } from '../../types/prebidjs';
 import BidResponse = prebidjs.event.BidResponse;
 
-describe('DynamicFloorPrices', () => {
+describe('PreviousBidCpms', () => {
   let dynamicFloorPrices: PreviousBidCpms;
   const exampleResponse: BidResponse = {
     bidder: 'criteo',
@@ -104,7 +104,6 @@ describe('DynamicFloorPrices', () => {
 
     it('should handle empty bids received', () => {
       dynamicFloorPrices.onAuctionEnd([]);
-
       expect(dynamicFloorPrices.getLastBidCpms('content_1')).to.be.null;
     });
   });
