@@ -49,22 +49,49 @@ const calculateDynamicFloorPrice = (
 };
 
 /**
+ * Rounds down a number to the nearest integer.
+ *
+ * @param num - The number to round down.
+ * @returns number - The rounded integer.
+ */
+const roundDownToInteger = (num: number): number => {
+  return Math.floor(num);
+};
+
+/**
  * Rounds down a price in cents to the nearest multiple of the given rounding step in cents.
  * Ensures the rounded price does not exceed the max floor price if provided.
+ *
+ * All params must be integers and will be rounded down to the nearest integer if they are not.
  *
  * @param priceInCents - The price in cents to be rounded down.
  * @param roundingStepInCents - The rounding step in cents.
  * @param [maxPriceRuleInCents] - The maximum configured price rule (UPR) in cents.
  * @param [minPriceRuleInCents] - The minimum configured price rule (UPR) in cents.
- * @returns roundedPriceInCents - The rounded down price in cents.
+ * @returns roundedPriceInCents - The rounded down price in cents - must be an integer!
  */
-const roundDownPrice = (
-  priceInCents: number,
-  roundingStepInCents: number,
-  maxPriceRuleInCents?: number,
-  minPriceRuleInCents?: number
-): number => {
-  const roundedPriceInCents = Math.floor(priceInCents / roundingStepInCents) * roundingStepInCents;
+interface RoundDownPrice {
+  priceInCents: number;
+  roundingStepsInCents: number;
+  maxPriceRuleInCents?: number;
+  minPriceRuleInCents?: number;
+}
+
+const roundDownPrice = (args: RoundDownPrice): number => {
+  // Round down to integers
+  const priceInCents = roundDownToInteger(args.priceInCents);
+  const roundingStepsInCents = roundDownToInteger(args.roundingStepsInCents);
+  const maxPriceRuleInCents =
+    args.maxPriceRuleInCents !== undefined
+      ? roundDownToInteger(args.maxPriceRuleInCents)
+      : undefined;
+  const minPriceRuleInCents =
+    args.minPriceRuleInCents !== undefined
+      ? roundDownToInteger(args.minPriceRuleInCents)
+      : undefined;
+
+  const roundedPriceInCents =
+    Math.floor(priceInCents / roundingStepsInCents) * roundingStepsInCents;
   if (maxPriceRuleInCents !== undefined && roundedPriceInCents > maxPriceRuleInCents) {
     return maxPriceRuleInCents;
   }
@@ -105,17 +132,28 @@ const roundDownPrice = (
  * const standardRule = { floorprice: 1.0, priceRuleId: 100, model: 'static', main: true };
  * const roundingStepsInCents = 5;
  * const maxFloorInCents = 500;
- * const result = calculateDynamicPriceRule(strategy, previousCpms, standardRule, roundingStepsInCents, maxFloorInCents);
- * // result: { floorprice: 1.44, priceRuleId: 140, model: 'static', main: true }
+ * const minFloorInCents = 5;
+ * const result = calculateDynamicPriceRule(strategy, previousCpms, standardRule, roundingStepsInCents, maxFloorInCents, minFloorInCents);
+ * // result: { floorprice: 1.40, priceRuleId: 140, model: 'static', main: true }
  */
-export const calculateDynamicPriceRule = (
-  strategy: DynamicFloorPriceStrategy | undefined,
-  previousCpms: number[] | undefined,
-  standardRule: PriceRule,
-  roundingStepsInCents: number,
-  maxPriceRuleInCents?: number,
-  minPriceRuleInCents?: number
-): PriceRule => {
+interface CalculateDynamicPriceRule {
+  strategy: DynamicFloorPriceStrategy | undefined;
+  previousCpms: number[] | undefined;
+  standardRule: PriceRule;
+  roundingStepsInCents: number;
+  maxPriceRuleInCents?: number;
+  minPriceRuleInCents?: number;
+}
+export const calculateDynamicPriceRule = (args: CalculateDynamicPriceRule): PriceRule => {
+  const {
+    strategy,
+    previousCpms,
+    standardRule,
+    roundingStepsInCents,
+    maxPriceRuleInCents,
+    minPriceRuleInCents
+  } = args;
+
   // filter out negative numbers and NaN
   const validPreviousCpms = previousCpms?.filter(cpm => cpm > 0 && !isNaN(cpm));
   if (!validPreviousCpms || validPreviousCpms.length === 0 || !strategy) {
@@ -127,16 +165,16 @@ export const calculateDynamicPriceRule = (
     return standardRule;
   }
 
-  const roundedPriceRuleIdInCents = roundDownPrice(
-    calculatedFloorPrice,
+  const roundedPriceRuleIdInCents = roundDownPrice({
+    priceInCents: calculatedFloorPrice,
     roundingStepsInCents,
     maxPriceRuleInCents,
     minPriceRuleInCents
-  );
+  });
 
   return {
     ...standardRule,
-    floorprice: calculatedFloorPrice / 100,
+    floorprice: roundedPriceRuleIdInCents / 100,
     priceRuleId: roundedPriceRuleIdInCents
   };
 };
