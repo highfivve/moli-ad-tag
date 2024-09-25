@@ -171,7 +171,7 @@ export namespace MoliRuntime {
      * Ad slots are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
-     * ## Usage
+     * **Usage**
      *
      * Refreshing a single ad slot that has loading behaviour `manual`.
      *
