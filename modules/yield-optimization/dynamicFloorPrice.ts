@@ -77,10 +77,11 @@ const roundDownPrice = (
 /**
  * Calculates a dynamic price rule based on the provided strategy and previous bid CPMs.
  * The function
- *  - filters out invalid CPMs (negative values, values under 10 cents, values above 30 euros, NaN)
+ *  - filters out invalid CPMs (negative values, NaN)
  *  - calculates the new floor price based on the strategy
  *  - rounds it down to the nearest multiple of the given rounding step
- *  - ensures the rounded price does not exceed the maximum floor price if provided
+ *  - ensures the rounded price does not exceed the maximum price rule if provided
+ *  - ensures the rounded price does not lie below the minimum price rule if provided
  *
  *  This function is needed to overwrite the standard price rule from the yield optimization (which could e.g. be 0.50 EUR floor price independent of current bids on the position)
  *  with a dynamic floor price based on previous bids on the position.
@@ -91,10 +92,12 @@ const roundDownPrice = (
  * @param strategy - The strategy to use for calculating the dynamic floor price. Can be 'max', 'min', or 'second-highest'.
  * @param previousCpms - An array of previous CPM values to base the calculation on (currently only available for prebid).
  * @param standardRule - The standard price rule to fall back on if no valid CPMs are provided or the strategy is undefined.
- * @param roundingStepsInCents - The rounding step in cents to round down the calculated floor price (upr_ids in GAM is set in 5 cent steps atm).
+ * @param roundingStepsInCents - The rounding step in cents to round down the calculated floor price.
  * @param [maxPriceRuleInCents] - The optional maximum price rule in cents. If the rounded price rule exceeds this value, it will be capped at this maximum (max. configured upr_id value is 500 cents atm).
  * @param [minPriceRuleInCents] - The optional minimum price rule in cents. If the rounded price rule is below this value, it will be set to this minimum (min. configured upr_id value is 5 cents atm).
  * @returns {PriceRule} - The calculated dynamic price rule with the updated floor price and price rule ID - each upr_id addresses a price rule (floor price) in GAM.
+ *
+ * @see more about UPR targeting here: https://gutefrage.atlassian.net/wiki/spaces/SBD/pages/26117427/Ad+Manager+Key+Values
  *
  * @example
  * const strategy = 'max';
