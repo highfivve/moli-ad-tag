@@ -185,16 +185,21 @@ export class YieldOptimizationService {
              * saved in the previousBidCpms extension of the global auction context.
              * The strategy is dependent on the dynamic yield optimization config.
              */
-            if (lastBidCpmsOnPosition && isYieldConfigDynamic(yieldOptimizationConfig)) {
-              const strategy = yieldOptimizationConfig.dynamicFloorStrategy;
-              const newRule = calculateDynamicPriceRule(
+            if (
+              lastBidCpmsOnPosition &&
+              isYieldConfigDynamic(yieldOptimizationConfig) &&
+              yieldOptimizationConfig.dynamicFloorPrices
+            ) {
+              const { strategy, roundingStepsInCents, maxPriceRuleInCents, minPriceRuleInCents } =
+                yieldOptimizationConfig.dynamicFloorPrices;
+              const newRule = calculateDynamicPriceRule({
                 strategy,
-                lastBidCpmsOnPosition,
-                rule,
-                5,
-                500,
-                5
-              );
+                previousCpms: lastBidCpmsOnPosition,
+                standardRule: rule,
+                roundingStepsInCents,
+                maxPriceRuleInCents,
+                minPriceRuleInCents
+              });
               this.log.debug(
                 'YieldOptimizationService',
                 `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Stategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`

@@ -123,8 +123,15 @@ export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
   /**
    * Strategy how to determine a dynamic floor price based on previous bids/cpms.
    */
-  readonly dynamicFloorStrategy?: DynamicFloorPriceStrategy;
+  readonly dynamicFloorPrices?: DynamicFloorPricesConfig;
 };
+
+export interface DynamicFloorPricesConfig {
+  strategy: DynamicFloorPriceStrategy;
+  roundingStepsInCents: number;
+  maxPriceRuleInCents?: number;
+  minPriceRuleInCents?: number;
+}
 
 /**
  * Defines the strategy used to determine the dynamic floor price based on bid CPMs in the last auctions on the same position.

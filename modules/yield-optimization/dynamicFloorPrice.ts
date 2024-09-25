@@ -144,16 +144,14 @@ interface CalculateDynamicPriceRule {
   maxPriceRuleInCents?: number;
   minPriceRuleInCents?: number;
 }
-export const calculateDynamicPriceRule = (args: CalculateDynamicPriceRule): PriceRule => {
-  const {
-    strategy,
-    previousCpms,
-    standardRule,
-    roundingStepsInCents,
-    maxPriceRuleInCents,
-    minPriceRuleInCents
-  } = args;
-
+export const calculateDynamicPriceRule = ({
+  strategy,
+  previousCpms,
+  standardRule,
+  roundingStepsInCents = 5,
+  maxPriceRuleInCents = 500,
+  minPriceRuleInCents = 5
+}: CalculateDynamicPriceRule): PriceRule => {
   // filter out negative numbers and NaN
   const validPreviousCpms = previousCpms?.filter(cpm => cpm > 0 && !isNaN(cpm));
   if (!validPreviousCpms || validPreviousCpms.length === 0 || !strategy) {
