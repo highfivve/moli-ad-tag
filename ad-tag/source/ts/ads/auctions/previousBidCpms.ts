@@ -9,9 +9,6 @@ export class PreviousBidCpms {
    * @private
    */
   private lastBidCpms: Map<string, number[]> = new Map();
-
-  constructor() {}
-
   /**
    * Processes a list of bid responses and groups them by their adUnitCode.
    * Each adUnitCode will be associated with an array of cpm values from the bid responses.

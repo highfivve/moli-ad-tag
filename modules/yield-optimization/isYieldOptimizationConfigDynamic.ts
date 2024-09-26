@@ -19,5 +19,5 @@ import { DynamicYieldOptimizationConfig, YieldOptimizationConfig } from './index
 export const isYieldConfigDynamic = (
   config: YieldOptimizationConfig
 ): config is DynamicYieldOptimizationConfig => {
-  return (config as DynamicYieldOptimizationConfig).dynamicFloorStrategy !== undefined;
+  return (config as DynamicYieldOptimizationConfig).dynamicFloorPrices?.strategy !== undefined;
 };

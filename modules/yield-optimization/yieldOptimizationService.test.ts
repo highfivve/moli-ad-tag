@@ -362,7 +362,12 @@ describe('YieldOptimizationService', () => {
             provider: 'dynamic',
             configEndpoint: '//localhost',
             excludedAdUnitPaths: [],
-            dynamicFloorStrategy: 'max'
+            dynamicFloorPrices: {
+              strategy: 'max',
+              roundingStepsInCents: 5,
+              maxPriceRuleInCents: 500,
+              minPriceRuleInCents: 5
+            }
           };
 
           getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
@@ -412,7 +417,12 @@ describe('YieldOptimizationService', () => {
             provider: 'dynamic',
             configEndpoint: '//localhost',
             excludedAdUnitPaths: [],
-            dynamicFloorStrategy: 'max'
+            dynamicFloorPrices: {
+              strategy: 'max',
+              roundingStepsInCents: 5,
+              maxPriceRuleInCents: 500,
+              minPriceRuleInCents: 5
+            }
           };
 
           getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([]);
