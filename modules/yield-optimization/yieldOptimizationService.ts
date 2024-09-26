@@ -187,6 +187,7 @@ export class YieldOptimizationService {
              */
             if (
               lastBidCpmsOnPosition &&
+              lastBidCpmsOnPosition?.length > 0 &&
               isYieldConfigDynamic(yieldOptimizationConfig) &&
               yieldOptimizationConfig.dynamicFloorPrices
             ) {
@@ -202,7 +203,7 @@ export class YieldOptimizationService {
               });
               this.log.debug(
                 'YieldOptimizationService',
-                `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Stategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`
+                `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Strategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`
               );
               adSlot.setTargeting('upr_id', newRule.priceRuleId.toFixed(0));
               return newRule;

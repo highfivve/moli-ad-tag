@@ -320,6 +320,7 @@ describe('YieldOptimizationService', () => {
       describe('setTargeting', async () => {
         let globalAuctionContext: GlobalAuctionContext;
         let getLastBidCpmsOfAdUnitStub: Sinon.SinonStub;
+        const debugLogSpy = sandbox.spy(noopLogger, 'debug');
 
         beforeEach(() => {
           // stub global auction context with getLastBidCpms method
@@ -387,6 +388,7 @@ describe('YieldOptimizationService', () => {
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'static');
           expect(setTargetingSpy).has.been.calledWith('upr_main', 'true');
           expect(setTargetingSpy).has.been.calledWith('upr_id', '500');
+          expect(debugLogSpy).has.been.called;
         });
 
         it('should NOT overwrite the standard price rule if yield config is dynamic and strategy is not available', async () => {
@@ -411,6 +413,7 @@ describe('YieldOptimizationService', () => {
           );
 
           expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
+          expect(debugLogSpy).has.not.been.called;
         });
         it('should NOT overwrite the standard price rule if yield config is dynamic and there are no last bids', async () => {
           const yieldConfig: DynamicYieldOptimizationConfig = {
@@ -435,6 +438,7 @@ describe('YieldOptimizationService', () => {
           await service.setTargeting(adSlot, 'gam', yieldConfig, globalAuctionContext);
 
           expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
+          expect(debugLogSpy).has.not.been.called;
         });
         it('should NOT overwrite the standard price rule if config is other than dynamic', async () => {
           const yieldConfig: StaticYieldOptimizationConfig = {
@@ -459,6 +463,7 @@ describe('YieldOptimizationService', () => {
           await service.setTargeting(adSlot, 'gam', yieldConfig, globalAuctionContext);
 
           expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
+          expect(debugLogSpy).has.not.been.called;
         });
       });
     });
