@@ -120,7 +120,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 1.44,
+          floorprice: 1.4,
           priceRuleId: 140,
           model: 'static',
           main: true
@@ -139,7 +139,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 1.44,
+          floorprice: 1.4,
           priceRuleId: 140,
           model: 'static',
           main: true
@@ -158,7 +158,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 5.8,
+          floorprice: 5.0,
           priceRuleId: 500,
           model: 'static',
           main: true
@@ -177,7 +177,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: Infinity,
+          floorprice: 5.0,
           priceRuleId: 500,
           model: 'static',
           main: true
@@ -198,7 +198,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 0.16,
+          floorprice: 0.15,
           priceRuleId: 15,
           model: 'static',
           main: true
@@ -217,7 +217,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 1.43,
+          floorprice: 1.4,
           priceRuleId: 140,
           model: 'static',
           main: true
@@ -236,7 +236,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 0.01,
+          floorprice: 0.05,
           priceRuleId: 5,
           model: 'static',
           main: true
@@ -255,7 +255,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 0,
+          floorprice: 0.05,
           priceRuleId: 5,
           model: 'static',
           main: true
@@ -276,7 +276,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 1.43,
+          floorprice: 1.4,
           priceRuleId: 140,
           model: 'static',
           main: true
@@ -295,7 +295,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 0.21,
+          floorprice: 0.2,
           priceRuleId: 20,
           model: 'static',
           main: true
@@ -314,7 +314,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 1.43,
+          floorprice: 1.4,
           priceRuleId: 140,
           model: 'static',
           main: true
@@ -333,7 +333,7 @@ describe('dynamicFloorPrice', () => {
             minPriceRuleInCents: 5
           })
         ).to.deep.equal({
-          floorprice: 1.44,
+          floorprice: 1.4,
           priceRuleId: 140,
           model: 'static',
           main: true

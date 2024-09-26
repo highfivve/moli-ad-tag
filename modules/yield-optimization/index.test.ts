@@ -243,7 +243,12 @@ describe('Yield Optimization module', () => {
       expect(slot.priceRule).to.be.ok;
       expect(slot.priceRule).to.be.deep.equals(yieldConfig.config.rules[adUnitId]);
       expect(setTargetingStub).to.have.been.calledOnce;
-      expect(setTargetingStub).to.have.been.calledOnceWithExactly(adSlot, 'gam');
+      expect(setTargetingStub).to.have.been.calledOnceWithExactly(
+        adSlot,
+        'gam',
+        yieldConfig,
+        undefined
+      );
     });
 
     it('sets the browser returned by getBrowser', async () => {

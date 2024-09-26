@@ -168,7 +168,7 @@ export class YieldOptimizationService {
     adSlot: IAdSlot,
     adServer: Moli.AdServer,
     yieldOptimizationConfig: YieldOptimizationConfig,
-    auctionContext?: GlobalAuctionContext
+    auctionContext?: GlobalAuctionContext | undefined
   ): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
