@@ -119,7 +119,30 @@ export type DynamicYieldOptimizationConfig = IYieldOptimizationConfig & {
    * AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.
    */
   readonly excludedAdUnitPaths: string[];
+
+  /**
+   * Strategy how to determine a dynamic floor price based on previous bids/cpms.
+   */
+  readonly dynamicFloorPrices?: DynamicFloorPricesConfig;
 };
+
+export interface DynamicFloorPricesConfig {
+  strategy: DynamicFloorPriceStrategy;
+  roundingStepsInCents: number;
+  maxPriceRuleInCents?: number;
+  minPriceRuleInCents?: number;
+}
+
+/**
+ * Defines the strategy used to determine the dynamic floor price based on bid CPMs in the last auctions on the same position.
+ *
+ * Available strategies:
+ * - 'max': Selects the highest previous bid CPM.
+ * - 'min': Selects the lowest previous bid CPM.
+ * - 'second-highest': Selects the second highest bid CPM.
+ */
+
+export type DynamicFloorPriceStrategy = 'max' | 'min' | 'second-highest';
 
 export type PriceRules = {
   /**
@@ -221,7 +244,7 @@ export class YieldOptimization implements IModule {
         const adServer = context.config.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
-            .setTargeting(slot.adSlot, adServer)
+            .setTargeting(slot.adSlot, adServer, this.yieldModuleConfig, context.auction)
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)

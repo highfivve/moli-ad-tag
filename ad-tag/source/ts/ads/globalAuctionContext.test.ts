@@ -157,6 +157,7 @@ describe('Global auction context', () => {
         expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
       });
     });
+
     describe('disabled', () => {
       const auctionContextConfig = {
         frequencyCap: {
@@ -178,10 +179,42 @@ describe('Global auction context', () => {
 
       it('should never throttle/frequency-cap requests', () => {
         const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
-        expect(context.isBidderFrequencyCappedOnSlot('slot-1', 'dspx')).to.be.false;
+        expect(context.isBidderFrequencyCappedOnSlot('wp-slot', 'dspx')).to.be.false;
       });
 
       it('should not add bidWon event listener if disabled', () => {
+        new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(pbjsOnEventSpy).to.have.not.been.called;
+      });
+    });
+  });
+  describe('previousFloorPrices', () => {
+    describe('enabled', () => {
+      const auctionContextConfig = {
+        previousBidCpms: {
+          enabled: true
+        }
+      };
+
+      it('should instantiate previous floor price saving', () => {
+        const context = new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(context.previousBidCpms).to.be.ok;
+      });
+
+      it('should add an auctionEnd event listener', () => {
+        new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
+        expect(pbjsOnEventSpy).to.have.been.calledOnce;
+        expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', sinon.match.func);
+      });
+    });
+    describe('disabled', () => {
+      const auctionContextConfig = {
+        previousBidCpms: {
+          enabled: false
+        }
+      };
+
+      it('should not add auctionEnd event listener if disabled', () => {
         new GlobalAuctionContext(jsDomWindow, auctionContextConfig);
         expect(pbjsOnEventSpy).to.have.not.been.called;
       });

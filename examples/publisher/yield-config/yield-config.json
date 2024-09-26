@@ -29,6 +29,16 @@
       "priceRuleId": 39837386,
       "floorprice": 0.20,
       "main": true
+    },
+    "/33559401,22597236956/gutefrage/gf_content_1/mobile/gutefrage.net": {
+      "priceRuleId": 39837386,
+      "floorprice": 0.20,
+      "main": true
+    },
+    "/33559401,22597236956/gutefrage/gf_content_3/mobile/gutefrage.net": {
+      "priceRuleId": 39837386,
+      "floorprice": 0.20,
+      "main": true
     }
   }
 }

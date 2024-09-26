@@ -4,6 +4,7 @@ import { googletag } from '../types/googletag';
 import { BiddersDisabling } from './auctions/biddersDisabling';
 import { AdRequestThrottling } from './auctions/adRequestThrottling';
 import { FrequencyCapping } from './auctions/frequencyCapping';
+import { PreviousBidCpms } from './auctions/previousBidCpms';
 
 /**
  * ## Global Auction Context
@@ -24,6 +25,7 @@ export class GlobalAuctionContext {
   readonly biddersDisabling?: BiddersDisabling;
   readonly adRequestThrottling?: AdRequestThrottling;
   readonly frequencyCapping?: FrequencyCapping;
+  readonly previousBidCpms?: PreviousBidCpms;
 
   constructor(
     private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
@@ -41,6 +43,10 @@ export class GlobalAuctionContext {
       this.frequencyCapping = new FrequencyCapping(config.frequencyCap, this.window);
     }
 
+    if (config.previousBidCpms?.enabled) {
+      this.previousBidCpms = new PreviousBidCpms();
+    }
+
     // FIXME we need to make sure that pbjs.que and googletag.que are initialized globally in moli ad tag, so we don't
     //       have to put this init code across the entire codebase
     this.window.pbjs = this.window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
@@ -48,10 +54,15 @@ export class GlobalAuctionContext {
       this.window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
 
     // Register events, if enabled
-    if (this.config.biddersDisabling?.enabled) {
+    if (this.config.biddersDisabling?.enabled || this.config.previousBidCpms?.enabled) {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('auctionEnd', auction => {
-          this.handleAuctionEndEvent(auction);
+          if (this.config.biddersDisabling?.enabled) {
+            this.handleAuctionEndEvent(auction);
+          }
+          if (this.config.previousBidCpms?.enabled && auction.bidsReceived) {
+            this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
+          }
         });
       });
     }
@@ -81,6 +92,10 @@ export class GlobalAuctionContext {
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
     return this.frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
+  }
+
+  getLastBidCpmsOfAdUnit(slotId: string): number[] {
+    return this.previousBidCpms?.getLastBidCpms(slotId) ?? [];
   }
 
   private handleAuctionEndEvent(auction: any) {

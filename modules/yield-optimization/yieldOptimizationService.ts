@@ -5,6 +5,9 @@ import IAdSlot = googletag.IAdSlot;
 import { AdunitPriceRulesResponse, PriceRules, YieldOptimizationConfig } from './index';
 import { AdUnitPathVariables, resolveAdUnitPath } from '@highfivve/ad-tag';
 import Device = Moli.Device;
+import { calculateDynamicPriceRule } from './dynamicFloorPrice';
+import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { isYieldConfigDynamic } from './isYieldOptimizationConfigDynamic';
 
 /**
  * Extended representation which adds
@@ -158,21 +161,61 @@ export class YieldOptimizationService {
    *
    * @param adSlot
    * @param adServer
+   * @param yieldOptimizationConfig - needed to determine if the price rule should be calculated dynamically
+   * @param auctionContext - place where previous bid cpms in order to determine dynamic floor price are saved
    */
-  public setTargeting(adSlot: IAdSlot, adServer: Moli.AdServer): Promise<PriceRule | undefined> {
+  public setTargeting(
+    adSlot: IAdSlot,
+    adServer: Moli.AdServer,
+    yieldOptimizationConfig: YieldOptimizationConfig,
+    auctionContext?: GlobalAuctionContext
+  ): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
       if (adServer === 'gam') {
         if (rule) {
-          this.log.debug(
-            'YieldOptimizationService',
-            `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
-          );
-          adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           adSlot.setTargeting('upr_model', rule.model || 'static');
           if (rule.main) {
             adSlot.setTargeting('upr_main', 'true');
+            const lastBidCpmsOnPosition: number[] | undefined =
+              auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
+            /*
+             * If in main group and if there were bids on the position, the price should be calculated based on the previous cpms
+             * saved in the previousBidCpms extension of the global auction context.
+             * The strategy is dependent on the dynamic yield optimization config.
+             */
+            if (
+              lastBidCpmsOnPosition &&
+              isYieldConfigDynamic(yieldOptimizationConfig) &&
+              yieldOptimizationConfig.dynamicFloorPrices
+            ) {
+              const { strategy, roundingStepsInCents, maxPriceRuleInCents, minPriceRuleInCents } =
+                yieldOptimizationConfig.dynamicFloorPrices;
+              const newRule = calculateDynamicPriceRule({
+                strategy,
+                previousCpms: lastBidCpmsOnPosition,
+                standardRule: rule,
+                roundingStepsInCents,
+                maxPriceRuleInCents,
+                minPriceRuleInCents
+              });
+              this.log.debug(
+                'YieldOptimizationService',
+                `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Stategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`
+              );
+              adSlot.setTargeting('upr_id', newRule.priceRuleId.toFixed(0));
+              return newRule;
+            } else {
+              adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+            }
+          } else {
+            // if not in main group, use the price rule determined by the yield optimization
+            this.log.debug(
+              'YieldOptimizationService',
+              `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+            );
+            adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           }
         } else if (this.isEnabled) {
           this.log.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
