@@ -2633,6 +2633,22 @@ export namespace prebidjs {
      * Hint: Some SSPs handles only the first size, so keep that in mind.
      */
     readonly sizes: [number, number][];
+
+    /**
+     * OpenRTB page position value:
+     *
+     * - 0=unknown
+     * - 1=above-the-fold
+     * - 3=below-the-fold
+     * - 4=header
+     * - 5=footer
+     * - 6=sidebar
+     * - 7=full-screen
+     *
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    readonly pos?: 0 | 1 | 3 | 4 | 5 | 6 | 7;
   }
 
   /**
@@ -3660,6 +3676,7 @@ export namespace prebidjs {
   export const Smartx = 'smartx';
   export const Unruly = 'unruly';
   export const Teads = 'teads';
+  export const TheTradeDesk = 'tdd';
   export const Triplelift = 'triplelift';
   export const Yieldlab = 'yieldlab';
   export const Seedtag = 'seedtag';
@@ -3701,6 +3718,7 @@ export namespace prebidjs {
     | typeof Smartx
     | typeof Unruly
     | typeof Teads
+    | typeof TheTradeDesk
     | typeof Triplelift
     | typeof Yieldlab
     | typeof Seedtag
@@ -4973,6 +4991,43 @@ export namespace prebidjs {
    */
   export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
 
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/ttd.html
+   */
+  export interface ITheTradeDeskParams {
+    /**
+     * The TTD-provided supply source name.
+     * @example `'supplier'`
+     */
+    readonly supplySourceId: string;
+
+    /**
+     * The publisher ID. If there is a sellers.json, this should be the same as the seller_id in the
+     * sellers.json for the site being trafficked. If there is no sellers.json, this should be hardcoded to “1”.
+     *
+     * @example `'1427ab10f2e448057ed3b422'`
+     */
+    readonly publisherId: string;
+
+    /**
+     * This field is optional if GPID is passed through the GPT module https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html.
+     * If that module isn’t used, the GPID value should be passed in this field.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
+     */
+    readonly placementId?: string;
+
+    /**
+     * Display banner targeting parameters.
+     */
+    readonly banner?: any;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/ttd.html
+   */
+  export interface ITheTradeDeskBid extends IBidObject<typeof TheTradeDesk, ITheTradeDeskParams> {}
+
   export interface IYieldlabParams {
     /**
      * Yieldlab Adslot ID
@@ -5510,6 +5565,7 @@ export namespace prebidjs {
     | ISmartxBid
     | IUnrulyBid
     | ITeadsBid
+    | ITheTradeDeskBid
     | IYieldlabBid
     | ISeedtagBid
     | ISpotXBid
