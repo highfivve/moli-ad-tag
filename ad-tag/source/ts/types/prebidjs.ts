@@ -3669,6 +3669,7 @@ export namespace prebidjs {
   export const StailaMedia = 'stailamedia';
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
+  export const RichAudience = 'ra'; // using the shorter alias
   export const Rubicon = 'rubicon';
   export const Recognified = 'rads';
   export const Visx = 'visx';
@@ -3709,6 +3710,7 @@ export namespace prebidjs {
     | typeof StroeerCore
     | typeof Xaxis
     | typeof DSPX
+    | typeof RichAudience
     | typeof Rubicon
     | typeof Recognified
     | typeof Visx
@@ -5246,6 +5248,53 @@ export namespace prebidjs {
   export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/richaudience.html
+   */
+  export interface IRichAudienceParams {
+    /**
+     * The placement ID from Rich Audience.
+     * @example `'ADb1f40rmi'`
+     */
+    readonly pid: string;
+
+    /**
+     * Define if site or app.
+     */
+    readonly supplyType: 'site' | 'app';
+
+    /**
+     * Identifier For Advertisers
+     *
+     * @example `'AAAAAAAAA-BBBB-CCCC-1111-222222220000234234234234234'`
+     */
+    readonly ifa?: string;
+
+    /**
+     * A key-value applied only to the configured bid. This value is optional. Strings separated by semicolon.
+     *
+     * @example `car=mercedes;car=audi;`
+     */
+    readonly keywords?: string;
+
+    /**
+     * Object containing video targeting parameters.
+     */
+    readonly player?: {
+      /** Start mode of the player open or close*/
+      readonly init?: 'open' | 'close';
+      /** End mode of the player open or close	 */
+      readonly end?: 'open' | 'close';
+      /** Choose the background color	 */
+      readonly skin?: 'light' | 'dark';
+    };
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/richaudience.html
+   */
+  export interface IRichAudienceBid extends IBidObject<typeof RichAudience, IRichAudienceParams> {}
+
+  /**
    * @see http://prebid.org/dev-docs/bidders/rubicon.html
    */
   export interface IRubiconParams {
@@ -5468,6 +5517,7 @@ export namespace prebidjs {
     | IStroeerCoreBid
     | IXaxisBid
     | IDSPXBid
+    | IRichAudienceBid
     | IRubiconBid
     | IRecognifiedBid
     | IVlybyBid
