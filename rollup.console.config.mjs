@@ -28,7 +28,7 @@ export default [
     output: [
       {
         file: 'dist/console.js',
-        format: 'cjs',
+        format: 'iife',
         sourcemap: false
       },
       {
@@ -56,7 +56,7 @@ export default [
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.css']
       }),
       commonjs(),
-      typescript({tsconfig: 'tsconfig.build.json'}),
+      typescript({ tsconfig: 'tsconfig.build.json' }),
       postcss({
         extract: false,
         config: {
@@ -66,9 +66,9 @@ export default [
       // react uses this variable to determine if it should be in dev mode, so we need to replace it
       replace({
         preventAssignment: false,
-        'process.env.NODE_ENV': JSON.stringify( isProduction ? 'production' : 'development')
+        'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development')
       }),
       ...(isProduction ? [terser()] : [])
     ]
   }
-]
+];
