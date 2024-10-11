@@ -207,7 +207,9 @@ export class StickyHeaderAd implements IModule {
                 if (this.observer) {
                   this.observer.disconnect();
                 }
-                ctx.window.googletag.destroySlots([headerSlot.adSlot]);
+                if (ctx.env === 'production') {
+                  ctx.window.googletag.destroySlots([headerSlot.adSlot]);
+                }
 
                 // kill it with fire!
                 if (config.destroySlot) {
