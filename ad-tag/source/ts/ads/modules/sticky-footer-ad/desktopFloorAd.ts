@@ -39,7 +39,8 @@ const renderFooterAd =
 
     const removeFooterAd = () => {
       if (slot.getSlotElementId() === floorAdDomId && footerAdContainerElement) {
-        window.googletag.destroySlots([slot]);
+        // in test mode, googletag may not be defined
+        window.googletag?.destroySlots([slot]);
         footerAdContainerElement.remove();
       }
     };

@@ -122,7 +122,7 @@ export const initAdSticky = (
         function () {
           adSticky.remove(); // Remove the container from the DOM after animation
           const slot = window.googletag
-            .pubads()
+            ?.pubads() // in test mode, googletag may not be defined
             .getSlots()
             .find(slot => slot.getSlotElementId() === footerStickyDomId);
 
