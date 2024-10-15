@@ -274,7 +274,7 @@ moli.addLabel('pubmatic');
 
 window.pbjs = window.pbjs || { que: [] };
 window.pbjs.que.push(() => {
-  window.pbjs.onEvent('bidWon', (bidWon: prebidjs.event.BidResponse) => {
+  window.pbjs.onEvent('bidWon', (bidWon: prebidjs.BidResponse) => {
     console.log('bidWon', bidWon);
   });
 });
