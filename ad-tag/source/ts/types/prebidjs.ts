@@ -241,6 +241,27 @@ export namespace prebidjs {
     registerSignalSources?: () => void;
 
     getAllWinningBids(): prebidjs.BidResponse[];
+
+    /**
+     * Defining an alias can help avoid user confusion since it’s possible to send parameters to the same adapter
+     * but in different contexts (e.g, The publisher uses "appnexus" for demand and also uses "newAlias" which is an
+     * SSP partner that uses the "appnexus" adapter to serve their own unique demand).
+     *
+     * @example ```javascript
+     * pbjs.aliasBidder('bidderA', 'aliasOfBidderA', {gvlid: 9999});
+     * ```
+     *
+     * @param bidderCode
+     * @param alias
+     * @param options - `gvlid` IAB Global Vendor List ID for this alias for use with the TCF control module.
+     *                - `useBaseGvlid` Flag determining if the GVL ID of the original adapter should be re-used. (PBJS 9.14+)
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/aliasBidder.html
+     */
+    aliasBidder(
+      bidderCode: string,
+      alias: string,
+      options?: { gvlid?: number; useBaseGvlid?: boolean }
+    ): void;
   }
 
   /**
@@ -2520,6 +2541,22 @@ export namespace prebidjs {
     readonly enableTIDs?: boolean;
 
     readonly allowActivities?: activitycontrols.IAllowActivities;
+
+    /**
+     * Prebid offers an additional gvl mapping configuration that allows us to defined GVL IDs
+     * for a module or bidder by name.
+     *
+     * This is useful in various cases
+     *
+     * 1. bidders that do not have a GVL ID defined in their adapter yet
+     * 2. bidders where we use aliases. The alias is not part of the registry
+     *
+     * This is the static variant of the runtime configuration option through `pbjs.aliasBidder`
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/tcfControl.html#page-integration
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/aliasBidder.html
+     */
+    readonly gvlMapping?: Record<string, number>;
   }
 
   /**

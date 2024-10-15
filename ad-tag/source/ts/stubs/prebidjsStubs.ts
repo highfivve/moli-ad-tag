@@ -86,6 +86,13 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     },
     getAllWinningBids(): prebidjs.BidResponse[] {
       return [];
+    },
+    aliasBidder(
+      bidderCode: string,
+      alias: string,
+      options?: { gvlid?: number; useBaseGvlid?: boolean }
+    ) {
+      return;
     }
   };
 };
