@@ -1,5 +1,5 @@
 import { prebidjs } from '../../types/prebidjs';
-import BidResponse = prebidjs.event.BidResponse;
+import BidResponse = prebidjs.BidResponse;
 
 export class PreviousBidCpms {
   /**

@@ -1,14 +1,12 @@
 import { expect } from 'chai';
 import { PreviousBidCpms } from './previousBidCpms';
 import { prebidjs } from '../../types/prebidjs';
-import BidResponse = prebidjs.event.BidResponse;
+import BidResponse = prebidjs.BidResponse;
 
 describe('PreviousBidCpms', () => {
   let dynamicFloorPrices: PreviousBidCpms;
   const exampleResponse: BidResponse = {
     bidder: 'criteo',
-    bidderCode: 'criteo',
-    params: [],
     meta: {},
     adId: 'ad123',
     requestId: 'req123',
@@ -17,6 +15,7 @@ describe('PreviousBidCpms', () => {
     cpm: 1.5,
     creativeId: 456,
     currency: 'USD',
+    originalCurrency: 'USD',
     netRevenue: true,
     ttl: 300,
     adUnitCode: 'unit123',

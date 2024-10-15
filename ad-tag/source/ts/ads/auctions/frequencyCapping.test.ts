@@ -1,10 +1,10 @@
 import { expect, use } from 'chai';
 import { FrequencyCapping } from './frequencyCapping';
 import { prebidjs } from '../../types/prebidjs';
-import BidObject = prebidjs.event.BidObject;
 import { createDom } from '../../stubs/browserEnvSetup';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import BidResponse = prebidjs.BidResponse;
 use(sinonChai);
 
 describe('FrequencyCapping', () => {
@@ -50,10 +50,10 @@ describe('FrequencyCapping', () => {
   });
 
   it('should not add a frequency cap if the configured bidder did not win the auction on the slot', () => {
-    const bid: BidObject = {
+    const bid: BidResponse = {
       bidder: prebidjs.GumGum,
       adUnitCode: 'wp-slot'
-    } as BidObject;
+    } as BidResponse;
 
     frequencyCapping.onBidWon(bid, configs);
 
@@ -61,20 +61,20 @@ describe('FrequencyCapping', () => {
   });
 
   it('should add a frequency cap when a bid is won on the configured slot', () => {
-    const bid: BidObject = {
+    const bid: BidResponse = {
       bidder: prebidjs.DSPX,
       adUnitCode: 'wp-slot'
-    } as BidObject;
+    } as BidResponse;
 
     frequencyCapping.onBidWon(bid, configs);
     expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.true;
   });
 
   it('should remove the frequency cap after the specified timeout', () => {
-    const bid: BidObject = {
+    const bid: BidResponse = {
       bidder: prebidjs.DSPX,
       adUnitCode: 'wp-slot'
-    } as BidObject;
+    } as BidResponse;
 
     frequencyCapping.onBidWon(bid, configs);
     expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.true;

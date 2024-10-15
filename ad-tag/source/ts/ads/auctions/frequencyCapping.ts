@@ -1,8 +1,6 @@
 import { Moli } from '../../types/moli';
 import auction = Moli.auction;
 import { prebidjs } from '../../types/prebidjs';
-import BidObject = prebidjs.event.BidObject;
-import BidderFrequencyConfig = Moli.auction.BidderFrequencyConfig;
 import BidderCode = prebidjs.BidderCode;
 
 export class FrequencyCapping {
@@ -19,7 +17,7 @@ export class FrequencyCapping {
     private readonly _window: Window
   ) {}
 
-  onBidWon(bid: BidObject, configs: BidderFrequencyConfig[]) {
+  onBidWon(bid: prebidjs.BidResponse, configs: auction.BidderFrequencyConfig[]) {
     configs.forEach(config => {
       if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
         const key = `${bid.adUnitCode}-${bid.bidder}`;
