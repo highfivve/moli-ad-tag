@@ -56,21 +56,22 @@ describe('Skin Module', () => {
   const genericBidResponse = (
     bidder: prebidjs.IGenericBidResponse['bidder'],
     cpm: number
-  ): prebidjs.IGenericBidResponse => ({
-    bidder: bidder,
-    cpm,
-    adId: '',
-    height: 1,
-    width: 1,
-    mediaType: 'banner',
-    source: 'client',
-    ad: '<h1>AD</h1>',
-    adUnitCode: '',
-    auctionId: '',
-    currency: 'EUR',
-    originalCurrency: 'EUR',
-    netRevenue: true
-  });
+  ): prebidjs.IGenericBidResponse =>
+    ({
+      bidder: bidder,
+      cpm,
+      adId: '',
+      height: 1,
+      width: 1,
+      mediaType: 'banner',
+      source: 'client',
+      ad: '<h1>AD</h1>',
+      adUnitCode: '',
+      auctionId: '',
+      currency: 'EUR',
+      originalCurrency: 'EUR',
+      netRevenue: true
+    } as prebidjs.IGenericBidResponse);
 
   const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
     genericBidResponse(prebidjs.DSPX, cpm);
@@ -168,21 +169,22 @@ describe('Skin Module', () => {
     // ----  GumGum -----
     const gumgumBidResponse = (
       ad: prebidjs.IGumGumBidResponseWrapper | string
-    ): prebidjs.IGumGumBidResponse => ({
-      bidder: prebidjs.GumGum,
-      adId: '',
-      cpm: 10.0,
-      height: 1,
-      width: 1,
-      mediaType: 'banner',
-      source: 'client',
-      ad: ad,
-      adUnitCode: '',
-      auctionId: '',
-      currency: 'EUR',
-      originalCurrency: 'EUR',
-      netRevenue: true
-    });
+    ): prebidjs.IGumGumBidResponse =>
+      ({
+        bidder: prebidjs.GumGum,
+        adId: '',
+        cpm: 10.0,
+        height: 1,
+        width: 1,
+        mediaType: 'banner',
+        source: 'client',
+        ad: ad,
+        adUnitCode: '',
+        auctionId: '',
+        currency: 'EUR',
+        originalCurrency: 'EUR',
+        netRevenue: true
+      } as prebidjs.IGumGumBidResponse);
     describe('gumgum mobile skin', () => {
       const config: SkinConfig = {
         formatFilter: [{ bidder: 'gumgum', auid: 59 }],
