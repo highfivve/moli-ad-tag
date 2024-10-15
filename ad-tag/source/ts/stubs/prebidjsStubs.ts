@@ -22,11 +22,16 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     getAdserverTargeting: (): Object => {
       return {};
     },
-    requestBids: (requestParam?: prebidjs.IRequestObj): void => {
+    requestBids: (requestParam?: prebidjs.IRequestObj): Promise<prebidjs.IRequestBidsResult> => {
       // invoke bidsBackHandler immediately
       if (requestParam && requestParam.bidsBackHandler) {
         requestParam.bidsBackHandler({}, false, requestParam.auctionId || 'auction-id');
       }
+      return Promise.resolve({
+        bidResponses: {},
+        timedOut: false,
+        auctionId: requestParam?.auctionId ?? 'auction-id'
+      });
     },
     getConfig: (): prebidjs.IPrebidJsConfig => ({
       currency: {
@@ -60,17 +65,17 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void {
       return;
     },
-    onEvent: () => {
+    onEvent(_event: keyof prebidjs.event.PrebidEventMap, _handler: Function, _id?: any): void {
       return;
     },
-    offEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void {
+    offEvent(_event: keyof prebidjs.event.PrebidEventMap, _handler: Function, _id?: any): void {
       return;
     },
     convertCurrency(cpm: number, fromCurrency: string, toCurrency: string): number {
       // We use an unrealistic value here to easily check the value in tests.
       return cpm * 2;
     },
-    getHighestCpmBids(adUnitCode?: string): prebidjs.event.BidResponse[] {
+    getHighestCpmBids(adUnitCode?: string): prebidjs.BidResponse[] {
       return [];
     },
     renderAd(iframeDocument: Document, adId: string): void {
@@ -79,8 +84,15 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     registerSignalSources(): void {
       return;
     },
-    getAllWinningBids(): prebidjs.event.BidResponse[] {
+    getAllWinningBids(): prebidjs.BidResponse[] {
       return [];
+    },
+    aliasBidder(
+      bidderCode: string,
+      alias: string,
+      options?: { gvlid?: number; useBaseGvlid?: boolean }
+    ) {
+      return;
     }
   };
 };
