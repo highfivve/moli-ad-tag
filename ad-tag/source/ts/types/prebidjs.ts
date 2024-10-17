@@ -3630,7 +3630,7 @@ export namespace prebidjs {
   export const Smartx = 'smartx';
   export const Unruly = 'unruly';
   export const Teads = 'teads';
-  export const TheTradeDesk = 'tdd';
+  export const TheTradeDesk = 'ttd';
   export const Triplelift = 'triplelift';
   export const Yieldlab = 'yieldlab';
   export const Seedtag = 'seedtag';
