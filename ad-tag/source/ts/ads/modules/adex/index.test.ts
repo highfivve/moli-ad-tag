@@ -203,6 +203,76 @@ describe('The Adex DMP Module', () => {
     })
   );
 
+  describe('targetings', () => {
+    beforeEach(() => {
+      sandbox.stub(assetLoaderService, 'loadScript').returns(Promise.resolve());
+    });
+
+    it('should use targeting from config and runtimeConfig', async () => {
+      const module = createAndConfigureModule(true, [
+        { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' },
+        { key: 'iab_v3', attribute: 'example_iab_v3', adexValueType: 'string' }
+      ]);
+
+      const adPipelineCtx: AdPipelineContext = {
+        ...adPipelineContext(fullConsent({ '44': true }), {
+          keyValues: { channel: 'Medical' }
+        }),
+        runtimeConfig: {
+          ...emptyRuntimeConfig,
+          keyValues: {
+            iab_v3: 'example_iab_v3_value'
+          }
+        }
+      };
+      const init = module.initSteps()[0];
+      expect(init).to.be.ok;
+
+      await expect(init(adPipelineCtx)).to.eventually.be.fulfilled;
+
+      expect(jsDomWindow._adexc).to.deep.equal([
+        [
+          `/123/456/`,
+          'ut', // usertrack
+          '_kv', // key values
+          [{ iab_cat: 'Medical', example_iab_v3: 'example_iab_v3_value' }, 1]
+        ]
+      ]);
+    });
+
+    it('should override server side targeting with client side targeting', async () => {
+      const module = createAndConfigureModule(true, [
+        { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' },
+        { key: 'iab_v3', attribute: 'example_iab_v3', adexValueType: 'string' }
+      ]);
+
+      const adPipelineCtx: AdPipelineContext = {
+        ...adPipelineContext(fullConsent({ '44': true }), {
+          keyValues: { channel: 'Medical', iab_v3: 'example_iab_v3_value' }
+        }),
+        runtimeConfig: {
+          ...emptyRuntimeConfig,
+          keyValues: {
+            iab_v3: 'example_iab_v3_value_overridden'
+          }
+        }
+      };
+      const init = module.initSteps()[0];
+      expect(init).to.be.ok;
+
+      await expect(init(adPipelineCtx)).to.eventually.be.fulfilled;
+
+      expect(jsDomWindow._adexc).to.deep.equal([
+        [
+          `/123/456/`,
+          'ut', // usertrack
+          '_kv', // key values
+          [{ iab_cat: 'Medical', example_iab_v3: 'example_iab_v3_value_overridden' }, 1]
+        ]
+      ]);
+    });
+  });
+
   it('should load the script only once despite multiple trackings in SPA mode', async () => {
     const module = createAndConfigureModule(true, [
       { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' }
