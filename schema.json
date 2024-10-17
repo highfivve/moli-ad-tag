@@ -3000,7 +3000,7 @@
         "smartx",
         "unruly",
         "teads",
-        "tdd",
+        "ttd",
         "triplelift",
         "yieldlab",
         "seedtag",
@@ -4260,13 +4260,13 @@
         "stroeerCore": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
-        "tdd": {
-          "$ref": "#/definitions/prebidjs.IBidderSetting"
-        },
         "teads": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "triplelift": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
+        "ttd": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "unruly": {
@@ -6043,9 +6043,9 @@
             "spotx": {},
             "stailamedia": {},
             "stroeerCore": {},
-            "tdd": {},
             "teads": {},
             "triplelift": {},
+            "ttd": {},
             "unruly": {},
             "visx": {},
             "vlyby": {},
@@ -6074,7 +6074,7 @@
             "smartx",
             "unruly",
             "teads",
-            "tdd",
+            "ttd",
             "triplelift",
             "yieldlab",
             "seedtag",
@@ -7681,7 +7681,7 @@
           "description": "Only available with the s2sTesting module. Overrides the global bidSource configuration"
         },
         "bidder": {
-          "const": "tdd",
+          "const": "ttd",
           "description": "Unique code identifying the bidder. For bidder codes, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).",
           "type": "string"
         },
@@ -8597,13 +8597,13 @@
         "stroeerCore": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
-        "tdd": {
-          "$ref": "#/definitions/prebidjs.currency.ICurrency"
-        },
         "teads": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "triplelift": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
+        "ttd": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "unruly": {
@@ -8644,7 +8644,7 @@
         "smartx",
         "unruly",
         "teads",
-        "tdd",
+        "ttd",
         "triplelift",
         "yieldlab",
         "seedtag",
@@ -9727,9 +9727,9 @@
         "spotx": {},
         "stailamedia": {},
         "stroeerCore": {},
-        "tdd": {},
         "teads": {},
         "triplelift": {},
+        "ttd": {},
         "unruly": {},
         "visx": {},
         "vlyby": {},
@@ -10066,13 +10066,13 @@
             "stroeerCore": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
-            "tdd": {
-              "$ref": "#/definitions/prebidjs.server.BidderControl"
-            },
             "teads": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "triplelift": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
+            "ttd": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "unruly": {
