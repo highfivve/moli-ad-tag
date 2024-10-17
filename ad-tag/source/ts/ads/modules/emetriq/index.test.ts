@@ -654,20 +654,12 @@ describe('Emetriq Module', () => {
   });
 
   describe('staticCustomParams', () => {
-    it('should return an empty object if both parameters are undefined', () => {
-      expect(Emetriq.staticCustomParams(undefined, undefined)).to.be.deep.eq({});
-    });
-
     it('should return an empty object if mappings are undefined', () => {
       expect(Emetriq.staticCustomParams({}, undefined)).to.be.deep.eq({});
     });
 
     it('should return an empty object if mappings are an empty array', () => {
       expect(Emetriq.staticCustomParams({}, [])).to.be.deep.eq({});
-    });
-
-    it('should return an empty object if targeting is undefined', () => {
-      expect(Emetriq.staticCustomParams(undefined, [])).to.be.deep.eq({});
     });
 
     it('should return string as string', () => {

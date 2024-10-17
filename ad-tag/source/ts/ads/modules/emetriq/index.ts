@@ -151,7 +151,7 @@ export class Emetriq implements IModule {
       ? [
           mkInitStep('load-emetriq', ctx => {
             const customParams = Emetriq.staticCustomParams(
-              ctx.config.targeting?.keyValues,
+              { ...ctx.config.targeting?.keyValues, ...ctx.runtimeConfig.keyValues },
               config.customMappingDefinition
             );
 
@@ -184,7 +184,7 @@ export class Emetriq implements IModule {
       ? [
           mkConfigureStepOncePerRequestAdsCycle('track-emetriq', ctx => {
             const customParams = Emetriq.staticCustomParams(
-              ctx.config.targeting?.keyValues,
+              { ...ctx.config.targeting?.keyValues, ...ctx.runtimeConfig.keyValues },
               config.customMappingDefinition
             );
             // test environment doesn't require emetriq
@@ -288,13 +288,12 @@ export class Emetriq implements IModule {
   }
 
   static staticCustomParams(
-    targeting: googleAdManager.KeyValueMap | undefined,
+    targeting: googleAdManager.KeyValueMap,
     mappings: modules.emetriq.EmetriqMappingDefinition[] | undefined
   ): EmetriqCustomParams {
-    const keyValues = targeting ?? {};
     let additionalCustomParams: Mutable<EmetriqCustomParams> = {};
     (mappings ?? []).forEach(({ param, key }) => {
-      const value = keyValues[key];
+      const value = targeting[key];
       if (value) {
         additionalCustomParams[param] = typeof value === 'string' ? value : value.join(',');
       }
