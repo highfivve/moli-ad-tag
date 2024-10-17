@@ -17,7 +17,7 @@ declare const window: MoliRuntime.MoliWindow;
 const moliConfig: MoliConfig | null = window.moli.getConfig();
 
 if (moliConfig) {
-  const extraLabels = (moliConfig.targeting && moliConfig.targeting.labels) || [];
+  const extraLabels = (moliConfig.targeting && moliConfig.targeting.labels) ?? [];
   extraLabels.push(...window.moli.getRuntimeConfig().labels);
   const labelConfigService = new LabelConfigService(
     moliConfig.labelSizeConfig || [],
