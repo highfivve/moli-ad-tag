@@ -64,7 +64,7 @@
  *
  * @module
  */
-import { modules } from 'ad-tag/types/moliConfig';
+import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import {
   AdPipelineContext,
@@ -207,30 +207,37 @@ export class AdexModule implements IModule {
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
   public track(context: AdPipelineContext, adexConfig: modules.adex.AdexConfig): Promise<void> {
-    const { adexCustomerId, adexTagId, mappingDefinitions, spaMode, appConfig } = adexConfig;
+    const { adexCustomerId, adexTagId, appConfig } = adexConfig;
     this.configureAdexC(context, adexConfig);
     const adexKeyValues = this.getAdexKeyValues(context, adexConfig);
 
-    const dfpKeyValues = context.config.targeting?.keyValues;
+    const gamKeyValues: googleAdManager.KeyValueMap = {
+      ...context.config.targeting?.keyValues,
+      ...context.runtimeConfig.keyValues
+    };
 
     // load script or make request (appMode) if consent is given
-    if (this.hasRequiredConsent(context.tcData) && !this.isLoaded && dfpKeyValues) {
+    if (
+      this.hasRequiredConsent(context.tcData) &&
+      !this.isLoaded &&
+      Object.keys(gamKeyValues).length > 0
+    ) {
       this.isLoaded = true;
       // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
       const hasValidMobileKeyValues: boolean =
         // appConfig is not undefined or null
         isNotNull(appConfig) &&
         // advertisingId must be set in dfpKeyValues
-        isNotNull(dfpKeyValues[appConfig.advertiserIdKey]) &&
+        isNotNull(gamKeyValues[appConfig.advertiserIdKey]) &&
         // clientType must be either 'ios' or 'android'
-        (dfpKeyValues[appConfig.clientTypeKey] === 'android' ||
-          dfpKeyValues[appConfig.clientTypeKey] === 'ios');
+        (gamKeyValues[appConfig.clientTypeKey] === 'android' ||
+          gamKeyValues[appConfig.clientTypeKey] === 'ios');
 
       if (appConfig?.advertiserIdKey && hasValidMobileKeyValues) {
         const consentString = context.tcData.gdprApplies ? context.tcData.tcString : undefined;
 
         // only send request if advertisingId is a single string (no array)
-        const advertisingIdValue = dfpKeyValues[appConfig.advertiserIdKey];
+        const advertisingIdValue = gamKeyValues[appConfig.advertiserIdKey];
         typeof advertisingIdValue === 'string' &&
           adexKeyValues &&
           sendAdvertisingID(
@@ -238,7 +245,7 @@ export class AdexModule implements IModule {
             appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
             advertisingIdValue,
             adexKeyValues,
-            dfpKeyValues[appConfig.clientTypeKey] ?? '',
+            gamKeyValues[appConfig.clientTypeKey] ?? '',
             context.window.fetch,
             context.logger,
             consentString
@@ -281,18 +288,21 @@ export class AdexModule implements IModule {
     context: AdPipelineContext,
     config: modules.adex.AdexConfig
   ): (modules.adex.AdexKeyValuePair | modules.adex.AdexKeyValueMap)[] | undefined => {
-    const dfpKeyValues = context.config.targeting?.keyValues;
+    const gamKeyValues: googleAdManager.KeyValueMap = {
+      ...context.config.targeting?.keyValues,
+      ...context.runtimeConfig.keyValues
+    };
 
-    if (dfpKeyValues) {
+    if (Object.keys(gamKeyValues).length > 0) {
       return config.mappingDefinitions
         .map(def => {
           switch (def.adexValueType) {
             case 'map':
-              return toAdexMapType(dfpKeyValues, def, context.logger);
+              return toAdexMapType(gamKeyValues, def, context.logger);
             case 'list':
-              return toAdexListType(dfpKeyValues, def, context.logger);
+              return toAdexListType(gamKeyValues, def, context.logger);
             default:
-              return toAdexStringOrNumberType(dfpKeyValues, def, context.logger);
+              return toAdexStringOrNumberType(gamKeyValues, def, context.logger);
           }
         })
         .filter(isNotNull);
