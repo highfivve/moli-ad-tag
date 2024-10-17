@@ -459,9 +459,12 @@ export class GlobalConfig
                   {config.targeting && (
                     <div>
                       <h5>Key/value pairs</h5>
-                      {this.keyValues(config.targeting.keyValues)}
+                      {this.keyValues({
+                        ...config.targeting.keyValues,
+                        ...runtimeConfig.keyValues
+                      })}
                       <h5>Labels from publisher</h5>
-                      {this.labels(config.targeting.labels)}
+                      {this.labels([...runtimeConfig.labels, ...(config.targeting?.labels ?? [])])}
                       <h5>Labels from label size config</h5>
                       {this.labels(
                         labelConfigService
