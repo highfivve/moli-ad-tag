@@ -310,29 +310,27 @@ export class AdexModule implements IModule {
   };
 
   private configureAdexC = (context: AdPipelineContext, config: modules.adex.AdexConfig) => {
-    if (!context.config.targeting) {
+    const adexKeyValues = this.getAdexKeyValues(context, config);
+    if (!adexKeyValues) {
       context.logger.warn('Adex DMP', 'targeting key/values are empty');
       return Promise.resolve();
     } else {
-      const adexKeyValues = this.getAdexKeyValues(context, config);
-
-      adexKeyValues &&
-        (context.window as ITheAdexWindow)._adexc?.push([
-          `/${config.adexCustomerId}/${config.adexTagId}/`,
-          'ut', // usertrack
-          '_kv', // key values
-          [
-            adexKeyValues.reduce(
-              (
-                aggregator: modules.adex.AdexKeyValues,
-                additionalKeyValue: modules.adex.AdexKeyValues
-              ) => ({ ...aggregator, ...additionalKeyValue }) as modules.adex.AdexKeyValues,
-              {}
-            ),
-            // single page mode for logged-in
-            config.spaMode ? 1 : 0
-          ]
-        ]);
+      (context.window as ITheAdexWindow)._adexc?.push([
+        `/${config.adexCustomerId}/${config.adexTagId}/`,
+        'ut', // usertrack
+        '_kv', // key values
+        [
+          adexKeyValues.reduce(
+            (
+              aggregator: modules.adex.AdexKeyValues,
+              additionalKeyValue: modules.adex.AdexKeyValues
+            ) => ({ ...aggregator, ...additionalKeyValue }) as modules.adex.AdexKeyValues,
+            {}
+          ),
+          // single page mode for logged-in
+          config.spaMode ? 1 : 0
+        ]
+      ]);
     }
   };
 }

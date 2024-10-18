@@ -227,8 +227,7 @@ describe('The Adex DMP Module', () => {
       };
       const init = module.initSteps()[0];
       expect(init).to.be.ok;
-
-      await expect(init(adPipelineCtx)).to.eventually.be.fulfilled;
+      await init(adPipelineCtx);
 
       expect(jsDomWindow._adexc).to.deep.equal([
         [
@@ -259,8 +258,7 @@ describe('The Adex DMP Module', () => {
       };
       const init = module.initSteps()[0];
       expect(init).to.be.ok;
-
-      await expect(init(adPipelineCtx)).to.eventually.be.fulfilled;
+      await init(adPipelineCtx);
 
       expect(jsDomWindow._adexc).to.deep.equal([
         [
@@ -268,6 +266,35 @@ describe('The Adex DMP Module', () => {
           'ut', // usertrack
           '_kv', // key values
           [{ iab_cat: 'Medical', example_iab_v3: 'example_iab_v3_value_overridden' }, 1]
+        ]
+      ]);
+    });
+
+    it('should set runtime config targeting if no server side targeting is given', async () => {
+      const module = createAndConfigureModule(true, [
+        { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' },
+        { key: 'iab_v3', attribute: 'example_iab_v3', adexValueType: 'string' }
+      ]);
+
+      const adPipelineCtx: AdPipelineContext = {
+        ...adPipelineContext(fullConsent({ '44': true }), undefined),
+        runtimeConfig: {
+          ...emptyRuntimeConfig,
+          keyValues: {
+            iab_v3: 'example_iab_v3_value'
+          }
+        }
+      };
+      const init = module.initSteps()[0];
+      expect(init).to.be.ok;
+      await init(adPipelineCtx);
+
+      expect(jsDomWindow._adexc).to.deep.equal([
+        [
+          `/123/456/`,
+          'ut', // usertrack
+          '_kv', // key values
+          [{ example_iab_v3: 'example_iab_v3_value' }, 1]
         ]
       ]);
     });
