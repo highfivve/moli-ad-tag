@@ -33,7 +33,6 @@ describe('The Adex DMP Module', () => {
     jsDomWindow.googletag = createGoogletagStub();
     jsDomWindow.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
       Promise.resolve(new Response());
-    jsDomWindow._adexc = [];
     assetLoaderService = createAssetLoaderService(jsDomWindow);
   };
 

@@ -84,6 +84,7 @@ import {
   toAdexMapType,
   toAdexStringOrNumberType
 } from 'ad-tag/ads/modules/adex/adex-mapping';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -92,7 +93,7 @@ export interface ITheAdexWindow extends Window {
    * Takes an array of plugin configurations that configure the TheAdex
    * tracking pixel.
    */
-  _adexc?: IUserTrackPluginKeyValueConfiguration[];
+  _adexc: IUserTrackPluginKeyValueConfiguration[];
 }
 
 /**
@@ -191,6 +192,7 @@ export class AdexModule implements IModule {
     if (config?.spaMode) {
       return [
         mkConfigureStep('DMP module setup', context => {
+          // this is a side effect by choise as DMP configuring should not affect the pipeline
           this.configureAdexC(context, config);
           return Promise.resolve();
         })
@@ -208,6 +210,7 @@ export class AdexModule implements IModule {
    */
   public track(context: AdPipelineContext, adexConfig: modules.adex.AdexConfig): Promise<void> {
     const { adexCustomerId, adexTagId, appConfig } = adexConfig;
+
     this.configureAdexC(context, adexConfig);
     const adexKeyValues = this.getAdexKeyValues(context, adexConfig);
 
@@ -284,6 +287,12 @@ export class AdexModule implements IModule {
     return [];
   }
 
+  private getOrInitAdexQueue = (_window: Window): ITheAdexWindow => {
+    const adexWindow = _window as ITheAdexWindow;
+    adexWindow._adexc = adexWindow._adexc || [];
+    return adexWindow;
+  };
+
   private getAdexKeyValues = (
     context: AdPipelineContext,
     config: modules.adex.AdexConfig
@@ -309,13 +318,13 @@ export class AdexModule implements IModule {
     }
   };
 
-  private configureAdexC = (context: AdPipelineContext, config: modules.adex.AdexConfig) => {
+  private configureAdexC = (context: AdPipelineContext, config: modules.adex.AdexConfig): void => {
+    const adexWindow = this.getOrInitAdexQueue(context.window);
     const adexKeyValues = this.getAdexKeyValues(context, config);
     if (!adexKeyValues) {
       context.logger.warn('Adex DMP', 'targeting key/values are empty');
-      return Promise.resolve();
     } else {
-      (context.window as ITheAdexWindow)._adexc?.push([
+      adexWindow._adexc.push([
         `/${config.adexCustomerId}/${config.adexTagId}/`,
         'ut', // usertrack
         '_kv', // key values
