@@ -3,7 +3,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { auction, modules } from 'ad-tag/types/moliConfig';
+import { auction, Device, modules } from 'ad-tag/types/moliConfig';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import StaticYieldOptimizationConfig = modules.yield_optimization.StaticYieldOptimizationConfig;
 import NoYieldOptimizationConfig = modules.yield_optimization.NoYieldOptimizationConfig;
@@ -40,11 +40,13 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('resolve ad unit paths', () => {
-    [
-      { device: 'mobile' as const, domain: 'example.com' },
-      { device: 'desktop' as const, domain: 'test.org' },
-      { device: 'mobile' as const, domain: 'acme.net' }
-    ].forEach(({ device, domain }) => {
+    const adInfo: { device: Device; domain: string }[] = [
+      { device: 'mobile', domain: 'example.com' },
+      { device: 'desktop', domain: 'test.org' },
+      { device: 'mobile', domain: 'acme.net' }
+    ];
+
+    adInfo.forEach(({ device, domain }) => {
       it(`should resolve the ad unit path with device: ${device}, domain: ${domain}`, async () => {
         const adUnitDynamic = '/123/pub/ad_content_1/{device}/{domain}';
         const adUnitResolved = `/123/pub/ad_content_1/${device}/${domain}`;

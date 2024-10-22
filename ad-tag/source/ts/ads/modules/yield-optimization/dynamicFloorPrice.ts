@@ -152,7 +152,9 @@ export const calculateDynamicPriceRule = ({
   minPriceRuleInCents = 5
 }: CalculateDynamicPriceRule): MoliRuntime.yield_optimization.PriceRule => {
   // filter out negative numbers and NaN
-  const validPreviousCpms = previousCpms?.filter(cpm => cpm > 0 && !isNaN(cpm));
+  const validPreviousCpms: number[] | undefined = Array.isArray(previousCpms)
+    ? previousCpms?.filter(cpm => cpm > 0 && !isNaN(cpm))
+    : [];
   if (!validPreviousCpms || validPreviousCpms.length === 0 || !strategy) {
     return standardRule;
   }
