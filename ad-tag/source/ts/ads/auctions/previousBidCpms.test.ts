@@ -17,7 +17,6 @@ describe('PreviousBidCpms', () => {
     currency: 'USD',
     originalCurrency: 'USD',
     netRevenue: true,
-    ttl: 300,
     adUnitCode: 'unit123',
     ad: '<div>Ad content</div>',
     auctionId: 'auction123',
@@ -40,23 +39,8 @@ describe('PreviousBidCpms', () => {
       hb_format: 'banner',
       hb_adomain: 'example.com'
     },
-    status: 'rendered',
     statusMessage: 'Bid available',
-    native: {
-      address: '123 Example St',
-      body: 'This is the body text',
-      body2: 'This is the secondary body text',
-      cta: 'Click here',
-      clickTrackers: ['http://example.com/click1', 'http://example.com/click2'],
-      clickUrl: 'http://example.com/click',
-      displayUrl: 'http://example.com/display',
-      downloads: '1000',
-      image: {
-        url: 'http://example.com/image.jpg',
-        height: 250,
-        width: 300
-      }
-    }
+    native: {}
   };
 
   beforeEach(() => {
