@@ -1872,16 +1872,26 @@ export namespace modules {
       readonly excludedAdUnitPaths: string[];
 
       /**
-       * Strategy how to determine a dynamic floor price based on previous bids/cpms.
+       * How to determine a dynamic floor price based on previous bids/cpms.
        */
       readonly dynamicFloorPrices?: DynamicFloorPricesConfig;
     };
 
     export interface DynamicFloorPricesConfig {
-      strategy: DynamicFloorPriceStrategy;
-      roundingStepsInCents: number;
-      maxPriceRuleInCents?: number;
-      minPriceRuleInCents?: number;
+      readonly strategy: DynamicFloorPriceStrategy;
+      /**
+       * The calculated floor price will be rounded down according to the configured steps in cents.
+       * E.g. if the floor price is 0.46 and the roundingStepsInCents is 5, the floor price will be 0.45.
+       */
+      readonly roundingStepsInCents: number;
+      /**
+       * The maximum price rule in cents that is configured in GAM (at the moment 5 Cents).
+       */
+      readonly maxPriceRuleInCents?: number;
+      /**
+       * The maximum price rule in cents that is configured in GAM (at the moment 500 Cents).
+       */
+      readonly minPriceRuleInCents?: number;
     }
 
     /**
@@ -1892,7 +1902,6 @@ export namespace modules {
      * - 'min': Selects the lowest previous bid CPM.
      * - 'second-highest': Selects the second highest bid CPM.
      */
-
     export type DynamicFloorPriceStrategy = 'max' | 'min' | 'second-highest';
 
     export type PriceRules = {
