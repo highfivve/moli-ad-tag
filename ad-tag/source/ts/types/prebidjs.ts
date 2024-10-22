@@ -219,7 +219,7 @@ export namespace prebidjs {
      * @param adUnitCode - optional filter for the given ad unit code
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getHighestCpmBids.html
      */
-    getHighestCpmBids(adUnitCode?: string): BidResponse[];
+    getHighestCpmBids(adUnitCode?: string): prebidjs.BidResponse[];
 
     /**
      * This function will render the ad (based on params) in the given iframe document passed through.
@@ -240,7 +240,7 @@ export namespace prebidjs {
      */
     registerSignalSources?: () => void;
 
-    getAllWinningBids(): BidResponse[];
+    getAllWinningBids(): prebidjs.BidResponse[];
   }
 
   /**
@@ -1367,7 +1367,7 @@ export namespace prebidjs {
       readonly auctionId: string;
       readonly auctionStatus?: 'inProgress' | 'completed';
       readonly bidderRequests?: BidderRequest[];
-      readonly bidsReceived?: BidResponse[];
+      readonly bidsReceived?: prebidjs.BidResponse[];
       readonly bidsRejected?: NoBidObject[];
       /**
        * different functions to manage metrics
@@ -1382,7 +1382,7 @@ export namespace prebidjs {
        * This is probably always empty, because when the auction ends, the results must be sent
        * back to the ad server. After that, the winners will be determined.
        */
-      readonly winningBids: BidResponse[];
+      readonly winningBids: prebidjs.BidResponse[];
     };
 
     export type NoBidObject = {
