@@ -1,5 +1,5 @@
-import { prebidjs } from 'ad-tag/types/prebidjs';
-
+import { prebidjs } from '../../types/prebidjs';
+import BidResponse = prebidjs.BidResponse;
 export class PreviousBidCpms {
   /**
    * Stores the information about previous bid cpms.
@@ -13,7 +13,7 @@ export class PreviousBidCpms {
    * Processes a list of bid responses and groups them by their adUnitCode.
    * Each adUnitCode will be associated with an array of cpm values from the bid responses.
    */
-  groupReceivedBidsByAdUnitCode(bidsReceived: prebidjs.BidResponse[]): { [key: string]: number[] } {
+  groupReceivedBidsByAdUnitCode(bidsReceived: BidResponse[]): { [key: string]: number[] } {
     return bidsReceived.reduce((result, current) => {
       const { adUnitCode, cpm } = current;
       if (!result[adUnitCode]) {

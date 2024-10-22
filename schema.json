@@ -314,7 +314,7 @@
           "type": "string"
         },
         "priceRuleId": {
-          "description": "Unique identifier for a pricing rule. This is will be sent as a key_value `upr_id` per ad unit and will trigger the matching unified pricing rule in Google Ad Manager.",
+          "description": "Unique identifier for a pricing rule. This will be sent as a key_value `upr_id` per ad unit and will trigger the matching unified pricing rule in Google Ad Manager.\n\nThe `upr_id` can be a unique id that is associated with a specific cpm or the cpm itself in cents. The cpm in cents is used when \"previous bid cpms\" is enabled in the global auction context. The cpm is then calculated based on previous bids on the position. In order to avoid a mapping of the calculated cpm and the corresponding unique id, the calculated cpm in cents is directly set as `upr_id`.",
           "type": "number"
         }
       },
@@ -512,8 +512,25 @@
         "frequencyCap": {
           "$ref": "#/definitions/auction.FrequencyCappingConfig",
           "description": "Set frequency capping for a specific slot and bidder"
+        },
+        "previousBidCpms": {
+          "$ref": "#/definitions/auction.PreviousBidCpmsConfig",
+          "description": "Save previous prebid bid cpms on this position"
         }
       },
+      "type": "object"
+    },
+    "auction.PreviousBidCpmsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "enable or disable this feature",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
       "type": "object"
     },
     "behaviour.Backfill": {
@@ -2755,6 +2772,40 @@
       ],
       "type": "object"
     },
+    "modules.yield_optimization.DynamicFloorPriceStrategy": {
+      "description": "Defines the strategy used to determine the dynamic floor price based on bid CPMs in the last auctions on the same position.\n\nAvailable strategies:\n- 'max': Selects the highest previous bid CPM.\n- 'min': Selects the lowest previous bid CPM.\n- 'second-highest': Selects the second highest bid CPM.",
+      "enum": [
+        "max",
+        "min",
+        "second-highest"
+      ],
+      "type": "string"
+    },
+    "modules.yield_optimization.DynamicFloorPricesConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "maxPriceRuleInCents": {
+          "description": "The maximum price rule in cents that is configured in GAM (at the moment 5 Cents).",
+          "type": "number"
+        },
+        "minPriceRuleInCents": {
+          "description": "The maximum price rule in cents that is configured in GAM (at the moment 500 Cents).",
+          "type": "number"
+        },
+        "roundingStepsInCents": {
+          "description": "The calculated floor price will be rounded down according to the configured steps in cents. E.g. if the floor price is 0.46 and the roundingStepsInCents is 5, the floor price will be 0.45.",
+          "type": "number"
+        },
+        "strategy": {
+          "$ref": "#/definitions/modules.yield_optimization.DynamicFloorPriceStrategy"
+        }
+      },
+      "required": [
+        "strategy",
+        "roundingStepsInCents"
+      ],
+      "type": "object"
+    },
     "modules.yield_optimization.DynamicYieldOptimizationConfig": {
       "additionalProperties": false,
       "description": "A dynamic configuration",
@@ -2762,6 +2813,10 @@
         "configEndpoint": {
           "description": "URL to a json config file that contains a list of AdUnitPriceRules.",
           "type": "string"
+        },
+        "dynamicFloorPrices": {
+          "$ref": "#/definitions/modules.yield_optimization.DynamicFloorPricesConfig",
+          "description": "How to determine a dynamic floor price based on previous bids/cpms."
         },
         "enabled": {
           "description": "If set to true the module will be enabled.",
