@@ -1123,6 +1123,20 @@ export namespace prebidjs {
       readonly maxDelayTime?: number;
     }
 
+    export interface IUtiqMtpIdProviderParams {
+      /**
+       * Max amount of time (in seconds) before looking into storage for data
+       */
+      readonly maxDelayTime?: number;
+
+      /**
+       * You may like to consider limiting the SSPs that receive the martechpass by adding the bidders array, to make
+       * sure they are not forwarding this first party ID to DSPs. We are working with SSPs to exclude the above
+       * source from being sent to DSPs, please reach out to csm@utiq.com to verify which are these SSPs.
+       */
+      readonly bidders?: BidderCode[];
+    }
+
     /**
      * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
      * unintended behaviour, because prebid filters out unconfigured modules.
@@ -1139,7 +1153,7 @@ export namespace prebidjs {
      * @see https://docs.utiq.com/docs/programmatic-integration
      */
     export interface IUtiqMtpIdProvider
-      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiqMtpId'> {}
+      extends IParameterizedUserIdProvider<IUtiqMtpIdProviderParams, 'utiqMtpId'> {}
 
     /**
      * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
