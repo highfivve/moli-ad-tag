@@ -31,6 +31,27 @@ import { BrowserStorageKeys } from '../util/browserStorageKeys';
  * Adding the `id="moli-ad-tag"` attribute to the script tag is highly recommended to ensure the script can find itself.
  * ```
  *
+ * ## Permanent labels
+ *
+ * You can also add labels to the ad tag bundle that are used for all ad requests. This is useful
+ *
+ * - `device` type (`mobile`, `desktop`, `ios`, `android`). Useful for pages that have no responsive design and
+ *    use user agents to determine the device type on the backend
+ * - `page type` if the page is not single page app and the publisher requires page specific behaviour.
+ *    NOTE: This does not work for single page applications, because the labels are not reset on page change.
+ * - features labels. Enable or disable specific bidders, formats, positions based on a label configuration.
+ *
+ * ### Usage
+ *
+ * Add the `data-labels` attribute to the script tag that loads the ad tag bundle. The values must be comma separated.
+ *
+ * ```html
+ * <script id="moli-ad-tag" src="path/to/your/ad-tag-bundle.js"
+ *        data-labels="mobile,article"
+ * ></script>
+ * ```
+ *
+ *
  * @module
  */
 declare const window: MoliRuntime.MoliWindow;
@@ -57,6 +78,21 @@ if (currentScript) {
   // publisher code and version can be overridden via query parameters
   const publisherCode = pubCodeOverride ?? currentScript.getAttribute('data-publisher-code');
   const version = versionOverride ?? currentScript.getAttribute('data-version') ?? 'production';
+
+  // publisher provided labels in data-labels
+  const labels = (currentScript.getAttribute('data-labels') ?? '')
+    .split(',')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  if (labels.length > 0) {
+    // add labels to before each requestAds call. This ensures that even in single page applications
+    // the labels are persistent across all ad requests. This also means that the labels are not
+    // meant to be page specific. Use the moli.addLabel() API if you need to add page specific labels.
+    window.moli.que.push(moli => {
+      moli.beforeRequestAds(() => labels.forEach(label => moli.addLabel(label)));
+    });
+  }
 
   // make the configLabel available for the ad tag bundle. This info is sent along to prebid server for telemetry.
   window.moli.configLabel = version;
