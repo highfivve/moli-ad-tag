@@ -38,6 +38,11 @@ jobs:
       - name: Validate
         run: npm run validate
 
+      - name: Setup default CSS variables and custom properties
+        run: npm run setup:css:defaults
+        env:
+          NODE_ENV: production
+
       - name: Build
         run: npm run build
         env:

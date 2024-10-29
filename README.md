@@ -89,6 +89,18 @@ cd examples/esbuild
 npm start
 ```
 
+## Styles
+
+The ad tag offers a set of styles that can be included in your project. You can build the styles with
+
+```bash
+# if you haven't run setup:dev before
+npm run setup:css:defaults
+npm run build:css
+```
+
+Styles will appear in the [dist](dist) folder.
+
 ## Console
 
 You can build and test the console locally with

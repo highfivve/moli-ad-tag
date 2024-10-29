@@ -18,6 +18,8 @@
     "build:bundle:all": "npx ts-node bundle.ts --config bundles/all.json",
     "clean": "rm -rf lib",
     "setup": "npm run clean && npm ci --engine-strict && npm run codeGen && npm run build",
+    "setup:dev": "npm run setup && npm run setup:css:defaults",
+    "setup:css:defaults": "cp ad-tag/source/css/media.json ad-tag/source/css/publisher.media.json && cp ad-tag/source/css/vars.css ad-tag/source/css/publisher.vars.css",
     "start": "npm run watch",
     "watch": "tsc --composite false --watch",
     "compile": "tsc --noEmit",
