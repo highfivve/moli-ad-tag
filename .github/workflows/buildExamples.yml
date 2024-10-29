@@ -37,13 +37,18 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: '@highfivve'
 
+      - name: setup
+        run: npm run setup
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Build ad tag lib
-        run: npm install && npm run build
+        run: npm run build
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install dependencies ( ${{ matrix.version }} )
-        run: npm install
+        run: npm ci
         working-directory: examples/${{ matrix.working_directory }}
         env:
          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

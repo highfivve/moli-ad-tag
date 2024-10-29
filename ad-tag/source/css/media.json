@@ -1,0 +1,6 @@
+{
+	"custom-media": {
+		"--h5v-mobile": "(max-width: 767px)",
+		"--h5v-desktop": "(min-width: 768px)"
+	}
+}

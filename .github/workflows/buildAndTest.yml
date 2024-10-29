@@ -31,7 +31,7 @@ jobs:
           scope: '@highfivve'
 
       - name: Install dependencies
-        run: npm ci && npm run setup
+        run: npm run setup
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
