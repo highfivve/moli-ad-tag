@@ -404,6 +404,11 @@ export namespace auction {
     readonly configs: BidderFrequencyConfig[];
   }
 
+  export interface PreviousBidCpmsConfig {
+    /** enable or disable this feature */
+    readonly enabled: boolean;
+  }
+
   export interface GlobalAuctionContextConfig {
     /**
      * Disable bidders that lack auction participation
@@ -421,6 +426,11 @@ export namespace auction {
      * Set frequency capping for a specific slot and bidder
      */
     readonly frequencyCap?: FrequencyCappingConfig;
+
+    /**
+     * Save previous prebid bid cpms on this position
+     */
+    readonly previousBidCpms?: PreviousBidCpmsConfig;
   }
 }
 
@@ -1860,7 +1870,39 @@ export namespace modules {
        * AdUnitPaths that don't need the yield optimization. Add all adUnits that are not configured in the server.
        */
       readonly excludedAdUnitPaths: string[];
+
+      /**
+       * How to determine a dynamic floor price based on previous bids/cpms.
+       */
+      readonly dynamicFloorPrices?: DynamicFloorPricesConfig;
     };
+
+    export interface DynamicFloorPricesConfig {
+      readonly strategy: DynamicFloorPriceStrategy;
+      /**
+       * The calculated floor price will be rounded down according to the configured steps in cents.
+       * E.g. if the floor price is 0.46 and the roundingStepsInCents is 5, the floor price will be 0.45.
+       */
+      readonly roundingStepsInCents: number;
+      /**
+       * The maximum price rule in cents that is configured in GAM (at the moment 5 Cents).
+       */
+      readonly maxPriceRuleInCents?: number;
+      /**
+       * The maximum price rule in cents that is configured in GAM (at the moment 500 Cents).
+       */
+      readonly minPriceRuleInCents?: number;
+    }
+
+    /**
+     * Defines the strategy used to determine the dynamic floor price based on bid CPMs in the last auctions on the same position.
+     *
+     * Available strategies:
+     * - 'max': Selects the highest previous bid CPM.
+     * - 'min': Selects the lowest previous bid CPM.
+     * - 'second-highest': Selects the second highest bid CPM.
+     */
+    export type DynamicFloorPriceStrategy = 'max' | 'min' | 'second-highest';
 
     export type PriceRules = {
       /**

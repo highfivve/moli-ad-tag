@@ -7,7 +7,7 @@ import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/mol
 import { Cleanup } from './index';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createMoliTag } from 'ad-tag/ads/moli';
-import { AdSlot, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { AdSlot, modules } from 'ad-tag/types/moliConfig';
 import { googletag } from 'ad-tag/types/googletag';
 import IAdSlot = googletag.IAdSlot;
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
@@ -83,8 +83,6 @@ describe('Cleanup Module', () => {
         position: 'in-page',
         sizes: [],
         behaviour: { loaded: behaviour ?? 'manual', bucket: bucket },
-        labelAll: [],
-        labelAny: [],
         sizeConfig: []
       };
       return slot;

@@ -3,20 +3,24 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 import { YieldOptimizationService } from './yieldOptimizationService';
-import { modules } from 'ad-tag/types/moliConfig';
+import { auction, Device, modules } from 'ad-tag/types/moliConfig';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import StaticYieldOptimizationConfig = modules.yield_optimization.StaticYieldOptimizationConfig;
 import NoYieldOptimizationConfig = modules.yield_optimization.NoYieldOptimizationConfig;
 import DynamicYieldOptimizationConfig = modules.yield_optimization.DynamicYieldOptimizationConfig;
 import AdunitPriceRulesResponse = modules.yield_optimization.AdunitPriceRulesResponse;
 import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { prebidjs } from 'ad-tag/types/prebidjs';
+import { googletag } from 'ad-tag/types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
 
 describe('YieldOptimizationService', () => {
   const dom = createDom();
-  const domWindow: Window = dom.window as any;
+  const domWindow: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow =
+    dom.window as any;
   domWindow.fetch = () => {
     return Promise.reject('not implemented');
   };
@@ -36,11 +40,13 @@ describe('YieldOptimizationService', () => {
   });
 
   describe('resolve ad unit paths', () => {
-    [
-      { device: 'mobile' as const, domain: 'example.com' },
-      { device: 'desktop' as const, domain: 'test.org' },
-      { device: 'mobile' as const, domain: 'acme.net' }
-    ].forEach(({ device, domain }) => {
+    const adInfo: { device: Device; domain: string }[] = [
+      { device: 'mobile', domain: 'example.com' },
+      { device: 'desktop', domain: 'test.org' },
+      { device: 'mobile', domain: 'acme.net' }
+    ];
+
+    adInfo.forEach(({ device, domain }) => {
       it(`should resolve the ad unit path with device: ${device}, domain: ${domain}`, async () => {
         const adUnitDynamic = '/123/pub/ad_content_1/{device}/{domain}';
         const adUnitResolved = `/123/pub/ad_content_1/${device}/${domain}`;
@@ -88,7 +94,7 @@ describe('YieldOptimizationService', () => {
       const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
       await service.init('mobile', {}, [], domWindow.fetch, noopLogger);
-      await service.setTargeting(adSlot, 'gam', noopLogger);
+      await service.setTargeting(adSlot, 'gam', noopLogger, config);
       expect(getAdUnitPathSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.not.have.been.called;
     });
@@ -115,7 +121,7 @@ describe('YieldOptimizationService', () => {
         const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
         await service.init('mobile', {}, [], domWindow.fetch, noopLogger);
-        await service.setTargeting(adSlot, 'gam', noopLogger);
+        await service.setTargeting(adSlot, 'gam', noopLogger, config);
         expect(getAdUnitPathSpy).to.have.been.calledOnce;
         expect(setTargetingSpy).to.not.have.been.called;
       });
@@ -258,7 +264,7 @@ describe('YieldOptimizationService', () => {
 
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], domWindow.fetch, noopLogger);
         await service.getPriceRule(adUnitPath1);
-        await service.setTargeting(adSlot, 'gam', noopLogger);
+        await service.setTargeting(adSlot, 'gam', noopLogger, config);
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
@@ -278,7 +284,7 @@ describe('YieldOptimizationService', () => {
 
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], domWindow.fetch, noopLogger);
         await service.getPriceRule(adUnitPath1);
-        await service.setTargeting(adSlot, 'gam', noopLogger);
+        await service.setTargeting(adSlot, 'gam', noopLogger, config);
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
@@ -301,7 +307,7 @@ describe('YieldOptimizationService', () => {
           noopLogger
         );
         await service.getPriceRule(adUnitPath1);
-        await service.setTargeting(adSlot, 'gam', noopLogger);
+        await service.setTargeting(adSlot, 'gam', noopLogger, config);
 
         expect(fetchStub).to.have.been.calledOnce;
         expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {
@@ -331,6 +337,20 @@ describe('YieldOptimizationService', () => {
       });
 
       describe('setTargeting', async () => {
+        let globalAuctionContext: GlobalAuctionContext;
+        let getLastBidCpmsOfAdUnitStub: Sinon.SinonStub;
+
+        beforeEach(() => {
+          // stub global auction context with getLastBidCpms method
+          const config: auction.GlobalAuctionContextConfig = {
+            previousBidCpms: {
+              enabled: true
+            }
+          };
+          globalAuctionContext = new GlobalAuctionContext(domWindow, config);
+          getLastBidCpmsOfAdUnitStub = sandbox.stub(globalAuctionContext, 'getLastBidCpmsOfAdUnit');
+        });
+
         it('should setTargeting with model fallback', async () => {
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
@@ -338,7 +358,7 @@ describe('YieldOptimizationService', () => {
           const service = createService(config);
           await service.init('mobile', {}, [adUnitPath1, adUnitPath2], domWindow.fetch, noopLogger);
           const rule = await service.getPriceRule(adUnitPath1);
-          await service.setTargeting(adSlot, 'gam', noopLogger);
+          await service.setTargeting(adSlot, 'gam', noopLogger, config, globalAuctionContext);
 
           expect(setTargetingSpy).has.been.calledWith('upr_id', rule!.priceRuleId.toFixed(0));
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'static');
@@ -351,9 +371,119 @@ describe('YieldOptimizationService', () => {
 
           const service = createService(config);
           await service.init('mobile', {}, [adUnitPath1, adUnitPath2], domWindow.fetch, noopLogger);
-          await service.setTargeting(adSlot, 'gam', noopLogger);
+          await service.setTargeting(adSlot, 'gam', noopLogger, config);
 
           expect(setTargetingSpy).has.been.calledWith('upr_model', 'ml');
+        });
+
+        it('should overwrite the standard price rule with the dynamic floor price based on the last bid cpms if yield config is dynamic and strategy is available', async () => {
+          const configWithDynamicFloorStrategy: DynamicYieldOptimizationConfig = {
+            enabled: true,
+            provider: 'dynamic',
+            configEndpoint: '//localhost',
+            excludedAdUnitPaths: [],
+            dynamicFloorPrices: {
+              strategy: 'max',
+              roundingStepsInCents: 5,
+              maxPriceRuleInCents: 500,
+              minPriceRuleInCents: 5
+            }
+          };
+
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createService(configWithDynamicFloorStrategy);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          await service.setTargeting(
+            adSlot,
+            'gam',
+            noopLogger,
+            configWithDynamicFloorStrategy,
+            globalAuctionContext
+          );
+
+          expect(setTargetingSpy).has.been.calledWith('upr_model', 'static');
+          expect(setTargetingSpy).has.been.calledWith('upr_main', 'true');
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '500');
+        });
+
+        it('should NOT overwrite the standard price rule if yield config is dynamic and strategy is not available', async () => {
+          const configWithoutDynamicFloorStrategy: DynamicYieldOptimizationConfig = {
+            enabled: true,
+            provider: 'dynamic',
+            configEndpoint: '//localhost',
+            excludedAdUnitPaths: []
+          };
+
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createService(configWithoutDynamicFloorStrategy);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          await service.setTargeting(
+            adSlot,
+            'gam',
+            noopLogger,
+            configWithoutDynamicFloorStrategy,
+            globalAuctionContext
+          );
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
+        });
+        it('should NOT overwrite the standard price rule if yield config is dynamic and there are no last bids', async () => {
+          const yieldConfig: DynamicYieldOptimizationConfig = {
+            enabled: true,
+            provider: 'dynamic',
+            configEndpoint: '//localhost',
+            excludedAdUnitPaths: [],
+            dynamicFloorPrices: {
+              strategy: 'max',
+              roundingStepsInCents: 5,
+              maxPriceRuleInCents: 500,
+              minPriceRuleInCents: 5
+            }
+          };
+
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createService(yieldConfig);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          await service.setTargeting(adSlot, 'gam', noopLogger, yieldConfig, globalAuctionContext);
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
+        });
+        it('should NOT overwrite the standard price rule if config is other than dynamic', async () => {
+          const yieldConfig: StaticYieldOptimizationConfig = {
+            enabled: true,
+            provider: 'static',
+            config: {
+              rules: {
+                [adUnitPath1]: {
+                  priceRuleId: 3,
+                  floorprice: 0.2,
+                  main: true
+                }
+              }
+            }
+          };
+          getLastBidCpmsOfAdUnitStub.withArgs('p_content_1').returns([1.5, 5.0]);
+
+          const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
+          const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
+
+          const service = createService(yieldConfig);
+          await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
+          await service.setTargeting(adSlot, 'gam', noopLogger, yieldConfig, globalAuctionContext);
+
+          expect(setTargetingSpy).has.been.calledWith('upr_id', '3');
         });
       });
     });
@@ -376,7 +506,7 @@ describe('YieldOptimizationService', () => {
 
           await service.init(device, {}, [], domWindow.fetch, noopLogger);
           await service.getPriceRule(adUnitPath1);
-          await service.setTargeting(adSlot, 'gam', noopLogger);
+          await service.setTargeting(adSlot, 'gam', noopLogger, config);
 
           expect(fetchStub).to.have.been.calledOnce;
           expect(fetchStub).to.have.been.calledOnceWithExactly(config.configEndpoint, {

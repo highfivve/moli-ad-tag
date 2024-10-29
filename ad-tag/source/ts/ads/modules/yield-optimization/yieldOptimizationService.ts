@@ -2,6 +2,9 @@ import { AdServer, AdUnitPathVariables, Device, modules } from 'ad-tag/types/mol
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { resolveAdUnitPath } from 'ad-tag/ads/adUnitPath';
 import { googletag } from 'ad-tag/types/googletag';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { isYieldConfigDynamic } from 'ad-tag/ads/modules/yield-optimization/isYieldOptimizationConfigDynamic';
+import { calculateDynamicPriceRule } from 'ad-tag/ads/modules/yield-optimization/dynamicFloorPrice';
 
 /**
  * Extended representation which adds
@@ -80,14 +83,17 @@ export class YieldOptimizationService {
         logger.warn('YieldOptimizationService', 'Yield optimization is static!');
         this.isEnabled = true;
         this.adUnitPricingRuleResponse = Promise.resolve({
-          rules: this.yieldConfig.config.rules,
+          rules: (this.yieldConfig as modules.yield_optimization.StaticYieldOptimizationConfig)
+            .config.rules,
           browser: 'None'
         });
         break;
       case 'dynamic':
         this.isEnabled = true;
 
-        const excludedAdUnitPaths = this.yieldConfig.excludedAdUnitPaths;
+        const excludedAdUnitPaths = (
+          this.yieldConfig as modules.yield_optimization.DynamicYieldOptimizationConfig
+        ).excludedAdUnitPaths;
 
         // The list of adUnitPaths we want to get the priceRules for.
         const filteredAdUnitPaths = adUnitPaths.filter(
@@ -99,7 +105,8 @@ export class YieldOptimizationService {
         );
 
         this.adUnitPricingRuleResponse = this.loadConfigWithRetry(
-          this.yieldConfig.configEndpoint,
+          (this.yieldConfig as modules.yield_optimization.DynamicYieldOptimizationConfig)
+            .configEndpoint,
           3,
           resolvedAdUnits,
           fetch
@@ -155,25 +162,63 @@ export class YieldOptimizationService {
    * @param adSlot
    * @param adServer
    * @param logger
+   * @param yieldOptimizationConfig - needed to determine if the price rule should be calculated dynamically
+   * @param auctionContext - place where previous bid cpms in order to determine dynamic floor price are saved
    */
   public setTargeting(
     adSlot: googletag.IAdSlot,
     adServer: AdServer,
-    logger: MoliRuntime.MoliLogger
+    logger: MoliRuntime.MoliLogger,
+    yieldOptimizationConfig: modules.yield_optimization.YieldOptimizationConfig | null,
+    auctionContext?: GlobalAuctionContext
   ): Promise<PriceRule | undefined> {
     const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
     return this.adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
       if (adServer === 'gam') {
         if (rule) {
-          logger.debug(
-            'YieldOptimizationService',
-            `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
-          );
-          adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           adSlot.setTargeting('upr_model', rule.model || 'static');
           if (rule.main) {
             adSlot.setTargeting('upr_main', 'true');
+            const lastBidCpmsOnPosition: number[] | undefined =
+              auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
+            /*
+             * If in main group and if there were bids on the position, the price should be calculated based on the previous cpms
+             * saved in the previousBidCpms extension of the global auction context.
+             * The strategy is dependent on the dynamic yield optimization config.
+             */
+            if (
+              lastBidCpmsOnPosition &&
+              lastBidCpmsOnPosition?.length > 0 &&
+              isYieldConfigDynamic(yieldOptimizationConfig) &&
+              yieldOptimizationConfig.dynamicFloorPrices
+            ) {
+              const { strategy, roundingStepsInCents, maxPriceRuleInCents, minPriceRuleInCents } =
+                yieldOptimizationConfig.dynamicFloorPrices;
+              const newRule = calculateDynamicPriceRule({
+                strategy,
+                previousCpms: lastBidCpmsOnPosition,
+                standardRule: rule,
+                roundingStepsInCents,
+                maxPriceRuleInCents,
+                minPriceRuleInCents
+              });
+              logger.debug(
+                'YieldOptimizationService',
+                `set dynamic price rule id ${newRule.priceRuleId} for ${adUnitPath} based on previous bid cpms on same position. Stategy is '${strategy}'. Main traffic share ${rule.main}. Cpm is ${newRule.floorprice}.`
+              );
+              adSlot.setTargeting('upr_id', newRule.priceRuleId.toFixed(0));
+              return newRule;
+            } else {
+              adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
+            }
+          } else {
+            // if not in main group, use the price rule determined by the yield optimization
+            logger.debug(
+              'YieldOptimizationService',
+              `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
+            );
+            adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           }
         } else if (this.isEnabled) {
           logger.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
