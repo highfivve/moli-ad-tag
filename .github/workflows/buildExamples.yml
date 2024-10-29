@@ -43,7 +43,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Build ad tag lib
-        run: npm run build:bundle:all
+        run: npm run build
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
