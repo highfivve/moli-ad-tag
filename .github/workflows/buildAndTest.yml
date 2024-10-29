@@ -35,9 +35,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Setup default CSS variables and custom properties
-        run: npm run setup:css:defaults
-
       - name: Validate
         run: npm run validate
 

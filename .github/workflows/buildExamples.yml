@@ -38,7 +38,7 @@ jobs:
           scope: '@highfivve'
 
       - name: setup
-        run: npm run setup && npm run setup:css:defaults
+        run: npm run setup
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
