@@ -1,7 +1,4 @@
 /** provided by publisher or generated through external system */
-@custom-media --h5v-mobile (max-width: 767px);
-@custom-media --h5v-desktop (min-width: 768px);
-
 :root {
   /** sticky footer ad */
   --h5v-sticky-footer-bg: #f0f0f0;
