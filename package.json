@@ -35,7 +35,8 @@
     "schema": "ts-json-schema-generator --path 'ad-tag/source/ts/types/moliConfig.ts' --type 'MoliConfig' --out schema.json",
     "release:validate": "npm run validate && npm run build",
     "release": "np --no-release-draft --no-publish --test-script release:validate",
-    "github:publish": "npm run clean && npm run build && npm publish --registry https://npm.pkg.github.com/",
+    "github:publish": "npm run clean && npm run build && npm publish --registry https://npm.pkg.github.com/",,,
+    "prepublishOnly": "npm run setup:css:defaults",
     "postpublish": "npm run clean",
     "postinstall": "npm run codeGen"
   },
