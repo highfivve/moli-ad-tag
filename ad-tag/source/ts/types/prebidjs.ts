@@ -4074,7 +4074,21 @@ export namespace prebidjs {
     /**
      * Indicates the type of supply for this placement. Possible values are web, mobile_web, mobile_app
      */
-    readonly supplyType?: 'web' | 'mobile_web' | 'mobile_app';
+    readonly supply_type?: 'web' | 'mobile_web' | 'mobile_app';
+
+    /**
+     * If true, Appnexus will return net price to Prebid.js after publisher payment rules have been applied.
+     */
+    readonly use_pmt_rule?: boolean;
+
+    /**
+     * 	Identify the placement as above or below the fold.
+     * 	Allowed values:
+     * 	- Unknown: unknown
+     * 	- Above the fold: above
+     * 	- Below the fold: below
+     */
+    readonly position?: 'above' | 'below' | 'unknown';
 
     /**
      * Optional configuration for video placements
