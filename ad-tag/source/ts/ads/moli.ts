@@ -507,7 +507,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         addDomainLabel(state.config.domain);
         const { moduleMeta, isSinglePageApp, refreshSlots, refreshInfiniteSlots } = state;
         let config = state.config;
-        console.log(refreshInfiniteSlots);
         // if there are infinite adslots available in the refreshInfiniteSlots array, they need to be added to the config
         if (refreshInfiniteSlots.length > 0) {
           refreshInfiniteSlots.forEach(slot => {
@@ -574,15 +573,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               // check if we are still on the same page and in the spa-requestAds state
               // if not the user has already navigated to another page, and we discard everything here
               const validateLocation = config.spa?.validateLocation ?? 'href';
-              state.state === 'spa-requestAds' && console.log('requestAds stateHref', state.href);
-              console.log('requestAds currentsLocation', window.location.href);
-
-              console.log(
-                'allow allowRefreshAdSlot',
-                state.state === 'spa-requestAds' &&
-                  allowRefreshAdSlot(validateLocation, state.href, window.location)
-              );
-
               if (
                 state.state === 'spa-requestAds' &&
                 allowRefreshAdSlot(validateLocation, state.href, window.location)
@@ -678,7 +668,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             // don't use the config from the initialized method as we need to alter the config
             // here to allow different key-values for multiple pages
             const validation = config.spa?.validateLocation ?? 'href';
-            console.log('allowRequestAds', !allowRequestAds(validation, href, window.location));
             if (!allowRequestAds(validation, href, window.location)) {
               return Promise.reject(
                 `You are trying to refresh ads on the same page, which is not allowed. Using ${validation} for validation.`
@@ -833,8 +822,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   ): Promise<'queued' | 'refreshed'> {
     switch (state.state) {
       case 'configurable': {
-        console.log('configurable');
-
         state.refreshInfiniteSlots.push({
           artificialDomId: domId,
           idOfConfiguredSlot: idOfConfiguredSlot
@@ -842,8 +829,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         return Promise.resolve('queued');
       }
       case 'configured': {
-        console.log('configured');
-
         state.refreshInfiniteSlots.push({
           artificialDomId: domId,
           idOfConfiguredSlot: idOfConfiguredSlot
@@ -853,8 +838,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // if requestAds is currently called we batch the refreshAdSlot calls until
       // we hit the 'spa-finished' state
       case 'spa-requestAds':
-        console.log('spa-requestAds');
-
         state.refreshInfiniteSlots.push({
           artificialDomId: domId,
           idOfConfiguredSlot: idOfConfiguredSlot
@@ -863,7 +846,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
       // until the next requestAds() call arrives
       case 'spa-finished':
-        console.log('spa-finished');
         // user hasn't navigated yet so we directly refresh the slot
         const validateLocation = state.config.spa?.validateLocation ?? 'href';
         if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
@@ -884,8 +866,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        console.log('finished');
-
         state = {
           ...state,
           config: addNewInfiniteSlotToConfig(state.config, idOfConfiguredSlot, domId, window)

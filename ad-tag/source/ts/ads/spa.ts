@@ -39,9 +39,6 @@ export const allowRequestAds = (
   stateHref: string,
   currentLocation: Location
 ): boolean => {
-  console.log('stateHref', stateHref);
-  console.log('currentLocation', currentLocation.href);
-
   switch (validateLocation) {
     case 'none':
       return true;

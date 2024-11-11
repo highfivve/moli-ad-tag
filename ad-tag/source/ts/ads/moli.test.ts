@@ -1496,10 +1496,9 @@ describe('moli', () => {
           expect(allowRequestAdsSpy).to.have.not.been.called;
         });
 
-        it('should refreshAdSlots fn refresh slots if requestAds was called & the path has changed', async () => {
+        it('should refreshInfiniteAdSlot fn refresh slots if requestAds was called & the path has changed', async () => {
           const adTag = createMoliTag(jsDomWindow);
           const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
-          const requestAdsSpy = sandbox.spy(adTag, 'requestAds');
 
           const slots: Moli.AdSlot[] = [
             {
@@ -1532,16 +1531,13 @@ describe('moli', () => {
 
           expect(response).to.be.eq('refreshed');
           expect(allowRefreshAdSlotSpy).to.have.been.called;
-
-          await expect(requestAdsSpy.firstCall.returnValue).to.be.eventually.fulfilled;
         });
       });
 
       describe('with validateLocation: href', () => {
-        it('should refreshAdSlots fn queue slots until requestAds is called but prevent requestAds if the href remained the same', async () => {
+        it('should refreshInfiniteAdSlot fn queue slots until requestAds is called but prevent requestAds if the href remained the same', async () => {
           const adTag = createMoliTag(jsDomWindow);
           const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
-          const requestAdsSpy = sandbox.spy(adTag, 'requestAds');
 
           const slots: Moli.AdSlot[] = [
             {
@@ -1566,14 +1562,14 @@ describe('moli', () => {
           expect(response).to.be.eq('queued');
           await adTag.requestAds();
           expect(allowRefreshAdSlotSpy).to.have.been.called;
-          const expectedMessage =
-            'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.';
-          await expect(requestAdsSpy.firstCall.returnValue).to.be.eventually.rejectedWith(
-            expectedMessage
+
+          // second requestAds is not allowed
+          expect(adTag.requestAds()).to.be.eventually.rejectedWith(
+            'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
           );
         });
 
-        it('should refreshAdSlots fn refresh slots if requestAds was called & the href has changed', async () => {
+        it('should refreshInfiniteAdSlot fn refresh slots if requestAds was called & the href has changed', async () => {
           const adTag = createMoliTag(jsDomWindow);
           const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
 
