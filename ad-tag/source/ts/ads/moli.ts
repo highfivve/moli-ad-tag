@@ -415,7 +415,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             .then(() => {
               // check if we are still on the same page and in the spa-requestAds state
               // if not the user has already navigated to another page, and we discard everything here
-              if (state.state === 'spa-requestAds' && state.href === window.location.href) {
+              const validateLocation = config.spa?.validateLocation ?? 'href';
+              if (
+                state.state === 'spa-requestAds' &&
+                allowRefreshAdSlot(validateLocation, state.href, window.location)
+              ) {
                 // TODO never all this if refreshSlots is empty
                 adService.refreshAdSlots(
                   state.runtimeConfig.refreshSlots,
@@ -741,7 +745,9 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
       // until the next requestAds() call arrives
       case 'spa-finished': {
-        if (state.href === window.location.href) {
+        // user hasn't navigated yet so we directly refresh the slot
+        const validateLocation = state.config.spa?.validateLocation ?? 'href';
+        if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
           // user hasn't navigated yet, so we directly refresh the slot
           return adService
             .refreshBucket(bucket, state.config, state.runtimeConfig)

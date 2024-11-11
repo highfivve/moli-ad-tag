@@ -159,7 +159,6 @@ describe('a9', () => {
       const tcData = fullConsent({ '793': false });
 
       await step({ ...adPipelineContext(), tcData });
-      console.log(assetLoaderStub.firstCall);
       expect(assetLoaderStub).not.have.been.called;
     });
 
