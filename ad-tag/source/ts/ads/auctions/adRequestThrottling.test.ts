@@ -16,8 +16,11 @@ describe('ad request throttling', () => {
   const sandbox = Sinon.createSandbox();
   const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
 
-  const throttle = (throttleInSeconds: number) =>
-    new AdRequestThrottling({ enabled: true, throttle: throttleInSeconds }, jsDomWindow);
+  const throttle = (throttleInSeconds: number, includedDomIds?: string[]) =>
+    new AdRequestThrottling(
+      { enabled: true, throttle: throttleInSeconds, includedDomIds },
+      jsDomWindow
+    );
 
   const slotRequestedEvent = (slotId: string) =>
     ({ slot: { getSlotElementId: () => slotId } }) as googletag.events.ISlotRequestedEvent;
@@ -66,5 +69,30 @@ describe('ad request throttling', () => {
     expect(adRequestThrottling.isThrottled('slot-1')).to.be.true;
     sandbox.clock.tick(10 * 1000);
     expect(adRequestThrottling.isThrottled('slot-1')).to.be.false;
+  });
+
+  describe('includedDomIds', () => {
+    it('should throttle requests only for the given ad slots if "includedDomIds" is set in the config', () => {
+      const adRequestThrottling = throttle(20, ['slot-1']);
+      adRequestThrottling.onSlotRequested(slotRequestedEvent('slot-1'));
+      adRequestThrottling.onSlotRequested(slotRequestedEvent('slot-2'));
+
+      expect(adRequestThrottling.isThrottled('slot-1')).to.be.true;
+      expect(adRequestThrottling.isThrottled('slot-2')).to.be.false;
+      sandbox.clock.tick(20 * 1000);
+      expect(adRequestThrottling.isThrottled('slot-1')).to.be.false;
+      expect(adRequestThrottling.isThrottled('slot-2')).to.be.false;
+    });
+    it('should throttle requests for all ad slots if "includedDomIds" is empty', () => {
+      const adRequestThrottling = throttle(20, []);
+      adRequestThrottling.onSlotRequested(slotRequestedEvent('slot-1'));
+      adRequestThrottling.onSlotRequested(slotRequestedEvent('slot-2'));
+
+      expect(adRequestThrottling.isThrottled('slot-1')).to.be.true;
+      expect(adRequestThrottling.isThrottled('slot-2')).to.be.true;
+      sandbox.clock.tick(20 * 1000);
+      expect(adRequestThrottling.isThrottled('slot-1')).to.be.false;
+      expect(adRequestThrottling.isThrottled('slot-2')).to.be.false;
+    });
   });
 });
