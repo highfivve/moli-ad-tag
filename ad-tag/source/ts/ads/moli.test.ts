@@ -1,6 +1,7 @@
 import { createDom } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 import { createMoliTag } from './moli';
@@ -35,6 +36,7 @@ import * as spaModule from 'ad-tag/ads/spa';
 
 // setup sinon-chai
 use(sinonChai);
+use(chaiAsPromised);
 
 describe('moli', () => {
   // single sandbox instance to create spies and stubs
@@ -90,6 +92,7 @@ describe('moli', () => {
 
   afterEach(() => {
     sandbox.reset();
+    sandbox.restore();
   });
 
   describe('init ad tag', () => {
@@ -243,8 +246,6 @@ describe('moli', () => {
       }
     };
 
-    const configureSpy = sandbox.spy(fakeModule, 'configure');
-
     it('should init modules in the requestAds call', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
@@ -285,6 +286,7 @@ describe('moli', () => {
     });
 
     it('should add pipeline steps', async () => {
+      const configureSpy = sandbox.spy(fakeModule, 'configure');
       const adTag = createMoliTag(jsDomWindow);
       const moduleConfig: modules.ModulesConfig = {
         pubstack: {
@@ -358,6 +360,7 @@ describe('moli', () => {
       const config = newEmptyConfig(defaultSlots);
       const logger = newNoopLogger();
 
+      const configureSpy = sandbox.spy(fakeModule, 'configure');
       const errorLogSpy = sandbox.spy(logger, 'error');
 
       adTag.setLogger(logger);
@@ -1338,6 +1341,15 @@ describe('moli', () => {
   });
 
   describe('refreshInfiniteAdSlots()', () => {
+    const idOfConfiguredInfiniteSlot = 'my-id';
+    const slots = (): AdSlot[] => [
+      {
+        ...mkAdSlotInDOM(),
+        behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
+        domId: idOfConfiguredInfiniteSlot
+      }
+    ];
+
     it('should add a new infinite slot to the config', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const slots: AdSlot[] = [
@@ -1357,20 +1369,11 @@ describe('moli', () => {
 
     it('should refresh the new infinite adslot if given configured slot id is available in the config', async () => {
       const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
-      const idOfConfiguredInfiniteSlot = 'my-id';
-
-      const slots: AdSlot[] = [
-        {
-          ...mkAdSlotInDOM(),
-          behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
-          domId: idOfConfiguredInfiniteSlot
-        }
-      ];
 
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      await adTag.configure({ ...defaultConfig, slots: slots });
+      await adTag.configure({ ...defaultConfig, slots: slots() });
 
       // Add div with domIdOfNewInfiniteSlot to DOM
       const div = jsDomWindow.document.createElement('div');
@@ -1388,21 +1391,12 @@ describe('moli', () => {
 
     it('should NOT refresh the new infinite adslot if given configured slot id is NOT available in the config', async () => {
       const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
-      const idOfConfiguredInfiniteSlot = 'my-id';
       const idNotInTheConfig = 'my-id-2';
-
-      const slots: AdSlot[] = [
-        {
-          ...mkAdSlotInDOM(),
-          behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
-          domId: idOfConfiguredInfiniteSlot
-        }
-      ];
 
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      await adTag.configure({ ...defaultConfig, slots: slots });
+      await adTag.configure({ ...defaultConfig, slots: slots() });
 
       // Add div with domIdOfNewInfiniteSlot to DOM
       const div = jsDomWindow.document.createElement('div');
@@ -1418,35 +1412,147 @@ describe('moli', () => {
     });
 
     describe('single page application', () => {
-      it('should check through allowRefreshAdSlot if refreshing is allowed', async () => {
-        const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
-        const idOfConfiguredInfiniteSlot = 'my-id';
+      const domIdOfNewInfiniteSlot = 'infinite-adslot-1';
+      const idOfConfiguredInfiniteSlot = 'my-id';
 
-        const slots: AdSlot[] = [
-          {
-            ...mkAdSlotInDOM(),
-            behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
-            domId: idOfConfiguredInfiniteSlot
-          }
-        ];
+      describe('with validateLocation: path', () => {
+        it('should let refreshAdSlots fn to refresh slots until requestAds is called but prevent requestAds if the path remained the same', async () => {
+          const adTag = createMoliTag(jsDomWindow);
+          const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+          const allowRequestAdsSpy = sandbox.spy(spaModule, 'allowRequestAds');
 
-        const adTag = createMoliTag(jsDomWindow);
-        const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+          await adTag.configure({
+            ...defaultConfig,
+            slots: slots(),
+            spa: { enabled: true, validateLocation: 'path' }
+          });
+          await adTag.requestAds();
 
-        await adTag.configure({
-          ...defaultConfig,
-          spa: { enabled: true, validateLocation: 'href' },
-          slots: slots
+          expect(adTag.getState()).to.be.eq('spa-finished');
+          // initial requestAds
+
+          const response = await adTag.refreshInfiniteAdSlot(
+            domIdOfNewInfiniteSlot,
+            idOfConfiguredInfiniteSlot
+          );
+          expect(response).to.be.eq('refreshed');
+
+          expect(allowRefreshAdSlotSpy).to.have.been.called;
+          expect(allowRequestAdsSpy).to.have.not.been.called;
         });
 
-        await adTag.requestAds();
-        const response = await adTag.refreshInfiniteAdSlot(
-          domIdOfNewInfiniteSlot,
-          idOfConfiguredInfiniteSlot
-        );
+        it('should refreshInfiniteAdSlot fn refresh slots if requestAds was called & the path has changed', async () => {
+          const adTag = createMoliTag(jsDomWindow);
+          const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
 
-        expect(response).to.be.eq('refreshed');
-        expect(allowRefreshAdSlotSpy).to.have.been.called;
+          await adTag.configure({
+            ...defaultConfig,
+            spa: { enabled: true, validateLocation: 'href' },
+            slots: slots()
+          });
+
+          expect(adTag.getState()).to.be.eq('configured');
+
+          // navigate to a new path
+          dom.reconfigure({
+            url: 'http://localhost/home'
+          });
+
+          // initial requestAds
+          await adTag.requestAds();
+
+          const response = await adTag.refreshInfiniteAdSlot(
+            domIdOfNewInfiniteSlot,
+            idOfConfiguredInfiniteSlot
+          );
+
+          expect(response).to.be.eq('refreshed');
+          expect(allowRefreshAdSlotSpy).to.have.been.called;
+        });
+      });
+
+      describe('with validateLocation: href', () => {
+        it('should refreshInfiniteAdSlot fn queue slots until requestAds is called but prevent requestAds if the href remained the same', async () => {
+          const adTag = createMoliTag(jsDomWindow);
+          const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+
+          await adTag.configure({
+            ...defaultConfig,
+            slots: slots(),
+            spa: { enabled: true, validateLocation: 'href' }
+          });
+
+          expect(adTag.getState()).to.be.eq('configured');
+
+          const response = await adTag.refreshInfiniteAdSlot(
+            domIdOfNewInfiniteSlot,
+            idOfConfiguredInfiniteSlot
+          );
+          expect(response).to.be.eq('queued');
+          await adTag.requestAds();
+          expect(allowRefreshAdSlotSpy).to.have.been.called;
+
+          // second requestAds is not allowed
+          expect(adTag.requestAds()).to.be.eventually.rejectedWith(
+            'You are trying to refresh ads on the same page, which is not allowed. Using href for validation.'
+          );
+        });
+
+        it('should refreshInfiniteAdSlot fn refresh slots if requestAds was called & the href has changed', async () => {
+          const adTag = createMoliTag(jsDomWindow);
+          const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+
+          await adTag.configure({
+            ...defaultConfig,
+            slots: slots(),
+            spa: { enabled: true, validateLocation: 'href' }
+          });
+
+          expect(adTag.getState()).to.be.eq('configured');
+
+          // initial requestAds
+          await adTag.requestAds();
+
+          // navigate to a new path
+          dom.reconfigure({
+            url: 'http://localhost/?query=1'
+          });
+
+          await adTag.requestAds();
+
+          const response = await adTag.refreshInfiniteAdSlot(
+            domIdOfNewInfiniteSlot,
+            idOfConfiguredInfiniteSlot
+          );
+
+          expect(response).to.be.eq('refreshed');
+          expect(allowRefreshAdSlotSpy).to.have.been.called;
+        });
+      });
+
+      describe('with validateLocation: none', () => {
+        it('should refreshAdSlots fn queue slots until requestAds is called and NOT to prevent requestAds', async () => {
+          const adTag = createMoliTag(jsDomWindow);
+          const allowRefreshAdSlotSpy = sandbox.spy(spaModule, 'allowRefreshAdSlot');
+
+          await adTag.configure({
+            ...defaultConfig,
+            slots: slots(),
+            spa: { enabled: true, validateLocation: 'none' }
+          });
+
+          expect(adTag.getState()).to.be.eq('configured');
+
+          await adTag.requestAds();
+
+          const response = await adTag.refreshInfiniteAdSlot(
+            domIdOfNewInfiniteSlot,
+            idOfConfiguredInfiniteSlot
+          );
+
+          expect(response).to.be.eq('refreshed');
+          expect(allowRefreshAdSlotSpy).to.have.been.called;
+        });
       });
     });
   });
