@@ -507,7 +507,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         addDomainLabel(state.config.domain);
         const { moduleMeta, isSinglePageApp, refreshSlots, refreshInfiniteSlots } = state;
         let config = state.config;
-
         // if there are infinite adslots available in the refreshInfiniteSlots array, they need to be added to the config
         if (refreshInfiniteSlots.length > 0) {
           refreshInfiniteSlots.forEach(slot => {
