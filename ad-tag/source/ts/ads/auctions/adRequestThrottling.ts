@@ -15,11 +15,19 @@ export class AdRequestThrottling {
   ) {}
 
   onSlotRequested(event: googletag.events.ISlotRequestedEvent) {
-    // store information about the request
-    this.slotsRequested.add(event.slot.getSlotElementId());
-    this._window.setTimeout(() => {
-      this.slotsRequested.delete(event.slot.getSlotElementId());
-    }, this.config.throttle * 1000);
+    const slotId = event.slot.getSlotElementId();
+    // slot info should only be added if there's no list of included dom ids or the list includes the current slot id
+    const shouldAddSlot =
+      !this.config.includedDomIds ||
+      this.config.includedDomIds.length === 0 ||
+      this.config.includedDomIds.includes(slotId);
+
+    if (shouldAddSlot) {
+      this.slotsRequested.add(slotId);
+      this._window.setTimeout(() => {
+        this.slotsRequested.delete(slotId);
+      }, this.config.throttle * 1000);
+    }
   }
 
   isThrottled(slotId: string): boolean {
