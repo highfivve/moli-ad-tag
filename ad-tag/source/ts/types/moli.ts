@@ -1322,6 +1322,11 @@ export namespace Moli {
        * the time in seconds that has to pass before a slot can be requested again
        */
       throttle: number;
+      /**
+       * optional list of ad dom ids that should be included in the ad request throttling
+       * if not set, all ad slot requests will be throttled
+       */
+      includedDomIds?: string[];
     }
 
     export interface BidderDisablingConfig {
