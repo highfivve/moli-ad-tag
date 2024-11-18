@@ -1,16 +1,3 @@
-/** change the mobile/desktop breakpoint according to your style */
-@media (--h5v-mobile) {
-  main {
-    /** this reserves enough "space" for the sticky ad.
-     *
-     * The padding represents the whitespace where the sticky ad floats on top.
-     * It's caluclated based on the height of the navbar, the maximum height of the ad and some extra
-     * padding (30px in this case)
-     */
-    padding-top: calc(var(--navbar-height) + var(--header-ad-height) + 30px);
-  }
-}
-
 /** styles the container for the actual ad. You may name this CSS class as you wish */
 .h5v-header-ad {
   /** background is required for sticky ads */
