@@ -78,6 +78,15 @@ export class StickyHeaderAd implements IModule {
   private readonly buttonSelector = '[data-ref="header-ad-close-button"]';
 
   /**
+   * If a none sticky navbar configuration is available, but no css class is configured, this one will
+   * be used as default.
+   *
+   * Overriding this only makes sense if the publisher wants a different class name
+   * @private
+   */
+  private readonly navbarHiddenClassName = '.h5v-header-ad--navbarHidden';
+
+  /**
    * singleton observer instance. Required for SPA publishers where we need to
    * disconnect and reconnect when the user navigates.
    *
@@ -159,7 +168,8 @@ export class StickyHeaderAd implements IModule {
 
               // optional navbar configuration to support none-sticky navbars
               const navbarConfig = config.navbarConfig;
-              const navbarHiddenClass = navbarConfig ? navbarConfig.navbarHiddenClassName : null;
+              const navbarHiddenClass =
+                navbarConfig?.navbarHiddenClassName ?? this.navbarHiddenClassName;
               const navbar = navbarConfig
                 ? ctx.window.document.querySelector(navbarConfig.selector)
                 : null;
