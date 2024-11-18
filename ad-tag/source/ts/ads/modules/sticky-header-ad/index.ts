@@ -84,7 +84,7 @@ export class StickyHeaderAd implements IModule {
    * Overriding this only makes sense if the publisher wants a different class name
    * @private
    */
-  private readonly navbarHiddenClassName = '.h5v-header-ad--navbarHidden';
+  private readonly navbarHiddenClassName = 'h5v-header-ad--navbarHidden';
 
   /**
    * singleton observer instance. Required for SPA publishers where we need to
