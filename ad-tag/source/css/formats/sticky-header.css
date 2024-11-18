@@ -1,23 +1,23 @@
 /** styles the container for the actual ad. You may name this CSS class as you wish */
 .h5v-header-ad {
   /** background is required for sticky ads */
-  background-color: var(--header-ad-bg);
+  background-color: var(--h5v-header-ad-bg);
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: var(--header-ad-height);
+  min-height: var(--h5v-header-ad-height);
   width: 100%;
 }
 
 @media (--h5v-mobile) {
   .h5v-header-ad {
     /** you may change the style according to your needs */
-    border-bottom: var(--header-ad-border);
-    box-shadow: var(--header-ad-shadow);
+    border-bottom: var(--h5v-header-ad-border);
+    box-shadow: var(--h5v-header-ad-shadow);
 
     /** all properties below are for the sticky behaviour */
     position: fixed;
-    top: var(--navbar-height);
+    top: var(--h5v-navbar-height);
     transition: transform 800ms ease;
     transform: translateY(0);
     z-index: 10;
@@ -28,7 +28,9 @@
    */
   .h5v-header-ad--fadeOut {
     /** this is the hiding animiation */
-    transform: translateY(calc(-1 * (var(--navbar-height) + var(--header-ad-height) + 50px)));
+    transform: translateY(
+      calc(-1 * (var(--h5v-navbar-height) + var(--h5v-header-ad-height) + 50px))
+    );
   }
 
   /**
@@ -38,22 +40,22 @@
    * Only necessary if you have a none sticky navbar configuration.
    */
   .h5v-header-ad--navbarHidden {
-    top: var(--header-ad-navbar-hidden-top);
+    top: var(--h5v-header-ad-navbar-hidden-top);
   }
 
   /** this an example on how the close button may look like.
    * if you don't want a close button, this is optional.
    */
   .h5v-header-ad--button {
-    background-color: var(--header-ad-bg);
+    background-color: var(--h5v-header-ad-bg);
     bottom: -25px;
-    border-bottom: var(--header-ad-border);
-    border-right: var(--header-ad-border);
+    border-bottom: var(--h5v-header-ad-border);
+    border-right: var(--h5v-header-ad-border);
     border-width: inherit;
-    box-shadow: var(--header-ad-shadow);
+    box-shadow: var(--h5v-header-ad-shadow);
     border-radius: 0 0 0.5rem 0.5rem;
     font-size: 0.875rem;
-    display: var(--header-ad-close-button);
+    display: var(--h5v-header-ad-close-button);
     position: fixed;
     left: 0;
     padding: 0.125rem 1rem;
@@ -64,7 +66,7 @@
 @media (--h5v-desktop) {
   .h5v-header-ad {
     min-height: 250px;
-    padding-top: var(--navbar-height);
+    padding-top: var(--h5v-navbar-height);
   }
   .h5v-header-ad--button {
     display: none;

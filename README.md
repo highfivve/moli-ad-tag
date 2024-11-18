@@ -101,6 +101,21 @@ npm run build:css
 
 Styles will appear in the [dist](dist) folder.
 
+### Overriding styles
+
+You can override styles by changing the files
+
+- [ad-tag/source/css/publisher.vars.css](ad-tag/source/css/publisher.vars.css) for CSS variables
+- [ad-tag/source/css/publisher.media.json](ad-tag/source/css/publisher.media.json) for custom media properties
+
+The variables are split in different `:root` sections, so that [cssnano can deduplicate identical rules](https://cssnano.github.io/cssnano/docs/optimisations/discardduplicates/).
+
+You can create the default styles with
+
+```bash
+npm run setup:css:defaults
+```
+
 ## Console
 
 You can build and test the console locally with
