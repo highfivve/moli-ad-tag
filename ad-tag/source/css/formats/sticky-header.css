@@ -31,6 +31,16 @@
     transform: translateY(calc(-1 * (var(--navbar-height) + var(--header-ad-height) + 50px)));
   }
 
+  /**
+   * this class is added to the ad container when the navbar is hidden.
+   * It's required to prevent the ad from overlapping the content.
+   *
+   * Only necessary if you have a none sticky navbar configuration.
+   */
+  .h5v-header-ad--navbarHidden {
+    top: var(--header-ad-navbar-hidden-top);
+  }
+
   /** this an example on how the close button may look like.
    * if you don't want a close button, this is optional.
    */

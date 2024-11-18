@@ -2626,7 +2626,8 @@
           "description": "Optional configuration for publishers that have a navbar that hides on scroll or is not sticky. If set, the ad slot will receive the `navbarHiddenClassName` class when the navbar is hidden.",
           "properties": {
             "navbarHiddenClassName": {
-              "description": "the class name that will be added to the ad slot when the navbar is hidden",
+              "default": ".h5v-header-ad--navbarHidden",
+              "description": "the class name that will be added to the ad slot when the navbar is hidden If not provided a default will be used, which matches the CSS styling provided in this project.",
               "type": "string"
             },
             "selector": {
@@ -2635,8 +2636,7 @@
             }
           },
           "required": [
-            "selector",
-            "navbarHiddenClassName"
+            "selector"
           ],
           "type": "object"
         }

@@ -1461,8 +1461,12 @@ export namespace modules {
 
         /**
          * the class name that will be added to the ad slot when the navbar is hidden
+         * If not provided a default will be used, which matches the CSS styling provided in this
+         * project.
+         *
+         * @default '.h5v-header-ad--navbarHidden'
          */
-        readonly navbarHiddenClassName: string;
+        readonly navbarHiddenClassName?: string;
       };
 
       /**
