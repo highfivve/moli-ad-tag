@@ -65,8 +65,7 @@
 /** on desktop the ad is not sticky and placed in the regular layout flow */
 @media (--h5v-desktop) {
   .h5v-header-ad {
-    min-height: 250px;
-    padding-top: var(--h5v-navbar-height);
+    min-height: 90px;
   }
   .h5v-header-ad--button {
     display: none;
