@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && npm run build:bundle:all && npm run build:console && npm run build:css",
-    "build:css": "postcss ad-tag/source/css/*.css --dir dist",
+    "build:css": "postcss ad-tag/source/css/styles.css ad-tag/source/css/styles.novars.css --dir dist && cp ad-tag/source/css/vars.css dist/vars.css",
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "build:watch:css": "postcss ad-tag/source/css/*.css --dir dist --watch",
     "build:console": "npx rollup --config rollup.console.config.mjs",
