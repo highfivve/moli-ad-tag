@@ -841,6 +841,12 @@ export namespace prebidjs {
        */
       readonly enableOverride?: boolean;
 
+      /**
+       * Enable/disable registered syncs for aliased adapters.
+       * @default: `false`
+       */
+      readonly aliasSyncEnabled?: boolean;
+
       readonly userIds?: UserIdProvider[];
 
       /**
