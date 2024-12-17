@@ -1893,12 +1893,26 @@ export namespace prebidjs {
   }
 
   export namespace analytics {
-    export type AnalyticsAdapter = IGoogleAnalyticsAdapter;
-    export type AnalyticsProviders = 'ga';
+    export type AnalyticsAdapter = IAgmaAnalyticsAdapter | IGoogleAnalyticsAdapter;
+    export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
     export interface IAnalyticsAdapter<T> {
       readonly provider: AnalyticsProviders;
       readonly options: T;
+    }
+
+    export interface IAnalyticsAdapterOptions {
+      /**
+       * provided by AGMA
+       */
+      readonly code: string;
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/analytics/agma.html
+     */
+    export interface IAgmaAnalyticsAdapter extends IAnalyticsAdapter<IAnalyticsAdapterOptions> {
+      readonly provider: 'agma';
     }
 
     /**
