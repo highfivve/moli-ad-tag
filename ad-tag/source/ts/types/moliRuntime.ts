@@ -9,6 +9,7 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from '../ads/adPipeline';
+import { EventService } from '../ads/eventService';
 import {
   AdSlot,
   AdUnitPathVariables,
@@ -306,6 +307,23 @@ export namespace MoliRuntime {
      * @return the asset loader service that is used to fetch additional assets / resources
      */
     getAssetLoaderService(): IAssetLoaderService;
+
+    /**
+     * Add an event listener for ad request events.
+     * 
+     * @param event The event type
+     * @param listener The callback function to be executed with event-specific data
+     * @param options Optional configuration for the listener
+     */
+    addEventListener: EventService['addEventListener'];
+
+    /**
+     * Remove an event listener for ad request events.
+     * 
+     * @param event The event type
+     * @param listener The callback function to remove
+     */
+    removeEventListener: EventService['removeEventListener'];
   }
 
   /**
