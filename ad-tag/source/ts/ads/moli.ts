@@ -29,8 +29,8 @@ import {
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
   const assetLoaderService = createAssetLoaderService(window);
-  const adService = new AdService(assetLoaderService, window);
   const eventService = new EventService();
+  const adService = new AdService(assetLoaderService, eventService, window);
   const moliWindow = window as MoliRuntime.MoliWindow;
 
   /**
@@ -460,12 +460,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           };
           return adService
             .initialize(config, state.runtimeConfig)
-            .then(config => {
-              eventService.emit('beforeRequestAds', { runtimeConfig: state.runtimeConfig });
-              return adService.requestAds(config, state.runtimeConfig);
-            })
+            .then(config => adService.requestAds(config, state.runtimeConfig))
             .then(() => {
-              eventService.emit('afterRequestAds', { state: 'finished' });
               state = {
                 state: 'finished',
                 config: config,
@@ -476,7 +472,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               return Promise.resolve(state);
             })
             .catch(error => {
-              eventService.emit('afterRequestAds', { state: 'error' });
               getLogger(state.runtimeConfig, window).error('MoliGlobal', error);
               state = {
                 state: 'error',
@@ -548,7 +543,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             });
 
             // For single page applications
-            eventService.emit('beforeRequestAds', { runtimeConfig: state.runtimeConfig });
             return adService.requestAds(config, nextRuntimeConfig).then(() => config);
           })
           .then(config => {
@@ -566,7 +560,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
               runtimeConfig: state.runtimeConfig,
               nextRuntimeConfig: newEmptyRuntimeConfig(state.runtimeConfig)
             };
-            eventService.emit('afterRequestAds', { state: 'spa-finished' });
             afterRequestAds.forEach(hook => hook('spa-finished'));
             return state;
           });

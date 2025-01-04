@@ -17,6 +17,7 @@ import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { EventService } from 'ad-tag/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -29,6 +30,7 @@ describe('AdService', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
+  const eventService = new EventService();
 
   const emptyConfigWithPrebid: MoliConfig = {
     ...emptyConfig,
@@ -73,7 +75,7 @@ describe('AdService', () => {
       requestBids: [],
       requestAds: () => Promise.resolve()
     };
-    return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+    return new AdService(assetLoaderService, eventService, jsDomWindow, adPipelineConfiguration);
   };
 
   const initialize: (
@@ -557,6 +559,26 @@ describe('AdService', () => {
           Sinon.match.same(emptyRuntimeConfig),
           Sinon.match.number
         );
+      });
+    });
+
+    describe('events', () => {
+      it('should emit a beforeRequestAds event with the runtimeConfig', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('beforeRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, emptyRuntimeConfig);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ runtimeConfig: emptyRuntimeConfig });
+      });
+
+      it('should emit an afterRequestAds event the result state', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, emptyRuntimeConfig);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
       });
     });
   });
