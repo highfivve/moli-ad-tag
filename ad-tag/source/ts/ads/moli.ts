@@ -649,8 +649,21 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
         const { hooks, moduleMeta } = state;
         const afterRequestAds = state.hooks.afterRequestAds;
         const beforeRequestAds = state.hooks.beforeRequestAds;
-
         const currentState = state;
+
+        // call beforeRequestAds hooks to ensure side effects are being applied to the config first
+        beforeRequestAds.forEach(hook => {
+          try {
+            hook(currentState.configFromAdTag);
+          } catch (e) {
+            getLogger(currentState.config, window).error(
+              'MoliGlobal',
+              'beforeRequestAds hook failed',
+              e
+            );
+          }
+        });
+
         const { initialized, href, keyValues, labels, configFromAdTag } = state;
         // we can only use the preexisting refreshSlots array if the previous requestAds call finished in time
         const refreshSlots = state.state === 'spa-finished' ? state.refreshSlots : [];
@@ -701,19 +714,6 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
             };
           })
           .then(configWithTargeting => {
-            // run hooks
-            beforeRequestAds.forEach(hook => {
-              try {
-                hook(configWithTargeting);
-              } catch (e) {
-                getLogger(configWithTargeting, window).error(
-                  'MoliGlobal',
-                  'beforeRequestAds hook failed',
-                  e
-                );
-              }
-            });
-
             return adService
               .requestAds(configWithTargeting, refreshSlots, refreshInfiniteSlots)
               .then(() => configWithTargeting);
