@@ -56,9 +56,14 @@ export const checkSkinConfig = (
       const skinAdSlotDomId = conf.skinAdSlotDomId;
       const blockedAdSlotDomIds = conf.blockedAdSlotDomIds;
 
+      const bucketName = (bucket?: bucket.AdSlotBucket): string | undefined => {
+        return typeof bucket === 'string' ? bucket : bucket?.desktop;
+      };
+
       const skinAdSlotBucket = slots.find(slot => slot.domId === skinAdSlotDomId)?.behaviour.bucket;
       const blockedAdBuckets: string[] = blockedAdSlotDomIds
         .map(slotId => slots.find(slot => slot.domId === slotId)?.behaviour.bucket)
+        .map(bucketName)
         .filter(isNotNull);
 
       if (skinAdSlotBucket) {
@@ -69,7 +74,7 @@ export const checkSkinConfig = (
             text: formatSkinConfigMsg(
               {
                 id: skinAdSlotDomId,
-                bucket: skinAdSlotBucket
+                bucket: bucketName(skinAdSlotBucket) ?? 'default'
               },
               blockedAdSlotDomIds,
               blockedAdBuckets
