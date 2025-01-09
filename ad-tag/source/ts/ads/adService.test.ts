@@ -73,7 +73,9 @@ describe('AdService', () => {
       requestBids: [],
       requestAds: () => Promise.resolve()
     };
-    return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+    const service = new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+    service.setLogger(noopLogger);
+    return service;
   };
 
   const initialize: (
@@ -465,98 +467,228 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
-      const eagerAdSlot1: AdSlot = {
-        ...eagerAdSlot(),
-        behaviour: { loaded: 'eager', bucket: 'bucket1' }
-      };
-
-      const eagerAdSlot3: AdSlot = {
-        ...eagerAdSlot(),
-        behaviour: { loaded: 'eager' }
-      };
-
-      const allSlots = [eagerAdSlot1, eagerAdSlot3];
-
-      it('should load ad slots in specified buckets', async () => {
-        const adService = makeAdService();
-        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
-        const debugStub = sandbox.stub();
-        const logger: MoliRuntime.MoliLogger = { ...noopLogger, debug: debugStub };
-        adService.setLogger(logger);
-
-        addToDom(allSlots);
-        const moliConfig = {
-          ...emptyConfig,
-          buckets: { enabled: true },
-          slots: allSlots
+      describe('generic buckets', () => {
+        const eagerAdSlot1: AdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager', bucket: 'bucket1' }
         };
 
-        await adService.requestAds(moliConfig, emptyRuntimeConfig);
+        const eagerAdSlot3: AdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager' }
+        };
 
-        expect(runSpy).to.have.been.calledTwice;
-        expect(runSpy.firstCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals([eagerAdSlot1]),
-          Sinon.match.same(moliConfig),
-          Sinon.match.same(emptyRuntimeConfig),
-          Sinon.match.number
-        );
+        const allSlots = [eagerAdSlot1, eagerAdSlot3];
+        it('should load ad slots in specified buckets', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const debugStub = sandbox.stub();
+          const logger: MoliRuntime.MoliLogger = { ...noopLogger, debug: debugStub };
+          adService.setLogger(logger);
 
-        expect(debugStub).to.have.been.calledWithExactly(
-          'AdPipeline',
-          `running bucket bucket1, slots:`,
-          [eagerAdSlot1]
-        );
+          addToDom(allSlots);
+          const moliConfig = {
+            ...emptyConfig,
+            buckets: { enabled: true },
+            slots: allSlots
+          };
 
-        expect(debugStub).to.have.been.calledWithExactly(
-          'AdPipeline',
-          `running bucket default, slots:`,
-          [eagerAdSlot3]
-        );
+          await adService.requestAds(moliConfig, emptyRuntimeConfig);
+
+          expect(runSpy).to.have.been.calledTwice;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([eagerAdSlot1]),
+            Sinon.match.same(moliConfig),
+            Sinon.match.same(emptyRuntimeConfig),
+            Sinon.match.number
+          );
+
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket bucket1, slots:`,
+            [eagerAdSlot1]
+          );
+
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket default, slots:`,
+            [eagerAdSlot3]
+          );
+        });
+
+        it('should not load ad slots in specified buckets if disabled', async () => {
+          const adService = makeAdService();
+          adService.setLogger(noopLogger);
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+
+          addToDom(allSlots);
+          const moliConfig = {
+            ...emptyConfig,
+            buckets: { enabled: false },
+            slots: allSlots
+          };
+
+          await adService.requestAds(moliConfig, emptyRuntimeConfig);
+
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals(allSlots),
+            Sinon.match.same(moliConfig),
+            Sinon.match.same(emptyRuntimeConfig),
+            Sinon.match.number
+          );
+        });
+
+        it('should not load ad slots in specified buckets if no bucket config is provided', async () => {
+          const adService = makeAdService();
+          adService.setLogger(noopLogger);
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+
+          addToDom(allSlots);
+          const moliConfig = {
+            ...emptyConfig,
+            slots: allSlots
+          };
+
+          await adService.requestAds(moliConfig, emptyRuntimeConfig);
+
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals(allSlots),
+            Sinon.match.same(moliConfig),
+            Sinon.match.same(emptyRuntimeConfig),
+            Sinon.match.number
+          );
+        });
       });
 
-      it('should not load ad slots in specified buckets if disabled', async () => {
-        const adService = makeAdService();
-        adService.setLogger(noopLogger);
-        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      describe('device specific buckets', () => {
+        [
+          {
+            testName: 'should run pipeline twice for mobile if buckets differ',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'page' },
+            slot2Bucket: { mobile: 'page', desktop: 'page' }
+          },
+          {
+            testName: 'should run pipeline twice for mobile if buckets differ #2',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'page' },
+            slot2Bucket: 'page'
+          },
+          {
+            testName: 'should run pipeline twice for desktop if buckets differ',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'page', desktop: 'content' },
+            slot2Bucket: { mobile: 'page', desktop: 'page' }
+          },
+          {
+            testName: 'should run pipeline twice for desktop if buckets differ #2',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'page', desktop: 'content' },
+            slot2Bucket: 'page'
+          }
+        ].forEach(({ testName, deviceLabel, slot1Bucket, slot2Bucket }) => {
+          it(testName, async () => {
+            const adService = makeAdService();
+            const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+            const slot1: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot1Bucket }
+            };
 
-        addToDom(allSlots);
-        const moliConfig = {
-          ...emptyConfig,
-          buckets: { enabled: false },
-          slots: allSlots
-        };
+            const slot2: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot2Bucket }
+            };
+            addToDom([slot1, slot2]);
 
-        await adService.requestAds(moliConfig, emptyRuntimeConfig);
+            const moliConfig = {
+              ...emptyConfig,
+              buckets: { enabled: true },
+              slots: [slot1, slot2]
+            };
 
-        expect(runSpy).to.have.been.calledOnce;
-        expect(runSpy.firstCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals(allSlots),
-          Sinon.match.same(moliConfig),
-          Sinon.match.same(emptyRuntimeConfig),
-          Sinon.match.number
-        );
-      });
+            await adService.requestAds(moliConfig, {
+              ...emptyRuntimeConfig,
+              labels: [deviceLabel]
+            });
+            expect(runSpy).to.have.been.calledTwice;
+            expect(runSpy.firstCall).to.have.been.calledWith(
+              Sinon.match.array.deepEquals([slot1]),
+              Sinon.match.same(moliConfig),
+              Sinon.match.any,
+              Sinon.match.number
+            );
+            expect(runSpy.secondCall).to.have.been.calledWith(
+              Sinon.match.array.deepEquals([slot2]),
+              Sinon.match.same(moliConfig),
+              Sinon.match.any,
+              Sinon.match.number
+            );
+          });
+        });
 
-      it('should not load ad slots in specified buckets if no bucket config is provided', async () => {
-        const adService = makeAdService();
-        adService.setLogger(noopLogger);
-        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+        //
+        [
+          {
+            testName: 'should run pipeline once for mobile if buckets differ',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'content' },
+            slot2Bucket: { mobile: 'content', desktop: 'page' }
+          },
+          {
+            testName: 'should run pipeline once for mobile if buckets differ #2',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'page' },
+            slot2Bucket: 'content'
+          },
+          {
+            testName: 'should run pipeline once for desktop if buckets differ',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'content', desktop: 'content' },
+            slot2Bucket: { mobile: 'page', desktop: 'content' }
+          },
+          {
+            testName: 'should run pipeline once for desktop if buckets differ #2',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'page', desktop: 'content' },
+            slot2Bucket: 'content'
+          }
+        ].forEach(({ testName, deviceLabel, slot1Bucket, slot2Bucket }) => {
+          it(testName, async () => {
+            const adService = makeAdService();
+            const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+            const slot1: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot1Bucket }
+            };
 
-        addToDom(allSlots);
-        const moliConfig = {
-          ...emptyConfig,
-          slots: allSlots
-        };
+            const slot2: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot2Bucket }
+            };
+            addToDom([slot1, slot2]);
 
-        await adService.requestAds(moliConfig, emptyRuntimeConfig);
+            const moliConfig = {
+              ...emptyConfig,
+              buckets: { enabled: true },
+              slots: [slot1, slot2]
+            };
 
-        expect(runSpy).to.have.been.calledOnce;
-        expect(runSpy.firstCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals(allSlots),
-          Sinon.match.same(moliConfig),
-          Sinon.match.same(emptyRuntimeConfig),
-          Sinon.match.number
-        );
+            await adService.requestAds(moliConfig, {
+              ...emptyRuntimeConfig,
+              labels: [deviceLabel]
+            });
+            expect(adService.getAdPipeline().run).to.have.been.calledOnce;
+            expect(adService.getAdPipeline().run).to.have.been.calledWith(
+              Sinon.match.array.deepEquals([slot1, slot2]),
+              Sinon.match.same(moliConfig),
+              Sinon.match.any,
+              Sinon.match.number
+            );
+          });
+        });
       });
     });
   });

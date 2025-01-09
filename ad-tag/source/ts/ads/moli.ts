@@ -420,7 +420,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 state.state === 'spa-requestAds' &&
                 allowRefreshAdSlot(validateLocation, state.href, window.location)
               ) {
-                // TODO never all this if refreshSlots is empty
+                // TODO never call this if refreshSlots is empty
                 adService.refreshAdSlots(
                   state.runtimeConfig.refreshSlots,
                   state.config,
