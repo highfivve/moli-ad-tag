@@ -545,8 +545,8 @@
       "description": "This loading behaviour describes slots that are loaded through a backfill integration. A backfill slot is never loaded by default and needs to be refreshed manually along with the backfill option set. This is neccessary to differentiate between slots that are loaded manually and slots that are loaded through a backfill integration.",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "backfill",
@@ -563,8 +563,8 @@
       "description": "An ad slot which is requested during page load. This is the standard behaviour.",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "eager",
@@ -581,8 +581,8 @@
       "description": "The one infinite ad slot whose configuration will be copied if the `moli.refreshInfiniteAdSlot` API is triggered.\n\nThis is mainly the case in combination with the lazy-loading module which needs a CSS selector to identify the ad slots that should be lazily loaded PLUS get an automatic sequential numbering.\n\nTherefore, the `selector` configured here needs to be used in the lazy-loading module configuration. The module looks for fitting HTML elements in the whole document of the browser window and refreshes them lazily using the configuration of the 'infinite' slot.\n\nAlso, it manages the moli debugger's display of how many infinite slots with the given selector are rendered at the moment.\n\nValid examples (every CSS selector can be used):\n\n```js {   loaded: 'infinite',   selector: '.ad-infinite' } ``` or\n\n```js {   loaded: 'infinite',   selector: '[data-js=\"ad-infinite\"]' } ````",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "infinite",
@@ -603,8 +603,8 @@
       "description": "An ad slot which must be triggered via the `moli.refreshAdSlot` API.",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "manual",
@@ -632,6 +632,32 @@
         }
       ],
       "description": "all available slot loading behaviours."
+    },
+    "bucket.AdSlotBucket": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "android": {
+              "type": "string"
+            },
+            "desktop": {
+              "type": "string"
+            },
+            "ios": {
+              "type": "string"
+            },
+            "mobile": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      ],
+      "description": "The bucket name for an ad slot. Can be a string (just the name of the bucket) or an object that can contain buckets for each device type."
     },
     "bucket.BucketConfig": {
       "additionalProperties": false,
