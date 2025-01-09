@@ -56,6 +56,8 @@ export const checkSkinConfig = (
       const skinAdSlotDomId = conf.skinAdSlotDomId;
       const blockedAdSlotDomIds = conf.blockedAdSlotDomIds;
 
+      // FIXME this is crap, but should not be needed anyway as we generate this config in the future
+      //       there are skin configs for mobile as well
       const bucketName = (bucket?: bucket.AdSlotBucket): string | undefined => {
         return typeof bucket === 'string' ? bucket : bucket?.desktop;
       };
