@@ -477,9 +477,17 @@ export namespace behaviour {
      * All lazy slots are loaded in a separate auction anyway.
      *
      * For slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper
-     * buckets.
+     * buckets. The easiest way is to use the `moli.refreshBucket` API.
+     *
+     * ## Device specific buckets
+     *
+     * Instead of a single bucket name, it's possible to configure different buckets for desktop and mobile.
+     * This is especially useful for certain ad slots that always need to be requested together for roadblocking, such
+     * as wallpaper/skin ads, interstitials, or other high-impact formats.
+     *
+     * @see [[bucket.GlobalBucketConfig]]
      */
-    readonly bucket?: string;
+    readonly bucket?: bucket.AdSlotBucket;
   }
 
   /**
@@ -818,6 +826,12 @@ export namespace schain {
 }
 
 export namespace bucket {
+  /**
+   * The bucket name for an ad slot. Can be a string (just the name of the bucket) or an object that
+   * can contain buckets for each device type.
+   */
+  export type AdSlotBucket = string | Partial<Record<Device, string>>;
+
   /**
    * ## Bucket config
    *
