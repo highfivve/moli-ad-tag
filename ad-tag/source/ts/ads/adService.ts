@@ -49,6 +49,7 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { LabelConfigService } from './labelConfigService';
 
 /**
  * @internal
@@ -285,7 +286,11 @@ export class AdService {
         // create buckets
         const buckets = new Map<string, Moli.AdSlot[]>();
         immediatelyLoadedSlots.forEach(slot => {
-          const bucket = slot.behaviour.bucket || 'default';
+          const bucket = this.getBucketName(
+            slot.behaviour.bucket,
+            config.labelSizeConfig ?? [],
+            config.targeting?.labels ?? []
+          );
           const slots = buckets.get(bucket);
           if (slots) {
             slots.push(slot);
@@ -362,7 +367,14 @@ export class AdService {
       return Promise.resolve();
     }
     const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlotsInBucket = manualSlots.filter(slot => slot.behaviour.bucket === bucket);
+    const availableSlotsInBucket = manualSlots.filter(slot => {
+      const slotBucket = this.getBucketName(
+        slot.behaviour.bucket,
+        config.labelSizeConfig ?? [],
+        config.targeting?.labels ?? []
+      );
+      return slotBucket === bucket;
+    });
 
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
     return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);
@@ -405,5 +417,27 @@ export class AdService {
       slot.position === 'out-of-page-top-anchor' ||
       slot.position === 'out-of-page-bottom-anchor'
     );
+  };
+
+  private getBucketName = (
+    bucket: Moli.bucket.AdSlotBucket | undefined,
+    labelSizeConfig: Moli.LabelSizeConfigEntry[],
+    extraLabels: string[]
+  ): string => {
+    // if no bucket is defined, return the default bucket
+    if (!bucket) {
+      return 'default';
+    }
+    // a single bucket for all devices
+    if (typeof bucket === 'string') {
+      return bucket;
+    }
+    const device = new LabelConfigService(
+      labelSizeConfig,
+      extraLabels,
+      this.window
+    ).getDeviceLabel();
+
+    return bucket[device] || 'default';
   };
 }
