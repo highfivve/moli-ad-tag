@@ -82,6 +82,16 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
       }
     }
 
+    const getBucketName = (bucket?: Moli.bucket.AdSlotBucket): string => {
+      if (!bucket) {
+        return 'default';
+      }
+      if (typeof bucket === 'string') {
+        return bucket;
+      }
+      return bucket[labelConfigService.getDeviceLabel()] ?? 'default';
+    };
+
     return (
       <div
         className={classList(
@@ -170,7 +180,9 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
             <div className="MoliDebug-tagContainer">
               <Tag variant="green">{slot.position}</Tag>
               <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
-              {slot.behaviour.bucket && <Tag variant="blue">{slot.behaviour.bucket}</Tag>}
+              {slot.behaviour.bucket && (
+                <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
+              )}
             </div>
             <div className="MoliDebug-tagContainer">
               <span
