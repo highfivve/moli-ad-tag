@@ -2216,7 +2216,7 @@ export namespace prebidjs {
          * 2 = Required, bid responses without DSA object will not be accepted
          * 3 = Required, bid responses without DSA object will not be accepted, Publisher is an Online Platform
          */
-        required: 0 | 1 | 2 | 3;
+        dsarequired: 0 | 1 | 2 | 3;
 
         /**
          * Flag to indicate if the publisher will render the DSA Transparency info. This will signal if the publisher is
