@@ -2205,7 +2205,7 @@ export namespace prebidjs {
      * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/extensions/community_extensions/dsa_transparency.md
      */
     export interface OpenRtb2RegsExtDsa {
-      dsa: {
+      dsa?: {
         /**
          * Flag to indicate if DSA information should be made available. This will signal if the bid request belongs to
          * an Online Platform/VLOP, such that a buyer should respond with DSA Transparency information based on the
@@ -2241,7 +2241,7 @@ export namespace prebidjs {
         /**
          * Array of objects of the entities that applied user parameters and the parameters they applied.
          */
-        transparency: OpenRtb2RegsExtDsaTransparency[];
+        transparency?: OpenRtb2RegsExtDsaTransparency[];
       };
     }
 
