@@ -589,12 +589,12 @@
           "type": "string"
         },
         "selector": {
+          "deprecated": "The selector is configured in the lazy loading module configuration.",
           "type": "string"
         }
       },
       "required": [
-        "loaded",
-        "selector"
+        "loaded"
       ],
       "type": "object"
     },
