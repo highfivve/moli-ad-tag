@@ -117,3 +117,22 @@ export class LabelConfigService {
     );
   }
 }
+
+/**
+ * A small helper function to get the device label from a fresh LabelService instance.
+ *
+ * @param window used for the media query matching
+ * @param targeting access static labels from the config
+ * @param labelSizeConfig configuration from the server side config
+ */
+export const getDeviceLabel = (
+  window: Window,
+  labelSizeConfig: LabelSizeConfigEntry[] | undefined,
+  targeting: Moli.Targeting | undefined
+): Device => {
+  return new LabelConfigService(
+    labelSizeConfig ?? [],
+    targeting?.labels ?? [],
+    window
+  ).getDeviceLabel();
+};

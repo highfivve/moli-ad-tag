@@ -49,7 +49,7 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { LabelConfigService } from './labelConfigService';
+import { getDeviceLabel } from './labelConfigService';
 
 /**
  * @internal
@@ -283,14 +283,11 @@ export class AdService {
         .filter(this.isSlotAvailable);
 
       if (config.buckets?.enabled) {
+        const device = getDeviceLabel(this.window, config.labelSizeConfig, config.targeting);
         // create buckets
         const buckets = new Map<string, Moli.AdSlot[]>();
         immediatelyLoadedSlots.forEach(slot => {
-          const bucket = this.getBucketName(
-            slot.behaviour.bucket,
-            config.labelSizeConfig ?? [],
-            config.targeting?.labels ?? []
-          );
+          const bucket = this.getBucketName(slot.behaviour.bucket, device);
           const slots = buckets.get(bucket);
           if (slots) {
             slots.push(slot);
@@ -366,13 +363,11 @@ export class AdService {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
+    const device = getDeviceLabel(this.window, config.labelSizeConfig, config.targeting);
     const manualSlots = config.slots.filter(this.isManualSlot);
     const availableSlotsInBucket = manualSlots.filter(slot => {
-      const slotBucket = this.getBucketName(
-        slot.behaviour.bucket,
-        config.labelSizeConfig ?? [],
-        config.targeting?.labels ?? []
-      );
+      // TODO create label service here!
+      const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
       return slotBucket === bucket;
     });
 
@@ -421,8 +416,7 @@ export class AdService {
 
   private getBucketName = (
     bucket: Moli.bucket.AdSlotBucket | undefined,
-    labelSizeConfig: Moli.LabelSizeConfigEntry[],
-    extraLabels: string[]
+    device: Moli.Device
   ): string => {
     // if no bucket is defined, return the default bucket
     if (!bucket) {
@@ -432,12 +426,6 @@ export class AdService {
     if (typeof bucket === 'string') {
       return bucket;
     }
-    const device = new LabelConfigService(
-      labelSizeConfig,
-      extraLabels,
-      this.window
-    ).getDeviceLabel();
-
     return bucket[device] || 'default';
   };
 }
