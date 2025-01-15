@@ -384,7 +384,6 @@ export class AdService {
     );
     const manualSlots = config.slots.filter(this.isManualSlot);
     const availableSlotsInBucket = manualSlots.filter(slot => {
-      // TODO create label service here!
       const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
       return slotBucket === bucket;
     });
