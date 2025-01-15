@@ -1,5 +1,7 @@
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
-import { Device, sizeConfigs } from '../types/moliConfig';
+import { Device, googleAdManager, MoliConfig, sizeConfigs } from '../types/moliConfig';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 /**
  * Conditionally select the ad unit based on labels.
@@ -114,3 +116,24 @@ export class LabelConfigService {
     );
   }
 }
+
+/**
+ * A small helper function to get the device label from a fresh LabelService instance.
+ *
+ * @param window used for the media query matching
+ * @param targeting access static labels from the config
+ * @param runtimeConfig access labels set during runtime (e.g. from the ad tag or the publisher)
+ * @param labelSizeConfig configuration from the server side config
+ */
+export const getDeviceLabel = (
+  window: Window,
+  runtimeConfig: MoliRuntimeConfig,
+  labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[] | undefined,
+  targeting: googleAdManager.Targeting | undefined
+): Device => {
+  return new LabelConfigService(
+    labelSizeConfig ?? [],
+    [...(targeting?.labels || []), ...runtimeConfig.labels],
+    window
+  ).getDeviceLabel();
+};
