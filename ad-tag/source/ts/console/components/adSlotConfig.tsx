@@ -164,9 +164,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             />
           )}
           {isConfiguredInfiniteSlot && (
-            <p>{`Found ${
-              window.document.querySelectorAll(slot.behaviour.selector).length
-            } slots with infinite selector ${slot.behaviour.selector}`}</p>
+            <p>Looking up infinite slots is currently not implemented</p>
           )}
         </div>
         {showGeneral && (
