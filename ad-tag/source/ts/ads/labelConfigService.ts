@@ -1,7 +1,6 @@
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 import { Device, googleAdManager, MoliConfig, sizeConfigs } from '../types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 
 /**
  * Conditionally select the ad unit based on labels.
@@ -127,7 +126,7 @@ export class LabelConfigService {
  */
 export const getDeviceLabel = (
   window: Window,
-  runtimeConfig: MoliRuntimeConfig,
+  runtimeConfig: MoliRuntime.MoliRuntimeConfig,
   labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[] | undefined,
   targeting: googleAdManager.Targeting | undefined
 ): Device => {
