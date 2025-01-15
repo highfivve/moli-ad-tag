@@ -47,11 +47,12 @@ import {
   AdSlot,
   behaviour,
   bucket,
+  Device,
   Environment,
   MoliConfig,
   sizeConfigs
 } from '../types/moliConfig';
-import { LabelConfigService } from 'ad-tag/ads/labelConfigService';
+import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
 
 /**
  * @internal
@@ -275,13 +276,16 @@ export class AdService {
         .filter(this.isSlotAvailable);
 
       if (config.buckets?.enabled) {
+        const device = getDeviceLabel(
+          this.window,
+          runtimeConfig,
+          config.labelSizeConfig,
+          config.targeting
+        );
         // create buckets
         const buckets = new Map<string, AdSlot[]>();
         immediatelyLoadedSlots.forEach(slot => {
-          const bucket = this.getBucketName(slot.behaviour.bucket, config.labelSizeConfig ?? [], [
-            ...(config.targeting?.labels || []),
-            ...runtimeConfig.labels
-          ]);
+          const bucket = this.getBucketName(slot.behaviour.bucket, device);
           const slots = buckets.get(bucket);
           if (slots) {
             slots.push(slot);
@@ -372,12 +376,16 @@ export class AdService {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
+    const device = getDeviceLabel(
+      this.window,
+      runtimeConfig,
+      config.labelSizeConfig,
+      config.targeting
+    );
     const manualSlots = config.slots.filter(this.isManualSlot);
     const availableSlotsInBucket = manualSlots.filter(slot => {
-      const slotBucket = this.getBucketName(slot.behaviour.bucket, config.labelSizeConfig ?? [], [
-        ...(config.targeting?.labels || []),
-        ...runtimeConfig.labels
-      ]);
+      // TODO create label service here!
+      const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
       return slotBucket === bucket;
     });
 
@@ -424,11 +432,7 @@ export class AdService {
     );
   };
 
-  private getBucketName = (
-    bucket: bucket.AdSlotBucket | undefined,
-    labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[],
-    extraLabels: string[]
-  ): string => {
+  private getBucketName = (bucket: bucket.AdSlotBucket | undefined, device: Device): string => {
     // if no bucket is defined, return the default bucket
     if (!bucket) {
       return 'default';
@@ -437,11 +441,6 @@ export class AdService {
     if (typeof bucket === 'string') {
       return bucket;
     }
-    const device = new LabelConfigService(
-      labelSizeConfig,
-      extraLabels,
-      this.window
-    ).getDeviceLabel();
     return bucket[device] || 'default';
   };
 }
