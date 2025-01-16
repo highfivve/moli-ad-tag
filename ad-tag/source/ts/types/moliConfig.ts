@@ -537,7 +537,11 @@ export namespace behaviour {
    */
   export interface Infinite extends ISlotLoading {
     readonly loaded: 'infinite';
-    readonly selector: string;
+
+    /**
+     * @deprecated The selector is configured in the lazy loading module configuration.
+     */
+    readonly selector?: string;
   }
 
   /**
