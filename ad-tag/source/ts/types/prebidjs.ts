@@ -1134,13 +1134,6 @@ export namespace prebidjs {
        * Max amount of time (in seconds) before looking into storage for data
        */
       readonly maxDelayTime?: number;
-
-      /**
-       * You may like to consider limiting the SSPs that receive the martechpass by adding the bidders array, to make
-       * sure they are not forwarding this first party ID to DSPs. We are working with SSPs to exclude the above
-       * source from being sent to DSPs, please reach out to csm@utiq.com to verify which are these SSPs.
-       */
-      readonly bidders?: BidderCode[];
     }
 
     /**
@@ -1254,7 +1247,9 @@ export namespace prebidjs {
       | 'kpuid.com'
       | 'yahoo.com'
       | 'thenewco.it'
-      | 'pubcid.org';
+      | 'pubcid.org'
+      | 'utiq.com'
+      | 'utiq-mtp.com';
 
     export interface IEncryptedSignalSource {
       /**
@@ -2265,6 +2260,35 @@ export namespace prebidjs {
        * regulations for the United States Children’s Online Privacy Protection Act (“COPPA”)
        */
       regs?: OpenRtb2Regs;
+
+      /**
+       * community extensions
+       */
+      ext?:
+        | {
+            prebid?: {
+              data?: {
+                /**
+                 * Publishers can constrain which bidders receive which user.ext.eids entries.
+                 * See the [Prebid.js user ID permissions](https://docs.prebid.org/dev-docs/modules/userId.html#permissions) reference for background.
+                 *
+                 * @see https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#eid-permissions
+                 * @see https://docs.prebid.org/dev-docs/modules/userId.html#permissions
+                 */
+                eidpermissions?: Array<{
+                  /**
+                   * Which user.ext.eids.source is receiving the permissions, one entry per source is allowed
+                   */
+                  source: prebidjs.userSync.EIDSource;
+                  /**
+                   * Which bidders are allowed to receive the named eid source
+                   */
+                  permissions: Array<BidderCode | '*'>;
+                }>;
+              };
+            };
+          }
+        | any;
     }
 
     /**
