@@ -169,11 +169,7 @@ export class AdSlotConfig extends Component<IAdSlotConfigProps, IAdSlotConfigSta
               onClick={this.toggleSizeConfig}
             />
           )}
-          {isConfiguredInfiniteSlot && (
-            <p>{`Found ${
-              window.document.querySelectorAll(slot.behaviour.selector).length
-            } slots with infinite selector ${slot.behaviour.selector}`}</p>
-          )}
+          {isConfiguredInfiniteSlot && <p>infinite slots</p>}
         </div>
         {showGeneral && (
           <div className="MoliDebug-panel MoliDebug-panel--blue MoliDebug-panel--collapsible">
