@@ -371,7 +371,8 @@ export class AdService {
   public refreshBucket(
     bucket: string,
     config: MoliConfig,
-    runtimeConfig: MoliRuntime.MoliRuntimeConfig
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+    options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
@@ -382,11 +383,24 @@ export class AdService {
       config.labelSizeConfig,
       config.targeting
     );
-    const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlotsInBucket = manualSlots.filter(slot => {
-      const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
-      return slotBucket === bucket;
-    });
+    const { loaded } = { ...{ loaded: 'manual' }, ...options };
+
+    const availableSlotsInBucket = config.slots
+      .filter(this.isSlotAvailable)
+      .filter(slot => {
+        const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
+        return (
+          slotBucket === bucket &&
+          (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+        );
+      })
+      // if sizesOverride is provided, override the sizes of the slots
+      .map(slot => (options?.sizesOverride ? { ...slot, sizes: options.sizesOverride } : slot));
+
+    if (availableSlotsInBucket.length === 0) {
+      this.logger.warn('AdService', 'No slots found in bucket', bucket);
+      return Promise.resolve();
+    }
 
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
     return this.adPipeline.run(

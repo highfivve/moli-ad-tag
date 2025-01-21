@@ -442,6 +442,12 @@ export namespace googletag {
      * @param config - Configuration object for the page (adExpansion, ppp, privacyTreatments).
      */
     setConfig(config: GptPageSettingsConfig): void;
+
+    secureSignalProviders: {
+      push(provider: { id: string; collectorFunction(): any }): void;
+
+      clearAllCache(): void;
+    };
   }
 
   export type GptPageSettingsConfig = {
