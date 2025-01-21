@@ -97,7 +97,8 @@ const formatSkinConfigMsg = (
   return (
     <div>
       The SkinAdSlot <strong>{skinAdSlot.id}</strong> in the bucket{' '}
-      <strong>{skinAdSlot.bucket}</strong> is not in the same bucket with the BlockedAdSlots:
+      <strong>{JSON.stringify(skinAdSlot.bucket)}</strong> is not in the same bucket with the
+      BlockedAdSlots:
       <ul>
         {blockedAdSlotsIds.map((id, index) => {
           return <li key={index}>{`${id}: ${blockedAdSlotsBuckets[index]}`}</li>;
