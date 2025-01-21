@@ -58,3 +58,7 @@ export const newEmptyRuntimeConfig = (): MoliRuntime.MoliRuntimeConfig => ({
 export const emptyConfig: MoliConfig = newEmptyConfig();
 
 export const emptyRuntimeConfig: MoliRuntime.MoliRuntimeConfig = newEmptyRuntimeConfig();
+export const emptyTestRuntimeConfig: MoliRuntime.MoliRuntimeConfig = {
+  ...newEmptyRuntimeConfig(),
+  environment: 'test'
+};

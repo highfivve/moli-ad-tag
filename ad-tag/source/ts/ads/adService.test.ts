@@ -10,6 +10,7 @@ import { AdService } from './adService';
 import {
   emptyConfig,
   emptyRuntimeConfig,
+  emptyTestRuntimeConfig,
   newEmptyRuntimeConfig,
   noopLogger
 } from '../stubs/moliStubs';
@@ -17,6 +18,7 @@ import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { afterEach } from 'mocha';
 
 // setup sinon-chai
 use(sinonChai);
@@ -915,6 +917,98 @@ describe('AdService', () => {
         configWithManualSlot,
         emptyRuntimeConfig,
         Sinon.match.number
+      );
+    });
+  });
+
+  describe('refresh bucket', () => {
+    const withBucket = (adSlot: AdSlot, bucket: string): AdSlot => ({
+      ...adSlot,
+      behaviour: { loaded: adSlot.behaviour.loaded, bucket }
+    });
+
+    const bucketMoliConfig = (slots: AdSlot[]): MoliConfig => ({
+      ...emptyConfig,
+      buckets: { enabled: true },
+      slots
+    });
+
+    let adService: AdService = makeAdService();
+    let runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+
+    beforeEach(() => {
+      adService = makeAdService();
+      runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+    });
+
+    it('should not call adPipeline.run if the ad slots are not in the DOM', async () => {
+      const slot: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      const moliConfig = bucketMoliConfig([slot]);
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should not call adPipeline.run if no slots are in the bucket', async () => {
+      const slot: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      addToDom([slot]);
+      const moliConfig = bucketMoliConfig([slot]);
+      await adService.refreshBucket('bucket2', moliConfig, emptyTestRuntimeConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should call adPipeline.run with the slots in the bucket', async () => {
+      const slot1: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      const slot2: AdSlot = withBucket(eagerAdSlot(), 'bucket1');
+
+      addToDom([slot1, slot2]);
+
+      const moliConfig = bucketMoliConfig([slot1, slot2]);
+
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([slot1]),
+        Sinon.match.same(moliConfig),
+        Sinon.match.same(emptyTestRuntimeConfig),
+        Sinon.match.number,
+        Sinon.match.same('bucket1')
+      );
+    });
+
+    it('should call adPipeline.run with the slots in the bucket and the options', async () => {
+      const slot1: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      const slot2: AdSlot = withBucket(eagerAdSlot(), 'bucket1');
+      addToDom([slot1, slot2]);
+
+      const moliConfig = bucketMoliConfig([slot1, slot2]);
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig, {
+        loaded: 'eager'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([slot2]),
+        Sinon.match.same(moliConfig),
+        Sinon.match.same(emptyTestRuntimeConfig),
+        Sinon.match.number,
+        Sinon.match.same('bucket1')
+      );
+    });
+
+    it('should override slot sizes from options', async () => {
+      const slot1: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      addToDom([slot1]);
+
+      const moliConfig = bucketMoliConfig([slot1]);
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig, {
+        sizesOverride: [[300, 250]]
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...slot1, sizes: [[300, 250]] }]),
+        Sinon.match.same(moliConfig),
+        Sinon.match.same(emptyTestRuntimeConfig),
+        Sinon.match.number,
+        Sinon.match.same('bucket1')
       );
     });
   });
