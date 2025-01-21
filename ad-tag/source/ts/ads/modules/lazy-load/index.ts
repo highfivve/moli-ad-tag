@@ -172,7 +172,7 @@ export class LazyLoad implements IModule {
             `Lazy-load configured for slot without manual loading behaviour. ${domId}`
           );
         } else if (slot.behaviour.loaded === 'manual') {
-          const elementToObserve = window.document.querySelector(`#${domId}`);
+          const elementToObserve = window.document.getElementById(domId);
           elementToObserve && observer.observe(elementToObserve);
         }
       });
@@ -228,7 +228,7 @@ export class LazyLoad implements IModule {
           `Lazy-load non-existing bucket with name ${config.bucket}`
         );
       } else {
-        const elementToObserve = window.document.querySelector(`#${config.observedDomId}`);
+        const elementToObserve = window.document.getElementById(config.observedDomId);
         elementToObserve && observer.observe(elementToObserve);
       }
     });
