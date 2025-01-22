@@ -1,0 +1,49 @@
+name: Check JSON Schema
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Website Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Node Private Registry
+        uses: actions/setup-node@v4
+        with:
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          always-auth: true
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: '@highfivve'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      ## type declarations need to be present for docs to work properly
+      - name: setup project
+        run: |
+          npm run setup
+          npm run build
+
+      # Build website
+      - name: build website
+        working-directory: ./website
+        run: |
+          npm ci
+          npm run build
