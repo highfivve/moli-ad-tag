@@ -400,6 +400,21 @@ export namespace auction {
     readonly domId: string;
     /** milliseconds until a bidder can become active again  */
     readonly blockedForMs: number;
+
+    /**
+     * Optional list of events that should trigger the frequency capping.
+     * The main use case is to reduce requests for high impact formats like wallpaper or interstitials.
+     *
+     * The default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won.
+     * For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial,
+     * the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other.
+     * This can happen if the first page view is a google web interstitial, because the visx interstitial was requested,
+     * but no bid came back and the second page view display the google interstitial, while a visx interstitial is
+     * requested directly after the google interstitial is closed.
+     *
+     * @default ['bidWon']
+     */
+    readonly events?: Array<'bidWon' | 'bidRequested'>;
   }
 
   export interface FrequencyCappingConfig {
@@ -587,6 +602,7 @@ export namespace gpt {
    * Configure the ad slot position
    *
    * - `in-page` is the standard display ad
+   * - 'interstitial' combines the out-of-page-interstitial with prebid demand. It's a custom extension.
    * - `out-of-page` uses the `defineOutOfPageSlot` API
    * - `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`
    * - `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`
@@ -598,6 +614,7 @@ export namespace gpt {
    */
   export type Position =
     | 'in-page'
+    | 'interstitial'
     | 'out-of-page'
     | 'out-of-page-interstitial'
     | 'out-of-page-top-anchor'

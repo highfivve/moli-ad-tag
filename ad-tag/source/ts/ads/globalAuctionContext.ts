@@ -58,7 +58,7 @@ export class GlobalAuctionContext {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('auctionEnd', auction => {
           if (this.config.biddersDisabling?.enabled) {
-            this.handleAuctionEndEvent(auction);
+            this.biddersDisabling?.onAuctionEnd(auction);
           }
           if (this.config.previousBidCpms?.enabled && auction.bidsReceived) {
             this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
@@ -79,7 +79,7 @@ export class GlobalAuctionContext {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('bidWon', bid => {
           if (this.config.frequencyCap) {
-            this.frequencyCapping?.onBidWon(bid, this.config.frequencyCap.configs);
+            this.frequencyCapping?.onBidWon(bid);
           }
         });
       });
@@ -96,9 +96,5 @@ export class GlobalAuctionContext {
 
   getLastBidCpmsOfAdUnit(slotId: string): number[] {
     return this.previousBidCpms?.getLastBidCpms(slotId) ?? [];
-  }
-
-  private handleAuctionEndEvent(auction: any) {
-    this.biddersDisabling?.onAuctionEnd(auction);
   }
 }

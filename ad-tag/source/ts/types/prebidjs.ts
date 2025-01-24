@@ -1328,12 +1328,12 @@ export namespace prebidjs {
       auctionEnd: AuctionObject;
       auctionInit: AuctionObject;
       auctionTimeout: AuctionObject;
-      beforeBidderHttp: BidderRequest;
+      beforeBidderHttp: BidderRequests;
       beforeRequestBids: BeforeRequestBidsAdUnitInfo;
       bidAccepted: BidResponse;
       bidAdjustment: BidResponse;
-      bidderDone: BidderRequest;
-      bidRequested: BidderRequest;
+      bidderDone: BidderRequests;
+      bidRequested: BidderRequests;
       bidResponse: BidResponse;
       bidWon: BidResponse;
       bidTimeout: NoBidObject[];
@@ -1371,13 +1371,34 @@ export namespace prebidjs {
       readonly vendorData?: any;
     };
 
-    export type BidderRequest = {
+    export type BidderRequestBid = {
+      readonly bidder: prebidjs.BidderCode;
+      readonly adUnitCode: string;
+      readonly auctionId: string;
+
+      readonly sizes: [number, number][];
+      readonly mediaTypes: prebidjs.IMediaTypes;
+
+      readonly bidId?: string;
+      readonly bidderRequestId: string;
+
+      readonly deferBilling?: boolean;
+      readonly src: 's2s' | 'client';
+      readonly transactionId?: string;
+
+      readonly ortb2: prebidjs.firstpartydata.PrebidFirstPartyData;
+      readonly ortb2Imp?: prebidjs.IOrtb2Imp;
+
+      readonly serverResponseTimeMs?: number;
+    };
+
+    export type BidderRequests = {
       readonly adUnitsS2SCopy?: IAdUnit[];
       readonly auctionId?: string;
       readonly auctionStart?: number;
       readonly bidderCode?: BidderCode;
       readonly bidderRequestId?: string;
-      readonly bids?: [];
+      readonly bids?: BidderRequestBid[];
       readonly gdprConsent?: GdprConsent;
       /**
        * different functions to manage metrics
@@ -1402,7 +1423,7 @@ export namespace prebidjs {
       readonly adUnits?: IAdUnit[];
       readonly auctionId: string;
       readonly auctionStatus?: 'inProgress' | 'completed';
-      readonly bidderRequests?: BidderRequest[];
+      readonly bidderRequests?: BidderRequests[];
       readonly bidsReceived?: prebidjs.BidResponse[];
       readonly bidsRejected?: NoBidObject[];
       /**
@@ -5939,6 +5960,18 @@ export namespace prebidjs {
      * ```
      */
     readonly bidder: Exclude<BidderCode, typeof GumGum>;
+
+    /**
+     * The bidder code.
+     *
+     * Excludes all the bidder codes which have a more specific implementation.
+     * Add more bidders by extending the union type, e.g.
+     *
+     * ```
+     * Exclude<BidderCode, typeof AppNexusAst>;
+     * ```
+     */
+    readonly bidderCode: IGenericBidResponse['bidder'];
   }
 
   /**
@@ -5960,6 +5993,11 @@ export namespace prebidjs {
      * narrow this bid response type to gumgum
      */
     readonly bidder: typeof GumGum;
+
+    /**
+     * narrow this bid response type to gumgum
+     */
+    readonly bidderCode: IGumGumBidResponse['bidder'];
 
     /**
      * Contains the GumGum ad creative.
