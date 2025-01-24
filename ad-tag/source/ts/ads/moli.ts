@@ -711,12 +711,17 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
-  function refreshBucket(bucket: string): Promise<'queued' | 'refreshed'> {
+  function refreshBucket(
+    bucket: string,
+    options?: MoliRuntime.RefreshAdSlotsOptions
+  ): Promise<'queued' | 'refreshed'> {
     // A helper function to retrieve domIds that belong to buckets.
     function getBucketDomIds(config: MoliConfig): string[] {
       const slotsInBucket = config.slots.filter(slot => slot.behaviour.bucket === bucket);
       return slotsInBucket?.map(slot => slot.domId);
     }
+
+    // FIXME the options are not persisted in the state, so they are not used in the refreshBucket call
 
     switch (state.state) {
       case 'configurable': {
@@ -750,7 +755,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
           // user hasn't navigated yet, so we directly refresh the slot
           return adService
-            .refreshBucket(bucket, state.config, state.runtimeConfig)
+            .refreshBucket(bucket, state.config, state.runtimeConfig, options)
             .then(() => 'refreshed');
         } else {
           const domIds = getBucketDomIds(state.config);
