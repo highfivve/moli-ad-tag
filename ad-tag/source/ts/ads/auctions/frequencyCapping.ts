@@ -1,7 +1,6 @@
 import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { auction } from '../../types/moliConfig';
-import BidderFrequencyConfig = auction.BidderFrequencyConfig;
 
 export class FrequencyCapping {
   /**
@@ -45,7 +44,7 @@ export class FrequencyCapping {
     return this.frequencyCaps.has(`${slotId}-${bidder}`);
   }
 
-  #cap = (config: BidderFrequencyConfig, bid: { bidder: string; adUnitCode: string }) => {
+  #cap = (config: auction.BidderFrequencyConfig, bid: { bidder: string; adUnitCode: string }) => {
     if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
       const key = `${bid.adUnitCode}-${bid.bidder}`;
       this.frequencyCaps.add(key);
