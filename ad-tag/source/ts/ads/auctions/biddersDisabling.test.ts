@@ -2,13 +2,7 @@ import { expect } from 'chai';
 import Sinon, { SinonSandbox } from 'sinon';
 import { BiddersDisabling } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
-import BidderCode = prebidjs.BidderCode;
 import { createDom } from '../../stubs/browserEnvSetup';
-
-type BidType = {
-  bidder: BidderCode;
-  adUnitCode: string;
-};
 
 const auction1 = {
   bidderRequests: [
