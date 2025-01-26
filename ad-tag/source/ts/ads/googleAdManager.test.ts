@@ -66,6 +66,8 @@ describe('google ad manager', () => {
   };
 
   const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
+  const getElementByIdStub = sandbox.stub(dom.window.document, 'getElementById');
+  const createElementSpy = sandbox.spy(dom.window.document, 'createElement');
 
   const sleep = (timeInMs: number = 20) =>
     new Promise(resolve => {
@@ -472,6 +474,88 @@ describe('google ad manager', () => {
         const displaySpy = sandbox.spy(dom.window.googletag, 'display');
 
         const slotDefinitions = await step(adPipelineContext(), [adSlot]);
+        expect(defineSlotsStub).to.have.been.calledOnce;
+        expect(defineSlotsStub).to.have.been.calledOnceWithExactly(
+          adSlot.adUnitPath,
+          adSlot.sizes,
+          adSlot.domId
+        );
+        expect(addServiceSpy).to.have.been.calledOnce;
+        expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        expect(displaySpy).to.have.been.calledOnce;
+        expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+        expect(slotDefinitions).to.have.length(1);
+        expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+      });
+
+      it('should define interstitial slot if ad slot is in DOM', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        getElementByIdStub.returns({} as HTMLElement);
+
+        const interstitialAdSlot: AdSlot = {
+          ...adSlot,
+          position: 'interstitial'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineSlotsStub = sandbox
+          .stub(dom.window.googletag, 'defineSlot')
+          .returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        const slotDefinitions = await step(adPipelineContext(), [interstitialAdSlot]);
+        expect(createElementSpy).to.have.not.been.called;
+        expect(defineSlotsStub).to.have.been.calledOnce;
+        expect(defineSlotsStub).to.have.been.calledOnceWithExactly(
+          adSlot.adUnitPath,
+          adSlot.sizes,
+          adSlot.domId
+        );
+        expect(addServiceSpy).to.have.been.calledOnce;
+        expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
+        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        expect(displaySpy).to.have.been.calledOnce;
+        expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
+        expect(slotDefinitions).to.have.length(1);
+        expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+      });
+
+      it('should define interstitial slot if ad slot is not in DOM', async () => {
+        const step = gptDefineSlots();
+
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        getElementByIdStub.returns(null);
+
+        const interstitialAdSlot: AdSlot = {
+          ...adSlot,
+          position: 'interstitial'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        const defineSlotsStub = sandbox
+          .stub(dom.window.googletag, 'defineSlot')
+          .returns(adSlotStub);
+        const displaySpy = sandbox.spy(dom.window.googletag, 'display');
+
+        const slotDefinitions = await step(adPipelineContext(), [interstitialAdSlot]);
+        // new dom element needs to be added
+        expect(createElementSpy).to.have.been.calledOnce;
+        const createdElement = createElementSpy.firstCall.returnValue;
+        expect(createdElement).to.be.ok;
+        expect(createdElement.id).to.be.equal(adSlot.domId);
+        expect(createdElement.style.display).to.be.equal('none');
+        expect(createdElement.attributes.getNamedItem('data-h5v-position')?.value).to.be.equal(
+          'interstitial'
+        );
+
         expect(defineSlotsStub).to.have.been.calledOnce;
         expect(defineSlotsStub).to.have.been.calledOnceWithExactly(
           adSlot.adUnitPath,

@@ -329,9 +329,19 @@ export const gptDefineSlots =
       const defineAdSlot = (): googletag.IAdSlot | null => {
         switch (moliSlot.position) {
           case 'in-page':
+            return context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
           case 'interstitial':
             // note that the interstitial position first requests prebid demand and if none, switches
             // to the out-of-page-interstitial position if there are no bids or low quality bids
+            if (!context.window.document.getElementById(moliSlot.domId)) {
+              // if there's no element in the DOM, we create a div element with the given id to
+              // ensure a proper prebid auction can be executed
+              const slot = context.window.document.createElement('div');
+              slot.id = moliSlot.domId;
+              slot.setAttribute('data-h5v-position', moliSlot.position);
+              slot.style.setProperty('display', 'none'); // should net be visible
+              context.window.document.body.appendChild(slot);
+            }
             return context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
           case 'out-of-page':
             return context.window.googletag.defineOutOfPageSlot(resolvedAdUnitPath, moliSlot.domId);
