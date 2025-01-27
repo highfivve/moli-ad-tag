@@ -422,6 +422,16 @@ export namespace auction {
     readonly enabled: boolean;
     /** capping configuration for bidders and positions */
     readonly configs: BidderFrequencyConfig[];
+
+    /**
+     * If frequency capping state should be persisted into session storage.
+     *
+     * This is necessary for SSR pages, but should be disabled for SPA pages as no real page reload
+     * is happening there.
+     *
+     * @default false
+     */
+    readonly persistent?: boolean;
   }
 
   export interface PreviousBidCpmsConfig {

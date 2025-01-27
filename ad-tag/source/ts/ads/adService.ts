@@ -43,16 +43,17 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import {
-  AdSlot,
-  behaviour,
-  bucket,
-  Device,
-  Environment,
-  MoliConfig,
-  sizeConfigs
-} from '../types/moliConfig';
+import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
 import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
+
+/**
+ * All relevant information about the global window
+ */
+type AdServiceWindow = Window &
+  MoliRuntime.MoliWindow &
+  googletag.IGoogleTagWindow &
+  prebidjs.IPrebidjsWindow &
+  Pick<typeof globalThis, 'Date' | 'console'>;
 
 /**
  * @internal
@@ -83,13 +84,8 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window &
-      googletag.IGoogleTagWindow &
-      prebidjs.IPrebidjsWindow &
-      MoliRuntime.MoliWindow,
-    new GlobalAuctionContext(
-      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-    )
+    this.window as AdServiceWindow,
+    new GlobalAuctionContext(this.window as AdServiceWindow)
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -114,13 +110,8 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window &
-          googletag.IGoogleTagWindow &
-          prebidjs.IPrebidjsWindow &
-          MoliRuntime.MoliWindow,
-        new GlobalAuctionContext(
-          window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-        )
+        window as AdServiceWindow,
+        new GlobalAuctionContext(window as AdServiceWindow)
       );
     }
   }
@@ -219,14 +210,8 @@ export class AdService {
         requestAds: isGam ? gptRequestAds() : prebidRenderAds()
       },
       this.logger,
-      this.window as Window &
-        googletag.IGoogleTagWindow &
-        prebidjs.IPrebidjsWindow &
-        MoliRuntime.MoliWindow,
-      new GlobalAuctionContext(
-        this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-        config.globalAuctionContext
-      )
+      this.window as AdServiceWindow,
+      new GlobalAuctionContext(this.window as AdServiceWindow, config.globalAuctionContext)
     );
 
     return new Promise<Readonly<MoliConfig>>(resolve => {

@@ -19,22 +19,16 @@ export interface ResumeCallbackData {
 }
 
 /**
+ * A poor man's type for an "instant" function that returns the current timestamp.
+ */
+export type NowInstant = Pick<typeof globalThis, 'Date'>['Date']['now'];
+
+/**
  *
  * @param data loaded data from session storage to determine if the callback should be called or a new one should be scheduled
  * @param now the current timestamp, created via `Date.now()`
- * @param callback invoked either directly or through a new scheduled `setTimeout` call
- * @param _window an object that supports a `setTimeout` method - usually window
+ * @return the remaining time in milliseconds or 0 if the time has already passed
  */
-export const resume = (
-  data: ResumeCallbackData,
-  now: number,
-  callback: () => void,
-  _window: Pick<Window, 'setTimeout'>
-) => {
-  const diff = now - data.ts;
-  if (diff >= data.wait) {
-    callback();
-  } else {
-    _window.setTimeout(callback, data.wait - diff);
-  }
+export const remainingTime = (data: ResumeCallbackData, now: number): number => {
+  return Math.max(data.wait - (now - data.ts), 0);
 };

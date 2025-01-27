@@ -511,6 +511,11 @@
         "enabled": {
           "description": "enable or disable this feature",
           "type": "boolean"
+        },
+        "persistent": {
+          "default": false,
+          "description": "If frequency capping state should be persisted into session storage.\n\nThis is necessary for SSR pages, but should be disabled for SPA pages as no real page reload is happening there.",
+          "type": "boolean"
         }
       },
       "required": [

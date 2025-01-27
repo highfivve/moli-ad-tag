@@ -3,7 +3,7 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
@@ -17,20 +17,14 @@ import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
 import { AdPipelineContext } from '../../adPipeline';
 import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { googletag } from 'ad-tag/types/googletag';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 use(sinonChai);
 use(chaiAsPromised);
 
 describe('Prebid First Party Data Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom = createDom();
-  let jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  let { jsDomWindow } = createDomAndWindow();
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
@@ -57,8 +51,7 @@ describe('Prebid First Party Data Module', () => {
   });
 
   afterEach(() => {
-    dom = createDom();
-    jsDomWindow = dom.window as any;
+    jsDomWindow = createDomAndWindow().jsDomWindow;
     sandbox.reset();
     sandbox.restore();
   });

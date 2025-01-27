@@ -1,6 +1,6 @@
 import sinon, { SinonSandbox } from 'sinon';
 import { expect, use } from 'chai';
-import { createDom } from '../stubs/browserEnvSetup';
+import { createDomAndWindow } from '../stubs/browserEnvSetup';
 import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
 import { GlobalAuctionContext } from './globalAuctionContext';
@@ -12,9 +12,7 @@ import sinonChai from 'sinon-chai';
 use(sinonChai);
 
 describe('Global auction context', () => {
-  let dom = createDom();
-  let jsDomWindow: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow =
-    dom.window as any;
+  const { jsDomWindow } = createDomAndWindow();
 
   jsDomWindow.pbjs = createPbjsStub();
   jsDomWindow.googletag = createGoogletagStub();

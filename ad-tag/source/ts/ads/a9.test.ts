@@ -1,4 +1,4 @@
-import { createDom } from '../stubs/browserEnvSetup';
+import { createDomAndWindow } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -38,13 +38,7 @@ describe('a9', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    apstag.WindowA9 &
-    prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  const { dom, jsDomWindow } = createDomAndWindow();
   const adPipelineContext = (
     env: Environment = 'production',
     config: MoliConfig = emptyConfig,

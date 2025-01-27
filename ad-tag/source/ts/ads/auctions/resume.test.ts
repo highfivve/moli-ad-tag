@@ -1,70 +1,35 @@
 import { expect, use } from 'chai';
-import Sinon, { SinonSandbox } from 'sinon';
 import sinonChai from 'sinon-chai';
-import { resume, ResumeCallbackData } from './resume';
-import { createDom } from '../../stubs/browserEnvSetup';
+import { remainingTime, ResumeCallbackData } from './resume';
 
 // setup sinon-chai
 use(sinonChai);
 
-describe('resume', () => {
-  const dom = createDom();
+describe('remainingTime', () => {
+  it('should return 0 if the wait time has already passed', () => {
+    const fixedNow = 10000;
+    const data: ResumeCallbackData = { ts: 5000, wait: 3000 };
 
-  const jsDomWindow: Window = dom.window as any;
-  const sandbox: SinonSandbox = Sinon.createSandbox();
-  const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
-  let clock: Sinon.SinonFakeTimers = sandbox.useFakeTimers();
+    const result = remainingTime(data, fixedNow);
 
-  beforeEach(() => {
-    clock = sandbox.useFakeTimers();
+    expect(result).to.equal(0);
   });
 
-  afterEach(() => {
-    sandbox.reset();
-    sandbox.clock.restore();
+  it('should return the remaining time if the wait time has not yet passed', () => {
+    const fixedNow = 7000;
+    const data: ResumeCallbackData = { ts: 5000, wait: 5000 };
+
+    const result = remainingTime(data, fixedNow);
+
+    expect(result).to.equal(3000);
   });
 
-  it('should call the callback immediately if the wait time is exactly now', () => {
-    const data: ResumeCallbackData = { ts: 100000, wait: 3000 };
-    const callback = sandbox.spy();
-    const now = data.ts + data.wait; // now is equal to waiting time
+  it('should return the full wait time if the timestamp is now', () => {
+    const fixedNow = 5000;
+    const data: ResumeCallbackData = { ts: 5000, wait: 5000 };
 
-    resume(data, now, callback, jsDomWindow);
+    const result = remainingTime(data, fixedNow);
 
-    expect(callback.calledOnce).to.be.true;
-  });
-
-  it('should call the callback immediately if the wait time has passed', () => {
-    const data: ResumeCallbackData = { ts: 100000, wait: 3000 };
-    const callback = sandbox.spy();
-    const now = data.ts + data.wait + 1; // now has passed the waiting time
-
-    resume(data, now, callback, jsDomWindow);
-
-    expect(callback.calledOnce).to.be.true;
-  });
-
-  it('should schedule the callback if timestamp and now are identical', () => {
-    const data: ResumeCallbackData = { ts: 100000, wait: 5000 };
-    const callback = sandbox.spy();
-    const now = data.ts; // now is the same as the timestamp
-
-    resume(data, now, callback, jsDomWindow);
-
-    expect(callback).to.have.not.been.called;
-    expect(setTimeoutSpy).calledOnce;
-    expect(setTimeoutSpy).calledOnceWithExactly(callback, data.wait);
-  });
-
-  it('should call the scheduled callback after the remaining wait time', () => {
-    const data: ResumeCallbackData = { ts: 100000, wait: 5000 };
-    const callback = sandbox.spy();
-    const now = data.ts + 3000;
-
-    resume(data, now, callback, jsDomWindow);
-
-    clock.tick(3000);
-
-    expect(callback).calledOnce;
+    expect(result).to.equal(5000);
   });
 });

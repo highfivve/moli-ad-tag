@@ -5,17 +5,13 @@ import chaiAsPromised from 'chai-as-promised';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { googletag } from 'ad-tag/types/googletag';
 import { Zeotap } from 'ad-tag/ads/modules/zeotap/index';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { prebidjs } from 'ad-tag/types/prebidjs';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import MoliWindow = MoliRuntime.MoliWindow;
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,9 +19,7 @@ use(chaiAsPromised);
 
 describe('Zeotap Module', () => {
   const sandbox = Sinon.createSandbox();
-  const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow & MoliWindow =
-    dom.window as any;
+  const { jsDomWindow } = createDomAndWindow();
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');

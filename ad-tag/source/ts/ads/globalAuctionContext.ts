@@ -28,7 +28,10 @@ export class GlobalAuctionContext {
   readonly previousBidCpms?: PreviousBidCpms;
 
   constructor(
-    private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
+    private readonly window: Window &
+      prebidjs.IPrebidjsWindow &
+      googletag.IGoogleTagWindow &
+      Pick<typeof globalThis, 'Date' | 'console'>,
     private readonly config: auction.GlobalAuctionContextConfig = {}
   ) {
     if (config.biddersDisabling?.enabled) {
@@ -40,7 +43,11 @@ export class GlobalAuctionContext {
     }
 
     if (config.frequencyCap?.enabled) {
-      this.frequencyCapping = new FrequencyCapping(config.frequencyCap, this.window);
+      this.frequencyCapping = new FrequencyCapping(
+        config.frequencyCap,
+        this.window,
+        this.window.Date.now
+      );
     }
 
     if (config.previousBidCpms?.enabled) {
