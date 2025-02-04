@@ -127,7 +127,7 @@ export class Utiq implements IModule {
     // no consent if gdpr applies
     if (
       context.tcData.gdprApplies &&
-      // this is only a safeguard to block confiant when checkGVLID is false
+      // this is only a safeguard to block utiq when checkGVLID is false
       this.requiredPurposeIds.some(
         purposeId => context.tcData.gdprApplies && !context.tcData.purpose.consents[purposeId]
       )

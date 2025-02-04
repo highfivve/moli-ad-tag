@@ -6008,6 +6008,9 @@ export namespace prebidjs {
     readonly ad: IGumGumBidResponseWrapper | string;
   }
 
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidder-adaptor.html#interpreting-the-response
+   */
   export type BidResponse = IGenericBidResponse | IGumGumBidResponse;
 
   /**
