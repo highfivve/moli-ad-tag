@@ -1285,7 +1285,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
       ],
       position: 'in-page',
       behaviour: {
-        loaded: 'eager',
+        loaded: 'manual',
         bucket: 'page'
       },
       a9: {
@@ -1534,5 +1534,9 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
     previousBidCpms: {
       enabled: true
     }
+  },
+  spa: {
+    enabled: true,
+    validateLocation: 'none'
   }
 });

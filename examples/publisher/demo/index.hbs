@@ -164,18 +164,18 @@
 
   // hooks
   window.moli.que.push(function (moliAdTag) {
+
     moliAdTag.beforeRequestAds((config) => {
+      if (sessionStorage.getItem('beforeRequestAds') === 'true') {
+        moli.addLabel('beforeRequestAds');
+        console.log('beforeRequestAdsLabel added')
+      }
       console.log('before request ads hook', config);
     });
 
     moliAdTag.afterRequestAds((state) => {
       console.log('after request ads hook. State:', state);
     });
-  });
-
-  // request ads
-  window.moli.que.push(function (moliAdTag) {
-    moliAdTag.requestAds();
   });
 
 </script>
