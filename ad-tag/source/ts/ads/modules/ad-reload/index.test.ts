@@ -2,8 +2,6 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
-
 import { AdReload } from './index';
 import { googletag } from 'ad-tag/types/googletag';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
@@ -15,6 +13,7 @@ import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig'
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdVisibilityService } from './adVisibilityService';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 use(sinonChai);
 
@@ -36,7 +35,7 @@ describe('Moli Ad Reload Module', () => {
       labelConfigService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };

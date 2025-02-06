@@ -38,7 +38,7 @@ describe('Zeotap Module', () => {
       runtimeConfig: emptyRuntimeConfig,
       tcData: fullConsent({ 301: true }),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: assetLoaderService
     };
   };

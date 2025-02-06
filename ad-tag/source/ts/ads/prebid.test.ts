@@ -55,7 +55,7 @@ describe('prebid', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, {
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, {
         biddersDisabling: {
           enabled: true,
           minRate: 0.2,

@@ -94,6 +94,7 @@ describe('Lazy-load Module', () => {
   let sandbox = Sinon.createSandbox();
   let dom = createDom();
   let jsDomWindow = dom.window as any;
+
   jsDomWindow.moli = createMoliTag(jsDomWindow);
   jsDomWindow.IntersectionObserver = MockIntersectionObserver;
   const noopLogger = newNoopLogger();
@@ -172,7 +173,7 @@ describe('Lazy-load Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };

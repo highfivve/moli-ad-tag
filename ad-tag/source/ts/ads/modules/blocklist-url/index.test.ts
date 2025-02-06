@@ -1,16 +1,10 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { prebidjs } from 'ad-tag/types/prebidjs';
 import { modules, MoliConfig } from 'ad-tag/types/moliConfig';
-import Blocklist = modules.blocklist.Blocklist;
-import StaticBlocklistProvider = modules.blocklist.StaticBlocklistProvider;
-import DynamicBlocklistProvider = modules.blocklist.DynamicBlocklistProvider;
 import { BlocklistedUrls } from '../blocklist-url/index';
-import { googletag } from 'ad-tag/types/googletag';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import BlocklistUrlsBlockingConfig = modules.blocklist.BlocklistUrlsBlockingConfig;
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import {
   emptyConfig,
@@ -22,6 +16,10 @@ import { AdPipelineContext, ConfigureStep } from 'ad-tag/ads/adPipeline';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
+import Blocklist = modules.blocklist.Blocklist;
+import StaticBlocklistProvider = modules.blocklist.StaticBlocklistProvider;
+import DynamicBlocklistProvider = modules.blocklist.DynamicBlocklistProvider;
+import BlocklistUrlsBlockingConfig = modules.blocklist.BlocklistUrlsBlockingConfig;
 import BlocklistUrlsKeyValueConfig = modules.blocklist.BlocklistUrlsKeyValueConfig;
 
 // setup sinon-chai
@@ -30,17 +28,18 @@ use(chaiAsPromised);
 
 describe('BlocklistedUrls Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom, assetLoaderService, loadJsonStub, googleTagStub, setTargetingSpy;
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow;
+  let assetLoaderService, loadJsonStub, googleTagStub, setTargetingSpy;
+  let { dom, jsDomWindow } = createDomAndWindow();
 
   const setupDomAndServices = () => {
-    dom = createDom();
-    jsDomWindow = dom.window;
+    const newDom = createDomAndWindow();
+    jsDomWindow = newDom.jsDomWindow;
+    dom = newDom.dom;
     assetLoaderService = createAssetLoaderService(jsDomWindow);
     loadJsonStub = sandbox.stub(assetLoaderService, 'loadJson');
     googleTagStub = createGoogletagStub();
     setTargetingSpy = sandbox.spy(googleTagStub.pubads(), 'setTargeting');
-    dom.window.googletag = googleTagStub;
+    jsDomWindow.googletag = googleTagStub;
   };
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
@@ -55,7 +54,7 @@ describe('BlocklistedUrls Module', () => {
     labelConfigService: null as any,
     tcData: fullConsent(),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any),
+    auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
     assetLoaderService: assetLoaderService
   });
 

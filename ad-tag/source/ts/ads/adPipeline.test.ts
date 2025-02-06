@@ -56,7 +56,12 @@ describe('AdPipeline', () => {
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(config, noopLogger, jsDomWindow, new GlobalAuctionContext(jsDomWindow));
+    return new AdPipeline(
+      config,
+      noopLogger,
+      jsDomWindow,
+      new GlobalAuctionContext(jsDomWindow, noopLogger)
+    );
   };
 
   const adPipelineContext = (
@@ -77,7 +82,7 @@ describe('AdPipeline', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };

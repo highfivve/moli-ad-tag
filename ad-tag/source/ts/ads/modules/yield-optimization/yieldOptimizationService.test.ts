@@ -343,7 +343,7 @@ describe('YieldOptimizationService', () => {
               enabled: true
             }
           };
-          globalAuctionContext = new GlobalAuctionContext(jsDomWindow, config);
+          globalAuctionContext = new GlobalAuctionContext(jsDomWindow, noopLogger, config);
           getLastBidCpmsOfAdUnitStub = sandbox.stub(globalAuctionContext, 'getLastBidCpmsOfAdUnit');
         });
 

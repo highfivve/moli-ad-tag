@@ -32,7 +32,7 @@ describe('sticky header ad module', () => {
       labelConfigService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: null as any
     };
   };
