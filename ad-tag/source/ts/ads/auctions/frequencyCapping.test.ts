@@ -182,16 +182,15 @@ describe('FrequencyCapping', () => {
       const timePassed = 5;
       const waitTime = 3000;
       nowInstantStub.onFirstCall().returns(startTimestamp + timePassed);
-      const storedData = [
-        {
-          ts: startTimestamp,
-          wait: waitTime,
-          bid: {
-            bidder: prebidjs.DSPX,
-            adUnitCode: wpDomId
+      const storedData = {
+        caps: [
+          {
+            ts: startTimestamp,
+            wait: waitTime,
+            bid: { bidder: prebidjs.DSPX, adUnitCode: wpDomId }
           }
-        }
-      ];
+        ]
+      };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
       const frequencyCapping = new FrequencyCapping(
         { enabled: true, persistent: true, configs: [dspxWpConfig] },
@@ -218,8 +217,9 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('array').and.have.lengthOf(1);
-      expect(persistedState[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('caps');
+      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(1);
+      expect(persistedState.caps[0]).to.deep.equal({
         ts: 100000,
         wait: visxInterstitialConfig.blockedForMs,
         bid: { bidder: prebidjs.Visx, adUnitCode: interstitialDomId }
@@ -239,8 +239,9 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('array').and.have.lengthOf(1);
-      expect(persistedState[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('caps');
+      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(1);
+      expect(persistedState.caps[0]).to.deep.equal({
         ts: 100000,
         wait: dspxWpConfig.blockedForMs,
         bid: {
@@ -272,13 +273,14 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('array').and.have.lengthOf(2);
-      expect(persistedState[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('caps');
+      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(2);
+      expect(persistedState.caps[0]).to.deep.equal({
         ts: 100000,
         wait: visxInterstitialConfig.blockedForMs,
         bid: { bidder: prebidjs.Visx, adUnitCode: interstitialDomId }
       });
-      expect(persistedState[1]).to.deep.equal({
+      expect(persistedState.caps[1]).to.deep.equal({
         ts: 100000,
         wait: visxInterstitialConfig.blockedForMs,
         bid: { bidder: prebidjs.GumGum, adUnitCode: interstitialDomId }

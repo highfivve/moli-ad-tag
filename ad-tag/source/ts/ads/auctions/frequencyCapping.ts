@@ -14,8 +14,14 @@ type FrequencyCappingBid = ResumeCallbackData & {
  * The state of the frequency capping module is stored in a JSON array of the bidder/adunit key
  * that should be capped, along with the resume callback data, to re-schedule the callback if
  * the page is refreshed.
+ *
  */
-type PersistedFrequencyCappingState = Array<FrequencyCappingBid>;
+type PersistedFrequencyCappingState = {
+  /**
+   * The active frequency caps
+   */
+  readonly caps: FrequencyCappingBid[];
+};
 
 export class FrequencyCapping {
   /**
@@ -45,7 +51,7 @@ export class FrequencyCapping {
       if (storedData) {
         try {
           const parsedData = JSON.parse(storedData) as PersistedFrequencyCappingState;
-          parsedData.forEach(data => {
+          parsedData.caps.forEach(data => {
             const blockedForMs = remainingTime(data, this.now());
             this.#cap(
               // the start timestamp is taken from the stored data
@@ -116,7 +122,9 @@ export class FrequencyCapping {
   #persist = () => {
     // store the state in session storage
     if (this.config.persistent === true) {
-      const data: PersistedFrequencyCappingState = Array.from(this.frequencyCaps.values());
+      const data: PersistedFrequencyCappingState = {
+        caps: Array.from(this.frequencyCaps.values())
+      };
       this._window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
     }
   };
