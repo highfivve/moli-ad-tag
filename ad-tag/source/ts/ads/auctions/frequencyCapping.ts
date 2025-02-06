@@ -107,7 +107,7 @@ export class FrequencyCapping {
   ) => {
     if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
       const key = `${bid.adUnitCode}:${bid.bidder}`;
-      this.logger.debug('fc', 'adding $[{key}]');
+      this.logger.debug('fc', `adding ${key}`);
       this.frequencyCaps.set(key, {
         ts: startTimestamp,
         wait: config.blockedForMs,
@@ -117,7 +117,7 @@ export class FrequencyCapping {
         }
       });
       this._window.setTimeout(() => {
-        this.logger.debug('fc', 'removing', key);
+        this.logger.debug('fc', `removing ${key}`);
         this.frequencyCaps.delete(key);
       }, config.blockedForMs);
     }
