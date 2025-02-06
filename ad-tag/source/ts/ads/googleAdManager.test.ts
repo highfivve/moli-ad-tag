@@ -945,17 +945,19 @@ describe('google ad manager', () => {
           const defineOutOfPageSlotSpy = sandbox.spy(dom.window.googletag, 'defineOutOfPageSlot');
 
           await step(adPipelineContext(), [slot]);
-          expect(refreshSpy).to.have.been.calledOnce;
-          expect(refreshSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
-          expect(getTargetingStub).to.have.been.calledOnce;
-          expect(getTargetingStub).to.have.been.calledOnceWithExactly('hb_pb');
-          expect(destroySlotsSpy).to.have.been.calledOnce;
-          expect(destroySlotsSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
           expect(defineOutOfPageSlotSpy).to.have.been.calledOnce;
           expect(defineOutOfPageSlotSpy).to.have.been.calledOnceWithExactly(
             '/123/content_1/mobile',
             5
           );
+          const newSlot = defineOutOfPageSlotSpy.firstCall.returnValue;
+
+          expect(refreshSpy).to.have.been.calledOnce;
+          expect(refreshSpy).to.have.been.calledOnceWithExactly([newSlot]);
+          expect(getTargetingStub).to.have.been.calledOnce;
+          expect(getTargetingStub).to.have.been.calledOnceWithExactly('hb_pb');
+          expect(destroySlotsSpy).to.have.been.calledOnce;
+          expect(destroySlotsSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
         });
       });
     });
