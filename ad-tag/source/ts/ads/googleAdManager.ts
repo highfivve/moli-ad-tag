@@ -486,7 +486,7 @@ export const gptRequestAds =
           createTestSlots(context, slots);
           break;
         case 'production':
-          let slotsToRefresh = slots.filter(
+          const slotsToRefresh = slots.filter(
             ({ moliSlot }) => !context.auction.isSlotThrottled(moliSlot.domId)
           );
           if (slotsToRefresh.length === 0) {
