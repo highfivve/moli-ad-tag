@@ -34,7 +34,10 @@ describe('FrequencyCapping', () => {
 
   const dspxBidResponse: BidResponse = {
     bidder: prebidjs.DSPX,
-    adUnitCode: dspxWpConfig.domId
+    adUnitCode: dspxWpConfig.domId,
+    cpm: 20,
+    ttl: 60000,
+    ad: 'test ad'
   } as BidResponse;
 
   const auction = (
@@ -240,7 +243,10 @@ describe('FrequencyCapping', () => {
       expect(persistedState[0]).to.deep.equal({
         ts: 100000,
         wait: dspxWpConfig.blockedForMs,
-        bid: dspxBidResponse
+        bid: {
+          bidder: dspxBidResponse.bidder,
+          adUnitCode: dspxBidResponse.adUnitCode
+        }
       });
 
       expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;

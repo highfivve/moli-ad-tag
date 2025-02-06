@@ -99,7 +99,14 @@ export class FrequencyCapping {
   ) => {
     if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
       const key = `${bid.adUnitCode}:${bid.bidder}`;
-      this.frequencyCaps.set(key, { ts: startTimestamp, wait: config.blockedForMs, bid });
+      this.frequencyCaps.set(key, {
+        ts: startTimestamp,
+        wait: config.blockedForMs,
+        bid: {
+          bidder: bid.bidder,
+          adUnitCode: bid.adUnitCode
+        }
+      });
       this._window.setTimeout(() => {
         this.frequencyCaps.delete(key);
       }, config.blockedForMs);
