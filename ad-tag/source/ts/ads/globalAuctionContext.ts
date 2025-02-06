@@ -5,6 +5,7 @@ import { AdRequestThrottling } from './auctions/adRequestThrottling';
 import { auction } from '../types/moliConfig';
 import { FrequencyCapping } from './auctions/frequencyCapping';
 import { PreviousBidCpms } from './auctions/previousBidCpms';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 /**
  * ## Global Auction Context
@@ -31,7 +32,8 @@ export class GlobalAuctionContext {
     private readonly window: Window &
       prebidjs.IPrebidjsWindow &
       googletag.IGoogleTagWindow &
-      Pick<typeof globalThis, 'Date' | 'console'>,
+      Pick<typeof globalThis, 'Date'>,
+    private readonly logger: MoliRuntime.MoliLogger,
     private readonly config: auction.GlobalAuctionContextConfig = {}
   ) {
     if (config.biddersDisabling?.enabled) {
@@ -46,7 +48,8 @@ export class GlobalAuctionContext {
       this.frequencyCapping = new FrequencyCapping(
         config.frequencyCap,
         this.window,
-        this.window.Date.now
+        this.window.Date.now,
+        this.logger
       );
     }
 

@@ -2,6 +2,7 @@ import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { auction } from '../../types/moliConfig';
 import { NowInstant, remainingTime, ResumeCallbackData } from './resume';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
@@ -37,8 +38,9 @@ export class FrequencyCapping {
 
   constructor(
     private readonly config: auction.FrequencyCappingConfig,
-    private readonly _window: Window & Pick<typeof globalThis, 'console'>,
-    private readonly now: NowInstant
+    private readonly _window: Window,
+    private readonly now: NowInstant,
+    private readonly logger: MoliRuntime.MoliLogger
   ) {
     this.bidWonConfigs = this.config.configs.filter(
       config => !config.events || config.events?.includes('bidWon')
@@ -65,7 +67,7 @@ export class FrequencyCapping {
             // resume(data, now, () => this.frequencyCaps.delete(data.key), this._window);
           });
         } catch (e) {
-          this._window.console.error('failed to parse fc state', e);
+          this.logger.error('fc', 'failed to parse fc state', e);
         }
       }
     }
@@ -105,6 +107,7 @@ export class FrequencyCapping {
   ) => {
     if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
       const key = `${bid.adUnitCode}:${bid.bidder}`;
+      this.logger.debug('fc', 'adding $[{key}]');
       this.frequencyCaps.set(key, {
         ts: startTimestamp,
         wait: config.blockedForMs,
@@ -114,6 +117,7 @@ export class FrequencyCapping {
         }
       });
       this._window.setTimeout(() => {
+        this.logger.debug('fc', 'removing', key);
         this.frequencyCaps.delete(key);
       }, config.blockedForMs);
     }

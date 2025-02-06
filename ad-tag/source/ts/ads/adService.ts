@@ -85,7 +85,7 @@ export class AdService {
     },
     getDefaultLogger(),
     this.window as AdServiceWindow,
-    new GlobalAuctionContext(this.window as AdServiceWindow)
+    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger())
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -111,7 +111,7 @@ export class AdService {
         adPipelineConfig,
         this.logger,
         window as AdServiceWindow,
-        new GlobalAuctionContext(window as AdServiceWindow)
+        new GlobalAuctionContext(window as AdServiceWindow, this.logger)
       );
     }
   }
@@ -211,7 +211,11 @@ export class AdService {
       },
       this.logger,
       this.window as AdServiceWindow,
-      new GlobalAuctionContext(this.window as AdServiceWindow, config.globalAuctionContext)
+      new GlobalAuctionContext(
+        this.window as AdServiceWindow,
+        this.logger,
+        config.globalAuctionContext
+      )
     );
 
     return new Promise<Readonly<MoliConfig>>(resolve => {

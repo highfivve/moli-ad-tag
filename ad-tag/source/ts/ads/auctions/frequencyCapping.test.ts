@@ -6,6 +6,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import BidResponse = prebidjs.BidResponse;
 import { auction } from 'ad-tag/types/moliConfig';
+import { newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
 use(sinonChai);
 
 describe('FrequencyCapping', () => {
@@ -14,7 +15,6 @@ describe('FrequencyCapping', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
-  const consoleErrorSpy = sandbox.spy(jsDomWindow.console, 'error');
   const nowInstantStub = sandbox.stub<any, number>().returns(100000);
 
   const wpDomId = 'wp-slot';
@@ -67,7 +67,8 @@ describe('FrequencyCapping', () => {
     const frequencyCapping = new FrequencyCapping(
       { enabled: true, configs: [] },
       jsDomWindow,
-      nowInstantStub
+      nowInstantStub,
+      noopLogger
     );
     expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
     expect(jsDomWindow.sessionStorage.getItem('h5v-fc')).to.be.null;
@@ -77,7 +78,8 @@ describe('FrequencyCapping', () => {
     const frequencyCapping = new FrequencyCapping(
       { enabled: true, configs: [dspxWpConfig] },
       jsDomWindow,
-      nowInstantStub
+      nowInstantStub,
+      noopLogger
     );
     expect(frequencyCapping.isFrequencyCapped(dspxWpConfig.domId, prebidjs.DSPX)).to.be.false;
     expect(jsDomWindow.sessionStorage.getItem('h5v-fc'));
@@ -89,7 +91,8 @@ describe('FrequencyCapping', () => {
       frequencyCapping = new FrequencyCapping(
         { enabled: true, configs: [dspxWpConfig] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
     });
 
@@ -122,7 +125,8 @@ describe('FrequencyCapping', () => {
       frequencyCapping = new FrequencyCapping(
         { enabled: true, configs: [dspxWpConfig, visxInterstitialConfig] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
     });
 
@@ -161,20 +165,24 @@ describe('FrequencyCapping', () => {
       const frequencyCapping = new FrequencyCapping(
         { enabled: true, persistent: true, configs: [] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
       expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
     });
 
     it('should not add a frequency cap if the stored data is invalid', () => {
       jsDomWindow.sessionStorage.setItem('h5v-fc', 'invalid');
+      const logger = newNoopLogger();
+      const errorSpy = sandbox.spy(logger, 'error');
       const frequencyCapping = new FrequencyCapping(
         { enabled: true, persistent: true, configs: [] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        logger
       );
       expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
-      expect(consoleErrorSpy).to.have.been.called;
+      expect(errorSpy).to.have.been.called;
     });
 
     it('should resume the frequency cap if the stored data is valid', () => {
@@ -195,7 +203,8 @@ describe('FrequencyCapping', () => {
       const frequencyCapping = new FrequencyCapping(
         { enabled: true, persistent: true, configs: [dspxWpConfig] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
       expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
       expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(
@@ -209,7 +218,8 @@ describe('FrequencyCapping', () => {
       const frequencyCapping = new FrequencyCapping(
         { enabled: true, persistent: true, configs: [visxInterstitialConfig] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
       frequencyCapping.onAuctionEnd(
         auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
@@ -233,7 +243,8 @@ describe('FrequencyCapping', () => {
       const frequencyCapping = new FrequencyCapping(
         { enabled: true, persistent: true, configs: [dspxWpConfig] },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
       frequencyCapping.onBidWon(dspxBidResponse);
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
@@ -262,7 +273,8 @@ describe('FrequencyCapping', () => {
           configs: [visxInterstitialConfig, { ...visxInterstitialConfig, bidder: prebidjs.GumGum }]
         },
         jsDomWindow,
-        nowInstantStub
+        nowInstantStub,
+        noopLogger
       );
       frequencyCapping.onAuctionEnd(
         auction([
