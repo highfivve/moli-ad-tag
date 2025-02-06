@@ -427,6 +427,56 @@ export const gptDefineSlots =
     return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
   };
 
+/**
+ * check demand of interstitial position and remap to google ad manager web interstitial
+ * if there are no bids.
+ *
+ * @param slotsToRefresh the list of slots that are currently in the auction
+ * @param context ad pipeline context to access googletag, logger and window
+ */
+const checkAndSwitchToWebInterstitial = (
+  slotsToRefresh: MoliRuntime.SlotDefinition<AdSlot>[],
+  context: AdPipelineContext
+) => {
+  // check demand of interstitial position and remap if there are no bids
+  const interstitialSlot = slotsToRefresh.find(
+    ({ moliSlot }) => moliSlot.position === 'interstitial'
+  );
+
+  if (interstitialSlot) {
+    // for now, we only check if a bid is available. This can be more sophisticated in the future
+    // to check for a certain bid CPM. However prebid.js floor price feature should already filter
+    // out all bids below a certain CPM
+    const priceBuckets = interstitialSlot.adSlot.getTargeting('hb_pb');
+    if (priceBuckets.length === 0) {
+      // if there are no bids, we switch to the out-of-page-interstitial position
+      context.window.googletag.destroySlots([interstitialSlot.adSlot]);
+
+      const gamWebInterstitial = context.window.googletag.defineOutOfPageSlot(
+        resolveAdUnitPath(interstitialSlot.moliSlot.adUnitPath, context.adUnitPathVariables),
+        context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
+      );
+      if (gamWebInterstitial) {
+        console.log('GAM', 'Display out-of-page-interstitial slot');
+
+        // this little dance is annoying - refresh is done afterwards
+        gamWebInterstitial.addService(context.window.googletag.pubads());
+        context.window.googletag.display(gamWebInterstitial);
+
+        // early return to swap the interstitial slot
+        return [
+          ...slotsToRefresh.filter(({ moliSlot }) => moliSlot.position !== 'interstitial'),
+          { ...interstitialSlot, adSlot: gamWebInterstitial }
+        ];
+      } else {
+        context.logger.error('GAM', 'Failed to define out-of-page-interstitial slot');
+      }
+    }
+  }
+
+  return slotsToRefresh;
+};
+
 export const gptRequestAds =
   (): RequestAdsStep => (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) =>
     new Promise<void>(resolve => {
@@ -436,38 +486,20 @@ export const gptRequestAds =
           createTestSlots(context, slots);
           break;
         case 'production':
-          const slotsToRefresh = slots.filter(
+          let slotsToRefresh = slots.filter(
             ({ moliSlot }) => !context.auction.isSlotThrottled(moliSlot.domId)
           );
           if (slotsToRefresh.length === 0) {
             break;
           }
           // check demand of interstitial position and remap if there are no bids
-          const interstitialSlot = slotsToRefresh.find(
-            ({ moliSlot }) => moliSlot.position === 'interstitial'
-          );
-          if (interstitialSlot) {
-            // for now, we only check if a bid is available. This can be more sophisticated in the future
-            // to check for a certain bid CPM
-            const priceBuckets = interstitialSlot.adSlot.getTargeting('hb_pb');
-            if (priceBuckets.length === 0) {
-              // if there are no bids, we switch to the out-of-page-interstitial position
-              context.window.googletag.destroySlots([interstitialSlot.adSlot]);
-              context.window.googletag.defineOutOfPageSlot(
-                resolveAdUnitPath(
-                  interstitialSlot.moliSlot.adUnitPath,
-                  context.adUnitPathVariables
-                ),
-                context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
-              );
-            }
-          }
+          const updatedSlots = checkAndSwitchToWebInterstitial(slotsToRefresh, context);
 
           // load ads
-          context.window.googletag.pubads().refresh(slotsToRefresh.map(({ adSlot }) => adSlot));
+          context.window.googletag.pubads().refresh(updatedSlots.map(({ adSlot }) => adSlot));
 
           // debug logs
-          const debugMessage = slotsToRefresh
+          const debugMessage = updatedSlots
             .map(({ moliSlot }) => `[DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`)
             .join('\n');
           context.logger.debug('GAM', `Refresh ${slots.length} slot(s):\n${debugMessage}`);
