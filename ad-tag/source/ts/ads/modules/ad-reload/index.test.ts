@@ -2,12 +2,9 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
-
 import { AdReload } from './index';
 import { googletag } from 'ad-tag/types/googletag';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { prebidjs } from 'ad-tag/types/prebidjs';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
@@ -16,16 +13,13 @@ import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig'
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdVisibilityService } from './adVisibilityService';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 use(sinonChai);
 
 describe('Moli Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom = createDom();
-  let jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  let { jsDomWindow } = createDomAndWindow();
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
@@ -41,7 +35,7 @@ describe('Moli Ad Reload Module', () => {
       labelConfigService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
@@ -100,8 +94,7 @@ describe('Moli Ad Reload Module', () => {
   beforeEach(() => {
     // AdService calls a setInterval method, which blocks tests before exiting.
     sandbox.useFakeTimers();
-    dom = createDom();
-    jsDomWindow = dom.window as any;
+    jsDomWindow = createDomAndWindow().jsDomWindow;
     jsDomWindow.moli = {
       refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
         return Promise.resolve('refreshed');
@@ -170,7 +163,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should setup the pubads slotRenderEnded listener for the slots (but only once)', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { configureStep } = createAdReloadModule();
 
     await configureStep(adPipelineContext(emptyConfig), []);
@@ -186,7 +179,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should call trackSlot on the AdVisibilityService', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { module, configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
@@ -203,7 +196,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should NOT call trackSlot if the slot was rendered empty', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { module, configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
@@ -225,7 +218,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should NOT call trackSlot if the order id is not in the includes', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { module, configureStep, adVisibilityService } = createAdReloadModule([], [43]);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
@@ -247,7 +240,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should NOT call trackSlot if the yieldGroup id is not in the includes', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { module, configureStep, adVisibilityService } = createAdReloadModule([], [], []);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
@@ -272,7 +265,7 @@ describe('Moli Ad Reload Module', () => {
 
   it('should NOT call trackSlot if the order id is in the excludes', async () => {
     const excludedOrderId = 42;
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
     const { module, configureStep, adVisibilityService } = createAdReloadModule(
       [1337],
@@ -299,7 +292,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should NOT call trackSlot if the advertiser id is NOT in the includes', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { module, configureStep, adVisibilityService } = createAdReloadModule([13388], []);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
@@ -321,7 +314,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should NOT call trackSlot if the DOM id is in the excludes', async () => {
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const { module, configureStep, adVisibilityService } = createAdReloadModule(
       [1337],
       [42],
@@ -352,7 +345,7 @@ describe('Moli Ad Reload Module', () => {
   loadingBehaviours.forEach(loadingBehaviour => {
     it(`should set googletag key/value native-ad-reload=true and call moli.refreshAdSlot when reloading a slot with behaviour ${loadingBehaviour.loaded}`, async () => {
       const { configureStep, adVisibilityService } = createAdReloadModule([1337], [4711]);
-      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
       const testAdSlotWithBehaviour: AdSlot = {
         domId: 'foo',
@@ -399,10 +392,10 @@ describe('Moli Ad Reload Module', () => {
       [testAdSlotDomId]
     );
 
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
     const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
     const setTargetingSpy = sandbox.spy(testGoogleSlot, 'setTargeting');
-    const destroySlotSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+    const destroySlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
     await configureStep(adPipelineContext({ ...emptyConfig, slots: [moliSlot] }), [moliSlot]);
     const trackSlotSpy = sandbox.spy(adVisibilityService(), 'trackSlot');
@@ -419,7 +412,7 @@ describe('Moli Ad Reload Module', () => {
 
     const styleSetPropertySpy = sandbox.spy();
 
-    sandbox.stub(dom.window.document, 'getElementById').returns({
+    sandbox.stub(jsDomWindow.document, 'getElementById').returns({
       scrollHeight: 250,
       style: { setProperty: styleSetPropertySpy as Function }
     } as HTMLElement);
@@ -451,13 +444,13 @@ describe('Moli Ad Reload Module', () => {
       [testAdSlotDomId]
     );
 
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
     await configureStep(adPipelineContext({ ...emptyConfig, slots: [moliSlot] }), [moliSlot]);
 
     const googleSlot = googleAdSlotStub('foo', 'foo');
     const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
-    const destroySlotSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+    const destroySlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
     const trackSlotSpy = sandbox.spy(adVisibilityService(), 'trackSlot');
     const refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
@@ -474,7 +467,7 @@ describe('Moli Ad Reload Module', () => {
 
     const styleSetPropertySpy = sandbox.spy();
 
-    sandbox.stub(dom.window.document, 'getElementById').returns({
+    sandbox.stub(jsDomWindow.document, 'getElementById').returns({
       scrollHeight: 600,
       style: { setProperty: styleSetPropertySpy as Function }
     } as HTMLElement);
@@ -500,7 +493,7 @@ describe('Moli Ad Reload Module', () => {
   it('should remove visibility tracking if reloading is not allowed again', async () => {
     const { configureStep, adVisibilityService } = createAdReloadModule([1337], [4711]);
 
-    const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
 
@@ -592,7 +585,7 @@ describe('Moli Ad Reload Module', () => {
           includeOrderIds,
           includeYieldGroupIds
         );
-        const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
         await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
 

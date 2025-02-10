@@ -3,9 +3,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { StickyHeaderAd } from './index';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { prebidjs } from 'ad-tag/types/prebidjs';
-import { googletag } from 'ad-tag/types/googletag';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyConfig, emptyRuntimeConfig, newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { AdSlot, Device, MoliConfig } from 'ad-tag/types/moliConfig';
@@ -18,11 +16,7 @@ use(sinonChai);
 
 describe('sticky header ad module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom = createDom();
-  let jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  let { jsDomWindow } = createDomAndWindow();
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
@@ -38,7 +32,7 @@ describe('sticky header ad module', () => {
       labelConfigService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: null as any
     };
   };
@@ -98,8 +92,7 @@ describe('sticky header ad module', () => {
   });
 
   afterEach(() => {
-    dom = createDom();
-    jsDomWindow = dom.window as any;
+    jsDomWindow = createDomAndWindow().jsDomWindow;
     sandbox.reset();
     sandbox.resetHistory();
   });

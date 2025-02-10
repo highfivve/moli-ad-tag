@@ -32,7 +32,7 @@
     "prettier:fix": "prettier --config .prettierrc --ignore-path .prettierignore --write --check \"ad-tag/source/**/*.{ts,tsx,css}\"",
     "validate": "npm run compile && npm run lint && npm run test",
     "codeGen": "node codeGen.js",
-    "schema": "ts-json-schema-generator --path 'ad-tag/source/ts/types/moliConfig.ts' --type 'MoliConfig' --out schema.json",
+    "schema": "ts-json-schema-generator --tsconfig tsconfig.json --path 'ad-tag/source/ts/types/moliConfig.ts' --type 'MoliConfig' --out schema.json",
     "release:validate": "npm run validate && npm run build",
     "release": "np --no-release-draft --no-publish --test-script release:validate",
     "github:publish": "npm run clean && npm run build && npm publish --registry https://npm.pkg.github.com/",

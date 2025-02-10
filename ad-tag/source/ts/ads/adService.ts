@@ -43,16 +43,17 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import {
-  AdSlot,
-  behaviour,
-  bucket,
-  Device,
-  Environment,
-  MoliConfig,
-  sizeConfigs
-} from '../types/moliConfig';
+import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
 import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
+
+/**
+ * All relevant information about the global window
+ */
+type AdServiceWindow = Window &
+  MoliRuntime.MoliWindow &
+  googletag.IGoogleTagWindow &
+  prebidjs.IPrebidjsWindow &
+  Pick<typeof globalThis, 'Date' | 'console'>;
 
 /**
  * @internal
@@ -83,13 +84,8 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window &
-      googletag.IGoogleTagWindow &
-      prebidjs.IPrebidjsWindow &
-      MoliRuntime.MoliWindow,
-    new GlobalAuctionContext(
-      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-    )
+    this.window as AdServiceWindow,
+    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger())
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -114,13 +110,8 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window &
-          googletag.IGoogleTagWindow &
-          prebidjs.IPrebidjsWindow &
-          MoliRuntime.MoliWindow,
-        new GlobalAuctionContext(
-          window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-        )
+        window as AdServiceWindow,
+        new GlobalAuctionContext(window as AdServiceWindow, this.logger)
       );
     }
   }
@@ -219,12 +210,10 @@ export class AdService {
         requestAds: isGam ? gptRequestAds() : prebidRenderAds()
       },
       this.logger,
-      this.window as Window &
-        googletag.IGoogleTagWindow &
-        prebidjs.IPrebidjsWindow &
-        MoliRuntime.MoliWindow,
+      this.window as AdServiceWindow,
       new GlobalAuctionContext(
-        this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+        this.window as AdServiceWindow,
+        this.logger,
         config.globalAuctionContext
       )
     );
@@ -438,6 +427,9 @@ export class AdService {
   private isSlotAvailable = (slot: AdSlot): boolean => {
     return (
       !!this.window.document.getElementById(slot.domId) ||
+      // this is a custom position defined by the ad tag library. A temporary div is created
+      // if it does not exist to facilitate the prebid auction
+      slot.position === 'interstitial' ||
       // web interstitials and web anchors don't require a dom element
       slot.position === 'out-of-page-interstitial' ||
       slot.position === 'out-of-page-top-anchor' ||

@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 
 import { filterHighestNonSkinBid, FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
@@ -28,8 +28,7 @@ type SimpleFormatFilterBidder = Exclude<FormatFilter['bidder'], 'gumgum' | '*'>;
 
 describe('Skin Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & MoliRuntime.MoliWindow = dom.window as any;
+  let { jsDomWindow } = createDomAndWindow();
   jsDomWindow.googletag = createGoogletagStub();
 
   const prebidConfig: headerbidding.PrebidConfig = {
@@ -40,8 +39,7 @@ describe('Skin Module', () => {
   let assetLoaderService = createAssetLoaderService(jsDomWindow);
 
   afterEach(() => {
-    dom = createDom();
-    jsDomWindow = dom.window as any;
+    jsDomWindow = createDomAndWindow().jsDomWindow;
     jsDomWindow.googletag = createGoogletagStub();
     assetLoaderService = createAssetLoaderService(jsDomWindow);
     sandbox.reset();
@@ -106,7 +104,7 @@ describe('Skin Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any),
+      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
       assetLoaderService: assetLoaderService
     };
   };

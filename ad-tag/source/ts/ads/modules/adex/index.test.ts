@@ -66,7 +66,7 @@ describe('The Adex DMP Module', () => {
     labelConfigService: null as any,
     tcData: tcData ?? fullConsent({ '44': true }),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any),
+    auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
     assetLoaderService: assetLoaderService
   });
 

@@ -6,13 +6,8 @@ import { Pubstack } from './index';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import {
-  emptyConfig,
-  emptyRuntimeConfig,
-  newEmptyConfig,
-  noopLogger
-} from 'ad-tag/stubs/moliStubs';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { modules } from 'ad-tag/types/moliConfig';
@@ -22,13 +17,12 @@ use(sinonChai);
 
 describe('Pubstack Module', () => {
   const sandbox = Sinon.createSandbox();
-  const dom = createDom();
-  const jsDomWindow: Window = dom.window as any;
+  const { jsDomWindow } = createDomAndWindow();
 
   const googletagStub = createGoogletagStub();
   const setTargetingSpy = sandbox.spy(googletagStub.pubads(), 'setTargeting');
 
-  dom.window.googletag = googletagStub;
+  jsDomWindow.googletag = googletagStub;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
@@ -47,7 +41,7 @@ describe('Pubstack Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any),
+      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
       assetLoaderService: assetLoaderService
     };
   };
@@ -130,14 +124,14 @@ describe('Pubstack Module', () => {
     };
 
     const addMetaTag = (content: string): void => {
-      const metaTag = dom.window.document.createElement('meta');
+      const metaTag = jsDomWindow.document.createElement('meta');
       metaTag.name = 'pbstck_context:pbstck_ab_test';
       metaTag.content = content;
-      dom.window.document.head.appendChild(metaTag);
+      jsDomWindow.document.head.appendChild(metaTag);
     };
 
     beforeEach(() => {
-      dom.window.document.head.replaceChildren();
+      jsDomWindow.document.head.replaceChildren();
     });
 
     it('should do nothing if the meta tag is missing', async () => {

@@ -7,6 +7,7 @@ describe('PreviousBidCpms', () => {
   const exampleResponse: prebidjs.BidResponse = {
     requestId: 'req123',
     bidder: 'criteo',
+    bidderCode: 'criteo',
     ad: '<div>Ad content</div>',
     auctionId: 'auction123',
     adUnitCode: 'unit123',

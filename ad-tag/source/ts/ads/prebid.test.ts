@@ -1,4 +1,4 @@
-import { createDom } from '../stubs/browserEnvSetup';
+import { createDomAndWindow } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -19,7 +19,6 @@ import { LabelConfigService } from './labelConfigService';
 import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
-import { googletag } from '../types/googletag';
 import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
@@ -35,11 +34,7 @@ describe('prebid', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  const { dom, jsDomWindow } = createDomAndWindow();
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
@@ -60,7 +55,7 @@ describe('prebid', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, {
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, {
         biddersDisabling: {
           enabled: true,
           minRate: 0.2,

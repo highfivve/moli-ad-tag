@@ -57,7 +57,7 @@ describe('Emetriq Module', () => {
       labelConfigService: null as any,
       tcData: tcDataWithConsent,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any),
+      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
       assetLoaderService: assetLoaderService
     };
   };

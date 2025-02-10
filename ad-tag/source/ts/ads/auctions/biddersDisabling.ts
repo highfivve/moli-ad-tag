@@ -1,5 +1,4 @@
 import { prebidjs } from '../../types/prebidjs';
-import BidderCode = prebidjs.BidderCode;
 import { MoliRuntime } from '../../types/moliRuntime';
 import { auction } from '../../types/moliConfig';
 
@@ -34,7 +33,7 @@ type BidderState = {
  * @param window - window object
  */
 export class BiddersDisabling {
-  private participationInfo: Map<string, Map<BidderCode, BidderState>> = new Map();
+  private participationInfo: Map<string, Map<prebidjs.BidderCode, BidderState>> = new Map();
   private logger?: MoliRuntime.MoliLogger;
   constructor(
     private readonly config: auction.BidderDisablingConfig,
@@ -53,7 +52,7 @@ export class BiddersDisabling {
    * @param bidderCode the prebid.js client side bidder code
    * @returns true if the bidder is disabled for the given position, false otherwise
    */
-  public isBidderDisabled(position: string, bidderCode: BidderCode): boolean {
+  public isBidderDisabled(position: string, bidderCode: prebidjs.BidderCode): boolean {
     return this.participationInfo.get(position)?.get(bidderCode)?.disabled ?? false;
   }
 
@@ -63,10 +62,10 @@ export class BiddersDisabling {
    * For more info, execute => pbjs.getEvents().filter(event => (event.eventType === 'auctionEnd'))
    * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
    */
-  public onAuctionEnd(auction: any): void {
-    auction.bidderRequests.forEach(bidderRequest => {
+  public onAuctionEnd(auction: prebidjs.event.AuctionObject): void {
+    auction.bidderRequests?.forEach(bidderRequest => {
       // iterate over all bids and in each bid request and update participationInfo
-      bidderRequest.bids.forEach(bid => {
+      bidderRequest?.bids?.forEach(bid => {
         const bidderCode = bid.bidder;
         const adUnitCode = bid.adUnitCode;
 
@@ -94,7 +93,7 @@ export class BiddersDisabling {
       });
     });
 
-    auction.bidsReceived.forEach(bidReceived => {
+    auction.bidsReceived?.forEach(bidReceived => {
       const bidderForPosition = bidReceived.bidderCode;
       const position = bidReceived.adUnitCode;
 
@@ -139,7 +138,7 @@ export class BiddersDisabling {
     );
   }
 
-  private disableBidder(position: string, bidderCode: BidderCode) {
+  private disableBidder(position: string, bidderCode: prebidjs.BidderCode) {
     const bidderState = this.participationInfo.get(position)?.get(bidderCode);
     if (bidderState) {
       bidderState.disabled = true;
@@ -147,7 +146,7 @@ export class BiddersDisabling {
     }
   }
 
-  private enableBidder(position: string, bidderCode: BidderCode) {
+  private enableBidder(position: string, bidderCode: prebidjs.BidderCode) {
     const bidderState = this.participationInfo.get(position)?.get(bidderCode);
     if (bidderState) {
       bidderState.disabled = false;
