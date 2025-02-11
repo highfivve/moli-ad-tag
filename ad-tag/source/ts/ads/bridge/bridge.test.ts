@@ -1,17 +1,16 @@
-import { createDom } from '../stubs/browserEnvSetup';
-import { noopLogger } from '../stubs/moliStubs';
-import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
+import { createDom } from 'ad-tag//stubs/browserEnvSetup';
+import { noopLogger } from 'ad-tag//stubs/moliStubs';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag//stubs/googletagStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { PassbackService } from './passbackService';
-import { MoliRuntime } from '../types/moliRuntime';
-import { googletag } from '../types/googletag';
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { googletag } from 'ad-tag//types/googletag';
 
 // setup sinon-chai
 use(sinonChai);
 
-describe('Passback Service', () => {
+describe('bridge', () => {
   // create a fresh DOM for each test
   let dom = createDom();
   let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;

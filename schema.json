@@ -45,10 +45,6 @@
           },
           "type": "array"
         },
-        "passbackSupport": {
-          "description": "If true this ad slot will be refreshed if a window.postMessage event is being sent from a creative identifying the ad slot by domId. In additional key value `passback:true` will be set indicating this is a passback request. The rest of the key-values will be untouched keeping the prebid / a9 auction key-values.\n\n\n## Example creative snippet\n\nThis is an example of how a passback function could look like in a creative. Note that you can either use the `adUnitPath` or the `domId` of the slot.\n\n`adUnitPath` is not yet fully supported, when using variables in the ad unit path.\n\n``` var passbackCallback = function() {   var request = JSON.stringify({     type: 'passback',     adUnitPath: '%%ADUNIT%%' ,     passbackOrigin: '[ADVERTISER-NAME]'   });   try {     // first try to post a message on the top most window     window.top.postMessage(request, '*');   } catch (_) {     // best-effort postMessage     window.postMessage(request, '*');   } } ```\n\nDefault is `false`",
-          "type": "boolean"
-        },
         "position": {
           "$ref": "#/definitions/gpt.Position",
           "description": "the position of the ad slot"
@@ -216,6 +212,10 @@
         "adServer": {
           "$ref": "#/definitions/AdServer",
           "description": "default is `gam`"
+        },
+        "bridge": {
+          "$ref": "#/definitions/bridge.BridgeConfig",
+          "description": "## Bridge Configuration\n\nThe ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.\n\nThe most common use case, is to trigger ads from within a creative that is served in an iframe, e.g. for backfill implementations or \"post-bid\".\n\nIf enabled and configured a listener will be attached to the current `window` object that listens for messages."
         },
         "buckets": {
           "$ref": "#/definitions/bucket.GlobalBucketConfig",
@@ -651,6 +651,24 @@
         }
       ],
       "description": "all available slot loading behaviours."
+    },
+    "bridge.BridgeConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "If enabled, the implementation will be activated to handle postMessage events from creatives or other systems to refresh ad slots.",
+          "type": "boolean"
+        },
+        "eventPrefix": {
+          "description": "TODO: really a good idea? Each message contains an `event` field that identifies the event type. The name of the event will be prefixed with this value.\n\nPattern: `${prefix}.${event}`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "eventPrefix"
+      ],
+      "type": "object"
     },
     "bucket.AdSlotBucket": {
       "anyOf": [
