@@ -1037,7 +1037,7 @@ describe('moli', () => {
       expect(hookSpy).to.be.calledOnce;
     });
 
-    it('should add the beforeRequestAds hooks and call them on each requestAds() cal', async () => {
+    it('should add the beforeRequestAds hooks and call them on each requestAds() call', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const beforeRequestAdsHook = (_: MoliConfig) => {
@@ -1054,6 +1054,27 @@ describe('moli', () => {
       });
       await adTag.requestAds();
       expect(hookSpy).to.be.calledTwice;
+    });
+
+    it('should (conditionally) add labels to the ad tag config in beforeRequestAds hook in spa mode also after the first requestAds()', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      let condition = false;
+      const beforeRequestAdsHook = (_: MoliConfig) => {
+        if (condition) {
+          adTag.addLabel('testLabel');
+        }
+      };
+      adTag.beforeRequestAds(beforeRequestAdsHook);
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'none' } });
+
+      await adTag.requestAds();
+      const labelsAfterFirstRequestAds = adTag.getRuntimeConfig().labels;
+      expect(labelsAfterFirstRequestAds).not.to.include('testLabel');
+
+      condition = true;
+      await adTag.requestAds();
+      const labelsAfterSecondRequestAds = adTag.getRuntimeConfig().labels;
+      expect(labelsAfterSecondRequestAds).to.include('testLabel');
     });
 
     it('should catch errors in beforeRequestAds hook in spa mode', async () => {
