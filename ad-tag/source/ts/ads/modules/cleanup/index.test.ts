@@ -100,7 +100,6 @@ describe('Cleanup Module', () => {
         },
         adUnitPath: '/55155651/prebid_test',
         sizes: [[300, 250]],
-        passbackSupport: true,
         sizeConfig: [
           {
             mediaQuery: '(min-width: 0px)',

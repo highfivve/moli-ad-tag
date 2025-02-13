@@ -2,7 +2,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { AdPipelineContext, InitStep, mkInitStep } from 'ad-tag/ads/adPipeline';
 import { isPlainObject } from 'ad-tag/util/objectUtils';
 
-type PassbackMessage = {
+export type PassbackMessage = {
   /**
    */
   event: 'h5.adunit.passback';
@@ -30,7 +30,7 @@ type PassbackMessage = {
   passbackOrigin: string;
 };
 
-type RefreshAdUnitMessage = {
+export type RefreshAdUnitMessage = {
   event: 'h5.adunit.refresh';
   domId: string;
 };
@@ -69,6 +69,13 @@ const parseMessageData = (data: any): BridgeProtocol | null => {
   }
 };
 
+/**
+ * Refresh message are sent by third party creatives to indicate that they have no ads to show.
+ * Calls the backfill ad slot to refresh the ad slot.
+ *
+ * @param message post message data
+ * @param context
+ */
 const handleRefresh = (message: RefreshAdUnitMessage, context: AdPipelineContext): void => {
   const backfillMoliSlot = context.config.slots.find(
     slot => slot.domId === message.domId && slot.behaviour.loaded === 'backfill'

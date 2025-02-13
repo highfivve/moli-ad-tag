@@ -886,17 +886,6 @@ export namespace bridge {
      * or other systems to refresh ad slots.
      */
     readonly enabled: boolean;
-
-    /**
-     * TODO: really a good idea?
-     * Each message contains an `event` field that identifies the event type.
-     * The name of the event will be prefixed with this value.
-     *
-     * Pattern: `${prefix}.${event}`
-     *
-     * @example `h5` - event names may look like `h5.adunit.refresh`
-     */
-    readonly eventPrefix: string;
   }
 }
 

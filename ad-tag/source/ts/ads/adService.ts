@@ -37,8 +37,6 @@ import {
   a9PublisherAudiences
 } from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
-import { passbackPrepareRequestAds } from './passback';
-import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
