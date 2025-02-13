@@ -90,7 +90,14 @@ export class Cleanup implements IModule {
               if (context.runtimeConfig.environment === 'test') {
                 return Promise.resolve();
               }
-              this.cleanUp(context, config.configs);
+
+              // check if the bidder in each of the cleanup configs has won the last auction on the configured slot
+              // e.g. seedtag is configured on the wallpaper slot, then clean up seedtag if they have won the last auction on the wallpaper slot
+              // prevents cleaning on the first page load
+              const configsOfDomIdsThatNeedToBeCleaned = config.configs.filter(config =>
+                this.hasBidderWonLastAuction(context, config)
+              );
+              this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
               return Promise.resolve();
             }
           )
@@ -106,12 +113,14 @@ export class Cleanup implements IModule {
             if (context.runtimeConfig.environment === 'test') {
               return Promise.resolve();
             }
+
+            // look at the slots that should be reloaded & check if there is a cleanup config for it
+            // if there is, check if the bidder in this config has won the last auction on the slot
             const configsOfDomIdsThatNeedToBeCleaned = config.configs
               .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
               .filter(config => this.hasBidderWonLastAuction(context, config));
 
             this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
-
             return Promise.resolve();
           })
         ]
