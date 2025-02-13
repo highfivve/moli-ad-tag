@@ -37,14 +37,13 @@ import {
   a9PublisherAudiences
 } from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
-import { passbackPrepareRequestAds } from './passback';
-import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
 import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
+import { bridgeInitStep } from 'ad-tag/ads/bridge/bridge';
 
 /**
  * All relevant information about the global window
@@ -144,7 +143,7 @@ export class AdService {
     );
 
     // 2. build the AdPipeline
-    const init: InitStep[] = isGam ? [gptInit()] : [];
+    const init: InitStep[] = isGam ? [gptInit(), bridgeInitStep()] : [];
 
     const configure: ConfigureStep[] = isGam ? [gptConfigure()] : [];
 
@@ -154,13 +153,7 @@ export class AdService {
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [];
     if (isGam) {
-      prepareRequestAds.push(
-        gptLDeviceLabelKeyValue(),
-        gptConsentKeyValue(),
-        passbackPrepareRequestAds(
-          new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
-        )
-      );
+      prepareRequestAds.push(gptLDeviceLabelKeyValue(), gptConsentKeyValue());
     }
 
     const requestBids: RequestBidsStep[] = [];

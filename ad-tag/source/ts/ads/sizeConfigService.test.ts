@@ -222,6 +222,14 @@ describe('SizeConfigService', () => {
       expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
     });
 
+    it('should filter supported sizes if at least one label is met in the labelOne condition', () => {
+      const sizeConfigService = newSizeConfigService(
+        [newSizeConfigEntry([], ['foo', 'bar'])],
+        ['foo']
+      );
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
+    });
+
     it('should filter supported sizes if all labels are included in the supported labels, but the media query does not match', () => {
       const matchMediaStub = sandbox
         .stub(dom.window, 'matchMedia')

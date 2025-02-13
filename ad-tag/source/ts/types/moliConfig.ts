@@ -93,41 +93,6 @@ export interface AdSlot {
 
   /** optional a9 configuration if this ad slot can also be used by a9 */
   readonly a9?: headerbidding.A9AdSlotConfig;
-
-  /**
-   * If true this ad slot will be refreshed if a window.postMessage event is being sent from
-   * a creative identifying the ad slot by domId. In additional key value `passback:true` will
-   * be set indicating this is a passback request. The rest of the key-values will be untouched
-   * keeping the prebid / a9 auction key-values.
-   *
-   *
-   * ## Example creative snippet
-   *
-   * This is an example of how a passback function could look like in a creative.
-   * Note that you can either use the `adUnitPath` or the `domId` of the slot.
-   *
-   * `adUnitPath` is not yet fully supported, when using variables in the ad unit path.
-   *
-   * ```
-   * var passbackCallback = function() {
-   *   var request = JSON.stringify({
-   *     type: 'passback',
-   *     adUnitPath: '%%ADUNIT%%' ,
-   *     passbackOrigin: '[ADVERTISER-NAME]'
-   *   });
-   *   try {
-   *     // first try to post a message on the top most window
-   *     window.top.postMessage(request, '*');
-   *   } catch (_) {
-   *     // best-effort postMessage
-   *     window.postMessage(request, '*');
-   *   }
-   * }
-   * ```
-   *
-   * Default is `false`
-   */
-  readonly passbackSupport?: boolean;
 }
 
 /*
@@ -909,6 +874,19 @@ export namespace bucket {
   export type BucketConfigMap = {
     readonly [bucketName: string]: BucketConfig;
   };
+}
+
+/**
+ * Configuration namespace for the bridge (backfill) configuration
+ */
+export namespace bridge {
+  export interface BridgeConfig {
+    /**
+     * If enabled, the implementation will be activated to handle postMessage events from creatives
+     * or other systems to refresh ad slots.
+     */
+    readonly enabled: boolean;
+  }
 }
 
 export namespace modules {
@@ -2344,4 +2322,16 @@ export interface MoliConfig {
      */
     pageSettingsConfig?: googletag.GptPageSettingsConfig;
   };
+
+  /**
+   * ## Bridge Configuration
+   *
+   * The ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.
+   *
+   * The most common use case, is to trigger ads from within a creative that is served in an iframe, e.g. for backfill
+   * implementations or "post-bid".
+   *
+   * If enabled and configured a listener will be attached to the current `window` object that listens for messages.
+   */
+  readonly bridge?: bridge.BridgeConfig;
 }

@@ -161,6 +161,14 @@ describe('AdService', () => {
       expect(stepNames).to.contain('gpt-init');
     });
 
+    describe('bridge', () => {
+      it('should init bridge', async () => {
+        const pipeline = await initialize({ ...emptyConfig, bridge: { enabled: true } });
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('bridge');
+      });
+    });
+
     describe('modules', () => {
       it('should add the modules-init step', async () => {
         const initStepSpy = sandbox.spy();
@@ -357,14 +365,6 @@ describe('AdService', () => {
         const pipeline = await initialize(emptyConfigWithA9);
         const stepNames = pipeline.prepareRequestAds.map(step => step.name);
         expect(stepNames).to.contain('a9-clear-targeting');
-      });
-    });
-
-    describe('passback', () => {
-      it('should configure passback slots', async () => {
-        const pipeline = await initialize(emptyConfigWithPrebid);
-        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-        expect(stepNames).to.contain('passback-prepare-slots');
       });
     });
   });
