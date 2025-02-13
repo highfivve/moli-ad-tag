@@ -658,15 +658,10 @@
         "enabled": {
           "description": "If enabled, the implementation will be activated to handle postMessage events from creatives or other systems to refresh ad slots.",
           "type": "boolean"
-        },
-        "eventPrefix": {
-          "description": "TODO: really a good idea? Each message contains an `event` field that identifies the event type. The name of the event will be prefixed with this value.\n\nPattern: `${prefix}.${event}`",
-          "type": "string"
         }
       },
       "required": [
-        "enabled",
-        "eventPrefix"
+        "enabled"
       ],
       "type": "object"
     },
