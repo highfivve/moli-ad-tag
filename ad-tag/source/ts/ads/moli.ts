@@ -504,6 +504,20 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         const beforeRequestAds = state.nextRuntimeConfig.hooks.beforeRequestAds;
 
         const currentState = state;
+
+        // call beforeRequestAds hooks to ensure side effects are being applied to the config first
+        beforeRequestAds.forEach(hook => {
+          try {
+            hook(currentState.config, state.runtimeConfig);
+          } catch (e) {
+            getLogger(state.runtimeConfig, window).error(
+              'MoliGlobal',
+              'beforeRequestAds hook failed',
+              e
+            );
+          }
+        });
+
         // we can only use the preexisting refreshSlots array and refreshInfiniteSlots if the previous requestAds call finished in time
         const { initialized, href, nextRuntimeConfig } = state;
 
@@ -527,18 +541,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 `You are trying to refresh ads on the same page, which is not allowed. Using ${validation} for validation.`
               );
             }
-            // run hooks
-            beforeRequestAds.forEach(hook => {
-              try {
-                hook(config, state.runtimeConfig);
-              } catch (e) {
-                getLogger(state.runtimeConfig, window).error(
-                  'MoliGlobal',
-                  'beforeRequestAds hook failed',
-                  e
-                );
-              }
-            });
 
             // For single page applications
             return adService.requestAds(config, nextRuntimeConfig).then(() => config);
