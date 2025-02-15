@@ -12,12 +12,7 @@ import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliC
 import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoaderService';
 import { uuidV4 } from '../util/uuid';
 
-/**
- * Context passed to every pipeline step.
- *
- * Used to inject general purpose external dependencies
- */
-export type AdPipelineContext = {
+interface BaseAdPipelineContext {
   /**
    * Unique auction id for the current ad pipeline run.
    *
@@ -66,12 +61,7 @@ export type AdPipelineContext = {
   /**
    * access to the global window. Never access the global window object
    */
-  readonly window: Window &
-    apstag.WindowA9 &
-    googletag.IGoogleTagWindow &
-    prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow &
-    MoliRuntime.MoliWindow;
+  readonly window: Window & tcfapi.TCFApiWindow & MoliRuntime.MoliWindow;
 
   /**
    * consent data
@@ -99,7 +89,29 @@ export type AdPipelineContext = {
    * Takes care of loading (external) assets
    */
   readonly assetLoaderService: IAssetLoaderService;
+}
+
+export type AdPipelineContextTest = BaseAdPipelineContext & {
+  readonly env: 'test';
 };
+
+export type AdPipelineContextProduction = BaseAdPipelineContext & {
+  readonly env: 'production';
+
+  readonly window: Window &
+    tcfapi.TCFApiWindow &
+    MoliRuntime.MoliWindow &
+    apstag.WindowA9 &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow;
+};
+
+/**
+ * Context passed to every pipeline step.
+ *
+ * Used to inject general purpose external dependencies
+ */
+export type AdPipelineContext = AdPipelineContextTest | AdPipelineContextProduction;
 
 /**
  * ## Init Step
@@ -482,4 +494,11 @@ export class AdPipeline {
       resolve();
     });
   }
+}
+
+/**
+ * type guard for production context
+ */
+export function isProductionContext(ctx: AdPipelineContext): ctx is AdPipelineContextProduction {
+  return ctx.env === 'production';
 }

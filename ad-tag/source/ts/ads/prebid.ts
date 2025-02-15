@@ -1,8 +1,10 @@
 import {
   AdPipelineContext,
+  AdPipelineContextProduction,
   ConfigureStep,
   DefineSlotsStep,
   InitStep,
+  isProductionContext,
   LOW_PRIORITY,
   mkConfigureStep,
   mkInitStep,
@@ -92,7 +94,7 @@ const isAdUnitDefined = (
  * @return a list of prebid ad units. Those can either be added via `pbjs.addAdUnits` or used in `pbjs.requestBids`.
  */
 const createdAdUnits = (
-  context: AdPipelineContext,
+  context: AdPipelineContextProduction,
   prebidConfig: headerbidding.PrebidConfig,
   slots: MoliRuntime.SlotDefinition[]
 ): prebidjs.IAdUnit[] => {
@@ -246,6 +248,9 @@ const createdAdUnits = (
 
 export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
   mkInitStep('prebid-init', context => {
+    if (!isProductionContext(context)) {
+      return Promise.resolve();
+    }
     context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
     // if there's already prebid distribution loaded, just go ahead. Even if there's a distributionUrl set, we must not
     // load the external resources as this would create unintentional conflicts.
@@ -272,6 +277,9 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
     'prebid-remove-adunits',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
+        if (!isProductionContext(context)) {
+          return Promise.resolve();
+        }
         // only try to remove ad units if the configuration is set to not use ephemeral ad units and prebid is defined
         // at all
         if (prebidConfig.ephemeralAdUnits !== true) {
@@ -306,6 +314,9 @@ export const prebidConfigure = (
   });
 
   return mkConfigureStep('prebid-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
+    if (!isProductionContext(context)) {
+      return Promise.resolve();
+    }
     if (!result) {
       result = new Promise<void>(resolve => {
         if (prebidConfig.bidderSettings) {
@@ -382,7 +393,7 @@ export const prebidPrepareRequestAds = (
     LOW_PRIORITY,
     (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) =>
       new Promise<void>(resolve => {
-        if (prebidConfig.ephemeralAdUnits) {
+        if (prebidConfig.ephemeralAdUnits || !isProductionContext(context)) {
           resolve();
         } else {
           context.window.pbjs.que.push(() => {
@@ -409,6 +420,9 @@ export const prebidRequestBids = (
   mkRequestBidsStep(
     'prebid-request-bids',
     (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
+      if (!isProductionContext(context)) {
+        return Promise.resolve();
+      }
       // The failsafe timeout is the maximum of the bidder timeout and the failsafe timeout.
       // This also ensure that the failsafe timeout is never smaller than the bidderTimeout, which would be a very
       // unexpected behavior.
@@ -565,8 +579,6 @@ export const prebidDefineSlots =
             adSlot,
             filterSupportedSizes
           });
-        default:
-          return Promise.reject(`invalid environment: ${context.runtimeConfig.environment}`);
       }
     });
     return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
