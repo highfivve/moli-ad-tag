@@ -185,10 +185,22 @@ export namespace MoliRuntime {
      * moli.refreshAdSlots(['content_1', 'content_2']);
      * ```
      *
+     * ## Backfill setups
+     *
      * Refreshing a single ad slot that has loading behaviour `backfill` with custom options.
      *
      * ```javascript
      * moli.refreshAdSlots(['content_1'], { loaded: 'backfill' });
+     * ```
+     *
+     * ## Refresh an eagerly loaded slot
+     *
+     * This is useful if you have a fully rendered page on the server and the ad slot can be eagerly
+     * requested, but the user can alter the page afterwards, e.g. filtering the content or changing the layout and
+     * the slot should be refreshed.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1'], { loaded: 'eager' });
      * ```
      *
      * @param domId - identifies the ad slot or ad slots
@@ -231,26 +243,18 @@ export namespace MoliRuntime {
     /**
      * Refresh the given bucket as soon as possible.
      *
-     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
+     * By default, this is only possible for ad slots with a `manual` loading behaviour and bucket is enabled.
+     * You need to manually override this through the `options` parameter.
      *
      * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
-     * @param bucket - identifies the bucket
-     */
-    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
-
-    /**
-     * Refresh the given bucket as soon as possible.
-     *
-     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
-     *
-     * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
-     * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
+     * See the `refreshAdSlot` method for more information on how to refresh ad slots.
      *
      * @param bucket - identifies the bucket
+     * @param options - optional options to override the default refreshing behaviour
      */
-    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
+    refreshBucket(bucket: string, options?: RefreshAdSlotsOptions): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
