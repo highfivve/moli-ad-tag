@@ -13,6 +13,7 @@ import IAdSlot = googletag.IAdSlot;
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { createPbjsStub } from 'ad-tag/stubs/prebidjsStubs';
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,6 +24,7 @@ describe('Cleanup Module', () => {
   let dom = createDom();
   let jsDomWindow = dom.window as any;
   jsDomWindow.moli = createMoliTag(jsDomWindow);
+  jsDomWindow.pbjs = createPbjsStub();
   const noopLogger = newNoopLogger(true);
   const errorLogSpy = sandbox.spy(noopLogger, 'error');
 
@@ -44,6 +46,7 @@ describe('Cleanup Module', () => {
     dom = createDom();
     jsDomWindow = dom.window;
     jsDomWindow.moli = createMoliTag(jsDomWindow);
+    jsDomWindow.pbjs = createPbjsStub();
 
     // add special format elements to the dom
     [specialFormatClass1, specialFormatClass2, specialFormatClass3].forEach(className => {
@@ -169,6 +172,14 @@ describe('Cleanup Module', () => {
   });
 
   it('should remove all elements with the configured CSS selectors from the dom or execute the configured JS in the configure step', async () => {
+    jsDomWindow.pbjs = {
+      ...createPbjsStub(),
+      getAllWinningBids: () => [
+        { adUnitCode: domId1, bidder: 'seedtag' },
+        { adUnitCode: domId2, bidder: 'seedtag' },
+        { adUnitCode: domId3, bidder: 'dspx' }
+      ]
+    };
     const module = createAndConfigureModule({
       enabled: true,
       configs: [
@@ -195,24 +206,12 @@ describe('Cleanup Module', () => {
         }
       ]
     });
-    const adPipelineContextWithWinningBids = {
-      ...adPipelineContext(),
-      window: {
-        ...jsDomWindow,
-        pbjs: {
-          getAllWinningBids: () => [
-            { adUnitCode: domId1, bidder: 'seedtag' },
-            { adUnitCode: domId2, bidder: 'seedtag' },
-            { adUnitCode: domId3, bidder: 'dspx' }
-          ]
-        }
-      }
-    };
+
     const slots = createAdSlots(jsDomWindow, [domId1, domId2, domId3]);
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     const configure = module.configureSteps()[0];
-    await configure(adPipelineContextWithWinningBids, slots);
+    await configure(adPipelineContext(), slots);
 
     const specialFormatElementsInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
@@ -224,6 +223,11 @@ describe('Cleanup Module', () => {
   });
 
   it('should only clean if the configured bidder has won the last auction on the slot in the configure step (prevents cleaning on first page load)', async () => {
+    jsDomWindow.pbjs = {
+      ...jsDomWindow.pbjs,
+      getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
+    };
+
     const module = createAndConfigureModule({
       enabled: true,
       configs: [
@@ -250,19 +254,12 @@ describe('Cleanup Module', () => {
         }
       ]
     });
-    const adPipelineContextWithWinningBids = {
-      ...adPipelineContext(),
-      window: {
-        ...jsDomWindow,
-        pbjs: { getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }] }
-      }
-    };
 
     const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     const configure = module.configureSteps()[0];
-    await configure(adPipelineContextWithWinningBids, slots);
+    await configure(adPipelineContext(), slots);
 
     const specialFormatElementsInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
@@ -274,6 +271,10 @@ describe('Cleanup Module', () => {
   });
 
   it('should only clean if the configured bidder has won the last auction on the slot in the configure step (prevents cleaning on first page load)', async () => {
+    jsDomWindow.pbjs = {
+      ...jsDomWindow.pbjs,
+      getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
+    };
     const module = createAndConfigureModule({
       enabled: true,
       configs: [
@@ -302,19 +303,12 @@ describe('Cleanup Module', () => {
         }
       ]
     });
-    const adPipelineContextWithWinningBids = {
-      ...adPipelineContext(),
-      window: {
-        ...jsDomWindow,
-        pbjs: { getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }] }
-      }
-    };
 
     const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     const configure = module.configureSteps()[0];
-    await configure(adPipelineContextWithWinningBids, slots);
+    await configure(adPipelineContext(), slots);
 
     const specialFormatElementsInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
@@ -327,6 +321,10 @@ describe('Cleanup Module', () => {
   });
 
   it('should remove the configured element only in the prepare request ads step if the configured slot is reloaded and the corresponding configured bidder has won the last auction', async () => {
+    jsDomWindow.pbjs = {
+      ...jsDomWindow.pbjs,
+      getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }]
+    };
     const module = createAndConfigureModule({
       enabled: true,
       configs: [
@@ -364,20 +362,14 @@ describe('Cleanup Module', () => {
         }
       ]
     });
-    const adPipelineContextWithWinningBids = {
-      ...adPipelineContext(),
-      window: {
-        ...jsDomWindow,
-        pbjs: { getAllWinningBids: () => [{ adUnitCode: domId2, bidder: 'dspx' }] }
-      }
-    };
+
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     const prepareRequestAds = module.prepareRequestAdsSteps()[0];
 
     expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
     // only one of the configured slots is reloaded
-    await prepareRequestAds(adPipelineContextWithWinningBids, [createSlotDefinition(domId2)]);
+    await prepareRequestAds(adPipelineContext(), [createSlotDefinition(domId2)]);
 
     const specialFormatElementsSeedtagInDom = [
       ...jsDomWindow.document.querySelectorAll(`.${specialFormatClass1}`),
@@ -395,6 +387,10 @@ describe('Cleanup Module', () => {
   });
 
   it('should log an error message if the javascript in the deleteMethod is broken and continue without crashing ', async () => {
+    jsDomWindow.pbjs = {
+      ...jsDomWindow.pbjs,
+      getAllWinningBids: () => [{ adUnitCode: domId1, bidder: 'dspx' }]
+    };
     const module = createAndConfigureModule({
       enabled: true,
       configs: [
@@ -410,20 +406,14 @@ describe('Cleanup Module', () => {
         }
       ]
     });
-    const adPipelineContextWithWinningBids = {
-      ...adPipelineContext(),
-      window: {
-        ...jsDomWindow,
-        pbjs: { getAllWinningBids: () => [{ adUnitCode: domId1, bidder: 'dspx' }] }
-      }
-    };
+
     const slots = createAdSlots(jsDomWindow, [domId1]);
     const consoleLogSpy = sandbox.spy(globalThis.console, 'log');
 
     const configure = module.configureSteps()[0];
 
     expect(configure?.name).to.be.eq('destroy-out-of-page-ad-format');
-    await configure(adPipelineContextWithWinningBids, slots);
+    await configure(adPipelineContext(), slots);
 
     expect(errorLogSpy.called).to.be.true;
     expect(consoleLogSpy.calledWith(`This is broken`)).to.be.false;
