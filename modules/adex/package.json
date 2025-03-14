@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-the-adex-dmp",
-  "version": "4.23.14",
+  "version": "4.24.0",
   "license": "Apache-2.0",
   "description": "DMP module implementation using The Adex",
   "main": "./lib/index.js",
@@ -50,6 +50,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.23.14"
+    "@highfivve/ad-tag": "4.24.0"
   }
 }
