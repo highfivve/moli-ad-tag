@@ -52,6 +52,7 @@ import {
 } from '@highfivve/ad-tag';
 import MoliWindow = Moli.MoliWindow;
 import { selectInfiniteSlot } from './selectInfiniteSlot';
+import type { IntersectionObserverWindow } from '@highfivve/ad-tag/source/ts/types/dom';
 
 type LazyLoadModuleOptionsType = {
   /**
@@ -124,16 +125,7 @@ export type LazyLoadModuleConfig = {
  * To solve the Intersection Observer API typescript error
  * @see https://github.com/microsoft/TypeScript/issues/16255
  */
-export type LazyLoadWindow = Window &
-  MoliWindow & {
-    IntersectionObserver: {
-      prototype: IntersectionObserver;
-      new (
-        callback: IntersectionObserverCallback,
-        options?: IntersectionObserverInit
-      ): IntersectionObserver;
-    };
-  };
+export type LazyLoadWindow = Window & MoliWindow & IntersectionObserverWindow;
 
 /**
  * This module can be used to refresh ads based on slot visibility.

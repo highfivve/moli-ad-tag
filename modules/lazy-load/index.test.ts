@@ -2,6 +2,7 @@ import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { createMoliTag, Moli } from '@highfivve/ad-tag';
 import { moliPrebidTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
+import { MockIntersectionObserver } from '@highfivve/ad-tag/lib/stubs/intersectionObserverStubs';
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
@@ -60,27 +61,6 @@ const createInfiniteAdSlotinConfig = (infiniteSlotClassSelector: string) => {
   return slot;
 };
 
-const MockIntersectionObserver = class MockIntersectionObserver implements IntersectionObserver {
-  readonly root: Element | Document | null = null;
-  readonly rootMargin: string = '0';
-  readonly thresholds: ReadonlyArray<number> = [];
-  constructor(private readonly callback, private readonly options) {}
-  observe() {
-    return;
-  }
-  unobserve() {
-    return;
-  }
-
-  disconnect(): void {
-    return;
-  }
-
-  takeRecords(): IntersectionObserverEntry[] {
-    return [];
-  }
-};
-
 use(sinonChai);
 
 describe('Lazy-load Module', () => {
@@ -93,9 +73,7 @@ describe('Lazy-load Module', () => {
   const errorLogSpy = sandbox.spy(noopLogger, 'error');
   let refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
   let refreshBucketSpy = sandbox.spy(jsDomWindow.moli, 'refreshBucket');
-  let observer: IntersectionObserver = new MockIntersectionObserver(() => {
-    return;
-  }, {});
+  let observer: IntersectionObserver = new MockIntersectionObserver();
   let intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
 
   const getIntersectionObserverCallback = (call: number): IntersectionObserverCallback => {
@@ -123,9 +101,7 @@ describe('Lazy-load Module', () => {
     refreshAdSlotsSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
     refreshBucketSpy = sandbox.spy(jsDomWindow.moli, 'refreshBucket');
 
-    observer = new MockIntersectionObserver(() => {
-      return;
-    }, {});
+    observer = new MockIntersectionObserver();
     intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
     intersectionObserverConstructorStub.returns(observer);
   });

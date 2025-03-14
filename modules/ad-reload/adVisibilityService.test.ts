@@ -1,26 +1,59 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import { IntersectionObserverWindow } from '@highfivve/ad-tag/source/ts/types/dom';
 import { createGoogletagStub, googleAdSlotStub } from '@highfivve/ad-tag/lib/stubs/googletagStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
-import { AdVisibilityService } from './adVisibilityService';
-import { UserActivityService } from './userActivityService';
 import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
+import { MockIntersectionObserver } from '@highfivve/ad-tag/source/ts/stubs/intersectionObserverStubs';
 import { googletag } from '@highfivve/ad-tag';
+import { UserActivityService } from './userActivityService';
+import { AdVisibilityService } from './adVisibilityService';
 import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
-import { RefreshIntervalOverrides } from './index';
+import { RefreshIntervalOverrides, ViewabilityOverrides } from './index';
 
 use(sinonChai);
 
 describe('AdVisibilityService', () => {
   const sandbox = Sinon.createSandbox();
+  const fakeTimer = sandbox.useFakeTimers();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  let jsDomWindow: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow =
+    dom.window as any;
   (jsDomWindow as any).id = Math.random();
   const logger = noopLogger;
 
+  let observer: IntersectionObserver = new MockIntersectionObserver();
+  jsDomWindow.IntersectionObserver = MockIntersectionObserver;
+  let intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
+
+  const getIntersectionObserverCallback = (call: number): IntersectionObserverCallback => {
+    return intersectionObserverConstructorStub.getCall(call).firstArg;
+  };
+
+  const getIntersectionObserverArgs = (call: number): IntersectionObserverInit => {
+    return intersectionObserverConstructorStub.getCall(call).args[1] as any;
+  };
+
+  let observeSpy = sandbox.spy(observer, 'observe');
+  let unobserveSpy = sandbox.spy(observer, 'unobserve');
+
+  /*
+   * mocks only the relevant parts of the observer entry
+   */
+  const createIntersectionObserverEntry = (
+    isIntersecting: boolean,
+    targetId: string
+  ): IntersectionObserverEntry => ({ isIntersecting, target: { id: targetId } } as any);
+
   beforeEach(() => {
     jsDomWindow.googletag = createGoogletagStub();
+    jsDomWindow.IntersectionObserver = MockIntersectionObserver;
+    observer = new MockIntersectionObserver();
+    intersectionObserverConstructorStub = sandbox.stub(jsDomWindow, 'IntersectionObserver');
+    intersectionObserverConstructorStub.returns(observer);
+    observeSpy = sandbox.spy(observer, 'observe');
+    unobserveSpy = sandbox.spy(observer, 'unobserve');
   });
 
   afterEach(() => {
@@ -28,13 +61,20 @@ describe('AdVisibilityService', () => {
     jsDomWindow = dom.window as any;
     (jsDomWindow as any).id = Math.random();
     sandbox.reset();
+    fakeTimer.reset();
+  });
+
+  after(() => {
+    fakeTimer.restore();
   });
 
   const adRefreshInterval = 20000;
   const tickInterval = 1000;
   const createAdVisibilityService = (
     disableVisibilityChecks: boolean,
-    overrides: RefreshIntervalOverrides = {}
+    overrides: RefreshIntervalOverrides = {},
+    viewabilityOverrides: ViewabilityOverrides = {},
+    useIntersectionObserver = false
   ): AdVisibilityService => {
     const userActivityService = new UserActivityService(jsDomWindow, { level: 'strict' }, logger);
 
@@ -45,8 +85,9 @@ describe('AdVisibilityService', () => {
       userActivityService,
       adRefreshInterval,
       overrides,
-      false,
+      useIntersectionObserver,
       disableVisibilityChecks,
+      viewabilityOverrides,
       jsDomWindow,
       logger
     );
@@ -121,8 +162,6 @@ describe('AdVisibilityService', () => {
   });
 
   it('should call the refreshCallback after the specified time to refresh', () => {
-    sandbox.useFakeTimers();
-
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
     // performance.now needs to be stubbed "by hand":
@@ -155,7 +194,7 @@ describe('AdVisibilityService', () => {
 
     visibilityChangedListener({ inViewPercentage: 99, slot } as ISlotVisibilityChangedEvent);
 
-    sandbox.clock.tick(adRefreshInterval + tickInterval);
+    fakeTimer.tick(adRefreshInterval + tickInterval);
 
     // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
     expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
@@ -165,7 +204,6 @@ describe('AdVisibilityService', () => {
 
   it('should call the refreshCallback after the specified time in the override config', () => {
     const newRefreshInterval = 10000;
-    sandbox.useFakeTimers();
 
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
@@ -199,7 +237,7 @@ describe('AdVisibilityService', () => {
 
     visibilityChangedListener({ inViewPercentage: 99, slot } as ISlotVisibilityChangedEvent);
 
-    sandbox.clock.tick(newRefreshInterval + tickInterval);
+    fakeTimer.tick(newRefreshInterval + tickInterval);
 
     // initial call for ad slot visibility + 11 calls accounting for 1..10s + final call when refreshing the slot
     expect(performanceNowStub).to.have.callCount(1 + 11 + 1);
@@ -208,8 +246,6 @@ describe('AdVisibilityService', () => {
   });
 
   it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport', () => {
-    sandbox.useFakeTimers();
-
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
     // performance.now needs to be stubbed "by hand":
@@ -242,7 +278,7 @@ describe('AdVisibilityService', () => {
 
     visibilityChangedListener({ inViewPercentage: 0, slot } as ISlotVisibilityChangedEvent);
 
-    sandbox.clock.tick(adRefreshInterval + tickInterval);
+    fakeTimer.tick(adRefreshInterval + tickInterval);
 
     // when setting the initial record (because of disableVisibilityChecks flag) + initial call for
     // ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
@@ -252,8 +288,6 @@ describe('AdVisibilityService', () => {
   });
 
   it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received', () => {
-    sandbox.useFakeTimers();
-
     const addEventListenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
 
     // performance.now needs to be stubbed "by hand":
@@ -281,12 +315,106 @@ describe('AdVisibilityService', () => {
     const refreshCallback = sandbox.stub();
     service.trackSlot(slot, refreshCallback);
 
-    sandbox.clock.tick(adRefreshInterval + tickInterval);
+    fakeTimer.tick(adRefreshInterval + tickInterval);
 
     // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
     // note that no slot visibility event had to be fired.
     expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
 
     expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+  });
+
+  describe('ViewabilityOverrides', () => {
+    const adSlotDomId = 'content-1';
+    const cssSelector = '.inScreen';
+    const viewabilityOverrides: ViewabilityOverrides = { [adSlotDomId]: { cssSelector } };
+
+    it('should not create an IntersectionObserver if useIntersectionObserver is false', () => {
+      createAdVisibilityService(false, {}, {}, false);
+      expect(intersectionObserverConstructorStub).to.not.have.been.called;
+    });
+
+    it('should create an IntersectionObserver if useIntersectionObserver is false, but overrides are provided', () => {
+      createAdVisibilityService(false, {}, viewabilityOverrides, false);
+      expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
+    });
+
+    it('should create an IntersectionObserver if useIntersectionObserver is true', () => {
+      createAdVisibilityService(false, {}, {}, true);
+      expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
+    });
+
+    describe('trackSlot', () => {
+      const createAndStubAdSlot = (adSlotDomId: string) => {
+        const slot = googleAdSlotStub('/123/content-1', adSlotDomId);
+        const slotElement = jsDomWindow.document.createElement('div');
+        return {
+          slot,
+          slotElement,
+          getElementByIdStub: sandbox
+            .stub(jsDomWindow.document, 'getElementById')
+            .returns(slotElement)
+        };
+      };
+
+      it('should track a slot with an IntersectionObserver if override is defined', () => {
+        const service = createAdVisibilityService(false, {}, viewabilityOverrides, false);
+
+        const { slot, getElementByIdStub } = createAndStubAdSlot(adSlotDomId);
+        const overrideElement = jsDomWindow.document.createElement('div');
+        const querySelectorStub = sandbox
+          .stub(jsDomWindow.document, 'querySelector')
+          .returns(overrideElement);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(getElementByIdStub).to.have.been.calledOnceWithExactly(slot.getSlotElementId());
+        expect(querySelectorStub).to.have.calledOnce;
+        expect(querySelectorStub).to.have.been.calledOnceWithExactly(cssSelector);
+        expect(observeSpy).to.have.been.calledOnceWithExactly(overrideElement);
+      });
+      it('should fallback to the slot element if the override element is not found and useIntersectionObserver is true', () => {
+        const service = createAdVisibilityService(false, {}, viewabilityOverrides, true);
+
+        const { slot, slotElement, getElementByIdStub } = createAndStubAdSlot(adSlotDomId);
+        const querySelectorStub = sandbox.stub(jsDomWindow.document, 'querySelector').returns(null);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(getElementByIdStub).to.have.been.calledOnceWithExactly(slot.getSlotElementId());
+        expect(querySelectorStub).to.have.calledOnce;
+        expect(querySelectorStub).to.have.been.calledOnceWithExactly(cssSelector);
+        expect(observeSpy).to.have.been.calledOnceWithExactly(slotElement);
+      });
+
+      it('should not call observe if the override element is not found and userIntersectionObserver is false', () => {
+        const service = createAdVisibilityService(false, {}, viewabilityOverrides, false);
+        const { slot, getElementByIdStub } = createAndStubAdSlot(adSlotDomId);
+        const querySelectorStub = sandbox.stub(jsDomWindow.document, 'querySelector').returns(null);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(getElementByIdStub).to.have.been.calledOnceWithExactly(slot.getSlotElementId());
+        expect(querySelectorStub).to.have.calledOnce;
+        expect(querySelectorStub).to.have.been.calledOnceWithExactly(cssSelector);
+        expect(observeSpy).to.not.have.been.called;
+      });
+
+      describe('removeSlotTracking', () => {
+        it('should unobserve the override element if it exists', () => {
+          const service = createAdVisibilityService(false, {}, viewabilityOverrides, false);
+          const { slot } = createAndStubAdSlot(adSlotDomId);
+          const overrideElement = jsDomWindow.document.createElement('div');
+          sandbox.stub(jsDomWindow.document, 'querySelector').returns(overrideElement);
+
+          service.trackSlot(slot, sandbox.stub);
+          service.removeSlotTracking(slot);
+
+          expect(observeSpy).to.have.been.calledOnceWithExactly(overrideElement);
+          expect(unobserveSpy).to.have.been.calledOnce;
+          expect(unobserveSpy).to.have.been.calledOnceWithExactly(overrideElement);
+        });
+      });
+    });
   });
 });

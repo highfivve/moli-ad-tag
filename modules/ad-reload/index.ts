@@ -56,7 +56,8 @@ import {
   getLogger,
   AdPipeline,
   AdPipelineContext,
-  mkConfigureStep
+  mkConfigureStep,
+  IntersectionObserverWindow
 } from '@highfivve/ad-tag';
 
 import { AdVisibilityService } from './adVisibilityService';
@@ -64,6 +65,27 @@ import { UserActivityLevelControl, UserActivityService } from './userActivitySer
 
 export type RefreshIntervalOverrides = {
   [slotDomId: string]: number;
+};
+
+export type ViewabilityOverrideEntry = {
+  /** Used to select a single element to monitor for viewability */
+  cssSelector: string;
+};
+
+/**
+ * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
+ *
+ * This configuration object allows to provide a CSS selector to check for visibility.
+ * If set and available in the DOM it will be used to check for visibility with an IntersectionObserver.
+ * Otherwise, the configured default behavior will be used.
+ *
+ * A record in this overrides object is a mapping of a slot's DOM id to the override configuration.
+ */
+export type ViewabilityOverrides = {
+  /**
+   * Ad Slot DOM ID to viewability configuration
+   */
+  [slotDomId: string]: ViewabilityOverrideEntry | undefined;
 };
 
 export type AdReloadModuleConfig = {
@@ -124,6 +146,19 @@ export type AdReloadModuleConfig = {
    * very user-centric to load stuff that is out of viewport.
    */
   disableAdVisibilityChecks?: boolean;
+
+  /**
+   * Overrides the default viewability measurement with a custom target DOM element.
+   *
+   * This can be used to measure viewability of an ad slot that is not using the default ad slot
+   * div container, but creates a separate container on the page. This is the case for certain
+   * special ad formats like seedtag's or GumGum's inScreen, YOCs mystery scroller and similar mobile
+   * sticky formats.
+   *
+   * It can also be used to measure viewability for ad skin formats to apply ad reload accordingly.
+   *
+   */
+  viewabilityOverrides?: ViewabilityOverrides;
 };
 
 /**
@@ -223,7 +258,10 @@ export class AdReload implements IModule {
 
     context.logger.debug('AdReload', 'initialize moli ad reload module');
 
-    this.setupAdVisibilityService(context.config, context.window);
+    this.setupAdVisibilityService(
+      context.config,
+      context.window as unknown as Window & IntersectionObserverWindow & googletag.IGoogleTagWindow
+    );
     this.setupSlotRenderListener(slotsToMonitor, reloadAdSlotCallback, context.window);
 
     this.initialized = true;
@@ -231,15 +269,16 @@ export class AdReload implements IModule {
 
   private setupAdVisibilityService = (
     moliConfig: Moli.MoliConfig,
-    window: Window & googletag.IGoogleTagWindow
+    _window: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
-      new UserActivityService(window, this.moduleConfig.userActivityLevelControl, this.logger),
+      new UserActivityService(_window, this.moduleConfig.userActivityLevelControl, this.logger),
       this.refreshIntervalMs,
       this.moduleConfig.refreshIntervalMsOverrides || {},
       false,
       !!this.moduleConfig.disableAdVisibilityChecks,
-      window,
+      this.moduleConfig.viewabilityOverrides || {},
+      _window,
       this.logger
     );
   };
