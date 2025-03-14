@@ -1,8 +1,8 @@
 import { UserActivityService } from './userActivityService';
-import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import ISlotVisibilityChangedEvent = googletag.events.ISlotVisibilityChangedEvent;
-import { RefreshIntervalOverrides } from './index';
+import type { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
+import type { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import { RefreshIntervalOverrides, ViewabilityOverrides } from './index';
+import type { IntersectionObserverWindow } from '@highfivve/ad-tag/source/ts/types/dom';
 
 /**
  * Tracks the visibility of ad slots.
@@ -30,7 +30,7 @@ export class AdVisibilityService {
   /**
    * Ratio that an ad has to be in the visible viewport of the browser to be considered seen. 0.5 = 50%.
    */
-  private readonly minimalAdVisibilityRatio;
+  private readonly minimalAdVisibilityRatio: number;
 
   private visibilityRecords: Map<string, VisibilityRecord>;
   private readonly intersectionObserver?: IntersectionObserver;
@@ -46,15 +46,22 @@ export class AdVisibilityService {
     private readonly refreshIntervalOverrides: RefreshIntervalOverrides,
     readonly useIntersectionObserver: boolean,
     private readonly disableAdVisibilityChecks: boolean,
-    private readonly window: Window & googletag.IGoogleTagWindow,
+    private readonly viewabilityOverrides: ViewabilityOverrides,
+    private readonly window: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow,
     private readonly logger?: Moli.MoliLogger
   ) {
     this.minimalAdVisibilityRatio = disableAdVisibilityChecks ? 0 : 0.5;
 
     this.visibilityRecords = new Map<string, VisibilityRecord>();
 
-    if (useIntersectionObserver && 'IntersectionObserver' in this.window) {
-      this.intersectionObserver = new IntersectionObserver(
+    // instantiate IntersectionObserver if it is enabled or if there are custom overrides that
+    // require an observer to be available
+    const requiredIntersectionObserver =
+      (useIntersectionObserver || Object.keys(viewabilityOverrides).length > 0) &&
+      'IntersectionObserver' in this.window;
+
+    if (requiredIntersectionObserver) {
+      this.intersectionObserver = new this.window.IntersectionObserver(
         entries => this.handleObservedAdVisibilityChanged(entries),
         { threshold: this.minimalAdVisibilityRatio }
       );
@@ -88,7 +95,7 @@ export class AdVisibilityService {
    */
   trackSlot(slot: googletag.IAdSlot, refreshCallback: (slot: googletag.IAdSlot) => void): void {
     const slotDomId = slot.getSlotElementId();
-    const domElement = this.window.document.getElementById(slotDomId);
+    const domElement = this.observedDomElementForSlot(slot);
 
     if (domElement) {
       this.logger?.debug('AdVisibilityService', `tracking slot ${slot.getSlotElementId()}`, slot);
@@ -106,8 +113,13 @@ export class AdVisibilityService {
         refreshCallback: refreshCallback
       });
 
-      if (this.intersectionObserver) {
-        this.intersectionObserver.observe(domElement);
+      // use intersection observer if required due to viewability overrides or because it is globally
+      // enabled ( usually for none gpt.js environments like test or prebid-only setups )
+      if (
+        this.intersectionObserver &&
+        (domElement.targetOverride || this.useIntersectionObserver)
+      ) {
+        this.intersectionObserver.observe(domElement.target);
       }
     }
   }
@@ -120,6 +132,11 @@ export class AdVisibilityService {
     );
 
     this.visibilityRecords.delete(slot.getSlotElementId());
+
+    const observedSlot = this.observedDomElementForSlot(slot);
+    if (this.intersectionObserver && observedSlot) {
+      this.intersectionObserver.unobserve(observedSlot.target);
+    }
   };
 
   private setUpdateTimer(state: boolean): void {
@@ -177,7 +194,9 @@ export class AdVisibilityService {
       });
   }
 
-  private handleGoogletagAdVisibilityChanged = (event: ISlotVisibilityChangedEvent): void => {
+  private handleGoogletagAdVisibilityChanged = (
+    event: googletag.events.ISlotVisibilityChangedEvent
+  ): void => {
     const slot = event.slot;
     const visibilityRecord = this.visibilityRecordForGoogletagEvent(event);
 
@@ -257,8 +276,29 @@ export class AdVisibilityService {
   }
 
   private visibilityRecordForGoogletagEvent = (
-    event: ISlotVisibilityChangedEvent
+    event: googletag.events.ISlotVisibilityChangedEvent
   ): VisibilityRecord | undefined => this.visibilityRecords.get(event.slot.getSlotElementId());
+
+  /**
+   * use the override element if it exists, otherwise use the ad slot element
+   * this is necessary for ad formats that do not exist inside the regular ad slot element
+   * @param slot
+   */
+  private observedDomElementForSlot(
+    slot: googletag.IAdSlot
+  ): { target: HTMLElement; targetOverride: boolean } | null {
+    const slotDomId = slot.getSlotElementId();
+    const viewabilityOverride = this.viewabilityOverrides[slotDomId];
+    const adSlotElement = this.window.document.getElementById(slotDomId);
+    const overrideElement = viewabilityOverride
+      ? this.window.document.querySelector<HTMLElement>(viewabilityOverride.cssSelector)
+      : null;
+    return overrideElement
+      ? { target: overrideElement, targetOverride: true }
+      : adSlotElement
+      ? { target: adSlotElement, targetOverride: false }
+      : null;
+  }
 }
 
 /**
