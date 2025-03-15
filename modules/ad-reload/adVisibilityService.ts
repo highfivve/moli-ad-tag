@@ -1,7 +1,7 @@
 import { UserActivityService } from './userActivityService';
 import type { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import type { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
-import { RefreshIntervalOverrides, ViewabilityOverrides } from './index';
+import { RefreshIntervalOverrides, ViewabilityOverrideEntry, ViewabilityOverrides } from './index';
 import type { IntersectionObserverWindow } from '@highfivve/ad-tag/source/ts/types/dom';
 
 /**
@@ -57,7 +57,8 @@ export class AdVisibilityService {
     // instantiate IntersectionObserver if it is enabled or if there are custom overrides that
     // require an observer to be available
     const requiredIntersectionObserver =
-      (useIntersectionObserver || Object.keys(viewabilityOverrides).length > 0) &&
+      (useIntersectionObserver ||
+        Object.values(viewabilityOverrides).some(entry => entry?.variant === 'css')) &&
       'IntersectionObserver' in this.window;
 
     if (requiredIntersectionObserver) {
@@ -92,8 +93,13 @@ export class AdVisibilityService {
    *
    * @param slot              a refreshable ad slot with "visibility" trigger
    * @param refreshCallback   callback fired when the configured duration is up
+   * @param advertiserId      optional advertiser id to check against disallowed advertisers
    */
-  trackSlot(slot: googletag.IAdSlot, refreshCallback: (slot: googletag.IAdSlot) => void): void {
+  trackSlot(
+    slot: googletag.IAdSlot,
+    refreshCallback: (slot: googletag.IAdSlot) => void,
+    advertiserId?: number
+  ): void {
     const slotDomId = slot.getSlotElementId();
     const domElement = this.observedDomElementForSlot(slot);
 
@@ -104,11 +110,22 @@ export class AdVisibilityService {
         this.removeSlotTracking(slot);
       }
 
+      const override = domElement.viewabilityOverride;
       this.visibilityRecords.set(slot.getSlotElementId(), {
         slot: slot,
-        latestStartVisible: this.disableAdVisibilityChecks
-          ? this.window.performance.now()
-          : undefined,
+        latestStartVisible:
+          this.disableAdVisibilityChecks ||
+          (override?.variant === 'disabled' &&
+            // either all checks are disabled or the current advertiser is not in the list of disabled advertisers
+            (override.disableAllAdVisibilityChecks ||
+              !(
+                override.disabledAdVisibilityCheckAdvertiserIds &&
+                override.disabledAdVisibilityCheckAdvertiserIds.length > 0 &&
+                advertiserId
+              ) ||
+              override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)))
+            ? this.window.performance.now()
+            : undefined,
         durationVisibleSum: 0,
         refreshCallback: refreshCallback
       });
@@ -284,19 +301,22 @@ export class AdVisibilityService {
    * this is necessary for ad formats that do not exist inside the regular ad slot element
    * @param slot
    */
-  private observedDomElementForSlot(
-    slot: googletag.IAdSlot
-  ): { target: HTMLElement; targetOverride: boolean } | null {
+  private observedDomElementForSlot(slot: googletag.IAdSlot): {
+    target: HTMLElement;
+    targetOverride: boolean;
+    viewabilityOverride?: ViewabilityOverrideEntry;
+  } | null {
     const slotDomId = slot.getSlotElementId();
     const viewabilityOverride = this.viewabilityOverrides[slotDomId];
     const adSlotElement = this.window.document.getElementById(slotDomId);
-    const overrideElement = viewabilityOverride
-      ? this.window.document.querySelector<HTMLElement>(viewabilityOverride.cssSelector)
-      : null;
+    const overrideElement =
+      viewabilityOverride && viewabilityOverride.variant === 'css'
+        ? this.window.document.querySelector<HTMLElement>(viewabilityOverride.cssSelector)
+        : null;
     return overrideElement
-      ? { target: overrideElement, targetOverride: true }
+      ? { target: overrideElement, targetOverride: true, viewabilityOverride }
       : adSlotElement
-      ? { target: adSlotElement, targetOverride: false }
+      ? { target: adSlotElement, targetOverride: false, viewabilityOverride }
       : null;
   }
 }
