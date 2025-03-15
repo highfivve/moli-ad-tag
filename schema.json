@@ -1469,6 +1469,10 @@
         "userActivityLevelControl": {
           "$ref": "#/definitions/modules.adreload.UserActivityLevelControl",
           "description": "Configure what defines a user as active / inactive."
+        },
+        "viewabilityOverrides": {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrides",
+          "description": "Overrides the default viewability measurement with a custom target DOM element.\n\nThis can be used to measure viewability of an ad slot that is not using the default ad slot div container, but creates a separate container on the page. This is the case for certain special ad formats like seedtag's or GumGum's inScreen, YOCs mystery scroller and similar mobile sticky formats.\n\nIt can also be used to measure viewability for ad skin formats to apply ad reload accordingly."
         }
       },
       "required": [
@@ -1554,6 +1558,76 @@
         }
       ],
       "description": "Used to configure the strictness of user activity checks."
+    },
+    "modules.adreload.ViewabilityOverrideEntry": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntryCss"
+        },
+        {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntryDisabled"
+        }
+      ],
+      "description": "A set of different configuration options for a viewability override setting. Each entry is per position and can be used to override the default viewability behavior."
+    },
+    "modules.adreload.ViewabilityOverrideEntryCss": {
+      "additionalProperties": false,
+      "properties": {
+        "cssSelector": {
+          "description": "Used to select a single element to monitor for viewability",
+          "type": "string"
+        },
+        "variant": {
+          "const": "css",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant",
+        "cssSelector"
+      ],
+      "type": "object"
+    },
+    "modules.adreload.ViewabilityOverrideEntryDisabled": {
+      "additionalProperties": false,
+      "properties": {
+        "disableAllAdVisibilityChecks": {
+          "description": "Enable reloading ads that are not in viewport without any restrictions.\n\nIt is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible, and it's generally not very user-centric to load stuff that is out of viewport.\n\nSet this to false and provide additional configuration options to restrict the unconditional ad reload to certain advertisers.",
+          "type": "boolean"
+        },
+        "disabledAdVisibilityCheckAdvertiserIds": {
+          "description": "An optional list of advertisers that are allowed to be reloaded, but no additional ad visibility check is performed. This is necessary for special formats that may take a bit of time to render and the DOM elements are not yet ready, when the IntersectionObserver is about to be configured.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "variant": {
+          "const": "disabled",
+          "description": "Enable reloading ads that are not in viewport. It is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible, and it's generally not very user-centric to load stuff that is out of viewport.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant",
+        "disableAllAdVisibilityChecks"
+      ],
+      "type": "object"
+    },
+    "modules.adreload.ViewabilityOverrides": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntry"
+          },
+          {
+            "not": {}
+          }
+        ],
+        "description": "Ad Slot DOM ID to viewability configuration"
+      },
+      "description": "Viewability is measured by gpt visibility events or a separate IntersectionObserver.\n\nThis configuration object allows to provide a CSS selector to check for visibility. If set and available in the DOM it will be used to check for visibility with an IntersectionObserver. Otherwise, the configured default behavior will be used.\n\nA record in this overrides object is a mapping of a slot's DOM id to the override configuration.",
+      "type": "object"
     },
     "modules.blocklist.Blocklist": {
       "additionalProperties": false,
