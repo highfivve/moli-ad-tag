@@ -67,10 +67,39 @@ export type RefreshIntervalOverrides = {
   [slotDomId: string]: number;
 };
 
-export type ViewabilityOverrideEntry = {
-  /** Used to select a single element to monitor for viewability */
-  cssSelector: string;
-};
+export type ViewabilityOverrideEntry =
+  | {
+      variant: 'css';
+      /** Used to select a single element to monitor for viewability */
+      cssSelector: string;
+    }
+  | {
+      /**
+       * Enable reloading ads that are not in viewport. It is not advised to use this option.
+       * Impressions are usually only counted on ads that have been 50% visible, and it's generally not
+       * very user-centric to load stuff that is out of viewport.
+       */
+      variant: 'disabled';
+
+      /**
+       * Enable reloading ads that are not in viewport without any restrictions.
+       *
+       * It is not advised to use this option. Impressions are usually only counted on ads that
+       * have been 50% visible, and it's generally not very user-centric to load stuff that is out
+       * of viewport.
+       *
+       * Set this to false and provide additional configuration options to restrict the unconditional
+       * ad reload to certain advertisers.
+       */
+      disableAllAdVisibilityChecks: boolean;
+
+      /**
+       *  An optional list of advertisers that are allowed to be reloaded, but no additional ad visibility check is performed.
+       *  This is necessary for special formats that may take a bit of time to render and the DOM elements are not yet ready,
+       *  when the IntersectionObserver is about to be configured.
+       */
+      disabledAdVisibilityCheckAdvertiserIds?: number[];
+    };
 
 /**
  * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
@@ -344,7 +373,7 @@ export class AdReload implements IModule {
 
       if (trackingSlotAllowed) {
         // add tracking for non-excluded slots
-        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback);
+        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback, advertiserId);
       } else if (slotAlreadyTracked) {
         this.adVisibilityService!.removeSlotTracking(googleTagSlot);
       }

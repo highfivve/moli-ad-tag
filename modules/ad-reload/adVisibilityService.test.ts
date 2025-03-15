@@ -327,7 +327,21 @@ describe('AdVisibilityService', () => {
   describe('ViewabilityOverrides', () => {
     const adSlotDomId = 'content-1';
     const cssSelector = '.inScreen';
-    const viewabilityOverrides: ViewabilityOverrides = { [adSlotDomId]: { cssSelector } };
+    const viewabilityOverrides: ViewabilityOverrides = {
+      [adSlotDomId]: { variant: 'css', cssSelector }
+    };
+
+    const createAndStubAdSlot = (adSlotDomId: string) => {
+      const slot = googleAdSlotStub('/123/content-1', adSlotDomId);
+      const slotElement = jsDomWindow.document.createElement('div');
+      return {
+        slot,
+        slotElement,
+        getElementByIdStub: sandbox
+          .stub(jsDomWindow.document, 'getElementById')
+          .returns(slotElement)
+      };
+    };
 
     it('should not create an IntersectionObserver if useIntersectionObserver is false', () => {
       createAdVisibilityService(false, {}, {}, false);
@@ -344,19 +358,7 @@ describe('AdVisibilityService', () => {
       expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
     });
 
-    describe('trackSlot', () => {
-      const createAndStubAdSlot = (adSlotDomId: string) => {
-        const slot = googleAdSlotStub('/123/content-1', adSlotDomId);
-        const slotElement = jsDomWindow.document.createElement('div');
-        return {
-          slot,
-          slotElement,
-          getElementByIdStub: sandbox
-            .stub(jsDomWindow.document, 'getElementById')
-            .returns(slotElement)
-        };
-      };
-
+    describe('trackSlot with css variant', () => {
       it('should track a slot with an IntersectionObserver if override is defined', () => {
         const service = createAdVisibilityService(false, {}, viewabilityOverrides, false);
 
@@ -414,6 +416,129 @@ describe('AdVisibilityService', () => {
           expect(unobserveSpy).to.have.been.calledOnce;
           expect(unobserveSpy).to.have.been.calledOnceWithExactly(overrideElement);
         });
+      });
+    });
+
+    describe('trackSlot with disabled variant', () => {
+      const adSlotDomId = 'content-1';
+      const viewabilityOverrides: ViewabilityOverrides = {
+        [adSlotDomId]: { variant: 'disabled', disableAllAdVisibilityChecks: true }
+      };
+
+      it('should not create an IntersectionObserver if useIntersectionObserver is false', () => {
+        createAdVisibilityService(false, {}, viewabilityOverrides, false);
+        expect(intersectionObserverConstructorStub).to.not.have.been.called;
+      });
+
+      it('should create an IntersectionObserver if useIntersectionObserver is true', () => {
+        createAdVisibilityService(false, {}, viewabilityOverrides, true);
+        expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
+      });
+
+      it('should not call observe if the variant is disabled', () => {
+        const service = createAdVisibilityService(false, {}, viewabilityOverrides, false);
+        const { slot } = createAndStubAdSlot(adSlotDomId);
+
+        service.trackSlot(slot, sandbox.stub);
+
+        expect(observeSpy).to.not.have.been.called;
+      });
+
+      it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received', () => {
+        const { slot } = createAndStubAdSlot(adSlotDomId);
+
+        // performance.now needs to be stubbed "by hand":
+        // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+        const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+        Array.from({ length: 30 }).forEach((_, index) => {
+          performanceNowStub.onCall(index).returns((index + 1) * 1000);
+        });
+
+        const service = createAdVisibilityService(false, {}, viewabilityOverrides, false);
+
+        const refreshCallback = sandbox.stub();
+        service.trackSlot(slot, refreshCallback);
+
+        fakeTimer.tick(adRefreshInterval + tickInterval);
+
+        // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
+        // note that no slot visibility event had to be fired.
+        expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
+
+        expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+      });
+
+      it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received for specified advertiserId', () => {
+        const { slot } = createAndStubAdSlot(adSlotDomId);
+
+        // performance.now needs to be stubbed "by hand":
+        // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+        const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+        Array.from({ length: 30 }).forEach((_, index) => {
+          performanceNowStub.onCall(index).returns((index + 1) * 1000);
+        });
+
+        const service = createAdVisibilityService(
+          false,
+          {},
+          {
+            [adSlotDomId]: {
+              variant: 'disabled',
+              disableAllAdVisibilityChecks: false,
+              disabledAdVisibilityCheckAdvertiserIds: [55555]
+            }
+          },
+          false
+        );
+
+        const refreshCallback = sandbox.stub();
+        service.trackSlot(slot, refreshCallback, 55555);
+
+        fakeTimer.tick(adRefreshInterval + tickInterval);
+
+        // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
+        // note that no slot visibility event had to be fired.
+        expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
+
+        expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+      });
+
+      it('disableVisibilityChecks: should not call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received for specified advertiserId', () => {
+        const { slot } = createAndStubAdSlot(adSlotDomId);
+
+        // performance.now needs to be stubbed "by hand":
+        // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+        const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+        Array.from({ length: 30 }).forEach((_, index) => {
+          performanceNowStub.onCall(index).returns((index + 1) * 1000);
+        });
+
+        const service = createAdVisibilityService(
+          false,
+          {},
+          {
+            [adSlotDomId]: {
+              variant: 'disabled',
+              disableAllAdVisibilityChecks: false,
+              disabledAdVisibilityCheckAdvertiserIds: [55555]
+            }
+          },
+          false
+        );
+
+        const refreshCallback = sandbox.stub();
+        service.trackSlot(slot, refreshCallback, 44444);
+
+        fakeTimer.tick(adRefreshInterval + tickInterval);
+
+        // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
+        // note that no slot visibility event had to be fired.
+        expect(performanceNowStub).to.have.not.been.called;
+
+        expect(refreshCallback).to.have.not.been.called;
       });
     });
   });
