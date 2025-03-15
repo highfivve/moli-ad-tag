@@ -902,6 +902,64 @@ export namespace modules {
       [slotDomId: string]: number;
     };
 
+    export type ViewabilityOverrideEntryCss = {
+      variant: 'css';
+      /** Used to select a single element to monitor for viewability */
+      cssSelector: string;
+    };
+
+    export type ViewabilityOverrideEntryDisabled = {
+      /**
+       * Enable reloading ads that are not in viewport. It is not advised to use this option.
+       * Impressions are usually only counted on ads that have been 50% visible, and it's generally not
+       * very user-centric to load stuff that is out of viewport.
+       */
+      variant: 'disabled';
+
+      /**
+       * Enable reloading ads that are not in viewport without any restrictions.
+       *
+       * It is not advised to use this option. Impressions are usually only counted on ads that
+       * have been 50% visible, and it's generally not very user-centric to load stuff that is out
+       * of viewport.
+       *
+       * Set this to false and provide additional configuration options to restrict the unconditional
+       * ad reload to certain advertisers.
+       */
+      disableAllAdVisibilityChecks: boolean;
+
+      /**
+       *  An optional list of advertisers that are allowed to be reloaded, but no additional ad visibility check is performed.
+       *  This is necessary for special formats that may take a bit of time to render and the DOM elements are not yet ready,
+       *  when the IntersectionObserver is about to be configured.
+       */
+      disabledAdVisibilityCheckAdvertiserIds?: number[];
+    };
+
+    /**
+     * A set of different configuration options for a viewability override setting.
+     * Each entry is per position and can be used to override the default viewability behavior.
+     */
+    export type ViewabilityOverrideEntry =
+      | ViewabilityOverrideEntryCss
+      | ViewabilityOverrideEntryDisabled;
+
+    /**
+     * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
+     *
+     * This configuration object allows to provide a CSS selector to check for visibility.
+     * If set and available in the DOM it will be used to check for visibility with an IntersectionObserver.
+     * Otherwise, the configured default behavior will be used.
+     *
+     * A record in this overrides object is a mapping of a slot's DOM id to the override configuration.
+     */
+    export type ViewabilityOverrides = {
+      /**
+       * Ad Slot DOM ID to viewability configuration
+       */
+      [slotDomId: string]: ViewabilityOverrideEntry | undefined;
+    };
+
     export type UserActivityParameters = {
       /**
        * The duration in milliseconds the page is considered to be "actively used" after the last user action. Changes to page visibility
@@ -985,6 +1043,19 @@ export namespace modules {
        * very user-centric to load stuff that is out of viewport.
        */
       disableAdVisibilityChecks?: boolean;
+
+      /**
+       * Overrides the default viewability measurement with a custom target DOM element.
+       *
+       * This can be used to measure viewability of an ad slot that is not using the default ad slot
+       * div container, but creates a separate container on the page. This is the case for certain
+       * special ad formats like seedtag's or GumGum's inScreen, YOCs mystery scroller and similar mobile
+       * sticky formats.
+       *
+       * It can also be used to measure viewability for ad skin formats to apply ad reload accordingly.
+       *
+       */
+      viewabilityOverrides?: ViewabilityOverrides;
     }
   }
 
