@@ -180,7 +180,7 @@ describe('Moli Ad Reload Module', () => {
 
   it('should call trackSlot on the AdVisibilityService', async () => {
     const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
-    const { module, configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
+    const { configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
 
@@ -192,7 +192,13 @@ describe('Moli Ad Reload Module', () => {
     )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(testSlotRenderEndedEvent);
-    expect(trackSlotSpy).to.have.been.called;
+    expect(trackSlotSpy).to.have.been.calledOnce;
+    const [googleSlot, refreshCallback, advertiserId] = trackSlotSpy.firstCall.args;
+    expect(googleSlot).to.be.ok;
+    expect(refreshCallback).to.be.ok;
+    expect(refreshCallback).to.be.a('function');
+    expect(advertiserId).to.be.ok;
+    expect(advertiserId).to.be.equals(testSlotRenderEndedEvent.advertiserId);
   });
 
   it('should NOT call trackSlot if the slot was rendered empty', async () => {
