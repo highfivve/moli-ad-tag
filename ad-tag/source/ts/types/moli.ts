@@ -1788,7 +1788,7 @@ export namespace Moli {
       /**
        * Supply Chain Object for Amazon TAM
        */
-      readonly schainNode: SupplyChainObject.ISupplyChainNode;
+      readonly schainNode?: SupplyChainObject.ISupplyChainNode;
     }
 
     /**
