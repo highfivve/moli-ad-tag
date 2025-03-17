@@ -109,6 +109,10 @@ export const a9Configure = (
   schainConfig: Moli.schain.SupplyChainConfig
 ): ConfigureStep =>
   mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+    const schainNodes = [schainConfig.supplyChainStartNode];
+    if (config.schainNode) {
+      schainNodes.push(config.schainNode);
+    }
     return new Promise<void>(resolve => {
       context.window.apstag.init({
         pubID: config.pubID,
@@ -121,7 +125,7 @@ export const a9Configure = (
         schain: {
           complete: 1,
           ver: '1.0',
-          nodes: [schainConfig.supplyChainStartNode, config.schainNode]
+          nodes: schainNodes
         }
       });
       resolve();
