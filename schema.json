@@ -978,7 +978,7 @@
         },
         "schainNode": {
           "$ref": "#/definitions/SupplyChainObject.ISupplyChainNode",
-          "description": "Supply Chain Object for Amazon TAM"
+          "description": "Supply Chain Object for Amazon TAM\n\nRecently Amazon TAM asked partners to remove the Amazon TAM specific node as it is not required anymore."
         },
         "scriptUrl": {
           "description": "Defaults to //c.amazon-adsystem.com/aax2/apstag.js",
@@ -1003,8 +1003,7 @@
       "required": [
         "pubID",
         "timeout",
-        "cmpTimeout",
-        "schainNode"
+        "cmpTimeout"
       ],
       "type": "object"
     },
