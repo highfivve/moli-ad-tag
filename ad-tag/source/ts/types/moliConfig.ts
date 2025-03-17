@@ -776,8 +776,10 @@ export namespace headerbidding {
 
     /**
      * Supply Chain Object for Amazon TAM
+     *
+     * Recently Amazon TAM asked partners to remove the Amazon TAM specific node as it is not required anymore.
      */
-    readonly schainNode: SupplyChainObject.ISupplyChainNode;
+    readonly schainNode?: SupplyChainObject.ISupplyChainNode;
   }
 
   /**

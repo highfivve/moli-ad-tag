@@ -201,6 +201,26 @@ describe('a9', () => {
         }
       });
     });
+
+    it('should add only the supplyChainStartNode if no schainNode is provided', async () => {
+      const step = a9Configure({ ...a9ConfigStub, schainNode: undefined }, dummySchainConfig);
+      const apstagInitSpy = sandbox.spy(dom.window.apstag, 'init');
+      await step(adPipelineContext(), []);
+      expect(apstagInitSpy).to.have.been.calledOnce;
+      expect(apstagInitSpy).to.have.been.calledOnceWithExactly({
+        pubID: a9ConfigStub.pubID,
+        adServer: 'googletag',
+        bidTimeout: a9ConfigStub.timeout,
+        gdpr: {
+          cmpTimeout: a9ConfigStub.cmpTimeout
+        },
+        schain: {
+          complete: 1,
+          ver: '1.0',
+          nodes: [dummySchainConfig.supplyChainStartNode]
+        }
+      });
+    });
   });
 
   describe('a9 publisher audiences step', () => {

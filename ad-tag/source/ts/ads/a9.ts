@@ -109,6 +109,10 @@ export const a9Configure = (
 ): ConfigureStep =>
   mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
     return new Promise<void>(resolve => {
+      const schainNodes = [schainConfig.supplyChainStartNode];
+      if (config.schainNode) {
+        schainNodes.push(config.schainNode);
+      }
       context.window.apstag.init({
         pubID: config.pubID,
         adServer: 'googletag',
@@ -120,7 +124,7 @@ export const a9Configure = (
         schain: {
           complete: 1,
           ver: '1.0',
-          nodes: [schainConfig.supplyChainStartNode, config.schainNode]
+          nodes: schainNodes
         }
       });
       resolve();
