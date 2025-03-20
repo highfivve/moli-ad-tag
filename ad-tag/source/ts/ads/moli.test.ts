@@ -403,6 +403,34 @@ describe('moli', () => {
       expect(domIds[1]).to.be.eq(slots[2].domId);
     });
 
+    it('should refresh slots that belong to the same device specific bucket bucket', async () => {
+      const slots: AdSlot[] = [
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: { mobile: 'one' } } },
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: { mobile: 'two' } } },
+        {
+          ...mkAdSlotInDOM(),
+          behaviour: { loaded: 'manual', bucket: { mobile: 'two', desktop: 'one' } }
+        }
+      ];
+      const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+      adTag.configure({
+        ...defaultConfig,
+        slots: slots
+      });
+
+      await adTag.refreshBucket('one');
+      await adTag.requestAds();
+      // refresh after requestAds has been called
+      expect(adTag.getState()).to.be.eq('finished');
+      expect(refreshSpy).to.have.been.calledOnce;
+      const domIds = (refreshSpy.firstCall.args[0] || []).map(slot => slot.getSlotElementId());
+      expect(domIds).to.have.length(2);
+      expect(domIds[0]).to.be.eq(slots[0].domId);
+      expect(domIds[1]).to.be.eq(slots[2].domId);
+    });
+
     it("should refresh no slots when the bucket doesn't exist", async () => {
       const slots: AdSlot[] = [
         { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'one' } }
@@ -421,6 +449,25 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('finished');
       expect(refreshSpy).to.have.not.been.called;
     });
+  });
+
+  it('should refresh no slots when no buckets are set', async () => {
+    const slots: AdSlot[] = [
+      { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: undefined } }
+    ];
+    const adTag = createMoliTag(jsDomWindow);
+    const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+    adTag.configure({
+      ...defaultConfig,
+      slots: slots
+    });
+
+    await adTag.refreshBucket('two');
+    await adTag.requestAds();
+    // refresh after requestAds has been called
+    expect(adTag.getState()).to.be.eq('finished');
+    expect(refreshSpy).to.have.not.been.called;
   });
 
   describe('refreshAds()', () => {

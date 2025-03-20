@@ -719,7 +719,12 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   ): Promise<'queued' | 'refreshed'> {
     // A helper function to retrieve domIds that belong to buckets.
     function getBucketDomIds(config: MoliConfig): string[] {
-      const slotsInBucket = config.slots.filter(slot => slot.behaviour.bucket === bucket);
+      const slotsInBucket = config.slots.filter(
+        slot =>
+          slot.behaviour.bucket &&
+          ((typeof slot.behaviour.bucket === 'string' && slot.behaviour.bucket === bucket) ||
+            Object.values(slot.behaviour.bucket).includes(bucket))
+      );
       return slotsInBucket?.map(slot => slot.domId);
     }
 
