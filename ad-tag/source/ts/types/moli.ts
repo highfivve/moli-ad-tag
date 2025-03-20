@@ -1329,6 +1329,21 @@ export namespace Moli {
       includedDomIds?: string[];
     }
 
+    export interface PacingConfig {
+      readonly domId: string;
+
+      // pacing during the user session
+      readonly minPageViews: number;
+      /* 1 = every page view, 0.5 every second page view, 0.1 every tenth page view */
+      readonly pageViewRate: number;
+
+      // how many impressions in a time window
+      readonly rate: {
+        readonly intervalInMs: number;
+        readonly allowed?: number;
+      };
+    }
+
     export interface BidderDisablingConfig {
       /** enable or disable this feature */
       readonly enabled: boolean;

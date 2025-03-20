@@ -87,6 +87,7 @@ export class GlobalAuctionContext {
   }
 
   isSlotThrottled(slotId: string): boolean {
+    // TODO add pacing throttling
     return this.adRequestThrottling?.isThrottled(slotId) ?? false;
   }
 
