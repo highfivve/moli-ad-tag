@@ -1329,19 +1329,47 @@ export namespace Moli {
       includedDomIds?: string[];
     }
 
-    export interface PacingConfig {
+    /**
+     * How many requestAds calls are needed before the configured ad slot can be requested
+     */
+    export interface PositionFrequencyConfigDelay {
+      readonly condition: 'delay';
+      readonly minRequestAds: number;
+    }
+
+    /**
+     * how many impressions are allowed in the defined interval for the configured ad slot.
+     */
+    export interface PositionFrequencyConfigPacingInterval {
+      readonly condition: 'pacing:interval';
+      readonly impressionsAllowed: number;
+      readonly intervalInMs: number;
+    }
+
+    /**
+     *  how many requestAds call need to be between two winning impressions before the configured
+     *  ad slot can be requested again.
+     */
+    export interface PositionFrequencyConfigPacingRequestAds {
+      readonly condition: 'pacing:requestAds';
+      readonly requestAds: number;
+    }
+
+    export type PositionFrequencyConfigCondition =
+      | PositionFrequencyConfigDelay
+      | PositionFrequencyConfigPacingInterval
+      | PositionFrequencyConfigPacingRequestAds;
+
+    export interface PositionFrequencyConfig {
+      /**
+       * references the ad slot that should be frequency capped
+       */
       readonly domId: string;
 
-      // pacing during the user session
-      readonly minPageViews: number;
-      /* 1 = every page view, 0.5 every second page view, 0.1 every tenth page view */
-      readonly pageViewRate: number;
-
-      // how many impressions in a time window
-      readonly rate: {
-        readonly intervalInMs: number;
-        readonly allowed?: number;
-      };
+      /**
+       * all list of conditions that need to be met before the ad slot can request ads.
+       */
+      readonly conditions: PositionFrequencyConfigCondition[];
     }
 
     export interface BidderDisablingConfig {
@@ -1371,6 +1399,14 @@ export namespace Moli {
       readonly enabled: boolean;
       /** capping configuration for bidders and positions */
       readonly configs: BidderFrequencyConfig[];
+
+      /**
+       * capping configuration for positions only.
+       *
+       * This mirrors general ad manager frequency capping and is useful for positions that have a
+       * high impact on the user experience and thus should be reduced in frequency.
+       */
+      readonly positions: PositionFrequencyConfig[];
     }
 
     export interface PreviousBidCpmsConfig {
