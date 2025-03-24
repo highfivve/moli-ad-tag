@@ -314,7 +314,7 @@ export namespace MoliRuntime {
 
     /**
      * Add an event listener for ad request events.
-     * 
+     *
      * @param event The event type
      * @param listener The callback function to be executed with event-specific data
      * @param options Optional configuration for the listener
@@ -323,7 +323,7 @@ export namespace MoliRuntime {
 
     /**
      * Remove an event listener for ad request events.
-     * 
+     *
      * @param event The event type
      * @param listener The callback function to remove
      */

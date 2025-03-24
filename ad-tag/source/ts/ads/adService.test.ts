@@ -77,7 +77,12 @@ describe('AdService', () => {
       requestBids: [],
       requestAds: () => Promise.resolve()
     };
-    const service = new AdService(assetLoaderService, eventService, jsDomWindow, adPipelineConfiguration);
+    const service = new AdService(
+      assetLoaderService,
+      eventService,
+      jsDomWindow,
+      adPipelineConfiguration
+    );
     service.setLogger(noopLogger);
     return service;
   };

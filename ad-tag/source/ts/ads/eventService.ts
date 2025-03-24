@@ -25,12 +25,12 @@ interface EventListenerOptions {
  * });
  * eventService.emit('beforeRequestAds', { runtimeConfig: getRuntimeConfig() });
  * ```
- * 
+ *
  * The moli ad tag emits events for external systems or itself to trigger actions. Examples include
- * 
+ *
  * - `beforeRequestAds`: correlate page view with requestAds() calls to see where mismatches occur
  * - `afterRequestAds`: to trigger actions after the ads have been loaded. Or to check for errors
- * 
+ *
  */
 export class EventService {
   private eventListeners: Map<EventType, Set<EventListener<any>>> = new Map();
@@ -38,7 +38,7 @@ export class EventService {
 
   /**
    * Add an event listener for a specific event. If the event has already been emitted, the listener will not be called.
-   * 
+   *
    * @param event the event type
    * @param listener callback function
    * @param options optional configuration
@@ -49,17 +49,14 @@ export class EventService {
     options: EventListenerOptions = {}
   ): void => {
     const targetMap = options.once ? this.oneTimeListeners : this.eventListeners;
-    
+
     if (!targetMap.has(event)) {
       targetMap.set(event, new Set());
     }
     targetMap.get(event)?.add(listener);
   };
 
-  removeEventListener = <T extends EventType>(
-    event: T,
-    listener: EventListener<T>
-  ): void => {
+  removeEventListener = <T extends EventType>(event: T, listener: EventListener<T>): void => {
     this.eventListeners.get(event)?.delete(listener);
     this.oneTimeListeners.get(event)?.delete(listener);
   };
@@ -78,7 +75,7 @@ export class EventService {
         console.error(`Error in event listener for ${event}:`, error);
       }
     });
-    
+
     // One-time listeners
     const oneTimeListenersForEvent = this.oneTimeListeners.get(event);
     if (oneTimeListenersForEvent) {
@@ -92,7 +89,7 @@ export class EventService {
           oneTimeListenersForEvent.delete(listener);
         }
       });
-      
+
       // Clean up empty Sets from the oneTimeListeners Map to prevent memory leaks.
       // Once all one-time listeners for an event have been executed and removed,
       // we no longer need to keep the empty Set in our Map.

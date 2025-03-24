@@ -48,7 +48,7 @@ describe('EventService', () => {
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
       service.addEventListener('beforeRequestAds', listener, { once: true });
-      
+
       service.emit('beforeRequestAds', { runtimeConfig });
       service.emit('beforeRequestAds', { runtimeConfig });
 
@@ -64,7 +64,7 @@ describe('EventService', () => {
 
       service.addEventListener('beforeRequestAds', listener1, { once: true });
       service.addEventListener('beforeRequestAds', listener2, { once: true });
-      
+
       service.emit('beforeRequestAds', { runtimeConfig });
       service.emit('beforeRequestAds', { runtimeConfig });
 
@@ -82,7 +82,7 @@ describe('EventService', () => {
 
       service.addEventListener('beforeRequestAds', regularListener);
       service.addEventListener('beforeRequestAds', oneTimeListener, { once: true });
-      
+
       service.emit('beforeRequestAds', { runtimeConfig });
       service.emit('beforeRequestAds', { runtimeConfig });
 
@@ -137,7 +137,7 @@ describe('EventService', () => {
     it('should not throw when emitting event with no listeners', () => {
       const service = new EventService();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
-      
+
       // Should not throw
       service.emit('beforeRequestAds', { runtimeConfig });
     });
@@ -184,7 +184,9 @@ describe('EventService', () => {
         expect(errorListener).to.be.calledOnce;
         expect(goodListener).to.be.calledOnce;
         expect(consoleErrorStub).to.be.calledOnce;
-        expect(consoleErrorStub.firstCall.args[0]).to.equal('Error in event listener for beforeRequestAds:');
+        expect(consoleErrorStub.firstCall.args[0]).to.equal(
+          'Error in event listener for beforeRequestAds:'
+        );
       });
 
       it('should remove one-time listeners even if they throw', () => {
