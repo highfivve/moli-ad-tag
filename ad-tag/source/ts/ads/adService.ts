@@ -50,6 +50,7 @@ import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { getDeviceLabel } from './labelConfigService';
+import { EventService } from './eventService';
 
 /**
  * @internal
@@ -94,12 +95,14 @@ export class AdService {
   /**
    *
    * @param assetService
+   * @param eventService
    * @param window
    * @param adPipelineConfig only for testing purpose at this point. This configuration will be overridden by
    *        a call to initialize. This should not be the API for extending the pipeline!
    */
   constructor(
     private readonly assetService: IAssetLoaderService,
+    private readonly eventService: EventService,
     private readonly window: Window,
     private readonly adPipelineConfig?: IAdPipelineConfiguration
   ) {
@@ -260,6 +263,7 @@ export class AdService {
   ): Promise<Moli.AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
     this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);
+    this.eventService.emit('beforeRequestAds', { moliConfig: config });
     try {
       const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
         .map(slot => {
@@ -307,10 +311,12 @@ export class AdService {
         return flatten(arr);
       } else {
         await this.adPipeline.run(immediatelyLoadedSlots, config, this.requestAdsCalls);
+        this.eventService.emit('afterRequestAds', { state: 'finished' });
         return immediatelyLoadedSlots;
       }
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
+      this.eventService.emit('afterRequestAds', { state: 'error' });
       return Promise.reject(e);
     }
   };

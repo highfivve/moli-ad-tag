@@ -5,6 +5,7 @@ import { IAssetLoaderService } from '../util/assetLoaderService';
 import { ConfigureStep, InitStep, PrepareRequestAdsStep } from '../ads/adPipeline';
 import { apstag } from './apstag';
 import { SupplyChainObject } from './supplyChainObject';
+import { EventService } from '../ads/eventService';
 
 export namespace Moli {
   export type DfpSlotSize = [number, number] | 'fluid';
@@ -342,6 +343,23 @@ export namespace Moli {
      * @return the asset loader service that is used to fetch additional assets / resources
      */
     getAssetLoaderService(): IAssetLoaderService;
+
+    /**
+     * Add an event listener for ad request events.
+     *
+     * @param event The event type
+     * @param listener The callback function to be executed with event-specific data
+     * @param options Optional configuration for the listener
+     */
+    addEventListener: EventService['addEventListener'];
+
+    /**
+     * Remove an event listener for ad request events.
+     *
+     * @param event The event type
+     * @param listener The callback function to remove
+     */
+    removeEventListener: EventService['removeEventListener'];
   }
 
   /**
