@@ -11,6 +11,8 @@ import { emptyConfig, noopLogger } from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
 import MoliLogger = Moli.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { afterEach } from 'mocha';
+import { EventService } from './eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,6 +25,7 @@ describe('AdService', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
+  const eventService = new EventService();
 
   const emptyConfigWithPrebid: Moli.MoliConfig = {
     ...emptyConfig,
@@ -62,7 +65,12 @@ describe('AdService', () => {
       requestBids: [],
       requestAds: () => Promise.resolve()
     };
-    const service = new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+    const service = new AdService(
+      assetLoaderService,
+      eventService,
+      jsDomWindow,
+      adPipelineConfiguration
+    );
     service.setLogger(noopLogger);
     return service;
   };
@@ -671,6 +679,26 @@ describe('AdService', () => {
             );
           });
         });
+      });
+    });
+
+    describe('events', () => {
+      it('should emit a beforeRequestAds event with the runtimeConfig', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('beforeRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, [], []);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ moliConfig: emptyConfig });
+      });
+
+      it('should emit an afterRequestAds event the result state', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, [], []);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
       });
     });
 

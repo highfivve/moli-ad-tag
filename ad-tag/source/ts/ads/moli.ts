@@ -15,6 +15,7 @@ import ISinglePageApp = Moli.state.ISinglePageApp;
 import RefreshAdSlotsOptions = Moli.RefreshAdSlotsOptions;
 import { IModule, metaFromModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
+import { EventService } from './eventService';
 import {
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
@@ -28,7 +29,8 @@ import { allowRefreshAdSlot, allowRequestAds } from './spa';
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
   const assetLoaderService = createAssetLoaderService(window);
-  const adService = new AdService(assetLoaderService, window);
+  const eventService = new EventService();
+  const adService = new AdService(assetLoaderService, eventService, window);
   const moliWindow = window as Moli.MoliWindow;
 
   /**
@@ -886,7 +888,12 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
   function refreshBucket(bucket: string): Promise<'queued' | 'refreshed'> {
     // A helper function to retrieve domIds that belong to buckets.
     function getBucketDomIds(config: Moli.MoliConfig): string[] {
-      const slotsInBucket = config.slots.filter(slot => slot.behaviour.bucket === bucket);
+      const slotsInBucket = config.slots.filter(
+        slot =>
+          slot.behaviour.bucket &&
+          ((typeof slot.behaviour.bucket === 'string' && slot.behaviour.bucket === bucket) ||
+            Object.values(slot.behaviour.bucket).includes(bucket))
+      );
       return slotsInBucket?.map(slot => slot.domId);
     }
 
@@ -1034,6 +1041,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     getModuleMeta: getModuleMeta,
     getState: getState,
     openConsole: openConsole,
-    getAssetLoaderService: getAssetLoaderService
+    getAssetLoaderService: getAssetLoaderService,
+    addEventListener: eventService.addEventListener,
+    removeEventListener: eventService.removeEventListener
   };
 };
