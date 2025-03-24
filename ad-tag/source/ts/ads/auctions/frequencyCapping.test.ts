@@ -55,7 +55,7 @@ describe('FrequencyCapping', () => {
       adUnitCode: 'wp-slot'
     } as BidResponse;
 
-    frequencyCapping.onBidWon(bid, configs);
+    frequencyCapping.onBidWon(bid);
 
     expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.false;
   });
@@ -66,7 +66,7 @@ describe('FrequencyCapping', () => {
       adUnitCode: 'wp-slot'
     } as BidResponse;
 
-    frequencyCapping.onBidWon(bid, configs);
+    frequencyCapping.onBidWon(bid);
     expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.true;
   });
 
@@ -76,7 +76,7 @@ describe('FrequencyCapping', () => {
       adUnitCode: 'wp-slot'
     } as BidResponse;
 
-    frequencyCapping.onBidWon(bid, configs);
+    frequencyCapping.onBidWon(bid);
     expect(frequencyCapping.isFrequencyCapped('wp-slot', prebidjs.DSPX)).to.be.true;
 
     sandbox.clock.tick(11000);

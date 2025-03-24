@@ -17,8 +17,8 @@ export class FrequencyCapping {
     private readonly _window: Window
   ) {}
 
-  onBidWon(bid: prebidjs.BidResponse, configs: auction.BidderFrequencyConfig[]) {
-    configs.forEach(config => {
+  onBidWon(bid: prebidjs.BidResponse) {
+    this.config.configs.forEach(config => {
       if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
         const key = `${bid.adUnitCode}-${bid.bidder}`;
         this.frequencyCaps.add(key);

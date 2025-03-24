@@ -79,7 +79,7 @@ export class GlobalAuctionContext {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('bidWon', bid => {
           if (this.config.frequencyCap) {
-            this.frequencyCapping?.onBidWon(bid, this.config.frequencyCap.configs);
+            this.frequencyCapping?.onBidWon(bid);
           }
         });
       });
