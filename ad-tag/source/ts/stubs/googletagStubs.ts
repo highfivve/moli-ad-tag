@@ -123,6 +123,14 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
     pubads: (): googletag.IPubAdsService => pubAdsStub,
     setConfig: (): void => {
       return;
+    },
+    secureSignalProviders: {
+      push(provider: { id: string; collectorFunction(): any }) {
+        return;
+      },
+      clearAllCache() {
+        return;
+      }
     }
   };
 };

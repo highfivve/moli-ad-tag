@@ -1,4 +1,4 @@
-import { createDom } from '../stubs/browserEnvSetup';
+import { createDomAndWindow } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -20,10 +20,8 @@ import {
 } from './a9';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
-import { apstag } from '../types/apstag';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
@@ -38,13 +36,7 @@ describe('a9', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    apstag.WindowA9 &
-    prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow &
-    MoliRuntime.MoliWindow = dom.window as any;
+  const { dom, jsDomWindow } = createDomAndWindow();
   const adPipelineContext = (
     env: Environment = 'production',
     config: MoliConfig = emptyConfig,
@@ -62,7 +54,7 @@ describe('a9', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
@@ -206,6 +198,26 @@ describe('a9', () => {
           complete: 1,
           ver: '1.0',
           nodes: [dummySchainConfig.supplyChainStartNode, a9ConfigStub.schainNode]
+        }
+      });
+    });
+
+    it('should add only the supplyChainStartNode if no schainNode is provided', async () => {
+      const step = a9Configure({ ...a9ConfigStub, schainNode: undefined }, dummySchainConfig);
+      const apstagInitSpy = sandbox.spy(dom.window.apstag, 'init');
+      await step(adPipelineContext(), []);
+      expect(apstagInitSpy).to.have.been.calledOnce;
+      expect(apstagInitSpy).to.have.been.calledOnceWithExactly({
+        pubID: a9ConfigStub.pubID,
+        adServer: 'googletag',
+        bidTimeout: a9ConfigStub.timeout,
+        gdpr: {
+          cmpTimeout: a9ConfigStub.cmpTimeout
+        },
+        schain: {
+          complete: 1,
+          ver: '1.0',
+          nodes: [dummySchainConfig.supplyChainStartNode]
         }
       });
     });

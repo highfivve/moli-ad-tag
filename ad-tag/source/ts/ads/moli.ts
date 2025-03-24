@@ -422,7 +422,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 state.state === 'spa-requestAds' &&
                 allowRefreshAdSlot(validateLocation, state.href, window.location)
               ) {
-                // TODO never all this if refreshSlots is empty
+                // TODO never call this if refreshSlots is empty
                 adService.refreshAdSlots(
                   state.runtimeConfig.refreshSlots,
                   state.config,
@@ -506,6 +506,20 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         const beforeRequestAds = state.nextRuntimeConfig.hooks.beforeRequestAds;
 
         const currentState = state;
+
+        // call beforeRequestAds hooks to ensure side effects are being applied to the config first
+        beforeRequestAds.forEach(hook => {
+          try {
+            hook(currentState.config, state.runtimeConfig);
+          } catch (e) {
+            getLogger(state.runtimeConfig, window).error(
+              'MoliGlobal',
+              'beforeRequestAds hook failed',
+              e
+            );
+          }
+        });
+
         // we can only use the preexisting refreshSlots array and refreshInfiniteSlots if the previous requestAds call finished in time
         const { initialized, href, nextRuntimeConfig } = state;
 
@@ -529,18 +543,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 `You are trying to refresh ads on the same page, which is not allowed. Using ${validation} for validation.`
               );
             }
-            // run hooks
-            beforeRequestAds.forEach(hook => {
-              try {
-                hook(config, state.runtimeConfig);
-              } catch (e) {
-                getLogger(state.runtimeConfig, window).error(
-                  'MoliGlobal',
-                  'beforeRequestAds hook failed',
-                  e
-                );
-              }
-            });
 
             // For single page applications
             return adService.requestAds(config, nextRuntimeConfig).then(() => config);
@@ -713,12 +715,22 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
-  function refreshBucket(bucket: string): Promise<'queued' | 'refreshed'> {
+  function refreshBucket(
+    bucket: string,
+    options?: MoliRuntime.RefreshAdSlotsOptions
+  ): Promise<'queued' | 'refreshed'> {
     // A helper function to retrieve domIds that belong to buckets.
     function getBucketDomIds(config: MoliConfig): string[] {
-      const slotsInBucket = config.slots.filter(slot => slot.behaviour.bucket === bucket);
+      const slotsInBucket = config.slots.filter(
+        slot =>
+          slot.behaviour.bucket &&
+          ((typeof slot.behaviour.bucket === 'string' && slot.behaviour.bucket === bucket) ||
+            Object.values(slot.behaviour.bucket).includes(bucket))
+      );
       return slotsInBucket?.map(slot => slot.domId);
     }
+
+    // FIXME the options are not persisted in the state, so they are not used in the refreshBucket call
 
     switch (state.state) {
       case 'configurable': {
@@ -752,7 +764,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         if (allowRefreshAdSlot(validateLocation, state.href, window.location)) {
           // user hasn't navigated yet, so we directly refresh the slot
           return adService
-            .refreshBucket(bucket, state.config, state.runtimeConfig)
+            .refreshBucket(bucket, state.config, state.runtimeConfig, options)
             .then(() => 'refreshed');
         } else {
           const domIds = getBucketDomIds(state.config);

@@ -85,7 +85,7 @@ describe('IdentityLink Module', () => {
         runtimeConfig: emptyRuntimeConfig,
         tcData: fullConsent({ 97: true }),
         adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow as any),
+        auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
         assetLoaderService: assetLoaderService
       };
     };

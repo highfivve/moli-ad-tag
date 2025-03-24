@@ -152,6 +152,26 @@ describe('SizeConfigService', () => {
       expect(sizeConfigService.filterSlot(adSlot605x165)).to.be.false;
       expect(sizeConfigService.filterSlot(adSlotFluid985x380)).to.be.true;
     });
+
+    it('should maintain the order of the given slot sizes', () => {
+      const sizeConfigService1 = newSizeConfigService([sizeConfigEntry1, sizeConfigEntry3]);
+      const sizeConfigService2 = newSizeConfigService([sizeConfigEntry3, sizeConfigEntry1]);
+
+      const sizesOrdered: googleAdManager.SlotSize[] = [
+        [985, 380],
+        [205, 200]
+      ];
+
+      expect(sizeConfigService1.filterSupportedSizes(sizesOrdered)).to.deep.equal([
+        [985, 380],
+        [205, 200]
+      ]);
+
+      expect(sizeConfigService2.filterSupportedSizes(sizesOrdered)).to.deep.equal([
+        [985, 380],
+        [205, 200]
+      ]);
+    });
   });
 
   describe('additional label filtering', () => {
@@ -219,6 +239,14 @@ describe('SizeConfigService', () => {
     it('should filter supported sizes if not all labels are included in the supported labels and labelNone is empty', () => {
       const labels = ['page-x'];
       const sizeConfigService = newSizeConfigService([newSizeConfigEntry(labels, [])], []);
+      expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
+    });
+
+    it('should filter supported sizes if at least one label is met in the labelOne condition', () => {
+      const sizeConfigService = newSizeConfigService(
+        [newSizeConfigEntry([], ['foo', 'bar'])],
+        ['foo']
+      );
       expect(sizeConfigService.filterSupportedSizes(sizes)).to.deep.equal([]);
     });
 

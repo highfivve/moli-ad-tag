@@ -93,41 +93,6 @@ export interface AdSlot {
 
   /** optional a9 configuration if this ad slot can also be used by a9 */
   readonly a9?: headerbidding.A9AdSlotConfig;
-
-  /**
-   * If true this ad slot will be refreshed if a window.postMessage event is being sent from
-   * a creative identifying the ad slot by domId. In additional key value `passback:true` will
-   * be set indicating this is a passback request. The rest of the key-values will be untouched
-   * keeping the prebid / a9 auction key-values.
-   *
-   *
-   * ## Example creative snippet
-   *
-   * This is an example of how a passback function could look like in a creative.
-   * Note that you can either use the `adUnitPath` or the `domId` of the slot.
-   *
-   * `adUnitPath` is not yet fully supported, when using variables in the ad unit path.
-   *
-   * ```
-   * var passbackCallback = function() {
-   *   var request = JSON.stringify({
-   *     type: 'passback',
-   *     adUnitPath: '%%ADUNIT%%' ,
-   *     passbackOrigin: '[ADVERTISER-NAME]'
-   *   });
-   *   try {
-   *     // first try to post a message on the top most window
-   *     window.top.postMessage(request, '*');
-   *   } catch (_) {
-   *     // best-effort postMessage
-   *     window.postMessage(request, '*');
-   *   }
-   * }
-   * ```
-   *
-   * Default is `false`
-   */
-  readonly passbackSupport?: boolean;
 }
 
 /*
@@ -400,6 +365,21 @@ export namespace auction {
     readonly domId: string;
     /** milliseconds until a bidder can become active again  */
     readonly blockedForMs: number;
+
+    /**
+     * Optional list of events that should trigger the frequency capping.
+     * The main use case is to reduce requests for high impact formats like wallpaper or interstitials.
+     *
+     * The default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won.
+     * For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial,
+     * the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other.
+     * This can happen if the first page view is a google web interstitial, because the visx interstitial was requested,
+     * but no bid came back and the second page view display the google interstitial, while a visx interstitial is
+     * requested directly after the google interstitial is closed.
+     *
+     * @default ['bidWon']
+     */
+    readonly events?: Array<'bidWon' | 'bidRequested'>;
   }
 
   export interface FrequencyCappingConfig {
@@ -407,6 +387,16 @@ export namespace auction {
     readonly enabled: boolean;
     /** capping configuration for bidders and positions */
     readonly configs: BidderFrequencyConfig[];
+
+    /**
+     * If frequency capping state should be persisted into session storage.
+     *
+     * This is necessary for SSR pages, but should be disabled for SPA pages as no real page reload
+     * is happening there.
+     *
+     * @default false
+     */
+    readonly persistent?: boolean;
   }
 
   export interface PreviousBidCpmsConfig {
@@ -477,9 +467,17 @@ export namespace behaviour {
      * All lazy slots are loaded in a separate auction anyway.
      *
      * For slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper
-     * buckets.
+     * buckets. The easiest way is to use the `moli.refreshBucket` API.
+     *
+     * ## Device specific buckets
+     *
+     * Instead of a single bucket name, it's possible to configure different buckets for desktop and mobile.
+     * This is especially useful for certain ad slots that always need to be requested together for roadblocking, such
+     * as wallpaper/skin ads, interstitials, or other high-impact formats.
+     *
+     * @see [[bucket.GlobalBucketConfig]]
      */
-    readonly bucket?: string;
+    readonly bucket?: bucket.AdSlotBucket;
   }
 
   /**
@@ -529,7 +527,11 @@ export namespace behaviour {
    */
   export interface Infinite extends ISlotLoading {
     readonly loaded: 'infinite';
-    readonly selector: string;
+
+    /**
+     * @deprecated The selector is configured in the lazy loading module configuration.
+     */
+    readonly selector?: string;
   }
 
   /**
@@ -575,6 +577,7 @@ export namespace gpt {
    * Configure the ad slot position
    *
    * - `in-page` is the standard display ad
+   * - 'interstitial' combines the out-of-page-interstitial with prebid demand. It's a custom extension.
    * - `out-of-page` uses the `defineOutOfPageSlot` API
    * - `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`
    * - `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`
@@ -586,6 +589,7 @@ export namespace gpt {
    */
   export type Position =
     | 'in-page'
+    | 'interstitial'
     | 'out-of-page'
     | 'out-of-page-interstitial'
     | 'out-of-page-top-anchor'
@@ -772,8 +776,10 @@ export namespace headerbidding {
 
     /**
      * Supply Chain Object for Amazon TAM
+     *
+     * Recently Amazon TAM asked partners to remove the Amazon TAM specific node as it is not required anymore.
      */
-    readonly schainNode: SupplyChainObject.ISupplyChainNode;
+    readonly schainNode?: SupplyChainObject.ISupplyChainNode;
   }
 
   /**
@@ -818,6 +824,12 @@ export namespace schain {
 }
 
 export namespace bucket {
+  /**
+   * The bucket name for an ad slot. Can be a string (just the name of the bucket) or an object that
+   * can contain buckets for each device type.
+   */
+  export type AdSlotBucket = string | Partial<Record<Device, string>>;
+
   /**
    * ## Bucket config
    *
@@ -866,6 +878,19 @@ export namespace bucket {
   };
 }
 
+/**
+ * Configuration namespace for the bridge (backfill) configuration
+ */
+export namespace bridge {
+  export interface BridgeConfig {
+    /**
+     * If enabled, the implementation will be activated to handle postMessage events from creatives
+     * or other systems to refresh ad slots.
+     */
+    readonly enabled: boolean;
+  }
+}
+
 export namespace modules {
   export interface IModuleConfig {
     /**
@@ -877,6 +902,64 @@ export namespace modules {
   export namespace adreload {
     export type RefreshIntervalOverrides = {
       [slotDomId: string]: number;
+    };
+
+    export type ViewabilityOverrideEntryCss = {
+      variant: 'css';
+      /** Used to select a single element to monitor for viewability */
+      cssSelector: string;
+    };
+
+    export type ViewabilityOverrideEntryDisabled = {
+      /**
+       * Enable reloading ads that are not in viewport. It is not advised to use this option.
+       * Impressions are usually only counted on ads that have been 50% visible, and it's generally not
+       * very user-centric to load stuff that is out of viewport.
+       */
+      variant: 'disabled';
+
+      /**
+       * Enable reloading ads that are not in viewport without any restrictions.
+       *
+       * It is not advised to use this option. Impressions are usually only counted on ads that
+       * have been 50% visible, and it's generally not very user-centric to load stuff that is out
+       * of viewport.
+       *
+       * Set this to false and provide additional configuration options to restrict the unconditional
+       * ad reload to certain advertisers.
+       */
+      disableAllAdVisibilityChecks: boolean;
+
+      /**
+       *  An optional list of advertisers that are allowed to be reloaded, but no additional ad visibility check is performed.
+       *  This is necessary for special formats that may take a bit of time to render and the DOM elements are not yet ready,
+       *  when the IntersectionObserver is about to be configured.
+       */
+      disabledAdVisibilityCheckAdvertiserIds?: number[];
+    };
+
+    /**
+     * A set of different configuration options for a viewability override setting.
+     * Each entry is per position and can be used to override the default viewability behavior.
+     */
+    export type ViewabilityOverrideEntry =
+      | ViewabilityOverrideEntryCss
+      | ViewabilityOverrideEntryDisabled;
+
+    /**
+     * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
+     *
+     * This configuration object allows to provide a CSS selector to check for visibility.
+     * If set and available in the DOM it will be used to check for visibility with an IntersectionObserver.
+     * Otherwise, the configured default behavior will be used.
+     *
+     * A record in this overrides object is a mapping of a slot's DOM id to the override configuration.
+     */
+    export type ViewabilityOverrides = {
+      /**
+       * Ad Slot DOM ID to viewability configuration
+       */
+      [slotDomId: string]: ViewabilityOverrideEntry | undefined;
     };
 
     export type UserActivityParameters = {
@@ -962,6 +1045,19 @@ export namespace modules {
        * very user-centric to load stuff that is out of viewport.
        */
       disableAdVisibilityChecks?: boolean;
+
+      /**
+       * Overrides the default viewability measurement with a custom target DOM element.
+       *
+       * This can be used to measure viewability of an ad slot that is not using the default ad slot
+       * div container, but creates a separate container on the page. This is the case for certain
+       * special ad formats like seedtag's or GumGum's inScreen, YOCs mystery scroller and similar mobile
+       * sticky formats.
+       *
+       * It can also be used to measure viewability for ad skin formats to apply ad reload accordingly.
+       *
+       */
+      viewabilityOverrides?: ViewabilityOverrides;
     }
   }
 
@@ -1507,6 +1603,20 @@ export namespace modules {
   }
 
   export namespace utiq {
+    type ColorHexCode = `#${string}`;
+
+    export interface UtiqIntegrationOps {
+      /**
+       * Utiq SDK automatically sends adtechpass as Google Secure Signals to Google Ad Manager (GAM),
+       * firing the below code. From integration perspective you don’t have to do anything else.
+       *
+       * Your only pending action would be to enable the feature in Google Ad Manager UI.
+       *
+       * @see https://docs.utiq.com/docs/google-secure-signals
+       */
+      readonly disableGoogleSecureSignals?: boolean;
+    }
+
     /**
      * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript
      * object that can be set up before the Utiq loader script is loaded. The configuration object is available under
@@ -1521,7 +1631,8 @@ export namespace modules {
      * that the ad tag or `requestAds` call is made after the event listener are added. Otherwise, the Utiq script might
      * already be available and not pick the listeners up.
      *
-     * We merged the `Utiq.config
+     * We merged the `Utiq.config` object with thhe `options` provided by the module to allow publishers to add additional
+     * configuration options.
      *
      * ## Customization Options
      *
@@ -1531,6 +1642,20 @@ export namespace modules {
      * @see https://docs.utiq.com/docs/event-listeners
      */
     export interface UtiqConfigOptions {
+      /**
+       * If you need not to show Utiq separate pop-up, you will need to add CMP: "none" in Utiq.config. Use cases would
+       * be not showing pop-up on Manage Utiq page, on Privacy Policy page and/or if you want to run an A/B testing.
+       *
+       * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-CMP
+       */
+      readonly CMP?: 'none';
+
+      /**
+       * You can configure Utiq SDK for various integration options with other marketing solutions.
+       * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-integrations
+       */
+      readonly integrations?: UtiqIntegrationOps;
+
       /**
        * The Utiq loader configuration automatically detects the currently accessed host for setting up connections and
        * managing data. However, you can use a custom host for staging environments that do not fall under the CNAME setups
@@ -1547,12 +1672,53 @@ export namespace modules {
        * @see https://docs.utiq.com/docs/configuration-options#ConfigurationOptions-customizationOptions
        */
       readonly customizationOptions?: {
+        /**
+         * ## Configuration option for language
+         *
+         * You can use the below configuration option if you need to dynamically change the default language of the text
+         * generated by the dynamic `<div>`, e.g. if users have a language drop-down option.
+         *
+         * @see https://docs.utiq.com/docs/manage-utiq-page#ManageUtiqPage-Configurationoptionforlanguage
+         */
+        readonly customizationOptions?: 'en' | 'de' | 'it' | 'fr' | 'es';
+
+        /**
+         * @example `https://www.example.com/images/logo.svg`
+         */
+        readonly websiteLogoUrl?: string;
+
         readonly buttons: {
-          readonly bodyColor: string;
-          readonly textColor: string;
+          readonly bodyColor: ColorHexCode;
+          readonly textColor: ColorHexCode;
           readonly radius: number;
         };
-        readonly contentTextColor: string;
+
+        readonly hyperlinks?: {
+          /** color hex code */
+          readonly color?: ColorHexCode;
+          /** color hex code */
+          readonly colorOnHover?: ColorHexCode;
+          /** @default `false` */
+          readonly isUnderlined?: boolean;
+        };
+
+        /**
+         * Text color of the pop-up content. This should be a HEX color code, e.g. #000000.
+         */
+        readonly contentTextColor: ColorHexCode;
+
+        /**
+         * ## Optimize auto-scroll margin to domain list paragraph
+         *
+         * Users may land on Manage Utiq page from either the Integrated Model or Separate pop-up Model, with a relevant
+         * hyperlink, and they will be automatically scrolled to the domains list paragraph.
+         *
+         * In case you have any overlaying top menu, remaining in view when users scroll lower, you can use the below
+         * configuration, to optimize the margin of the auto scroll, so that the paragraph title is visible.
+         *
+         * @see https://docs.utiq.com/docs/manage-utiq-page#ManageUtiqPage-Optimizeauto-scrollmargintodomainlistparagraph
+         */
+        readonly domainListAnchorMargin?: number;
       };
 
       /**
@@ -2229,4 +2395,16 @@ export interface MoliConfig {
      */
     pageSettingsConfig?: googletag.GptPageSettingsConfig;
   };
+
+  /**
+   * ## Bridge Configuration
+   *
+   * The ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.
+   *
+   * The most common use case, is to trigger ads from within a creative that is served in an iframe, e.g. for backfill
+   * implementations or "post-bid".
+   *
+   * If enabled and configured a listener will be attached to the current `window` object that listens for messages.
+   */
+  readonly bridge?: bridge.BridgeConfig;
 }

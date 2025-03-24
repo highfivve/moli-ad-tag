@@ -60,6 +60,7 @@ import {
 } from '../../adPipeline';
 import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { IntersectionObserverWindow } from 'ad-tag/types/dom';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
  */
@@ -158,7 +159,11 @@ export class AdReload implements IModule {
 
     context.logger.debug('AdReload', 'initialize moli ad reload module');
 
-    this.setupAdVisibilityService(config, context.window, context.logger);
+    this.setupAdVisibilityService(
+      config,
+      context.window as unknown as Window & IntersectionObserverWindow & googletag.IGoogleTagWindow,
+      context.logger
+    );
     this.setupSlotRenderListener(
       config,
       slotsToMonitor,
@@ -172,15 +177,16 @@ export class AdReload implements IModule {
 
   private setupAdVisibilityService = (
     config: modules.adreload.AdReloadModuleConfig,
-    window: Window & googletag.IGoogleTagWindow,
+    window: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow,
     logger: MoliRuntime.MoliLogger
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, config.userActivityLevelControl, logger),
       this.refreshIntervalMs,
-      config.refreshIntervalMsOverrides || {},
+      config.refreshIntervalMsOverrides ?? {},
       false,
       !!config.disableAdVisibilityChecks,
+      config.viewabilityOverrides ?? {},
       window,
       logger
     );
@@ -247,7 +253,7 @@ export class AdReload implements IModule {
 
       if (trackingSlotAllowed) {
         // add tracking for non-excluded slots
-        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback);
+        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback, advertiserId);
       } else if (slotAlreadyTracked) {
         this.adVisibilityService!.removeSlotTracking(googleTagSlot);
       }

@@ -94,6 +94,7 @@ describe('Lazy-load Module', () => {
   let sandbox = Sinon.createSandbox();
   let dom = createDom();
   let jsDomWindow = dom.window as any;
+
   jsDomWindow.moli = createMoliTag(jsDomWindow);
   jsDomWindow.IntersectionObserver = MockIntersectionObserver;
   const noopLogger = newNoopLogger();
@@ -172,7 +173,7 @@ describe('Lazy-load Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any),
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
@@ -196,7 +197,7 @@ describe('Lazy-load Module', () => {
     });
 
     it('Observe only domIds that are in the module config, i.e., lazy-1', () => {
-      const oberserveSpy = sandbox.spy(observer, 'observe');
+      const observeSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
       const module = new LazyLoad();
@@ -216,17 +217,17 @@ describe('Lazy-load Module', () => {
       const callback = getIntersectionObserverCallback(0);
       callback([createIntersectionObserverEntry(true, domId1)], observer);
 
-      const args = oberserveSpy.firstCall.firstArg;
+      const args = observeSpy.firstCall.firstArg;
 
       expect(errorLogSpy).to.have.not.been.called;
       expect(intersectionObserverConstructorStub).to.have.been.calledOnce;
-      expect(oberserveSpy).to.have.been.calledOnce;
+      expect(observeSpy).to.have.been.calledOnce;
       expect(args).to.equal(jsDomWindow.document.getElementById('lazy-1'));
     });
 
     it('Unobserve already observed and intersected slots, thus no ad-slot refresh again', () => {
-      const oberserveSpy = sandbox.spy(observer, 'observe');
-      const unOberserveSpy = sandbox.spy(observer, 'unobserve');
+      const observeSpy = sandbox.spy(observer, 'observe');
+      const unobserveSpy = sandbox.spy(observer, 'unobserve');
 
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
@@ -249,18 +250,18 @@ describe('Lazy-load Module', () => {
       const unIntersected = createIntersectionObserverEntry(false, domId2);
 
       callback([intersected, unIntersected], observer);
-      const firstCallArgs = unOberserveSpy.firstCall.args;
+      const firstCallArgs = unobserveSpy.firstCall.args;
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(oberserveSpy).to.have.been.calledTwice;
-      expect(unOberserveSpy).to.have.been.calledOnce;
-      expect(unOberserveSpy).to.have.been.calledOnceWithExactly({ id: 'lazy-1' });
+      expect(observeSpy).to.have.been.calledTwice;
+      expect(unobserveSpy).to.have.been.calledOnce;
+      expect(unobserveSpy).to.have.been.calledOnceWithExactly({ id: 'lazy-1' });
       expect(firstCallArgs).to.deep.contain({ id: 'lazy-1' });
       expect(refreshAdSlotsSpy).to.have.been.calledOnceWithExactly('lazy-1');
     });
 
     it('Observe only slots that have a manual behaviour', () => {
-      const oberserveSpy = sandbox.spy(observer, 'observe');
+      const observeSpy = sandbox.spy(observer, 'observe');
 
       const module = new LazyLoad();
       const lazyConfig = {
@@ -282,8 +283,8 @@ describe('Lazy-load Module', () => {
       );
 
       expect(errorLogSpy).to.have.not.been.called;
-      expect(oberserveSpy).to.have.been.calledOnce;
-      expect(oberserveSpy).to.have.been.calledOnceWithExactly(
+      expect(observeSpy).to.have.been.calledOnce;
+      expect(observeSpy).to.have.been.calledOnceWithExactly(
         jsDomWindow.document.getElementById('lazy-2')
       );
     });

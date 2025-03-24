@@ -1134,13 +1134,6 @@ export namespace prebidjs {
        * Max amount of time (in seconds) before looking into storage for data
        */
       readonly maxDelayTime?: number;
-
-      /**
-       * You may like to consider limiting the SSPs that receive the martechpass by adding the bidders array, to make
-       * sure they are not forwarding this first party ID to DSPs. We are working with SSPs to exclude the above
-       * source from being sent to DSPs, please reach out to csm@utiq.com to verify which are these SSPs.
-       */
-      readonly bidders?: BidderCode[];
     }
 
     /**
@@ -1254,7 +1247,9 @@ export namespace prebidjs {
       | 'kpuid.com'
       | 'yahoo.com'
       | 'thenewco.it'
-      | 'pubcid.org';
+      | 'pubcid.org'
+      | 'utiq.com'
+      | 'utiq-mtp.com';
 
     export interface IEncryptedSignalSource {
       /**
@@ -1333,12 +1328,12 @@ export namespace prebidjs {
       auctionEnd: AuctionObject;
       auctionInit: AuctionObject;
       auctionTimeout: AuctionObject;
-      beforeBidderHttp: BidderRequest;
+      beforeBidderHttp: BidderRequests;
       beforeRequestBids: BeforeRequestBidsAdUnitInfo;
       bidAccepted: BidResponse;
       bidAdjustment: BidResponse;
-      bidderDone: BidderRequest;
-      bidRequested: BidderRequest;
+      bidderDone: BidderRequests;
+      bidRequested: BidderRequests;
       bidResponse: BidResponse;
       bidWon: BidResponse;
       bidTimeout: NoBidObject[];
@@ -1376,13 +1371,34 @@ export namespace prebidjs {
       readonly vendorData?: any;
     };
 
-    export type BidderRequest = {
+    export type BidderRequestBid = {
+      readonly bidder: prebidjs.BidderCode;
+      readonly adUnitCode: string;
+      readonly auctionId: string;
+
+      readonly sizes: [number, number][];
+      readonly mediaTypes: prebidjs.IMediaTypes;
+
+      readonly bidId?: string;
+      readonly bidderRequestId: string;
+
+      readonly deferBilling?: boolean;
+      readonly src: 's2s' | 'client';
+      readonly transactionId?: string;
+
+      readonly ortb2: prebidjs.firstpartydata.PrebidFirstPartyData;
+      readonly ortb2Imp?: prebidjs.IOrtb2Imp;
+
+      readonly serverResponseTimeMs?: number;
+    };
+
+    export type BidderRequests = {
       readonly adUnitsS2SCopy?: IAdUnit[];
       readonly auctionId?: string;
       readonly auctionStart?: number;
       readonly bidderCode?: BidderCode;
       readonly bidderRequestId?: string;
-      readonly bids?: [];
+      readonly bids?: BidderRequestBid[];
       readonly gdprConsent?: GdprConsent;
       /**
        * different functions to manage metrics
@@ -1407,7 +1423,7 @@ export namespace prebidjs {
       readonly adUnits?: IAdUnit[];
       readonly auctionId: string;
       readonly auctionStatus?: 'inProgress' | 'completed';
-      readonly bidderRequests?: BidderRequest[];
+      readonly bidderRequests?: BidderRequests[];
       readonly bidsReceived?: prebidjs.BidResponse[];
       readonly bidsRejected?: NoBidObject[];
       /**
@@ -2205,7 +2221,7 @@ export namespace prebidjs {
      * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/extensions/community_extensions/dsa_transparency.md
      */
     export interface OpenRtb2RegsExtDsa {
-      dsa: {
+      dsa?: {
         /**
          * Flag to indicate if DSA information should be made available. This will signal if the bid request belongs to
          * an Online Platform/VLOP, such that a buyer should respond with DSA Transparency information based on the
@@ -2216,7 +2232,7 @@ export namespace prebidjs {
          * 2 = Required, bid responses without DSA object will not be accepted
          * 3 = Required, bid responses without DSA object will not be accepted, Publisher is an Online Platform
          */
-        required: 0 | 1 | 2 | 3;
+        dsarequired: 0 | 1 | 2 | 3;
 
         /**
          * Flag to indicate if the publisher will render the DSA Transparency info. This will signal if the publisher is
@@ -2241,7 +2257,7 @@ export namespace prebidjs {
         /**
          * Array of objects of the entities that applied user parameters and the parameters they applied.
          */
-        transparency: OpenRtb2RegsExtDsaTransparency[];
+        transparency?: OpenRtb2RegsExtDsaTransparency[];
       };
     }
 
@@ -2265,6 +2281,35 @@ export namespace prebidjs {
        * regulations for the United States Children’s Online Privacy Protection Act (“COPPA”)
        */
       regs?: OpenRtb2Regs;
+
+      /**
+       * community extensions
+       */
+      ext?:
+        | {
+            prebid?: {
+              data?: {
+                /**
+                 * Publishers can constrain which bidders receive which user.ext.eids entries.
+                 * See the [Prebid.js user ID permissions](https://docs.prebid.org/dev-docs/modules/userId.html#permissions) reference for background.
+                 *
+                 * @see https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#eid-permissions
+                 * @see https://docs.prebid.org/dev-docs/modules/userId.html#permissions
+                 */
+                eidpermissions?: Array<{
+                  /**
+                   * Which user.ext.eids.source is receiving the permissions, one entry per source is allowed
+                   */
+                  source: prebidjs.userSync.EIDSource;
+                  /**
+                   * Which bidders are allowed to receive the named eid source
+                   */
+                  permissions: Array<BidderCode | '*'>;
+                }>;
+              };
+            };
+          }
+        | any;
     }
 
     /**
@@ -5915,6 +5960,18 @@ export namespace prebidjs {
      * ```
      */
     readonly bidder: Exclude<BidderCode, typeof GumGum>;
+
+    /**
+     * The bidder code.
+     *
+     * Excludes all the bidder codes which have a more specific implementation.
+     * Add more bidders by extending the union type, e.g.
+     *
+     * ```
+     * Exclude<BidderCode, typeof AppNexusAst>;
+     * ```
+     */
+    readonly bidderCode: IGenericBidResponse['bidder'];
   }
 
   /**
@@ -5938,6 +5995,11 @@ export namespace prebidjs {
     readonly bidder: typeof GumGum;
 
     /**
+     * narrow this bid response type to gumgum
+     */
+    readonly bidderCode: IGumGumBidResponse['bidder'];
+
+    /**
      * Contains the GumGum ad creative.
      *
      * If the `cw` field is set, then it's a "wrapper". Otherwise, it's considered
@@ -5946,6 +6008,9 @@ export namespace prebidjs {
     readonly ad: IGumGumBidResponseWrapper | string;
   }
 
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidder-adaptor.html#interpreting-the-response
+   */
   export type BidResponse = IGenericBidResponse | IGumGumBidResponse;
 
   /**

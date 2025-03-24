@@ -5,8 +5,7 @@ import sinonChai from 'sinon-chai';
 import { AdPipelineContext } from '../../adPipeline';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
-import { googletag } from 'ad-tag/types/googletag';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { Confiant } from 'ad-tag/ads/modules/confiant/index';
@@ -19,12 +18,11 @@ use(sinonChai);
 
 describe('Confiant Module', () => {
   const sandbox = Sinon.createSandbox();
-  let dom, assetLoaderService;
-  let jsDomWindow: Window & googletag.IGoogleTagWindow;
+  let { jsDomWindow } = createDomAndWindow();
+  let assetLoaderService = createAssetLoaderService(jsDomWindow);
 
   const setupDomAndServices = () => {
-    dom = createDom();
-    jsDomWindow = dom.window as any;
+    jsDomWindow = createDomAndWindow().jsDomWindow;
     jsDomWindow.googletag = createGoogletagStub();
     assetLoaderService = createAssetLoaderService(jsDomWindow);
   };
@@ -48,11 +46,11 @@ describe('Confiant Module', () => {
     logger: noopLogger,
     config: { ...emptyConfig, targeting: targeting },
     runtimeConfig: emptyRuntimeConfig,
-    window: jsDomWindow as any,
+    window: jsDomWindow,
     labelConfigService: null as any,
     tcData: tcData ?? fullConsent({ '44': true }),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any),
+    auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
     assetLoaderService: assetLoaderService
   });
 

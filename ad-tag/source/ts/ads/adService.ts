@@ -37,14 +37,23 @@ import {
   a9PublisherAudiences
 } from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
-import { passbackPrepareRequestAds } from './passback';
-import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, behaviour, Environment, MoliConfig } from '../types/moliConfig';
+import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
+import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
 import { EventService } from 'ad-tag/ads/eventService';
+import { bridgeInitStep } from 'ad-tag/ads/bridge/bridge';
+
+/**
+ * All relevant information about the global window
+ */
+type AdServiceWindow = Window &
+  MoliRuntime.MoliWindow &
+  googletag.IGoogleTagWindow &
+  prebidjs.IPrebidjsWindow &
+  Pick<typeof globalThis, 'Date' | 'console'>;
 
 /**
  * @internal
@@ -75,13 +84,8 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window &
-      googletag.IGoogleTagWindow &
-      prebidjs.IPrebidjsWindow &
-      MoliRuntime.MoliWindow,
-    new GlobalAuctionContext(
-      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-    )
+    this.window as AdServiceWindow,
+    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger())
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -107,13 +111,8 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window &
-          googletag.IGoogleTagWindow &
-          prebidjs.IPrebidjsWindow &
-          MoliRuntime.MoliWindow,
-        new GlobalAuctionContext(
-          window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-        )
+        window as AdServiceWindow,
+        new GlobalAuctionContext(window as AdServiceWindow, this.logger)
       );
     }
   }
@@ -146,7 +145,7 @@ export class AdService {
     );
 
     // 2. build the AdPipeline
-    const init: InitStep[] = isGam ? [gptInit()] : [];
+    const init: InitStep[] = isGam ? [gptInit(), bridgeInitStep()] : [];
 
     const configure: ConfigureStep[] = isGam ? [gptConfigure()] : [];
 
@@ -156,13 +155,7 @@ export class AdService {
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [];
     if (isGam) {
-      prepareRequestAds.push(
-        gptLDeviceLabelKeyValue(),
-        gptConsentKeyValue(),
-        passbackPrepareRequestAds(
-          new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
-        )
-      );
+      prepareRequestAds.push(gptLDeviceLabelKeyValue(), gptConsentKeyValue());
     }
 
     const requestBids: RequestBidsStep[] = [];
@@ -212,12 +205,10 @@ export class AdService {
         requestAds: isGam ? gptRequestAds() : prebidRenderAds()
       },
       this.logger,
-      this.window as Window &
-        googletag.IGoogleTagWindow &
-        prebidjs.IPrebidjsWindow &
-        MoliRuntime.MoliWindow,
+      this.window as AdServiceWindow,
       new GlobalAuctionContext(
-        this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+        this.window as AdServiceWindow,
+        this.logger,
         config.globalAuctionContext
       )
     );
@@ -270,10 +261,16 @@ export class AdService {
         .filter(this.isSlotAvailable);
 
       if (config.buckets?.enabled) {
+        const device = getDeviceLabel(
+          this.window,
+          runtimeConfig,
+          config.labelSizeConfig,
+          config.targeting
+        );
         // create buckets
         const buckets = new Map<string, AdSlot[]>();
         immediatelyLoadedSlots.forEach(slot => {
-          const bucket = slot.behaviour.bucket || 'default';
+          const bucket = this.getBucketName(slot.behaviour.bucket, device);
           const slots = buckets.get(bucket);
           if (slots) {
             slots.push(slot);
@@ -361,13 +358,36 @@ export class AdService {
   public refreshBucket(
     bucket: string,
     config: MoliConfig,
-    runtimeConfig: MoliRuntime.MoliRuntimeConfig
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+    options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
-    const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlotsInBucket = manualSlots.filter(slot => slot.behaviour.bucket === bucket);
+    const device = getDeviceLabel(
+      this.window,
+      runtimeConfig,
+      config.labelSizeConfig,
+      config.targeting
+    );
+    const { loaded } = { ...{ loaded: 'manual' }, ...options };
+
+    const availableSlotsInBucket = config.slots
+      .filter(this.isSlotAvailable)
+      .filter(slot => {
+        const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
+        return (
+          slotBucket === bucket &&
+          (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+        );
+      })
+      // if sizesOverride is provided, override the sizes of the slots
+      .map(slot => (options?.sizesOverride ? { ...slot, sizes: options.sizesOverride } : slot));
+
+    if (availableSlotsInBucket.length === 0) {
+      this.logger.warn('AdService', 'No slots found in bucket', bucket);
+      return Promise.resolve();
+    }
 
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
     return this.adPipeline.run(
@@ -405,10 +425,25 @@ export class AdService {
   private isSlotAvailable = (slot: AdSlot): boolean => {
     return (
       !!this.window.document.getElementById(slot.domId) ||
+      // this is a custom position defined by the ad tag library. A temporary div is created
+      // if it does not exist to facilitate the prebid auction
+      slot.position === 'interstitial' ||
       // web interstitials and web anchors don't require a dom element
       slot.position === 'out-of-page-interstitial' ||
       slot.position === 'out-of-page-top-anchor' ||
       slot.position === 'out-of-page-bottom-anchor'
     );
+  };
+
+  private getBucketName = (bucket: bucket.AdSlotBucket | undefined, device: Device): string => {
+    // if no bucket is defined, return the default bucket
+    if (!bucket) {
+      return 'default';
+    }
+    // a single bucket for all devices
+    if (typeof bucket === 'string') {
+      return bucket;
+    }
+    return bucket[device] || 'default';
   };
 }

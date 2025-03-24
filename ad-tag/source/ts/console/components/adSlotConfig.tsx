@@ -6,7 +6,7 @@ import { SizeConfigDebug } from './sizeConfigDebug';
 import { Tag } from './tag';
 
 import { extractPrebidAdSlotConfigs } from '../util/prebid';
-import { AdSlot, googleAdManager, headerbidding } from '../../types/moliConfig';
+import { AdSlot, bucket, googleAdManager, headerbidding } from '../../types/moliConfig';
 import { LabelConfigService } from '../../ads/labelConfigService';
 import { SizeConfigService } from '../../ads/sizeConfigService';
 import { prebidjs } from '../../types/prebidjs';
@@ -75,6 +75,16 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
         return 'x';
       }
     }
+
+    const getBucketName = (bucket?: bucket.AdSlotBucket): string => {
+      if (!bucket) {
+        return 'default';
+      }
+      if (typeof bucket === 'string') {
+        return bucket;
+      }
+      return bucket[labelConfigService.getDeviceLabel()] ?? 'default';
+    };
 
     return (
       <div
@@ -154,9 +164,7 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             />
           )}
           {isConfiguredInfiniteSlot && (
-            <p>{`Found ${
-              window.document.querySelectorAll(slot.behaviour.selector).length
-            } slots with infinite selector ${slot.behaviour.selector}`}</p>
+            <p>Looking up infinite slots is currently not implemented</p>
           )}
         </div>
         {showGeneral && (
@@ -164,7 +172,9 @@ export class AdSlotConfig extends React.Component<IAdSlotConfigProps, IAdSlotCon
             <div className="MoliDebug-tagContainer">
               <Tag variant="green">{slot.position}</Tag>
               <Tag variant="yellow">{slot.behaviour.loaded}</Tag>
-              {slot.behaviour.bucket && <Tag variant="blue">{slot.behaviour.bucket}</Tag>}
+              {slot.behaviour.bucket && (
+                <Tag variant="blue">{getBucketName(slot.behaviour.bucket)}</Tag>
+              )}
             </div>
             <div className="MoliDebug-tagContainer">
               <span

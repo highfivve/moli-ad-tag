@@ -1,6 +1,9 @@
-export function isPlainObject(object: any): boolean {
-  return toString.call(object) === '[object Object]';
-}
+/**
+ * Check if the value is a real object and not an array or null.
+ * @param value - The value to check.
+ */
+export const isPlainObject = (value: any): value is object =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
 
 /**
  * Merges objects and arrays.

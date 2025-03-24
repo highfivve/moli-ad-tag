@@ -2,22 +2,9 @@ import { expect } from 'chai';
 import Sinon, { SinonSandbox } from 'sinon';
 import { BiddersDisabling } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
-import BidderCode = prebidjs.BidderCode;
 import { createDom } from '../../stubs/browserEnvSetup';
 
-type BidType = {
-  bidder: BidderCode;
-  adUnitCode: string;
-};
-
-type AuctionType = {
-  bidderRequests: {
-    bids: BidType[];
-  }[];
-  bidsReceived: { bidderCode: BidderCode; adUnitCode: string }[];
-};
-
-const auction1: AuctionType = {
+const auction1 = {
   bidderRequests: [
     {
       bids: [
@@ -27,9 +14,9 @@ const auction1: AuctionType = {
     }
   ],
   bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
-};
+} as prebidjs.event.AuctionObject;
 
-const auction2: AuctionType = {
+const auction2 = {
   bidderRequests: [
     {
       bids: [
@@ -39,9 +26,9 @@ const auction2: AuctionType = {
     }
   ],
   bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
-};
+} as prebidjs.event.AuctionObject;
 
-const auction3: AuctionType = {
+const auction3 = {
   bidderRequests: [
     {
       bids: [
@@ -57,7 +44,7 @@ const auction3: AuctionType = {
     { bidderCode: 'gumgum', adUnitCode: 'position1' },
     { bidderCode: 'seedtag', adUnitCode: 'position1' }
   ]
-};
+} as prebidjs.event.AuctionObject;
 
 describe('BiddersDisabling', () => {
   const dom = createDom();

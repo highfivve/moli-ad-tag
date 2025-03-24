@@ -45,10 +45,6 @@
           },
           "type": "array"
         },
-        "passbackSupport": {
-          "description": "If true this ad slot will be refreshed if a window.postMessage event is being sent from a creative identifying the ad slot by domId. In additional key value `passback:true` will be set indicating this is a passback request. The rest of the key-values will be untouched keeping the prebid / a9 auction key-values.\n\n\n## Example creative snippet\n\nThis is an example of how a passback function could look like in a creative. Note that you can either use the `adUnitPath` or the `domId` of the slot.\n\n`adUnitPath` is not yet fully supported, when using variables in the ad unit path.\n\n``` var passbackCallback = function() {   var request = JSON.stringify({     type: 'passback',     adUnitPath: '%%ADUNIT%%' ,     passbackOrigin: '[ADVERTISER-NAME]'   });   try {     // first try to post a message on the top most window     window.top.postMessage(request, '*');   } catch (_) {     // best-effort postMessage     window.postMessage(request, '*');   } } ```\n\nDefault is `false`",
-          "type": "boolean"
-        },
         "position": {
           "$ref": "#/definitions/gpt.Position",
           "description": "the position of the ad slot"
@@ -216,6 +212,10 @@
         "adServer": {
           "$ref": "#/definitions/AdServer",
           "description": "default is `gam`"
+        },
+        "bridge": {
+          "$ref": "#/definitions/bridge.BridgeConfig",
+          "description": "## Bridge Configuration\n\nThe ad tag supports a postMessage protocol to communicate with other javascript inside an iframe.\n\nThe most common use case, is to trigger ads from within a creative that is served in an iframe, e.g. for backfill implementations or \"post-bid\".\n\nIf enabled and configured a listener will be attached to the current `window` object that listens for messages."
         },
         "buckets": {
           "$ref": "#/definitions/bucket.GlobalBucketConfig",
@@ -475,6 +475,20 @@
         "domId": {
           "description": "domId of the slot that should receive the capping",
           "type": "string"
+        },
+        "events": {
+          "default": [
+            "bidWon"
+          ],
+          "description": "Optional list of events that should trigger the frequency capping. The main use case is to reduce requests for high impact formats like wallpaper or interstitials.\n\nThe default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won. For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial, the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other. This can happen if the first page view is a google web interstitial, because the visx interstitial was requested, but no bid came back and the second page view display the google interstitial, while a visx interstitial is requested directly after the google interstitial is closed.",
+          "items": {
+            "enum": [
+              "bidWon",
+              "bidRequested"
+            ],
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -496,6 +510,11 @@
         },
         "enabled": {
           "description": "enable or disable this feature",
+          "type": "boolean"
+        },
+        "persistent": {
+          "default": false,
+          "description": "If frequency capping state should be persisted into session storage.\n\nThis is necessary for SSR pages, but should be disabled for SPA pages as no real page reload is happening there.",
           "type": "boolean"
         }
       },
@@ -545,8 +564,8 @@
       "description": "This loading behaviour describes slots that are loaded through a backfill integration. A backfill slot is never loaded by default and needs to be refreshed manually along with the backfill option set. This is neccessary to differentiate between slots that are loaded manually and slots that are loaded through a backfill integration.",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "backfill",
@@ -563,8 +582,8 @@
       "description": "An ad slot which is requested during page load. This is the standard behaviour.",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "eager",
@@ -581,20 +600,20 @@
       "description": "The one infinite ad slot whose configuration will be copied if the `moli.refreshInfiniteAdSlot` API is triggered.\n\nThis is mainly the case in combination with the lazy-loading module which needs a CSS selector to identify the ad slots that should be lazily loaded PLUS get an automatic sequential numbering.\n\nTherefore, the `selector` configured here needs to be used in the lazy-loading module configuration. The module looks for fitting HTML elements in the whole document of the browser window and refreshes them lazily using the configuration of the 'infinite' slot.\n\nAlso, it manages the moli debugger's display of how many infinite slots with the given selector are rendered at the moment.\n\nValid examples (every CSS selector can be used):\n\n```js {   loaded: 'infinite',   selector: '.ad-infinite' } ``` or\n\n```js {   loaded: 'infinite',   selector: '[data-js=\"ad-infinite\"]' } ````",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "infinite",
           "type": "string"
         },
         "selector": {
+          "deprecated": "The selector is configured in the lazy loading module configuration.",
           "type": "string"
         }
       },
       "required": [
-        "loaded",
-        "selector"
+        "loaded"
       ],
       "type": "object"
     },
@@ -603,8 +622,8 @@
       "description": "An ad slot which must be triggered via the `moli.refreshAdSlot` API.",
       "properties": {
         "bucket": {
-          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets.",
-          "type": "string"
+          "$ref": "#/definitions/bucket.AdSlotBucket",
+          "description": "Defines a bucket in which this slot should be loaded. This allows to publishers to configured a set of ad slots that should run in a separate auction. This can have positive revenue impacts on some prebid partners that bid poorly if too many placements are requested at once.\n\nEven though this property is available on all loading behaviours only `eager` have an effect as these are loaded immediately.\n\nAll lazy slots are loaded in a separate auction anyway.\n\nFor slots with a `manual` loading behaviour it's the publishers responsibility to load those in the proper buckets. The easiest way is to use the `moli.refreshBucket` API.\n\n## Device specific buckets\n\nInstead of a single bucket name, it's possible to configure different buckets for desktop and mobile. This is especially useful for certain ad slots that always need to be requested together for roadblocking, such as wallpaper/skin ads, interstitials, or other high-impact formats."
         },
         "loaded": {
           "const": "manual",
@@ -632,6 +651,45 @@
         }
       ],
       "description": "all available slot loading behaviours."
+    },
+    "bridge.BridgeConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "If enabled, the implementation will be activated to handle postMessage events from creatives or other systems to refresh ad slots.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "bucket.AdSlotBucket": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "android": {
+              "type": "string"
+            },
+            "desktop": {
+              "type": "string"
+            },
+            "ios": {
+              "type": "string"
+            },
+            "mobile": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      ],
+      "description": "The bucket name for an ad slot. Can be a string (just the name of the bucket) or an object that can contain buckets for each device type."
     },
     "bucket.BucketConfig": {
       "additionalProperties": false,
@@ -851,9 +909,10 @@
       "type": "object"
     },
     "gpt.Position": {
-      "description": "Configure the ad slot position\n\n- `in-page` is the standard display ad\n- `out-of-page` uses the `defineOutOfPageSlot` API\n- `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`\n- `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`\n- `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`",
+      "description": "Configure the ad slot position\n\n- `in-page` is the standard display ad\n- 'interstitial' combines the out-of-page-interstitial with prebid demand. It's a custom extension.\n- `out-of-page` uses the `defineOutOfPageSlot` API\n- `out-of-page-interstitial` - `googletag.enums.OutOfPageFormat.INTERSTITIAL`\n- `out-of-page-top-anchor` - `googletag.enums.OutOfPageFormat.TOP_ANCHOR`\n- `out-of-page-bottom-anchor` - `googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR`",
       "enum": [
         "in-page",
+        "interstitial",
         "out-of-page",
         "out-of-page-interstitial",
         "out-of-page-top-anchor",
@@ -919,7 +978,7 @@
         },
         "schainNode": {
           "$ref": "#/definitions/SupplyChainObject.ISupplyChainNode",
-          "description": "Supply Chain Object for Amazon TAM"
+          "description": "Supply Chain Object for Amazon TAM\n\nRecently Amazon TAM asked partners to remove the Amazon TAM specific node as it is not required anymore."
         },
         "scriptUrl": {
           "description": "Defaults to //c.amazon-adsystem.com/aax2/apstag.js",
@@ -944,8 +1003,7 @@
       "required": [
         "pubID",
         "timeout",
-        "cmpTimeout",
-        "schainNode"
+        "cmpTimeout"
       ],
       "type": "object"
     },
@@ -1410,6 +1468,10 @@
         "userActivityLevelControl": {
           "$ref": "#/definitions/modules.adreload.UserActivityLevelControl",
           "description": "Configure what defines a user as active / inactive."
+        },
+        "viewabilityOverrides": {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrides",
+          "description": "Overrides the default viewability measurement with a custom target DOM element.\n\nThis can be used to measure viewability of an ad slot that is not using the default ad slot div container, but creates a separate container on the page. This is the case for certain special ad formats like seedtag's or GumGum's inScreen, YOCs mystery scroller and similar mobile sticky formats.\n\nIt can also be used to measure viewability for ad skin formats to apply ad reload accordingly."
         }
       },
       "required": [
@@ -1495,6 +1557,76 @@
         }
       ],
       "description": "Used to configure the strictness of user activity checks."
+    },
+    "modules.adreload.ViewabilityOverrideEntry": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntryCss"
+        },
+        {
+          "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntryDisabled"
+        }
+      ],
+      "description": "A set of different configuration options for a viewability override setting. Each entry is per position and can be used to override the default viewability behavior."
+    },
+    "modules.adreload.ViewabilityOverrideEntryCss": {
+      "additionalProperties": false,
+      "properties": {
+        "cssSelector": {
+          "description": "Used to select a single element to monitor for viewability",
+          "type": "string"
+        },
+        "variant": {
+          "const": "css",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant",
+        "cssSelector"
+      ],
+      "type": "object"
+    },
+    "modules.adreload.ViewabilityOverrideEntryDisabled": {
+      "additionalProperties": false,
+      "properties": {
+        "disableAllAdVisibilityChecks": {
+          "description": "Enable reloading ads that are not in viewport without any restrictions.\n\nIt is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible, and it's generally not very user-centric to load stuff that is out of viewport.\n\nSet this to false and provide additional configuration options to restrict the unconditional ad reload to certain advertisers.",
+          "type": "boolean"
+        },
+        "disabledAdVisibilityCheckAdvertiserIds": {
+          "description": "An optional list of advertisers that are allowed to be reloaded, but no additional ad visibility check is performed. This is necessary for special formats that may take a bit of time to render and the DOM elements are not yet ready, when the IntersectionObserver is about to be configured.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "variant": {
+          "const": "disabled",
+          "description": "Enable reloading ads that are not in viewport. It is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible, and it's generally not very user-centric to load stuff that is out of viewport.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant",
+        "disableAllAdVisibilityChecks"
+      ],
+      "type": "object"
+    },
+    "modules.adreload.ViewabilityOverrides": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/modules.adreload.ViewabilityOverrideEntry"
+          },
+          {
+            "not": {}
+          }
+        ],
+        "description": "Ad Slot DOM ID to viewability configuration"
+      },
+      "description": "Viewability is measured by gpt visibility events or a separate IntersectionObserver.\n\nThis configuration object allows to provide a CSS selector to check for visibility. If set and available in the DOM it will be used to check for visibility with an IntersectionObserver. Otherwise, the configured default behavior will be used.\n\nA record in this overrides object is a mapping of a slot's DOM id to the override configuration.",
+      "type": "object"
     },
     "modules.blocklist.Blocklist": {
       "additionalProperties": false,
@@ -2711,8 +2843,13 @@
     },
     "modules.utiq.UtiqConfigOptions": {
       "additionalProperties": false,
-      "description": "The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript object that can be set up before the Utiq loader script is loaded. The configuration object is available under the `Utiq.config` namespace.\n\nAll the configuration options below are optional and can be omitted if not needed.\n\n## Event Listeners\n\nUtiq made the design choice to add event listeners to the config object, which makes it impossible to configure them server side. If a publisher wants to add event listeners, they have to do it in the client side code and make sure that the ad tag or `requestAds` call is made after the event listener are added. Otherwise, the Utiq script might already be available and not pick the listeners up.\n\nWe merged the `Utiq.config\n\n## Customization Options\n\nThose will be merged top level with any existing `customizationOptions` options.",
+      "description": "The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript object that can be set up before the Utiq loader script is loaded. The configuration object is available under the `Utiq.config` namespace.\n\nAll the configuration options below are optional and can be omitted if not needed.\n\n## Event Listeners\n\nUtiq made the design choice to add event listeners to the config object, which makes it impossible to configure them server side. If a publisher wants to add event listeners, they have to do it in the client side code and make sure that the ad tag or `requestAds` call is made after the event listener are added. Otherwise, the Utiq script might already be available and not pick the listeners up.\n\nWe merged the `Utiq.config` object with thhe `options` provided by the module to allow publishers to add additional configuration options.\n\n## Customization Options\n\nThose will be merged top level with any existing `customizationOptions` options.",
       "properties": {
+        "CMP": {
+          "const": "none",
+          "description": "If you need not to show Utiq separate pop-up, you will need to add CMP: \"none\" in Utiq.config. Use cases would be not showing pop-up on Manage Utiq page, on Privacy Policy page and/or if you want to run an A/B testing.",
+          "type": "string"
+        },
         "consentManagerDataLayer": {
           "description": "When using the [Utiq Consent Manager](https://docs.utiq.com/docs/1b-consent-experience-utiq-separate-pop-up-model-u) you can enable event tracking for the pop-up actions by adding a consentManagerDataLayer configuration.",
           "type": "boolean"
@@ -2750,6 +2887,43 @@
               "type": "object"
             },
             "contentTextColor": {
+              "description": "Text color of the pop-up content. This should be a HEX color code, e.g. #000000.",
+              "type": "string"
+            },
+            "customizationOptions": {
+              "description": "## Configuration option for language\n\nYou can use the below configuration option if you need to dynamically change the default language of the text generated by the dynamic `<div>`, e.g. if users have a language drop-down option.",
+              "enum": [
+                "en",
+                "de",
+                "it",
+                "fr",
+                "es"
+              ],
+              "type": "string"
+            },
+            "domainListAnchorMargin": {
+              "description": "## Optimize auto-scroll margin to domain list paragraph\n\nUsers may land on Manage Utiq page from either the Integrated Model or Separate pop-up Model, with a relevant hyperlink, and they will be automatically scrolled to the domains list paragraph.\n\nIn case you have any overlaying top menu, remaining in view when users scroll lower, you can use the below configuration, to optimize the margin of the auto scroll, so that the paragraph title is visible.",
+              "type": "number"
+            },
+            "hyperlinks": {
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "description": "color hex code",
+                  "type": "string"
+                },
+                "colorOnHover": {
+                  "description": "color hex code",
+                  "type": "string"
+                },
+                "isUnderlined": {
+                  "default": "`false`",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "websiteLogoUrl": {
               "type": "string"
             }
           },
@@ -2758,6 +2932,20 @@
             "contentTextColor"
           ],
           "type": "object"
+        },
+        "integrations": {
+          "$ref": "#/definitions/modules.utiq.UtiqIntegrationOps",
+          "description": "You can configure Utiq SDK for various integration options with other marketing solutions."
+        }
+      },
+      "type": "object"
+    },
+    "modules.utiq.UtiqIntegrationOps": {
+      "additionalProperties": false,
+      "properties": {
+        "disableGoogleSecureSignals": {
+          "description": "Utiq SDK automatically sends adtechpass as Google Secure Signals to Google Ad Manager (GAM), firing the below code. From integration perspective you don’t have to do anything else.\n\nYour only pending action would be to enable the feature in Google Ad Manager UI.",
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -8161,7 +8349,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-191369-191372-248365657-191362-191372-248365657-191330-192158-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-193326-193329-248365657-193319-193329-248365657-193287-194115-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363%3E"
           },
           "type": "array"
         }
@@ -8171,7 +8359,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-190273-190443-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061149092559&alias-248365657-190443-190576-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-192230-192400-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631149092559&alias-248365657-192400-192533-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8181,7 +8369,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-190273-190443-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061149092559%26alias-248365657-190443-190576-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-192230-192400-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631149092559%26alias-248365657-192400-192533-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631210238678)%3E"
           },
           "type": "array"
         }
@@ -8191,7 +8379,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-189846-190032-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-20440698888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-191803-191989-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-20636398888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8201,7 +8389,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-189846-190032-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-20440698888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-191803-191989-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-20636398888365%3E"
           },
           "type": "array"
         }
@@ -8211,7 +8399,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8221,7 +8409,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090%3E"
           },
           "type": "array"
         }
@@ -8231,7 +8419,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-190273-190443-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061149092559&alias-248365657-190443-190576-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-192230-192400-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631149092559&alias-248365657-192400-192533-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8294,7 +8482,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-189846-190032-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-20440698888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-191803-191989-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-20636398888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8353,7 +8541,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8408,7 +8596,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-191369-191372-248365657-191362-191372-248365657-191330-192158-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-193326-193329-248365657-193319-193329-248365657-193287-194115-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8464,7 +8652,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-189846-190032-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-20440698888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-191803-191989-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-20636398888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -8476,7 +8664,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -8484,23 +8672,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-190273-190443-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061149092559%26alias-248365657-190443-190576-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-2044061210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-192230-192400-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631149092559%26alias-248365657-192400-192533-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-2063631210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-190032-190273-248365657-189265-195340-248365657-189150-195340-248365657-190-204405-248365657-163-204405-248365657-0-204406187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-191989-192230-248365657-191222-197297-248365657-191107-197297-248365657-190-206362-248365657-163-206362-248365657-0-206363187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -8955,22 +9143,22 @@
               ],
               "type": "number"
             },
-            "pubrender": {
-              "description": "Flag to indicate if the publisher will render the DSA Transparency info. This will signal if the publisher is able to and intends to render an icon or other appropriate user-facing symbol and display the DSA transparency info to the end user.\n\n0 = Publisher can't render 1 = Publisher could render depending on adrender 2 = Publisher will render",
-              "enum": [
-                0,
-                1,
-                2
-              ],
-              "type": "number"
-            },
-            "required": {
+            "dsarequired": {
               "description": "Flag to indicate if DSA information should be made available. This will signal if the bid request belongs to an Online Platform/VLOP, such that a buyer should respond with DSA Transparency information based on the pubrender value.\n\n0 = Not required 1 = Supported, bid responses with or without DSA object will be accepted 2 = Required, bid responses without DSA object will not be accepted 3 = Required, bid responses without DSA object will not be accepted, Publisher is an Online Platform",
               "enum": [
                 0,
                 1,
                 2,
                 3
+              ],
+              "type": "number"
+            },
+            "pubrender": {
+              "description": "Flag to indicate if the publisher will render the DSA Transparency info. This will signal if the publisher is able to and intends to render an icon or other appropriate user-facing symbol and display the DSA transparency info to the end user.\n\n0 = Publisher can't render 1 = Publisher could render depending on adrender 2 = Publisher will render",
+              "enum": [
+                0,
+                1,
+                2
               ],
               "type": "number"
             },
@@ -8983,17 +9171,13 @@
             }
           },
           "required": [
-            "required",
+            "dsarequired",
             "pubrender",
-            "datatopub",
-            "transparency"
+            "datatopub"
           ],
           "type": "object"
         }
       },
-      "required": [
-        "dsa"
-      ],
       "type": "object"
     },
     "prebidjs.firstpartydata.OpenRtb2RegsExtDsaTransparency": {
@@ -9214,6 +9398,63 @@
     "prebidjs.firstpartydata.PrebidFirstPartyData": {
       "additionalProperties": false,
       "properties": {
+        "ext": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "prebid": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "eidpermissions": {
+                          "description": "Publishers can constrain which bidders receive which user.ext.eids entries. See the [Prebid.js user ID permissions](https://docs.prebid.org/dev-docs/modules/userId.html#permissions) reference for background.",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "permissions": {
+                                "description": "Which bidders are allowed to receive the named eid source",
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "$ref": "#/definitions/prebidjs.BidderCode"
+                                    },
+                                    {
+                                      "const": "*",
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                "type": "array"
+                              },
+                              "source": {
+                                "$ref": "#/definitions/prebidjs.userSync.EIDSource",
+                                "description": "Which user.ext.eids.source is receiving the permissions, one entry per source is allowed"
+                              }
+                            },
+                            "required": [
+                              "source",
+                              "permissions"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            {}
+          ],
+          "description": "community extensions"
+        },
         "publisher": {
           "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Publisher"
         },
@@ -10379,7 +10620,9 @@
         "kpuid.com",
         "yahoo.com",
         "thenewco.it",
-        "pubcid.org"
+        "pubcid.org",
+        "utiq.com",
+        "utiq-mtp.com"
       ],
       "type": "string"
     },
@@ -11058,13 +11301,6 @@
     "prebidjs.userSync.IUtiqMtpIdProviderParams": {
       "additionalProperties": false,
       "properties": {
-        "bidders": {
-          "description": "You may like to consider limiting the SSPs that receive the martechpass by adding the bidders array, to make sure they are not forwarding this first party ID to DSPs. We are working with SSPs to exclude the above source from being sent to DSPs, please reach out to csm@utiq.com to verify which are these SSPs.",
-          "items": {
-            "$ref": "#/definitions/prebidjs.BidderCode"
-          },
-          "type": "array"
-        },
         "maxDelayTime": {
           "description": "Max amount of time (in seconds) before looking into storage for data",
           "type": "number"

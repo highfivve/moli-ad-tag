@@ -14,12 +14,11 @@ import {
 import * as stickyAdModule from './footerStickyAd';
 
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
-import { prebidjs } from 'ad-tag/types/prebidjs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { AdSlot, Device, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { StickyFooterAdsV2 } from 'ad-tag/ads/modules/sticky-footer-ad-v2/index';
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { initAdSticky } from './footerStickyAd';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
@@ -27,14 +26,12 @@ import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 use(sinonChai);
 
 const sandbox = Sinon.createSandbox();
-let dom = createDom();
-let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow = dom.window as any;
+let { jsDomWindow } = createDomAndWindow();
 
 const stickyAdSpy = sandbox.spy(stickyAdModule, 'initAdSticky');
 
 const setupDomAndServices = () => {
-  dom = createDom();
-  jsDomWindow = dom.window as any;
+  jsDomWindow = createDomAndWindow().jsDomWindow;
   jsDomWindow.googletag = createGoogletagStub();
 };
 
@@ -46,11 +43,11 @@ const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
   logger: noopLogger,
   config: config ?? emptyConfig,
   runtimeConfig: emptyRuntimeConfig,
-  window: jsDomWindow as any,
+  window: jsDomWindow,
   labelConfigService: null as any,
   tcData: fullConsent(),
   adUnitPathVariables: {},
-  auction: new GlobalAuctionContext(jsDomWindow as any),
+  auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
   assetLoaderService: createAssetLoaderService(jsDomWindow)
 });
 
@@ -150,7 +147,7 @@ describe('Sticky-footer-v2 Module', () => {
       const mobileGoogleAdSlot = googleAdSlotStub('/1/ad-mobile-sticky', 'ad-mobile-sticky');
       const desktopGoogleAdSlot = googleAdSlotStub('/1/ad-desktop-sticky', 'ad-desktop-sticky');
 
-      const { prepareSteps, config, module } = createInitializedModule(
+      const { prepareSteps, config } = createInitializedModule(
         {
           stickyFooterDomIds: { desktop: 'ad-desktop-sticky', mobile: 'ad-mobile-sticky' },
           disallowedAdvertiserIds: [111],
@@ -321,7 +318,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
       await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
@@ -364,7 +361,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
       await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 
@@ -388,7 +385,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
       await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [999], 'close');
 
@@ -405,7 +402,7 @@ describe('Sticky-footer-v2 Module', () => {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
-      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
       await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
 

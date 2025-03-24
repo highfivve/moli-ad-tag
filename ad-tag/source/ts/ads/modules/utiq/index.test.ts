@@ -2,9 +2,8 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createDom } from 'ad-tag/stubs/browserEnvSetup';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { modules } from 'ad-tag/types/moliConfig';
-import { googletag } from 'ad-tag/types/googletag';
 import { tcfapi } from 'ad-tag/types/tcfapi';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
@@ -19,8 +18,7 @@ use(sinonChai);
 
 describe('Utiq Module', () => {
   const sandbox = Sinon.createSandbox();
-  const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  const { jsDomWindow } = createDomAndWindow();
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
@@ -65,12 +63,12 @@ describe('Utiq Module', () => {
         logger: noopLogger,
         config: emptyConfig,
         runtimeConfig: emptyRuntimeConfig,
-        window: jsDomWindow as any,
+        window: jsDomWindow,
         // no service dependencies required
         labelConfigService: null as any,
         tcData: fullConsent({ 56: true }),
         adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow as any),
+        auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
         assetLoaderService: assetLoaderService
       };
     };
