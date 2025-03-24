@@ -9,6 +9,7 @@ import { getLogger } from '../util/logging';
 import { addNewInfiniteSlotToConfig } from '../util/addNewInfiniteSlotToConfig';
 import { IModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
+import { EventService } from './eventService';
 import {
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
@@ -28,7 +29,8 @@ import {
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
   const assetLoaderService = createAssetLoaderService(window);
-  const adService = new AdService(assetLoaderService, window);
+  const eventService = new EventService();
+  const adService = new AdService(assetLoaderService, eventService, window);
   const moliWindow = window as MoliRuntime.MoliWindow;
 
   /**
@@ -934,6 +936,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     getModuleMeta: getModuleMeta,
     getState: getState,
     openConsole: openConsole,
-    getAssetLoaderService: getAssetLoaderService
+    getAssetLoaderService: () => assetLoaderService,
+    addEventListener: eventService.addEventListener,
+    removeEventListener: eventService.removeEventListener
   };
 };

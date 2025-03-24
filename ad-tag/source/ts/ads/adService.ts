@@ -43,6 +43,7 @@ import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugD
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
 import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
+import { EventService } from 'ad-tag/ads/eventService';
 import { bridgeInitStep } from 'ad-tag/ads/bridge/bridge';
 
 /**
@@ -100,6 +101,7 @@ export class AdService {
    */
   constructor(
     private readonly assetService: IAssetLoaderService,
+    private readonly eventService: EventService,
     private readonly window: Window,
     private readonly adPipelineConfig?: IAdPipelineConfiguration
   ) {
@@ -235,6 +237,7 @@ export class AdService {
     this.requestAdsCalls = this.requestAdsCalls + 1;
     const { refreshSlots, refreshInfiniteSlots } = runtimeConfig;
     this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);
+    this.eventService.emit('beforeRequestAds', { runtimeConfig: runtimeConfig });
     try {
       const immediatelyLoadedSlots: AdSlot[] = config.slots
         .map(slot => {
@@ -292,10 +295,12 @@ export class AdService {
           runtimeConfig,
           this.requestAdsCalls
         );
+        this.eventService.emit('afterRequestAds', { state: 'finished' });
         return immediatelyLoadedSlots;
       }
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
+      this.eventService.emit('afterRequestAds', { state: 'error' });
       return Promise.reject(e);
     }
   };
