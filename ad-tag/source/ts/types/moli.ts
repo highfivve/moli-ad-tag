@@ -1347,6 +1347,50 @@ export namespace Moli {
       includedDomIds?: string[];
     }
 
+    /**
+     * How many requestAds calls are needed before the configured ad slot can be requested
+     */
+    export interface PositionFrequencyConfigDelay {
+      readonly minRequestAds: number;
+    }
+
+    /**
+     * how many impressions are allowed in the defined interval for the configured ad slot.
+     */
+    export interface PositionFrequencyConfigPacingInterval {
+      readonly maxImpressions: number;
+      readonly intervalInMs: number;
+    }
+
+    /**
+     *  how many requestAds call need to be between two winning impressions before the configured
+     *  ad slot can be requested again.
+     */
+    export interface PositionFrequencyConfigPacingRequestAds {
+      readonly requestAds: number;
+    }
+
+    /**
+     * A set of possible conditions that all need to be met before the ad slot can request ads.
+     */
+    export interface PositionFrequencyConfigConditions {
+      readonly delay?: PositionFrequencyConfigDelay;
+      readonly pacingInterval?: PositionFrequencyConfigPacingInterval;
+      readonly pacingRequestAds?: PositionFrequencyConfigPacingRequestAds;
+    }
+
+    export interface PositionFrequencyConfig {
+      /**
+       * references the ad slot that should be frequency capped
+       */
+      readonly domId: string;
+
+      /**
+       * all list of conditions that need to be met before the ad slot can request ads.
+       */
+      readonly conditions: PositionFrequencyConfigConditions;
+    }
+
     export interface BidderDisablingConfig {
       /** enable or disable this feature */
       readonly enabled: boolean;
@@ -1367,6 +1411,21 @@ export namespace Moli {
       readonly domId: string;
       /** milliseconds until a bidder can become active again  */
       readonly blockedForMs: number;
+
+      /**
+       * Optional list of events that should trigger the frequency capping.
+       * The main use case is to reduce requests for high impact formats like wallpaper or interstitials.
+       *
+       * The default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won.
+       * For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial,
+       * the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other.
+       * This can happen if the first page view is a google web interstitial, because the visx interstitial was requested,
+       * but no bid came back and the second page view display the google interstitial, while a visx interstitial is
+       * requested directly after the google interstitial is closed.
+       *
+       * @default ['bidWon']
+       */
+      readonly events?: Array<'bidWon' | 'bidRequested'>;
     }
 
     export interface FrequencyCappingConfig {
@@ -1374,6 +1433,24 @@ export namespace Moli {
       readonly enabled: boolean;
       /** capping configuration for bidders and positions */
       readonly configs: BidderFrequencyConfig[];
+
+      /**
+       * capping configuration for positions only.
+       *
+       * This mirrors general ad manager frequency capping and is useful for positions that have a
+       * high impact on the user experience and thus should be reduced in frequency.
+       */
+      readonly positions?: PositionFrequencyConfig[];
+
+      /**
+       * If frequency capping state should be persisted into session storage.
+       *
+       * This is necessary for SSR pages, but should be disabled for SPA pages as no real page reload
+       * is happening there.
+       *
+       * @default false
+       */
+      readonly persistent?: boolean;
     }
 
     export interface PreviousBidCpmsConfig {

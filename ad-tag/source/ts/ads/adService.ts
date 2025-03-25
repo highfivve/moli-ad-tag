@@ -53,6 +53,15 @@ import { getDeviceLabel } from './labelConfigService';
 import { EventService } from './eventService';
 
 /**
+ * All relevant information about the global window
+ */
+type AdServiceWindow = Window &
+  Moli.MoliWindow &
+  googletag.IGoogleTagWindow &
+  prebidjs.IPrebidjsWindow &
+  Pick<typeof globalThis, 'Date' | 'console'>;
+
+/**
  * @internal
  */
 export class AdService {
@@ -81,11 +90,9 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+    this.window as AdServiceWindow,
     noopReportingService,
-    new GlobalAuctionContext(
-      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-    )
+    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger(), this.eventService)
   );
 
   private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
@@ -112,11 +119,9 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+        window as AdServiceWindow,
         noopReportingService,
-        new GlobalAuctionContext(
-          window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow
-        )
+        new GlobalAuctionContext(window as AdServiceWindow, this.logger, this.eventService)
       );
     }
   }
@@ -235,7 +240,9 @@ export class AdService {
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
       reportingService,
       new GlobalAuctionContext(
-        this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
+        this.window as AdServiceWindow,
+        this.logger,
+        this.eventService,
         config.globalAuctionContext
       )
     );

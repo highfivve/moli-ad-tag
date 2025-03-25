@@ -5,6 +5,7 @@ import { BiddersDisabling } from './auctions/biddersDisabling';
 import { AdRequestThrottling } from './auctions/adRequestThrottling';
 import { FrequencyCapping } from './auctions/frequencyCapping';
 import { PreviousBidCpms } from './auctions/previousBidCpms';
+import { EventService } from './eventService';
 
 /**
  * ## Global Auction Context
@@ -28,7 +29,12 @@ export class GlobalAuctionContext {
   readonly previousBidCpms?: PreviousBidCpms;
 
   constructor(
-    private readonly window: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow,
+    private readonly window: Window &
+      prebidjs.IPrebidjsWindow &
+      googletag.IGoogleTagWindow &
+      Pick<typeof globalThis, 'Date'>,
+    private readonly logger: Moli.MoliLogger,
+    private readonly eventService: EventService,
     private readonly config: Moli.auction.GlobalAuctionContextConfig = {}
   ) {
     if (config.biddersDisabling?.enabled) {
@@ -40,7 +46,12 @@ export class GlobalAuctionContext {
     }
 
     if (config.frequencyCap?.enabled) {
-      this.frequencyCapping = new FrequencyCapping(config.frequencyCap, this.window);
+      this.frequencyCapping = new FrequencyCapping(
+        config.frequencyCap,
+        this.window,
+        this.window.Date.now,
+        this.logger
+      );
     }
 
     if (config.previousBidCpms?.enabled) {
@@ -79,14 +90,25 @@ export class GlobalAuctionContext {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('bidWon', bid => {
           if (this.config.frequencyCap) {
-            this.frequencyCapping?.onBidWon(bid, this.config.frequencyCap.configs);
+            this.frequencyCapping?.onBidWon(bid);
           }
         });
+      });
+
+      this.window.googletag.cmd.push(() => {
+        this.window.googletag.pubads().addEventListener('slotRenderEnded', event => {
+          this.frequencyCapping?.onSlotRenderEnded(event);
+        });
+      });
+
+      this.eventService.addEventListener('afterRequestAds', () => {
+        this.frequencyCapping?.afterRequestAds();
       });
     }
   }
 
   isSlotThrottled(slotId: string): boolean {
+    // TODO add pacing throttling
     return this.adRequestThrottling?.isThrottled(slotId) ?? false;
   }
 
