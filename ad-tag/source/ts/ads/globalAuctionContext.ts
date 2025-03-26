@@ -6,6 +6,8 @@ import { AdRequestThrottling } from './auctions/adRequestThrottling';
 import { FrequencyCapping } from './auctions/frequencyCapping';
 import { PreviousBidCpms } from './auctions/previousBidCpms';
 import { EventService } from './eventService';
+import { ConfigureStep, mkConfigureStep } from './adPipeline';
+import { AdUnitPathVariables } from './adUnitPath';
 
 /**
  * ## Global Auction Context
@@ -27,6 +29,19 @@ export class GlobalAuctionContext {
   readonly adRequestThrottling?: AdRequestThrottling;
   readonly frequencyCapping?: FrequencyCapping;
   readonly previousBidCpms?: PreviousBidCpms;
+
+  /**
+   * The ad unit path variables that are used to resolve the ad unit path.
+   * They are at least partially created at runtime, which is why they are a mutable field here and
+   * are updated during every configure ad pipeline run.
+   *
+   * This allows the global auction context to resolve ad unit paths if they contain variables.
+   * @private
+   */
+  #configureStep = mkConfigureStep('GlobalAuctionContext', context => {
+    this.frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables);
+    return Promise.resolve();
+  });
 
   constructor(
     private readonly window: Window &
@@ -107,9 +122,16 @@ export class GlobalAuctionContext {
     }
   }
 
-  isSlotThrottled(slotId: string): boolean {
-    // TODO add pacing throttling
-    return this.adRequestThrottling?.isThrottled(slotId) ?? false;
+  /**
+   *
+   * @param slotId
+   * @param adUnitPath received from a google slot via getAdUnitPath(), thus fully resolved
+   */
+  isSlotThrottled(slotId: string, adUnitPath: string): boolean {
+    return !!(
+      this.adRequestThrottling?.isThrottled(slotId) ||
+      this.frequencyCapping?.isAdUnitCapped(adUnitPath)
+    );
   }
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
@@ -118,6 +140,10 @@ export class GlobalAuctionContext {
 
   getLastBidCpmsOfAdUnit(slotId: string): number[] {
     return this.previousBidCpms?.getLastBidCpms(slotId) ?? [];
+  }
+
+  configureStep(): ConfigureStep {
+    return this.#configureStep;
   }
 
   private handleAuctionEndEvent(auction: any) {

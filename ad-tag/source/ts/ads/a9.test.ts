@@ -29,6 +29,7 @@ import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { EventService } from './eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -43,7 +44,8 @@ describe('a9', () => {
     googletag.IGoogleTagWindow &
     apstag.WindowA9 &
     prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow = dom.window as any;
+    tcfapi.TCFApiWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
   const adPipelineContext = (
     env: Moli.Environment = 'production',
     config: Moli.MoliConfig = emptyConfig,
@@ -60,7 +62,7 @@ describe('a9', () => {
       reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
@@ -369,8 +371,8 @@ describe('a9', () => {
       const slot2 = createSlotDefinitions(domId2, {});
 
       const isThrottled = sandbox.stub(contextWithConsent.auction, 'isSlotThrottled');
-      isThrottled.withArgs(domId1).returns(false);
-      isThrottled.withArgs(domId2).returns(true);
+      isThrottled.withArgs(domId1, slot1.adSlot.getAdUnitPath()).returns(false);
+      isThrottled.withArgs(domId2, slot2.adSlot.getAdUnitPath()).returns(true);
 
       await step(contextWithConsent, [slot1, slot2]);
       expect(addAdUnitsSpy).to.have.been.calledOnce;

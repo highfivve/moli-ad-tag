@@ -26,6 +26,7 @@ import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { createAssetLoaderService } from '../util/assetLoaderService';
+import { EventService } from './eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -36,8 +37,10 @@ describe('prebid', () => {
   const sandbox = Sinon.createSandbox();
 
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
 
@@ -57,7 +60,7 @@ describe('prebid', () => {
       reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, {
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService(), {
         biddersDisabling: {
           enabled: true,
           minRate: 0.2,
@@ -988,7 +991,7 @@ describe('prebid', () => {
       const slot = createAdSlot('none-prebid');
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
-      isThrottledStub.withArgs(slot.domId).returns(true);
+      isThrottledStub.withArgs(slot.domId, slot.adUnitPath).returns(true);
 
       await step(ctx, [
         {
@@ -1025,8 +1028,8 @@ describe('prebid', () => {
 
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
-      isThrottledStub.withArgs(domId1).returns(false);
-      isThrottledStub.withArgs(domId2).returns(true);
+      isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
+      isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);
       expect(requestBidsSpy).to.have.been.calledOnce;
@@ -1075,8 +1078,8 @@ describe('prebid', () => {
 
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
-      isThrottledStub.withArgs(domId1).returns(false);
-      isThrottledStub.withArgs(domId2).returns(true);
+      isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
+      isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);
       expect(requestBidsSpy).to.have.been.calledOnce;

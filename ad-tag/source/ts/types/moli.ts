@@ -1381,9 +1381,12 @@ export namespace Moli {
 
     export interface PositionFrequencyConfig {
       /**
-       * references the ad slot that should be frequency capped
+       * references the ad slot that should be frequency capped.
+       *
+       * The `domId` or `adUnitCode` doesn't work for all possible use cases, as the interstitial
+       * and other out-of-page formats have an auto-generated domId at runtime by gpt.js
        */
-      readonly domId: string;
+      readonly adUnitPath: string;
 
       /**
        * all list of conditions that need to be met before the ad slot can request ads.

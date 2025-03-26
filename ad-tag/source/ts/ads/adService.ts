@@ -212,6 +212,15 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
+    // create global auction context and add it to the pipeline
+    const globalAuctionContext = new GlobalAuctionContext(
+      this.window as AdServiceWindow,
+      this.logger,
+      this.eventService,
+      config.globalAuctionContext
+    );
+    configure.push(globalAuctionContext.configureStep());
+
     // add additional steps if configured
     if (config.pipeline) {
       init.push(...config.pipeline.initSteps);
@@ -239,12 +248,7 @@ export class AdService {
       this.logger,
       this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
       reportingService,
-      new GlobalAuctionContext(
-        this.window as AdServiceWindow,
-        this.logger,
-        this.eventService,
-        config.globalAuctionContext
-      )
+      globalAuctionContext
     );
 
     return new Promise<Readonly<Moli.MoliConfig>>(resolve => {
