@@ -411,7 +411,8 @@ export const gptRequestAds =
           break;
         case 'production':
           const slotsToRefresh = slots.filter(
-            ({ moliSlot }) => !context.auction.isSlotThrottled(moliSlot.domId)
+            ({ moliSlot, adSlot }) =>
+              !context.auction.isSlotThrottled(moliSlot.domId, adSlot.getAdUnitPath())
           );
           if (slotsToRefresh.length === 0) {
             break;

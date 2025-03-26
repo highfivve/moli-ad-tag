@@ -4,6 +4,7 @@ import { prebidjs } from '../../types/prebidjs';
 import BidderCode = prebidjs.BidderCode;
 import { NowInstant, remainingTime, ResumeCallbackData } from './resume';
 import { googletag } from '../../types/googletag';
+import { AdUnitPathVariables, resolveAdUnitPath } from '../adUnitPath';
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
@@ -29,7 +30,7 @@ export type PersistedFrequencyCappingState = {
   /**
    * The active position impression schedules
    */
-  readonly pCaps: { [domId: string]: FrequencyCappingPositionImpSchedules | undefined };
+  readonly pCaps: { [adUnitPath: string]: FrequencyCappingPositionImpSchedules | undefined };
 
   /**
    * number of requestAds made so far
@@ -58,6 +59,7 @@ export class FrequencyCapping {
 
   private bidWonConfigs: auction.BidderFrequencyConfig[];
   private bidRequestedConfigs: auction.BidderFrequencyConfig[];
+  private resolvedAdUnitPathPositionConfigs: auction.PositionFrequencyConfig[];
 
   /**
    * Number of ad requests made so far
@@ -77,6 +79,8 @@ export class FrequencyCapping {
     this.bidRequestedConfigs = this.config.configs.filter(config =>
       config.events?.includes('bidRequested')
     );
+
+    this.resolvedAdUnitPathPositionConfigs = this.config.positions || [];
 
     if (config.persistent === true) {
       const storedData = this._window.sessionStorage.getItem(sessionStorageKey);
@@ -100,11 +104,11 @@ export class FrequencyCapping {
             );
           });
           // reschedule frequency caps
-          Object.entries(parsedData.pCaps).forEach(([domId, schedules]) => {
+          Object.entries(parsedData.pCaps).forEach(([adUnitPath, schedules]) => {
             schedules?.forEach(schedule => {
               const blockedForMs = remainingTime(schedule, this.now());
               // the start timestamp and waiting interval is taken from the stored data
-              this.#capPosition(schedule.ts, domId, { intervalInMs: blockedForMs });
+              this.#capPosition(schedule.ts, adUnitPath, { intervalInMs: blockedForMs });
             });
           });
         } catch (e) {
@@ -132,13 +136,16 @@ export class FrequencyCapping {
 
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent) {
     if (!event.isEmpty) {
-      const slotId = event.slot.getSlotElementId();
+      // FIXME for the google web interstitial, the slot id is not the same as the ad unit code
+      //       it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
+      const adUnitPath = event.slot.getAdUnitPath();
       // 1. search if there's a pacing:interval config
-      const pacingInterval = this.config.positions?.find(config => config.domId === slotId)
-        ?.conditions.pacingInterval;
+      const pacingInterval = this.resolvedAdUnitPathPositionConfigs.find(
+        config => config.adUnitPath === adUnitPath
+      )?.conditions.pacingInterval;
       if (pacingInterval) {
         // 2. store the timestamp of the last impression as a schedule for persistence
-        this.#capPosition(this.now(), slotId, pacingInterval);
+        this.#capPosition(this.now(), adUnitPath, pacingInterval);
       }
       // the frequency capping check just needs to check if the impression count prohibits a new request
     }
@@ -149,10 +156,21 @@ export class FrequencyCapping {
     this.#persist();
   }
 
-  isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
-    const isPositionCapped = this.config.positions?.some(positionConfig => {
+  /**
+   * Updates all internal configurations that have ad unit paths with variables.
+   * Should be called during every configure run
+   * @param adUnitPathVariables
+   */
+  updateAdUnitPaths(adUnitPathVariables: AdUnitPathVariables) {
+    this.resolvedAdUnitPathPositionConfigs = (this.config.positions ?? []).map(config => {
+      return { ...config, adUnitPath: resolveAdUnitPath(config.adUnitPath, adUnitPathVariables) };
+    });
+  }
+
+  isAdUnitCapped(adUnitPath: string): boolean {
+    return this.resolvedAdUnitPathPositionConfigs.some(positionConfig => {
       return (
-        (positionConfig.domId === slotId &&
+        (positionConfig.adUnitPath === adUnitPath &&
           // cap if minRequestAds is not reached yet
           positionConfig.conditions.delay &&
           this.numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
@@ -161,11 +179,14 @@ export class FrequencyCapping {
           this.numAdRequests % positionConfig.conditions.pacingRequestAds.requestAds !== 0) ||
         // cap if the maxImpressions is reached in the current window
         (positionConfig.conditions.pacingInterval &&
-          (this.positionImpSchedules.get(slotId) ?? []).length >=
+          (this.positionImpSchedules.get(adUnitPath) ?? []).length >=
             positionConfig.conditions.pacingInterval.maxImpressions)
       );
     });
-    return isPositionCapped || this.frequencyCaps.has(`${slotId}:${bidder}`);
+  }
+
+  isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
+    return this.frequencyCaps.has(`${slotId}:${bidder}`);
   }
 
   /**
@@ -200,20 +221,20 @@ export class FrequencyCapping {
 
   #capPosition(
     startTimestamp: number,
-    slotId: string,
+    adUnitPath: string,
     pacingInterval: Pick<auction.PositionFrequencyConfigPacingInterval, 'intervalInMs'>
   ) {
     // 1. search if there's a pacing:interval config
     // 2. store the timestamp of the last impression as a schedule for persistence
-    const currentSchedules = this.positionImpSchedules.get(slotId) ?? [];
+    const currentSchedules = this.positionImpSchedules.get(adUnitPath) ?? [];
     currentSchedules.push({ ts: startTimestamp, wait: pacingInterval.intervalInMs });
-    this.positionImpSchedules.set(slotId, currentSchedules);
+    this.positionImpSchedules.set(adUnitPath, currentSchedules);
     // 3. schedule a callback to decrease the impression counter by 1
     this._window.setTimeout(() => {
-      const schedules = this.positionImpSchedules.get(slotId);
+      const schedules = this.positionImpSchedules.get(adUnitPath);
       if (schedules) {
         this.positionImpSchedules.set(
-          slotId,
+          adUnitPath,
           schedules.filter(s => s.ts !== startTimestamp)
         );
       }
@@ -229,7 +250,7 @@ export class FrequencyCapping {
         caps: Array.from(this.frequencyCaps.values()),
         pCaps: Array.from(this.positionImpSchedules.entries()).reduce<
           PersistedFrequencyCappingState['pCaps']
-        >((acc, [domId, schedules]) => ({ ...acc, [domId]: schedules }), {}),
+        >((acc, [adUnitPath, schedules]) => ({ ...acc, [adUnitPath]: schedules }), {}),
         requestAds: this.numAdRequests
       };
       this._window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));

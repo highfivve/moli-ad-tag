@@ -26,6 +26,7 @@ import MoliConfig = Moli.MoliConfig;
 import SlotDefinition = Moli.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { GlobalAuctionContext } from './globalAuctionContext';
+import { EventService } from './eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -51,8 +52,10 @@ describe('AdPipeline', () => {
   };
 
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
@@ -66,7 +69,7 @@ describe('AdPipeline', () => {
       noopLogger,
       jsDomWindow,
       reportingService,
-      new GlobalAuctionContext(jsDomWindow)
+      new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     );
   };
 
@@ -87,7 +90,7 @@ describe('AdPipeline', () => {
       reportingService: noopReportingService,
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
