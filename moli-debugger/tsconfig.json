@@ -3,6 +3,6 @@
   "compilerOptions": {
     "composite": false,
     "declaration": false,
-    "target": "ES5"
+    "target": "ES2015"
   }
 }
