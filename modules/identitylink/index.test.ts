@@ -10,9 +10,10 @@ import { ATS } from './types/identitylink';
 
 import { IdentityLink } from './index';
 import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { AdPipelineContext } from '@highfivve/ad-tag';
+import { AdPipelineContext, googletag, prebidjs } from '@highfivve/ad-tag';
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -20,7 +21,11 @@ use(sinonChai);
 describe('IdentityLink Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: ATS.ATSWindow = dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    ATS.ATSWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
   const envelopeModuleSetAdditionalDataStub = sandbox.stub();
   const addEventListerSpy = sandbox.spy(jsDomWindow, 'addEventListener');
 
@@ -85,7 +90,7 @@ describe('IdentityLink Module', () => {
         reportingService: null as any,
         tcData: fullConsent({ 97: true }),
         adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow as any)
+        auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
       };
     };
 

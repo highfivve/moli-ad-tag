@@ -7,8 +7,15 @@ import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/s
 import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 
 import { Pubstack } from './index';
-import { AdPipelineContext, AssetLoadMethod, createAssetLoaderService } from '@highfivve/ad-tag';
+import {
+  AdPipelineContext,
+  AssetLoadMethod,
+  createAssetLoaderService,
+  googletag,
+  prebidjs
+} from '@highfivve/ad-tag';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -16,7 +23,10 @@ use(sinonChai);
 describe('Pubstack Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: Window = dom.window as any;
+  const jsDomWindow: Window &
+    prebidjs.IPrebidjsWindow &
+    googletag.IGoogleTagWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const googletagStub = createGoogletagStub();
   const setTargetingSpy = sandbox.spy(googletagStub.pubads(), 'setTargeting');
@@ -39,7 +49,7 @@ describe('Pubstack Module', () => {
       reportingService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 

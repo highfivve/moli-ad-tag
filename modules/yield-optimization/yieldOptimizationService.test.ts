@@ -17,14 +17,17 @@ import { googletag } from '@highfivve/ad-tag/lib/types/googletag';
 import { Moli } from '@highfivve/ad-tag/lib/types/moli';
 import { prebidjs } from '@highfivve/ad-tag/lib/types/prebidjs';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
 
 describe('YieldOptimizationService', () => {
   const dom = createDom();
-  const domWindow: Window & prebidjs.IPrebidjsWindow & googletag.IGoogleTagWindow =
-    dom.window as any;
+  const domWindow: Window &
+    prebidjs.IPrebidjsWindow &
+    googletag.IGoogleTagWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
   domWindow.fetch = () => {
     return Promise.reject('not implemented');
   };
@@ -329,7 +332,12 @@ describe('YieldOptimizationService', () => {
               enabled: true
             }
           };
-          globalAuctionContext = new GlobalAuctionContext(domWindow, config);
+          globalAuctionContext = new GlobalAuctionContext(
+            domWindow,
+            noopLogger,
+            new EventService(),
+            config
+          );
           getLastBidCpmsOfAdUnitStub = sandbox.stub(globalAuctionContext, 'getLastBidCpmsOfAdUnit');
         });
 

@@ -19,6 +19,7 @@ import {
 import Device = Moli.Device;
 import { StickyHeaderAds } from './index';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -26,8 +27,10 @@ use(sinonChai);
 describe('sticky header ad module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const reportingService = reportingServiceStub();
 
@@ -52,7 +55,7 @@ describe('sticky header ad module', () => {
       reportingService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
@@ -114,7 +117,7 @@ describe('sticky header ad module', () => {
       noopLogger,
       jsDomWindow,
       reportingService,
-      new GlobalAuctionContext(jsDomWindow)
+      new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     );
 
     return { moliConfig, adPipeline };

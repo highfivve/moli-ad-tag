@@ -22,14 +22,17 @@ import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 import { AdReload } from './index';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 use(sinonChai);
 
 describe('Moli Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
@@ -54,7 +57,7 @@ describe('Moli Ad Reload Module', () => {
       reportingService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
@@ -111,7 +114,7 @@ describe('Moli Ad Reload Module', () => {
       noopLogger,
       jsDomWindow,
       reportingService,
-      new GlobalAuctionContext(jsDomWindow)
+      new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);

@@ -18,6 +18,7 @@ import { noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import { fullConsent } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -26,8 +27,10 @@ use(chaiAsPromised);
 describe('Zeotap Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  const jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
@@ -51,7 +54,7 @@ describe('Zeotap Module', () => {
       reportingService: null as any,
       tcData: fullConsent({ 301: true }),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 

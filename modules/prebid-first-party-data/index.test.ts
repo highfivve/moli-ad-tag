@@ -24,6 +24,7 @@ import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -31,8 +32,10 @@ use(chaiAsPromised);
 describe('Prebid First Party Data Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow =
-    dom.window as any;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
@@ -57,7 +60,7 @@ describe('Prebid First Party Data Module', () => {
       reportingService,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
@@ -112,7 +115,7 @@ describe('Prebid First Party Data Module', () => {
       noopLogger,
       jsDomWindow,
       reportingService,
-      new GlobalAuctionContext(jsDomWindow)
+      new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);

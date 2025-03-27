@@ -26,6 +26,7 @@ import { AdexAppConfig, AdexModule, ITheAdexWindow } from './index';
 import TCData = tcfapi.responses.TCData;
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -33,8 +34,11 @@ use(chaiAsPromised);
 describe('The Adex DMP Module', () => {
   const sandbox = Sinon.createSandbox();
   let dom = createDom();
-  let jsDomWindow: Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow & ITheAdexWindow =
-    dom.window as any;
+  let jsDomWindow: Window &
+    googletag.IGoogleTagWindow &
+    prebidjs.IPrebidjsWindow &
+    ITheAdexWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const reportingService = reportingServiceStub();
@@ -59,7 +63,7 @@ describe('The Adex DMP Module', () => {
       reportingService: null as any,
       tcData: tcData ?? fullConsent({ '44': true }),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
@@ -117,7 +121,7 @@ describe('The Adex DMP Module', () => {
       noopLogger,
       jsDomWindow,
       reportingService,
-      new GlobalAuctionContext(jsDomWindow)
+      new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     );
 
     module.init(moliConfig, assetLoaderService, () => adPipeline);

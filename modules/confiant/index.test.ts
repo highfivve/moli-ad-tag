@@ -9,10 +9,12 @@ import {
   AdPipelineContext,
   AssetLoadMethod,
   createAssetLoaderService,
-  googletag
+  googletag,
+  prebidjs
 } from '@highfivve/ad-tag';
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -20,7 +22,10 @@ use(sinonChai);
 describe('Confiant Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: Window & googletag.IGoogleTagWindow = dom.window as any;
+  const jsDomWindow: Window &
+    prebidjs.IPrebidjsWindow &
+    googletag.IGoogleTagWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
@@ -65,7 +70,7 @@ describe('Confiant Module', () => {
         reportingService: null as any,
         tcData: fullConsent({ 56: true }),
         adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow as any)
+        auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
       };
     };
 

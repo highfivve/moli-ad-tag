@@ -15,13 +15,14 @@ import {
   EmetriqWebConfig
 } from './index';
 import { emptyConfig, newEmptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { AdPipelineContext, prebidjs } from '@highfivve/ad-tag';
+import { AdPipelineContext, googletag, prebidjs } from '@highfivve/ad-tag';
 import { fullConsent, tcDataNoGdpr } from '@highfivve/ad-tag/lib/stubs/consentStubs';
 import { EmetriqWindow } from './types/emetriq';
 import { trackInApp } from './trackInApp';
 import { createPbjsStub } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { shouldTrackLoginEvent, trackLoginEvent } from './trackLoginEvent';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
+import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -29,7 +30,10 @@ use(sinonChai);
 describe('Emetriq Module', () => {
   const sandbox = Sinon.createSandbox();
   const dom = createDom();
-  const jsDomWindow: EmetriqWindow & prebidjs.IPrebidjsWindow = dom.window as any;
+  const jsDomWindow: EmetriqWindow &
+    prebidjs.IPrebidjsWindow &
+    googletag.IGoogleTagWindow &
+    Pick<typeof globalThis, 'Date'> = dom.window as any;
   const setTimeoutStub = sandbox.stub(jsDomWindow, 'setTimeout');
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
@@ -57,7 +61,7 @@ describe('Emetriq Module', () => {
       reportingService: null as any,
       tcData: tcDataWithConsent,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any)
+      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService())
     };
   };
 
