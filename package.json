@@ -30,5 +30,6 @@
   },
   "bin": {
     "moli-release": "moli-release/bin/moli-release"
-  }
+  },
+  "dependencies": {}
 }
