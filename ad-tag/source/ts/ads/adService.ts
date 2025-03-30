@@ -287,6 +287,7 @@ export class AdService {
               .then(() => bucketSlots);
           })
         );
+        this.eventService.emit('afterRequestAds', { state: 'finished' });
         return flatten(arr);
       } else {
         await this.adPipeline.run(
