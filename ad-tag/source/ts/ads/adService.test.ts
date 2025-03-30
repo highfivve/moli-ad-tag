@@ -719,6 +719,18 @@ describe('AdService', () => {
         expect(listenerSpy).to.have.been.calledOnce;
         expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
       });
+
+      it('should emit an afterRequestAds event the result state if buckets are enabled', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(
+          { ...emptyConfig, buckets: { enabled: true } },
+          emptyRuntimeConfig
+        );
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
+      });
     });
   });
 
