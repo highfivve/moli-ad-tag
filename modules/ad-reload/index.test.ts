@@ -8,21 +8,21 @@ import { dummySchainConfig } from '@highfivve/ad-tag/lib/stubs/schainStubs';
 import { reportingServiceStub } from '@highfivve/ad-tag/lib/stubs/reportingServiceStub';
 import { emptyConfig, noopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
 import {
-  googletag,
-  prebidjs,
-  Moli,
   AdPipeline,
   AdPipelineContext,
+  createAssetLoaderService,
+  createMoliTag,
+  googletag,
   IAdPipelineConfiguration,
   mkInitStep,
-  createAssetLoaderService
+  Moli,
+  prebidjs
 } from '@highfivve/ad-tag';
 
-import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
-
-import { AdReload } from './index';
+import { AdReload, AdReloadModuleConfig } from './index';
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
+import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 use(sinonChai);
 
@@ -32,6 +32,7 @@ describe('Moli Ad Reload Module', () => {
   let jsDomWindow: Window &
     googletag.IGoogleTagWindow &
     prebidjs.IPrebidjsWindow &
+    Moli.MoliWindow &
     Pick<typeof globalThis, 'Date'> = dom.window as any;
 
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
@@ -63,6 +64,7 @@ describe('Moli Ad Reload Module', () => {
 
   beforeEach(() => {
     jsDomWindow.googletag = createGoogletagStub();
+    jsDomWindow.moli = createMoliTag(jsDomWindow);
   });
 
   afterEach(() => {
@@ -71,6 +73,22 @@ describe('Moli Ad Reload Module', () => {
     sandbox.reset();
   });
 
+  const defaultAdReloadConfig: AdReloadModuleConfig = {
+    includeAdvertiserIds: [1337],
+    includeOrderIds: [4711],
+    includeYieldGroupIds: [],
+    excludeOrderIds: [],
+    excludeAdSlotDomIds: [],
+    optimizeClsScoreDomIds: []
+  };
+
+  const slotRenderEndedEvent = (googleSlot: googletag.IAdSlot): ISlotRenderEndedEvent =>
+    ({
+      slot: googleSlot,
+      advertiserId: 1337,
+      campaignId: 4711
+    } as ISlotRenderEndedEvent);
+
   const createAdReloadModule = (
     reloadKeyValue: string = 'foo-reload',
     includeAdvertiserIds: Array<number> = [],
@@ -78,8 +96,7 @@ describe('Moli Ad Reload Module', () => {
     includeYieldGroupIds: Array<number> = [],
     excludeOrderIds: Array<number> = [],
     excludeAdSlotDomIds: Array<string> = [],
-    optimizeClsScoreDomIds: Array<string> = [],
-    window: Window & googletag.IGoogleTagWindow = jsDomWindow
+    optimizeClsScoreDomIds: Array<string> = []
   ): AdReload => {
     return new AdReload(
       {
@@ -90,7 +107,7 @@ describe('Moli Ad Reload Module', () => {
         excludeAdSlotDomIds,
         optimizeClsScoreDomIds
       },
-      window,
+      jsDomWindow,
       reloadKeyValue
     );
   };
@@ -403,17 +420,11 @@ describe('Moli Ad Reload Module', () => {
     const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
     const adPipelineRunSpy = sandbox.stub(adPipeline, 'run').resolves();
 
-    const slotRenderEndedEvent: ISlotRenderEndedEvent = {
-      slot: googleSlot,
-      advertiserId: 1337,
-      campaignId: 4711
-    } as ISlotRenderEndedEvent;
-
     const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
       args => (args[0] as string) === 'slotRenderEnded'
     )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
-    slotRenderedCallback(slotRenderEndedEvent);
+    slotRenderedCallback(slotRenderEndedEvent(googleSlot));
 
     expect(trackSlotSpy).to.have.been.called;
 
@@ -671,6 +682,55 @@ describe('Moli Ad Reload Module', () => {
 
         expect(trackSlotSpy).to.have.been.called;
       });
+    });
+  });
+
+  describe('bucket refresh', () => {
+    const moliSlot = {
+      domId: 'foo',
+      behaviour: { loaded: 'eager', bucket: 'page' }
+    } as Moli.AdSlot;
+
+    const bucketAdReloadConfig: AdReloadModuleConfig = {
+      ...defaultAdReloadConfig,
+      viewabilityOverrides: {
+        [moliSlot.domId]: {
+          variant: 'disabled',
+          disableAllAdVisibilityChecks: true,
+          refreshBucket: true
+        }
+      }
+    };
+
+    it('should call moli.refreshBucket() if ad slot has a simple bucket configured', async () => {
+      const module = new AdReload(bucketAdReloadConfig, jsDomWindow);
+      const refreshBucketSpy = sandbox.spy(jsDomWindow.moli, 'refreshBucket');
+
+      const { moliConfig } = initModule(module, undefined, moliSlot);
+
+      const listenerSpy = sandbox.spy(dom.window.googletag.pubads(), 'addEventListener');
+
+      await moliConfig.pipeline?.configureSteps[0](adPipelineContext(moliConfig), [moliSlot]);
+
+      const googleSlot = googleAdSlotStub(moliSlot.domId, 'foo');
+      const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
+
+      const trackSlotSpy = sandbox.spy((module as any).adVisibilityService, 'trackSlot');
+
+      const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+        args => (args[0] as string) === 'slotRenderEnded'
+      )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+      slotRenderedCallback(slotRenderEndedEvent(googleSlot));
+
+      expect(trackSlotSpy).to.have.been.called;
+
+      const reloadCallback = trackSlotSpy.args[0][1] as (googleTagSlot: googletag.IAdSlot) => void;
+
+      reloadCallback(googleSlot);
+
+      expect(setTargetingSpy).to.have.been.calledOnceWithExactly('native-ad-reload', 'true');
+      expect(refreshBucketSpy).to.have.been.calledOnce;
     });
   });
 });

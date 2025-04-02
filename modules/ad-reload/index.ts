@@ -48,26 +48,37 @@
  * @module
  */
 import {
-  IModule,
-  ModuleType,
-  Moli,
-  googletag,
-  IAssetLoaderService,
-  getLogger,
   AdPipeline,
   AdPipelineContext,
+  getLogger,
+  googletag,
+  IAssetLoaderService,
+  IModule,
+  IntersectionObserverWindow,
   mkConfigureStep,
-  IntersectionObserverWindow
+  ModuleType,
+  Moli
 } from '@highfivve/ad-tag';
 
 import { AdVisibilityService } from './adVisibilityService';
 import { UserActivityLevelControl, UserActivityService } from './userActivityService';
+import { getDeviceLabel } from '@highfivve/ad-tag/lib/ads/labelConfigService';
 
 export type RefreshIntervalOverrides = {
   [slotDomId: string]: number;
 };
 
-export type ViewabilityOverrideEntry =
+export type ViewabilityOverrideEntry = {
+  /**
+   * An optional bucket that is used to refresh the ad slot and all other ad slots in the same bucket.
+   * This is mainly used for the skin ad format, that requires the entire 'page' bucket to be refreshed,
+   * if the wallpaper_pixel ad slot is reloaded.
+   *
+   * NOTE: use with caution! This will refresh all ads in the same bucket, which could refresh slots that
+   *       are not in viewport.
+   */
+  refreshBucket?: boolean;
+} & (
   | {
       variant: 'css';
       /** Used to select a single element to monitor for viewability */
@@ -99,7 +110,8 @@ export type ViewabilityOverrideEntry =
        *  when the IntersectionObserver is about to be configured.
        */
       disabledAdVisibilityCheckAdvertiserIds?: number[];
-    };
+    }
+);
 
 /**
  * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
@@ -217,7 +229,7 @@ export class AdReload implements IModule {
 
   constructor(
     private readonly moduleConfig: AdReloadModuleConfig,
-    private readonly window: Window & googletag.IGoogleTagWindow,
+    private readonly window: Window & googletag.IGoogleTagWindow & Moli.MoliWindow,
     private readonly reloadKeyValue: string = 'native-ad-reload'
   ) {
     if (moduleConfig.refreshIntervalMs) {
@@ -288,7 +300,6 @@ export class AdReload implements IModule {
     context.logger.debug('AdReload', 'initialize moli ad reload module');
 
     this.setupAdVisibilityService(
-      context.config,
       context.window as unknown as Window & IntersectionObserverWindow & googletag.IGoogleTagWindow
     );
     this.setupSlotRenderListener(slotsToMonitor, reloadAdSlotCallback, context.window);
@@ -297,7 +308,6 @@ export class AdReload implements IModule {
   };
 
   private setupAdVisibilityService = (
-    moliConfig: Moli.MoliConfig,
     _window: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
@@ -313,7 +323,7 @@ export class AdReload implements IModule {
   };
 
   private setupSlotRenderListener = (
-    slotsToMonitor: Array<string>,
+    slotsToMonitor: string[],
     reloadAdSlotCallback: (googleTagSlot: googletag.IAdSlot) => void,
     window: Window & googletag.IGoogleTagWindow
   ) =>
@@ -391,17 +401,48 @@ export class AdReload implements IModule {
 
       googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-      adPipeline.run(
-        [slotWithOptimizedSizes],
-        {
-          ...moliConfig,
-          slots: [
-            ...moliConfig.slots.filter(({ domId }) => domId !== slotId),
-            slotWithOptimizedSizes
-          ]
-        },
-        this.requestAdsCalls
-      );
+      const getBucketName = () => {
+        const bucketOverride = this.moduleConfig.viewabilityOverrides?.[slotId]?.refreshBucket;
+        const bucket = moliSlot.behaviour.bucket;
+        if (bucketOverride === true && bucket) {
+          if (typeof bucket === 'string') {
+            return bucket;
+          }
+          const device = getDeviceLabel(
+            this.window,
+            moliConfig.labelSizeConfig || [],
+            moliConfig.targeting
+          );
+          return bucket[device];
+        }
+      };
+
+      const bucketName = getBucketName();
+
+      if (bucketName) {
+        this.window.moli
+          .refreshBucket(bucketName)
+          .then(result =>
+            this.logger?.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
+          )
+          .catch(error =>
+            this.logger?.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
+          );
+      } else {
+        adPipeline
+          .run(
+            [slotWithOptimizedSizes],
+            {
+              ...moliConfig,
+              slots: [
+                ...moliConfig.slots.filter(({ domId }) => domId !== slotId),
+                slotWithOptimizedSizes
+              ]
+            },
+            this.requestAdsCalls
+          )
+          .catch(error => this.logger?.error('AdReload', `refreshing ${slotId} failed`, error));
+      }
     }
   };
 
