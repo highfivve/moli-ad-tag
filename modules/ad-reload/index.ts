@@ -403,17 +403,18 @@ export class AdReload implements IModule {
 
       const getBucketName = () => {
         const bucketOverride = this.moduleConfig.viewabilityOverrides?.[slotId]?.refreshBucket;
-        const bucket = moliSlot.behaviour.bucket;
-        if (bucketOverride === true && bucket) {
+        if (bucketOverride === true) {
+          const bucket = moliSlot.behaviour.bucket;
           if (typeof bucket === 'string') {
             return bucket;
+          } else if (bucket) {
+            const device = getDeviceLabel(
+              this.window,
+              moliConfig.labelSizeConfig || [],
+              moliConfig.targeting
+            );
+            return bucket[device];
           }
-          const device = getDeviceLabel(
-            this.window,
-            moliConfig.labelSizeConfig || [],
-            moliConfig.targeting
-          );
-          return bucket[device];
         }
       };
 
