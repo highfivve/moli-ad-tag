@@ -299,18 +299,6 @@ export namespace Moli {
     refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
 
     /**
-     * Refresh the given bucket as soon as possible.
-     *
-     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
-     *
-     * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
-     * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
-     *
-     * @param bucket - identifies the bucket
-     */
-    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
-
-    /**
      * Returns the  current state of the configuration. This configuration may not be final!
      * If you need to access the final configuration use the `beforeRequestAds` method to configure
      * a callback.

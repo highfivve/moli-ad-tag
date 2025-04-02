@@ -23,7 +23,7 @@ import {
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
-import { LabelConfigService } from './labelConfigService';
+import { getDeviceLabel } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
@@ -183,11 +183,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       case 'finished':
       case 'error':
         // temporary label service to resolve the device label
-        const labelService = new LabelConfigService(state.config.labelSizeConfig || [], [], window);
         return {
           ...state.config.targeting?.adUnitPathVariables,
           domain: state.config.domain || domain,
-          device: labelService.getDeviceLabel()
+          device: getDeviceLabel(window, state.config.labelSizeConfig || [], state.config.targeting)
         };
     }
   }
