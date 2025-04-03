@@ -904,13 +904,25 @@ export namespace modules {
       [slotDomId: string]: number;
     };
 
-    export type ViewabilityOverrideEntryCss = {
+    export type ViewabilityOverrideEntryBase = {
+      /**
+       * An optional bucket that is used to refresh the ad slot and all other ad slots in the same bucket.
+       * This is mainly used for the skin ad format, that requires the entire 'page' bucket to be refreshed,
+       * if the wallpaper_pixel ad slot is reloaded.
+       *
+       * NOTE: use with caution! This will refresh all ads in the same bucket, which could refresh slots that
+       *       are not in viewport.
+       */
+      refreshBucket?: boolean;
+    };
+
+    export type ViewabilityOverrideEntryCss = ViewabilityOverrideEntryBase & {
       variant: 'css';
       /** Used to select a single element to monitor for viewability */
       cssSelector: string;
     };
 
-    export type ViewabilityOverrideEntryDisabled = {
+    export type ViewabilityOverrideEntryDisabled = ViewabilityOverrideEntryBase & {
       /**
        * Enable reloading ads that are not in viewport. It is not advised to use this option.
        * Impressions are usually only counted on ads that have been 50% visible, and it's generally not

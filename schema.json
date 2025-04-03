@@ -1576,14 +1576,18 @@
           "description": "Used to select a single element to monitor for viewability",
           "type": "string"
         },
+        "refreshBucket": {
+          "description": "An optional bucket that is used to refresh the ad slot and all other ad slots in the same bucket. This is mainly used for the skin ad format, that requires the entire 'page' bucket to be refreshed, if the wallpaper_pixel ad slot is reloaded.\n\nNOTE: use with caution! This will refresh all ads in the same bucket, which could refresh slots that       are not in viewport.",
+          "type": "boolean"
+        },
         "variant": {
           "const": "css",
           "type": "string"
         }
       },
       "required": [
-        "variant",
-        "cssSelector"
+        "cssSelector",
+        "variant"
       ],
       "type": "object"
     },
@@ -1601,6 +1605,10 @@
           },
           "type": "array"
         },
+        "refreshBucket": {
+          "description": "An optional bucket that is used to refresh the ad slot and all other ad slots in the same bucket. This is mainly used for the skin ad format, that requires the entire 'page' bucket to be refreshed, if the wallpaper_pixel ad slot is reloaded.\n\nNOTE: use with caution! This will refresh all ads in the same bucket, which could refresh slots that       are not in viewport.",
+          "type": "boolean"
+        },
         "variant": {
           "const": "disabled",
           "description": "Enable reloading ads that are not in viewport. It is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible, and it's generally not very user-centric to load stuff that is out of viewport.",
@@ -1608,8 +1616,8 @@
         }
       },
       "required": [
-        "variant",
-        "disableAllAdVisibilityChecks"
+        "disableAllAdVisibilityChecks",
+        "variant"
       ],
       "type": "object"
     },
