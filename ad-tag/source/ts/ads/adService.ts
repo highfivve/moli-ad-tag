@@ -429,6 +429,9 @@ export class AdService {
       // this is a custom position defined by the ad tag library. A temporary div is created
       // if it does not exist to facilitate the prebid auction
       slot.position === 'interstitial' ||
+      // gpt.js position for custom out-of-page formats. A DOM element is required, which we create
+      // on demand if it is missing
+      slot.position === 'out-of-page' ||
       // web interstitials and web anchors don't require a dom element
       slot.position === 'out-of-page-interstitial' ||
       slot.position === 'out-of-page-top-anchor' ||

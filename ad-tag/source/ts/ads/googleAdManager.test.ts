@@ -22,9 +22,8 @@ import { LabelConfigService } from './labelConfigService';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import { prebidjs } from '../types/prebidjs';
 import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, gpt, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -61,9 +60,10 @@ describe('google ad manager', () => {
     };
   };
 
-  const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
-  const getElementByIdStub = sandbox.stub(dom.window.document, 'getElementById');
-  const createElementSpy = sandbox.spy(dom.window.document, 'createElement');
+  const matchMediaStub = sandbox.stub(jsDomWindow, 'matchMedia');
+  const getElementByIdStub = sandbox.stub(jsDomWindow.document, 'getElementById');
+  const createElementSpy = sandbox.spy(jsDomWindow.document, 'createElement');
+  const appendChildSpy = sandbox.spy(jsDomWindow.document.body, 'appendChild');
 
   const sleep = (timeInMs: number = 20) =>
     new Promise(resolve => {
@@ -91,7 +91,7 @@ describe('google ad manager', () => {
 
   beforeEach(() => {
     // reset the before each test
-    dom.window.googletag = createGoogletagStub();
+    jsDomWindow.googletag = createGoogletagStub();
     dom.window.__tcfapi = tcfapiFunction(tcData);
     matchMediaStub.returns({ matches: true } as MediaQueryList);
     loadScriptStub.resolves();
@@ -599,6 +599,39 @@ describe('google ad manager', () => {
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
         expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+      });
+
+      (['out-of-page', 'interstitial'] as gpt.Position[]).forEach(position => {
+        it(`should create a div container for position ${position} if it does not exist`, async () => {
+          const step = gptDefineSlots();
+          matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+          const outOfPageAdSlot: AdSlot = { ...adSlot, position: position };
+
+          await step(adPipelineContext(), [outOfPageAdSlot]);
+          expect(createElementSpy).to.have.been.calledOnce;
+          expect(createElementSpy).to.have.been.calledOnceWithExactly('div');
+          const createdElement = createElementSpy.firstCall.returnValue;
+          expect(createdElement.id).to.be.equal(adSlot.domId);
+          expect(createdElement.style.display).to.be.equal('none');
+          expect(createdElement.attributes.getNamedItem('data-h5v-position')?.value).to.be.equal(
+            position
+          );
+          expect(appendChildSpy).to.have.been.calledOnce;
+          expect(appendChildSpy).to.have.been.calledOnceWithExactly(createdElement);
+        });
+
+        it(`should not create a div container for position ${position} if the container already exists`, async () => {
+          const step = gptDefineSlots();
+          matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+          const outOfPageAdSlot: AdSlot = { ...adSlot, position: position };
+
+          getElementByIdStub.returns({} as HTMLElement);
+          await step(adPipelineContext(), [outOfPageAdSlot]);
+          expect(createElementSpy).to.have.not.been.called;
+          expect(appendChildSpy).to.have.not.been.called;
+        });
       });
 
       it('should define out-of-page-interstitial slots', async () => {

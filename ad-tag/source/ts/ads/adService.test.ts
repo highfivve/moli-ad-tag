@@ -428,12 +428,24 @@ describe('AdService', () => {
       });
     };
 
-    it('should return an empty slots array for any empty slots array input', () => {
-      return expect(requestAds([], [], [])).to.eventually.be.deep.equals([]);
+    it('should return an empty slots array for any empty slots array input', async () => {
+      const requestAdSlots = await requestAds([], [], []);
+      expect(requestAdSlots).to.be.deep.equals([]);
     });
 
-    it('should filter out all slots that are not available in the DOM', () => {
-      return expect(requestAds([eagerAdSlot()], [], [])).to.eventually.be.deep.equals([]);
+    it('should filter out all slots that are not available in the DOM', async () => {
+      const requestedSlots = await requestAds([eagerAdSlot()], [], []);
+      expect(requestedSlots).to.be.deep.equals([]);
+    });
+
+    it('should filter out all slots that are not available in the DOM except out-of-page', async () => {
+      const outOfPageSlot: AdSlot = {
+        ...eagerAdSlot(),
+        position: 'out-of-page'
+      };
+      const slots = [outOfPageSlot];
+      const requestedSlots = await requestAds(slots, [], []);
+      expect(requestedSlots).to.be.deep.equals(slots);
     });
 
     it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
