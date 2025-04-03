@@ -44,24 +44,31 @@ describe('Moli Ad Reload Module', () => {
     };
   };
 
-  const createAdReloadModule = (
-    includeAdvertiserIds: Array<number> = [],
-    includeOrderIds: Array<number> = [],
-    includeYieldGroupIds: Array<number> = [],
-    excludeOrderIds: Array<number> = [],
-    excludeAdSlotDomIds: Array<string> = [],
-    optimizeClsScoreDomIds: Array<string> = []
-  ) => {
+  const defaultAdReloadConfig: modules.adreload.AdReloadModuleConfig = {
+    enabled: true,
+    includeAdvertiserIds: [1337],
+    includeOrderIds: [4711],
+    includeYieldGroupIds: [],
+    excludeOrderIds: [],
+    excludeAdSlotDomIds: [],
+    optimizeClsScoreDomIds: []
+  };
+
+  const slotRenderEndedEvent = (
+    googleSlot: googletag.IAdSlot,
+    advertiserId: number | undefined = 1337,
+    campaignId: number | undefined = 4711,
+    yieldGroupIds: number[] | null = null
+  ): ISlotRenderEndedEvent =>
+    ({
+      slot: googleSlot,
+      advertiserId,
+      campaignId,
+      yieldGroupIds
+    }) as ISlotRenderEndedEvent;
+
+  const createAdReloadModuleInitialized = (moduleConfig: modules.adreload.AdReloadModuleConfig) => {
     const module = new AdReload();
-    const moduleConfig: modules.adreload.AdReloadModuleConfig = {
-      enabled: true,
-      includeAdvertiserIds,
-      includeOrderIds,
-      includeYieldGroupIds,
-      excludeOrderIds,
-      excludeAdSlotDomIds,
-      optimizeClsScoreDomIds
-    };
     module.configure({ adReload: moduleConfig });
     const configureStep = module.configureSteps()[0];
     // this is awkward, but it works. Alternative would be to inject the service into the module via the constructor for tests
@@ -71,6 +78,26 @@ describe('Moli Ad Reload Module', () => {
       configureStep,
       adVisibilityService: (): AdVisibilityService => (module as any).adVisibilityService
     };
+  };
+
+  const createAdReloadModule = (
+    includeAdvertiserIds: Array<number> = [],
+    includeOrderIds: Array<number> = [],
+    includeYieldGroupIds: Array<number> = [],
+    excludeOrderIds: Array<number> = [],
+    excludeAdSlotDomIds: Array<string> = [],
+    optimizeClsScoreDomIds: Array<string> = []
+  ) => {
+    const moduleConfig: modules.adreload.AdReloadModuleConfig = {
+      enabled: true,
+      includeAdvertiserIds,
+      includeOrderIds,
+      includeYieldGroupIds,
+      excludeOrderIds,
+      excludeAdSlotDomIds,
+      optimizeClsScoreDomIds
+    };
+    return createAdReloadModuleInitialized(moduleConfig);
   };
 
   const testAdSlotDomId = 'foo';
@@ -101,6 +128,12 @@ describe('Moli Ad Reload Module', () => {
     jsDomWindow = createDomAndWindow().jsDomWindow;
     jsDomWindow.moli = {
       refreshAdSlot(domId: string | string[]): Promise<'queued' | 'refreshed'> {
+        return Promise.resolve('refreshed');
+      },
+      refreshBucket(
+        bucket: string,
+        options?: MoliRuntime.RefreshAdSlotsOptions
+      ): Promise<'queued' | 'refreshed'> {
         return Promise.resolve('refreshed');
       }
     } as MoliRuntime.MoliTag;
@@ -207,7 +240,7 @@ describe('Moli Ad Reload Module', () => {
 
   it('should NOT call trackSlot if the slot was rendered empty', async () => {
     const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
-    const { module, configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
+    const { configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
 
@@ -229,7 +262,7 @@ describe('Moli Ad Reload Module', () => {
 
   it('should NOT call trackSlot if the order id is not in the includes', async () => {
     const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
-    const { module, configureStep, adVisibilityService } = createAdReloadModule([], [43]);
+    const { configureStep, adVisibilityService } = createAdReloadModule([], [43]);
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
 
@@ -575,14 +608,6 @@ describe('Moli Ad Reload Module', () => {
       includeYieldGroupIds: number[];
     };
 
-    const slotRenderEndedEvent = (googleSlot: googletag.IAdSlot): ISlotRenderEndedEvent =>
-      ({
-        slot: googleSlot,
-        advertiserId: 1,
-        campaignId: 2,
-        yieldGroupIds: [3]
-      }) as ISlotRenderEndedEvent;
-
     const testCases: IncludesConfig[] = [
       {
         test: 'only advertiser id is included',
@@ -633,9 +658,59 @@ describe('Moli Ad Reload Module', () => {
           args => (args[0] as string) === 'slotRenderEnded'
         )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
-        slotRenderedCallback(slotRenderEndedEvent(testGoogleSlot));
+        slotRenderedCallback(slotRenderEndedEvent(testGoogleSlot, 1, 2, [3]));
 
         expect(trackSlotSpy).to.have.been.called;
+      });
+    });
+
+    describe('bucket refresh', () => {
+      const moliSlot = {
+        domId: 'foo',
+        behaviour: { loaded: 'eager', bucket: 'page' }
+      } as AdSlot;
+
+      const bucketAdReloadConfig: modules.adreload.AdReloadModuleConfig = {
+        ...defaultAdReloadConfig,
+        viewabilityOverrides: {
+          [moliSlot.domId]: {
+            variant: 'disabled',
+            disableAllAdVisibilityChecks: true,
+            refreshBucket: true
+          }
+        }
+      };
+
+      it('should call moli.refreshBucket() if ad slot has a simple bucket configured', async () => {
+        const refreshBucketSpy = sandbox.spy(jsDomWindow.moli, 'refreshBucket');
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+        const { configureStep, adVisibilityService } =
+          createAdReloadModuleInitialized(bucketAdReloadConfig);
+        await configureStep(adPipelineContext({ ...emptyConfig, slots: [moliSlot] }), [moliSlot]);
+
+        const trackSlotSpy = sandbox.spy(adVisibilityService(), 'trackSlot');
+
+        const googleSlot = googleAdSlotStub(moliSlot.adUnitPath, moliSlot.domId);
+        const setTargetingSpy = sandbox.spy(googleSlot, 'setTargeting');
+
+        expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded', Sinon.match.func);
+        const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+        slotRenderedCallback(slotRenderEndedEvent(googleSlot));
+
+        expect(trackSlotSpy).to.have.been.called;
+
+        const reloadCallback = trackSlotSpy.args[0][1] as (
+          googleTagSlot: googletag.IAdSlot
+        ) => void;
+
+        reloadCallback(googleSlot);
+
+        expect(setTargetingSpy).to.have.been.calledOnceWithExactly('native-ad-reload', 'true');
+        expect(refreshBucketSpy).to.have.been.calledOnce;
       });
     });
   });

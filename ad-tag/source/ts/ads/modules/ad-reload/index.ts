@@ -280,10 +280,35 @@ export class AdReload implements IModule {
 
         googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-        ctx.window.moli.refreshAdSlot(slotId, {
-          loaded: moliSlot.behaviour.loaded,
-          ...(sizesOverride && { sizesOverride: sizesOverride })
-        });
+        const getBucketName = () => {
+          const bucketOverride = config.viewabilityOverrides?.[slotId]?.refreshBucket;
+          if (bucketOverride === true) {
+            const bucket = moliSlot.behaviour.bucket;
+            return typeof bucket === 'string'
+              ? bucket
+              : bucket?.[ctx.labelConfigService.getDeviceLabel()];
+          }
+        };
+
+        const bucketName = getBucketName();
+
+        if (bucketName) {
+          ctx.window.moli
+            .refreshBucket(bucketName)
+            .then(result =>
+              ctx.logger.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
+            )
+            .catch(error =>
+              ctx.logger.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
+            );
+        } else {
+          ctx.window.moli
+            .refreshAdSlot(slotId, {
+              loaded: moliSlot.behaviour.loaded,
+              ...(sizesOverride && { sizesOverride: sizesOverride })
+            })
+            .catch(error => ctx.logger.error('AdReload', `refreshing ${slotId} failed`, error));
+        }
       }
     };
 
