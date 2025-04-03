@@ -6,6 +6,9 @@ import { auction } from '../types/moliConfig';
 import { FrequencyCapping } from './auctions/frequencyCapping';
 import { PreviousBidCpms } from './auctions/previousBidCpms';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { EventService } from './eventService';
+import { ConfigureStep, mkConfigureStep } from './adPipeline';
+import { AdUnitPathVariables } from './adUnitPath';
 
 /**
  * ## Global Auction Context
@@ -28,12 +31,26 @@ export class GlobalAuctionContext {
   readonly frequencyCapping?: FrequencyCapping;
   readonly previousBidCpms?: PreviousBidCpms;
 
+  /**
+   * The ad unit path variables that are used to resolve the ad unit path.
+   * They are at least partially created at runtime, which is why they are a mutable field here and
+   * are updated during every configure ad pipeline run.
+   *
+   * This allows the global auction context to resolve ad unit paths if they contain variables.
+   * @private
+   */
+  #configureStep = mkConfigureStep('GlobalAuctionContext', context => {
+    this.frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables);
+    return Promise.resolve();
+  });
+
   constructor(
     private readonly window: Window &
       prebidjs.IPrebidjsWindow &
       googletag.IGoogleTagWindow &
       Pick<typeof globalThis, 'Date'>,
     private readonly logger: MoliRuntime.MoliLogger,
+    private readonly eventService: EventService,
     private readonly config: auction.GlobalAuctionContextConfig = {}
   ) {
     if (config.biddersDisabling?.enabled) {
@@ -93,11 +110,29 @@ export class GlobalAuctionContext {
           }
         });
       });
+
+      this.window.googletag.cmd.push(() => {
+        this.window.googletag.pubads().addEventListener('slotRenderEnded', event => {
+          this.frequencyCapping?.onSlotRenderEnded(event);
+        });
+      });
+
+      this.eventService.addEventListener('afterRequestAds', () => {
+        this.frequencyCapping?.afterRequestAds();
+      });
     }
   }
 
-  isSlotThrottled(slotId: string): boolean {
-    return this.adRequestThrottling?.isThrottled(slotId) ?? false;
+  /**
+   *
+   * @param slotId
+   * @param adUnitPath received from a google slot via getAdUnitPath(), thus fully resolved
+   */
+  isSlotThrottled(slotId: string, adUnitPath: string): boolean {
+    return !!(
+      this.adRequestThrottling?.isThrottled(slotId) ||
+      this.frequencyCapping?.isAdUnitCapped(adUnitPath)
+    );
   }
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
@@ -106,5 +141,9 @@ export class GlobalAuctionContext {
 
   getLastBidCpmsOfAdUnit(slotId: string): number[] {
     return this.previousBidCpms?.getLastBidCpms(slotId) ?? [];
+  }
+
+  configureStep(): ConfigureStep {
+    return this.#configureStep;
   }
 }

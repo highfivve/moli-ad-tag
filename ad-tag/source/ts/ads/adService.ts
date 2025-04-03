@@ -85,7 +85,7 @@ export class AdService {
     },
     getDefaultLogger(),
     this.window as AdServiceWindow,
-    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger())
+    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger(), this.eventService)
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -95,6 +95,7 @@ export class AdService {
   /**
    *
    * @param assetService
+   * @param eventService
    * @param window
    * @param adPipelineConfig only for testing purpose at this point. This configuration will be overridden by
    *        a call to initialize. This should not be the API for extending the pipeline!
@@ -112,7 +113,7 @@ export class AdService {
         adPipelineConfig,
         this.logger,
         window as AdServiceWindow,
-        new GlobalAuctionContext(window as AdServiceWindow, this.logger)
+        new GlobalAuctionContext(window as AdServiceWindow, this.logger, this.eventService)
       );
     }
   }
@@ -181,6 +182,15 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
+    // create global auction context and add it to the pipeline
+    const globalAuctionContext = new GlobalAuctionContext(
+      this.window as AdServiceWindow,
+      this.logger,
+      this.eventService,
+      config.globalAuctionContext
+    );
+    configure.push(globalAuctionContext.configureStep());
+
     // add module steps to pipeline
     init.push(...runtimeConfig.adPipelineConfig.initSteps);
     configure.push(...runtimeConfig.adPipelineConfig.configureSteps);
@@ -206,11 +216,7 @@ export class AdService {
       },
       this.logger,
       this.window as AdServiceWindow,
-      new GlobalAuctionContext(
-        this.window as AdServiceWindow,
-        this.logger,
-        config.globalAuctionContext
-      )
+      globalAuctionContext
     );
 
     return new Promise<Readonly<MoliConfig>>(resolve => {
