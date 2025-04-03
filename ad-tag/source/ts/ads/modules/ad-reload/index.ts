@@ -61,6 +61,7 @@ import {
 import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import { isNotNull } from 'ad-tag/util/arrayUtils';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
  */
@@ -116,7 +117,8 @@ export class AdReload implements IModule {
             const slotsToMonitor = context.config.slots
               // filter out slots excluded by dom id
               .filter(slot => config.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
-              .map(slot => slot.domId);
+              .map(slot => slot.domId)
+              .filter(isNotNull);
 
             const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = this.reloadAdSlot(
               config,

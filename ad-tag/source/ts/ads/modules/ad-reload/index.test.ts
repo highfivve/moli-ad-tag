@@ -7,7 +7,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
 import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
@@ -19,6 +19,10 @@ use(sinonChai);
 
 describe('Moli Ad Reload Module', () => {
   const sandbox = Sinon.createSandbox();
+  const noopLogger = newNoopLogger();
+
+  const debugSpy = sandbox.spy(noopLogger, 'debug');
+
   let { jsDomWindow } = createDomAndWindow();
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
@@ -78,7 +82,7 @@ describe('Moli Ad Reload Module', () => {
   } as AdSlot;
   const testSlotMoliConfig: MoliConfig = { ...emptyConfig, slots: [testAdSlot] };
 
-  let testGoogleSlot = googleAdSlotStub('/123/foo', 'foo');
+  let testGoogleSlot = googleAdSlotStub('/123/foo', testAdSlotDomId);
   const testSlotRenderEndedEvent: ISlotRenderEndedEvent = {
     slot: testGoogleSlot,
     advertiserId: 1337,
@@ -321,13 +325,15 @@ describe('Moli Ad Reload Module', () => {
 
   it('should NOT call trackSlot if the DOM id is in the excludes', async () => {
     const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
-    const { module, configureStep, adVisibilityService } = createAdReloadModule(
+    const { configureStep, adVisibilityService } = createAdReloadModule(
       [1337],
       [42],
       [],
       [],
       ['foo']
     );
+
+    const logger = newNoopLogger();
 
     await configureStep(adPipelineContext(testSlotMoliConfig), [testAdSlot]);
 
@@ -339,6 +345,32 @@ describe('Moli Ad Reload Module', () => {
     )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
 
     slotRenderedCallback(testSlotRenderEndedEvent);
+    expect(trackSlotSpy).to.not.have.been.called;
+  });
+
+  it('should NOT call trackSlot if the slot has no DOM ID', async () => {
+    const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+    const { configureStep, adVisibilityService } = createAdReloadModule([1337], [42]);
+    const testAdSlotWithoutDomId: AdSlot = {
+      behaviour: {
+        loaded: 'eager'
+      }
+    } as AdSlot;
+
+    await configureStep(adPipelineContext({ ...emptyConfig, slots: [testAdSlotWithoutDomId] }), [
+      testAdSlotWithoutDomId
+    ]);
+
+    expect(listenerSpy).to.have.been.calledWithMatch('slotRenderEnded', Sinon.match.func);
+
+    const trackSlotSpy = sandbox.spy(adVisibilityService(), 'trackSlot');
+    const slotRenderedCallback: (event: ISlotRenderEndedEvent) => void = listenerSpy.args.find(
+      args => (args[0] as string) === 'slotRenderEnded'
+    )?.[1] as unknown as (event: ISlotRenderEndedEvent) => void;
+
+    slotRenderedCallback(testSlotRenderEndedEvent);
+    // what a way to check that things are filtered properly
+    expect(debugSpy).to.have.been.calledWithExactly('AdReload', 'monitoring slots', []);
     expect(trackSlotSpy).to.not.have.been.called;
   });
 
