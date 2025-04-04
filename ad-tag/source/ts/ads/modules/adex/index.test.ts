@@ -2,20 +2,24 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AdPipelineContext } from '../../adPipeline';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
 import { AdexModule, ITheAdexWindow } from './index';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { googletag } from 'ad-tag/types/googletag';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
+import { tcfapi } from 'ad-tag/types/tcfapi';
 import MappingDefinition = modules.adex.MappingDefinition;
 import AdexAppConfig = modules.adex.AdexAppConfig;
-import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
@@ -66,7 +70,7 @@ describe('The Adex DMP Module', () => {
     labelConfigService: null as any,
     tcData: tcData ?? fullConsent({ '44': true }),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
+    auction: newGlobalAuctionContext(jsDomWindow),
     assetLoaderService: assetLoaderService
   });
 

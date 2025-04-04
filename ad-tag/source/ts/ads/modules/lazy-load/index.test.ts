@@ -5,13 +5,13 @@ import sinonChai from 'sinon-chai';
 import { AdSlot, MoliConfig } from 'ad-tag/types/moliConfig';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { createMoliTag } from 'ad-tag/ads/moli';
-import { emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
+import { emptyRuntimeConfig, newGlobalAuctionContext, newNoopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+
 const createAdSlots = (
   window: Window,
   domIds: string[],
@@ -173,7 +173,7 @@ describe('Lazy-load Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };

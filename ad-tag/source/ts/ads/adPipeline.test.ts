@@ -5,7 +5,12 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from '../stubs/moliStubs';
 import {
   AdPipeline,
   AdPipelineContext,
@@ -17,12 +22,9 @@ import {
   PrepareRequestAdsStep
 } from './adPipeline';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
-import { googletag } from '../types/googletag';
-import { prebidjs } from '../types/prebidjs';
 import { LabelConfigService } from './labelConfigService';
 import SlotDefinition = MoliRuntime.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
@@ -56,12 +58,7 @@ describe('AdPipeline', () => {
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(
-      config,
-      noopLogger,
-      jsDomWindow,
-      new GlobalAuctionContext(jsDomWindow, noopLogger)
-    );
+    return new AdPipeline(config, noopLogger, jsDomWindow, newGlobalAuctionContext(jsDomWindow));
   };
 
   const adPipelineContext = (
@@ -82,7 +79,7 @@ describe('AdPipeline', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };

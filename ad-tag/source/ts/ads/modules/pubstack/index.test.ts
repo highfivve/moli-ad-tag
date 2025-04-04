@@ -3,10 +3,14 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { Pubstack } from './index';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
@@ -41,7 +45,7 @@ describe('Pubstack Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: assetLoaderService
     };
   };

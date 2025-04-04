@@ -346,6 +346,53 @@ export namespace auction {
     includedDomIds?: string[];
   }
 
+  /**
+   * How many requestAds calls are needed before the configured ad slot can be requested
+   */
+  export interface PositionFrequencyConfigDelay {
+    readonly minRequestAds: number;
+  }
+
+  /**
+   * how many impressions are allowed in the defined interval for the configured ad slot.
+   */
+  export interface PositionFrequencyConfigPacingInterval {
+    readonly maxImpressions: number;
+    readonly intervalInMs: number;
+  }
+
+  /**
+   *  how many requestAds call need to be between two winning impressions before the configured
+   *  ad slot can be requested again.
+   */
+  export interface PositionFrequencyConfigPacingRequestAds {
+    readonly requestAds: number;
+  }
+
+  /**
+   * A set of possible conditions that all need to be met before the ad slot can request ads.
+   */
+  export interface PositionFrequencyConfigConditions {
+    readonly delay?: PositionFrequencyConfigDelay;
+    readonly pacingInterval?: PositionFrequencyConfigPacingInterval;
+    readonly pacingRequestAds?: PositionFrequencyConfigPacingRequestAds;
+  }
+
+  export interface PositionFrequencyConfig {
+    /**
+     * references the ad slot that should be frequency capped.
+     *
+     * The `domId` or `adUnitCode` doesn't work for all possible use cases, as the interstitial
+     * and other out-of-page formats have an auto-generated domId at runtime by gpt.js
+     */
+    readonly adUnitPath: string;
+
+    /**
+     * all list of conditions that need to be met before the ad slot can request ads.
+     */
+    readonly conditions: PositionFrequencyConfigConditions;
+  }
+
   export interface BidderDisablingConfig {
     /** enable or disable this feature */
     readonly enabled: boolean;
@@ -387,6 +434,14 @@ export namespace auction {
     readonly enabled: boolean;
     /** capping configuration for bidders and positions */
     readonly configs: BidderFrequencyConfig[];
+
+    /**
+     * capping configuration for positions only.
+     *
+     * This mirrors general ad manager frequency capping and is useful for positions that have a
+     * high impact on the user experience and thus should be reduced in frequency.
+     */
+    readonly positions?: PositionFrequencyConfig[];
 
     /**
      * If frequency capping state should be persisted into session storage.

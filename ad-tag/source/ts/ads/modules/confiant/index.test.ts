@@ -3,10 +3,14 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { AdPipelineContext } from '../../adPipeline';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { Confiant } from 'ad-tag/ads/modules/confiant/index';
 import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
@@ -50,7 +54,7 @@ describe('Confiant Module', () => {
     labelConfigService: null as any,
     tcData: tcData ?? fullConsent({ '44': true }),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+    auction: newGlobalAuctionContext(jsDomWindow),
     assetLoaderService: assetLoaderService
   });
 

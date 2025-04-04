@@ -11,6 +11,7 @@ import DynamicYieldOptimizationConfig = modules.yield_optimization.DynamicYieldO
 import AdunitPriceRulesResponse = modules.yield_optimization.AdunitPriceRulesResponse;
 import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { EventService } from 'ad-tag/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -343,7 +344,12 @@ describe('YieldOptimizationService', () => {
               enabled: true
             }
           };
-          globalAuctionContext = new GlobalAuctionContext(jsDomWindow, noopLogger, config);
+          globalAuctionContext = new GlobalAuctionContext(
+            jsDomWindow,
+            noopLogger,
+            new EventService(),
+            config
+          );
           getLastBidCpmsOfAdUnitStub = sandbox.stub(globalAuctionContext, 'getLastBidCpmsOfAdUnit');
         });
 

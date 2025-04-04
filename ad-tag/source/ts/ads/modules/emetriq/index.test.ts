@@ -3,11 +3,15 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { EmetriqWindow } from 'ad-tag/types/emetriq';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { Emetriq } from 'ad-tag/ads/modules/emetriq/index';
 import { modules } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
@@ -57,7 +61,7 @@ describe('Emetriq Module', () => {
       labelConfigService: null as any,
       tcData: tcDataWithConsent,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: assetLoaderService
     };
   };
