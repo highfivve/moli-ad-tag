@@ -247,6 +247,16 @@ const createdAdUnits = (
 export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
   mkInitStep('prebid-init', context => {
     context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
+
+    // enable configured analytic adapters in prebid. Note that longstanding analytics vendors usually have no
+    // prebid analytics adapter, but rather are loaded through an external script. Like pubstack and assertive yield do this
+    const analyticAdapters = context.config.prebid?.analyticAdapters;
+    if (analyticAdapters && analyticAdapters.length > 0) {
+      context.window.pbjs.que.push(() => {
+        context.window.pbjs.enableAnalytics(analyticAdapters);
+      });
+    }
+
     // if there's already prebid distribution loaded, just go ahead. Even if there's a distributionUrl set, we must not
     // load the external resources as this would create unintentional conflicts.
     if (context.window.pbjs.libLoaded) {

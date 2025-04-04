@@ -151,8 +151,9 @@ export namespace prebidjs {
      * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)
      *
      * @param adapters
-     * @see [[http://prebid.org/overview/analytics.html]]
-     * @see [[http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html]]
+     * @see http://prebid.org/overview/analytics.html
+     * @see http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
      */
     enableAnalytics(adapters: analytics.AnalyticsAdapter[]): void;
 
@@ -1908,16 +1909,44 @@ export namespace prebidjs {
     }
   }
 
+  /**
+   * @see http://prebid.org/overview/analytics.html
+   * @see http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
+   */
   export namespace analytics {
-    export type AnalyticsAdapter = IAgmaAnalyticsAdapter | IGoogleAnalyticsAdapter;
+    export type AnalyticsAdapter =
+      | IAdagioAnalyticsAdapter
+      | IAgmaAnalyticsAdapter
+      | IGoogleAnalyticsAdapter;
     export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
+    /**
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
+     */
     export interface IAnalyticsAdapter<T> {
+      /**
+       * Analytics adapter code
+       */
       readonly provider: AnalyticsProviders;
+
+      /**
+       * Adapter specific options
+       */
       readonly options: T;
+
+      /**
+       * Event include list; if provided, only these events will be forwarded to the adapter
+       */
+      readonly includeEvents?: string[];
+
+      /**
+       * Event blocklist; if provided, these events will not be forwarded to the adapter
+       */
+      readonly excludeEvents?: string[];
     }
 
-    export interface IAnalyticsAdapterOptions {
+    export interface IAgmaAnalyticsAdapterOptions {
       /**
        * provided by AGMA
        */
@@ -1927,8 +1956,30 @@ export namespace prebidjs {
     /**
      * @see https://docs.prebid.org/dev-docs/analytics/agma.html
      */
-    export interface IAgmaAnalyticsAdapter extends IAnalyticsAdapter<IAnalyticsAdapterOptions> {
+    export interface IAgmaAnalyticsAdapter extends IAnalyticsAdapter<IAgmaAnalyticsAdapterOptions> {
       readonly provider: 'agma';
+    }
+
+    export interface IAdagioAnalyticsAdapterOptions {
+      /**
+       * Required. Provided by Adagio
+       * @example `'1000'`
+       */
+      readonly organizationId: string;
+
+      /**
+       * Required. Provided by Adagio
+       * @example `'my-website'`
+       */
+      readonly site: string;
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/analytics/adagio.html
+     */
+    export interface IAdagioAnalyticsAdapter
+      extends IAnalyticsAdapter<IAdagioAnalyticsAdapterOptions> {
+      readonly provider: 'adagio';
     }
 
     /**

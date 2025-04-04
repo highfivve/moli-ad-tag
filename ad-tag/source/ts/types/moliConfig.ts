@@ -702,6 +702,17 @@ export namespace headerbidding {
     /** optional bidder settings */
     readonly bidderSettings?: prebidjs.IBidderSettings;
 
+    /**
+     * optional list of analytic adapters that will be enabled through the `enableAnalytics` API.
+     *
+     * Note: the configuration should contain no duplicate adapters as the ad tag will make no
+     *       attempt to deduplicate.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
+     * @see https://docs.prebid.org/overview/analytics.html
+     */
+    readonly analyticAdapters?: prebidjs.analytics.AnalyticsAdapter[];
+
     /** prebid bidder supply chain configuration */
     readonly schain: {
       /** supply chain node for each bidder */
