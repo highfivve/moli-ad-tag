@@ -245,6 +245,36 @@ describe('prebid', () => {
         loadMethod: 1
       });
     });
+
+    it('should enableAnalytics if the prebid config has it', async () => {
+      const enableAnalyticsSpy = sandbox.spy(dom.window.pbjs, 'enableAnalytics');
+      const analyticsAdapters: prebidjs.analytics.AnalyticsAdapter[] = [
+        { provider: 'agma', options: { code: 'foo' } },
+        { provider: 'ga', options: {} }
+      ];
+      await prebidInit(assetLoaderService)(
+        adPipelineContext(undefined, {
+          ...emptyConfig,
+          prebid: {
+            ...moliPrebidTestConfig,
+            analyticAdapters: analyticsAdapters
+          }
+        })
+      );
+      expect(enableAnalyticsSpy).to.have.been.calledOnce;
+      expect(enableAnalyticsSpy).to.have.been.calledOnceWithExactly(analyticsAdapters);
+    });
+
+    it('should not call enableAnalytics if the prebid config does not have it', async () => {
+      const enableAnalyticsSpy = sandbox.spy(dom.window.pbjs, 'enableAnalytics');
+      await prebidInit(assetLoaderService)(
+        adPipelineContext(undefined, {
+          ...emptyConfig,
+          prebid: moliPrebidTestConfig
+        })
+      );
+      expect(enableAnalyticsSpy).to.have.not.been.called;
+    });
   });
 
   describe('prebid configure step', () => {
