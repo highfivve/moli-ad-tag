@@ -5,7 +5,12 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
@@ -22,7 +27,6 @@ import { LabelConfigService } from './labelConfigService';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, gpt, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
@@ -55,7 +59,7 @@ describe('google ad manager', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
@@ -922,9 +926,6 @@ describe('google ad manager', () => {
       it('should call googletag.pubads().refresh with slots that are not throttled', async () => {
         const step = gptRequestAds();
         const ctx = adPipelineContext();
-        const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
-        isThrottledStub.withArgs('slot-1').returns(true);
-        isThrottledStub.withArgs('slot-2').returns(false);
 
         const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
         const slot1 = {
@@ -935,6 +936,10 @@ describe('google ad manager', () => {
           adSlot: googleAdSlotStub('/123/content_2', 'slot-2'),
           moliSlot: createdAdSlot('slot-2')
         } as MoliRuntime.SlotDefinition;
+
+        const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+        isThrottledStub.withArgs(slot1.moliSlot.domId, slot1.adSlot.getAdUnitPath()).returns(true);
+        isThrottledStub.withArgs(slot2.moliSlot.domId, slot2.adSlot.getAdUnitPath()).returns(false);
 
         await step(ctx, [slot1, slot2]);
         expect(isThrottledStub).to.have.been.calledTwice;

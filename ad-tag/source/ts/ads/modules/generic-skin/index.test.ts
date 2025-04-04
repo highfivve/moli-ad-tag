@@ -9,13 +9,17 @@ import { AdSlot, headerbidding, modules, MoliConfig } from 'ad-tag/types/moliCon
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { initAdTag } from 'ad-tag/ads/moliGlobal';
 
 // setup sinon-chai
@@ -104,7 +108,7 @@ describe('Skin Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: assetLoaderService
     };
   };

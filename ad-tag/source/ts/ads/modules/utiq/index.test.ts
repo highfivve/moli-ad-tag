@@ -8,9 +8,13 @@ import { tcfapi } from 'ad-tag/types/tcfapi';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { Utiq } from './index';
 
 // setup sinon-chai
@@ -68,7 +72,7 @@ describe('Utiq Module', () => {
         labelConfigService: null as any,
         tcData: fullConsent({ 56: true }),
         adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+        auction: newGlobalAuctionContext(jsDomWindow),
         assetLoaderService: assetLoaderService
       };
     };

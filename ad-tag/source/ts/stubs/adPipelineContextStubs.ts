@@ -2,12 +2,12 @@ import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import {
   emptyRuntimeConfig,
   newEmptyConfig,
+  newGlobalAuctionContext,
   newNoopLogger,
   noopLogger
 } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { LabelConfigService } from 'ad-tag/ads/labelConfigService';
 
 export const adPipelineContext = (
@@ -26,7 +26,7 @@ export const adPipelineContext = (
   labelConfigService: new LabelConfigService([], [], jsDomWindow),
   tcData: fullConsent(),
   adUnitPathVariables: {},
-  auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+  auction: newGlobalAuctionContext(jsDomWindow),
   assetLoaderService: createAssetLoaderService(jsDomWindow),
   ...overrides
 });

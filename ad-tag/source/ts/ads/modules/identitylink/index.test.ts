@@ -2,14 +2,18 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { modules } from 'ad-tag/types/moliConfig';
 import { ATS } from 'ad-tag/types/identitylink';
 import { IdentityLink } from 'ad-tag/ads/modules/identitylink/index';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { noopLogger, emptyConfig, emptyRuntimeConfig } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 
 // setup sinon-chai
@@ -85,7 +89,7 @@ describe('IdentityLink Module', () => {
         runtimeConfig: emptyRuntimeConfig,
         tcData: fullConsent({ 97: true }),
         adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
+        auction: newGlobalAuctionContext(jsDomWindow),
         assetLoaderService: assetLoaderService
       };
     };

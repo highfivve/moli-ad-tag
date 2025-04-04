@@ -4,8 +4,13 @@ import sinonChai from 'sinon-chai';
 
 import { StickyHeaderAd } from './index';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { emptyConfig, emptyRuntimeConfig, newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  newNoopLogger,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { AdSlot, Device, MoliConfig } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
@@ -32,7 +37,7 @@ describe('sticky header ad module', () => {
       labelConfigService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: null as any
     };
   };

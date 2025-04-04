@@ -3,15 +3,16 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { AdPipelineContext, PrepareRequestAdsStep } from '../../adPipeline';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { googletag } from 'ad-tag/types/googletag';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
+  newGlobalAuctionContext,
   noopLogger
 } from 'ad-tag/stubs/moliStubs';
 import * as stickyAdModule from './footerStickyAd';
+import { initAdSticky } from './footerStickyAd';
 
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
@@ -19,7 +20,6 @@ import { AdSlot, Device, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { StickyFooterAdsV2 } from 'ad-tag/ads/modules/sticky-footer-ad-v2/index';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { initAdSticky } from './footerStickyAd';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 // setup sinon-chai
@@ -47,7 +47,7 @@ const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
   labelConfigService: null as any,
   tcData: fullConsent(),
   adUnitPathVariables: {},
-  auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+  auction: newGlobalAuctionContext(jsDomWindow),
   assetLoaderService: createAssetLoaderService(jsDomWindow)
 });
 

@@ -421,7 +421,7 @@ export const prebidRequestBids = (
       );
       const auction = new Promise<void>(resolve => {
         const slotsToRefresh = slots.filter(
-          slot => !context.auction.isSlotThrottled(slot.moliSlot.domId)
+          slot => !context.auction.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits

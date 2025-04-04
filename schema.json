@@ -516,6 +516,13 @@
           "default": false,
           "description": "If frequency capping state should be persisted into session storage.\n\nThis is necessary for SSR pages, but should be disabled for SPA pages as no real page reload is happening there.",
           "type": "boolean"
+        },
+        "positions": {
+          "description": "capping configuration for positions only.\n\nThis mirrors general ad manager frequency capping and is useful for positions that have a high impact on the user experience and thus should be reduced in frequency.",
+          "items": {
+            "$ref": "#/definitions/auction.PositionFrequencyConfig"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -544,6 +551,83 @@
           "description": "Save previous prebid bid cpms on this position"
         }
       },
+      "type": "object"
+    },
+    "auction.PositionFrequencyConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "adUnitPath": {
+          "description": "references the ad slot that should be frequency capped.\n\nThe `domId` or `adUnitCode` doesn't work for all possible use cases, as the interstitial and other out-of-page formats have an auto-generated domId at runtime by gpt.js",
+          "type": "string"
+        },
+        "conditions": {
+          "$ref": "#/definitions/auction.PositionFrequencyConfigConditions",
+          "description": "all list of conditions that need to be met before the ad slot can request ads."
+        }
+      },
+      "required": [
+        "adUnitPath",
+        "conditions"
+      ],
+      "type": "object"
+    },
+    "auction.PositionFrequencyConfigConditions": {
+      "additionalProperties": false,
+      "description": "A set of possible conditions that all need to be met before the ad slot can request ads.",
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/auction.PositionFrequencyConfigDelay"
+        },
+        "pacingInterval": {
+          "$ref": "#/definitions/auction.PositionFrequencyConfigPacingInterval"
+        },
+        "pacingRequestAds": {
+          "$ref": "#/definitions/auction.PositionFrequencyConfigPacingRequestAds"
+        }
+      },
+      "type": "object"
+    },
+    "auction.PositionFrequencyConfigDelay": {
+      "additionalProperties": false,
+      "description": "How many requestAds calls are needed before the configured ad slot can be requested",
+      "properties": {
+        "minRequestAds": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "minRequestAds"
+      ],
+      "type": "object"
+    },
+    "auction.PositionFrequencyConfigPacingInterval": {
+      "additionalProperties": false,
+      "description": "how many impressions are allowed in the defined interval for the configured ad slot.",
+      "properties": {
+        "intervalInMs": {
+          "type": "number"
+        },
+        "maxImpressions": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "maxImpressions",
+        "intervalInMs"
+      ],
+      "type": "object"
+    },
+    "auction.PositionFrequencyConfigPacingRequestAds": {
+      "additionalProperties": false,
+      "description": "how many requestAds call need to be between two winning impressions before the configured ad slot can be requested again.",
+      "properties": {
+        "requestAds": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "requestAds"
+      ],
       "type": "object"
     },
     "auction.PreviousBidCpmsConfig": {

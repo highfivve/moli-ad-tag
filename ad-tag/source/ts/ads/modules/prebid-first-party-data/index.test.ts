@@ -5,19 +5,23 @@ import sinonChai from 'sinon-chai';
 
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { PrebidFirstPartyDataModule } from './index';
+import { AdPipelineContext } from '../../adPipeline';
+import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
+import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
 import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
 import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
-import { AdPipelineContext } from '../../adPipeline';
-import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
-import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -41,7 +45,7 @@ describe('Prebid First Party Data Module', () => {
       labelConfigService: null as any,
       tcData: fullConsent(),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: assetLoaderService
     };
   };

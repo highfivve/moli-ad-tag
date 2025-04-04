@@ -5,7 +5,12 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import { LabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
@@ -25,7 +30,6 @@ import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
@@ -54,7 +58,7 @@ describe('a9', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };
@@ -364,8 +368,8 @@ describe('a9', () => {
       const slot2 = createSlotDefinitions(domId2, {});
 
       const isThrottled = sandbox.stub(contextWithConsent.auction, 'isSlotThrottled');
-      isThrottled.withArgs(domId1).returns(false);
-      isThrottled.withArgs(domId2).returns(true);
+      isThrottled.withArgs(domId1, slot1.adSlot.getAdUnitPath()).returns(false);
+      isThrottled.withArgs(domId2, slot2.adSlot.getAdUnitPath()).returns(true);
 
       await step(contextWithConsent, [slot1, slot2]);
       expect(addAdUnitsSpy).to.have.been.calledOnce;

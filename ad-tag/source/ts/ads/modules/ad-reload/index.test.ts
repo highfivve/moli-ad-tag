@@ -7,8 +7,12 @@ import { googletag } from 'ad-tag/types/googletag';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdPipelineContext } from '../../adPipeline';
-import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  newNoopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { AdSlot, behaviour, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdVisibilityService } from './adVisibilityService';
@@ -39,7 +43,7 @@ describe('Moli Ad Reload Module', () => {
       labelConfigService: null as any,
       tcData: null as any,
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: createAssetLoaderService(jsDomWindow)
     };
   };

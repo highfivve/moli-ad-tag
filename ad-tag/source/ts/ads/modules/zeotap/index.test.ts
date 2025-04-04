@@ -2,15 +2,13 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { Zeotap } from 'ad-tag/ads/modules/zeotap/index';
-import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { emptyRuntimeConfig, newGlobalAuctionContext, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 
 // setup sinon-chai
@@ -38,7 +36,7 @@ describe('Zeotap Module', () => {
       runtimeConfig: emptyRuntimeConfig,
       tcData: fullConsent({ 301: true }),
       adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
+      auction: newGlobalAuctionContext(jsDomWindow),
       assetLoaderService: assetLoaderService
     };
   };

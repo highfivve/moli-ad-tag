@@ -10,11 +10,11 @@ import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
+  newGlobalAuctionContext,
   noopLogger
 } from 'ad-tag/stubs/moliStubs';
 import { AdPipelineContext, ConfigureStep } from 'ad-tag/ads/adPipeline';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
 import Blocklist = modules.blocklist.Blocklist;
 import StaticBlocklistProvider = modules.blocklist.StaticBlocklistProvider;
@@ -54,7 +54,7 @@ describe('BlocklistedUrls Module', () => {
     labelConfigService: null as any,
     tcData: fullConsent(),
     adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
+    auction: newGlobalAuctionContext(jsDomWindow),
     assetLoaderService: assetLoaderService
   });
 

@@ -1,5 +1,7 @@
 import { MoliRuntime } from '../types/moliRuntime';
 import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { EventService } from 'ad-tag/ads/eventService';
 
 export const newNoopLogger = (withErrorLogs?: boolean): MoliRuntime.MoliLogger => {
   return {
@@ -61,4 +63,8 @@ export const emptyRuntimeConfig: MoliRuntime.MoliRuntimeConfig = newEmptyRuntime
 export const emptyTestRuntimeConfig: MoliRuntime.MoliRuntimeConfig = {
   ...newEmptyRuntimeConfig(),
   environment: 'test'
+};
+
+export const newGlobalAuctionContext = (jsDomWindow: any) => {
+  return new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService());
 };
