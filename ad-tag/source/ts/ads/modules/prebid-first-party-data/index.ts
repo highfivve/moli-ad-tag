@@ -52,6 +52,7 @@ import {
 } from 'ad-tag/ads/adPipeline';
 import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
 import { mergeDeep } from 'ad-tag/util/objectUtils';
+import { extractTopPrivateDomainFromHostname } from 'ad-tag/util/extractTopPrivateDomainFromHostname';
 
 export class PrebidFirstPartyDataModule implements IModule {
   readonly description = 'Module for passing first party data to prebid auctions';
@@ -144,10 +145,15 @@ export class PrebidFirstPartyDataModule implements IModule {
             site.pagecat = site.pagecat.filter(uniquePrimitiveFilter);
           }
 
+          const provider =
+            config.iabDataProviderName ??
+            extractTopPrivateDomainFromHostname(context.window.location.hostname);
+
           if (!config.iabDataProviderName && (gptTargeting.iabV2 || gptTargeting.iabV3)) {
-            log.error(
+            log.debug(
               'PrebidFirstPartyDataModule',
-              'Targeting for iabV2 or iabV3 was defined, but iabDataProviderName was not configured. Data Segments will not be set.'
+              'Targeting for iabV2 or iabV3 was defined, but iabDataProviderName was not configured. Use tld as fallback',
+              provider
             );
           }
 
@@ -155,18 +161,18 @@ export class PrebidFirstPartyDataModule implements IModule {
           // This prevents duplicated entries in the site.content.data array.
           site.content = {
             ...site.content,
-            data: site.content?.data?.filter(data => data.name !== config.iabDataProviderName) ?? []
+            data: site.content?.data?.filter(data => data.name !== provider) ?? []
           };
 
           // Set site.content.data objects with the publisher as data provider and the iab v2 segments for this page.
-          if (gptTargeting.iabV2 && config.iabDataProviderName) {
+          if (gptTargeting.iabV2 && provider) {
             const iabV2Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
               gptTargeting.iabV2,
               keyValues
             );
 
             const publisherContentData: OpenRtb2Data = {
-              name: config.iabDataProviderName,
+              name: provider,
               ext: {
                 segtax: 6 // Segtax version for IAB Tech Lab Content Taxonomy 2.2
               },
@@ -177,14 +183,14 @@ export class PrebidFirstPartyDataModule implements IModule {
           }
 
           // Set site.content.data objects with the publisher as data provider and the iab v3 segments for this page.
-          if (gptTargeting.iabV3 && config.iabDataProviderName) {
+          if (gptTargeting.iabV3 && provider) {
             const iabV3Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
               gptTargeting.iabV3,
               keyValues
             );
 
             const publisherContentData: OpenRtb2Data = {
-              name: config.iabDataProviderName,
+              name: provider,
               ext: {
                 segtax: 7 // Segtax version for IAB Tech Lab Content Taxonomy 3
               },
