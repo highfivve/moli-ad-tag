@@ -366,12 +366,17 @@ export class AdPipeline {
           ? config.buckets.bucket[bucketName]
           : null;
 
-      const adUnitPathVariables = generateAdUnitPathVariables(
+      const defaultAdUnitPathVariables = generateAdUnitPathVariables(
         this.window.location.hostname,
         labelConfigService.getDeviceLabel(),
         config.targeting?.adUnitPathVariables,
         config.domain
       );
+
+      const adUnitPathVariables = {
+        ...defaultAdUnitPathVariables,
+        ...runtimeConfig.adUnitPathVariables
+      };
 
       // the context is based on the consent data
       const context: AdPipelineContext = {
