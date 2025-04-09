@@ -251,6 +251,36 @@ describe('AdPipeline', () => {
       expect(spyFn.secondCall).calledWithExactly('2', 'priority 2');
       expect(spyFn.thirdCall).calledWithExactly('3', 'priority 1');
     });
+
+    it('should prioritize adUnitPathVariables from the runtime config over the static config', async () => {
+      const adUnitPathVariables = { domain: 'example.com', device: 'mobile' };
+      const runtimeConfig: MoliRuntime.MoliRuntimeConfig = {
+        ...emptyRuntimeConfig,
+        adUnitPathVariables: { ...adUnitPathVariables, device: 'desktop' }
+      };
+      const moliConfig: MoliConfig = {
+        ...emptyConfig,
+        targeting: {
+          keyValues: {},
+          adUnitPathVariables
+        }
+      };
+
+      const pipeline = newAdPipeline({
+        ...emptyPipelineConfig,
+        defineSlots: () => Promise.resolve([{ moliSlot: adSlot } as SlotDefinition]),
+        prepareRequestAds: [
+          mkPrepareRequestAdsStep('step', 1, context => {
+            expect(context.adUnitPathVariables).to.deep.equal({
+              domain: 'example.com',
+              device: 'desktop'
+            });
+            return Promise.resolve();
+          })
+        ]
+      });
+      await pipeline.run([adSlot], moliConfig, runtimeConfig, 1);
+    });
   });
 
   describe('pipeline context', () => {
