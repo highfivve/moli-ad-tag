@@ -69,9 +69,11 @@ export class AdVisibilityService {
     }
 
     if (!useIntersectionObserver) {
-      this.window.googletag
-        .pubads()
-        .addEventListener('slotVisibilityChanged', this.handleGoogletagAdVisibilityChanged);
+      this.window.googletag.cmd.push(() => {
+        this.window.googletag
+          .pubads()
+          .addEventListener('slotVisibilityChanged', this.handleGoogletagAdVisibilityChanged);
+      });
     }
 
     this.userActivityService.addUserActivityChangedListener(state =>
