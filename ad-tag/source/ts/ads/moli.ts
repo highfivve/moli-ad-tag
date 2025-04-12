@@ -422,12 +422,16 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                 state.state === 'spa-requestAds' &&
                 allowRefreshAdSlot(validateLocation, state.href, window.location)
               ) {
-                // TODO never call this if refreshSlots is empty
-                adService.refreshAdSlots(
-                  state.runtimeConfig.refreshSlots,
-                  state.config,
-                  state.runtimeConfig
-                );
+                const { config, runtimeConfig } = state;
+                if (state.runtimeConfig.refreshSlots.length > 0) {
+                  adService.refreshAdSlots(runtimeConfig.refreshSlots, config, runtimeConfig);
+                }
+
+                if (state.runtimeConfig.refreshBuckets.length > 0) {
+                  state.runtimeConfig.refreshBuckets.forEach(bucket => {
+                    adService.refreshBucket(bucket.bucket, config, runtimeConfig, bucket.options);
+                  });
+                }
                 afterRequestAds.forEach(hook => hook('spa-finished'));
                 const finishedState: MoliRuntime.state.ISinglePageApp = {
                   ...state,
@@ -548,9 +552,21 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             return adService.requestAds(config, nextRuntimeConfig).then(() => config);
           })
           .then(config => {
+            const runtimeConfig = state.runtimeConfig;
             // if there are refreshAdSlot calls while the requestAds() call is still resolving, there might be new
             // refreshAdSlot calls being queued. Now we can refresh them
-            adService.refreshAdSlots(state.runtimeConfig.refreshSlots, config, state.runtimeConfig);
+            if (state.runtimeConfig.refreshSlots.length > 0) {
+              adService.refreshAdSlots(
+                state.runtimeConfig.refreshSlots,
+                config,
+                state.runtimeConfig
+              );
+            }
+            if (state.runtimeConfig.refreshBuckets.length > 0) {
+              state.runtimeConfig.refreshBuckets.forEach(bucket => {
+                adService.refreshBucket(bucket.bucket, config, runtimeConfig, bucket.options);
+              });
+            }
 
             // requesting ads has finished.
             state = {
@@ -719,41 +735,19 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     bucket: string,
     options?: MoliRuntime.RefreshAdSlotsOptions
   ): Promise<'queued' | 'refreshed'> {
-    // A helper function to retrieve domIds that belong to buckets.
-    function getBucketDomIds(config: MoliConfig): string[] {
-      const slotsInBucket = config.slots.filter(
-        slot =>
-          slot.behaviour.bucket &&
-          ((typeof slot.behaviour.bucket === 'string' && slot.behaviour.bucket === bucket) ||
-            Object.values(slot.behaviour.bucket).includes(bucket))
-      );
-      return slotsInBucket?.map(slot => slot.domId);
-    }
-
-    // FIXME the options are not persisted in the state, so they are not used in the refreshBucket call
-
     switch (state.state) {
       case 'configurable': {
-        const slotsInBucket = moliWindow.moli
-          .getConfig()
-          ?.slots.filter(slot => slot.behaviour.bucket === bucket);
-        const domIds = slotsInBucket?.map(slot => slot.domId);
-        if (domIds?.length) {
-          state.runtimeConfig.refreshSlots.push(...domIds);
-          return Promise.resolve('queued');
-        }
-        return Promise.reject('no configurable domIds for buckets');
+        state.runtimeConfig.refreshBuckets.push({ bucket, options });
+        return Promise.resolve('queued');
       }
       case 'configured': {
-        const domIds = getBucketDomIds(state.config);
-        state.runtimeConfig.refreshSlots.push(...domIds);
+        state.runtimeConfig.refreshBuckets.push({ bucket, options });
         return Promise.resolve('queued');
       }
       // if requestAds is currently called we batch the refreshAdSlot calls until
       // we hit the 'spa-finished' state
       case 'spa-requestAds': {
-        const domIds = getBucketDomIds(state.config);
-        state.runtimeConfig.refreshSlots.push(...domIds);
+        state.runtimeConfig.refreshBuckets.push({ bucket, options });
         return Promise.resolve('queued');
       }
       // If we arrive in the spa-finished state we refresh slots immediately and don't batch them
@@ -767,9 +761,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             .refreshBucket(bucket, state.config, state.runtimeConfig, options)
             .then(() => 'refreshed');
         } else {
-          const domIds = getBucketDomIds(state.config);
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.runtimeConfig.refreshSlots.push(...domIds);
+          state.runtimeConfig.refreshBuckets.push({ bucket, options });
           return Promise.resolve('queued');
         }
       }
@@ -778,7 +771,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'finished':
       case 'requestAds': {
         return adService
-          .refreshBucket(bucket, state.config, state.runtimeConfig)
+          .refreshBucket(bucket, state.config, state.runtimeConfig, options)
           .then(() => 'refreshed');
       }
       default: {
@@ -896,6 +889,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       keyValues: options?.keepTargeting === true ? (previous?.keyValues ?? {}) : {},
       refreshSlots: [],
       refreshInfiniteSlots: [],
+      refreshBuckets: [],
       // the pipeline is always reset to an empty state as they can be altered after the first requestAds() call.
       // stacking up pipeline steps would lead to unexpected behavior, when the same step is added multiple times.
       adPipelineConfig: {
