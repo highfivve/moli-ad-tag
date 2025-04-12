@@ -409,14 +409,15 @@ describe('AdService', () => {
     const requestAds = (
       slots: AdSlot[],
       refreshSlots: string[] = [],
-      refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[],
+      refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[] = [],
+      refreshBuckets: MoliRuntime.IRefreshBucket[] = [],
       logger: MoliLogger = noopLogger
     ): Promise<AdSlot[]> => {
       const adService = makeAdService();
       adService.setLogger(logger);
       return adService.requestAds(
         { ...emptyConfig, slots: slots },
-        { ...emptyRuntimeConfig, refreshSlots, refreshInfiniteSlots }
+        { ...emptyRuntimeConfig, refreshSlots, refreshInfiniteSlots, refreshBuckets }
       );
     };
 
@@ -488,6 +489,96 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
+      describe('runtimeConfig refreshBuckets queue', () => {
+        it('should run the ad pipeline with the refreshBuckets', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot2: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket2' } }
+          };
+          const slots = [slot1, slot2];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [
+            { bucket: 'bucket1' },
+            { bucket: 'bucket2' }
+          ];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            { ...emptyRuntimeConfig, refreshBuckets }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1, slot2]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+
+        it('should run the ad pipeline with the refreshBuckets and refreshSlots without running a slot twice', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot2: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket2' } }
+          };
+          const slots = [slot1, slot2];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [{ bucket: 'bucket1' }];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            {
+              ...emptyRuntimeConfig,
+              refreshSlots: [slot1.domId],
+              refreshBuckets
+            }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+
+        it('should run no backfill slots if specified in the refreshBuckets with default options', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot1Backfill: AdSlot = {
+            ...slot1,
+            behaviour: { loaded: 'backfill', bucket: { mobile: 'bucket1' } }
+          };
+          const slots = [slot1, slot1Backfill];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [{ bucket: 'bucket1' }];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            { ...emptyRuntimeConfig, refreshBuckets }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+      });
+
       describe('generic buckets', () => {
         const eagerAdSlot1: AdSlot = {
           ...eagerAdSlot(),

@@ -397,6 +397,8 @@ export namespace MoliRuntime {
      */
     readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
 
+    readonly refreshBuckets: IRefreshBucket[];
+
     /**
      * Add hooks on specific state changes.
      */
@@ -442,6 +444,18 @@ export namespace MoliRuntime {
      */
     readonly sizesOverride?: googleAdManager.SlotSize[];
   }
+
+  export type IRefreshBucket = {
+    /**
+     * the bucket name
+     */
+    readonly bucket: string;
+
+    /**
+     * optional refresh bucket options
+     */
+    readonly options?: MoliRuntime.RefreshAdSlotsOptions;
+  };
 
   /**
    * Models `refreshInifiniteAdSlot` calls before ads are being requested

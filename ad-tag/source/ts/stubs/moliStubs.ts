@@ -54,6 +54,7 @@ export const newEmptyRuntimeConfig = (): MoliRuntime.MoliRuntimeConfig => ({
   logger: noopLogger,
   adUnitPathVariables: {},
   refreshSlots: [],
+  refreshBuckets: [],
   refreshInfiniteSlots: []
 });
 

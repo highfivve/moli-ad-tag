@@ -387,10 +387,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      await adTag.configure({
-        ...defaultConfig,
-        slots: slots
-      });
+      await adTag.configure({ ...defaultConfig, slots: slots });
 
       await adTag.refreshBucket('one');
       await adTag.requestAds();
@@ -410,15 +407,16 @@ describe('moli', () => {
         {
           ...mkAdSlotInDOM(),
           behaviour: { loaded: 'manual', bucket: { mobile: 'two', desktop: 'one' } }
+        },
+        {
+          ...mkAdSlotInDOM(),
+          behaviour: { loaded: 'manual', bucket: { mobile: 'one', desktop: 'one' } }
         }
       ];
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      adTag.configure({
-        ...defaultConfig,
-        slots: slots
-      });
+      await adTag.configure({ ...defaultConfig, slots: slots });
 
       await adTag.refreshBucket('one');
       await adTag.requestAds();
@@ -428,7 +426,7 @@ describe('moli', () => {
       const domIds = (refreshSpy.firstCall.args[0] || []).map(slot => slot.getSlotElementId());
       expect(domIds).to.have.length(2);
       expect(domIds[0]).to.be.eq(slots[0].domId);
-      expect(domIds[1]).to.be.eq(slots[2].domId);
+      expect(domIds[1]).to.be.eq(slots[3].domId);
     });
 
     it("should refresh no slots when the bucket doesn't exist", async () => {
@@ -449,25 +447,25 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('finished');
       expect(refreshSpy).to.have.not.been.called;
     });
-  });
 
-  it('should refresh no slots when no buckets are set', async () => {
-    const slots: AdSlot[] = [
-      { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: undefined } }
-    ];
-    const adTag = createMoliTag(jsDomWindow);
-    const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+    it('should refresh no slots when no buckets are set', async () => {
+      const slots: AdSlot[] = [
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: undefined } }
+      ];
+      const adTag = createMoliTag(jsDomWindow);
+      const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-    adTag.configure({
-      ...defaultConfig,
-      slots: slots
+      adTag.configure({
+        ...defaultConfig,
+        slots: slots
+      });
+
+      await adTag.refreshBucket('two');
+      await adTag.requestAds();
+      // refresh after requestAds has been called
+      expect(adTag.getState()).to.be.eq('finished');
+      expect(refreshSpy).to.have.not.been.called;
     });
-
-    await adTag.refreshBucket('two');
-    await adTag.requestAds();
-    // refresh after requestAds has been called
-    expect(adTag.getState()).to.be.eq('finished');
-    expect(refreshSpy).to.have.not.been.called;
   });
 
   describe('refreshAds()', () => {
