@@ -1,9 +1,9 @@
 import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
-import { BiddersDisabling } from './auctions/biddersDisabling';
+import { createBiddersDisabling } from './auctions/biddersDisabling';
 import { createAdRequestThrottling } from './auctions/adRequestThrottling';
 import { auction } from '../types/moliConfig';
-import { FrequencyCapping } from './auctions/frequencyCapping';
+import { createFrequencyCapping } from './auctions/frequencyCapping';
 import { PreviousBidCpms } from './auctions/previousBidCpms';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
@@ -45,7 +45,7 @@ export const createGlobalAuctionContext = (
   config: auction.GlobalAuctionContextConfig = {}
 ): GlobalAuctionContext => {
   const biddersDisabling = config.biddersDisabling?.enabled
-    ? new BiddersDisabling(config.biddersDisabling, window)
+    ? createBiddersDisabling(config.biddersDisabling, window)
     : undefined;
 
   const adRequestThrottling = config.adRequestThrottling?.enabled
@@ -53,7 +53,7 @@ export const createGlobalAuctionContext = (
     : undefined;
 
   const frequencyCapping = config.frequencyCap?.enabled
-    ? new FrequencyCapping(config.frequencyCap, window, window.Date.now, logger)
+    ? createFrequencyCapping(config.frequencyCap, window, window.Date.now, logger)
     : undefined;
 
   const previousBidCpms = config.previousBidCpms?.enabled ? new PreviousBidCpms() : undefined;
