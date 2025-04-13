@@ -63,30 +63,30 @@ export class PrebidFirstPartyDataModule implements IModule {
     null;
   private _configureSteps: ConfigureStep[] = [];
 
-  config(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
+  config__(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
     return this.moduleConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.prebidFirstPartyData?.enabled) {
       const config = moduleConfig.prebidFirstPartyData;
       this._configureSteps = [
         mkConfigureStep('prebid-fpd-module-configure', context =>
-          PrebidFirstPartyDataModule.setPrebidFpdConfig(context, config, context.logger)
+          PrebidFirstPartyDataModule.setPrebidFpdConfig(context, config, context.logger__)
         )
       ];
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return this._configureSteps;
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
@@ -95,12 +95,12 @@ export class PrebidFirstPartyDataModule implements IModule {
     config: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig,
     log: MoliRuntime.MoliLogger
   ): Promise<void> {
-    if (context.config.prebid) {
-      const keyValues = context.config.targeting?.keyValues || {};
+    if (context.config__.prebid) {
+      const keyValues = context.config__.targeting?.keyValues || {};
       const gptTargeting = config.gptTargetingMappings;
 
-      context.window.pbjs.que.push(() => {
-        const existingFpd = context.window.pbjs.readConfig().ortb2 || {};
+      context.window__.pbjs.que.push(() => {
+        const existingFpd = context.window__.pbjs.readConfig().ortb2 || {};
 
         // extract key-values from gpt targeting
         const ortb2FromKeyValues = mergeDeep({}, config.staticPrebidFirstPartyData, existingFpd);
@@ -147,7 +147,7 @@ export class PrebidFirstPartyDataModule implements IModule {
 
           const provider =
             config.iabDataProviderName ??
-            extractTopPrivateDomainFromHostname(context.window.location.hostname);
+            extractTopPrivateDomainFromHostname(context.window__.location.hostname);
 
           if (!config.iabDataProviderName && (gptTargeting.iabV2 || gptTargeting.iabV3)) {
             log.debug(
@@ -203,7 +203,7 @@ export class PrebidFirstPartyDataModule implements IModule {
           ortb2FromKeyValues.site = site;
         }
 
-        context.window.pbjs.setConfig({ ortb2: ortb2FromKeyValues });
+        context.window__.pbjs.setConfig({ ortb2: ortb2FromKeyValues });
       });
     }
 

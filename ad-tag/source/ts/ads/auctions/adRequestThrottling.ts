@@ -1,35 +1,38 @@
 import { googletag } from '../../types/googletag';
 import { auction } from '../../types/moliConfig';
 
-export class AdRequestThrottling {
-  /**
-   * stores the information if a slot was requested and should not be requested again
-   * @private
-   */
-  private slotsRequested: Set<string> = new Set();
+export interface AdRequestThrottling {
+  onSlotRequested(event: googletag.events.ISlotRequestedEvent): void;
+  isThrottled(slotId: string): boolean;
+}
 
-  constructor(
-    private readonly config: auction.AdRequestThrottlingConfig,
-    private readonly _window: Window
-  ) {}
+export const createAdRequestThrottling = (
+  config: auction.AdRequestThrottlingConfig,
+  _window: Window
+): AdRequestThrottling => {
+  const slotsRequested: Set<string> = new Set();
 
-  onSlotRequested(event: googletag.events.ISlotRequestedEvent) {
+  function onSlotRequested(event: googletag.events.ISlotRequestedEvent): void {
     const slotId = event.slot.getSlotElementId();
-    // slot info should only be added if there's no list of included dom ids or the list includes the current slot id
     const shouldAddSlot =
-      !this.config.includedDomIds ||
-      this.config.includedDomIds.length === 0 ||
-      this.config.includedDomIds.includes(slotId);
+      !config.includedDomIds ||
+      config.includedDomIds.length === 0 ||
+      config.includedDomIds.includes(slotId);
 
     if (shouldAddSlot) {
-      this.slotsRequested.add(slotId);
-      this._window.setTimeout(() => {
-        this.slotsRequested.delete(slotId);
-      }, this.config.throttle * 1000);
+      slotsRequested.add(slotId);
+      _window.setTimeout(() => {
+        slotsRequested.delete(slotId);
+      }, config.throttle * 1000);
     }
   }
 
-  isThrottled(slotId: string): boolean {
-    return this.slotsRequested.has(slotId);
+  function isThrottled(slotId: string): boolean {
+    return slotsRequested.has(slotId);
   }
-}
+
+  return {
+    onSlotRequested,
+    isThrottled
+  };
+};

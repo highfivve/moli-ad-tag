@@ -32,59 +32,45 @@ type BidderState = {
  * @param config - configuration object
  * @param window - window object
  */
-export class BiddersDisabling {
-  private participationInfo: Map<string, Map<prebidjs.BidderCode, BidderState>> = new Map();
-  private logger?: MoliRuntime.MoliLogger;
-  constructor(
-    private readonly config: auction.BidderDisablingConfig,
-    private readonly window: Window
-  ) {
-    this.logger?.info(`Bidders disabling feature is ${config.enabled ? 'enabled' : 'disabled'}`);
-  }
+export interface BiddersDisabling {
+  isBidderDisabled(position: string, bidderCode: prebidjs.BidderCode): boolean;
+  onAuctionEnd(auction: prebidjs.event.AuctionObject): void;
+}
 
-  /**
-   * Disable bidders that have low bid rate as specified in the configuration.
-   * This method should be used to filter bid objects before an auction starts.
-   *
-   * Note that by default bidders are never disabled.
-   *
-   * @param position the DOM id of the ad unit that should be checked
-   * @param bidderCode the prebid.js client side bidder code
-   * @returns true if the bidder is disabled for the given position, false otherwise
-   */
-  public isBidderDisabled(position: string, bidderCode: prebidjs.BidderCode): boolean {
-    return this.participationInfo.get(position)?.get(bidderCode)?.disabled ?? false;
-  }
+export const createBiddersDisabling = (
+  config: auction.BidderDisablingConfig,
+  window: Window,
+  logger?: MoliRuntime.MoliLogger
+): BiddersDisabling => {
+  const participationInfo: Map<string, Map<prebidjs.BidderCode, BidderState>> = new Map();
 
-  /**
-   * This method is called when the auction ends.
-   * @param auction - auction object that contains information about the bids and bid requests.
-   * For more info, execute => pbjs.getEvents().filter(event => (event.eventType === 'auctionEnd'))
-   * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
-   */
-  public onAuctionEnd(auction: prebidjs.event.AuctionObject): void {
+  logger?.info(`Bidders disabling feature is ${config.enabled ? 'enabled' : 'disabled'}`);
+
+  const isBidderDisabled = (position: string, bidderCode: prebidjs.BidderCode): boolean => {
+    return participationInfo.get(position)?.get(bidderCode)?.disabled ?? false;
+  };
+
+  const onAuctionEnd = (auction: prebidjs.event.AuctionObject): void => {
     auction.bidderRequests?.forEach(bidderRequest => {
-      // iterate over all bids and in each bid request and update participationInfo
       bidderRequest?.bids?.forEach(bid => {
         const bidderCode = bid.bidder;
         const adUnitCode = bid.adUnitCode;
 
-        const foundPosition = this.participationInfo.get(adUnitCode);
-        if (!foundPosition) {
-          this.participationInfo.set(adUnitCode, new Map());
+        if (!participationInfo.get(adUnitCode)) {
+          participationInfo.set(adUnitCode, new Map());
         }
 
-        const bidderState = this.participationInfo.get(adUnitCode)?.get(bidderCode);
+        const bidderState = participationInfo.get(adUnitCode)?.get(bidderCode);
 
         if (bidderState) {
           const newBidRequestCount = bidderState.bidRequestCount + 1;
 
-          this.participationInfo.get(adUnitCode)?.set(bidderCode, {
+          participationInfo.get(adUnitCode)?.set(bidderCode, {
             ...bidderState,
             bidRequestCount: newBidRequestCount
           });
         } else {
-          this.participationInfo.get(adUnitCode)?.set(bidderCode, {
+          participationInfo.get(adUnitCode)?.set(bidderCode, {
             disabled: false,
             bidRequestCount: 1,
             bidReceivedCount: 0
@@ -97,60 +83,64 @@ export class BiddersDisabling {
       const bidderForPosition = bidReceived.bidderCode;
       const position = bidReceived.adUnitCode;
 
-      const bidderState = this.participationInfo.get(position)?.get(bidderForPosition);
+      const bidderState = participationInfo.get(position)?.get(bidderForPosition);
       if (bidderState) {
-        this.participationInfo.get(position)?.set(bidderForPosition, {
+        participationInfo.get(position)?.set(bidderForPosition, {
           ...bidderState,
           bidReceivedCount: bidderState.bidReceivedCount + 1
         });
       } else {
-        this.participationInfo.get(position)?.set(bidderForPosition, {
+        participationInfo.get(position)?.set(bidderForPosition, {
           disabled: false,
           bidRequestCount: 1,
           bidReceivedCount: 1
         });
       }
     });
-    // deactivate bidders that should be disabled after updating participationInfo, and schedule their reactivation
-    this.deactivateBidderForTTL();
-  }
 
-  private deactivateBidderForTTL() {
-    this.participationInfo.forEach((bidders, position) => {
+    deactivateBidderForTTL();
+  };
+
+  const deactivateBidderForTTL = () => {
+    participationInfo.forEach((bidders, position) => {
       bidders.forEach((bidderState, bidderCode) => {
-        if (this.shouldDisableBidder(bidderState)) {
-          this.disableBidder(position, bidderCode);
+        if (shouldDisableBidder(bidderState)) {
+          disableBidder(position, bidderCode);
 
-          this.window.setTimeout(() => {
-            this.enableBidder(position, bidderCode);
-          }, this.config.reactivationPeriod);
+          window.setTimeout(() => {
+            enableBidder(position, bidderCode);
+          }, config.reactivationPeriod);
         }
       });
     });
-  }
+  };
 
-  // check if bidder should be disabled based on the bid rate and the number of bid requests
-  private shouldDisableBidder(bidderState: BidderState): boolean {
+  const shouldDisableBidder = (bidderState: BidderState): boolean => {
     return (
-      bidderState.bidRequestCount > this.config.minBidRequests &&
-      bidderState.bidReceivedCount / bidderState.bidRequestCount < this.config.minRate &&
+      bidderState.bidRequestCount > config.minBidRequests &&
+      bidderState.bidReceivedCount / bidderState.bidRequestCount < config.minRate &&
       !bidderState.disabled
     );
-  }
+  };
 
-  private disableBidder(position: string, bidderCode: prebidjs.BidderCode) {
-    const bidderState = this.participationInfo.get(position)?.get(bidderCode);
+  const disableBidder = (position: string, bidderCode: prebidjs.BidderCode) => {
+    const bidderState = participationInfo.get(position)?.get(bidderCode);
     if (bidderState) {
       bidderState.disabled = true;
-      this.logger?.info(`Bidder ${bidderCode} for position ${position} is now disabled.`);
+      logger?.info(`Bidder ${bidderCode} for position ${position} is now disabled.`);
     }
-  }
+  };
 
-  private enableBidder(position: string, bidderCode: prebidjs.BidderCode) {
-    const bidderState = this.participationInfo.get(position)?.get(bidderCode);
+  const enableBidder = (position: string, bidderCode: prebidjs.BidderCode) => {
+    const bidderState = participationInfo.get(position)?.get(bidderCode);
     if (bidderState) {
       bidderState.disabled = false;
-      this.logger?.info(`Bidder ${bidderCode} for position ${position} is now enabled.`);
+      logger?.info(`Bidder ${bidderCode} for position ${position} is now enabled.`);
     }
-  }
-}
+  };
+
+  return {
+    isBidderDisabled,
+    onAuctionEnd
+  };
+};

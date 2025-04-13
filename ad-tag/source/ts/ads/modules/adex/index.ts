@@ -169,17 +169,17 @@ export class AdexModule implements IModule {
 
   private isLoaded: boolean = false;
 
-  config(): modules.adex.AdexConfig | null {
+  config__(): modules.adex.AdexConfig | null {
     return this.adexConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.adex && moduleConfig.adex.enabled) {
       this.adexConfig = moduleConfig.adex;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.adexConfig;
     if (config) {
       return [mkInitStep('DMP module setup', context => this.track(context, config))];
@@ -187,7 +187,7 @@ export class AdexModule implements IModule {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.adexConfig;
     if (config?.spaMode) {
       return [
@@ -215,13 +215,13 @@ export class AdexModule implements IModule {
     const adexKeyValues = this.getAdexKeyValues(context, adexConfig);
 
     const gamKeyValues: googleAdManager.KeyValueMap = {
-      ...context.config.targeting?.keyValues,
-      ...context.runtimeConfig.keyValues
+      ...context.config__.targeting?.keyValues,
+      ...context.runtimeConfig__.keyValues
     };
 
     // load script or make request (appMode) if consent is given
     if (
-      this.hasRequiredConsent(context.tcData) &&
+      this.hasRequiredConsent(context.tcData__) &&
       !this.isLoaded &&
       Object.keys(gamKeyValues).length > 0
     ) {
@@ -237,7 +237,7 @@ export class AdexModule implements IModule {
           gamKeyValues[appConfig.clientTypeKey] === 'ios');
 
       if (appConfig?.advertiserIdKey && hasValidMobileKeyValues) {
-        const consentString = context.tcData.gdprApplies ? context.tcData.tcString : undefined;
+        const consentString = context.tcData__.gdprApplies ? context.tcData__.tcString : undefined;
 
         // only send request if advertisingId is a single string (no array)
         const advertisingIdValue = gamKeyValues[appConfig.advertiserIdKey];
@@ -249,18 +249,18 @@ export class AdexModule implements IModule {
             advertisingIdValue,
             adexKeyValues,
             gamKeyValues[appConfig.clientTypeKey] ?? '',
-            context.window.fetch,
-            context.logger,
+            context.window__.fetch,
+            context.logger__,
             consentString
           );
       } else {
-        context.assetLoaderService
+        context.assetLoaderService__
           .loadScript({
             name: this.name,
             assetUrl: `https://dmp.theadex.com/d/${adexCustomerId}/${adexTagId}/s/adex.js`,
             loadMethod: AssetLoadMethod.TAG
           })
-          .catch(error => context.logger.error('failed to load adex', error));
+          .catch(error => context.logger__.error('failed to load adex', error));
       }
     }
 
@@ -283,7 +283,7 @@ export class AdexModule implements IModule {
         TCPurpose.DEVELOP_IMPROVE_PRODUCTS
       ].every(purpose => tcData.purpose.consents[purpose]));
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
@@ -298,8 +298,8 @@ export class AdexModule implements IModule {
     config: modules.adex.AdexConfig
   ): (modules.adex.AdexKeyValuePair | modules.adex.AdexKeyValueMap)[] | undefined => {
     const gamKeyValues: googleAdManager.KeyValueMap = {
-      ...context.config.targeting?.keyValues,
-      ...context.runtimeConfig.keyValues
+      ...context.config__.targeting?.keyValues,
+      ...context.runtimeConfig__.keyValues
     };
 
     if (Object.keys(gamKeyValues).length > 0) {
@@ -307,11 +307,11 @@ export class AdexModule implements IModule {
         .map(def => {
           switch (def.adexValueType) {
             case 'map':
-              return toAdexMapType(gamKeyValues, def, context.logger);
+              return toAdexMapType(gamKeyValues, def, context.logger__);
             case 'list':
-              return toAdexListType(gamKeyValues, def, context.logger);
+              return toAdexListType(gamKeyValues, def, context.logger__);
             default:
-              return toAdexStringOrNumberType(gamKeyValues, def, context.logger);
+              return toAdexStringOrNumberType(gamKeyValues, def, context.logger__);
           }
         })
         .filter(isNotNull);
@@ -319,10 +319,10 @@ export class AdexModule implements IModule {
   };
 
   private configureAdexC = (context: AdPipelineContext, config: modules.adex.AdexConfig): void => {
-    const adexWindow = this.getOrInitAdexQueue(context.window);
+    const adexWindow = this.getOrInitAdexQueue(context.window__);
     const adexKeyValues = this.getAdexKeyValues(context, config);
     if (!adexKeyValues) {
-      context.logger.warn('Adex DMP', 'targeting key/values are empty');
+      context.logger__.warn('Adex DMP', 'targeting key/values are empty');
     } else {
       adexWindow._adexc.push([
         `/${config.adexCustomerId}/${config.adexTagId}/`,

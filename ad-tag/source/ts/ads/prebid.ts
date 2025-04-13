@@ -31,7 +31,7 @@ import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
 const prebidTimeout = (context: AdPipelineContext) => {
   return new Promise<void>((_, reject) => {
-    context.window.setTimeout(
+    context.window__.setTimeout(
       () =>
         reject(
           'Prebid did not resolve in time. Maybe you forgot to import the prebid distribution in the ad tag'
@@ -113,9 +113,9 @@ const createdAdUnits = (
             }
           }
         : null;
-      context.logger.debug(
+      context.logger__.debug(
         'Prebid',
-        context.requestId,
+        context.requestId__,
         'Price Rule',
         priceRule,
         moliSlot.domId,
@@ -138,17 +138,18 @@ const createdAdUnits = (
           // filter bids ourselves and don't rely on prebid to have a stable API
           // we also remove the bid labels so prebid doesn't require them
           const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
-            .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
-            .filter((bid: prebidjs.IBid) => {
-              return bid.bidder && context.auction.biddersDisabling
-                ? !context.auction.biddersDisabling.isBidderDisabled(moliSlot.domId, bid.bidder)
-                : true;
-            })
-            .filter((bid: prebidjs.IBid) => {
-              return bid.bidder && context.auction.frequencyCapping
-                ? !context.auction.isBidderFrequencyCappedOnSlot(moliSlot.domId, bid.bidder)
-                : true;
-            })
+            .filter((bid: prebidjs.IBid) => context.labelConfigService__.filterSlot(bid))
+            .filter(
+              (bid: prebidjs.IBid) =>
+                !bid.bidder ||
+                (bid.bidder && !context.auction__.isBidderDisabled(moliSlot.domId, bid.bidder))
+            )
+            .filter(
+              (bid: prebidjs.IBid) =>
+                !bid.bidder ||
+                (bid.bidder &&
+                  !context.auction__.isBidderFrequencyCappedOnSlot(moliSlot.domId, bid.bidder))
+            )
             .map(bid => {
               // we remove the labelAll and labelAny fields from the bid object to ensure that prebid doesn't
               // interfere with the label filtering from our end
@@ -195,7 +196,7 @@ const createdAdUnits = (
             ...prebidAdSlotConfig.adUnit.pubstack,
             adUnitPath: resolveAdUnitPath(
               prebidAdSlotConfig.adUnit.pubstack?.adUnitPath || moliSlot.adUnitPath,
-              context.adUnitPathVariables
+              context.adUnitPathVariables__
             )
           };
 
@@ -205,7 +206,7 @@ const createdAdUnits = (
             storedRequest && storedRequest.id
               ? {
                   ...storedRequest,
-                  id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables)
+                  id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables__)
                 }
               : null;
 
@@ -237,7 +238,7 @@ const createdAdUnits = (
             // some mediaType must be defined
             (adUnit.mediaTypes.banner || adUnit.mediaTypes.video || adUnit.mediaTypes.native) &&
             // if an adUnit is already defined we should not add it a second time
-            !isAdUnitDefined(adUnit, context.window)
+            !isAdUnitDefined(adUnit, context.window__)
         );
     });
 
@@ -246,26 +247,26 @@ const createdAdUnits = (
 
 export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
   mkInitStep('prebid-init', context => {
-    context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
+    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
 
     // enable configured analytic adapters in prebid. Note that longstanding analytics vendors usually have no
     // prebid analytics adapter, but rather are loaded through an external script. Like pubstack and assertive yield do this
-    const analyticAdapters = context.config.prebid?.analyticAdapters;
+    const analyticAdapters = context.config__.prebid?.analyticAdapters;
     if (analyticAdapters && analyticAdapters.length > 0) {
-      context.window.pbjs.que.push(() => {
-        context.window.pbjs.enableAnalytics(analyticAdapters);
+      context.window__.pbjs.que.push(() => {
+        context.window__.pbjs.enableAnalytics(analyticAdapters);
       });
     }
 
     // if there's already prebid distribution loaded, just go ahead. Even if there's a distributionUrl set, we must not
     // load the external resources as this would create unintentional conflicts.
-    if (context.window.pbjs.libLoaded) {
+    if (context.window__.pbjs.libLoaded) {
       return Promise.resolve();
-    } else if (context.config.prebid?.distributionUrl) {
+    } else if (context.config__.prebid?.distributionUrl) {
       // load as a side effect and don't block the pipeline
       assetService.loadScript({
         name: 'prebid',
-        assetUrl: context.config.prebid.distributionUrl,
+        assetUrl: context.config__.prebid.distributionUrl,
         loadMethod: AssetLoadMethod.TAG
       });
       return Promise.resolve();
@@ -273,7 +274,7 @@ export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
       // if there's no distribution URL we assume that prebid is part of the ad tag itself.
       // the timeout makes sure that even if there are issues with the included prebid distribution, the pipeline does
       // not block forever.
-      return Promise.race([prebidReady(context.window), prebidTimeout(context)]);
+      return Promise.race([prebidReady(context.window__), prebidTimeout(context)]);
     }
   });
 
@@ -285,12 +286,12 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
         // only try to remove ad units if the configuration is set to not use ephemeral ad units and prebid is defined
         // at all
         if (prebidConfig.ephemeralAdUnits !== true) {
-          context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
-          const adUnits = context.window.pbjs.adUnits;
+          context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+          const adUnits = context.window__.pbjs.adUnits;
           if (adUnits) {
-            context.window.pbjs.que.push(() => {
-              context.logger.debug('Prebid', `Destroying prebid adUnits`, adUnits);
-              adUnits.forEach(adUnit => context.window.pbjs.removeAdUnit(adUnit.code));
+            context.window__.pbjs.que.push(() => {
+              context.logger__.debug('Prebid', `Destroying prebid adUnits`, adUnits);
+              adUnits.forEach(adUnit => context.window__.pbjs.removeAdUnit(adUnit.code));
             });
           }
         }
@@ -319,9 +320,9 @@ export const prebidConfigure = (
     if (!result) {
       result = new Promise<void>(resolve => {
         if (prebidConfig.bidderSettings) {
-          context.window.pbjs.bidderSettings = prebidConfig.bidderSettings;
+          context.window__.pbjs.bidderSettings = prebidConfig.bidderSettings;
         }
-        context.window.pbjs.que.push(() => {
+        context.window__.pbjs.que.push(() => {
           const s2sConfig = prebidConfig.config.s2sConfig;
           if (s2sConfig) {
             const s2sConfigs: prebidjs.server.S2SConfig[] = Array.isArray(
@@ -335,13 +336,13 @@ export const prebidConfigure = (
             s2sConfigs.forEach(s2sConfigEntry => {
               const h5v = s2sConfigEntry.extPrebid?.analytics?.h5v;
               if (h5v) {
-                h5v.configLabel = context.window.moli.configLabel;
+                h5v.configLabel = context.window__.moli.configLabel;
                 h5v.moliVersion = packageJson.version;
               }
             });
           }
 
-          context.window.pbjs.setConfig({
+          context.window__.pbjs.setConfig({
             ...prebidConfig.config,
             // global schain configuration
             ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
@@ -354,7 +355,7 @@ export const prebidConfigure = (
             if (appendNode) {
               nodes.push(node);
             }
-            context.window.pbjs.setBidderConfig(
+            context.window__.pbjs.setBidderConfig(
               { bidders: [bidder], config: { schain: mkSupplyChainConfig(nodes) } },
               true
             );
@@ -362,7 +363,8 @@ export const prebidConfigure = (
 
           // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
           // don't add this to the init step.
-          context.window.pbjs.registerSignalSources && context.window.pbjs.registerSignalSources();
+          context.window__.pbjs.registerSignalSources &&
+            context.window__.pbjs.registerSignalSources();
         });
 
         // the resolve is intentionally not inside the pbjs.que.push. At this point we do not need to block the pipeline
@@ -395,17 +397,17 @@ export const prebidPrepareRequestAds = (
         if (prebidConfig.ephemeralAdUnits) {
           resolve();
         } else {
-          context.window.pbjs.que.push(() => {
+          context.window__.pbjs.que.push(() => {
             const adUnits = createdAdUnits(context, prebidConfig, slots);
             adUnits.forEach(adUnit => {
-              context.logger.debug(
+              context.logger__.debug(
                 'Prebid',
-                context.requestId,
+                context.requestId__,
                 `Prebid add ad unit: [Code] ${adUnit.code}`,
                 adUnit
               );
             });
-            context.window.pbjs.addAdUnits(adUnits);
+            context.window__.pbjs.addAdUnits(adUnits);
           });
           resolve();
         }
@@ -427,11 +429,12 @@ export const prebidRequestBids = (
         prebidConfig.failsafeTimeout ?? 0
       );
       const failsafe = new Promise<void>(resolve =>
-        context.window.setTimeout(resolve, failsafeTimeout)
+        context.window__.setTimeout(resolve, failsafeTimeout)
       );
       const auction = new Promise<void>(resolve => {
         const slotsToRefresh = slots.filter(
-          slot => !context.auction.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
+          slot =>
+            !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
@@ -455,7 +458,7 @@ export const prebidRequestBids = (
 
         // resolve immediately if no ad unit codes should be requested
         if (adUnitCodes.length === 0) {
-          context.logger.debug(
+          context.logger__.debug(
             'Prebid',
             'skip request bids. All slots were filtered.',
             slotsToRefresh.map(s => s.moliSlot)
@@ -468,7 +471,7 @@ export const prebidRequestBids = (
         // afterward anyway the bidsBackHandler is called a second time.
         let adserverRequestSent = false;
 
-        context.logger.debug(
+        context.logger__.debug(
           'Prebid',
           `Prebid request bids: \n\t\t\t${adUnitCodes.join('\n\t\t\t')}`
         );
@@ -478,7 +481,7 @@ export const prebidRequestBids = (
           timedOut: boolean,
           auctionId: string
         ) => {
-          context.logger.info(
+          context.logger__.info(
             'Prebid',
             auctionId,
             bidResponses,
@@ -488,15 +491,15 @@ export const prebidRequestBids = (
           // in consequence, we need to catch errors here to propagate them to top levels
           try {
             if (adserverRequestSent) {
-              context.logger.warn(
+              context.logger__.warn(
                 'Prebid',
-                `ad server request already sent [${context.requestId}]. AuctionId ${auctionId}`
+                `ad server request already sent [${context.requestId__}]. AuctionId ${auctionId}`
               );
               return;
             }
 
             if (!bidResponses) {
-              context.logger.warn(
+              context.logger__.warn(
                 'Prebid',
                 `Undefined bid response map for ad unit codes: ${adUnitCodes.join(', ')}`
               );
@@ -507,17 +510,17 @@ export const prebidRequestBids = (
 
             if (adServer === 'gam') {
               // execute synchronous handlers before proceeding
-              context.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.forEach(handler =>
+              context.runtimeConfig__.adPipelineConfig.prebidBidsBackHandler.forEach(handler =>
                 handler(context, bidResponses, slots)
               );
 
               // set key-values for DFP to target the correct line items
-              context.window.pbjs.setTargetingForGPTAsync(adUnitCodes);
+              context.window__.pbjs.setTargetingForGPTAsync(adUnitCodes);
             }
 
             resolve();
           } catch (error) {
-            context.logger.error(
+            context.logger__.error(
               'Prebid',
               'DfpService:: could not resolve bidsBackHandler' + JSON.stringify(error)
             );
@@ -526,13 +529,13 @@ export const prebidRequestBids = (
         };
 
         // finally call the auction
-        context.window.pbjs.que.push(() => {
-          context.window.pbjs.requestBids({
+        context.window__.pbjs.que.push(() => {
+          context.window__.pbjs.requestBids({
             ...requestObject,
             // we provide our own auctionId, so we can associate events with ad pipeline runs
-            auctionId: context.auctionId,
+            auctionId: context.auctionId__,
             // buckets (group of ad units) may have a separate timeout override
-            timeout: context.bucket?.timeout,
+            timeout: context.bucket__?.timeout,
             bidsBackHandler: bidsBackHandler
           });
         });
@@ -546,14 +549,17 @@ export const prebidDefineSlots =
     const slotDefinitions = slots.map(moliSlot => {
       const sizeConfigService = new SizeConfigService(
         moliSlot.sizeConfig,
-        context.labelConfigService.getSupportedLabels(),
-        context.window
+        context.labelConfigService__.getSupportedLabels(),
+        context.window__
       );
       const filterSupportedSizes = sizeConfigService.filterSupportedSizes;
 
       // filter slots that shouldn't be displayed
       if (
-        !(sizeConfigService.filterSlot(moliSlot) && context.labelConfigService.filterSlot(moliSlot))
+        !(
+          sizeConfigService.filterSlot(moliSlot) &&
+          context.labelConfigService__.filterSlot(moliSlot)
+        )
       ) {
         return Promise.resolve(null);
       }
@@ -562,7 +568,7 @@ export const prebidDefineSlots =
       const adSlot: googletag.IAdSlot = {
         getAdUnitPath: (): string => moliSlot.adUnitPath
       } as any;
-      switch (context.env) {
+      switch (context.env__) {
         case 'production':
           return Promise.resolve<MoliRuntime.SlotDefinition>({
             moliSlot,
@@ -576,7 +582,7 @@ export const prebidDefineSlots =
             filterSupportedSizes
           });
         default:
-          return Promise.reject(`invalid environment: ${context.runtimeConfig.environment}`);
+          return Promise.reject(`invalid environment: ${context.runtimeConfig__.environment}`);
       }
     });
     return Promise.all(slotDefinitions).then(slots => slots.filter(isNotNull));
@@ -585,19 +591,19 @@ export const prebidDefineSlots =
 export const prebidRenderAds =
   (): RequestAdsStep => (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
     return new Promise((resolve, reject) => {
-      context.logger.debug('Prebid', 'start rendering');
+      context.logger__.debug('Prebid', 'start rendering');
       try {
-        switch (context.env) {
+        switch (context.env__) {
           case 'test':
-            context.logger.debug('Prebid', 'Rendering test slots');
+            context.logger__.debug('Prebid', 'Rendering test slots');
             createTestSlots(context, slots);
             break;
           case 'production':
-            context.window.pbjs
+            context.window__.pbjs
               .getHighestCpmBids()
               .filter(bid => bid && bid.adId)
               .forEach(winningBid => {
-                const adSlotDiv = context.window.document.getElementById(winningBid.adUnitCode);
+                const adSlotDiv = context.window__.document.getElementById(winningBid.adUnitCode);
                 if (adSlotDiv) {
                   const innerDiv = document.createElement('div');
                   innerDiv.style.setProperty('border', '0pt none');
@@ -627,7 +633,7 @@ export const prebidRenderAds =
                   adSlotDiv.appendChild(innerDiv);
                   const iframeDoc = iframe.contentWindow?.document;
                   if (iframeDoc) {
-                    context.window.pbjs.renderAd(iframeDoc, winningBid.adId);
+                    context.window__.pbjs.renderAd(iframeDoc, winningBid.adId);
 
                     // most browsers have a default margin of 8px . We add those after prebid has written to the iframe.
                     // internally prebid uses document.write or inserts an element. Either way, this is safe to do here.
@@ -639,13 +645,13 @@ export const prebidRenderAds =
                     iframeStyle.appendChild(iframeDoc.createTextNode(normalizeCss));
                     iframeDoc.head.appendChild(iframeStyle);
                   } else {
-                    context.logger.error(
+                    context.logger__.error(
                       'Prebid',
                       `No access to iframe contentWindow for ad unit${winningBid.adUnitCode}`
                     );
                   }
                 } else {
-                  context.logger.error(
+                  context.logger__.error(
                     'Prebid',
                     `Could not locate ad slot with id ${winningBid.adUnitCode}`
                   );

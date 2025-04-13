@@ -33,20 +33,20 @@ describe('Prebid First Party Data Module', () => {
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: fullConsent(),
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: assetLoaderService
+      labelConfigService__: null as any,
+      tcData__: fullConsent(),
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -69,7 +69,7 @@ describe('Prebid First Party Data Module', () => {
   ) => {
     const module = new PrebidFirstPartyDataModule();
 
-    module.configure({
+    module.configure__({
       prebidFirstPartyData: {
         enabled: true,
         staticPrebidFirstPartyData,
@@ -77,7 +77,7 @@ describe('Prebid First Party Data Module', () => {
         iabDataProviderName
       }
     });
-    return { module, configureStep: module.configureSteps()[0] };
+    return { module, configureStep: module.configureSteps__()[0] };
   };
 
   const configWithTargeting = (targeting: googleAdManager.Targeting): MoliConfig => ({
@@ -94,7 +94,7 @@ describe('Prebid First Party Data Module', () => {
     it('should add a configure step', () => {
       const { module } = createFpdModule({}, { cat: 'openrtb2_page_cat' });
 
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.lengthOf(1);
       expect(configureSteps[0].name).to.be.equals('prebid-fpd-module-configure');

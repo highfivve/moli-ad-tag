@@ -1,5 +1,9 @@
 import { expect, use } from 'chai';
-import { FrequencyCapping, PersistedFrequencyCappingState } from './frequencyCapping';
+import {
+  createFrequencyCapping,
+  FrequencyCapping,
+  PersistedFrequencyCappingState
+} from './frequencyCapping';
 import { prebidjs } from '../../types/prebidjs';
 import { createDomAndWindow } from '../../stubs/browserEnvSetup';
 import * as Sinon from 'sinon';
@@ -66,7 +70,7 @@ describe('FrequencyCapping', () => {
   });
 
   it('should not add a frequency cap if configs are empty', () => {
-    const frequencyCapping = new FrequencyCapping(
+    const frequencyCapping = createFrequencyCapping(
       { enabled: true, configs: [] },
       jsDomWindow,
       nowInstantStub,
@@ -77,7 +81,7 @@ describe('FrequencyCapping', () => {
   });
 
   it('should not add a frequency cap if no events have been fired', () => {
-    const frequencyCapping = new FrequencyCapping(
+    const frequencyCapping = createFrequencyCapping(
       { enabled: true, configs: [dspxWpConfig] },
       jsDomWindow,
       nowInstantStub,
@@ -90,7 +94,7 @@ describe('FrequencyCapping', () => {
   describe('onBidWon', () => {
     let frequencyCapping: FrequencyCapping;
     beforeEach(() => {
-      frequencyCapping = new FrequencyCapping(
+      frequencyCapping = createFrequencyCapping(
         { enabled: true, configs: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
@@ -124,7 +128,7 @@ describe('FrequencyCapping', () => {
   describe('onAuctionEnd', () => {
     let frequencyCapping: FrequencyCapping;
     beforeEach(() => {
-      frequencyCapping = new FrequencyCapping(
+      frequencyCapping = createFrequencyCapping(
         { enabled: true, configs: [dspxWpConfig, visxInterstitialConfig] },
         jsDomWindow,
         nowInstantStub,
@@ -164,7 +168,7 @@ describe('FrequencyCapping', () => {
 
   describe('position frequency capping', () => {
     const makeFrequencyCapping = (configs: auction.PositionFrequencyConfig[]) =>
-      new FrequencyCapping(
+      createFrequencyCapping(
         { enabled: true, configs: [], positions: configs },
         jsDomWindow,
         nowInstantStub,
@@ -301,7 +305,7 @@ describe('FrequencyCapping', () => {
 
   describe('persistence', () => {
     it('should not add a frequency cap if no data is stored', () => {
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         { enabled: true, persistent: true, configs: [] },
         jsDomWindow,
         nowInstantStub,
@@ -314,7 +318,7 @@ describe('FrequencyCapping', () => {
       jsDomWindow.sessionStorage.setItem('h5v-fc', 'invalid');
       const logger = newNoopLogger();
       const errorSpy = sandbox.spy(logger, 'error');
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         { enabled: true, persistent: true, configs: [] },
         jsDomWindow,
         nowInstantStub,
@@ -341,7 +345,7 @@ describe('FrequencyCapping', () => {
         requestAds: 0
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         { enabled: true, persistent: true, configs: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
@@ -367,7 +371,7 @@ describe('FrequencyCapping', () => {
         requestAds: 1
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         {
           enabled: true,
           persistent: true,
@@ -392,7 +396,7 @@ describe('FrequencyCapping', () => {
 
     it('should persist onAuctionEnd events', () => {
       nowInstantStub.returns(100000);
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         { enabled: true, persistent: true, configs: [visxInterstitialConfig] },
         jsDomWindow,
         nowInstantStub,
@@ -417,7 +421,7 @@ describe('FrequencyCapping', () => {
 
     it('should persist onBidWon events', () => {
       nowInstantStub.returns(100000);
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         { enabled: true, persistent: true, configs: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
@@ -443,7 +447,7 @@ describe('FrequencyCapping', () => {
 
     it('should persist on afterRequestAds events', () => {
       nowInstantStub.returns(100000);
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         { enabled: true, persistent: true, configs: [] },
         jsDomWindow,
         nowInstantStub,
@@ -459,7 +463,7 @@ describe('FrequencyCapping', () => {
 
     it('should persist multiple configs if applicable', () => {
       nowInstantStub.returns(100000);
-      const frequencyCapping = new FrequencyCapping(
+      const frequencyCapping = createFrequencyCapping(
         {
           enabled: true,
           persistent: true,

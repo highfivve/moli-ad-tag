@@ -23,7 +23,7 @@ export interface IModule {
   /**
    * If the module has some sort of configuration this can be fetched with this method
    */
-  config(): Object | null;
+  config__(): Object | null;
 
   /**
    * Initialize the module with the given module configuration.
@@ -31,22 +31,22 @@ export interface IModule {
    *
    * @param moduleConfig
    */
-  configure(moduleConfig?: modules.ModulesConfig): void;
+  configure__(moduleConfig?: modules.ModulesConfig): void;
 
   /**
    * Returns a list of steps that should be executed in the ad pipeline.
    */
-  initSteps(): InitStep[];
+  initSteps__(): InitStep[];
 
   /**
    * Returns a list of steps that should be executed in the ad pipeline.
    */
-  configureSteps(): ConfigureStep[];
+  configureSteps__(): ConfigureStep[];
 
   /**
    * Returns a list of steps that should be executed in the ad pipeline.
    */
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[];
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[];
 
   /**
    * Returns a list of steps that should be executed in the ad pipeline.
@@ -57,7 +57,7 @@ export interface IModule {
    * Note: prebid and amazon tam (a9) maybe implemented as modules in the future as they add those
    *       steps to the ad pipeline.
    */
-  requestBidsSteps?(): RequestBidsStep[];
+  requestBidsSteps__?(): RequestBidsStep[];
 
   /**
    * This method is called in the bidsBackHandler of prebid.
@@ -83,9 +83,5 @@ export interface IModule {
    * @see https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html
    * @see https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids
    */
-  prebidBidsBackHandler?(): MoliRuntime.PrebidBidsBackHandler[];
+  prebidBidsBackHandler__?(): MoliRuntime.PrebidBidsBackHandler[];
 }
-
-export type ModuleMeta = Pick<IModule, 'name' | 'description' | 'moduleType'> & {
-  config: Object | null;
-};

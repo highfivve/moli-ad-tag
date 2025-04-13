@@ -10,7 +10,7 @@ import { ThemingService } from './util/themingService';
 import { WindowResizeService } from './util/windowResizeService';
 import type { MoliRuntime } from '../types/moliRuntime';
 import type { MoliConfig } from '../types/moliConfig';
-import { LabelConfigService } from '../ads/labelConfigService';
+import { createLabelConfigService } from '../ads/labelConfigService';
 
 declare const window: MoliRuntime.MoliWindow;
 
@@ -19,7 +19,7 @@ const moliConfig: MoliConfig | null = window.moli.getConfig();
 if (moliConfig) {
   const extraLabels = (moliConfig.targeting && moliConfig.targeting.labels) ?? [];
   extraLabels.push(...window.moli.getRuntimeConfig().labels);
-  const labelConfigService = new LabelConfigService(
+  const labelConfigService = createLabelConfigService(
     moliConfig.labelSizeConfig || [],
     extraLabels,
     window

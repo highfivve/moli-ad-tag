@@ -9,7 +9,7 @@ const extractAdIdOrIdfa = (
   if (moduleConfig.os === 'web') {
     return;
   }
-  const deviceId = context.config.targeting?.keyValues[moduleConfig.advertiserIdKey];
+  const deviceId = context.config__.targeting?.keyValues[moduleConfig.advertiserIdKey];
   if (deviceId) {
     return typeof deviceId === 'string' ? deviceId : deviceId[0];
   }
@@ -77,9 +77,9 @@ export const trackLoginEvent = (
   url.searchParams.append('guid', moduleConfig.login.guid);
 
   // consent parameter
-  if (context.tcData.gdprApplies) {
+  if (context.tcData__.gdprApplies) {
     url.searchParams.append('gdpr', '1');
-    url.searchParams.append('gdpr_consent', context.tcData.tcString);
+    url.searchParams.append('gdpr_consent', context.tcData__.tcString);
   } else {
     url.searchParams.append('gdpr', '0');
   }

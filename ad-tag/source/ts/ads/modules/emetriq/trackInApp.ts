@@ -6,7 +6,7 @@ const extractDeviceIdParam = (
   context: AdPipelineContext,
   advertiserIdKey: string
 ): string | undefined => {
-  const deviceId = context.config.targeting?.keyValues[advertiserIdKey];
+  const deviceId = context.config__.targeting?.keyValues[advertiserIdKey];
   if (deviceId) {
     return `&device_id=${typeof deviceId === 'string' ? deviceId : deviceId[0]}`;
   }
@@ -32,8 +32,8 @@ export const trackInApp = (
   document: Document
 ): void => {
   const deviceIdParam = extractDeviceIdParam(context, appConfig.advertiserIdKey);
-  const consentString = context.tcData.gdprApplies
-    ? `gdpr=1&gdpr_consent=${context.tcData.tcString}`
+  const consentString = context.tcData__.gdprApplies
+    ? `gdpr=1&gdpr_consent=${context.tcData__.tcString}`
     : 'gdpr=0';
 
   const linkParam = appConfig.linkOrKeyword.link

@@ -19,94 +19,84 @@ type PriceRule = MoliRuntime.yield_optimization.PriceRule & {
   readonly main?: boolean;
 };
 
-export class YieldOptimizationService {
-  private readonly emptyAdUnitPriceRulesResponse: modules.yield_optimization.AdunitPriceRulesResponse =
-    {
-      rules: {},
-      browser: 'None'
-    };
-
-  /**
-   * initialized with an resolved promise and no rules
-   */
-  private adUnitPricingRuleResponse: Promise<modules.yield_optimization.AdunitPriceRulesResponse> =
-    Promise.resolve(this.emptyAdUnitPriceRulesResponse);
-
-  /**
-   * true if the yield optimization is enabled (provider is not `none`) and init() was called.
-   */
-  private isEnabled: boolean = false;
-
-  /**
-   * The device for the current device
-   */
-  private device: Device = 'mobile';
-
-  /**
-   * Contains the device variable
-   */
-  private adUnitPathVariables = {};
-
-  /**
-   *
-   * @param yieldConfig the yield optimization config
-   */
-  constructor(private readonly yieldConfig: modules.yield_optimization.YieldOptimizationConfig) {}
-
-  /**
-   *
-   * @param device - the device label for the LabelConfigService
-   * @param adUnitPathVariables - from the config targeting object
-   * @param adUnitPaths All adUnitPaths configured in the slot config.
-   * @param fetch
-   * @param logger
-   */
-  public init(
+export interface YieldOptimizationService {
+  init(
     device: Device,
     adUnitPathVariables: AdUnitPathVariables,
     adUnitPaths: string[],
     fetch: typeof window.fetch,
     logger: MoliRuntime.MoliLogger
-  ): Promise<void> {
-    // if a desktop label is present, the yield optimization service will request desktop price rules
-    // otherwise mobile
-    this.device = device;
-    this.adUnitPathVariables = adUnitPathVariables;
+  ): Promise<void>;
 
-    switch (this.yieldConfig.provider) {
+  getPriceRule(adUnitPath: string): Promise<PriceRule | undefined>;
+
+  getBrowser(): Promise<string>;
+
+  setTargeting(
+    adSlot: googletag.IAdSlot,
+    adServer: AdServer,
+    logger: MoliRuntime.MoliLogger,
+    yieldOptimizationConfig: modules.yield_optimization.YieldOptimizationConfig | null,
+    auctionContext?: GlobalAuctionContext
+  ): Promise<PriceRule | undefined>;
+}
+export const createYieldOptimizationService = (
+  yieldConfig: modules.yield_optimization.YieldOptimizationConfig
+): YieldOptimizationService => {
+  const emptyAdUnitPriceRulesResponse: modules.yield_optimization.AdunitPriceRulesResponse = {
+    rules: {},
+    browser: 'None'
+  };
+
+  let adUnitPricingRuleResponse: Promise<modules.yield_optimization.AdunitPriceRulesResponse> =
+    Promise.resolve(emptyAdUnitPriceRulesResponse);
+
+  let isEnabled = false;
+  let device: Device = 'mobile';
+  let adUnitPathVariables = {};
+
+  const init = (
+    deviceLabel: Device,
+    adUnitPathVars: AdUnitPathVariables,
+    adUnitPaths: string[],
+    fetch: typeof window.fetch,
+    logger: MoliRuntime.MoliLogger
+  ): Promise<void> => {
+    device = deviceLabel;
+    adUnitPathVariables = adUnitPathVars;
+
+    switch (yieldConfig.provider) {
       case 'none':
         logger.warn('YieldOptimizationService', 'Yield optimization is disabled!');
-        this.isEnabled = false;
-        this.adUnitPricingRuleResponse = Promise.resolve(this.emptyAdUnitPriceRulesResponse);
+        isEnabled = false;
+        adUnitPricingRuleResponse = Promise.resolve(emptyAdUnitPriceRulesResponse);
         break;
       case 'static':
         logger.warn('YieldOptimizationService', 'Yield optimization is static!');
-        this.isEnabled = true;
-        this.adUnitPricingRuleResponse = Promise.resolve({
-          rules: (this.yieldConfig as modules.yield_optimization.StaticYieldOptimizationConfig)
-            .config.rules,
+        isEnabled = true;
+        adUnitPricingRuleResponse = Promise.resolve({
+          rules: (yieldConfig as modules.yield_optimization.StaticYieldOptimizationConfig).config
+            .rules,
           browser: 'None'
         });
         break;
       case 'dynamic':
-        this.isEnabled = true;
+        isEnabled = true;
 
         const excludedAdUnitPaths = (
-          this.yieldConfig as modules.yield_optimization.DynamicYieldOptimizationConfig
+          yieldConfig as modules.yield_optimization.DynamicYieldOptimizationConfig
         ).excludedAdUnitPaths;
 
-        // The list of adUnitPaths we want to get the priceRules for.
         const filteredAdUnitPaths = adUnitPaths.filter(
           adUnitPath => excludedAdUnitPaths.indexOf(adUnitPath) < 0
         );
 
         const resolvedAdUnits = filteredAdUnitPaths.map(adUnitPath =>
-          resolveAdUnitPath(adUnitPath, this.adUnitPathVariables)
+          resolveAdUnitPath(adUnitPath, adUnitPathVariables)
         );
 
-        this.adUnitPricingRuleResponse = this.loadConfigWithRetry(
-          (this.yieldConfig as modules.yield_optimization.DynamicYieldOptimizationConfig)
-            .configEndpoint,
+        adUnitPricingRuleResponse = loadConfigWithRetry(
+          (yieldConfig as modules.yield_optimization.DynamicYieldOptimizationConfig).configEndpoint,
           3,
           resolvedAdUnits,
           fetch
@@ -114,66 +104,43 @@ export class YieldOptimizationService {
           .then(config => {
             logger.info(
               'YieldOptimizationService',
-              `loaded pricing rules for device ${this.device}`,
+              `loaded pricing rules for device ${device}`,
               config
             );
             return config;
           })
           .catch(error => {
             logger.error('YieldOptimizationService', 'failed to initialize service', error);
-            return this.emptyAdUnitPriceRulesResponse;
+            return emptyAdUnitPriceRulesResponse;
           });
         break;
       default:
-        this.isEnabled = false;
-        this.adUnitPricingRuleResponse = Promise.reject('Unknown config provider');
+        isEnabled = false;
+        adUnitPricingRuleResponse = Promise.reject('Unknown config provider');
     }
 
     return Promise.resolve();
-  }
+  };
 
-  /**
-   * Return the price rule for the given ad slot adUnitPath if available.
-   *
-   * If the provider is `dynamic` this is an async operation as the configuration file might
-   * not be loaded yet.
-   *
-   * @param adUnitPath
-   */
-  public getPriceRule(adUnitPath: string): Promise<PriceRule | undefined> {
-    return this.adUnitPricingRuleResponse.then(
-      response => response.rules[resolveAdUnitPath(adUnitPath, this.adUnitPathVariables)]
+  const getPriceRule = (adUnitPath: string): Promise<PriceRule | undefined> => {
+    return adUnitPricingRuleResponse.then(
+      response => response.rules[resolveAdUnitPath(adUnitPath, adUnitPathVariables)]
     );
-  }
+  };
 
-  /**
-   * Returns the detected browser for the user agent
-   */
-  public getBrowser(): Promise<string> {
-    return this.adUnitPricingRuleResponse.then(response => response.browser || 'None');
-  }
+  const getBrowser = (): Promise<string> => {
+    return adUnitPricingRuleResponse.then(response => response.browser || 'None');
+  };
 
-  /**
-   * Sets the targeting for the given googletag ad slot if a price rule is defined for it.
-   *
-   * If the provider is `dynamic` this is an async operation as the configuration file might
-   * not be loaded yet.
-   *
-   * @param adSlot
-   * @param adServer
-   * @param logger
-   * @param yieldOptimizationConfig - needed to determine if the price rule should be calculated dynamically
-   * @param auctionContext - place where previous bid cpms in order to determine dynamic floor price are saved
-   */
-  public setTargeting(
+  const setTargeting = (
     adSlot: googletag.IAdSlot,
     adServer: AdServer,
     logger: MoliRuntime.MoliLogger,
     yieldOptimizationConfig: modules.yield_optimization.YieldOptimizationConfig | null,
     auctionContext?: GlobalAuctionContext
-  ): Promise<PriceRule | undefined> {
-    const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), this.adUnitPathVariables);
-    return this.adUnitPricingRuleResponse.then(config => {
+  ): Promise<PriceRule | undefined> => {
+    const adUnitPath = resolveAdUnitPath(adSlot.getAdUnitPath(), adUnitPathVariables);
+    return adUnitPricingRuleResponse.then(config => {
       const rule = config.rules[adUnitPath];
       if (adServer === 'gam') {
         if (rule) {
@@ -182,11 +149,6 @@ export class YieldOptimizationService {
             adSlot.setTargeting('upr_main', 'true');
             const lastBidCpmsOnPosition: number[] | undefined =
               auctionContext?.getLastBidCpmsOfAdUnit(adSlot.getSlotElementId());
-            /*
-             * If in main group and if there were bids on the position, the price should be calculated based on the previous cpms
-             * saved in the previousBidCpms extension of the global auction context.
-             * The strategy is dependent on the dynamic yield optimization config.
-             */
             if (
               lastBidCpmsOnPosition &&
               lastBidCpmsOnPosition?.length > 0 &&
@@ -213,28 +175,27 @@ export class YieldOptimizationService {
               adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
             }
           } else {
-            // if not in main group, use the price rule determined by the yield optimization
             logger.debug(
               'YieldOptimizationService',
               `set price rule id ${rule.priceRuleId} for ${adUnitPath}. Main traffic share ${rule.main}. cpm is ${rule.floorprice}`
             );
             adSlot.setTargeting('upr_id', rule.priceRuleId.toFixed(0));
           }
-        } else if (this.isEnabled) {
+        } else if (isEnabled) {
           logger.warn('YieldOptimizationService', `No price rule found for ${adUnitPath}`);
         }
       }
       return rule;
     });
-  }
+  };
 
-  private loadConfigWithRetry(
+  const loadConfigWithRetry = (
     configEndpoint: string,
     retriesLeft: number,
     adUnitPaths: string[],
     fetch: typeof window.fetch,
     lastError: any | null = null
-  ): Promise<modules.yield_optimization.AdunitPriceRulesResponse> {
+  ): Promise<modules.yield_optimization.AdunitPriceRulesResponse> => {
     if (retriesLeft <= 0) {
       return Promise.reject(lastError);
     }
@@ -246,12 +207,9 @@ export class YieldOptimizationService {
         'Content-Type': 'application/json',
         Accept: 'application/json'
       },
-      //
       body: JSON.stringify({
-        device: this.device,
-        // GD-2996 - temporary migration to new key
+        device: device,
         key: 'adUnitPath',
-        // GD-3821 - send adUnitPaths for alarm on misconfigured adUnits
         adUnitPaths: adUnitPaths
       })
     })
@@ -263,44 +221,38 @@ export class YieldOptimizationService {
               .then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
       })
       .then((response: unknown) => {
-        if (typeof response !== 'object') {
-          return Promise.reject('response is not an object');
+        if (typeof response !== 'object' || response === null) {
+          return Promise.reject('Invalid response');
         }
-
-        if (response === null) {
-          return Promise.reject('response is null');
-        }
-        if (!this.isAdunitPricesRulesResponse(response)) {
+        if (!isAdunitPricesRulesResponse(response)) {
           return Promise.reject('response is missing rules property');
         }
-
-        if (this.validateRules(response.rules)) {
+        if (validateRules(response.rules)) {
           return response;
         } else {
           return Promise.reject('At least one rule object was not valid');
         }
       })
       .catch(error => {
-        // for 3 retries the backoff time will be 33ms / 50ms / 100ms
         const exponentialBackoff = new Promise(resolve => setTimeout(resolve, 100 / retriesLeft));
         return exponentialBackoff.then(() =>
-          this.loadConfigWithRetry(configEndpoint, retriesLeft - 1, adUnitPaths, fetch, error)
+          loadConfigWithRetry(configEndpoint, retriesLeft - 1, adUnitPaths, fetch, error)
         );
       });
-  }
+  };
 
-  private isAdunitPricesRulesResponse(
+  const isAdunitPricesRulesResponse = (
     obj: Object
-  ): obj is modules.yield_optimization.AdunitPriceRulesResponse {
+  ): obj is modules.yield_optimization.AdunitPriceRulesResponse => {
     return obj.hasOwnProperty('rules');
-  }
+  };
 
-  private isPriceRules(obj: unknown): obj is modules.yield_optimization.PriceRules {
+  const isPriceRules = (obj: unknown): obj is modules.yield_optimization.PriceRules => {
     return typeof obj === 'object' && obj !== null;
-  }
+  };
 
-  private validateRules(rules: unknown): rules is modules.yield_optimization.PriceRules {
-    if (!this.isPriceRules(rules)) {
+  const validateRules = (rules: unknown): rules is modules.yield_optimization.PriceRules => {
+    if (!isPriceRules(rules)) {
       return false;
     }
 
@@ -314,5 +266,12 @@ export class YieldOptimizationService {
         typeof rule.priceRuleId === 'number'
       );
     });
-  }
-}
+  };
+
+  return {
+    init,
+    getPriceRule,
+    getBrowser,
+    setTargeting
+  };
+};

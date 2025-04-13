@@ -97,21 +97,21 @@ export class StickyHeaderAd implements IModule {
 
   private stickyHeaderAdConfig: modules.stickyHeaderAd.StickyHeaderAdConfig | null = null;
 
-  configure(moduleConfig?: modules.ModulesConfig | undefined): void {
+  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
     if (moduleConfig?.stickyHeaderAd?.enabled) {
       this.stickyHeaderAdConfig = moduleConfig.stickyHeaderAd;
     }
   }
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.stickyHeaderAdConfig;
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.stickyHeaderAdConfig;
     return config
       ? [
@@ -126,7 +126,7 @@ export class StickyHeaderAd implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     const config = this.stickyHeaderAdConfig;
     return config
       ? [
@@ -141,11 +141,11 @@ export class StickyHeaderAd implements IModule {
               return Promise.resolve();
             }
 
-            const container = ctx.window.document.querySelector<HTMLDivElement>(
+            const container = ctx.window__.document.querySelector<HTMLDivElement>(
               this.containerSelector
             );
             if (!container) {
-              ctx.logger.warn(
+              ctx.logger__.warn(
                 this.name,
                 `Could not find sticky header container with selector '${this.containerSelector}'`
               );
@@ -161,7 +161,9 @@ export class StickyHeaderAd implements IModule {
               };
 
               // start observing the first element that matches the selector
-              const targets = ctx.window.document.querySelectorAll(config.fadeOutTrigger.selector);
+              const targets = ctx.window__.document.querySelectorAll(
+                config.fadeOutTrigger.selector
+              );
               // I don't trust the spread operator [target] = targets. The element is typed as Element without null,
               // but it can be null. So we need to check for null.
               const target = targets.length > 0 ? targets.item(0) : null;
@@ -171,7 +173,7 @@ export class StickyHeaderAd implements IModule {
               const navbarHiddenClass =
                 navbarConfig?.navbarHiddenClassName ?? this.navbarHiddenClassName;
               const navbar = navbarConfig
-                ? ctx.window.document.querySelector(navbarConfig.selector)
+                ? ctx.window__.document.querySelector(navbarConfig.selector)
                 : null;
 
               if (target) {
@@ -200,7 +202,7 @@ export class StickyHeaderAd implements IModule {
                   this.observer.observe(navbar);
                 }
               } else {
-                ctx.logger.error(
+                ctx.logger__.error(
                   this.name,
                   `No DOM element found for selector ${config.fadeOutTrigger.selector}. Sticky header may never fade out`
                 );
@@ -208,7 +210,7 @@ export class StickyHeaderAd implements IModule {
             }
 
             // register close button
-            const closeButton = ctx.window.document.querySelector<HTMLButtonElement>(
+            const closeButton = ctx.window__.document.querySelector<HTMLButtonElement>(
               this.buttonSelector
             );
             if (closeButton) {
@@ -217,8 +219,8 @@ export class StickyHeaderAd implements IModule {
                 if (this.observer) {
                   this.observer.disconnect();
                 }
-                if (ctx.env === 'production') {
-                  ctx.window.googletag.destroySlots([headerSlot.adSlot]);
+                if (ctx.env__ === 'production') {
+                  ctx.window__.googletag.destroySlots([headerSlot.adSlot]);
                 }
 
                 // kill it with fire!

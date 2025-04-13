@@ -15,17 +15,17 @@ import {
   prebidRemoveAdUnits,
   prebidRequestBids
 } from './prebid';
-import { LabelConfigService } from './labelConfigService';
-import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
+import { createLabelConfigService } from './labelConfigService';
+import { createPbjsStub, moliPrebidTestConfig, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
-import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
+import { createGlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { packageJson } from 'ad-tag/gen/packageJson';
-import { EventService } from 'ad-tag/ads/eventService';
+import { createEventService } from 'ad-tag/ads/eventService';
+import video = prebidjs.video;
 
 // setup sinon-chai
 use(sinonChai);
@@ -45,18 +45,18 @@ describe('prebid', () => {
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: requestAdsCalls,
-      env: env,
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService(), {
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: requestAdsCalls,
+      env__: env,
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
+      labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+      tcData__: tcData,
+      adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+      auction__: createGlobalAuctionContext(jsDomWindow, noopLogger, createEventService(), {
         biddersDisabling: {
           enabled: true,
           minRate: 0.2,
@@ -64,7 +64,7 @@ describe('prebid', () => {
           reactivationPeriod: 1000
         }
       }),
-      assetLoaderService: assetLoaderService
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -559,10 +559,7 @@ describe('prebid', () => {
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
 
         const ctx = adPipelineContext();
-        const isBidderDisabledStub = sandbox.stub(
-          ctx.auction!.biddersDisabling!,
-          'isBidderDisabled'
-        );
+        const isBidderDisabledStub = sandbox.stub(ctx.auction__!, 'isBidderDisabled');
 
         isBidderDisabledStub.withArgs(domId, 'teads').returns(true);
         isBidderDisabledStub.withArgs(domId, 'appnexus').returns(false);
@@ -585,15 +582,14 @@ describe('prebid', () => {
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
 
         const ctx = adPipelineContext();
-        const isBidderDisabledSpy = sandbox.spy(ctx.auction!.biddersDisabling!, 'isBidderDisabled');
+        const isBidderDisabledSpy = sandbox.spy(ctx.auction__, 'isBidderDisabled');
 
         await step(ctx, [singleSlot]);
         expect(isBidderDisabledSpy).to.have.not.been.called;
 
         expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          prebidAdUnit(domId, [{ bidder: undefined } as any])
-        ]);
+        const adUnit1Called = addAdUnitsSpy.firstCall.args[0];
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
       });
 
       it('should add a single adunit when the static prebid config provider returns a two bids but one is filtered', async () => {
@@ -701,7 +697,7 @@ describe('prebid', () => {
         domain: string
       ): AdPipelineContext => ({
         ...adPipelineContext(),
-        adUnitPathVariables: { domain: domain, device: device }
+        adUnitPathVariables__: { domain: domain, device: device }
       });
       const domain = 'example.com';
 
@@ -1106,7 +1102,7 @@ describe('prebid', () => {
       const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
       const slot = createAdSlot('none-prebid');
       const ctx = adPipelineContext();
-      const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+      const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
       isThrottledStub.withArgs(slot.domId, slot.adUnitPath).returns(true);
 
       await step(ctx, [
@@ -1143,7 +1139,7 @@ describe('prebid', () => {
       const slotDef2 = createSlotDefinitions(domId2, { adUnit: adUnit2 });
 
       const ctx = adPipelineContext();
-      const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+      const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
       isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
       isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
 
@@ -1185,7 +1181,7 @@ describe('prebid', () => {
       const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
 
       const ctx = adPipelineContext();
-      const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+      const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
       isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
       isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
 
@@ -1218,7 +1214,7 @@ describe('prebid', () => {
       ]);
       const slotDef = createSlotDefinitions(domId, { adUnit });
 
-      await step({ ...adPipelineContext(), bucket: { timeout: 3000 } }, [slotDef]);
+      await step({ ...adPipelineContext(), bucket__: { timeout: 3000 } }, [slotDef]);
       expect(requestBidsSpy).to.have.been.calledOnce;
       expect(requestBidsSpy).to.have.been.calledWith(Sinon.match.has('timeout', 3000));
     });

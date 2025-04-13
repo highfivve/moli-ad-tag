@@ -56,52 +56,52 @@ export class Confiant implements IModule {
 
   private confiantConfig: modules.confiant.ConfiantConfig | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.confiantConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.confiant && moduleConfig.confiant.enabled) {
       this.confiantConfig = moduleConfig.confiant;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.confiantConfig;
     return config ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, config))] : [];
   }
 
   loadConfiant(context: AdPipelineContext, config: modules.confiant.ConfiantConfig): Promise<void> {
     // test environment doesn't require confiant
-    if (context.env === 'test') {
+    if (context.env__ === 'test') {
       return Promise.resolve();
     }
 
     // no consent if gdpr applies
     if (
-      context.tcData.gdprApplies &&
+      context.tcData__.gdprApplies &&
       // this is only a safeguard to block confiant when checkGVLID is false
-      (!context.tcData.purpose.consents['1'] ||
+      (!context.tcData__.purpose.consents['1'] ||
         // validate the GVL ID if configured
-        !(!this.confiantConfig?.checkGVLID || context.tcData.vendor.consents[this.gvlid]))
+        !(!this.confiantConfig?.checkGVLID || context.tcData__.vendor.consents[this.gvlid]))
     ) {
       return Promise.resolve();
     }
-    context.assetLoaderService
+    context.assetLoaderService__
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: config.assetUrl
       })
-      .catch(error => context.logger.error('failed to load confiant', error));
+      .catch(error => context.logger__.error('failed to load confiant', error));
     return Promise.resolve();
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 }

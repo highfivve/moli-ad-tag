@@ -17,7 +17,7 @@ export const adRenderResult = (
 ) =>
   new Promise<RenderEventResult>(resolve => {
     // in test mode there's no event fired so we need to resolve immediately and say it's not empty
-    if (ctx.env === 'test') {
+    if (ctx.env__ === 'test') {
       resolve('standard');
       return;
     }
@@ -34,11 +34,11 @@ export const adRenderResult = (
         resolve('empty');
       } else {
         minVisibleDuration > 0
-          ? ctx.window.setTimeout(() => resolve('standard'), minVisibleDuration)
+          ? ctx.window__.setTimeout(() => resolve('standard'), minVisibleDuration)
           : resolve('standard');
       }
-      ctx.window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
+      ctx.window__.googletag.pubads().removeEventListener('slotRenderEnded', listener);
     };
 
-    ctx.window.googletag.pubads().addEventListener('slotRenderEnded', listener);
+    ctx.window__.googletag.pubads().addEventListener('slotRenderEnded', listener);
   });

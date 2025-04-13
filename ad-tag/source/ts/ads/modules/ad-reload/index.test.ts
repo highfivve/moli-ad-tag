@@ -31,20 +31,20 @@ describe('Moli Ad Reload Module', () => {
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: null as any,
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      labelConfigService__: null as any,
+      tcData__: null as any,
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -73,8 +73,8 @@ describe('Moli Ad Reload Module', () => {
 
   const createAdReloadModuleInitialized = (moduleConfig: modules.adreload.AdReloadModuleConfig) => {
     const module = new AdReload();
-    module.configure({ adReload: moduleConfig });
-    const configureStep = module.configureSteps()[0];
+    module.configure__({ adReload: moduleConfig });
+    const configureStep = module.configureSteps__()[0];
     // this is awkward, but it works. Alternative would be to inject the service into the module via the constructor for tests
     return {
       module,
@@ -155,7 +155,7 @@ describe('Moli Ad Reload Module', () => {
       const { module, moduleConfig } = createAdReloadModule();
       expect(module.isInitialized()).to.be.false;
       module.initialize(
-        { ...adPipelineContext(emptyConfig), env: 'test' },
+        { ...adPipelineContext(emptyConfig), env__: 'test' },
         moduleConfig,
         [],
         () => {
@@ -181,26 +181,26 @@ describe('Moli Ad Reload Module', () => {
   it('should not return any pipeline steps if unconfigured', () => {
     const module = new AdReload();
 
-    expect(module.initSteps()).to.be.empty;
-    expect(module.configureSteps()).to.be.empty;
-    expect(module.prepareRequestAdsSteps()).to.be.empty;
+    expect(module.initSteps__()).to.be.empty;
+    expect(module.configureSteps__()).to.be.empty;
+    expect(module.prepareRequestAdsSteps__()).to.be.empty;
   });
 
   it('should not return any pipeline steps if disabled', () => {
     const module = new AdReload();
-    module.configure({ adReload: { enabled: false } as modules.adreload.AdReloadModuleConfig });
+    module.configure__({ adReload: { enabled: false } as modules.adreload.AdReloadModuleConfig });
 
-    expect(module.initSteps()).to.be.empty;
-    expect(module.configureSteps()).to.be.empty;
-    expect(module.prepareRequestAdsSteps()).to.be.empty;
+    expect(module.initSteps__()).to.be.empty;
+    expect(module.configureSteps__()).to.be.empty;
+    expect(module.prepareRequestAdsSteps__()).to.be.empty;
   });
 
   it('should return any init and configure steps if unconfigured', () => {
     const module = new AdReload();
 
-    expect(module.initSteps()).to.be.empty;
-    expect(module.configureSteps()).to.be.empty;
-    expect(module.prepareRequestAdsSteps()).to.be.empty;
+    expect(module.initSteps__()).to.be.empty;
+    expect(module.configureSteps__()).to.be.empty;
+    expect(module.prepareRequestAdsSteps__()).to.be.empty;
   });
 
   it('should setup the pubads slotRenderEnded listener for the slots (but only once)', async () => {

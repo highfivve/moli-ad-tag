@@ -40,7 +40,7 @@ import { flatten, isNotNull } from '../util/arrayUtils';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
-import { GlobalAuctionContext } from './globalAuctionContext';
+import { createGlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
 import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
 import { EventService } from 'ad-tag/ads/eventService';
@@ -150,7 +150,11 @@ export class AdService {
     },
     getDefaultLogger(),
     this.window as AdServiceWindow,
-    new GlobalAuctionContext(this.window as AdServiceWindow, getDefaultLogger(), this.eventService)
+    createGlobalAuctionContext(
+      this.window as AdServiceWindow,
+      getDefaultLogger(),
+      this.eventService
+    )
   );
 
   private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
@@ -178,7 +182,7 @@ export class AdService {
         adPipelineConfig,
         this.logger,
         window as AdServiceWindow,
-        new GlobalAuctionContext(window as AdServiceWindow, this.logger, this.eventService)
+        createGlobalAuctionContext(window as AdServiceWindow, this.logger, this.eventService)
       );
     }
   }
@@ -248,7 +252,7 @@ export class AdService {
     }
 
     // create global auction context and add it to the pipeline
-    const globalAuctionContext = new GlobalAuctionContext(
+    const globalAuctionContext = createGlobalAuctionContext(
       this.window as AdServiceWindow,
       this.logger,
       this.eventService,

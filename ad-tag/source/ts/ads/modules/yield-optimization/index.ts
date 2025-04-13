@@ -58,7 +58,10 @@
  * ```
  * @module
  */
-import { YieldOptimizationService } from './yieldOptimizationService';
+import {
+  createYieldOptimizationService,
+  YieldOptimizationService
+} from './yieldOptimizationService';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import { modules } from 'ad-tag/types/moliConfig';
@@ -82,94 +85,96 @@ import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
  *
  * @see https://support.google.com/admanager/answer/9298008?hl=en
  */
-export class YieldOptimization implements IModule {
-  public readonly name: string = 'YieldOptimization';
-  public readonly description: string = 'Provides floors and UPR ids';
-  public readonly moduleType: ModuleType = 'yield';
+export const YieldOptimization = (
+  testYieldOptimizationService?: YieldOptimizationService
+): IModule => {
+  const name = 'YieldOptimization';
+  const description = 'Provides floors and UPR ids';
+  const moduleType: ModuleType = 'yield';
 
-  private yieldModuleConfig: modules.yield_optimization.YieldOptimizationConfig | null = null;
+  let yieldModuleConfig: modules.yield_optimization.YieldOptimizationConfig | null = null;
 
-  private _initSteps: InitStep[] = [];
-  private _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
+  const _initSteps: InitStep[] = [];
+  const _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
 
-  config(): Object | null {
-    return this.yieldModuleConfig;
-  }
+  const config__ = (): Object | null => yieldModuleConfig;
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  const configure__ = (moduleConfig?: modules.ModulesConfig): void => {
     if (moduleConfig?.yieldOptimization?.enabled) {
-      this.yieldModuleConfig = moduleConfig.yieldOptimization;
+      yieldModuleConfig = moduleConfig.yieldOptimization;
 
-      const yieldOptimizationService = new YieldOptimizationService(moduleConfig.yieldOptimization);
+      const yieldOptimizationService =
+        testYieldOptimizationService ??
+        createYieldOptimizationService(moduleConfig.yieldOptimization);
 
-      this._initSteps.push(this.yieldOptimizationInit(yieldOptimizationService));
-      this._prepareRequestAdsSteps.push(
-        this.yieldOptimizationPrepareRequestAds(yieldOptimizationService)
-      );
+      _initSteps.push(yieldOptimizationInit(yieldOptimizationService));
+      _prepareRequestAdsSteps.push(yieldOptimizationPrepareRequestAds(yieldOptimizationService));
     }
-  }
+  };
 
-  initSteps(): InitStep[] {
-    return this._initSteps;
-  }
+  const initSteps__ = (): InitStep[] => _initSteps;
 
-  configureSteps(): ConfigureStep[] {
-    return [];
-  }
+  const configureSteps__ = (): ConfigureStep[] => [];
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
-    return this._prepareRequestAdsSteps;
-  }
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => _prepareRequestAdsSteps;
 
-  yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
+  const yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
-      const adUnitPaths = context.config.slots
-        // remove ad units that should not be displayed
-        .filter(slot => context.labelConfigService.filterSlot(slot))
+      const adUnitPaths = context.config__.slots
+        .filter(slot => context.labelConfigService__.filterSlot(slot))
         .map(slot => slot.adUnitPath)
         .filter(uniquePrimitiveFilter);
       return yieldOptimizationService.init(
-        context.labelConfigService.getDeviceLabel(),
-        context.adUnitPathVariables,
+        context.labelConfigService__.getDeviceLabel(),
+        context.adUnitPathVariables__,
         adUnitPaths,
-        context.window.fetch,
-        context.logger
+        context.window__.fetch,
+        context.logger__
       );
     });
 
-  /**
-   * This step adds a `priceRule` to the slot definition if possible. It does so by **mutating**
-   * the slot definition.
-   *
-   * @param yieldOptimizationService
-   */
-  yieldOptimizationPrepareRequestAds = (
+  const yieldOptimizationPrepareRequestAds = (
     yieldOptimizationService: YieldOptimizationService
   ): PrepareRequestAdsStep =>
     mkPrepareRequestAdsStep(
       'yield-optimization',
       HIGH_PRIORITY,
       (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
-        context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
-        const adServer = context.config.adServer || 'gam';
+        context.logger__.debug(
+          'YieldOptimizationService',
+          context.requestId__,
+          'applying price rules'
+        );
+        const adServer = context.config__.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
             .setTargeting(
               slot.adSlot,
               adServer,
-              context.logger,
-              this.yieldModuleConfig,
-              context.auction
+              context.logger__,
+              yieldModuleConfig,
+              context.auction__
             )
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)
           .then(() => yieldOptimizationService.getBrowser())
           .then(browser => {
-            if (context.env === 'production' && adServer === 'gam') {
-              context.window.googletag.pubads().setTargeting('upr_browser', browser);
+            if (context.env__ === 'production' && adServer === 'gam') {
+              context.window__.googletag.pubads().setTargeting('upr_browser', browser);
             }
           });
       }
     );
-}
+
+  return {
+    name,
+    description,
+    moduleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};

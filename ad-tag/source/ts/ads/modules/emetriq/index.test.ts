@@ -49,20 +49,20 @@ describe('Emetriq Module', () => {
 
   const adPipelineContext = (): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: emptyConfig,
-      window: jsDomWindow as any,
-      runtimeConfig: emptyRuntimeConfig,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: emptyConfig,
+      window__: jsDomWindow as any,
+      runtimeConfig__: emptyRuntimeConfig,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: tcDataWithConsent,
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: assetLoaderService
+      labelConfigService__: null as any,
+      tcData__: tcDataWithConsent,
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -76,9 +76,9 @@ describe('Emetriq Module', () => {
 
   it('should add an init and a configure step', async () => {
     const module = createEmetriq();
-    module.configure(modulesConfig);
-    const initSteps = module.initSteps();
-    const configureSteps = module.configureSteps();
+    module.configure__(modulesConfig);
+    const initSteps = module.initSteps__();
+    const configureSteps = module.configureSteps__();
 
     expect(initSteps).to.have.length(1);
     expect(initSteps[0].name).to.be.eq('load-emetriq');
@@ -89,26 +89,26 @@ describe('Emetriq Module', () => {
   describe('init step', () => {
     it('should execute nothing in test mode', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const initSteps = module.initSteps();
+      module.configure__(modulesConfig);
+      const initSteps = module.initSteps__();
 
       const step = initSteps[0];
       expect(step).to.be.ok;
 
-      await step!({ ...adPipelineContext(), env: 'test' });
+      await step!({ ...adPipelineContext(), env__: 'test' });
       expect(syncDelaySpy).to.have.not.been.called;
       expect(loadScriptStub).to.have.not.been.called;
     });
 
     it('should execute nothing if consent is not provided', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const initSteps = module.initSteps();
+      module.configure__(modulesConfig);
+      const initSteps = module.initSteps__();
 
       const step = initSteps[0];
       expect(step).to.be.ok;
 
-      await step!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) });
+      await step!({ ...adPipelineContext(), tcData__: fullConsent({ 213: false }) });
       expect(syncDelaySpy).to.have.not.been.called;
       expect(loadScriptStub).to.have.not.been.called;
     });
@@ -117,15 +117,15 @@ describe('Emetriq Module', () => {
   describe('configure step', () => {
     it('should track nothing in test mode', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const configureSteps = module.configureSteps();
+      module.configure__(modulesConfig);
+      const configureSteps = module.configureSteps__();
       const trackInAppSpy = sandbox.spy(trackInApp);
       const trackLoginEventSpy = sandbox.spy(trackLoginEvent);
 
       const step = configureSteps[0];
       expect(step).to.be.ok;
 
-      await step!({ ...adPipelineContext(), env: 'test' }, []);
+      await step!({ ...adPipelineContext(), env__: 'test' }, []);
       expect(syncDelaySpy).to.have.not.been.called;
       expect(trackInAppSpy).to.have.not.been.called;
       expect(trackLoginEventSpy).to.have.not.been.called;
@@ -133,15 +133,15 @@ describe('Emetriq Module', () => {
 
     it('should execute nothing if consent is not provided', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const configureSteps = module.configureSteps();
+      module.configure__(modulesConfig);
+      const configureSteps = module.configureSteps__();
       const trackInAppSpy = sandbox.spy(trackInApp);
       const trackLoginEventSpy = sandbox.spy(trackLoginEvent);
 
       const step = configureSteps[0];
       expect(step).to.be.ok;
 
-      await step!({ ...adPipelineContext(), tcData: fullConsent({ 213: false }) }, []);
+      await step!({ ...adPipelineContext(), tcData__: fullConsent({ 213: false }) }, []);
       expect(syncDelaySpy).to.have.not.been.called;
       expect(trackInAppSpy).to.have.not.been.called;
       expect(trackLoginEventSpy).to.have.not.been.called;
@@ -150,11 +150,11 @@ describe('Emetriq Module', () => {
 
   describe('loadEmetriq', () => {
     const module = createEmetriq();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    [adPipelineContext(), { ...adPipelineContext(), tcData: tcDataNoGdpr }].forEach(context =>
+    [adPipelineContext(), { ...adPipelineContext(), tcData__: tcDataNoGdpr }].forEach(context =>
       it(`load emetriq if gdpr ${
-        context.tcData.gdprApplies ? 'applies' : 'does not apply'
+        context.tcData__.gdprApplies ? 'applies' : 'does not apply'
       }`, async () => {
         await module.loadEmetriqScript(context, webConfig, {}, {});
 
@@ -186,7 +186,7 @@ describe('Emetriq Module', () => {
       };
 
       const module = createEmetriq();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       await module.loadEmetriqScript(adPipelineContext(), webConfig, {}, {});
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
@@ -214,7 +214,7 @@ describe('Emetriq Module', () => {
       };
 
       const module = createEmetriq();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
 
       await module.loadEmetriqScript(
         adPipelineContext(),
@@ -251,7 +251,7 @@ describe('Emetriq Module', () => {
       };
 
       const module = createEmetriq();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
 
       await module.loadEmetriqScript(
         adPipelineContext(),
@@ -342,7 +342,7 @@ describe('Emetriq Module', () => {
         await trackInApp(
           {
             ...adPipelineContext(),
-            config: { ...emptyConfig, targeting: { keyValues: { advertiserId } } }
+            config__: { ...emptyConfig, targeting: { keyValues: { advertiserId } } }
           },
           appConfig,
           {},
@@ -423,7 +423,7 @@ describe('Emetriq Module', () => {
 
       it('should call endpoint when gdpr does not apply', async () => {
         await trackInApp(
-          { ...adPipelineContext(), tcData: tcDataNoGdpr },
+          { ...adPipelineContext(), tcData__: tcDataNoGdpr },
           appConfig,
           {},
           {},
@@ -528,8 +528,8 @@ describe('Emetriq Module', () => {
         await trackLoginEvent(
           {
             ...adPipelineContext(),
-            config: { ...emptyConfig, targeting: { keyValues: { advertiserId } } },
-            tcData: tcDataNoGdpr
+            config__: { ...emptyConfig, targeting: { keyValues: { advertiserId } } },
+            tcData__: tcDataNoGdpr
           },
           iosConfig,
           jsDomWindow.document,
@@ -555,8 +555,8 @@ describe('Emetriq Module', () => {
         await trackLoginEvent(
           {
             ...adPipelineContext(),
-            config: { ...emptyConfig, targeting: { keyValues: { advertiserId } } },
-            tcData: tcDataNoGdpr
+            config__: { ...emptyConfig, targeting: { keyValues: { advertiserId } } },
+            tcData__: tcDataNoGdpr
           },
           iosConfig,
           jsDomWindow.document,
@@ -571,7 +571,7 @@ describe('Emetriq Module', () => {
       it('should call endpoint when gdpr does apply', async () => {
         const tcData = fullConsent();
         await trackLoginEvent(
-          { ...adPipelineContext(), tcData },
+          { ...adPipelineContext(), tcData__: tcData },
           loginWebConfig,
           jsDomWindow.document,
           noopLogger
@@ -584,7 +584,7 @@ describe('Emetriq Module', () => {
 
       it('should call endpoint when gdpr does not apply', async () => {
         await trackLoginEvent(
-          { ...adPipelineContext(), tcData: tcDataNoGdpr },
+          { ...adPipelineContext(), tcData__: tcDataNoGdpr },
           loginWebConfig,
           jsDomWindow.document,
           noopLogger

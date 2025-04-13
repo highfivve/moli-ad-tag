@@ -22,7 +22,7 @@ import {
   PrepareRequestAdsStep
 } from './adPipeline';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import SlotDefinition = MoliRuntime.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
@@ -68,19 +68,19 @@ describe('AdPipeline', () => {
     config: MoliConfig = emptyConfig
   ): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId,
-      requestAdsCalls: requestAdsCalls,
-      env: env,
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: requestId,
+      requestAdsCalls__: requestAdsCalls,
+      env__: env,
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
+      labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+      tcData__: tcData,
+      adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -124,7 +124,7 @@ describe('AdPipeline', () => {
       let timeout: number | undefined = 0;
       const initSteps: InitStep[] = [
         context => {
-          timeout = context.bucket?.timeout;
+          timeout = context.bucket__?.timeout;
           return Promise.resolve();
         }
       ];
@@ -149,7 +149,7 @@ describe('AdPipeline', () => {
       let timeout: number | undefined = 0;
       const initSteps: InitStep[] = [
         context => {
-          timeout = context.bucket?.timeout;
+          timeout = context.bucket__?.timeout;
           return Promise.resolve();
         }
       ];
@@ -271,7 +271,7 @@ describe('AdPipeline', () => {
         defineSlots: () => Promise.resolve([{ moliSlot: adSlot } as SlotDefinition]),
         prepareRequestAds: [
           mkPrepareRequestAdsStep('step', 1, context => {
-            expect(context.adUnitPathVariables).to.deep.equal({
+            expect(context.adUnitPathVariables__).to.deep.equal({
               domain: 'example.com',
               device: 'desktop'
             });
@@ -288,7 +288,7 @@ describe('AdPipeline', () => {
       let requestId: number | undefined;
       const configureStep: ConfigureStep[] = [
         context => {
-          requestId = context.requestId;
+          requestId = context.requestId__;
           return Promise.resolve();
         }
       ];
@@ -305,7 +305,7 @@ describe('AdPipeline', () => {
       let supportedLabels: string[] = [];
       const configureStep: ConfigureStep[] = [
         context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
           return Promise.resolve();
         }
       ];
@@ -322,7 +322,7 @@ describe('AdPipeline', () => {
       let supportedLabels: string[] = [];
       const configureStep: ConfigureStep[] = [
         context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
           return Promise.resolve();
         }
       ];
@@ -337,7 +337,7 @@ describe('AdPipeline', () => {
       let supportedLabels: string[] = [];
       const configureStep: ConfigureStep[] = [
         context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
           return Promise.resolve();
         }
       ];

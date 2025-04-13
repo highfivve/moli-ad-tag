@@ -43,19 +43,19 @@ describe('BlocklistedUrls Module', () => {
   };
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
-    auctionId: 'xxxx-xxxx-xxxx-xxxx',
-    requestId: 0,
-    requestAdsCalls: 1,
-    env: 'production',
-    logger: noopLogger,
-    config: config ?? emptyConfig,
-    runtimeConfig: emptyRuntimeConfig,
-    window: jsDomWindow as any,
-    labelConfigService: null as any,
-    tcData: fullConsent(),
-    adUnitPathVariables: {},
-    auction: newGlobalAuctionContext(jsDomWindow),
-    assetLoaderService: assetLoaderService
+    auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+    requestId__: 0,
+    requestAdsCalls__: 1,
+    env__: 'production',
+    logger__: noopLogger,
+    config__: config ?? emptyConfig,
+    runtimeConfig__: emptyRuntimeConfig,
+    window__: jsDomWindow as any,
+    labelConfigService__: null as any,
+    tcData__: fullConsent(),
+    adUnitPathVariables__: {},
+    auction__: newGlobalAuctionContext(jsDomWindow),
+    assetLoaderService__: assetLoaderService
   });
 
   const blocklist = (
@@ -104,13 +104,13 @@ describe('BlocklistedUrls Module', () => {
     config?: BlocklistUrlsBlockingConfig | BlocklistUrlsKeyValueConfig
   ) => {
     const module = new BlocklistedUrls();
-    module.configure(modulesConfig(config));
+    module.configure__(modulesConfig(config));
     return module;
   };
 
   it('should configure nothing in test mode', async () => {
     const module = createAndConfigureModule();
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
   });
 
@@ -128,10 +128,10 @@ describe('BlocklistedUrls Module', () => {
 
       const module = createAndConfigureModule(blocklistConfig);
 
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
 
-      const initSteps = module.initSteps();
+      const initSteps = module.initSteps__();
       expect(initSteps).to.have.length(1);
 
       return { configureStep: initSteps[0], module, config };
@@ -185,12 +185,12 @@ describe('BlocklistedUrls Module', () => {
 
       const module = createAndConfigureModule(blocklistConfig);
 
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       loadJsonStub.resolves(blocklist(patterns));
 
       expect(init).to.be.ok;
 
-      const initSteps = module.initSteps();
+      const initSteps = module.initSteps__();
       expect(initSteps).to.have.length(1);
 
       return { configureStep: initSteps[0], module, config };
@@ -275,12 +275,12 @@ describe('BlocklistedUrls Module', () => {
 
         const module = createAndConfigureModule(blocklistConfig);
 
-        const init = module.initSteps()[0];
+        const init = module.initSteps__()[0];
         loadJsonStub.resolves(blocklist(patterns));
 
         expect(init).to.be.ok;
 
-        const initSteps = module.initSteps();
+        const initSteps = module.initSteps__();
         expect(initSteps).to.have.length(1);
 
         return { configureStep: initSteps[0], module, config };
