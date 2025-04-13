@@ -76,9 +76,9 @@ describe('Emetriq Module', () => {
 
   it('should add an init and a configure step', async () => {
     const module = createEmetriq();
-    module.configure(modulesConfig);
-    const initSteps = module.initSteps();
-    const configureSteps = module.configureSteps();
+    module.configure__(modulesConfig);
+    const initSteps = module.initSteps__();
+    const configureSteps = module.configureSteps__();
 
     expect(initSteps).to.have.length(1);
     expect(initSteps[0].name).to.be.eq('load-emetriq');
@@ -89,8 +89,8 @@ describe('Emetriq Module', () => {
   describe('init step', () => {
     it('should execute nothing in test mode', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const initSteps = module.initSteps();
+      module.configure__(modulesConfig);
+      const initSteps = module.initSteps__();
 
       const step = initSteps[0];
       expect(step).to.be.ok;
@@ -102,8 +102,8 @@ describe('Emetriq Module', () => {
 
     it('should execute nothing if consent is not provided', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const initSteps = module.initSteps();
+      module.configure__(modulesConfig);
+      const initSteps = module.initSteps__();
 
       const step = initSteps[0];
       expect(step).to.be.ok;
@@ -117,8 +117,8 @@ describe('Emetriq Module', () => {
   describe('configure step', () => {
     it('should track nothing in test mode', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const configureSteps = module.configureSteps();
+      module.configure__(modulesConfig);
+      const configureSteps = module.configureSteps__();
       const trackInAppSpy = sandbox.spy(trackInApp);
       const trackLoginEventSpy = sandbox.spy(trackLoginEvent);
 
@@ -133,8 +133,8 @@ describe('Emetriq Module', () => {
 
     it('should execute nothing if consent is not provided', async () => {
       const module = createEmetriq();
-      module.configure(modulesConfig);
-      const configureSteps = module.configureSteps();
+      module.configure__(modulesConfig);
+      const configureSteps = module.configureSteps__();
       const trackInAppSpy = sandbox.spy(trackInApp);
       const trackLoginEventSpy = sandbox.spy(trackLoginEvent);
 
@@ -150,7 +150,7 @@ describe('Emetriq Module', () => {
 
   describe('loadEmetriq', () => {
     const module = createEmetriq();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
     [adPipelineContext(), { ...adPipelineContext(), tcData: tcDataNoGdpr }].forEach(context =>
       it(`load emetriq if gdpr ${
@@ -186,7 +186,7 @@ describe('Emetriq Module', () => {
       };
 
       const module = createEmetriq();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       await module.loadEmetriqScript(adPipelineContext(), webConfig, {}, {});
 
       expect(jsDomWindow._enqAdpParam).to.be.ok;
@@ -214,7 +214,7 @@ describe('Emetriq Module', () => {
       };
 
       const module = createEmetriq();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
 
       await module.loadEmetriqScript(
         adPipelineContext(),
@@ -251,7 +251,7 @@ describe('Emetriq Module', () => {
       };
 
       const module = createEmetriq();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
 
       await module.loadEmetriqScript(
         adPipelineContext(),

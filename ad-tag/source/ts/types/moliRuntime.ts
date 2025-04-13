@@ -1,6 +1,6 @@
 import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
-import { IModule, ModuleMeta } from './module';
+import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import {
   AdPipelineContext,
@@ -295,22 +295,12 @@ export namespace MoliRuntime {
     getState(): state.States;
 
     /**
-     * @returns meta information about the active moli modules
-     */
-    getModuleMeta(): ReadonlyArray<ModuleMeta>;
-
-    /**
      * Open the moli debug console.
      *
      * Request the debug bundle and start the debug mode.
      * @param path - [optional] full path to the moli debug script.
      */
     openConsole(path?: string): void;
-
-    /**
-     * @return the asset loader service that is used to fetch additional assets / resources
-     */
-    getAssetLoaderService(): IAssetLoaderService;
 
     /**
      * Add an event listener for ad request events.

@@ -1,13 +1,9 @@
 import { MoliRuntime } from '../types/moliRuntime';
 import { parseQueryString } from '../util/query';
-import {
-  AssetLoadMethod,
-  createAssetLoaderService,
-  IAssetLoaderService
-} from '../util/assetLoaderService';
+import { AssetLoadMethod, createAssetLoaderService } from '../util/assetLoaderService';
 import { getLogger } from '../util/logging';
 import { addNewInfiniteSlotToConfig } from '../util/addNewInfiniteSlotToConfig';
-import { IModule, ModuleMeta } from '../types/module';
+import { IModule } from '../types/module';
 import { AdService } from './adService';
 import { createEventService } from './eventService';
 import {
@@ -21,9 +17,9 @@ import { LabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
   AdUnitPathVariables,
+  googleAdManager,
   MoliConfig,
-  ResolveAdUnitPathOptions,
-  googleAdManager
+  ResolveAdUnitPathOptions
 } from '../types/moliConfig';
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
@@ -271,25 +267,25 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         log.debug('MoliGlobal', 'configure modules', config.modules ?? {});
         modules.forEach(module => {
           try {
-            module.configure(config.modules ?? {});
+            module.configure__(config.modules ?? {});
             log.debug(
               'MoliGlobal',
               `configure ${module.moduleType} module ${module.name}`,
-              module.config()
+              module.config__()
             );
-            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps());
-            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps());
+            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
+            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps__());
             state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
-              ...module.prepareRequestAdsSteps()
+              ...module.prepareRequestAdsSteps__()
             );
-            if (module.requestBidsSteps) {
+            if (module.requestBidsSteps__) {
               state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
-                ...module.requestBidsSteps()
+                ...module.requestBidsSteps__()
               );
             }
-            if (module.prebidBidsBackHandler) {
+            if (module.prebidBidsBackHandler__) {
               state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
-                ...module.prebidBidsBackHandler()
+                ...module.prebidBidsBackHandler__()
               );
             }
           } catch (e) {
@@ -789,10 +785,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     return state.state;
   }
 
-  function getModuleMeta(): ReadonlyArray<ModuleMeta> {
-    return state.modules;
-  }
-
   function openConsole(path?: string): void {
     switch (state.state) {
       case 'configurable': {
@@ -923,10 +915,8 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     refreshAdSlot: refreshAdSlot,
     refreshBucket: refreshBucket,
     refreshInfiniteAdSlot: refreshInfiniteAdSlot,
-    getModuleMeta: getModuleMeta,
     getState: getState,
     openConsole: openConsole,
-    getAssetLoaderService: () => assetLoaderService,
     addEventListener: eventService.addEventListener,
     removeEventListener: eventService.removeEventListener
   };

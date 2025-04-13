@@ -97,21 +97,21 @@ export class StickyHeaderAd implements IModule {
 
   private stickyHeaderAdConfig: modules.stickyHeaderAd.StickyHeaderAdConfig | null = null;
 
-  configure(moduleConfig?: modules.ModulesConfig | undefined): void {
+  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
     if (moduleConfig?.stickyHeaderAd?.enabled) {
       this.stickyHeaderAdConfig = moduleConfig.stickyHeaderAd;
     }
   }
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.stickyHeaderAdConfig;
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.stickyHeaderAdConfig;
     return config
       ? [
@@ -126,7 +126,7 @@ export class StickyHeaderAd implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     const config = this.stickyHeaderAdConfig;
     return config
       ? [

@@ -69,8 +69,8 @@ describe('Pubstack Module', () => {
   describe('init step', () => {
     it('should add an init step', async () => {
       const module = createPubstack();
-      module.configure(modulesConfig);
-      const initSteps = module.initSteps();
+      module.configure__(modulesConfig);
+      const initSteps = module.initSteps__();
 
       expect(initSteps).to.have.length(1);
       expect(initSteps[0].name).to.be.eq('pubstack-init');
@@ -78,9 +78,9 @@ describe('Pubstack Module', () => {
 
     it('should load script in init step', async () => {
       const module = createPubstack();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
 
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
 
       await init(adPipelineContext());
@@ -94,7 +94,7 @@ describe('Pubstack Module', () => {
       it('should not load script in init step if env is test', async () => {
         const module = createPubstack();
 
-        const init = module.initSteps()[0];
+        const init = module.initSteps__()[0];
         expect(init).to.be.ok;
 
         await init({ ...adPipelineContext(), env: 'test' });
@@ -106,8 +106,8 @@ describe('Pubstack Module', () => {
   describe('prepareRequestAds step', () => {
     it('should not add a prepareRequestAds step', () => {
       const module = createPubstack();
-      module.configure(modulesConfig);
-      const prepareRequestAdsSteps = module.prepareRequestAdsSteps();
+      module.configure__(modulesConfig);
+      const prepareRequestAdsSteps = module.prepareRequestAdsSteps__();
 
       expect(prepareRequestAdsSteps).to.have.length(0);
     });
@@ -116,9 +116,9 @@ describe('Pubstack Module', () => {
   describe('ab test feature', () => {
     const callConfigureStep = async (env: 'production' | 'test' = 'production') => {
       const module = createPubstack();
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
 
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(1);
       const step = configureSteps[0]!;

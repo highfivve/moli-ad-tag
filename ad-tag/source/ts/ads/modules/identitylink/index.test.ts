@@ -66,8 +66,8 @@ describe('IdentityLink Module', () => {
 
   it('should add an init step', async () => {
     const module = createIdentityLink();
-    module.configure(modulesConfig);
-    const initSteps = module.initSteps();
+    module.configure__(modulesConfig);
+    const initSteps = module.initSteps__();
 
     expect(initSteps).to.have.length(1);
     expect(initSteps[0].name).to.be.eq('identitylink');

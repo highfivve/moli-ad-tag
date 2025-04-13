@@ -188,8 +188,8 @@ describe('Lazy-load Module', () => {
           buckets: []
         }
       };
-      module.configure(modulesConfig);
-      const configureSteps = module.configureSteps();
+      module.configure__(modulesConfig);
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).length(1);
       const configureStep = configureSteps[0];
@@ -210,7 +210,7 @@ describe('Lazy-load Module', () => {
         lazyload: lazyConfig
       };
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       // trigger an intersection event
@@ -241,7 +241,7 @@ describe('Lazy-load Module', () => {
         lazyload: lazyConfig
       };
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       const callback = getIntersectionObserverCallback(0);
@@ -276,7 +276,7 @@ describe('Lazy-load Module', () => {
       const eagerSlot = createAdSlots(jsDomWindow, [domId1], 'eager');
       const manualSlot = createAdSlots(jsDomWindow, [domId2], 'manual');
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(
         adPipelineContext(mkConfig([...manualSlot, ...eagerSlot])),
         lazyConfig
@@ -311,7 +311,7 @@ describe('Lazy-load Module', () => {
         lazyload: lazyConfig
       };
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       const callback = getIntersectionObserverCallback(0);
@@ -343,7 +343,7 @@ describe('Lazy-load Module', () => {
         lazyload: lazyConfig
       };
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       // trigger an intersection event
@@ -380,7 +380,7 @@ describe('Lazy-load Module', () => {
         lazyload: lazyConfig
       };
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(adPipelineContext(mkConfig(slots)), lazyConfig);
 
       // trigger an intersection event
@@ -428,7 +428,7 @@ describe('Lazy-load Module', () => {
         lazyload: lazyConfig
       };
 
-      module.configure(modulesConfig);
+      module.configure__(modulesConfig);
       module.registerIntersectionObservers(
         adPipelineContext(mkConfig([...slots, infiniteSlot])),
         lazyConfig

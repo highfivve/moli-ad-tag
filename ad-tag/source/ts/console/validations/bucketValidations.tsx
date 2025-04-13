@@ -1,7 +1,6 @@
 import React from 'react';
 import { Message } from '../components/globalConfig';
 import type { bucket, modules, AdSlot } from '../../types/moliConfig';
-import { ModuleMeta } from '../../types/module';
 import { isNotNull } from '../../util/arrayUtils';
 
 type AdSlotType = {

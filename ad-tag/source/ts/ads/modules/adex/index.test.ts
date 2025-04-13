@@ -89,7 +89,7 @@ describe('The Adex DMP Module', () => {
     appConfig?: AdexAppConfig
   ) => {
     const module = new AdexModule();
-    module.configure(modulesConfig(isSpa, mappingDefinitions, appConfig));
+    module.configure__(modulesConfig(isSpa, mappingDefinitions, appConfig));
     return module;
   };
 
@@ -101,7 +101,7 @@ describe('The Adex DMP Module', () => {
     const loadScriptStub = sandbox
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     await init(context);
@@ -120,7 +120,7 @@ describe('The Adex DMP Module', () => {
   describe('init step', () => {
     it('should add an init step', () => {
       const module = createAndConfigureModule(false);
-      const initSteps = module.initSteps();
+      const initSteps = module.initSteps__();
 
       expect(initSteps).to.have.length(1);
       expect(initSteps[0].name).to.be.eq('DMP module setup');
@@ -128,14 +128,14 @@ describe('The Adex DMP Module', () => {
 
     it('should not add a configure step in non-spa mode', () => {
       const module = createAndConfigureModule(false);
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(0);
     });
 
     it('should add a configure step in spa mode', () => {
       const module = createAndConfigureModule(true);
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(1);
     });
@@ -164,7 +164,7 @@ describe('The Adex DMP Module', () => {
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     await expect(
@@ -228,7 +228,7 @@ describe('The Adex DMP Module', () => {
           }
         }
       };
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
       await init(adPipelineCtx);
 
@@ -259,7 +259,7 @@ describe('The Adex DMP Module', () => {
           }
         }
       };
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
       await init(adPipelineCtx);
 
@@ -288,7 +288,7 @@ describe('The Adex DMP Module', () => {
           }
         }
       };
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
       await init(adPipelineCtx);
 
@@ -312,7 +312,7 @@ describe('The Adex DMP Module', () => {
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     const adPipelineCtxMed = adPipelineContext(fullConsent({ '44': true }), {

@@ -3,7 +3,6 @@ import type { AdSlot, headerbidding, modules } from '../../types/moliConfig';
 import { prebidjs } from '../../types/prebidjs';
 import { isNotNull } from '../../util/arrayUtils';
 import { Message } from '../components/globalConfig';
-import type { ModuleMeta } from '../../types/module';
 
 const isWallpaperSlot = (
   slot: AdSlot,

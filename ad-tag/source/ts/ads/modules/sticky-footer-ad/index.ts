@@ -60,17 +60,17 @@ export class StickyFooterAd implements IModule {
 
   private stickyFooterAdConfig: modules.stickyFooterAd.StickyFooterAdConfig | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.stickyFooterAdConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig | undefined): void {
+  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
     if (moduleConfig?.stickyFooterAd?.enabled) {
       this.stickyFooterAdConfig = moduleConfig.stickyFooterAd;
     }
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     const config = this.stickyFooterAdConfig;
     return config
       ? [
@@ -108,11 +108,11 @@ export class StickyFooterAd implements IModule {
       : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 }

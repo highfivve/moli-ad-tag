@@ -83,7 +83,7 @@ const createAndConfigureModule = (
   closingButtonText?: string
 ) => {
   const module = new StickyFooterAdsV2();
-  module.configure({
+  module.configure__({
     stickyFooterAdV2: {
       enabled: true,
       stickyFooterDomIds,
@@ -113,7 +113,7 @@ const createInitializedModule = (
     moduleConfig.closingButtonText
   );
 
-  const prepareSteps = module.prepareRequestAdsSteps();
+  const prepareSteps = module.prepareRequestAdsSteps__();
   expect(prepareSteps).to.be.ok;
   expect(prepareSteps).to.have.lengthOf(1);
 

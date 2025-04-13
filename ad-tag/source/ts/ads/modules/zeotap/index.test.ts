@@ -77,9 +77,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     await init(
       adPipelineContext(
@@ -115,9 +115,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     await init(
       adPipelineContext(
@@ -152,9 +152,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const configureStep = module.configureSteps()[0];
+    const configureStep = module.configureSteps__()[0];
 
     await configureStep(
       adPipelineContext(
@@ -174,7 +174,7 @@ describe('Zeotap Module', () => {
         '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337&idp=1&zcat=VideoGaming&zcid=technik%2Ccomputer%2Ctechnologie%2Cpc%2Csmartphone%2Cinternet&ctry=DEU&z_e_sha2_l=somehashedaddress'
     });
 
-    const configure = module.configureSteps()[0];
+    const configure = module.configureSteps__()[0];
 
     await configure(
       adPipelineContext(
@@ -204,9 +204,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     const config = moliConfig({
       channel: 'TechnologyAndComputing',
@@ -234,9 +234,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     await init(
       adPipelineContext(
@@ -261,9 +261,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     const config = moliConfig({
       channel: 'NonStandardContent',

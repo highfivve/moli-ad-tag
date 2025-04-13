@@ -58,17 +58,17 @@ export class IdentityLink implements IModule {
 
   private identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig | null = null;
 
-  config(): modules.identitylink.IdentityLinkModuleConfig | null {
+  config__(): modules.identitylink.IdentityLinkModuleConfig | null {
     return this.identityLinkConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.identitylink && moduleConfig.identitylink.enabled) {
       this.identityLinkConfig = moduleConfig.identitylink;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.identityLinkConfig;
     return config
       ? [
@@ -81,11 +81,11 @@ export class IdentityLink implements IModule {
       : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

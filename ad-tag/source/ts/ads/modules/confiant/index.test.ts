@@ -69,7 +69,7 @@ describe('Confiant Module', () => {
 
   const createAndConfigureModule = (checkGVLID?: boolean) => {
     const module = new Confiant();
-    module.configure(modulesConfig(checkGVLID));
+    module.configure__(modulesConfig(checkGVLID));
     return module;
   };
 
@@ -82,7 +82,7 @@ describe('Confiant Module', () => {
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     await init(context);
@@ -101,7 +101,7 @@ describe('Confiant Module', () => {
 
   it('should add an init step', async () => {
     const module = createAndConfigureModule();
-    const initSteps = module.initSteps();
+    const initSteps = module.initSteps__();
     expect(initSteps).to.have.length(1);
     expect(initSteps[0].name).to.be.eq('confiant-init');
   });

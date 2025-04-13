@@ -135,17 +135,17 @@ export class Emetriq implements IModule {
 
   private emetriqConfig: modules.emetriq.EmetriqModuleConfig | null = null;
 
-  config(): modules.emetriq.EmetriqModuleConfig | null {
+  config__(): modules.emetriq.EmetriqModuleConfig | null {
     return this.emetriqConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.emetriq && moduleConfig.emetriq.enabled) {
       this.emetriqConfig = moduleConfig.emetriq;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.emetriqConfig;
     return config
       ? [
@@ -178,7 +178,7 @@ export class Emetriq implements IModule {
       : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.emetriqConfig;
     return config
       ? [
@@ -219,7 +219,7 @@ export class Emetriq implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

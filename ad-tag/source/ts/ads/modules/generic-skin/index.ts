@@ -269,30 +269,30 @@ export class Skin implements IModule {
   private skinModuleConfig: modules.skin.SkinModuleConfig | null = null;
   private bidsBackHandler: MoliRuntime.PrebidBidsBackHandler[] = [];
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.skinModuleConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.skin && moduleConfig.skin.enabled) {
       this.skinModuleConfig = moduleConfig.skin;
       this.bidsBackHandler.push(this.runSkinConfigs(moduleConfig.skin));
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
-  prebidBidsBackHandler(): MoliRuntime.PrebidBidsBackHandler[] {
+  prebidBidsBackHandler__(): MoliRuntime.PrebidBidsBackHandler[] {
     return this.bidsBackHandler;
   }
 

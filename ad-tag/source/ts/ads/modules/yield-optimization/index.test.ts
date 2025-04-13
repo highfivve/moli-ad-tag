@@ -61,7 +61,7 @@ describe('Yield Optimization module', () => {
     providedYieldConfig: modules.yield_optimization.YieldOptimizationConfig = yieldConfig
   ): YieldOptimization => {
     const module = new YieldOptimization();
-    module.configure({
+    module.configure__({
       yieldOptimization: providedYieldConfig
     });
     return module;
@@ -76,7 +76,7 @@ describe('Yield Optimization module', () => {
   describe('init step', () => {
     it('should add yield-optimization optimization step', async () => {
       const module = createConfiguredModule();
-      let initSteps = module.initSteps();
+      let initSteps = module.initSteps__();
 
       expect(initSteps).to.have.length(1);
       expect(initSteps.map(e => e.name)).to.include('yield-optimization-init');
@@ -214,7 +214,7 @@ describe('Yield Optimization module', () => {
   describe('prepare request ads step', () => {
     it('should add yield-optimization optimization step', async () => {
       const module = createConfiguredModule();
-      let prepareRequestAdsSteps = module.prepareRequestAdsSteps();
+      let prepareRequestAdsSteps = module.prepareRequestAdsSteps__();
 
       expect(prepareRequestAdsSteps).to.have.length(1);
       expect(prepareRequestAdsSteps.map(e => e.name)).to.include('yield-optimization');

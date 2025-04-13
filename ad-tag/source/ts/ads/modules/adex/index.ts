@@ -169,17 +169,17 @@ export class AdexModule implements IModule {
 
   private isLoaded: boolean = false;
 
-  config(): modules.adex.AdexConfig | null {
+  config__(): modules.adex.AdexConfig | null {
     return this.adexConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.adex && moduleConfig.adex.enabled) {
       this.adexConfig = moduleConfig.adex;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.adexConfig;
     if (config) {
       return [mkInitStep('DMP module setup', context => this.track(context, config))];
@@ -187,7 +187,7 @@ export class AdexModule implements IModule {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.adexConfig;
     if (config?.spaMode) {
       return [
@@ -283,7 +283,7 @@ export class AdexModule implements IModule {
         TCPurpose.DEVELOP_IMPROVE_PRODUCTS
       ].every(purpose => tcData.purpose.consents[purpose]));
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

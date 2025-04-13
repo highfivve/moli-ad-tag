@@ -29,7 +29,7 @@ describe('Utiq Module', () => {
 
   const createUtiq = (options?: modules.utiq.UtiqConfigOptions): Utiq => {
     const module = new Utiq();
-    module.configure({
+    module.configure__({
       utiq: {
         enabled: true,
         assetUrl: 'http://localhost/utiqLoader.js',
@@ -50,7 +50,7 @@ describe('Utiq Module', () => {
   it('should add an init step', async () => {
     const module = createUtiq();
 
-    const initStep = module.initSteps()[0];
+    const initStep = module.initSteps__()[0];
 
     expect(initStep).to.have.length(1);
     expect(initStep.name).to.be.eq('utiq');

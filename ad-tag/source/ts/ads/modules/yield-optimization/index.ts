@@ -92,11 +92,11 @@ export class YieldOptimization implements IModule {
   private _initSteps: InitStep[] = [];
   private _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.yieldModuleConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.yieldOptimization?.enabled) {
       this.yieldModuleConfig = moduleConfig.yieldOptimization;
 
@@ -109,15 +109,15 @@ export class YieldOptimization implements IModule {
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return this._initSteps;
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return this._prepareRequestAdsSteps;
   }
 

@@ -45,17 +45,17 @@ export class Pubstack implements IModule {
 
   private pubstackConfig: modules.pubstack.PubstackConfig | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.pubstackConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.pubstack && moduleConfig.pubstack.enabled) {
       this.pubstackConfig = moduleConfig.pubstack;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.pubstackConfig;
     return config
       ? [
@@ -77,7 +77,7 @@ export class Pubstack implements IModule {
       : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.pubstackConfig;
     return config
       ? [
@@ -102,7 +102,7 @@ export class Pubstack implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 }

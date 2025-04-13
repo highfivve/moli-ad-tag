@@ -73,8 +73,8 @@ describe('Moli Ad Reload Module', () => {
 
   const createAdReloadModuleInitialized = (moduleConfig: modules.adreload.AdReloadModuleConfig) => {
     const module = new AdReload();
-    module.configure({ adReload: moduleConfig });
-    const configureStep = module.configureSteps()[0];
+    module.configure__({ adReload: moduleConfig });
+    const configureStep = module.configureSteps__()[0];
     // this is awkward, but it works. Alternative would be to inject the service into the module via the constructor for tests
     return {
       module,
@@ -181,26 +181,26 @@ describe('Moli Ad Reload Module', () => {
   it('should not return any pipeline steps if unconfigured', () => {
     const module = new AdReload();
 
-    expect(module.initSteps()).to.be.empty;
-    expect(module.configureSteps()).to.be.empty;
-    expect(module.prepareRequestAdsSteps()).to.be.empty;
+    expect(module.initSteps__()).to.be.empty;
+    expect(module.configureSteps__()).to.be.empty;
+    expect(module.prepareRequestAdsSteps__()).to.be.empty;
   });
 
   it('should not return any pipeline steps if disabled', () => {
     const module = new AdReload();
-    module.configure({ adReload: { enabled: false } as modules.adreload.AdReloadModuleConfig });
+    module.configure__({ adReload: { enabled: false } as modules.adreload.AdReloadModuleConfig });
 
-    expect(module.initSteps()).to.be.empty;
-    expect(module.configureSteps()).to.be.empty;
-    expect(module.prepareRequestAdsSteps()).to.be.empty;
+    expect(module.initSteps__()).to.be.empty;
+    expect(module.configureSteps__()).to.be.empty;
+    expect(module.prepareRequestAdsSteps__()).to.be.empty;
   });
 
   it('should return any init and configure steps if unconfigured', () => {
     const module = new AdReload();
 
-    expect(module.initSteps()).to.be.empty;
-    expect(module.configureSteps()).to.be.empty;
-    expect(module.prepareRequestAdsSteps()).to.be.empty;
+    expect(module.initSteps__()).to.be.empty;
+    expect(module.configureSteps__()).to.be.empty;
+    expect(module.prepareRequestAdsSteps__()).to.be.empty;
   });
 
   it('should setup the pubads slotRenderEnded listener for the slots (but only once)', async () => {

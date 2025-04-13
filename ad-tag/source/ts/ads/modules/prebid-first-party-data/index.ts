@@ -63,11 +63,11 @@ export class PrebidFirstPartyDataModule implements IModule {
     null;
   private _configureSteps: ConfigureStep[] = [];
 
-  config(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
+  config__(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
     return this.moduleConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.prebidFirstPartyData?.enabled) {
       const config = moduleConfig.prebidFirstPartyData;
       this._configureSteps = [
@@ -78,15 +78,15 @@ export class PrebidFirstPartyDataModule implements IModule {
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return this._configureSteps;
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

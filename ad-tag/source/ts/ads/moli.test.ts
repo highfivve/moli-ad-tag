@@ -148,15 +148,14 @@ describe('moli', () => {
       expect(finishedState.state).to.be.eq('finished');
     });
 
-    it('should stay in configurable state after requestAds() and set initialize to true', () => {
+    it('should stay in configurable state after requestAds() and set initialize to true', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const finished = adTag.requestAds();
       expect(adTag.getState()).to.be.eq('configurable');
-      return finished.then(state => {
-        expect(state.state).to.be.eq('configurable');
-        const configurableState: IConfigurable = state as IConfigurable;
-        expect(configurableState.initialize).to.be.true;
-      });
+      const state = await finished;
+      expect(state.state).to.be.eq('configurable');
+      const configurableState: IConfigurable = state as IConfigurable;
+      expect(configurableState.initialize).to.be.true;
     });
 
     it('should stay in spa state if single page app is enabled and requestAds is called multiple times', async () => {
@@ -164,7 +163,7 @@ describe('moli', () => {
         url: 'https://localhost/page-one'
       });
       const adTag = createMoliTag(jsDomWindow);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       expect(adTag.getState()).to.be.eq('configured');
       const state1 = await adTag.requestAds();
       expect(state1.state).to.be.eq('spa-finished');
@@ -229,19 +228,19 @@ describe('moli', () => {
       description: '',
       moduleType: 'cmp',
       name: '',
-      config(): Object | null {
+      config__(): Object | null {
         return null;
       },
-      configure(): void {
+      configure__(): void {
         return;
       },
-      initSteps(): InitStep[] {
+      initSteps__(): InitStep[] {
         return [];
       },
-      configureSteps(): ConfigureStep[] {
+      configureSteps__(): ConfigureStep[] {
         return [];
       },
-      prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+      prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
         return [];
       }
     };
@@ -260,11 +259,11 @@ describe('moli', () => {
         () => Promise.resolve()
       );
 
-      const module = {
+      const module: IModule = {
         ...fakeModule,
-        initSteps: (): InitStep[] => [initStep],
-        configureSteps: (): ConfigureStep[] => [configuredStep],
-        prepareRequestAdsSteps: (): PrepareRequestAdsStep[] => [prepareRequestAdsStep]
+        initSteps__: (): InitStep[] => [initStep],
+        configureSteps__: (): ConfigureStep[] => [configuredStep],
+        prepareRequestAdsSteps__: (): PrepareRequestAdsStep[] => [prepareRequestAdsStep]
       };
 
       adTag.registerModule(module);
@@ -286,7 +285,7 @@ describe('moli', () => {
     });
 
     it('should add pipeline steps', async () => {
-      const configureSpy = sandbox.spy(fakeModule, 'configure');
+      const configureSpy = sandbox.spy(fakeModule, 'configure__');
       const adTag = createMoliTag(jsDomWindow);
       const moduleConfig: modules.ModulesConfig = {
         pubstack: {
@@ -323,13 +322,13 @@ describe('moli', () => {
 
       const fakePrebidBidsBackHandler: MoliRuntime.PrebidBidsBackHandler = () => ({});
 
-      const configChangingModule = {
+      const configChangingModule: IModule = {
         ...fakeModule,
-        initSteps: (): InitStep[] => [fakeInitStep],
-        configureSteps: (): ConfigureStep[] => [fakeConfigureStep],
-        prepareRequestAdsSteps: (): PrepareRequestAdsStep[] => [fakePrepareRequestAdsStep],
-        requestBidsSteps: () => [fakeRequestBidsSteps],
-        prebidBidsBackHandler: () => [fakePrebidBidsBackHandler]
+        initSteps__: (): InitStep[] => [fakeInitStep],
+        configureSteps__: (): ConfigureStep[] => [fakeConfigureStep],
+        prepareRequestAdsSteps__: (): PrepareRequestAdsStep[] => [fakePrepareRequestAdsStep],
+        requestBidsSteps__: () => [fakeRequestBidsSteps],
+        prebidBidsBackHandler__: () => [fakePrebidBidsBackHandler]
       };
 
       expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
@@ -360,7 +359,7 @@ describe('moli', () => {
       const config = newEmptyConfig(defaultSlots);
       const logger = newNoopLogger();
 
-      const configureSpy = sandbox.spy(fakeModule, 'configure');
+      const configureSpy = sandbox.spy(fakeModule, 'configure__');
       const errorLogSpy = sandbox.spy(logger, 'error');
 
       adTag.setLogger(logger);
@@ -455,7 +454,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-      adTag.configure({
+      await adTag.configure({
         ...defaultConfig,
         slots: slots
       });
@@ -493,7 +492,7 @@ describe('moli', () => {
         expect(domIds).to.be.deep.eq(slots.map(slot => slot.domId));
       });
 
-      it('should refresh ads after requestAds have been called', () => {
+      it('should refresh ads after requestAds have been called', async () => {
         // create all slots
         const slots: AdSlot[] = [
           { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } },
@@ -504,31 +503,26 @@ describe('moli', () => {
 
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.refreshAdSlot(slots[0].domId);
-        adTag.configure({ ...defaultConfig, slots: slots });
+        await adTag.refreshAdSlot(slots[0].domId);
+        await adTag.configure({ ...defaultConfig, slots: slots });
 
         expect(adTag.getState()).to.be.eq('configured');
-        return adTag
-          .requestAds()
-          .then(state => adTag.refreshAdSlot(slots[1].domId).then(() => state))
-          .then(state => {
-            expect(state.state).to.be.eq('finished');
-            const firstCallDomIds = refreshSpy.firstCall.args[0]!.map(slot =>
-              slot.getSlotElementId()
-            );
-            expect(firstCallDomIds).to.have.length(1);
+        await adTag.requestAds();
+        await adTag.refreshAdSlot(slots[1].domId);
+        expect(adTag.getState()).to.be.eq('finished');
+        const firstCallDomIds = refreshSpy.firstCall.args[0]!.map(slot => slot.getSlotElementId());
+        expect(firstCallDomIds).to.have.length(1);
 
-            expect(firstCallDomIds[0]).to.be.eq(slots[0].domId);
-            // refreshAds call after requestAds
-            const secondCallDomIds = refreshSpy.secondCall.args[0]!.map(slot =>
-              slot.getSlotElementId()
-            );
+        expect(firstCallDomIds[0]).to.be.eq(slots[0].domId);
+        // refreshAds call after requestAds
+        const secondCallDomIds = refreshSpy.secondCall.args[0]!.map(slot =>
+          slot.getSlotElementId()
+        );
 
-            expect(secondCallDomIds).to.have.length(1);
-            expect(secondCallDomIds[0]).to.be.eq(slots[1].domId);
+        expect(secondCallDomIds).to.have.length(1);
+        expect(secondCallDomIds[0]).to.be.eq(slots[1].domId);
 
-            expect(refreshSpy).to.have.been.calledTwice;
-          });
+        expect(refreshSpy).to.have.been.calledTwice;
       });
     });
 
@@ -575,7 +569,7 @@ describe('moli', () => {
 
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
+        await adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
         await adTag.refreshAdSlot(slots[0].domId);
 
         expect(adTag.getState()).to.be.eq('configured');
@@ -604,7 +598,7 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
+        await adTag.configure({ ...defaultConfig, slots: slots, spa: spa });
 
         expect(adTag.getState()).to.be.eq('configured');
 
@@ -642,7 +636,7 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
 
-        adTag.configure({
+        await adTag.configure({
           ...defaultConfig,
           slots: slots,
           spa: { enabled: true, validateLocation: 'path' }
@@ -711,7 +705,7 @@ describe('moli', () => {
       });
       const adTag = createMoliTag(jsDomWindow);
       adTag.setAdUnitPathVariables({ foo: 'value' });
-      adTag.configure({
+      await adTag.configure({
         slots: defaultSlots,
         spa: { enabled: true, validateLocation: 'href' },
         targeting: {
@@ -831,7 +825,7 @@ describe('moli', () => {
 
     it('should add ABtest key-value between 1 and 100 in configured state calling requestAds() ', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      adTag.configure(defaultConfig);
+      await adTag.configure(defaultConfig);
 
       expect(adTag.getState()).to.be.eq('configured');
       const state = await adTag.requestAds();
@@ -948,7 +942,7 @@ describe('moli', () => {
       });
       const adTag = createMoliTag(jsDomWindow);
       adTag.addLabel('dynamicLabelPre');
-      adTag.configure({
+      await adTag.configure({
         slots: defaultSlots,
         spa: { enabled: true, validateLocation: 'href' },
         targeting: {
@@ -1017,7 +1011,7 @@ describe('moli', () => {
   });
 
   describe('hooks', () => {
-    it('should add the beforeRequestAds hook and call it', () => {
+    it('should add the beforeRequestAds hook and call it', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const beforeRequestAdsHook = (_: MoliConfig) => {
@@ -1027,14 +1021,13 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.configure(defaultConfig);
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-      });
+      await adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
     });
 
     [2, 3].forEach(callCounts => {
-      it(`should add ${callCounts} beforeRequestAds hooks and call all`, () => {
+      it(`should add ${callCounts} beforeRequestAds hooks and call all`, async () => {
         const adTag = createMoliTag(jsDomWindow);
 
         const beforeRequestAdsHook = (_: MoliConfig) => {
@@ -1044,10 +1037,9 @@ describe('moli', () => {
         const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
         [...Array.from(new Array(callCounts).keys())].forEach(_ => adTag.beforeRequestAds(hookSpy));
-        adTag.configure(defaultConfig);
-        return adTag.requestAds().then(() => {
-          expect(hookSpy).to.be.callCount(callCounts);
-        });
+        await adTag.configure(defaultConfig);
+        await adTag.requestAds();
+        expect(hookSpy).to.be.callCount(callCounts);
       });
     });
 
@@ -1061,7 +1053,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.configure(defaultConfig);
+      await adTag.configure(defaultConfig);
       const result = await adTag.requestAds();
       expect(hookSpy).to.be.calledOnce;
       expect(result.state).not.to.be.eq('error');
@@ -1077,7 +1069,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       await adTag.requestAds();
       expect(hookSpy).to.be.calledOnce;
     });
@@ -1092,7 +1084,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       await adTag.requestAds();
       dom.reconfigure({
         url: 'https://localhost/page-one'
@@ -1132,7 +1124,7 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(beforeRequestAdsHook);
 
       adTag.beforeRequestAds(hookSpy);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
       const result = await adTag.requestAds();
       expect(hookSpy).to.be.calledOnce;
       expect(result.state).not.to.be.eq('error');
@@ -1148,14 +1140,14 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.configure(defaultConfig);
+      await adTag.configure(defaultConfig);
       await adTag.requestAds();
       expect(hookSpy).to.be.calledOnce;
       expect(hookSpy).to.be.calledOnceWithExactly('finished');
     });
 
     [2, 3].forEach(callCounts => {
-      it(`should add ${callCounts} afterRequestAds hooks and call all`, () => {
+      it(`should add ${callCounts} afterRequestAds hooks and call all`, async () => {
         const adTag = createMoliTag(jsDomWindow);
 
         const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
@@ -1165,15 +1157,14 @@ describe('moli', () => {
         const hookSpy = sandbox.spy(afterRequestAdsHook);
 
         [...Array.from(new Array(callCounts).keys())].forEach(_ => adTag.afterRequestAds(hookSpy));
-        adTag.configure(defaultConfig);
-        return adTag.requestAds().then(() => {
-          expect(hookSpy).to.be.callCount(callCounts);
-          expect(hookSpy).to.be.calledWith('finished');
-        });
+        await adTag.configure(defaultConfig);
+        await adTag.requestAds();
+        expect(hookSpy).to.be.callCount(callCounts);
+        expect(hookSpy).to.be.calledWith('finished');
       });
     });
 
-    it('should add the afterRequestAds hook with spa state if requestAds() was successful', () => {
+    it('should add the afterRequestAds hook with spa state if requestAds() was successful', async () => {
       const adTag = createMoliTag(jsDomWindow);
 
       const afterRequestAdsHook = (_: state.AfterRequestAdsStates) => {
@@ -1183,14 +1174,13 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-        expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
-      });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
     });
 
-    it('should call the afterRequestAds hook with finished state on each requestAds() call', () => {
+    it('should call the afterRequestAds hook with finished state on each requestAds() call', async () => {
       const adTag = createMoliTag(jsDomWindow);
       dom.reconfigure({
         url: 'https://localhost/'
@@ -1203,24 +1193,19 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
-      return adTag
-        .requestAds()
-        .then(() => {
-          expect(hookSpy).to.be.calledOnce;
-          expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
-          dom.reconfigure({
-            url: 'https://localhost/home'
-          });
-          return adTag.requestAds();
-        })
-        .then(() => {
-          expect(hookSpy).to.be.calledTwice;
-          expect(hookSpy.secondCall.args[0]).to.be.equal('spa-finished');
-        });
+      await adTag.configure({ ...defaultConfig, spa: { enabled: true, validateLocation: 'href' } });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(hookSpy).to.be.calledOnceWithExactly('spa-finished');
+      dom.reconfigure({
+        url: 'https://localhost/home'
+      });
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledTwice;
+      expect(hookSpy.secondCall.args[0]).to.be.equal('spa-finished');
     });
 
-    it('should add the afterRequestAds hook with error state if requestAds() failed', () => {
+    it('should add the afterRequestAds hook with error state if requestAds() failed', async () => {
       jsDomWindow.googletag = {
         ...createGoogletagStub(),
         pubadsReady: undefined,
@@ -1239,11 +1224,10 @@ describe('moli', () => {
       const hookSpy = sandbox.spy(afterRequestAdsHook);
 
       adTag.afterRequestAds(hookSpy);
-      adTag.configure(defaultConfig);
-      return adTag.requestAds().then(() => {
-        expect(hookSpy).to.be.calledOnce;
-        expect(hookSpy).to.be.calledOnceWithExactly('error');
-      });
+      await adTag.configure(defaultConfig);
+      await adTag.requestAds();
+      expect(hookSpy).to.be.calledOnce;
+      expect(hookSpy).to.be.calledOnceWithExactly('error');
     });
   });
 
@@ -1411,7 +1395,7 @@ describe('moli', () => {
     const slots = (): AdSlot[] => [
       {
         ...mkAdSlotInDOM(),
-        behaviour: { loaded: 'infinite', selector: '.ad-infinite' },
+        behaviour: { loaded: 'infinite' },
         domId: idOfConfiguredInfiniteSlot
       }
     ];
@@ -1420,7 +1404,7 @@ describe('moli', () => {
       const adTag = createMoliTag(jsDomWindow);
       const slots: AdSlot[] = [
         ...defaultSlots,
-        { ...mkAdSlotInDOM(), behaviour: { loaded: 'infinite', selector: '.ad-infinite' } }
+        { ...mkAdSlotInDOM(), behaviour: { loaded: 'infinite' } }
       ];
 
       await adTag.configure({ ...defaultConfig, slots: slots });
@@ -1661,17 +1645,17 @@ describe('moli', () => {
         name: 'test-module',
         moduleType: 'prebid',
         description: 'test-module',
-        config(): Object | null {
+        config__(): Object | null {
           return null;
         },
-        configure: configureSpy,
-        initSteps(): InitStep[] {
+        configure__: configureSpy,
+        initSteps__(): InitStep[] {
           return [initStepSpy];
         },
-        configureSteps(): ConfigureStep[] {
+        configureSteps__(): ConfigureStep[] {
           return [configureStepSpy];
         },
-        prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+        prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
           return [prepareRequestAdsStep];
         }
       });
@@ -1707,7 +1691,7 @@ describe('moli', () => {
       it('should add localhost as domain label in config', async () => {
         const adTag = createMoliTag(jsDomWindow);
         await adTag.requestAds();
-        adTag.configure(newEmptyConfig());
+        await adTag.configure(newEmptyConfig());
         const targeting = adTag.getPageTargeting();
         const labels = targeting?.labels;
         expect(labels).to.be.ok;
@@ -1720,7 +1704,7 @@ describe('moli', () => {
         });
         const adTag = createMoliTag(jsDomWindow);
         await adTag.requestAds();
-        adTag.configure(newEmptyConfig());
+        await adTag.configure(newEmptyConfig());
         const targeting = adTag.getPageTargeting();
         expect(targeting.labels).to.be.ok;
         expect(targeting.labels).to.contain.oneOf(['example.com']);
@@ -1730,7 +1714,7 @@ describe('moli', () => {
     describe('configured state', () => {
       it('should add ABtest targeting', async () => {
         const adTag = createMoliTag(jsDomWindow);
-        adTag.configure(newEmptyConfig());
+        await adTag.configure(newEmptyConfig());
         await adTag.requestAds();
         const targeting = adTag.getPageTargeting();
         expect(targeting.keyValues).to.be.ok;
@@ -1739,7 +1723,7 @@ describe('moli', () => {
 
       it('should localhost as domain label in config', async () => {
         const adTag = createMoliTag(jsDomWindow);
-        adTag.configure(newEmptyConfig());
+        await adTag.configure(newEmptyConfig());
         await adTag.requestAds();
         const targeting = adTag.getPageTargeting();
         expect(targeting.labels).to.contain.oneOf(['localhost']);
@@ -1750,7 +1734,7 @@ describe('moli', () => {
           url: 'https://example.com'
         });
         const adTag = createMoliTag(jsDomWindow);
-        adTag.configure(newEmptyConfig());
+        await adTag.configure(newEmptyConfig());
         await adTag.requestAds();
         const targeting = adTag.getPageTargeting();
         expect(targeting.labels).to.contain.oneOf(['example.com']);
@@ -1761,7 +1745,7 @@ describe('moli', () => {
           url: 'https://example.com'
         });
         const adTag = createMoliTag(jsDomWindow);
-        adTag.configure({ ...newEmptyConfig(), domain: 'sub.example.com' });
+        await adTag.configure({ ...newEmptyConfig(), domain: 'sub.example.com' });
         await adTag.requestAds();
         const targeting = adTag.getPageTargeting();
         expect(targeting.labels).to.contain.oneOf(['sub.example.com']);

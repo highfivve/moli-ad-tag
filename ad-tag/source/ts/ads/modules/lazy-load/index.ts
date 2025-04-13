@@ -91,21 +91,21 @@ export class LazyLoad implements IModule {
 
   private lazyloadConfig: modules.lazyload.LazyLoadModuleConfig | null = null;
 
-  config(): modules.lazyload.LazyLoadModuleConfig | null {
+  config__(): modules.lazyload.LazyLoadModuleConfig | null {
     return this.lazyloadConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.lazyload && moduleConfig.lazyload.enabled) {
       this.lazyloadConfig = moduleConfig.lazyload;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.lazyloadConfig;
     return config
       ? [
@@ -121,7 +121,7 @@ export class LazyLoad implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

@@ -69,7 +69,7 @@ describe('Prebid First Party Data Module', () => {
   ) => {
     const module = new PrebidFirstPartyDataModule();
 
-    module.configure({
+    module.configure__({
       prebidFirstPartyData: {
         enabled: true,
         staticPrebidFirstPartyData,
@@ -77,7 +77,7 @@ describe('Prebid First Party Data Module', () => {
         iabDataProviderName
       }
     });
-    return { module, configureStep: module.configureSteps()[0] };
+    return { module, configureStep: module.configureSteps__()[0] };
   };
 
   const configWithTargeting = (targeting: googleAdManager.Targeting): MoliConfig => ({
@@ -94,7 +94,7 @@ describe('Prebid First Party Data Module', () => {
     it('should add a configure step', () => {
       const { module } = createFpdModule({}, { cat: 'openrtb2_page_cat' });
 
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.lengthOf(1);
       expect(configureSteps[0].name).to.be.equals('prebid-fpd-module-configure');

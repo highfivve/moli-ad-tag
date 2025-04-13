@@ -85,17 +85,17 @@ export class Zeotap implements IModule {
 
   private zeotapConfig: modules.zeotap.ZeotapModuleConfig | null = null;
 
-  config(): modules.zeotap.ZeotapModuleConfig | null {
+  config__(): modules.zeotap.ZeotapModuleConfig | null {
     return this.zeotapConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.zeotap && moduleConfig.zeotap.enabled) {
       this.zeotapConfig = moduleConfig.zeotap;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.zeotapConfig;
     return config && config.mode === 'default'
       ? [
@@ -111,7 +111,7 @@ export class Zeotap implements IModule {
       : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.zeotapConfig;
     return config && config.mode === 'spa'
       ? [
@@ -126,7 +126,7 @@ export class Zeotap implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

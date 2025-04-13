@@ -66,21 +66,21 @@ export class Cleanup implements IModule {
 
   private cleanupConfig: modules.cleanup.CleanupModuleConfig | null = null;
 
-  configure(modulesConfig?: modules.ModulesConfig) {
+  configure__(modulesConfig?: modules.ModulesConfig) {
     if (modulesConfig?.cleanup && modulesConfig.cleanup.enabled) {
       this.cleanupConfig = modulesConfig.cleanup;
     }
   }
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.cleanupConfig;
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.cleanupConfig;
     return config
       ? [
@@ -107,7 +107,7 @@ export class Cleanup implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     const config = this.cleanupConfig;
     return config
       ? [

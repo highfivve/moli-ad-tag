@@ -56,17 +56,17 @@ export class Confiant implements IModule {
 
   private confiantConfig: modules.confiant.ConfiantConfig | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.confiantConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.confiant && moduleConfig.confiant.enabled) {
       this.confiantConfig = moduleConfig.confiant;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.confiantConfig;
     return config ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, config))] : [];
   }
@@ -97,11 +97,11 @@ export class Confiant implements IModule {
     return Promise.resolve();
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 }

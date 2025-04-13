@@ -91,7 +91,7 @@ export class AdReload implements IModule {
    */
   private initialized: boolean = false;
 
-  config(): modules.adreload.AdReloadModuleConfig | null {
+  config__(): modules.adreload.AdReloadModuleConfig | null {
     return this.moduleConfig;
   }
 
@@ -99,17 +99,17 @@ export class AdReload implements IModule {
     return this.initialized;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.adReload?.enabled) {
       this.moduleConfig = moduleConfig.adReload;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.moduleConfig;
     return config
       ? [
@@ -134,7 +134,7 @@ export class AdReload implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 

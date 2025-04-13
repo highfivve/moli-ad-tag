@@ -112,17 +112,17 @@ export class BlocklistedUrls implements IModule {
     | modules.blocklist.BlocklistUrlsKeyValueConfig
     | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.blocklistConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.blocklist && moduleConfig.blocklist.enabled) {
       this.blocklistConfig = moduleConfig.blocklist;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.blocklistConfig;
     return config
       ? [
@@ -240,11 +240,11 @@ export class BlocklistedUrls implements IModule {
     return this.blocklistCache;
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 }

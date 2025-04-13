@@ -78,7 +78,7 @@ describe('sticky header ad module', () => {
     disallowedAdvertiserIds: number[] = []
   ): StickyHeaderAd => {
     const module = new StickyHeaderAd();
-    module.configure({
+    module.configure__({
       stickyHeaderAd: {
         enabled: true,
         headerAdDomId,
@@ -106,7 +106,7 @@ describe('sticky header ad module', () => {
     it('should add an configure step', async () => {
       const module = createStickyHeaderAdModule(headerAdDomId, [111]);
 
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
       expect(configureSteps).to.have.lengthOf(1);
       expect(configureSteps[0].name).to.be.eq('sticky-header-ads:cleanup');
     });
@@ -114,7 +114,7 @@ describe('sticky header ad module', () => {
     it('should add a prepare request ads pipeline step', async () => {
       const module = createStickyHeaderAdModule(headerAdDomId, [111]);
 
-      const prepareRequestAdsSteps = module.prepareRequestAdsSteps();
+      const prepareRequestAdsSteps = module.prepareRequestAdsSteps__();
       expect(prepareRequestAdsSteps).to.have.lengthOf(1);
       expect(prepareRequestAdsSteps[0].name).to.be.eq('sticky-header-ads');
     });
@@ -125,7 +125,7 @@ describe('sticky header ad module', () => {
 
       const contentSlot1 = createAdSlotConfig('content-1', 'desktop');
 
-      const step = module.prepareRequestAdsSteps()[0];
+      const step = module.prepareRequestAdsSteps__()[0];
 
       await step(adPipelineContext(moliConfig([contentSlot1])), [contentSlot1]);
 
@@ -141,7 +141,7 @@ describe('sticky header ad module', () => {
 
       const contentSlot1 = createAdSlotConfig(headerAdDomId, 'desktop');
 
-      const step = module.prepareRequestAdsSteps()[0];
+      const step = module.prepareRequestAdsSteps__()[0];
       await step({ ...adPipelineContext(moliConfig([contentSlot1])), logger: newLogger }, [
         contentSlot1
       ]);

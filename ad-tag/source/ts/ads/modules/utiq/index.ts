@@ -89,26 +89,26 @@ export class Utiq implements IModule {
 
   private utiqConfig: modules.utiq.UtiqConfig | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.utiqConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.utiq && moduleConfig.utiq.enabled) {
       this.utiqConfig = moduleConfig.utiq;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     const config = this.utiqConfig;
     return config?.enabled ? [mkInitStep(this.name, ctx => this.loadUtiq(config, ctx))] : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
