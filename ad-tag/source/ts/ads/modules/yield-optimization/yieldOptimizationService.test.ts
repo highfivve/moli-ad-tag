@@ -2,7 +2,10 @@ import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { YieldOptimizationService } from './yieldOptimizationService';
+import {
+  createYieldOptimizationService,
+  YieldOptimizationService
+} from './yieldOptimizationService';
 import { auction, Device, modules } from 'ad-tag/types/moliConfig';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
 import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
@@ -25,12 +28,6 @@ describe('YieldOptimizationService', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const fetchStub = sandbox.stub(jsDomWindow, 'fetch');
-
-  const createService = (
-    config: modules.yield_optimization.YieldOptimizationConfig
-  ): YieldOptimizationService => {
-    return new YieldOptimizationService(config);
-  };
 
   afterEach(() => {
     sandbox.reset();
@@ -60,7 +57,7 @@ describe('YieldOptimizationService', () => {
             }
           }
         };
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init(
           device,
           { device: device, domain: domain },
@@ -77,7 +74,7 @@ describe('YieldOptimizationService', () => {
 
   describe('provider: none', () => {
     const config: NoYieldOptimizationConfig = { enabled: true, provider: 'none' };
-    const service = createService(config);
+    const service = createYieldOptimizationService(config);
 
     it('should always return undefined', async () => {
       await service.init('mobile', {}, [], jsDomWindow.fetch, noopLogger);
@@ -104,7 +101,7 @@ describe('YieldOptimizationService', () => {
         provider: 'static',
         config: { rules: {} }
       };
-      const service = createService(config);
+      const service = createYieldOptimizationService(config);
 
       it('should always return undefined', async () => {
         await service.init('mobile', {}, [], jsDomWindow.fetch, noopLogger);
@@ -141,14 +138,14 @@ describe('YieldOptimizationService', () => {
       };
 
       it('should return undefined if the ad slot is not configured', async () => {
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [], jsDomWindow.fetch, noopLogger);
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
 
       it('should return the price rule', async () => {
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [], jsDomWindow.fetch, noopLogger);
         const rule = await service.getPriceRule(adUnit);
         expect(rule).to.be.ok;
@@ -196,7 +193,7 @@ describe('YieldOptimizationService', () => {
             return Promise.resolve(publisherYieldConfiguration);
           }
         } as any);
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
 
         const rule = await service.getPriceRule(adUnitPath1);
@@ -206,7 +203,7 @@ describe('YieldOptimizationService', () => {
 
       it('should always return undefined if the asset loading fails after 3 retries', async () => {
         fetchStub.rejects('FetchRequestFailed');
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
 
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
         const rule = await service.getPriceRule(adUnitPath1);
@@ -221,7 +218,7 @@ describe('YieldOptimizationService', () => {
             return Promise.resolve('not json');
           }
         } as any);
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
 
         const rule = await service.getPriceRule(adUnitPath1);
@@ -236,7 +233,7 @@ describe('YieldOptimizationService', () => {
             return Promise.resolve({ foo: [] });
           }
         } as any);
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
 
         const rule = await service.getPriceRule(adUnitPath1);
@@ -256,7 +253,7 @@ describe('YieldOptimizationService', () => {
       });
 
       it('should call the configured endpoint only once', async () => {
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         const adSlot = googleAdSlotStub('/123/publisher/p_content_1', adUnitPath1);
 
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
@@ -273,7 +270,7 @@ describe('YieldOptimizationService', () => {
       });
 
       it('should respect the defined excludedAdUnits', async () => {
-        const service = createService({
+        const service = createYieldOptimizationService({
           ...config,
           excludedAdUnitPaths: [adUnitPath1]
         });
@@ -293,7 +290,7 @@ describe('YieldOptimizationService', () => {
       });
 
       it('should send the resolved adUnitPath', async () => {
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         const adSlot = googleAdSlotStub('/123/pub/ad_content_1/{device}', adUnitPath1);
 
         await service.init(
@@ -316,14 +313,14 @@ describe('YieldOptimizationService', () => {
       });
 
       it('should return undefined if the ad slot is not configured', async () => {
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
         const rule = await service.getPriceRule('foo');
         expect(rule).to.be.undefined;
       });
 
       it('should return the price rule', async () => {
-        const service = createService(config);
+        const service = createYieldOptimizationService(config);
         await service.init('mobile', {}, [adUnitPath1, adUnitPath2], jsDomWindow.fetch, noopLogger);
         const rule = await service.getPriceRule(adUnitPath1);
         expect(rule).to.be.ok;
@@ -357,7 +354,7 @@ describe('YieldOptimizationService', () => {
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-          const service = createService(config);
+          const service = createYieldOptimizationService(config);
           await service.init(
             'mobile',
             {},
@@ -377,7 +374,7 @@ describe('YieldOptimizationService', () => {
           const adSlot = googleAdSlotStub(adUnitPath2, 'p_content_2');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-          const service = createService(config);
+          const service = createYieldOptimizationService(config);
           await service.init(
             'mobile',
             {},
@@ -409,7 +406,7 @@ describe('YieldOptimizationService', () => {
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-          const service = createService(configWithDynamicFloorStrategy);
+          const service = createYieldOptimizationService(configWithDynamicFloorStrategy);
           await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
           await service.setTargeting(
             adSlot,
@@ -437,7 +434,7 @@ describe('YieldOptimizationService', () => {
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-          const service = createService(configWithoutDynamicFloorStrategy);
+          const service = createYieldOptimizationService(configWithoutDynamicFloorStrategy);
           await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
           await service.setTargeting(
             adSlot,
@@ -468,7 +465,7 @@ describe('YieldOptimizationService', () => {
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-          const service = createService(yieldConfig);
+          const service = createYieldOptimizationService(yieldConfig);
           await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
           await service.setTargeting(adSlot, 'gam', noopLogger, yieldConfig, globalAuctionContext);
 
@@ -493,7 +490,7 @@ describe('YieldOptimizationService', () => {
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
           const setTargetingSpy = sandbox.spy(adSlot, 'setTargeting');
 
-          const service = createService(yieldConfig);
+          const service = createYieldOptimizationService(yieldConfig);
           await service.init('mobile', {}, [adUnitPath1], fetchStub, noopLogger);
           await service.setTargeting(adSlot, 'gam', noopLogger, yieldConfig, globalAuctionContext);
 
@@ -515,7 +512,7 @@ describe('YieldOptimizationService', () => {
       // input parameters
       ['mobile' as const, 'desktop' as const].forEach(device => {
         it(`should use ${device} in body`, async () => {
-          const service = createService(config);
+          const service = createYieldOptimizationService(config);
           const adSlot = googleAdSlotStub(adUnitPath1, 'p_content_1');
 
           await service.init(device, {}, [], jsDomWindow.fetch, noopLogger);

@@ -58,7 +58,10 @@
  * ```
  * @module
  */
-import { YieldOptimizationService } from './yieldOptimizationService';
+import {
+  createYieldOptimizationService,
+  YieldOptimizationService
+} from './yieldOptimizationService';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IModule, ModuleType } from 'ad-tag/types/module';
 import { modules } from 'ad-tag/types/moliConfig';
@@ -82,49 +85,42 @@ import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
  *
  * @see https://support.google.com/admanager/answer/9298008?hl=en
  */
-export class YieldOptimization implements IModule {
-  public readonly name: string = 'YieldOptimization';
-  public readonly description: string = 'Provides floors and UPR ids';
-  public readonly moduleType: ModuleType = 'yield';
+export const YieldOptimization = (
+  testYieldOptimizationService?: YieldOptimizationService
+): IModule => {
+  const name = 'YieldOptimization';
+  const description = 'Provides floors and UPR ids';
+  const moduleType: ModuleType = 'yield';
 
-  private yieldModuleConfig: modules.yield_optimization.YieldOptimizationConfig | null = null;
+  let yieldModuleConfig: modules.yield_optimization.YieldOptimizationConfig | null = null;
 
-  private _initSteps: InitStep[] = [];
-  private _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
+  const _initSteps: InitStep[] = [];
+  const _prepareRequestAdsSteps: PrepareRequestAdsStep[] = [];
 
-  config__(): Object | null {
-    return this.yieldModuleConfig;
-  }
+  const config__ = (): Object | null => yieldModuleConfig;
 
-  configure__(moduleConfig?: modules.ModulesConfig): void {
+  const configure__ = (moduleConfig?: modules.ModulesConfig): void => {
     if (moduleConfig?.yieldOptimization?.enabled) {
-      this.yieldModuleConfig = moduleConfig.yieldOptimization;
+      yieldModuleConfig = moduleConfig.yieldOptimization;
 
-      const yieldOptimizationService = new YieldOptimizationService(moduleConfig.yieldOptimization);
+      const yieldOptimizationService =
+        testYieldOptimizationService ??
+        createYieldOptimizationService(moduleConfig.yieldOptimization);
 
-      this._initSteps.push(this.yieldOptimizationInit(yieldOptimizationService));
-      this._prepareRequestAdsSteps.push(
-        this.yieldOptimizationPrepareRequestAds(yieldOptimizationService)
-      );
+      _initSteps.push(yieldOptimizationInit(yieldOptimizationService));
+      _prepareRequestAdsSteps.push(yieldOptimizationPrepareRequestAds(yieldOptimizationService));
     }
-  }
+  };
 
-  initSteps__(): InitStep[] {
-    return this._initSteps;
-  }
+  const initSteps__ = (): InitStep[] => _initSteps;
 
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
+  const configureSteps__ = (): ConfigureStep[] => [];
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return this._prepareRequestAdsSteps;
-  }
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => _prepareRequestAdsSteps;
 
-  yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
+  const yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
       const adUnitPaths = context.config__.slots
-        // remove ad units that should not be displayed
         .filter(slot => context.labelConfigService__.filterSlot(slot))
         .map(slot => slot.adUnitPath)
         .filter(uniquePrimitiveFilter);
@@ -137,13 +133,7 @@ export class YieldOptimization implements IModule {
       );
     });
 
-  /**
-   * This step adds a `priceRule` to the slot definition if possible. It does so by **mutating**
-   * the slot definition.
-   *
-   * @param yieldOptimizationService
-   */
-  yieldOptimizationPrepareRequestAds = (
+  const yieldOptimizationPrepareRequestAds = (
     yieldOptimizationService: YieldOptimizationService
   ): PrepareRequestAdsStep =>
     mkPrepareRequestAdsStep(
@@ -162,7 +152,7 @@ export class YieldOptimization implements IModule {
               slot.adSlot,
               adServer,
               context.logger__,
-              this.yieldModuleConfig,
+              yieldModuleConfig,
               context.auction__
             )
             .then(priceRule => (slot.priceRule = priceRule));
@@ -176,4 +166,15 @@ export class YieldOptimization implements IModule {
           });
       }
     );
-}
+
+  return {
+    name,
+    description,
+    moduleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};
