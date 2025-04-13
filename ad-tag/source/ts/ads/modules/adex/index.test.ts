@@ -59,19 +59,19 @@ describe('The Adex DMP Module', () => {
     tcData?: TCData,
     targeting?: googleAdManager.Targeting
   ): AdPipelineContext => ({
-    auctionId: 'xxxx-xxxx-xxxx-xxxx',
-    requestId: 0,
-    requestAdsCalls: 1,
-    env: 'production',
-    logger: noopLogger,
-    config: { ...emptyConfig, targeting: targeting },
-    runtimeConfig: emptyRuntimeConfig,
-    window: jsDomWindow as any,
-    labelConfigService: null as any,
-    tcData: tcData ?? fullConsent({ '44': true }),
-    adUnitPathVariables: {},
-    auction: newGlobalAuctionContext(jsDomWindow),
-    assetLoaderService: assetLoaderService
+    auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+    requestId__: 0,
+    requestAdsCalls__: 1,
+    env__: 'production',
+    logger__: noopLogger,
+    config__: { ...emptyConfig, targeting: targeting },
+    runtimeConfig__: emptyRuntimeConfig,
+    window__: jsDomWindow as any,
+    labelConfigService__: null as any,
+    tcData__: tcData ?? fullConsent({ '44': true }),
+    adUnitPathVariables__: {},
+    auction__: newGlobalAuctionContext(jsDomWindow),
+    assetLoaderService__: assetLoaderService
   });
 
   beforeEach(() => {
@@ -221,7 +221,7 @@ describe('The Adex DMP Module', () => {
         ...adPipelineContext(fullConsent({ '44': true }), {
           keyValues: { channel: 'Medical' }
         }),
-        runtimeConfig: {
+        runtimeConfig__: {
           ...emptyRuntimeConfig,
           keyValues: {
             iab_v3: 'example_iab_v3_value'
@@ -252,7 +252,7 @@ describe('The Adex DMP Module', () => {
         ...adPipelineContext(fullConsent({ '44': true }), {
           keyValues: { channel: 'Medical', iab_v3: 'example_iab_v3_value' }
         }),
-        runtimeConfig: {
+        runtimeConfig__: {
           ...emptyRuntimeConfig,
           keyValues: {
             iab_v3: 'example_iab_v3_value_overridden'
@@ -281,7 +281,7 @@ describe('The Adex DMP Module', () => {
 
       const adPipelineCtx: AdPipelineContext = {
         ...adPipelineContext(fullConsent({ '44': true }), undefined),
-        runtimeConfig: {
+        runtimeConfig__: {
           ...emptyRuntimeConfig,
           keyValues: {
             iab_v3: 'example_iab_v3_value'
@@ -368,7 +368,7 @@ describe('The Adex DMP Module', () => {
       keyValues: { gf_clientType: 'android', advertising_id: '1234-5678-9123' }
     });
 
-    const fetchStub = sandbox.stub(adPipelineCtx.window, 'fetch').rejects(new Error('whatever'));
+    const fetchStub = sandbox.stub(adPipelineCtx.window__, 'fetch').rejects(new Error('whatever'));
 
     await module.track(adPipelineCtx, moduleConfig.adex);
 

@@ -100,17 +100,19 @@ describe('bridge', () => {
 
   describe('bridge behaviour', () => {
     it('should not initialize the event listener if bridge config is undefined', async () => {
-      await step(adPipelineContext(jsDomWindow, { config: { ...emptyConfig, bridge: undefined } }));
+      await step(
+        adPipelineContext(jsDomWindow, { config__: { ...emptyConfig, bridge: undefined } })
+      );
       expect(addEventListenerSpy).to.have.not.been.called;
     });
     it('should not initialize the event listener if bridge is disabled', async () => {
       await step(
-        adPipelineContext(jsDomWindow, { config: { ...emptyConfig, bridge: { enabled: false } } })
+        adPipelineContext(jsDomWindow, { config__: { ...emptyConfig, bridge: { enabled: false } } })
       );
       expect(addEventListenerSpy).to.have.not.been.called;
     });
     it('should initialize the message listener if bridge is enabled', async () => {
-      await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+      await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
       expect(addEventListenerSpy).to.have.been.calledOnce;
       expect(addEventListenerSpy).to.have.been.calledOnceWith(
         Sinon.match.same('message'),
@@ -140,7 +142,7 @@ describe('bridge', () => {
       it('should not refresh the given ad slot does not exist', async () => {
         pubadsGetSlotsStub.returns([]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ domId: slot.domId }));
 
         expect(pubadsRefreshSpy).to.have.not.been.called;
@@ -150,7 +152,7 @@ describe('bridge', () => {
       it('should not refresh the given ad slot if domId does not match', async () => {
         pubadsGetSlotsStub.returns([googleAdSlot]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ domId: 'another-slot' }));
 
         expect(pubadsRefreshSpy).to.have.not.been.called;
@@ -163,7 +165,7 @@ describe('bridge', () => {
         });
         pubadsGetSlotsStub.returns([googleAdSlot]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ domId: slot.domId }));
 
         expect(pubadsRefreshSpy).to.have.been.not.called;
@@ -173,7 +175,7 @@ describe('bridge', () => {
       it('should refresh the given ad slot', async () => {
         pubadsGetSlotsStub.returns([googleAdSlot]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ domId: slot.domId }));
 
         expect(pubadsRefreshSpy).to.have.been.called;
@@ -185,7 +187,7 @@ describe('bridge', () => {
       it('should not refresh the given ad slot does not exist', async () => {
         pubadsGetSlotsStub.returns([]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ adUnitPath: slot.adUnitPath }));
 
         expect(pubadsRefreshSpy).to.have.not.been.called;
@@ -195,7 +197,7 @@ describe('bridge', () => {
       it('should not refresh the given ad slot if adUnitPath does not match', async () => {
         pubadsGetSlotsStub.returns([googleAdSlot]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ adUnitPath: 'another-ad-unit-path' }));
 
         expect(pubadsRefreshSpy).to.have.not.been.called;
@@ -208,7 +210,7 @@ describe('bridge', () => {
         });
         pubadsGetSlotsStub.returns([googleAdSlot]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ adUnitPath: slot.adUnitPath }));
 
         expect(pubadsRefreshSpy).to.have.been.not.called;
@@ -218,7 +220,7 @@ describe('bridge', () => {
       it('should refresh the given ad slot', async () => {
         pubadsGetSlotsStub.returns([googleAdSlot]);
 
-        await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+        await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
         await postMessage(passbackMessage({ adUnitPath: slot.adUnitPath }));
 
         expect(pubadsRefreshSpy).to.have.been.called;
@@ -248,7 +250,7 @@ describe('bridge', () => {
     it('should not refresh the given ad slot does not exist anywhere', async () => {
       pubadsGetSlotsStub.returns([]);
 
-      await step(adPipelineContext(jsDomWindow, { config: configWithBridge([]) }));
+      await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([]) }));
       await postMessage(refreshMessage(slot.domId));
 
       expect(googleAdSlotDestroySlotsSpy).to.have.not.been.called;
@@ -259,7 +261,7 @@ describe('bridge', () => {
       pubadsGetSlotsStub.returns([]);
 
       await step(
-        adPipelineContext(jsDomWindow, { config: configWithBridge([slot, backfillSlot]) })
+        adPipelineContext(jsDomWindow, { config__: configWithBridge([slot, backfillSlot]) })
       );
       await postMessage(refreshMessage(slot.domId));
 
@@ -270,7 +272,7 @@ describe('bridge', () => {
     it('should not refresh the given ad slot does not exist in moli', async () => {
       pubadsGetSlotsStub.returns([googleAdSlot]);
 
-      await step(adPipelineContext(jsDomWindow, { config: configWithBridge([slot]) }));
+      await step(adPipelineContext(jsDomWindow, { config__: configWithBridge([slot]) }));
       await postMessage(refreshMessage(slot.domId));
 
       expect(googleAdSlotDestroySlotsSpy).to.have.not.been.called;
@@ -280,7 +282,7 @@ describe('bridge', () => {
     it('should not refresh the given ad slot if domId does not match', async () => {
       pubadsGetSlotsStub.returns([googleAdSlot]);
 
-      await step(adPipelineContext(jsDomWindow, { config: configWithBridge(slots) }));
+      await step(adPipelineContext(jsDomWindow, { config__: configWithBridge(slots) }));
       await postMessage(refreshMessage('another-slot'));
 
       expect(googleAdSlotDestroySlotsSpy).to.have.not.been.called;
@@ -290,7 +292,7 @@ describe('bridge', () => {
     it('should refresh the given ad slot', async () => {
       pubadsGetSlotsStub.returns([googleAdSlot]);
 
-      await step(adPipelineContext(jsDomWindow, { config: configWithBridge(slots) }));
+      await step(adPipelineContext(jsDomWindow, { config__: configWithBridge(slots) }));
       await postMessage(refreshMessage(slot.domId));
 
       expect(googleAdSlotDestroySlotsSpy).to.have.been.called;

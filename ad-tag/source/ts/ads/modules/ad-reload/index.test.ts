@@ -31,20 +31,20 @@ describe('Moli Ad Reload Module', () => {
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: null as any,
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      labelConfigService__: null as any,
+      tcData__: null as any,
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -155,7 +155,7 @@ describe('Moli Ad Reload Module', () => {
       const { module, moduleConfig } = createAdReloadModule();
       expect(module.isInitialized()).to.be.false;
       module.initialize(
-        { ...adPipelineContext(emptyConfig), env: 'test' },
+        { ...adPipelineContext(emptyConfig), env__: 'test' },
         moduleConfig,
         [],
         () => {

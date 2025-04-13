@@ -104,11 +104,11 @@ describe('Yield Optimization module', () => {
       };
 
       await module.yieldOptimizationInit(yieldOptimizationService)({
-        config: config,
-        logger: noopLogger,
-        labelConfigService: labelConfigService,
-        adUnitPathVariables: { device: 'desktop', domain: 'example.com' },
-        window: jsDomWindow
+        config__: config,
+        logger__: noopLogger,
+        labelConfigService__: labelConfigService,
+        adUnitPathVariables__: { device: 'desktop', domain: 'example.com' },
+        window__: jsDomWindow
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnce;
@@ -151,11 +151,11 @@ describe('Yield Optimization module', () => {
 
       const adUnitPathVariables = { device: 'desktop', domain: 'example.com' };
       await module.yieldOptimizationInit(yieldOptimizationService)({
-        config: config,
-        logger: noopLogger,
-        labelConfigService: labelConfigService,
-        adUnitPathVariables: adUnitPathVariables,
-        window: jsDomWindow
+        config__: config,
+        logger__: noopLogger,
+        labelConfigService__: labelConfigService,
+        adUnitPathVariables__: adUnitPathVariables,
+        window__: jsDomWindow
       } as any);
       expect(getDeviceLabelStub).to.have.been.calledOnce;
       expect(filterSlotStub).to.have.been.calledTwice;
@@ -194,11 +194,11 @@ describe('Yield Optimization module', () => {
 
       const adUnitPathVariables = { device: 'desktop', domain: 'example.com' };
       await module.yieldOptimizationInit(yieldOptimizationService)({
-        config: config,
-        logger: noopLogger,
-        labelConfigService: labelConfigService,
-        adUnitPathVariables: adUnitPathVariables,
-        window: jsDomWindow
+        config__: config,
+        logger__: noopLogger,
+        labelConfigService__: labelConfigService,
+        adUnitPathVariables__: adUnitPathVariables,
+        window__: jsDomWindow
       } as any);
       expect(initSpy).to.have.been.calledOnce;
       expect(initSpy).to.have.been.calledOnceWithExactly(
@@ -237,8 +237,8 @@ describe('Yield Optimization module', () => {
 
       await module.yieldOptimizationPrepareRequestAds(yieldOptimizationService)(
         {
-          logger: noopLogger,
-          config: {}
+          logger__: noopLogger,
+          config__: {}
         } as any,
         [slot]
       );
@@ -266,10 +266,10 @@ describe('Yield Optimization module', () => {
 
       await module.yieldOptimizationPrepareRequestAds(yieldOptimizationService)(
         {
-          env: 'production',
-          logger: noopLogger,
-          config: {},
-          window: {
+          env__: 'production',
+          logger__: noopLogger,
+          config__: {},
+          window__: {
             googletag: {
               pubads: () => {
                 return { setTargeting: setTargetingSpy };

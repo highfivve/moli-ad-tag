@@ -151,12 +151,12 @@ export class Emetriq implements IModule {
       ? [
           mkInitStep('load-emetriq', ctx => {
             const customParams = Emetriq.staticCustomParams(
-              { ...ctx.config.targeting?.keyValues, ...ctx.runtimeConfig.keyValues },
+              { ...ctx.config__.targeting?.keyValues, ...ctx.runtimeConfig__.keyValues },
               config.customMappingDefinition
             );
 
             // test environment doesn't require emetriq
-            if (ctx.env === 'test') {
+            if (ctx.env__ === 'test') {
               return Promise.resolve();
             }
 
@@ -184,11 +184,11 @@ export class Emetriq implements IModule {
       ? [
           mkConfigureStepOncePerRequestAdsCycle('track-emetriq', ctx => {
             const customParams = Emetriq.staticCustomParams(
-              { ...ctx.config.targeting?.keyValues, ...ctx.runtimeConfig.keyValues },
+              { ...ctx.config__.targeting?.keyValues, ...ctx.runtimeConfig__.keyValues },
               config.customMappingDefinition
             );
             // test environment doesn't require emetriq
-            if (ctx.env === 'test') {
+            if (ctx.env__ === 'test') {
               return Promise.resolve();
             }
 
@@ -199,16 +199,22 @@ export class Emetriq implements IModule {
 
             if (
               config.login &&
-              shouldTrackLoginEvent(ctx.window.sessionStorage, Date.now(), ctx.logger)
+              shouldTrackLoginEvent(ctx.window__.sessionStorage, Date.now(), ctx.logger__)
             ) {
-              trackLoginEvent(ctx, config, ctx.window.document, ctx.logger);
+              trackLoginEvent(ctx, config, ctx.window__.document, ctx.logger__);
             }
 
             Emetriq.syncDelay(ctx, config.syncDelay).then(additionalIdentifier => {
               switch (config.os) {
                 case 'android':
                 case 'ios':
-                  trackInApp(ctx, config, additionalIdentifier, customParams, ctx.window.document);
+                  trackInApp(
+                    ctx,
+                    config,
+                    additionalIdentifier,
+                    customParams,
+                    ctx.window__.document
+                  );
                   break;
               }
             });
@@ -224,8 +230,8 @@ export class Emetriq implements IModule {
   }
 
   checkIfConsentIsMissing(ctx: AdPipelineContext): boolean {
-    if (ctx.tcData.gdprApplies && !ctx.tcData.vendor.consents[this.gvlid]) {
-      ctx.logger.warn(this.name, 'missing consent');
+    if (ctx.tcData__.gdprApplies && !ctx.tcData__.vendor.consents[this.gvlid]) {
+      ctx.logger__.warn(this.name, 'missing consent');
       return true;
     }
     return false;
@@ -237,20 +243,20 @@ export class Emetriq implements IModule {
     additionalIdentifier: EmetriqAdditionalIdentifier,
     additionalCustomParams: EmetriqCustomParams
   ): Promise<void> {
-    const window = context.window as EmetriqWindow;
+    const window = context.window__ as EmetriqWindow;
     window._enqAdpParam = {
       ...webConfig._enqAdpParam,
       ...additionalIdentifier,
       ...additionalCustomParams
     };
 
-    return context.assetLoaderService
+    return context.assetLoaderService__
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: `https://ups.xplosion.de/loader/${webConfig._enqAdpParam.sid}/default.js`
       })
-      .catch(error => context.logger.error('failed to load emetriq', error));
+      .catch(error => context.logger__.error('failed to load emetriq', error));
   }
 
   /**
@@ -265,20 +271,20 @@ export class Emetriq implements IModule {
   ): Promise<EmetriqAdditionalIdentifier> {
     if (delay) {
       if (typeof delay === 'number') {
-        return new Promise(resolve => ctx.window.setTimeout(() => resolve({}), delay));
+        return new Promise(resolve => ctx.window__.setTimeout(() => resolve({}), delay));
       } else {
-        if (ctx.window.pbjs) {
+        if (ctx.window__.pbjs) {
           return new Promise(resolve => {
-            ctx.window.pbjs.que.push(() => {
+            ctx.window__.pbjs.que.push(() => {
               const listener = () => {
                 resolve(Emetriq.prebidIdentifiers(ctx));
-                ctx.window.pbjs.offEvent('auctionEnd', listener);
+                ctx.window__.pbjs.offEvent('auctionEnd', listener);
               };
-              ctx.window.pbjs.onEvent('auctionEnd', listener);
+              ctx.window__.pbjs.onEvent('auctionEnd', listener);
             });
           });
         } else {
-          ctx.logger.error('emetriq', 'No sync delay, because window.pbjs is not defined!');
+          ctx.logger__.error('emetriq', 'No sync delay, because window.pbjs is not defined!');
           return Promise.resolve({});
         }
       }
@@ -309,7 +315,7 @@ export class Emetriq implements IModule {
    */
   static prebidIdentifiers(ctx: AdPipelineContext): EmetriqAdditionalIdentifier {
     const identifier: Mutable<EmetriqAdditionalIdentifier> = {};
-    const userIds = ctx.window.pbjs.getUserIds();
+    const userIds = ctx.window__.pbjs.getUserIds();
     if (userIds.amxId) {
       identifier.id_amxid = userIds.amxId;
     }

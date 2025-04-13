@@ -114,11 +114,11 @@ export class Utiq implements IModule {
 
   loadUtiq(utiqConfig: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> {
     // test environment doesn't require confiant
-    if (context.env === 'test') {
+    if (context.env__ === 'test') {
       return Promise.resolve();
     }
 
-    const utiqWindow = context.window as unknown as UtiqWindow;
+    const utiqWindow = context.window__ as unknown as UtiqWindow;
     // merge any existing object. Existing configurations take precedence.
     utiqWindow.Utiq = utiqWindow.Utiq
       ? { ...utiqWindow.Utiq, config: { ...utiqWindow.Utiq.config, ...utiqConfig.options } }
@@ -126,20 +126,20 @@ export class Utiq implements IModule {
 
     // no consent if gdpr applies
     if (
-      context.tcData.gdprApplies &&
+      context.tcData__.gdprApplies &&
       // this is only a safeguard to block utiq when checkGVLID is false
       this.requiredPurposeIds.some(
-        purposeId => context.tcData.gdprApplies && !context.tcData.purpose.consents[purposeId]
+        purposeId => context.tcData__.gdprApplies && !context.tcData__.purpose.consents[purposeId]
       )
     ) {
       return Promise.resolve();
     }
-    return context.assetLoaderService
+    return context.assetLoaderService__
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: utiqConfig.assetUrl
       })
-      .catch(error => context.logger.error('failed to load utiq', error));
+      .catch(error => context.logger__.error('failed to load utiq', error));
   }
 }

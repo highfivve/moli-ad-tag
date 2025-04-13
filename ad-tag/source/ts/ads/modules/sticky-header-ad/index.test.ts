@@ -25,20 +25,20 @@ describe('sticky header ad module', () => {
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: null as any,
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: null as any
+      labelConfigService__: null as any,
+      tcData__: null as any,
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: null as any
     };
   };
 
@@ -142,7 +142,7 @@ describe('sticky header ad module', () => {
       const contentSlot1 = createAdSlotConfig(headerAdDomId, 'desktop');
 
       const step = module.prepareRequestAdsSteps__()[0];
-      await step({ ...adPipelineContext(moliConfig([contentSlot1])), logger: newLogger }, [
+      await step({ ...adPipelineContext(moliConfig([contentSlot1])), logger__: newLogger }, [
         contentSlot1
       ]);
 

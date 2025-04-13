@@ -94,16 +94,16 @@ export class IdentityLink implements IModule {
     moduleConfig: modules.identitylink.IdentityLinkModuleConfig
   ): Promise<void> {
     // test environment doesn't require confiant
-    if (context.env === 'test') {
+    if (context.env__ === 'test') {
       return Promise.resolve();
     }
 
     // no consent
-    if (context.tcData.gdprApplies && !context.tcData.vendor.consents[this.gvlid]) {
+    if (context.tcData__.gdprApplies && !context.tcData__.vendor.consents[this.gvlid]) {
       return Promise.resolve();
     }
 
-    const window = context.window as unknown as ATS.ATSWindow;
+    const window = context.window__ as unknown as ATS.ATSWindow;
     // register event lister for email module
     // see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html#envelopemoduleready
     window.addEventListener('envelopeModuleReady', () => {
@@ -114,12 +114,12 @@ export class IdentityLink implements IModule {
       });
     });
 
-    return context.assetLoaderService
+    return context.assetLoaderService__
       .loadScript({
         name: this.name,
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: `https://launchpad-wrapper.privacymanager.io/${moduleConfig.launchPadId}/launchpad-liveramp.js`
       })
-      .catch(error => context.logger.error('failed to load emetriq', error));
+      .catch(error => context.logger__.error('failed to load emetriq', error));
   }
 }

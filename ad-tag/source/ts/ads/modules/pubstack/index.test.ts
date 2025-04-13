@@ -33,20 +33,20 @@ describe('Pubstack Module', () => {
 
   const adPipelineContext = (): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: emptyConfig,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow as any,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: emptyConfig,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow as any,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: fullConsent(),
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: assetLoaderService
+      labelConfigService__: null as any,
+      tcData__: fullConsent(),
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -97,7 +97,7 @@ describe('Pubstack Module', () => {
         const init = module.initSteps__()[0];
         expect(init).to.be.ok;
 
-        await init({ ...adPipelineContext(), env: 'test' });
+        await init({ ...adPipelineContext(), env__: 'test' });
         expect(loadScriptStub).to.have.not.been.called;
       });
     });
@@ -124,7 +124,7 @@ describe('Pubstack Module', () => {
       const step = configureSteps[0]!;
       expect(step.name).to.be.eq('pubstack-configure');
 
-      await step({ ...adPipelineContext(), env }, []);
+      await step({ ...adPipelineContext(), env__: env }, []);
     };
 
     const addMetaTag = (content: string): void => {

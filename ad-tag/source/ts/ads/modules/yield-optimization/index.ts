@@ -123,17 +123,17 @@ export class YieldOptimization implements IModule {
 
   yieldOptimizationInit = (yieldOptimizationService: YieldOptimizationService): InitStep =>
     mkInitStep('yield-optimization-init', context => {
-      const adUnitPaths = context.config.slots
+      const adUnitPaths = context.config__.slots
         // remove ad units that should not be displayed
-        .filter(slot => context.labelConfigService.filterSlot(slot))
+        .filter(slot => context.labelConfigService__.filterSlot(slot))
         .map(slot => slot.adUnitPath)
         .filter(uniquePrimitiveFilter);
       return yieldOptimizationService.init(
-        context.labelConfigService.getDeviceLabel(),
-        context.adUnitPathVariables,
+        context.labelConfigService__.getDeviceLabel(),
+        context.adUnitPathVariables__,
         adUnitPaths,
-        context.window.fetch,
-        context.logger
+        context.window__.fetch,
+        context.logger__
       );
     });
 
@@ -150,24 +150,28 @@ export class YieldOptimization implements IModule {
       'yield-optimization',
       HIGH_PRIORITY,
       (context: AdPipelineContext, slots: MoliRuntime.SlotDefinition[]) => {
-        context.logger.debug('YieldOptimizationService', context.requestId, 'applying price rules');
-        const adServer = context.config.adServer || 'gam';
+        context.logger__.debug(
+          'YieldOptimizationService',
+          context.requestId__,
+          'applying price rules'
+        );
+        const adServer = context.config__.adServer || 'gam';
         const slotsWithPriceRule = slots.map(slot => {
           return yieldOptimizationService
             .setTargeting(
               slot.adSlot,
               adServer,
-              context.logger,
+              context.logger__,
               this.yieldModuleConfig,
-              context.auction
+              context.auction__
             )
             .then(priceRule => (slot.priceRule = priceRule));
         });
         return Promise.all(slotsWithPriceRule)
           .then(() => yieldOptimizationService.getBrowser())
           .then(browser => {
-            if (context.env === 'production' && adServer === 'gam') {
-              context.window.googletag.pubads().setTargeting('upr_browser', browser);
+            if (context.env__ === 'production' && adServer === 'gam') {
+              context.window__.googletag.pubads().setTargeting('upr_browser', browser);
             }
           });
       }

@@ -14,19 +14,19 @@ export const adPipelineContext = (
   jsDomWindow: any,
   overrides?: Partial<AdPipelineContext>
 ): AdPipelineContext => ({
-  auctionId: 'xxxx-xxxx-xxxx-xxxx',
-  requestId: 0,
-  requestAdsCalls: 1,
-  env: 'production',
-  logger: newNoopLogger(),
-  config: newEmptyConfig(),
-  runtimeConfig: emptyRuntimeConfig,
-  window: jsDomWindow,
+  auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+  requestId__: 0,
+  requestAdsCalls__: 1,
+  env__: 'production',
+  logger__: newNoopLogger(),
+  config__: newEmptyConfig(),
+  runtimeConfig__: emptyRuntimeConfig,
+  window__: jsDomWindow,
   // no service dependencies required
-  labelConfigService: createLabelConfigService([], [], jsDomWindow),
-  tcData: fullConsent(),
-  adUnitPathVariables: {},
-  auction: newGlobalAuctionContext(jsDomWindow),
-  assetLoaderService: createAssetLoaderService(jsDomWindow),
+  labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+  tcData__: fullConsent(),
+  adUnitPathVariables__: {},
+  auction__: newGlobalAuctionContext(jsDomWindow),
+  assetLoaderService__: createAssetLoaderService(jsDomWindow),
   ...overrides
 });

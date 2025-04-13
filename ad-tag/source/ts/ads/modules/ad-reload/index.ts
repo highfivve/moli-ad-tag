@@ -114,7 +114,7 @@ export class AdReload implements IModule {
     return config
       ? [
           mkConfigureStep(this.name, context => {
-            const slotsToMonitor = context.config.slots
+            const slotsToMonitor = context.config__.slots
               // filter out slots excluded by dom id
               .filter(slot => config.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
               .map(slot => slot.domId)
@@ -125,7 +125,7 @@ export class AdReload implements IModule {
               context
             );
 
-            context.logger.debug('AdReload', 'monitoring slots', slotsToMonitor);
+            context.logger__.debug('AdReload', 'monitoring slots', slotsToMonitor);
             this.initialize(context, config, slotsToMonitor, reloadAdSlotCallback);
 
             return Promise.resolve();
@@ -151,27 +151,29 @@ export class AdReload implements IModule {
     slotsToMonitor: string[],
     reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
   ) => {
-    if (context.env === 'test') {
-      context.logger.info('AdReload', 'disabled in environment test');
+    if (context.env__ === 'test') {
+      context.logger__.info('AdReload', 'disabled in environment test');
       return;
     }
     if (this.initialized) {
       return;
     }
 
-    context.logger.debug('AdReload', 'initialize moli ad reload module');
+    context.logger__.debug('AdReload', 'initialize moli ad reload module');
 
     this.setupAdVisibilityService(
       config,
-      context.window as unknown as Window & IntersectionObserverWindow & googletag.IGoogleTagWindow,
-      context.logger
+      context.window__ as unknown as Window &
+        IntersectionObserverWindow &
+        googletag.IGoogleTagWindow,
+      context.logger__
     );
     this.setupSlotRenderListener(
       config,
       slotsToMonitor,
       reloadAdSlotCallback,
-      context.window,
-      context.logger
+      context.window__,
+      context.logger__
     );
 
     this.initialized = true;
@@ -265,17 +267,17 @@ export class AdReload implements IModule {
     (config: modules.adreload.AdReloadModuleConfig, ctx: AdPipelineContext) =>
     (googleTagSlot: googletag.IAdSlot) => {
       const slotId = googleTagSlot.getSlotElementId();
-      const moliSlot = ctx.config.slots.find(moliSlot => moliSlot.domId === slotId);
+      const moliSlot = ctx.config__.slots.find(moliSlot => moliSlot.domId === slotId);
 
       if (moliSlot && moliSlot.behaviour.loaded !== 'infinite') {
-        ctx.logger.debug('AdReload', 'fired slot reload', moliSlot.domId);
+        ctx.logger__.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
         const sizesOverride: googleAdManager.SlotSize[] = this.maybeOptimizeSlotForCls(
           config,
           moliSlot,
           googleTagSlot,
-          ctx.logger,
-          ctx.window
+          ctx.logger__,
+          ctx.window__
         );
 
         googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
@@ -286,28 +288,28 @@ export class AdReload implements IModule {
             const bucket = moliSlot.behaviour.bucket;
             return typeof bucket === 'string'
               ? bucket
-              : bucket?.[ctx.labelConfigService.getDeviceLabel()];
+              : bucket?.[ctx.labelConfigService__.getDeviceLabel()];
           }
         };
 
         const bucketName = getBucketName();
 
         if (bucketName) {
-          ctx.window.moli
+          ctx.window__.moli
             .refreshBucket(bucketName)
             .then(result =>
-              ctx.logger.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
+              ctx.logger__.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
             )
             .catch(error =>
-              ctx.logger.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
+              ctx.logger__.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
             );
         } else {
-          ctx.window.moli
+          ctx.window__.moli
             .refreshAdSlot(slotId, {
               loaded: moliSlot.behaviour.loaded,
               ...(sizesOverride && { sizesOverride: sizesOverride })
             })
-            .catch(error => ctx.logger.error('AdReload', `refreshing ${slotId} failed`, error));
+            .catch(error => ctx.logger__.error('AdReload', `refreshing ${slotId} failed`, error));
         }
       }
     };

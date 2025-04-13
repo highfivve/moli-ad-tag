@@ -108,23 +108,23 @@ describe('Cleanup Module', () => {
 
   const adPipelineContext = (): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: { ...noopLogger, error: errorLogSpy },
-      config: {
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: { ...noopLogger, error: errorLogSpy },
+      config__: {
         ...emptyConfig,
         spa: { enabled: true, validateLocation: 'href' }
       },
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow as any,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow as any,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: fullConsent(),
-      adUnitPathVariables: {},
-      auction: null as any,
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      labelConfigService__: null as any,
+      tcData__: fullConsent(),
+      adUnitPathVariables__: {},
+      auction__: null as any,
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -156,7 +156,7 @@ describe('Cleanup Module', () => {
 
     const configure = module.configureSteps__()[0];
     await configure(
-      { ...adPipelineContext(), runtimeConfig: { ...emptyRuntimeConfig, environment: 'test' } },
+      { ...adPipelineContext(), runtimeConfig__: { ...emptyRuntimeConfig, environment: 'test' } },
       []
     );
     expect(cleanupSpy).to.have.not.been.called;
@@ -165,7 +165,7 @@ describe('Cleanup Module', () => {
     expect(prepareRequestAds?.name).to.be.eq('cleanup-before-ad-reload');
 
     await prepareRequestAds(
-      { ...adPipelineContext(), runtimeConfig: { ...emptyRuntimeConfig, environment: 'test' } },
+      { ...adPipelineContext(), runtimeConfig__: { ...emptyRuntimeConfig, environment: 'test' } },
       []
     );
     expect(cleanupSpy).to.not.have.been.called;

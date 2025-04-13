@@ -36,19 +36,19 @@ const setupDomAndServices = () => {
 };
 
 const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
-  auctionId: 'xxxx-xxxx-xxxx-xxxx',
-  requestId: 0,
-  requestAdsCalls: 1,
-  env: 'production',
-  logger: noopLogger,
-  config: config ?? emptyConfig,
-  runtimeConfig: emptyRuntimeConfig,
-  window: jsDomWindow,
-  labelConfigService: null as any,
-  tcData: fullConsent(),
-  adUnitPathVariables: {},
-  auction: newGlobalAuctionContext(jsDomWindow),
-  assetLoaderService: createAssetLoaderService(jsDomWindow)
+  auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+  requestId__: 0,
+  requestAdsCalls__: 1,
+  env__: 'production',
+  logger__: noopLogger,
+  config__: config ?? emptyConfig,
+  runtimeConfig__: emptyRuntimeConfig,
+  window__: jsDomWindow,
+  labelConfigService__: null as any,
+  tcData__: fullConsent(),
+  adUnitPathVariables__: {},
+  auction__: newGlobalAuctionContext(jsDomWindow),
+  assetLoaderService__: createAssetLoaderService(jsDomWindow)
 });
 
 const createAdSlotConfig = (domId: string, device: Device): MoliRuntime.SlotDefinition => {

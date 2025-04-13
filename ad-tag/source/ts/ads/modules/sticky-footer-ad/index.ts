@@ -82,9 +82,9 @@ export class StickyFooterAd implements IModule {
               )
             ) {
               initMobileAdSticky(
-                ctx.window,
-                ctx.env,
-                ctx.logger,
+                ctx.window__,
+                ctx.env__,
+                ctx.logger__,
                 config.mobileStickyDomId,
                 config.disallowedAdvertiserIds,
                 config.initiallyHidden ?? false
@@ -95,9 +95,9 @@ export class StickyFooterAd implements IModule {
               slots.some(slot => slot.moliSlot.domId === config.desktopFloorAdDomId)
             ) {
               setupFooterAdListener(
-                ctx.window,
-                ctx.env,
-                ctx.logger,
+                ctx.window__,
+                ctx.env__,
+                ctx.logger__,
                 config.desktopFloorAdDomId,
                 config.disallowedAdvertiserIds
               );

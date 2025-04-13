@@ -43,19 +43,19 @@ describe('Confiant Module', () => {
     tcData?: TCData,
     targeting?: googleAdManager.Targeting
   ): AdPipelineContext => ({
-    auctionId: 'xxxx-xxxx-xxxx-xxxx',
-    requestId: 0,
-    requestAdsCalls: 1,
-    env: 'production',
-    logger: noopLogger,
-    config: { ...emptyConfig, targeting: targeting },
-    runtimeConfig: emptyRuntimeConfig,
-    window: jsDomWindow,
-    labelConfigService: null as any,
-    tcData: tcData ?? fullConsent({ '44': true }),
-    adUnitPathVariables: {},
-    auction: newGlobalAuctionContext(jsDomWindow),
-    assetLoaderService: assetLoaderService
+    auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+    requestId__: 0,
+    requestAdsCalls__: 1,
+    env__: 'production',
+    logger__: noopLogger,
+    config__: { ...emptyConfig, targeting: targeting },
+    runtimeConfig__: emptyRuntimeConfig,
+    window__: jsDomWindow,
+    labelConfigService__: null as any,
+    tcData__: tcData ?? fullConsent({ '44': true }),
+    adUnitPathVariables__: {},
+    auction__: newGlobalAuctionContext(jsDomWindow),
+    assetLoaderService__: assetLoaderService
   });
 
   beforeEach(() => {
@@ -109,7 +109,7 @@ describe('Confiant Module', () => {
   describe('loadConfiant', () => {
     it('not load anything in a test environment', async () => {
       const module = createAndConfigureModule();
-      await testConfiantLoad(module, { ...adPipelineContext(), env: 'test' }, false);
+      await testConfiantLoad(module, { ...adPipelineContext(), env__: 'test' }, false);
     });
 
     it('not load anything if gdpr applies, vendor 56 has no consent and checkGVLID is true', async () => {
@@ -135,7 +135,7 @@ describe('Confiant Module', () => {
 
     it('load confiant if gdpr does not apply', async () => {
       const module = createAndConfigureModule();
-      await testConfiantLoad(module, { ...adPipelineContext(), tcData: tcDataNoGdpr }, true);
+      await testConfiantLoad(module, { ...adPipelineContext(), tcData__: tcDataNoGdpr }, true);
     });
 
     it('load confiant if gdpr does apply', async () => {

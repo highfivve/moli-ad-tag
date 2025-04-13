@@ -100,9 +100,9 @@ export class Zeotap implements IModule {
     return config && config.mode === 'default'
       ? [
           mkInitStep(this.name, context => {
-            if (this.hasConsent(context.tcData)) {
-              this.loadScript(context.config, context.assetLoaderService, config).catch(error =>
-                context.logger.error(this.name, error)
+            if (this.hasConsent(context.tcData__)) {
+              this.loadScript(context.config__, context.assetLoaderService__, config).catch(error =>
+                context.logger__.error(this.name, error)
               );
             }
             return Promise.resolve();
@@ -116,8 +116,8 @@ export class Zeotap implements IModule {
     return config && config.mode === 'spa'
       ? [
           mkConfigureStepOncePerRequestAdsCycle(this.name, context => {
-            this.loadScript(context.config, context.assetLoaderService, config).catch(error =>
-              context.logger.error(this.name, error)
+            this.loadScript(context.config__, context.assetLoaderService__, config).catch(error =>
+              context.logger__.error(this.name, error)
             );
 
             return Promise.resolve();

@@ -24,20 +24,20 @@ describe('Zeotap Module', () => {
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      window: jsDomWindow,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      window__: jsDomWindow,
       // no service dependencies required
-      labelConfigService: null as any,
-      runtimeConfig: emptyRuntimeConfig,
-      tcData: fullConsent({ 301: true }),
-      adUnitPathVariables: {},
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: assetLoaderService
+      labelConfigService__: null as any,
+      runtimeConfig__: emptyRuntimeConfig,
+      tcData__: fullConsent({ 301: true }),
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -274,7 +274,7 @@ describe('Zeotap Module', () => {
 
     const context: AdPipelineContext = {
       ...adPipelineContext(config),
-      tcData: fullConsent()
+      tcData__: fullConsent()
     };
 
     await init(context);

@@ -60,17 +60,17 @@ export class Pubstack implements IModule {
     return config
       ? [
           mkInitStep('pubstack-init', ctx => {
-            if (ctx.env === 'test') {
+            if (ctx.env__ === 'test') {
               return Promise.resolve();
             }
             // load the pubstack script
-            ctx.assetLoaderService
+            ctx.assetLoaderService__
               .loadScript({
                 name: 'pubstack',
                 loadMethod: AssetLoadMethod.TAG,
                 assetUrl: `https://boot.pbstck.com/v1/tag/${config.tagId}`
               })
-              .catch(error => ctx.logger.error('failed to load pubstack', error));
+              .catch(error => ctx.logger__.error('failed to load pubstack', error));
             return Promise.resolve();
           })
         ]
@@ -82,18 +82,18 @@ export class Pubstack implements IModule {
     return config
       ? [
           mkConfigureStep('pubstack-configure', ctx => {
-            if (ctx.env === 'test') {
+            if (ctx.env__ === 'test') {
               return Promise.resolve();
             }
             // these map to key-value values in the ad manager. All other values are not configured there and thus
             // don't need to be sent along
             const validABTestValues = ['0', '1', '2', '3'];
             // find meta data
-            const meta = ctx.window.document.head.querySelector<HTMLMetaElement>(
+            const meta = ctx.window__.document.head.querySelector<HTMLMetaElement>(
               'meta[name="pbstck_context:pbstck_ab_test"]'
             );
             if (meta && meta.content && validABTestValues.includes(meta.content)) {
-              ctx.window.googletag.pubads().setTargeting('pbstck_ab_test', meta.content);
+              ctx.window__.googletag.pubads().setTargeting('pbstck_ab_test', meta.content);
             }
 
             return Promise.resolve();

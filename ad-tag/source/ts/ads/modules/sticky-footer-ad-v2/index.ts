@@ -78,14 +78,14 @@ export class StickyFooterAdsV2 implements IModule {
             // this is usually a configuration error in the ad tag and should not happen
             const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
             if (mobileSlot && desktopSlot) {
-              ctx.logger.warn(this.name, 'mobile and desktop sticky footer are called!');
+              ctx.logger__.warn(this.name, 'mobile and desktop sticky footer are called!');
             }
 
             if (footerAdSlot) {
               initAdSticky(
-                ctx.window,
-                ctx.env,
-                ctx.logger,
+                ctx.window__,
+                ctx.env__,
+                ctx.logger__,
                 footerAdSlot.moliSlot.domId,
                 config.disallowedAdvertiserIds,
                 config.closingButtonText

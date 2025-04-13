@@ -133,11 +133,11 @@ export class BlocklistedUrls implements IModule {
                 const value = this.blocklistConfig.isBlocklistedValue || 'true';
                 return this.getBlocklist(
                   this.blocklistConfig.blocklist,
-                  ctx.assetLoaderService,
-                  ctx.logger
+                  ctx.assetLoaderService__,
+                  ctx.logger__
                 )().then(blocklist => {
-                  if (this.isBlocklisted(blocklist, ctx.window.location.href, ctx.logger)) {
-                    (ctx.window as Window & googletag.IGoogleTagWindow).googletag
+                  if (this.isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
+                    (ctx.window__ as Window & googletag.IGoogleTagWindow).googletag
                       .pubads()
                       .setTargeting(key, value);
                   }
@@ -145,11 +145,11 @@ export class BlocklistedUrls implements IModule {
               case 'block':
                 return this.getBlocklist(
                   this.blocklistConfig.blocklist,
-                  ctx.assetLoaderService,
-                  ctx.logger
+                  ctx.assetLoaderService__,
+                  ctx.logger__
                 )().then(blocklist => {
-                  ctx.logger.debug(this.name, 'using blocklist', blocklist);
-                  if (this.isBlocklisted(blocklist, ctx.window.location.href, ctx.logger)) {
+                  ctx.logger__.debug(this.name, 'using blocklist', blocklist);
+                  if (this.isBlocklisted(blocklist, ctx.window__.location.href, ctx.logger__)) {
                     return Promise.reject('blocklisted url found. Abort ad pipeline run');
                   }
                 });

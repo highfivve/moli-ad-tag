@@ -48,19 +48,19 @@ describe('google ad manager', () => {
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: requestAdsCalls,
-      env: env,
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
-      labelConfigService: createLabelConfigService([], [], jsDomWindow),
-      tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: newGlobalAuctionContext(jsDomWindow),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: requestAdsCalls,
+      env__: env,
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
+      labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+      tcData__: tcData,
+      adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -305,7 +305,7 @@ describe('google ad manager', () => {
       domain: string
     ): AdPipelineContext => ({
       ...adPipelineContext(),
-      adUnitPathVariables: { domain: domain, device: device }
+      adUnitPathVariables__: { domain: domain, device: device }
     });
     const domain = 'example.com';
 
@@ -338,7 +338,7 @@ describe('google ad manager', () => {
   describe('gptLDeviceLabelKeyValue', () => {
     const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
     const getDeviceLabelStub = sandbox.stub(
-      ctxWithLabelServiceStub.labelConfigService,
+      ctxWithLabelServiceStub.labelConfigService__,
       'getDeviceLabel'
     );
 
@@ -376,7 +376,7 @@ describe('google ad manager', () => {
     it('should set full if gdpr does not apply', async () => {
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       const step = gptConsentKeyValue();
-      await step({ ...adPipelineContext(), tcData: tcDataNoGdpr }, []);
+      await step({ ...adPipelineContext(), tcData__: tcDataNoGdpr }, []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'full');
     });
@@ -396,7 +396,7 @@ describe('google ad manager', () => {
         const tcData = fullConsent();
         tcData.purpose.consents[purpose] = false;
 
-        await step({ ...adPipelineContext(), tcData }, []);
+        await step({ ...adPipelineContext(), tcData__: tcData }, []);
         expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'none');
       });
     });
@@ -815,7 +815,7 @@ describe('google ad manager', () => {
       const step = gptDefineSlots();
       const context = adPipelineContext();
 
-      const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+      const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
       filterSlotStub.returns(true);
 
       const slotDefinitions = await step(context, [adSlot]);
@@ -826,7 +826,7 @@ describe('google ad manager', () => {
       const step = gptDefineSlots();
       const context = adPipelineContext();
 
-      const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+      const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
       filterSlotStub.returns(false);
 
       const slotDefinitions = await step(context, [adSlot]);
@@ -848,7 +848,7 @@ describe('google ad manager', () => {
 
         const step = gptDefineSlots();
         const context = adPipelineContext();
-        const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+        const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
         filterSlotStub.returns(true);
 
         return step(context, [{ ...adSlot, gpt: { collapseEmptyDiv } }]);
@@ -918,7 +918,7 @@ describe('google ad manager', () => {
           moliSlot: createdAdSlot('slot-2')
         } as MoliRuntime.SlotDefinition;
 
-        const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
+        const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
         isThrottledStub.withArgs(slot1.moliSlot.domId, slot1.adSlot.getAdUnitPath()).returns(true);
         isThrottledStub.withArgs(slot2.moliSlot.domId, slot2.adSlot.getAdUnitPath()).returns(false);
 

@@ -60,20 +60,20 @@ describe('Utiq Module', () => {
     const module = createUtiq();
     const adPipelineContext = (): AdPipelineContext => {
       return {
-        auctionId: 'xxxx-xxxx-xxxx-xxxx',
-        requestId: 0,
-        requestAdsCalls: 1,
-        env: 'production',
-        logger: noopLogger,
-        config: emptyConfig,
-        runtimeConfig: emptyRuntimeConfig,
-        window: jsDomWindow,
+        auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+        requestId__: 0,
+        requestAdsCalls__: 1,
+        env__: 'production',
+        logger__: noopLogger,
+        config__: emptyConfig,
+        runtimeConfig__: emptyRuntimeConfig,
+        window__: jsDomWindow,
         // no service dependencies required
-        labelConfigService: null as any,
-        tcData: fullConsent({ 56: true }),
-        adUnitPathVariables: {},
-        auction: newGlobalAuctionContext(jsDomWindow),
-        assetLoaderService: assetLoaderService
+        labelConfigService__: null as any,
+        tcData__: fullConsent({ 56: true }),
+        adUnitPathVariables__: {},
+        auction__: newGlobalAuctionContext(jsDomWindow),
+        assetLoaderService__: assetLoaderService
       };
     };
 
@@ -82,7 +82,7 @@ describe('Utiq Module', () => {
         { enabled: true, assetUrl: 'http://localhost/utiqLoader.js' },
         {
           ...adPipelineContext(),
-          env: 'test'
+          env__: 'test'
         }
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -107,7 +107,7 @@ describe('Utiq Module', () => {
           { enabled: true, assetUrl: 'http://localhost/utiqLoader.js' },
           {
             ...adPipelineContext(),
-            tcData: {
+            tcData__: {
               ...tcDataFullConsent,
               purpose: {
                 ...tcDataFullConsent.purpose,
@@ -125,7 +125,7 @@ describe('Utiq Module', () => {
         { enabled: true, assetUrl: 'http://localhost/utiqLoader.js' },
         {
           ...adPipelineContext(),
-          tcData: tcDataNoGdpr
+          tcData__: tcDataNoGdpr
         }
       );
       expect(loadScriptStub).to.have.been.calledOnce;

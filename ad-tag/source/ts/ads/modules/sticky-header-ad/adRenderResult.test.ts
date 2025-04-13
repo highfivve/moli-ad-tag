@@ -33,8 +33,8 @@ describe('renderResult', () => {
 
   const adPipelineContext = (): AdPipelineContext =>
     ({
-      env: 'production',
-      window: jsDomWindow
+      env__: 'production',
+      window__: jsDomWindow
     }) as AdPipelineContext;
 
   afterEach(() => {
@@ -48,7 +48,7 @@ describe('renderResult', () => {
   });
 
   it('should resolve with standard if env is test', async () => {
-    const ctx: AdPipelineContext = { ...adPipelineContext(), env: 'test' };
+    const ctx: AdPipelineContext = { ...adPipelineContext(), env__: 'test' };
     const headerSlot = {
       domId: domId
     } as AdSlot;
