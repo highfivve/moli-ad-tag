@@ -12,7 +12,7 @@ import {
   noopLogger
 } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
@@ -55,7 +55,7 @@ describe('a9', () => {
       config: config,
       runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
+      labelConfigService: createLabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: newGlobalAuctionContext(jsDomWindow),

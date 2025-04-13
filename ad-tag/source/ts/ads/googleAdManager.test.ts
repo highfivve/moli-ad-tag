@@ -23,7 +23,7 @@ import {
   gptConfigure,
   gptRequestAds
 } from './googleAdManager';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
@@ -56,7 +56,7 @@ describe('google ad manager', () => {
       config: config,
       runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
+      labelConfigService: createLabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: newGlobalAuctionContext(jsDomWindow),
@@ -337,25 +337,15 @@ describe('google ad manager', () => {
 
   describe('gptLDeviceLabelKeyValue', () => {
     const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
-    const getSupportedLabelsStub = sandbox.stub(
+    const getDeviceLabelStub = sandbox.stub(
       ctxWithLabelServiceStub.labelConfigService,
-      'getSupportedLabels'
+      'getDeviceLabel'
     );
-
-    it('should set no device label if no valid device labels are available', async () => {
-      const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([]);
-
-      await step(ctxWithLabelServiceStub, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
-    });
 
     it('should set mobile as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile']);
+      getDeviceLabelStub.returns('mobile');
       await step(ctxWithLabelServiceStub, []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
@@ -364,27 +354,18 @@ describe('google ad manager', () => {
     it('should set desktop as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['desktop']);
+
+      getDeviceLabelStub.returns('desktop');
 
       await step(ctxWithLabelServiceStub, []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledWith('device_label', 'desktop');
     });
 
-    it('should filter out irrelevant labels', async () => {
-      const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile', 'mobile-320', 'ix']);
-
-      await step(ctxWithLabelServiceStub, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
-    });
-
     it('should not call googletag.pubads.setTargeting in env test', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile']);
+      getDeviceLabelStub.returns('mobile');
 
       await step(adPipelineContext('test'), []);
       expect(setTargetingSpy).to.have.not.been.called;

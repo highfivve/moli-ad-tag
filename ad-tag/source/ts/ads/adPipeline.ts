@@ -1,5 +1,5 @@
 import { MoliRuntime } from '../types/moliRuntime';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService, LabelConfigService } from './labelConfigService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
 import { consentReady } from './consent';
@@ -355,7 +355,7 @@ export class AdPipeline {
         extraLabels.push('purpose-1');
       }
 
-      const labelConfigService = new LabelConfigService(
+      const labelConfigService = createLabelConfigService(
         config.labelSizeConfig || [],
         extraLabels,
         this.window

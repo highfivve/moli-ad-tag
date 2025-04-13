@@ -8,7 +8,7 @@ import {
 } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
-import { LabelConfigService } from 'ad-tag/ads/labelConfigService';
+import { createLabelConfigService } from 'ad-tag/ads/labelConfigService';
 
 export const adPipelineContext = (
   jsDomWindow: any,
@@ -23,7 +23,7 @@ export const adPipelineContext = (
   runtimeConfig: emptyRuntimeConfig,
   window: jsDomWindow,
   // no service dependencies required
-  labelConfigService: new LabelConfigService([], [], jsDomWindow),
+  labelConfigService: createLabelConfigService([], [], jsDomWindow),
   tcData: fullConsent(),
   adUnitPathVariables: {},
   auction: newGlobalAuctionContext(jsDomWindow),

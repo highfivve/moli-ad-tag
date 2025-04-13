@@ -13,7 +13,7 @@ import {
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService, LabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
   AdUnitPathVariables,
@@ -121,7 +121,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'finished':
       case 'error':
         // temporary label service to resolve the device label
-        const labelService = new LabelConfigService(state.config.labelSizeConfig || [], [], window);
+        const labelService = createLabelConfigService(
+          state.config.labelSizeConfig || [],
+          [],
+          window
+        );
         return {
           ...getPageTargeting().adUnitPathVariables,
           domain: state.config.domain || domain,

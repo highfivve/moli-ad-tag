@@ -22,7 +22,7 @@ import {
   PrepareRequestAdsStep
 } from './adPipeline';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import SlotDefinition = MoliRuntime.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
@@ -76,7 +76,7 @@ describe('AdPipeline', () => {
       config: config,
       runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
+      labelConfigService: createLabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: newGlobalAuctionContext(jsDomWindow),

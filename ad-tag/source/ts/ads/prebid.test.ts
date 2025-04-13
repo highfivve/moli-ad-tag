@@ -15,7 +15,7 @@ import {
   prebidRemoveAdUnits,
   prebidRequestBids
 } from './prebid';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { createPbjsStub, moliPrebidTestConfig, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
@@ -53,7 +53,7 @@ describe('prebid', () => {
       config: config,
       runtimeConfig: emptyRuntimeConfig,
       window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
+      labelConfigService: createLabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
       auction: createGlobalAuctionContext(jsDomWindow, noopLogger, createEventService(), {
