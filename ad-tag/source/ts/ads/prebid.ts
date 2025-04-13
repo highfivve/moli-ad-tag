@@ -139,16 +139,17 @@ const createdAdUnits = (
           // we also remove the bid labels so prebid doesn't require them
           const bids: prebidjs.IBid[] = prebidAdSlotConfig.adUnit.bids
             .filter((bid: prebidjs.IBid) => context.labelConfigService.filterSlot(bid))
-            .filter((bid: prebidjs.IBid) => {
-              return bid.bidder && context.auction.biddersDisabling
-                ? !context.auction.biddersDisabling.isBidderDisabled(moliSlot.domId, bid.bidder)
-                : true;
-            })
-            .filter((bid: prebidjs.IBid) => {
-              return bid.bidder && context.auction.frequencyCapping
-                ? !context.auction.isBidderFrequencyCappedOnSlot(moliSlot.domId, bid.bidder)
-                : true;
-            })
+            .filter(
+              (bid: prebidjs.IBid) =>
+                !bid.bidder ||
+                (bid.bidder && !context.auction.isBidderDisabled(moliSlot.domId, bid.bidder))
+            )
+            .filter(
+              (bid: prebidjs.IBid) =>
+                !bid.bidder ||
+                (bid.bidder &&
+                  !context.auction.isBidderFrequencyCappedOnSlot(moliSlot.domId, bid.bidder))
+            )
             .map(bid => {
               // we remove the labelAll and labelAny fields from the bid object to ensure that prebid doesn't
               // interfere with the label filtering from our end

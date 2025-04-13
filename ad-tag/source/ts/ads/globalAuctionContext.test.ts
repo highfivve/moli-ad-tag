@@ -1,12 +1,12 @@
 import sinon, { SinonSandbox } from 'sinon';
 import { expect, use } from 'chai';
 import { createDomAndWindow } from '../stubs/browserEnvSetup';
-import { GlobalAuctionContext } from './globalAuctionContext';
+import { createGlobalAuctionContext, GlobalAuctionContext } from './globalAuctionContext';
 import { createPbjsStub } from '../stubs/prebidjsStubs';
 import { createGoogletagStub } from '../stubs/googletagStubs';
 import sinonChai from 'sinon-chai';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
-import { EventService } from './eventService';
+import { createEventService } from './eventService';
 import { auction } from 'ad-tag/types/moliConfig';
 
 // setup sinon-chai
@@ -19,7 +19,7 @@ describe('Global auction context', () => {
   jsDomWindow.googletag = createGoogletagStub();
 
   const sandbox: SinonSandbox = sinon.createSandbox();
-  const eventService = new EventService();
+  const eventService = createEventService();
   const eventServiceAddEventListenerSpy = sandbox.spy(eventService, 'addEventListener');
   const pbjsOnEventSpy = sandbox.spy(jsDomWindow.pbjs, 'onEvent');
   const googletagAddEventListenerSpy = sandbox.spy(
@@ -30,7 +30,7 @@ describe('Global auction context', () => {
   const makeAuctionContext = (
     config?: auction.GlobalAuctionContextConfig
   ): GlobalAuctionContext => {
-    return new GlobalAuctionContext(jsDomWindow, noopLogger, eventService, config);
+    return createGlobalAuctionContext(jsDomWindow, noopLogger, eventService, config);
   };
 
   after(() => {
@@ -63,7 +63,6 @@ describe('Global auction context', () => {
       });
       expect(pbjsOnEventSpy).to.have.been.calledOnce;
       expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('auctionEnd', sinon.match.func);
-      expect(context.biddersDisabling).to.be.ok;
     });
 
     it('should not add auctionEnd event listener if disabled', () => {
@@ -76,7 +75,6 @@ describe('Global auction context', () => {
         }
       });
       expect(pbjsOnEventSpy).to.have.not.been.called;
-      expect(context.biddersDisabling).to.be.undefined;
     });
   });
 
@@ -89,11 +87,6 @@ describe('Global auction context', () => {
           positions: []
         }
       };
-
-      it('should instantiate adUnitFrequencyCapping', () => {
-        const context = makeAuctionContext(auctionContextConfig);
-        expect(context.frequencyCapping).to.be.ok;
-      });
 
       it('should add slotRenderEnded event listener', () => {
         makeAuctionContext(auctionContextConfig);
@@ -124,11 +117,6 @@ describe('Global auction context', () => {
         }
       };
 
-      it('should instantiate adRequestThrottling', () => {
-        const context = makeAuctionContext(auctionContextConfig);
-        expect(context.adRequestThrottling).to.be.ok;
-      });
-
       it('should never throttle requests in initial state', () => {
         const context = makeAuctionContext(auctionContextConfig);
         expect(context.isSlotThrottled('slot-1', '/123/slot-1')).to.be.false;
@@ -151,11 +139,6 @@ describe('Global auction context', () => {
           throttle: 10
         }
       };
-
-      it('should not instantiate adRequestThrottling', () => {
-        const context = makeAuctionContext(auctionContextConfig);
-        expect(context.adRequestThrottling).to.be.undefined;
-      });
 
       it('should never throttle requests', () => {
         const context = makeAuctionContext(auctionContextConfig);
@@ -183,11 +166,6 @@ describe('Global auction context', () => {
         }
       };
 
-      it('should instantiate frequencyCapping', () => {
-        const context = makeAuctionContext(auctionContextConfig);
-        expect(context.frequencyCapping).to.be.ok;
-      });
-
       it('should never frequency-cap in initial state', () => {
         const context = makeAuctionContext(auctionContextConfig);
         expect(context.isBidderFrequencyCappedOnSlot('slot-1', 'dspx')).to.be.false;
@@ -214,11 +192,6 @@ describe('Global auction context', () => {
         }
       };
 
-      it('should not instantiate frequencyCapping', () => {
-        const context = makeAuctionContext(auctionContextConfig);
-        expect(context.frequencyCapping).to.be.undefined;
-      });
-
       it('should never throttle/frequency-cap requests', () => {
         const context = makeAuctionContext(auctionContextConfig);
         expect(context.isBidderFrequencyCappedOnSlot('wp-slot', 'dspx')).to.be.false;
@@ -237,11 +210,6 @@ describe('Global auction context', () => {
           enabled: true
         }
       };
-
-      it('should instantiate previous floor price saving', () => {
-        const context = makeAuctionContext(auctionContextConfig);
-        expect(context.previousBidCpms).to.be.ok;
-      });
 
       it('should add an auctionEnd event listener', () => {
         makeAuctionContext(auctionContextConfig);

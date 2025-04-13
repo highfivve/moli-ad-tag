@@ -1,7 +1,7 @@
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
-import { EventService } from 'ad-tag/ads/eventService';
+import { createEventService, EventService } from 'ad-tag/ads/eventService';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 
 use(sinonChai);
@@ -15,7 +15,7 @@ describe('EventService', () => {
 
   describe('addEventListener', () => {
     it('should add regular event listener', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
@@ -27,7 +27,7 @@ describe('EventService', () => {
     });
 
     it('should add multiple regular event listeners for same event', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener1 = sandbox.spy();
       const listener2 = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
@@ -43,7 +43,7 @@ describe('EventService', () => {
     });
 
     it('should add one-time event listener that is called only once', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
@@ -57,7 +57,7 @@ describe('EventService', () => {
     });
 
     it('should handle multiple one-time listeners for same event', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener1 = sandbox.spy();
       const listener2 = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
@@ -75,7 +75,7 @@ describe('EventService', () => {
     });
 
     it('should handle mix of regular and one-time listeners', () => {
-      const service = new EventService();
+      const service = createEventService();
       const regularListener = sandbox.spy();
       const oneTimeListener = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
@@ -95,7 +95,7 @@ describe('EventService', () => {
 
   describe('removeEventListener', () => {
     it('should remove regular event listener', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
@@ -107,7 +107,7 @@ describe('EventService', () => {
     });
 
     it('should remove one-time event listener before it is called', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
@@ -119,7 +119,7 @@ describe('EventService', () => {
     });
 
     it('should handle removing non-existent listener', () => {
-      const service = new EventService();
+      const service = createEventService();
       const listener = sandbox.spy();
 
       // Should not throw
@@ -135,7 +135,7 @@ describe('EventService', () => {
     });
 
     it('should not throw when emitting event with no listeners', () => {
-      const service = new EventService();
+      const service = createEventService();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
       // Should not throw
@@ -143,7 +143,7 @@ describe('EventService', () => {
     });
 
     it('should emit events independently', () => {
-      const service = new EventService();
+      const service = createEventService();
       const beforeListener = sandbox.spy();
       const afterListener = sandbox.spy();
       const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
@@ -159,7 +159,7 @@ describe('EventService', () => {
     });
 
     it('should emit afterRequestAds with correct state', () => {
-      const service = new EventService();
+      const service = createEventService();
       const afterListener = sandbox.spy();
 
       service.addEventListener('afterRequestAds', afterListener);
@@ -171,7 +171,7 @@ describe('EventService', () => {
 
     describe('error handling', () => {
       it('should continue executing other listeners when one throws', () => {
-        const service = new EventService();
+        const service = createEventService();
         const errorListener = sandbox.stub().throws(new Error('Test error'));
         const goodListener = sandbox.spy();
         const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
@@ -190,7 +190,7 @@ describe('EventService', () => {
       });
 
       it('should remove one-time listeners even if they throw', () => {
-        const service = new EventService();
+        const service = createEventService();
         const errorListener = sandbox.stub().throws(new Error('Test error'));
         const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;
 
@@ -207,7 +207,7 @@ describe('EventService', () => {
       });
 
       it('should handle multiple throwing listeners', () => {
-        const service = new EventService();
+        const service = createEventService();
         const error1 = new Error('Error 1');
         const error2 = new Error('Error 2');
         const errorListener1 = sandbox.stub().throws(error1);
@@ -230,7 +230,7 @@ describe('EventService', () => {
       });
 
       it('should clean up one-time listeners map when all listeners are removed', () => {
-        const service = new EventService();
+        const service = createEventService();
         const errorListener = sandbox.stub().throws(new Error('Test error'));
         const goodListener = sandbox.spy();
         const runtimeConfig = {} as MoliRuntime.MoliRuntimeConfig;

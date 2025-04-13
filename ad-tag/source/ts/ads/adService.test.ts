@@ -19,7 +19,7 @@ import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, MoliConfig } from '../types/moliConfig';
 import { afterEach } from 'mocha';
-import { EventService } from 'ad-tag/ads/eventService';
+import { createEventService } from 'ad-tag/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -32,7 +32,7 @@ describe('AdService', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
-  const eventService = new EventService();
+  const eventService = createEventService();
 
   const emptyConfigWithPrebid: MoliConfig = {
     ...emptyConfig,

@@ -16,16 +16,16 @@ import {
   prebidRequestBids
 } from './prebid';
 import { LabelConfigService } from './labelConfigService';
-import { createPbjsStub, pbjsTestConfig, moliPrebidTestConfig } from '../stubs/prebidjsStubs';
+import { createPbjsStub, moliPrebidTestConfig, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { tcData } from '../stubs/consentStubs';
-import video = prebidjs.video;
 import { dummySchainConfig } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
+import { createGlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { packageJson } from 'ad-tag/gen/packageJson';
-import { EventService } from 'ad-tag/ads/eventService';
+import { createEventService } from 'ad-tag/ads/eventService';
+import video = prebidjs.video;
 
 // setup sinon-chai
 use(sinonChai);
@@ -56,7 +56,7 @@ describe('prebid', () => {
       labelConfigService: new LabelConfigService([], [], jsDomWindow),
       tcData: tcData,
       adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger, new EventService(), {
+      auction: createGlobalAuctionContext(jsDomWindow, noopLogger, createEventService(), {
         biddersDisabling: {
           enabled: true,
           minRate: 0.2,
@@ -559,10 +559,7 @@ describe('prebid', () => {
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
 
         const ctx = adPipelineContext();
-        const isBidderDisabledStub = sandbox.stub(
-          ctx.auction!.biddersDisabling!,
-          'isBidderDisabled'
-        );
+        const isBidderDisabledStub = sandbox.stub(ctx.auction!, 'isBidderDisabled');
 
         isBidderDisabledStub.withArgs(domId, 'teads').returns(true);
         isBidderDisabledStub.withArgs(domId, 'appnexus').returns(false);
@@ -585,15 +582,14 @@ describe('prebid', () => {
         const singleSlot = createSlotDefinitions(domId, [{ adUnit: adUnit1 }]);
 
         const ctx = adPipelineContext();
-        const isBidderDisabledSpy = sandbox.spy(ctx.auction!.biddersDisabling!, 'isBidderDisabled');
+        const isBidderDisabledSpy = sandbox.spy(ctx.auction, 'isBidderDisabled');
 
         await step(ctx, [singleSlot]);
         expect(isBidderDisabledSpy).to.have.not.been.called;
 
         expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([
-          prebidAdUnit(domId, [{ bidder: undefined } as any])
-        ]);
+        const adUnit1Called = addAdUnitsSpy.firstCall.args[0];
+        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
       });
 
       it('should add a single adunit when the static prebid config provider returns a two bids but one is filtered', async () => {

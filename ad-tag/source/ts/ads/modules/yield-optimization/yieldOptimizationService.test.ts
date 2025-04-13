@@ -5,13 +5,13 @@ import * as Sinon from 'sinon';
 import { YieldOptimizationService } from './yieldOptimizationService';
 import { auction, Device, modules } from 'ad-tag/types/moliConfig';
 import { noopLogger } from 'ad-tag/stubs/moliStubs';
+import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { createGlobalAuctionContext, GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { createEventService } from 'ad-tag/ads/eventService';
 import StaticYieldOptimizationConfig = modules.yield_optimization.StaticYieldOptimizationConfig;
 import NoYieldOptimizationConfig = modules.yield_optimization.NoYieldOptimizationConfig;
 import DynamicYieldOptimizationConfig = modules.yield_optimization.DynamicYieldOptimizationConfig;
 import AdunitPriceRulesResponse = modules.yield_optimization.AdunitPriceRulesResponse;
-import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
-import { EventService } from 'ad-tag/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -344,10 +344,10 @@ describe('YieldOptimizationService', () => {
               enabled: true
             }
           };
-          globalAuctionContext = new GlobalAuctionContext(
+          globalAuctionContext = createGlobalAuctionContext(
             jsDomWindow,
             noopLogger,
-            new EventService(),
+            createEventService(),
             config
           );
           getLastBidCpmsOfAdUnitStub = sandbox.stub(globalAuctionContext, 'getLastBidCpmsOfAdUnit');
