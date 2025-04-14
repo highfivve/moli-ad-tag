@@ -142,14 +142,11 @@ const createdAdUnits = (
             .filter(
               (bid: prebidjs.IBid) =>
                 !bid.bidder ||
-                (bid.bidder && !context.auction__.isBidderDisabled(moliSlot.domId, bid.bidder))
-            )
-            .filter(
-              (bid: prebidjs.IBid) =>
-                !bid.bidder ||
                 (bid.bidder &&
+                  !context.auction__.isBidderDisabled(moliSlot.domId, bid.bidder) &&
                   !context.auction__.isBidderFrequencyCappedOnSlot(moliSlot.domId, bid.bidder))
             )
+
             .map(bid => {
               // we remove the labelAll and labelAny fields from the bid object to ensure that prebid doesn't
               // interfere with the label filtering from our end
