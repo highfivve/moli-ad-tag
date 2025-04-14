@@ -588,7 +588,6 @@ describe('prebid', () => {
         expect(isBidderDisabledSpy).to.have.not.been.called;
 
         expect(addAdUnitsSpy).to.have.been.calledOnce;
-        const adUnit1Called = addAdUnitsSpy.firstCall.args[0];
         expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly([adUnit1]);
       });
 
@@ -1065,7 +1064,8 @@ describe('prebid', () => {
     const domId1 = 'prebid-slot-1';
     const domId2 = 'prebid-slot-2';
     const adUnit1 = prebidAdUnit(domId1, [
-      { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+      { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] },
+      { bidder: 'orbidder', params: { accountId: 'foo', placementId: '123' }, labelAll: ['mobile'] }
     ]);
     const adUnit2 = prebidAdUnit(domId1, [
       { bidder: 'appnexus', params: { placementId: '456' }, labelAll: ['mobile'] }
@@ -1153,6 +1153,52 @@ describe('prebid', () => {
       );
     });
 
+    it('should call requestBids with ad units that are not frequency capped', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
+
+      const ctx = adPipelineContext();
+      sandbox
+        .stub(ctx.auction__, 'isBidderFrequencyCappedOnSlot')
+        .withArgs(domId1, 'appnexus')
+        .returns(false)
+        .withArgs(domId1, 'orbidder')
+        .returns(true);
+
+      await step(ctx, [slotDef1]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      const adUnits = requestBidsSpy.firstCall.args[0].adUnits;
+      expect(adUnits).to.have.length(1);
+      expect(adUnits[0]).to.deep.equals({
+        ...adUnit1,
+        // labelAll & labelAny are stripped away
+        bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+      });
+    });
+
+    it('should call requestBids with ad units without bidders that are frequency capped', async () => {
+      const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+      const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
+
+      const ctx = adPipelineContext();
+      sandbox
+        .stub(ctx.auction__, 'isBidderDisabled')
+        .withArgs(domId1, 'appnexus')
+        .returns(false)
+        .withArgs(domId1, 'orbidder')
+        .returns(true);
+
+      await step(ctx, [slotDef1]);
+      expect(requestBidsSpy).to.have.been.calledOnce;
+      const adUnits = requestBidsSpy.firstCall.args[0].adUnits;
+      expect(adUnits).to.have.length(1);
+      expect(adUnits[0]).to.deep.equals({
+        ...adUnit1,
+        // labelAll & labelAny are stripped away
+        bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+      });
+    });
+
     it('should call requestBids with the prebid ad units if ephemeralAdUnits is true', async () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
       const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
@@ -1172,7 +1218,10 @@ describe('prebid', () => {
       expect(adUnits[0]).to.deep.equals({
         ...adUnit1,
         // labelAll & labelAny are stripped away
-        bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+        bids: [
+          { bidder: 'appnexus', params: { placementId: '123' } },
+          { bidder: 'orbidder', params: { accountId: 'foo', placementId: '123' } }
+        ]
       });
     });
 
@@ -1181,9 +1230,12 @@ describe('prebid', () => {
       const step = prebidRequestBids({ ...moliPrebidTestConfig, ephemeralAdUnits: true }, 'gam');
 
       const ctx = adPipelineContext();
-      const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
-      isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
-      isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
+      sandbox
+        .stub(ctx.auction__, 'isSlotThrottled')
+        .withArgs(domId1, slotDef1.adSlot.getAdUnitPath())
+        .returns(false)
+        .withArgs(domId2, slotDef2.adSlot.getAdUnitPath())
+        .returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);
       expect(requestBidsSpy).to.have.been.calledOnce;
@@ -1200,7 +1252,10 @@ describe('prebid', () => {
       expect(adUnits[0]).to.deep.equals({
         ...adUnit1,
         // labelAll & labelAny are stripped away
-        bids: [{ bidder: 'appnexus', params: { placementId: '123' } }]
+        bids: [
+          { bidder: 'appnexus', params: { placementId: '123' } },
+          { bidder: 'orbidder', params: { accountId: 'foo', placementId: '123' } }
+        ]
       });
     });
 
