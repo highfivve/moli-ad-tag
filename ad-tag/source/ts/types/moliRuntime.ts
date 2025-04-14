@@ -1,6 +1,6 @@
 import { googletag } from './googletag';
 import { prebidjs } from './prebidjs';
-import { IModule, ModuleMeta } from './module';
+import { IModule } from './module';
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import {
   AdPipelineContext,
@@ -9,6 +9,7 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from '../ads/adPipeline';
+import { EventService } from '../ads/eventService';
 import {
   AdSlot,
   AdUnitPathVariables,
@@ -185,10 +186,22 @@ export namespace MoliRuntime {
      * moli.refreshAdSlots(['content_1', 'content_2']);
      * ```
      *
+     * ## Backfill setups
+     *
      * Refreshing a single ad slot that has loading behaviour `backfill` with custom options.
      *
      * ```javascript
      * moli.refreshAdSlots(['content_1'], { loaded: 'backfill' });
+     * ```
+     *
+     * ## Refresh an eagerly loaded slot
+     *
+     * This is useful if you have a fully rendered page on the server and the ad slot can be eagerly
+     * requested, but the user can alter the page afterwards, e.g. filtering the content or changing the layout and
+     * the slot should be refreshed.
+     *
+     * ```javascript
+     * moli.refreshAdSlots(['content_1'], { loaded: 'eager' });
      * ```
      *
      * @param domId - identifies the ad slot or ad slots
@@ -231,26 +244,18 @@ export namespace MoliRuntime {
     /**
      * Refresh the given bucket as soon as possible.
      *
-     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
+     * By default, this is only possible for ad slots with a `manual` loading behaviour and bucket is enabled.
+     * You need to manually override this through the `options` parameter.
      *
      * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
-     * @param bucket - identifies the bucket
-     */
-    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
-
-    /**
-     * Refresh the given bucket as soon as possible.
-     *
-     * This is only possible for ad slots with a `manual` loading behaviour and bucket is enabled
-     *
-     * Ad slots in buckets are batched until requestAds() is being called. This reduces the amount of requests made to the
-     * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
+     * See the `refreshAdSlot` method for more information on how to refresh ad slots.
      *
      * @param bucket - identifies the bucket
+     * @param options - optional options to override the default refreshing behaviour
      */
-    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
+    refreshBucket(bucket: string, options?: RefreshAdSlotsOptions): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
@@ -290,11 +295,6 @@ export namespace MoliRuntime {
     getState(): state.States;
 
     /**
-     * @returns meta information about the active moli modules
-     */
-    getModuleMeta(): ReadonlyArray<ModuleMeta>;
-
-    /**
      * Open the moli debug console.
      *
      * Request the debug bundle and start the debug mode.
@@ -303,9 +303,21 @@ export namespace MoliRuntime {
     openConsole(path?: string): void;
 
     /**
-     * @return the asset loader service that is used to fetch additional assets / resources
+     * Add an event listener for ad request events.
+     *
+     * @param event The event type
+     * @param listener The callback function to be executed with event-specific data
+     * @param options Optional configuration for the listener
      */
-    getAssetLoaderService(): IAssetLoaderService;
+    addEventListener: EventService['addEventListener'];
+
+    /**
+     * Remove an event listener for ad request events.
+     *
+     * @param event The event type
+     * @param listener The callback function to remove
+     */
+    removeEventListener: EventService['removeEventListener'];
   }
 
   /**
@@ -375,6 +387,8 @@ export namespace MoliRuntime {
      */
     readonly refreshInfiniteSlots: IRefreshInfiniteSlot[];
 
+    readonly refreshBuckets: IRefreshBucket[];
+
     /**
      * Add hooks on specific state changes.
      */
@@ -420,6 +434,18 @@ export namespace MoliRuntime {
      */
     readonly sizesOverride?: googleAdManager.SlotSize[];
   }
+
+  export type IRefreshBucket = {
+    /**
+     * the bucket name
+     */
+    readonly bucket: string;
+
+    /**
+     * optional refresh bucket options
+     */
+    readonly options?: MoliRuntime.RefreshAdSlotsOptions;
+  };
 
   /**
    * Models `refreshInifiniteAdSlot` calls before ads are being requested

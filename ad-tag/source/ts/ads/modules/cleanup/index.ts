@@ -66,38 +66,40 @@ export class Cleanup implements IModule {
 
   private cleanupConfig: modules.cleanup.CleanupModuleConfig | null = null;
 
-  configure(modulesConfig?: modules.ModulesConfig) {
+  configure__(modulesConfig?: modules.ModulesConfig) {
     if (modulesConfig?.cleanup && modulesConfig.cleanup.enabled) {
       this.cleanupConfig = modulesConfig.cleanup;
     }
   }
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.cleanupConfig;
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.cleanupConfig;
     return config
       ? [
           mkConfigureStepOncePerRequestAdsCycle(
             'destroy-out-of-page-ad-format',
             (context: AdPipelineContext) => {
-              if (context.runtimeConfig.environment === 'test') {
+              if (context.runtimeConfig__.environment === 'test') {
                 return Promise.resolve();
               }
 
-              // check if the bidder in each of the cleanup configs has won the last auction on the configured slot
-              // e.g. seedtag is configured on the wallpaper slot, then clean up seedtag if they have won the last auction on the wallpaper slot
-              // prevents cleaning on the first page load
-              const configsOfDomIdsThatNeedToBeCleaned = config.configs.filter(config =>
-                this.hasBidderWonLastAuction(context, config)
-              );
-              this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+              context.window__.pbjs.que.push(() => {
+                // check if the bidder in each of the cleanup configs has won the last auction on the configured slot
+                // e.g. seedtag is configured on the wallpaper slot, then clean up seedtag if they have won the last auction on the wallpaper slot
+                // prevents cleaning on the first page load
+                const configsOfDomIdsThatNeedToBeCleaned = config.configs.filter(config =>
+                  this.hasBidderWonLastAuction(context, config)
+                );
+                this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+              });
               return Promise.resolve();
             }
           )
@@ -105,22 +107,24 @@ export class Cleanup implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     const config = this.cleanupConfig;
     return config
       ? [
           mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
-            if (context.runtimeConfig.environment === 'test') {
+            if (context.runtimeConfig__.environment === 'test') {
               return Promise.resolve();
             }
 
-            // look at the slots that should be reloaded & check if there is a cleanup config for it
-            // if there is, check if the bidder in this config has won the last auction on the slot
-            const configsOfDomIdsThatNeedToBeCleaned = config.configs
-              .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
-              .filter(config => this.hasBidderWonLastAuction(context, config));
+            context.window__.pbjs.que.push(() => {
+              // look at the slots that should be reloaded & check if there is a cleanup config for it
+              // if there is, check if the bidder in this config has won the last auction on the slot
+              const configsOfDomIdsThatNeedToBeCleaned = config.configs
+                .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
+                .filter(config => this.hasBidderWonLastAuction(context, config));
 
-            this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+              this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+            });
             return Promise.resolve();
           })
         ]
@@ -134,8 +138,8 @@ export class Cleanup implements IModule {
     configs.forEach(config => {
       if ('cssSelectors' in config.deleteMethod) {
         config.deleteMethod.cssSelectors.forEach((selector: string) => {
-          const elements = context.window.document.querySelectorAll(selector);
-          context.logger.debug(
+          const elements = context.window__.document.querySelectorAll(selector);
+          context.logger__.debug(
             'Cleanup Module',
             `Remove elements with selector ${selector} from dom`,
             elements
@@ -144,7 +148,7 @@ export class Cleanup implements IModule {
             try {
               element.remove();
             } catch (e) {
-              context.logger.error(
+              context.logger__.error(
                 'Cleanup Module',
                 `Error removing element with selector ${selector}`,
                 e
@@ -155,14 +159,14 @@ export class Cleanup implements IModule {
       } else {
         config.deleteMethod.jsAsString.forEach(jsLineAsString => {
           try {
-            context.logger.debug(
+            context.logger__.debug(
               'Cleanup Module',
               `Try to execute string as JS: '${jsLineAsString}'`
             );
             const jsFunction = new Function(jsLineAsString);
             jsFunction();
           } catch (e) {
-            context.logger.error(
+            context.logger__.error(
               'Cleanup Module',
               `Error executing JS string: '${jsLineAsString}'`,
               e
@@ -177,7 +181,7 @@ export class Cleanup implements IModule {
     context: AdPipelineContext,
     config: modules.cleanup.CleanupConfig
   ): boolean => {
-    const prebidWinningBids = context.window.pbjs.getAllWinningBids();
+    const prebidWinningBids = context.window__.pbjs.getAllWinningBids();
     const bidderThatWonLastAuctionOnSlot = prebidWinningBids.find(
       bid => bid.adUnitCode === config.domId
     )?.bidder;

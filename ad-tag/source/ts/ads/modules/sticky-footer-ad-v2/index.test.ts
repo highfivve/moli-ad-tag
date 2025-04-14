@@ -3,15 +3,16 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { AdPipelineContext, PrepareRequestAdsStep } from '../../adPipeline';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
 import { googletag } from 'ad-tag/types/googletag';
 import {
   emptyConfig,
   emptyRuntimeConfig,
   newEmptyConfig,
+  newGlobalAuctionContext,
   noopLogger
 } from 'ad-tag/stubs/moliStubs';
 import * as stickyAdModule from './footerStickyAd';
+import { initAdSticky } from './footerStickyAd';
 
 import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
@@ -19,7 +20,6 @@ import { AdSlot, Device, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { StickyFooterAdsV2 } from 'ad-tag/ads/modules/sticky-footer-ad-v2/index';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { initAdSticky } from './footerStickyAd';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 // setup sinon-chai
@@ -36,19 +36,19 @@ const setupDomAndServices = () => {
 };
 
 const adPipelineContext = (config: MoliConfig): AdPipelineContext => ({
-  auctionId: 'xxxx-xxxx-xxxx-xxxx',
-  requestId: 0,
-  requestAdsCalls: 1,
-  env: 'production',
-  logger: noopLogger,
-  config: config ?? emptyConfig,
-  runtimeConfig: emptyRuntimeConfig,
-  window: jsDomWindow,
-  labelConfigService: null as any,
-  tcData: fullConsent(),
-  adUnitPathVariables: {},
-  auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
-  assetLoaderService: createAssetLoaderService(jsDomWindow)
+  auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+  requestId__: 0,
+  requestAdsCalls__: 1,
+  env__: 'production',
+  logger__: noopLogger,
+  config__: config ?? emptyConfig,
+  runtimeConfig__: emptyRuntimeConfig,
+  window__: jsDomWindow,
+  labelConfigService__: null as any,
+  tcData__: fullConsent(),
+  adUnitPathVariables__: {},
+  auction__: newGlobalAuctionContext(jsDomWindow),
+  assetLoaderService__: createAssetLoaderService(jsDomWindow)
 });
 
 const createAdSlotConfig = (domId: string, device: Device): MoliRuntime.SlotDefinition => {
@@ -83,7 +83,7 @@ const createAndConfigureModule = (
   closingButtonText?: string
 ) => {
   const module = new StickyFooterAdsV2();
-  module.configure({
+  module.configure__({
     stickyFooterAdV2: {
       enabled: true,
       stickyFooterDomIds,
@@ -113,7 +113,7 @@ const createInitializedModule = (
     moduleConfig.closingButtonText
   );
 
-  const prepareSteps = module.prepareRequestAdsSteps();
+  const prepareSteps = module.prepareRequestAdsSteps__();
   expect(prepareSteps).to.be.ok;
   expect(prepareSteps).to.have.lengthOf(1);
 

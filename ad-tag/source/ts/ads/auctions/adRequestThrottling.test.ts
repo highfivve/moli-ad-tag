@@ -3,7 +3,7 @@ import sinonChai from 'sinon-chai';
 import { expect, use } from 'chai';
 import { createDom } from '../../stubs/browserEnvSetup';
 import * as Sinon from 'sinon';
-import { AdRequestThrottling } from './adRequestThrottling';
+import { createAdRequestThrottling } from './adRequestThrottling';
 import { googletag } from '../../types/googletag';
 
 use(sinonChai);
@@ -17,7 +17,7 @@ describe('ad request throttling', () => {
   const setTimeoutSpy = sandbox.spy(jsDomWindow, 'setTimeout');
 
   const throttle = (throttleInSeconds: number, includedDomIds?: string[]) =>
-    new AdRequestThrottling(
+    createAdRequestThrottling(
       { enabled: true, throttle: throttleInSeconds, includedDomIds },
       jsDomWindow
     );

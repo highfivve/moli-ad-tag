@@ -269,30 +269,30 @@ export class Skin implements IModule {
   private skinModuleConfig: modules.skin.SkinModuleConfig | null = null;
   private bidsBackHandler: MoliRuntime.PrebidBidsBackHandler[] = [];
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.skinModuleConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.skin && moduleConfig.skin.enabled) {
       this.skinModuleConfig = moduleConfig.skin;
       this.bidsBackHandler.push(this.runSkinConfigs(moduleConfig.skin));
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
-  prebidBidsBackHandler(): MoliRuntime.PrebidBidsBackHandler[] {
+  prebidBidsBackHandler__(): MoliRuntime.PrebidBidsBackHandler[] {
     return this.bidsBackHandler;
   }
 
@@ -428,28 +428,28 @@ export class Skin implements IModule {
       slotDefinitions: MoliRuntime.SlotDefinition[]
     ): void => {
       let currentSetTimeoutId: number | null = null;
-      const skinConfigWithEffect = this.selectConfig(skinModuleConfig, bidResponses, ctx.logger);
+      const skinConfigWithEffect = this.selectConfig(skinModuleConfig, bidResponses, ctx.logger__);
 
       if (skinConfigWithEffect) {
         const { skinConfig, configEffect } = skinConfigWithEffect;
 
         if (configEffect === SkinConfigEffect.BlockOtherSlots) {
-          ctx.logger.debug('SkinModule', 'Skin configuration applied', skinConfig);
-          skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions, ctx.window));
+          ctx.logger__.debug('SkinModule', 'Skin configuration applied', skinConfig);
+          skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions, ctx.window__));
 
           if (skinConfig.hideBlockedSlots) {
-            skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.window, ctx.logger));
+            skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.window__, ctx.logger__));
           }
 
           if (skinConfig.hideSkinAdSlot) {
-            this.hideAdSlot(ctx.window, ctx.logger)(skinConfig.skinAdSlotDomId);
+            this.hideAdSlot(ctx.window__, ctx.logger__)(skinConfig.skinAdSlotDomId);
           }
 
           if (skinConfig.hideBlockedSlotsSelector) {
-            ctx.window.document
+            ctx.window__.document
               .querySelectorAll<HTMLElement>(skinConfig.hideBlockedSlotsSelector)
               .forEach(node => {
-                ctx.logger.debug(
+                ctx.logger__.debug(
                   'SkinModule',
                   `Set display:none for container with selector ${skinConfig.hideBlockedSlotsSelector}`
                 );
@@ -462,7 +462,7 @@ export class Skin implements IModule {
           )[0];
 
           const getGoogleAdSlotByDomId = (domId: string): googletag.IAdSlot | undefined => {
-            const slots = ctx.window.googletag.pubads().getSlots();
+            const slots = ctx.window__.googletag.pubads().getSlots();
             return slots.find(slot => slot.getSlotElementId() === domId);
           };
 
@@ -495,8 +495,8 @@ export class Skin implements IModule {
                 clearTimeout(currentSetTimeoutId);
               }
 
-              currentSetTimeoutId = ctx.window.setTimeout(() => {
-                ctx.window.moli.refreshAdSlot(
+              currentSetTimeoutId = ctx.window__.setTimeout(() => {
+                ctx.window__.moli.refreshAdSlot(
                   [...skinConfig.blockedAdSlotDomIds, skinConfig.skinAdSlotDomId],
                   {
                     loaded: loadingBehaviorOfSlotsToRefresh[0] as Exclude<
@@ -513,7 +513,7 @@ export class Skin implements IModule {
                   'true'
                 );
 
-                ctx.logger.info(
+                ctx.logger__.info(
                   'SkinModule',
                   'Ad reload for skin and blocked slots triggered',
                   skinConfig.skinAdSlotDomId,
@@ -521,7 +521,7 @@ export class Skin implements IModule {
                 );
               }, skinConfig.adReload?.intervalMs);
             } else {
-              ctx.logger.error(
+              ctx.logger__.error(
                 'SkinModule',
                 'Ad reload not possible because of different loading behaviors of the slots that should be refreshed:',
                 loadingBehaviorOfSlotsToRefresh
@@ -529,13 +529,13 @@ export class Skin implements IModule {
             }
           }
         } else if (skinConfig.enableCpmComparison) {
-          ctx.logger.debug(
+          ctx.logger__.debug(
             'SkinModule',
             'Skin configuration ignored because cpm was low',
             skinConfig
           );
 
-          this.destroyAdSlot(slotDefinitions, ctx.window)(skinConfig.skinAdSlotDomId);
+          this.destroyAdSlot(slotDefinitions, ctx.window__)(skinConfig.skinAdSlotDomId);
         }
       } else {
         // there's no matching configuration so we check if there are any
@@ -545,7 +545,7 @@ export class Skin implements IModule {
           .filter(skinConfig => skinConfig.destroySkinSlot)
           .map(skinConfig => skinConfig.skinAdSlotDomId)
           .filter(uniquePrimitiveFilter)
-          .forEach(this.destroyAdSlot(slotDefinitions, ctx.window));
+          .forEach(this.destroyAdSlot(slotDefinitions, ctx.window__));
       }
     };
 

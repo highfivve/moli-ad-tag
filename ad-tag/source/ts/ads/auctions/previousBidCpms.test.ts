@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { PreviousBidCpms } from './previousBidCpms';
+import { createPreviousBidCpms, PreviousBidCpms } from './previousBidCpms';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 
 describe('PreviousBidCpms', () => {
@@ -45,7 +45,7 @@ describe('PreviousBidCpms', () => {
   };
 
   beforeEach(() => {
-    dynamicFloorPrices = new PreviousBidCpms();
+    dynamicFloorPrices = createPreviousBidCpms();
   });
 
   describe('groupReceivedBidsByAdUnitCode', () => {

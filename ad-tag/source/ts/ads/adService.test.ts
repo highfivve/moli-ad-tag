@@ -19,6 +19,7 @@ import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
 import { AdSlot, MoliConfig } from '../types/moliConfig';
 import { afterEach } from 'mocha';
+import { createEventService } from 'ad-tag/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -31,6 +32,7 @@ describe('AdService', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
+  const eventService = createEventService();
 
   const emptyConfigWithPrebid: MoliConfig = {
     ...emptyConfig,
@@ -75,7 +77,12 @@ describe('AdService', () => {
       requestBids: [],
       requestAds: () => Promise.resolve()
     };
-    const service = new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
+    const service = new AdService(
+      assetLoaderService,
+      eventService,
+      jsDomWindow,
+      adPipelineConfiguration
+    );
     service.setLogger(noopLogger);
     return service;
   };
@@ -402,14 +409,15 @@ describe('AdService', () => {
     const requestAds = (
       slots: AdSlot[],
       refreshSlots: string[] = [],
-      refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[],
+      refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[] = [],
+      refreshBuckets: MoliRuntime.IRefreshBucket[] = [],
       logger: MoliLogger = noopLogger
     ): Promise<AdSlot[]> => {
       const adService = makeAdService();
       adService.setLogger(logger);
       return adService.requestAds(
         { ...emptyConfig, slots: slots },
-        { ...emptyRuntimeConfig, refreshSlots, refreshInfiniteSlots }
+        { ...emptyRuntimeConfig, refreshSlots, refreshInfiniteSlots, refreshBuckets }
       );
     };
 
@@ -421,12 +429,24 @@ describe('AdService', () => {
       });
     };
 
-    it('should return an empty slots array for any empty slots array input', () => {
-      return expect(requestAds([], [], [])).to.eventually.be.deep.equals([]);
+    it('should return an empty slots array for any empty slots array input', async () => {
+      const requestAdSlots = await requestAds([], [], []);
+      expect(requestAdSlots).to.be.deep.equals([]);
     });
 
-    it('should filter out all slots that are not available in the DOM', () => {
-      return expect(requestAds([eagerAdSlot()], [], [])).to.eventually.be.deep.equals([]);
+    it('should filter out all slots that are not available in the DOM', async () => {
+      const requestedSlots = await requestAds([eagerAdSlot()], [], []);
+      expect(requestedSlots).to.be.deep.equals([]);
+    });
+
+    it('should filter out all slots that are not available in the DOM except out-of-page', async () => {
+      const outOfPageSlot: AdSlot = {
+        ...eagerAdSlot(),
+        position: 'out-of-page'
+      };
+      const slots = [outOfPageSlot];
+      const requestedSlots = await requestAds(slots, [], []);
+      expect(requestedSlots).to.be.deep.equals(slots);
     });
 
     it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
@@ -469,6 +489,96 @@ describe('AdService', () => {
     });
 
     describe('slot buckets', () => {
+      describe('runtimeConfig refreshBuckets queue', () => {
+        it('should run the ad pipeline with the refreshBuckets', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot2: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket2' } }
+          };
+          const slots = [slot1, slot2];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [
+            { bucket: 'bucket1' },
+            { bucket: 'bucket2' }
+          ];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            { ...emptyRuntimeConfig, refreshBuckets }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1, slot2]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+
+        it('should run the ad pipeline with the refreshBuckets and refreshSlots without running a slot twice', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot2: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket2' } }
+          };
+          const slots = [slot1, slot2];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [{ bucket: 'bucket1' }];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            {
+              ...emptyRuntimeConfig,
+              refreshSlots: [slot1.domId],
+              refreshBuckets
+            }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+
+        it('should run no backfill slots if specified in the refreshBuckets with default options', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot1Backfill: AdSlot = {
+            ...slot1,
+            behaviour: { loaded: 'backfill', bucket: { mobile: 'bucket1' } }
+          };
+          const slots = [slot1, slot1Backfill];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [{ bucket: 'bucket1' }];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            { ...emptyRuntimeConfig, refreshBuckets }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+      });
+
       describe('generic buckets', () => {
         const eagerAdSlot1: AdSlot = {
           ...eagerAdSlot(),
@@ -691,6 +801,38 @@ describe('AdService', () => {
             );
           });
         });
+      });
+    });
+
+    describe('events', () => {
+      it('should emit a beforeRequestAds event with the runtimeConfig', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('beforeRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, emptyRuntimeConfig);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ runtimeConfig: emptyRuntimeConfig });
+      });
+
+      it('should emit an afterRequestAds event the result state', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, emptyRuntimeConfig);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
+      });
+
+      it('should emit an afterRequestAds event the result state if buckets are enabled', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(
+          { ...emptyConfig, buckets: { enabled: true } },
+          emptyRuntimeConfig
+        );
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
       });
     });
   });

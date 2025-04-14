@@ -1,11 +1,13 @@
 import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
-import { BiddersDisabling } from './auctions/biddersDisabling';
-import { AdRequestThrottling } from './auctions/adRequestThrottling';
+import { createBiddersDisabling } from './auctions/biddersDisabling';
+import { createAdRequestThrottling } from './auctions/adRequestThrottling';
 import { auction } from '../types/moliConfig';
-import { FrequencyCapping } from './auctions/frequencyCapping';
-import { PreviousBidCpms } from './auctions/previousBidCpms';
+import { createFrequencyCapping } from './auctions/frequencyCapping';
+import { createPreviousBidCpms, PreviousBidCpms } from './auctions/previousBidCpms';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { EventService } from './eventService';
+import { ConfigureStep, mkConfigureStep } from './adPipeline';
 
 /**
  * ## Global Auction Context
@@ -22,89 +24,108 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
  * This class does not contain any state itself, but only sets up event listeners and wires up the specific feature.
  * Every new feature must be enabled separately and should not share any data with other features.
  */
-export class GlobalAuctionContext {
-  readonly biddersDisabling?: BiddersDisabling;
-  readonly adRequestThrottling?: AdRequestThrottling;
-  readonly frequencyCapping?: FrequencyCapping;
-  readonly previousBidCpms?: PreviousBidCpms;
+export interface GlobalAuctionContext {
+  isSlotThrottled(slotId: string, adUnitPath: string): boolean;
+  isBidderFrequencyCappedOnSlot(slotId: string, bidder: string): boolean;
+  getLastBidCpmsOfAdUnit(slotId: string): number[];
 
-  constructor(
-    private readonly window: Window &
-      prebidjs.IPrebidjsWindow &
-      googletag.IGoogleTagWindow &
-      Pick<typeof globalThis, 'Date'>,
-    private readonly logger: MoliRuntime.MoliLogger,
-    private readonly config: auction.GlobalAuctionContextConfig = {}
-  ) {
-    if (config.biddersDisabling?.enabled) {
-      this.biddersDisabling = new BiddersDisabling(config.biddersDisabling, this.window);
-    }
+  isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean;
 
-    if (config.adRequestThrottling?.enabled) {
-      this.adRequestThrottling = new AdRequestThrottling(config.adRequestThrottling, this.window);
-    }
-
-    if (config.frequencyCap?.enabled) {
-      this.frequencyCapping = new FrequencyCapping(
-        config.frequencyCap,
-        this.window,
-        this.window.Date.now,
-        this.logger
-      );
-    }
-
-    if (config.previousBidCpms?.enabled) {
-      this.previousBidCpms = new PreviousBidCpms();
-    }
-
-    // FIXME we need to make sure that pbjs.que and googletag.que are initialized globally in moli ad tag, so we don't
-    //       have to put this init code across the entire codebase
-    this.window.pbjs = this.window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
-    this.window.googletag =
-      this.window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
-
-    // Register events, if enabled
-    if (this.config.biddersDisabling?.enabled || this.config.previousBidCpms?.enabled) {
-      this.window.pbjs.que.push(() => {
-        this.window.pbjs.onEvent('auctionEnd', auction => {
-          if (this.config.biddersDisabling?.enabled) {
-            this.biddersDisabling?.onAuctionEnd(auction);
-          }
-          if (this.config.previousBidCpms?.enabled && auction.bidsReceived) {
-            this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
-          }
-        });
-      });
-    }
-
-    if (this.config.adRequestThrottling?.enabled) {
-      this.window.googletag.cmd.push(() => {
-        this.window.googletag.pubads().addEventListener('slotRequested', event => {
-          this.adRequestThrottling?.onSlotRequested(event);
-        });
-      });
-    }
-
-    if (this.config.frequencyCap?.enabled) {
-      this.window.pbjs.que.push(() => {
-        this.window.pbjs.onEvent('bidWon', bid => {
-          if (this.config.frequencyCap) {
-            this.frequencyCapping?.onBidWon(bid);
-          }
-        });
-      });
-    }
-  }
-
-  isSlotThrottled(slotId: string): boolean {
-    return this.adRequestThrottling?.isThrottled(slotId) ?? false;
-  }
-
-  isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
-    return this.frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
-  }
-
-  getLastBidCpmsOfAdUnit(slotId: string): number[] {
-    return this.previousBidCpms?.getLastBidCpms(slotId) ?? [];
-  }
+  isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean;
+  configureStep(): ConfigureStep;
 }
+
+export const createGlobalAuctionContext = (
+  window: Window &
+    prebidjs.IPrebidjsWindow &
+    googletag.IGoogleTagWindow &
+    Pick<typeof globalThis, 'Date'>,
+  logger: MoliRuntime.MoliLogger,
+  eventService: EventService,
+  config: auction.GlobalAuctionContextConfig = {}
+): GlobalAuctionContext => {
+  const biddersDisabling = config.biddersDisabling?.enabled
+    ? createBiddersDisabling(config.biddersDisabling, window)
+    : undefined;
+
+  const adRequestThrottling = config.adRequestThrottling?.enabled
+    ? createAdRequestThrottling(config.adRequestThrottling, window)
+    : undefined;
+
+  const frequencyCapping = config.frequencyCap?.enabled
+    ? createFrequencyCapping(config.frequencyCap, window, window.Date.now, logger)
+    : undefined;
+
+  const previousBidCpms = config.previousBidCpms?.enabled ? createPreviousBidCpms() : undefined;
+
+  // Ensure pbjs and googletag are initialized
+  window.pbjs = window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
+  window.googletag = window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
+
+  // Register events
+  if (config.biddersDisabling?.enabled || config.previousBidCpms?.enabled) {
+    window.pbjs.que.push(() => {
+      window.pbjs.onEvent('auctionEnd', auction => {
+        if (config.biddersDisabling?.enabled) {
+          biddersDisabling?.onAuctionEnd(auction);
+        }
+        if (config.previousBidCpms?.enabled && auction.bidsReceived) {
+          previousBidCpms?.onAuctionEnd(auction.bidsReceived);
+        }
+      });
+    });
+  }
+
+  if (config.adRequestThrottling?.enabled) {
+    window.googletag.cmd.push(() => {
+      window.googletag.pubads().addEventListener('slotRequested', event => {
+        adRequestThrottling?.onSlotRequested(event);
+      });
+    });
+  }
+
+  if (config.frequencyCap?.enabled) {
+    window.pbjs.que.push(() => {
+      window.pbjs.onEvent('bidWon', bid => {
+        if (config.frequencyCap) {
+          frequencyCapping?.onBidWon(bid);
+        }
+      });
+    });
+
+    window.googletag.cmd.push(() => {
+      window.googletag.pubads().addEventListener('slotRenderEnded', event => {
+        frequencyCapping?.onSlotRenderEnded(event);
+      });
+    });
+
+    eventService.addEventListener('afterRequestAds', () => {
+      frequencyCapping?.afterRequestAds();
+    });
+  }
+
+  const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
+    frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
+    return Promise.resolve();
+  });
+
+  return {
+    isSlotThrottled(slotId: string, adUnitPath: string): boolean {
+      return !!(
+        adRequestThrottling?.isThrottled(slotId) || frequencyCapping?.isAdUnitCapped(adUnitPath)
+      );
+    },
+    isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
+      return frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
+    },
+    getLastBidCpmsOfAdUnit(slotId: string): number[] {
+      return previousBidCpms?.getLastBidCpms(slotId) ?? [];
+    },
+    isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean {
+      return biddersDisabling?.isBidderDisabled(domId, bidder) ?? false;
+    },
+    configureStep(): ConfigureStep {
+      return configureStep;
+    }
+  };
+};

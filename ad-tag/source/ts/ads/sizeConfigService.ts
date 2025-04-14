@@ -97,8 +97,8 @@ export class SizeConfigService {
     }
     return this.supportedSizes.length === 0
       ? givenSizes
-      : this.supportedSizes.filter(configuredSize =>
-          givenSizes.some(givenSize => {
+      : givenSizes.filter(givenSize =>
+          this.supportedSizes.some(configuredSize => {
             if (configuredSize === 'fluid') {
               return givenSize === 'fluid';
             } else if (givenSize === 'fluid') {

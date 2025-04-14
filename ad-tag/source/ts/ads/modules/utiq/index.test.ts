@@ -8,9 +8,13 @@ import { tcfapi } from 'ad-tag/types/tcfapi';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { Utiq } from './index';
 
 // setup sinon-chai
@@ -25,7 +29,7 @@ describe('Utiq Module', () => {
 
   const createUtiq = (options?: modules.utiq.UtiqConfigOptions): Utiq => {
     const module = new Utiq();
-    module.configure({
+    module.configure__({
       utiq: {
         enabled: true,
         assetUrl: 'http://localhost/utiqLoader.js',
@@ -46,7 +50,7 @@ describe('Utiq Module', () => {
   it('should add an init step', async () => {
     const module = createUtiq();
 
-    const initStep = module.initSteps()[0];
+    const initStep = module.initSteps__()[0];
 
     expect(initStep).to.have.length(1);
     expect(initStep.name).to.be.eq('utiq');
@@ -56,20 +60,20 @@ describe('Utiq Module', () => {
     const module = createUtiq();
     const adPipelineContext = (): AdPipelineContext => {
       return {
-        auctionId: 'xxxx-xxxx-xxxx-xxxx',
-        requestId: 0,
-        requestAdsCalls: 1,
-        env: 'production',
-        logger: noopLogger,
-        config: emptyConfig,
-        runtimeConfig: emptyRuntimeConfig,
-        window: jsDomWindow,
+        auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+        requestId__: 0,
+        requestAdsCalls__: 1,
+        env__: 'production',
+        logger__: noopLogger,
+        config__: emptyConfig,
+        runtimeConfig__: emptyRuntimeConfig,
+        window__: jsDomWindow,
         // no service dependencies required
-        labelConfigService: null as any,
-        tcData: fullConsent({ 56: true }),
-        adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
-        assetLoaderService: assetLoaderService
+        labelConfigService__: null as any,
+        tcData__: fullConsent({ 56: true }),
+        adUnitPathVariables__: {},
+        auction__: newGlobalAuctionContext(jsDomWindow),
+        assetLoaderService__: assetLoaderService
       };
     };
 
@@ -78,7 +82,7 @@ describe('Utiq Module', () => {
         { enabled: true, assetUrl: 'http://localhost/utiqLoader.js' },
         {
           ...adPipelineContext(),
-          env: 'test'
+          env__: 'test'
         }
       );
       expect(loadScriptStub).to.have.not.been.called;
@@ -103,7 +107,7 @@ describe('Utiq Module', () => {
           { enabled: true, assetUrl: 'http://localhost/utiqLoader.js' },
           {
             ...adPipelineContext(),
-            tcData: {
+            tcData__: {
               ...tcDataFullConsent,
               purpose: {
                 ...tcDataFullConsent.purpose,
@@ -121,7 +125,7 @@ describe('Utiq Module', () => {
         { enabled: true, assetUrl: 'http://localhost/utiqLoader.js' },
         {
           ...adPipelineContext(),
-          tcData: tcDataNoGdpr
+          tcData__: tcDataNoGdpr
         }
       );
       expect(loadScriptStub).to.have.been.calledOnce;

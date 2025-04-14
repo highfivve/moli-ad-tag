@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Sinon, { SinonSandbox } from 'sinon';
-import { BiddersDisabling } from './biddersDisabling';
+import { BiddersDisabling, createBiddersDisabling } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
 import { createDom } from '../../stubs/browserEnvSetup';
 
@@ -55,7 +55,7 @@ describe('BiddersDisabling', () => {
   let biddersDisablingConfig: BiddersDisabling;
 
   beforeEach(() => {
-    biddersDisablingConfig = new BiddersDisabling(
+    biddersDisablingConfig = createBiddersDisabling(
       {
         enabled: true,
         minBidRequests: 2,

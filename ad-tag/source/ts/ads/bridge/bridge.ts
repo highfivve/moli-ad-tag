@@ -77,16 +77,16 @@ const parseMessageData = (data: any): BridgeProtocol | null => {
  * @param context
  */
 const handleRefresh = (message: RefreshAdUnitMessage, context: AdPipelineContext): void => {
-  const backfillMoliSlot = context.config.slots.find(
+  const backfillMoliSlot = context.config__.slots.find(
     slot => slot.domId === message.domId && slot.behaviour.loaded === 'backfill'
   );
-  const adSlot = findAdSlot(message, context.window.googletag);
+  const adSlot = findAdSlot(message, context.window__.googletag);
   if (backfillMoliSlot && adSlot) {
-    context.logger.debug('bridge', `Refresh ad slot ${message.domId}`);
-    context.window.googletag.destroySlots([adSlot]);
-    context.window.moli
+    context.logger__.debug('bridge', `Refresh ad slot ${message.domId}`);
+    context.window__.googletag.destroySlots([adSlot]);
+    context.window__.moli
       .refreshAdSlot(message.domId, { loaded: 'backfill' })
-      .catch(e => context.logger.error('bridge', `failed to refresh ${message.domId}`, e));
+      .catch(e => context.logger__.error('bridge', `failed to refresh ${message.domId}`, e));
   }
 };
 
@@ -129,25 +129,25 @@ const handleRefresh = (message: RefreshAdUnitMessage, context: AdPipelineContext
  * @param context
  */
 const handlePassback = (message: PassbackMessage, context: AdPipelineContext): void => {
-  const adSlot = findAdSlot(message, context.window.googletag);
+  const adSlot = findAdSlot(message, context.window__.googletag);
   const passbackKey = 'passback';
   // only refresh if the ad slot is available and has not yet been marked as passback
   if (adSlot && adSlot.getTargeting(passbackKey).length === 0) {
-    context.logger.debug('passback', `Process passback for ad slot ${adSlot.getAdUnitPath()}`);
+    context.logger__.debug('passback', `Process passback for ad slot ${adSlot.getAdUnitPath()}`);
     adSlot.setTargeting(passbackKey, 'true');
     adSlot.setTargeting('passbackOrigin', message.passbackOrigin);
 
     // previously we had changeCorrelator: true (see GD-1615), but this hadn't the intended effect
     // so we removed it (see GD-1696)
-    context.window.googletag.pubads().refresh([adSlot]);
+    context.window__.googletag.pubads().refresh([adSlot]);
   }
 };
 
 export const bridgeInitStep = (): InitStep =>
   mkInitStep('bridge', (context: AdPipelineContext) => {
-    if (context.config.bridge?.enabled) {
-      context.logger.debug('bridge', 'add message listener');
-      context.window.addEventListener('message', (event: MessageEvent<BridgeProtocol>) => {
+    if (context.config__.bridge?.enabled) {
+      context.logger__.debug('bridge', 'add message listener');
+      context.window__.addEventListener('message', (event: MessageEvent<BridgeProtocol>) => {
         const message = parseMessageData(event.data);
         if (message) {
           switch (message.event) {

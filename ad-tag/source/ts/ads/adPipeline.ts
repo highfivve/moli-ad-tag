@@ -1,5 +1,5 @@
 import { MoliRuntime } from '../types/moliRuntime';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService, LabelConfigService } from './labelConfigService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
 import { consentReady } from './consent';
@@ -24,14 +24,14 @@ export type AdPipelineContext = {
    * It can be used to associate a pipeline run with events, e.g. the `auctionInit` or `auctionEnd`
    * event from prebid.
    */
-  readonly auctionId: string;
+  readonly auctionId__: string;
 
   /**
    * an incremented id that identifies a pipeline run.
    *
    * Starts with 1 and increments by one for each pipeline run.
    */
-  readonly requestId: number;
+  readonly requestId__: number;
 
   /**
    * A counter for requestAds() calls.
@@ -40,33 +40,33 @@ export type AdPipelineContext = {
    * For server side rendered pages this is always 1.
    *
    */
-  readonly requestAdsCalls: number;
+  readonly requestAdsCalls__: number;
 
-  readonly logger: MoliRuntime.MoliLogger;
+  readonly logger__: MoliRuntime.MoliLogger;
 
   /**
    * Environment from the config with a default set to production
    */
-  readonly env: Environment;
+  readonly env__: Environment;
 
   /**
    * The config used for the ad configuration run
    */
-  readonly config: MoliConfig;
+  readonly config__: MoliConfig;
   /**
    * The runtime config. It contains all values that have been set through the javascript API
    */
-  readonly runtimeConfig: MoliRuntime.MoliRuntimeConfig;
+  readonly runtimeConfig__: MoliRuntime.MoliRuntimeConfig;
 
   /**
    * required for filtering based on labels
    */
-  readonly labelConfigService: LabelConfigService;
+  readonly labelConfigService__: LabelConfigService;
 
   /**
    * access to the global window. Never access the global window object
    */
-  readonly window: Window &
+  readonly window__: Window &
     apstag.WindowA9 &
     googletag.IGoogleTagWindow &
     prebidjs.IPrebidjsWindow &
@@ -76,29 +76,29 @@ export type AdPipelineContext = {
   /**
    * consent data
    */
-  readonly tcData: tcfapi.responses.TCData;
+  readonly tcData__: tcfapi.responses.TCData;
 
   /**
    * bucket config
    */
-  readonly bucket?: bucket.BucketConfig | null;
+  readonly bucket__?: bucket.BucketConfig | null;
 
   /**
    * Contains the ad unit path variables set in the moli config, enhanced with
    * the dynamic values generated from the ad tag.
    */
-  readonly adUnitPathVariables: AdUnitPathVariables;
+  readonly adUnitPathVariables__: AdUnitPathVariables;
 
   /**
    * Access to global auction for auction optimizations.
    * If not set, the global auction context is undefined
    */
-  readonly auction: GlobalAuctionContext;
+  readonly auction__: GlobalAuctionContext;
 
   /**
    * Takes care of loading (external) assets
    */
-  readonly assetLoaderService: IAssetLoaderService;
+  readonly assetLoaderService__: IAssetLoaderService;
 };
 
 /**
@@ -230,8 +230,8 @@ export const mkConfigureStepOncePerRequestAdsCycle = (
   let currentRequestAdsCalls = 0;
 
   return mkConfigureStep(name, (context, slots) => {
-    if (currentRequestAdsCalls !== context.requestAdsCalls) {
-      currentRequestAdsCalls = context.requestAdsCalls;
+    if (currentRequestAdsCalls !== context.requestAdsCalls__) {
+      currentRequestAdsCalls = context.requestAdsCalls__;
       return fn(context, slots);
     } else {
       return Promise.resolve();
@@ -259,7 +259,7 @@ export const mkConfigureStepOnce = (
   Object.defineProperty(fn, 'name', { value: name });
 
   return mkConfigureStep(name, (context, slots) =>
-    context.requestAdsCalls === 1 && context.requestId === 1
+    context.requestAdsCalls__ === 1 && context.requestId__ === 1
       ? fn(context, slots)
       : Promise.resolve()
   );
@@ -355,7 +355,7 @@ export class AdPipeline {
         extraLabels.push('purpose-1');
       }
 
-      const labelConfigService = new LabelConfigService(
+      const labelConfigService = createLabelConfigService(
         config.labelSizeConfig || [],
         extraLabels,
         this.window
@@ -366,29 +366,34 @@ export class AdPipeline {
           ? config.buckets.bucket[bucketName]
           : null;
 
-      const adUnitPathVariables = generateAdUnitPathVariables(
+      const defaultAdUnitPathVariables = generateAdUnitPathVariables(
         this.window.location.hostname,
         labelConfigService.getDeviceLabel(),
         config.targeting?.adUnitPathVariables,
         config.domain
       );
 
+      const adUnitPathVariables = {
+        ...defaultAdUnitPathVariables,
+        ...runtimeConfig.adUnitPathVariables
+      };
+
       // the context is based on the consent data
       const context: AdPipelineContext = {
-        auctionId: auctionId,
-        requestId: currentRequestId,
-        requestAdsCalls: requestAdsCalls,
-        logger: this.logger,
-        env: runtimeConfig.environment || 'production',
-        config: config,
-        runtimeConfig: runtimeConfig,
-        labelConfigService: labelConfigService,
-        window: this.window,
-        tcData: consentData,
-        bucket: bucketConfig,
-        adUnitPathVariables: adUnitPathVariables,
-        auction: this.auction,
-        assetLoaderService: createAssetLoaderService(this.window)
+        auctionId__: auctionId,
+        requestId__: currentRequestId,
+        requestAdsCalls__: requestAdsCalls,
+        logger__: this.logger,
+        env__: runtimeConfig.environment || 'production',
+        config__: config,
+        runtimeConfig__: runtimeConfig,
+        labelConfigService__: labelConfigService,
+        window__: this.window,
+        tcData__: consentData,
+        bucket__: bucketConfig,
+        adUnitPathVariables__: adUnitPathVariables,
+        auction__: this.auction,
+        assetLoaderService__: createAssetLoaderService(this.window)
       };
 
       this.init = this.init
@@ -465,9 +470,9 @@ export class AdPipeline {
         // reduce to a single promise by chaining in order of priority
         .reduce((prevSteps, [priority, steps]) => {
           return prevSteps.then(() => {
-            context.logger.debug(
+            context.logger__.debug(
               'AdPipeline',
-              context.requestId,
+              context.requestId__,
               `run prepareRequestAds with priority ${priority}`
             );
             return Promise.all(steps.map(step => step(context, definedSlots)));

@@ -60,6 +60,8 @@ import {
 } from '../../adPipeline';
 import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import { isNotNull } from 'ad-tag/util/arrayUtils';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
  */
@@ -89,7 +91,7 @@ export class AdReload implements IModule {
    */
   private initialized: boolean = false;
 
-  config(): modules.adreload.AdReloadModuleConfig | null {
+  config__(): modules.adreload.AdReloadModuleConfig | null {
     return this.moduleConfig;
   }
 
@@ -97,32 +99,33 @@ export class AdReload implements IModule {
     return this.initialized;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig) {
+  configure__(moduleConfig?: modules.ModulesConfig) {
     if (moduleConfig?.adReload?.enabled) {
       this.moduleConfig = moduleConfig.adReload;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.moduleConfig;
     return config
       ? [
           mkConfigureStep(this.name, context => {
-            const slotsToMonitor = context.config.slots
+            const slotsToMonitor = context.config__.slots
               // filter out slots excluded by dom id
               .filter(slot => config.excludeAdSlotDomIds.indexOf(slot.domId) === -1)
-              .map(slot => slot.domId);
+              .map(slot => slot.domId)
+              .filter(isNotNull);
 
             const reloadAdSlotCallback: (slot: googletag.IAdSlot) => void = this.reloadAdSlot(
               config,
               context
             );
 
-            context.logger.debug('AdReload', 'monitoring slots', slotsToMonitor);
+            context.logger__.debug('AdReload', 'monitoring slots', slotsToMonitor);
             this.initialize(context, config, slotsToMonitor, reloadAdSlotCallback);
 
             return Promise.resolve();
@@ -131,7 +134,7 @@ export class AdReload implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
@@ -148,23 +151,29 @@ export class AdReload implements IModule {
     slotsToMonitor: string[],
     reloadAdSlotCallback: (slot: googletag.IAdSlot) => void
   ) => {
-    if (context.env === 'test') {
-      context.logger.info('AdReload', 'disabled in environment test');
+    if (context.env__ === 'test') {
+      context.logger__.info('AdReload', 'disabled in environment test');
       return;
     }
     if (this.initialized) {
       return;
     }
 
-    context.logger.debug('AdReload', 'initialize moli ad reload module');
+    context.logger__.debug('AdReload', 'initialize moli ad reload module');
 
-    this.setupAdVisibilityService(config, context.window, context.logger);
+    this.setupAdVisibilityService(
+      config,
+      context.window__ as unknown as Window &
+        IntersectionObserverWindow &
+        googletag.IGoogleTagWindow,
+      context.logger__
+    );
     this.setupSlotRenderListener(
       config,
       slotsToMonitor,
       reloadAdSlotCallback,
-      context.window,
-      context.logger
+      context.window__,
+      context.logger__
     );
 
     this.initialized = true;
@@ -172,15 +181,16 @@ export class AdReload implements IModule {
 
   private setupAdVisibilityService = (
     config: modules.adreload.AdReloadModuleConfig,
-    window: Window & googletag.IGoogleTagWindow,
+    window: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow,
     logger: MoliRuntime.MoliLogger
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, config.userActivityLevelControl, logger),
       this.refreshIntervalMs,
-      config.refreshIntervalMsOverrides || {},
+      config.refreshIntervalMsOverrides ?? {},
       false,
       !!config.disableAdVisibilityChecks,
+      config.viewabilityOverrides ?? {},
       window,
       logger
     );
@@ -247,7 +257,7 @@ export class AdReload implements IModule {
 
       if (trackingSlotAllowed) {
         // add tracking for non-excluded slots
-        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback);
+        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback, advertiserId);
       } else if (slotAlreadyTracked) {
         this.adVisibilityService!.removeSlotTracking(googleTagSlot);
       }
@@ -257,25 +267,50 @@ export class AdReload implements IModule {
     (config: modules.adreload.AdReloadModuleConfig, ctx: AdPipelineContext) =>
     (googleTagSlot: googletag.IAdSlot) => {
       const slotId = googleTagSlot.getSlotElementId();
-      const moliSlot = ctx.config.slots.find(moliSlot => moliSlot.domId === slotId);
+      const moliSlot = ctx.config__.slots.find(moliSlot => moliSlot.domId === slotId);
 
       if (moliSlot && moliSlot.behaviour.loaded !== 'infinite') {
-        ctx.logger.debug('AdReload', 'fired slot reload', moliSlot.domId);
+        ctx.logger__.debug('AdReload', 'fired slot reload', moliSlot.domId);
 
         const sizesOverride: googleAdManager.SlotSize[] = this.maybeOptimizeSlotForCls(
           config,
           moliSlot,
           googleTagSlot,
-          ctx.logger,
-          ctx.window
+          ctx.logger__,
+          ctx.window__
         );
 
         googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-        ctx.window.moli.refreshAdSlot(slotId, {
-          loaded: moliSlot.behaviour.loaded,
-          ...(sizesOverride && { sizesOverride: sizesOverride })
-        });
+        const getBucketName = () => {
+          const bucketOverride = config.viewabilityOverrides?.[slotId]?.refreshBucket;
+          if (bucketOverride === true) {
+            const bucket = moliSlot.behaviour.bucket;
+            return typeof bucket === 'string'
+              ? bucket
+              : bucket?.[ctx.labelConfigService__.getDeviceLabel()];
+          }
+        };
+
+        const bucketName = getBucketName();
+
+        if (bucketName) {
+          ctx.window__.moli
+            .refreshBucket(bucketName)
+            .then(result =>
+              ctx.logger__.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
+            )
+            .catch(error =>
+              ctx.logger__.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
+            );
+        } else {
+          ctx.window__.moli
+            .refreshAdSlot(slotId, {
+              loaded: moliSlot.behaviour.loaded,
+              ...(sizesOverride && { sizesOverride: sizesOverride })
+            })
+            .catch(error => ctx.logger__.error('AdReload', `refreshing ${slotId} failed`, error));
+        }
       }
     };
 

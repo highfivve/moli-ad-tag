@@ -52,17 +52,17 @@ export class StickyFooterAdsV2 implements IModule {
 
   private stickyFooterAdConfig: modules.stickyFooterAdV2.StickyFooterAdConfig | null = null;
 
-  config(): Object | null {
+  config__(): Object | null {
     return this.stickyFooterAdConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig | undefined): void {
+  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
     if (moduleConfig?.stickyFooterAdV2 && moduleConfig.stickyFooterAdV2.enabled) {
       this.stickyFooterAdConfig = moduleConfig.stickyFooterAdV2;
     }
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     const config = this.stickyFooterAdConfig;
     return config
       ? [
@@ -78,14 +78,14 @@ export class StickyFooterAdsV2 implements IModule {
             // this is usually a configuration error in the ad tag and should not happen
             const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
             if (mobileSlot && desktopSlot) {
-              ctx.logger.warn(this.name, 'mobile and desktop sticky footer are called!');
+              ctx.logger__.warn(this.name, 'mobile and desktop sticky footer are called!');
             }
 
             if (footerAdSlot) {
               initAdSticky(
-                ctx.window,
-                ctx.env,
-                ctx.logger,
+                ctx.window__,
+                ctx.env__,
+                ctx.logger__,
                 footerAdSlot.moliSlot.domId,
                 config.disallowedAdvertiserIds,
                 config.closingButtonText
@@ -97,10 +97,10 @@ export class StickyFooterAdsV2 implements IModule {
       : [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return [];
   }
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 }

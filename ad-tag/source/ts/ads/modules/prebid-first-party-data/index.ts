@@ -52,6 +52,7 @@ import {
 } from 'ad-tag/ads/adPipeline';
 import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
 import { mergeDeep } from 'ad-tag/util/objectUtils';
+import { extractTopPrivateDomainFromHostname } from 'ad-tag/util/extractTopPrivateDomainFromHostname';
 
 export class PrebidFirstPartyDataModule implements IModule {
   readonly description = 'Module for passing first party data to prebid auctions';
@@ -62,30 +63,30 @@ export class PrebidFirstPartyDataModule implements IModule {
     null;
   private _configureSteps: ConfigureStep[] = [];
 
-  config(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
+  config__(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
     return this.moduleConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.prebidFirstPartyData?.enabled) {
       const config = moduleConfig.prebidFirstPartyData;
       this._configureSteps = [
         mkConfigureStep('prebid-fpd-module-configure', context =>
-          PrebidFirstPartyDataModule.setPrebidFpdConfig(context, config, context.logger)
+          PrebidFirstPartyDataModule.setPrebidFpdConfig(context, config, context.logger__)
         )
       ];
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     return this._configureSteps;
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
@@ -94,12 +95,12 @@ export class PrebidFirstPartyDataModule implements IModule {
     config: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig,
     log: MoliRuntime.MoliLogger
   ): Promise<void> {
-    if (context.config.prebid) {
-      const keyValues = context.config.targeting?.keyValues || {};
+    if (context.config__.prebid) {
+      const keyValues = context.config__.targeting?.keyValues || {};
       const gptTargeting = config.gptTargetingMappings;
 
-      context.window.pbjs.que.push(() => {
-        const existingFpd = context.window.pbjs.readConfig().ortb2 || {};
+      context.window__.pbjs.que.push(() => {
+        const existingFpd = context.window__.pbjs.readConfig().ortb2 || {};
 
         // extract key-values from gpt targeting
         const ortb2FromKeyValues = mergeDeep({}, config.staticPrebidFirstPartyData, existingFpd);
@@ -144,10 +145,15 @@ export class PrebidFirstPartyDataModule implements IModule {
             site.pagecat = site.pagecat.filter(uniquePrimitiveFilter);
           }
 
+          const provider =
+            config.iabDataProviderName ??
+            extractTopPrivateDomainFromHostname(context.window__.location.hostname);
+
           if (!config.iabDataProviderName && (gptTargeting.iabV2 || gptTargeting.iabV3)) {
-            log.error(
+            log.debug(
               'PrebidFirstPartyDataModule',
-              'Targeting for iabV2 or iabV3 was defined, but iabDataProviderName was not configured. Data Segments will not be set.'
+              'Targeting for iabV2 or iabV3 was defined, but iabDataProviderName was not configured. Use tld as fallback',
+              provider
             );
           }
 
@@ -155,18 +161,18 @@ export class PrebidFirstPartyDataModule implements IModule {
           // This prevents duplicated entries in the site.content.data array.
           site.content = {
             ...site.content,
-            data: site.content?.data?.filter(data => data.name !== config.iabDataProviderName) ?? []
+            data: site.content?.data?.filter(data => data.name !== provider) ?? []
           };
 
           // Set site.content.data objects with the publisher as data provider and the iab v2 segments for this page.
-          if (gptTargeting.iabV2 && config.iabDataProviderName) {
+          if (gptTargeting.iabV2 && provider) {
             const iabV2Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
               gptTargeting.iabV2,
               keyValues
             );
 
             const publisherContentData: OpenRtb2Data = {
-              name: config.iabDataProviderName,
+              name: provider,
               ext: {
                 segtax: 6 // Segtax version for IAB Tech Lab Content Taxonomy 2.2
               },
@@ -177,14 +183,14 @@ export class PrebidFirstPartyDataModule implements IModule {
           }
 
           // Set site.content.data objects with the publisher as data provider and the iab v3 segments for this page.
-          if (gptTargeting.iabV3 && config.iabDataProviderName) {
+          if (gptTargeting.iabV3 && provider) {
             const iabV3Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
               gptTargeting.iabV3,
               keyValues
             );
 
             const publisherContentData: OpenRtb2Data = {
-              name: config.iabDataProviderName,
+              name: provider,
               ext: {
                 segtax: 7 // Segtax version for IAB Tech Lab Content Taxonomy 3
               },
@@ -197,7 +203,7 @@ export class PrebidFirstPartyDataModule implements IModule {
           ortb2FromKeyValues.site = site;
         }
 
-        context.window.pbjs.setConfig({ ortb2: ortb2FromKeyValues });
+        context.window__.pbjs.setConfig({ ortb2: ortb2FromKeyValues });
       });
     }
 

@@ -1,7 +1,8 @@
 import { UserActivityService } from './userActivityService';
-import { googletag } from 'ad-tag/types/googletag';
-import { modules } from 'ad-tag/types/moliConfig';
-import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import type { googletag } from 'ad-tag/types/googletag';
+import type { modules } from 'ad-tag/types/moliConfig';
+import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
 
 /**
  * Tracks the visibility of ad slots.
@@ -29,7 +30,7 @@ export class AdVisibilityService {
   /**
    * Ratio that an ad has to be in the visible viewport of the browser to be considered seen. 0.5 = 50%.
    */
-  private readonly minimalAdVisibilityRatio;
+  private readonly minimalAdVisibilityRatio: number;
 
   private visibilityRecords: Map<string, VisibilityRecord>;
   private readonly intersectionObserver?: IntersectionObserver;
@@ -45,24 +46,34 @@ export class AdVisibilityService {
     private readonly refreshIntervalOverrides: modules.adreload.RefreshIntervalOverrides,
     readonly useIntersectionObserver: boolean,
     private readonly disableAdVisibilityChecks: boolean,
-    private readonly window: Window & googletag.IGoogleTagWindow,
+    private readonly viewabilityOverrides: modules.adreload.ViewabilityOverrides,
+    private readonly window: Window & IntersectionObserverWindow & googletag.IGoogleTagWindow,
     private readonly logger?: MoliRuntime.MoliLogger
   ) {
     this.minimalAdVisibilityRatio = disableAdVisibilityChecks ? 0 : 0.5;
 
     this.visibilityRecords = new Map<string, VisibilityRecord>();
 
-    if (useIntersectionObserver && 'IntersectionObserver' in this.window) {
-      this.intersectionObserver = new IntersectionObserver(
+    // instantiate IntersectionObserver if it is enabled or if there are custom overrides that
+    // require an observer to be available
+    const requiredIntersectionObserver =
+      (useIntersectionObserver ||
+        Object.values(viewabilityOverrides).some(entry => entry?.variant === 'css')) &&
+      'IntersectionObserver' in this.window;
+
+    if (requiredIntersectionObserver) {
+      this.intersectionObserver = new this.window.IntersectionObserver(
         entries => this.handleObservedAdVisibilityChanged(entries),
         { threshold: this.minimalAdVisibilityRatio }
       );
     }
 
     if (!useIntersectionObserver) {
-      this.window.googletag
-        .pubads()
-        .addEventListener('slotVisibilityChanged', this.handleGoogletagAdVisibilityChanged);
+      this.window.googletag.cmd.push(() => {
+        this.window.googletag
+          .pubads()
+          .addEventListener('slotVisibilityChanged', this.handleGoogletagAdVisibilityChanged);
+      });
     }
 
     this.userActivityService.addUserActivityChangedListener(state =>
@@ -84,10 +95,15 @@ export class AdVisibilityService {
    *
    * @param slot              a refreshable ad slot with "visibility" trigger
    * @param refreshCallback   callback fired when the configured duration is up
+   * @param advertiserId      optional advertiser id to check against disallowed advertisers
    */
-  trackSlot(slot: googletag.IAdSlot, refreshCallback: (slot: googletag.IAdSlot) => void): void {
+  trackSlot(
+    slot: googletag.IAdSlot,
+    refreshCallback: (slot: googletag.IAdSlot) => void,
+    advertiserId?: number
+  ): void {
     const slotDomId = slot.getSlotElementId();
-    const domElement = this.window.document.getElementById(slotDomId);
+    const domElement = this.observedDomElementForSlot(slot);
 
     if (domElement) {
       this.logger?.debug('AdVisibilityService', `tracking slot ${slot.getSlotElementId()}`, slot);
@@ -96,17 +112,33 @@ export class AdVisibilityService {
         this.removeSlotTracking(slot);
       }
 
+      const override = domElement.viewabilityOverride;
       this.visibilityRecords.set(slot.getSlotElementId(), {
         slot: slot,
-        latestStartVisible: this.disableAdVisibilityChecks
-          ? this.window.performance.now()
-          : undefined,
+        latestStartVisible:
+          this.disableAdVisibilityChecks ||
+          (override?.variant === 'disabled' &&
+            // either all checks are disabled or the current advertiser is not in the list of disabled advertisers
+            (override.disableAllAdVisibilityChecks ||
+              !(
+                override.disabledAdVisibilityCheckAdvertiserIds &&
+                override.disabledAdVisibilityCheckAdvertiserIds.length > 0 &&
+                advertiserId
+              ) ||
+              override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)))
+            ? this.window.performance.now()
+            : undefined,
         durationVisibleSum: 0,
         refreshCallback: refreshCallback
       });
 
-      if (this.intersectionObserver) {
-        this.intersectionObserver.observe(domElement);
+      // use intersection observer if required due to viewability overrides or because it is globally
+      // enabled ( usually for none gpt.js environments like test or prebid-only setups )
+      if (
+        this.intersectionObserver &&
+        (domElement.targetOverride || this.useIntersectionObserver)
+      ) {
+        this.intersectionObserver.observe(domElement.target);
       }
     }
   }
@@ -119,6 +151,11 @@ export class AdVisibilityService {
     );
 
     this.visibilityRecords.delete(slot.getSlotElementId());
+
+    const observedSlot = this.observedDomElementForSlot(slot);
+    if (this.intersectionObserver && observedSlot) {
+      this.intersectionObserver.unobserve(observedSlot.target);
+    }
   };
 
   private setUpdateTimer(state: boolean): void {
@@ -260,6 +297,30 @@ export class AdVisibilityService {
   private visibilityRecordForGoogletagEvent = (
     event: googletag.events.ISlotVisibilityChangedEvent
   ): VisibilityRecord | undefined => this.visibilityRecords.get(event.slot.getSlotElementId());
+
+  /**
+   * use the override element if it exists, otherwise use the ad slot element
+   * this is necessary for ad formats that do not exist inside the regular ad slot element
+   * @param slot
+   */
+  private observedDomElementForSlot(slot: googletag.IAdSlot): {
+    target: HTMLElement;
+    targetOverride: boolean;
+    viewabilityOverride?: modules.adreload.ViewabilityOverrideEntry;
+  } | null {
+    const slotDomId = slot.getSlotElementId();
+    const viewabilityOverride = this.viewabilityOverrides[slotDomId];
+    const adSlotElement = this.window.document.getElementById(slotDomId);
+    const overrideElement =
+      viewabilityOverride && viewabilityOverride.variant === 'css'
+        ? this.window.document.querySelector<HTMLElement>(viewabilityOverride.cssSelector)
+        : null;
+    return overrideElement
+      ? { target: overrideElement, targetOverride: true, viewabilityOverride }
+      : adSlotElement
+        ? { target: adSlotElement, targetOverride: false, viewabilityOverride }
+        : null;
+  }
 }
 
 /**

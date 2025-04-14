@@ -91,21 +91,21 @@ export class LazyLoad implements IModule {
 
   private lazyloadConfig: modules.lazyload.LazyLoadModuleConfig | null = null;
 
-  config(): modules.lazyload.LazyLoadModuleConfig | null {
+  config__(): modules.lazyload.LazyLoadModuleConfig | null {
     return this.lazyloadConfig;
   }
 
-  configure(moduleConfig?: modules.ModulesConfig): void {
+  configure__(moduleConfig?: modules.ModulesConfig): void {
     if (moduleConfig?.lazyload && moduleConfig.lazyload.enabled) {
       this.lazyloadConfig = moduleConfig.lazyload;
     }
   }
 
-  initSteps(): InitStep[] {
+  initSteps__(): InitStep[] {
     return [];
   }
 
-  configureSteps(): ConfigureStep[] {
+  configureSteps__(): ConfigureStep[] {
     const config = this.lazyloadConfig;
     return config
       ? [
@@ -121,7 +121,7 @@ export class LazyLoad implements IModule {
       : [];
   }
 
-  prepareRequestAdsSteps(): PrepareRequestAdsStep[] {
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
 
@@ -133,20 +133,20 @@ export class LazyLoad implements IModule {
       return;
     }
     this.initialized = true;
-    context.logger?.debug(this.name, 'initialize moli lazy load module');
+    context.logger__?.debug(this.name, 'initialize moli lazy load module');
 
     const slotsConfig = moduleConfig.slots;
     const bucketsConfig = moduleConfig.buckets;
     const infiniteSlotsConfig = moduleConfig.infiniteSlots;
 
-    const window = context.window as unknown as LazyLoadWindow;
+    const window = context.window__ as unknown as LazyLoadWindow;
     slotsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
         entries => {
-          context.logger?.debug(this.name, 'lazy-load slots called with', entries);
+          context.logger__?.debug(this.name, 'lazy-load slots called with', entries);
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
-              context.logger?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
+              context.logger__?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
               window.moli.refreshAdSlot(entry.target.id);
               observer.unobserve(entry.target);
             }
@@ -163,11 +163,11 @@ export class LazyLoad implements IModule {
       this.observers.push(observer);
 
       config.domIds.forEach(domId => {
-        const slot = context.config.slots.find(slot => slot.domId === domId);
+        const slot = context.config__.slots.find(slot => slot.domId === domId);
         if (!slot) {
-          context.logger?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
+          context.logger__?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
         } else if (slot.behaviour.loaded !== 'manual') {
-          context.logger?.warn(
+          context.logger__?.warn(
             this.name,
             `Lazy-load configured for slot without manual loading behaviour. ${domId}`
           );
@@ -184,20 +184,20 @@ export class LazyLoad implements IModule {
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting && entry.target.id === config.observedDomId) {
               // sanity check
-              const correspondingBucket = context.config.slots.find(
+              const correspondingBucket = context.config__.slots.find(
                 slot => slot.domId === config.observedDomId
               )?.behaviour.bucket;
 
               if (correspondingBucket !== config.bucket) {
-                context.logger?.warn(
+                context.logger__?.warn(
                   this.name,
                   `${config.observedDomId} doesn't belong to ${config.bucket}`
                 );
               } else {
-                const domIdsInCorrespondingBucket = context.config.slots
+                const domIdsInCorrespondingBucket = context.config__.slots
                   .filter(slot => slot.behaviour.bucket === config.bucket)
                   .map(slot => slot.domId);
-                context.logger?.debug(
+                context.logger__?.debug(
                   `Refresh ${config.bucket}`,
                   `Trigger ad slots with DOM IDs [${domIdsInCorrespondingBucket.join(', ')}]`
                 );
@@ -218,12 +218,12 @@ export class LazyLoad implements IModule {
       );
       this.observers.push(observer);
 
-      if (!context.config.buckets?.enabled) {
-        context.logger?.warn(this.name, "GlobalBucket config isn't enabled");
+      if (!context.config__.buckets?.enabled) {
+        context.logger__?.warn(this.name, "GlobalBucket config isn't enabled");
       }
 
-      if (!(context.config.buckets?.bucket && context.config.buckets.bucket[config.bucket])) {
-        context.logger?.error(
+      if (!(context.config__.buckets?.bucket && context.config__.buckets.bucket[config.bucket])) {
+        context.logger__?.error(
           this.name,
           `Lazy-load non-existing bucket with name ${config.bucket}`
         );
@@ -233,7 +233,7 @@ export class LazyLoad implements IModule {
       }
     });
 
-    const { configuredInfiniteSlots, findSlot } = selectInfiniteSlot(context.config.slots);
+    const { configuredInfiniteSlots, findSlot } = selectInfiniteSlot(context.config__.slots);
 
     (infiniteSlotsConfig || []).forEach(config => {
       const serialNumberLabel = 'data-h5-serial-number';
@@ -250,14 +250,14 @@ export class LazyLoad implements IModule {
                     entry.target.attributes?.getNamedItem(serialNumberLabel)?.value;
                   const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
                   entry.target.setAttribute('id', createdDomId);
-                  context.logger?.debug(
+                  context.logger__?.debug(
                     this.name,
                     `Trigger ad slot with newly created DOM ID ${createdDomId}`
                   );
                   window.moli.refreshInfiniteAdSlot(createdDomId, configuredInfiniteSlot.domId);
                   observer.unobserve(entry.target);
                 } else {
-                  context.logger?.error(
+                  context.logger__?.error(
                     this.name,
                     `No infinite-scrolling slot configured for ${configSlotDomId}`
                   );
@@ -282,7 +282,7 @@ export class LazyLoad implements IModule {
           element && observer.observe(element);
         });
       } else {
-        context.logger?.warn(this.name, `No infinite-scrolling slots configured!`);
+        context.logger__?.warn(this.name, `No infinite-scrolling slots configured!`);
       }
     });
   };

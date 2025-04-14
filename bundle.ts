@@ -152,6 +152,7 @@ try {
     tsconfig: 'tsconfig.build.json',
     bundle: true,
     minify: true,
+    mangleProps: /__$/,
     target: options.target,
     outfile: options.output,
     format: options.format,

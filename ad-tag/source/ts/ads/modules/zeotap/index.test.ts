@@ -2,15 +2,13 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
-import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { Zeotap } from 'ad-tag/ads/modules/zeotap/index';
-import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import { emptyRuntimeConfig, newGlobalAuctionContext, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 
 // setup sinon-chai
@@ -26,20 +24,20 @@ describe('Zeotap Module', () => {
 
   const adPipelineContext = (config: MoliConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      window: jsDomWindow,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      window__: jsDomWindow,
       // no service dependencies required
-      labelConfigService: null as any,
-      runtimeConfig: emptyRuntimeConfig,
-      tcData: fullConsent({ 301: true }),
-      adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
-      assetLoaderService: assetLoaderService
+      labelConfigService__: null as any,
+      runtimeConfig__: emptyRuntimeConfig,
+      tcData__: fullConsent({ 301: true }),
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -79,9 +77,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     await init(
       adPipelineContext(
@@ -117,9 +115,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     await init(
       adPipelineContext(
@@ -154,9 +152,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const configureStep = module.configureSteps()[0];
+    const configureStep = module.configureSteps__()[0];
 
     await configureStep(
       adPipelineContext(
@@ -176,7 +174,7 @@ describe('Zeotap Module', () => {
         '//spl.zeotap.com/mapper.js?env=mWeb&eventType=pageview&zdid=1337&idp=1&zcat=VideoGaming&zcid=technik%2Ccomputer%2Ctechnologie%2Cpc%2Csmartphone%2Cinternet&ctry=DEU&z_e_sha2_l=somehashedaddress'
     });
 
-    const configure = module.configureSteps()[0];
+    const configure = module.configureSteps__()[0];
 
     await configure(
       adPipelineContext(
@@ -206,9 +204,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     const config = moliConfig({
       channel: 'TechnologyAndComputing',
@@ -236,9 +234,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     await init(
       adPipelineContext(
@@ -263,9 +261,9 @@ describe('Zeotap Module', () => {
       }
     };
     const module = createZeotap();
-    module.configure(modulesConfig);
+    module.configure__(modulesConfig);
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
 
     const config = moliConfig({
       channel: 'NonStandardContent',
@@ -276,7 +274,7 @@ describe('Zeotap Module', () => {
 
     const context: AdPipelineContext = {
       ...adPipelineContext(config),
-      tcData: fullConsent()
+      tcData__: fullConsent()
     };
 
     await init(context);

@@ -2,20 +2,24 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AdPipelineContext } from '../../adPipeline';
-import { GlobalAuctionContext } from '../../globalAuctionContext';
 import chaiAsPromised from 'chai-as-promised';
 import { AdexModule, ITheAdexWindow } from './index';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { googletag } from 'ad-tag/types/googletag';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
+import { tcfapi } from 'ad-tag/types/tcfapi';
 import MappingDefinition = modules.adex.MappingDefinition;
 import AdexAppConfig = modules.adex.AdexAppConfig;
-import { tcfapi } from 'ad-tag/types/tcfapi';
 import TCData = tcfapi.responses.TCData;
 
 use(sinonChai);
@@ -55,19 +59,19 @@ describe('The Adex DMP Module', () => {
     tcData?: TCData,
     targeting?: googleAdManager.Targeting
   ): AdPipelineContext => ({
-    auctionId: 'xxxx-xxxx-xxxx-xxxx',
-    requestId: 0,
-    requestAdsCalls: 1,
-    env: 'production',
-    logger: noopLogger,
-    config: { ...emptyConfig, targeting: targeting },
-    runtimeConfig: emptyRuntimeConfig,
-    window: jsDomWindow as any,
-    labelConfigService: null as any,
-    tcData: tcData ?? fullConsent({ '44': true }),
-    adUnitPathVariables: {},
-    auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
-    assetLoaderService: assetLoaderService
+    auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+    requestId__: 0,
+    requestAdsCalls__: 1,
+    env__: 'production',
+    logger__: noopLogger,
+    config__: { ...emptyConfig, targeting: targeting },
+    runtimeConfig__: emptyRuntimeConfig,
+    window__: jsDomWindow as any,
+    labelConfigService__: null as any,
+    tcData__: tcData ?? fullConsent({ '44': true }),
+    adUnitPathVariables__: {},
+    auction__: newGlobalAuctionContext(jsDomWindow),
+    assetLoaderService__: assetLoaderService
   });
 
   beforeEach(() => {
@@ -85,7 +89,7 @@ describe('The Adex DMP Module', () => {
     appConfig?: AdexAppConfig
   ) => {
     const module = new AdexModule();
-    module.configure(modulesConfig(isSpa, mappingDefinitions, appConfig));
+    module.configure__(modulesConfig(isSpa, mappingDefinitions, appConfig));
     return module;
   };
 
@@ -97,7 +101,7 @@ describe('The Adex DMP Module', () => {
     const loadScriptStub = sandbox
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     await init(context);
@@ -116,7 +120,7 @@ describe('The Adex DMP Module', () => {
   describe('init step', () => {
     it('should add an init step', () => {
       const module = createAndConfigureModule(false);
-      const initSteps = module.initSteps();
+      const initSteps = module.initSteps__();
 
       expect(initSteps).to.have.length(1);
       expect(initSteps[0].name).to.be.eq('DMP module setup');
@@ -124,14 +128,14 @@ describe('The Adex DMP Module', () => {
 
     it('should not add a configure step in non-spa mode', () => {
       const module = createAndConfigureModule(false);
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(0);
     });
 
     it('should add a configure step in spa mode', () => {
       const module = createAndConfigureModule(true);
-      const configureSteps = module.configureSteps();
+      const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(1);
     });
@@ -160,7 +164,7 @@ describe('The Adex DMP Module', () => {
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     await expect(
@@ -217,14 +221,14 @@ describe('The Adex DMP Module', () => {
         ...adPipelineContext(fullConsent({ '44': true }), {
           keyValues: { channel: 'Medical' }
         }),
-        runtimeConfig: {
+        runtimeConfig__: {
           ...emptyRuntimeConfig,
           keyValues: {
             iab_v3: 'example_iab_v3_value'
           }
         }
       };
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
       await init(adPipelineCtx);
 
@@ -248,14 +252,14 @@ describe('The Adex DMP Module', () => {
         ...adPipelineContext(fullConsent({ '44': true }), {
           keyValues: { channel: 'Medical', iab_v3: 'example_iab_v3_value' }
         }),
-        runtimeConfig: {
+        runtimeConfig__: {
           ...emptyRuntimeConfig,
           keyValues: {
             iab_v3: 'example_iab_v3_value_overridden'
           }
         }
       };
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
       await init(adPipelineCtx);
 
@@ -277,14 +281,14 @@ describe('The Adex DMP Module', () => {
 
       const adPipelineCtx: AdPipelineContext = {
         ...adPipelineContext(fullConsent({ '44': true }), undefined),
-        runtimeConfig: {
+        runtimeConfig__: {
           ...emptyRuntimeConfig,
           keyValues: {
             iab_v3: 'example_iab_v3_value'
           }
         }
       };
-      const init = module.initSteps()[0];
+      const init = module.initSteps__()[0];
       expect(init).to.be.ok;
       await init(adPipelineCtx);
 
@@ -308,7 +312,7 @@ describe('The Adex DMP Module', () => {
       .stub(assetLoaderService, 'loadScript')
       .returns(Promise.resolve());
 
-    const init = module.initSteps()[0];
+    const init = module.initSteps__()[0];
     expect(init).to.be.ok;
 
     const adPipelineCtxMed = adPipelineContext(fullConsent({ '44': true }), {
@@ -364,7 +368,7 @@ describe('The Adex DMP Module', () => {
       keyValues: { gf_clientType: 'android', advertising_id: '1234-5678-9123' }
     });
 
-    const fetchStub = sandbox.stub(adPipelineCtx.window, 'fetch').rejects(new Error('whatever'));
+    const fetchStub = sandbox.stub(adPipelineCtx.window__, 'fetch').rejects(new Error('whatever'));
 
     await module.track(adPipelineCtx, moduleConfig.adex);
 

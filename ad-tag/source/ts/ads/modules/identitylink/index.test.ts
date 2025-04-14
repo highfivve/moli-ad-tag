@@ -2,14 +2,18 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { modules } from 'ad-tag/types/moliConfig';
 import { ATS } from 'ad-tag/types/identitylink';
 import { IdentityLink } from 'ad-tag/ads/modules/identitylink/index';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { noopLogger, emptyConfig, emptyRuntimeConfig } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 
 // setup sinon-chai
@@ -62,8 +66,8 @@ describe('IdentityLink Module', () => {
 
   it('should add an init step', async () => {
     const module = createIdentityLink();
-    module.configure(modulesConfig);
-    const initSteps = module.initSteps();
+    module.configure__(modulesConfig);
+    const initSteps = module.initSteps__();
 
     expect(initSteps).to.have.length(1);
     expect(initSteps[0].name).to.be.eq('identitylink');
@@ -73,39 +77,39 @@ describe('IdentityLink Module', () => {
     const module = createIdentityLink();
     const adPipelineContext = (): AdPipelineContext => {
       return {
-        auctionId: 'xxxx-xxxx-xxxx-xxxx',
-        requestId: 0,
-        requestAdsCalls: 1,
-        env: 'production',
-        logger: noopLogger,
-        config: emptyConfig,
-        window: jsDomWindow as any,
+        auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+        requestId__: 0,
+        requestAdsCalls__: 1,
+        env__: 'production',
+        logger__: noopLogger,
+        config__: emptyConfig,
+        window__: jsDomWindow as any,
         // no service dependencies required
-        labelConfigService: null as any,
-        runtimeConfig: emptyRuntimeConfig,
-        tcData: fullConsent({ 97: true }),
-        adUnitPathVariables: {},
-        auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
-        assetLoaderService: assetLoaderService
+        labelConfigService__: null as any,
+        runtimeConfig__: emptyRuntimeConfig,
+        tcData__: fullConsent({ 97: true }),
+        adUnitPathVariables__: {},
+        auction__: newGlobalAuctionContext(jsDomWindow),
+        assetLoaderService__: assetLoaderService
       };
     };
 
     it('not load anything in a test environment', async () => {
-      await module.loadAts({ ...adPipelineContext(), env: 'test' }, identityLinkConfig);
+      await module.loadAts({ ...adPipelineContext(), env__: 'test' }, identityLinkConfig);
       expect(loadScriptStub).to.have.not.been.called;
     });
 
     it('not load anything if gdpr applies and vendor 97 has no consent', async () => {
       await module.loadAts(
-        { ...adPipelineContext(), tcData: fullConsent({ 97: false }) },
+        { ...adPipelineContext(), tcData__: fullConsent({ 97: false }) },
         identityLinkConfig
       );
       expect(loadScriptStub).to.have.not.been.called;
     });
 
-    [adPipelineContext(), { ...adPipelineContext(), tcData: tcDataNoGdpr }].forEach(context =>
+    [adPipelineContext(), { ...adPipelineContext(), tcData__: tcDataNoGdpr }].forEach(context =>
       it(`load ats if gdpr ${
-        context.tcData.gdprApplies ? 'applies' : 'does not apply'
+        context.tcData__.gdprApplies ? 'applies' : 'does not apply'
       }`, async () => {
         await module.loadAts(context, identityLinkConfig);
 

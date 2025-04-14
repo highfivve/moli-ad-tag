@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { AdSlot, sizeConfigs } from '../types/moliConfig';
 
 // setup sinon-chai
@@ -70,7 +70,7 @@ describe('LabelConfigConfigService', () => {
   const newLabelConfigService = (
     labelConfig: sizeConfigs.LabelSizeConfigEntry[],
     extraLabels: string[] = []
-  ) => new LabelConfigService(labelConfig, extraLabels, jsDomWindow);
+  ) => createLabelConfigService(labelConfig, extraLabels, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();
@@ -92,7 +92,7 @@ describe('LabelConfigConfigService', () => {
 
     it('should filter out duplicate labels from the label config', () => {
       matchMediaStub.returns({ matches: true } as MediaQueryList);
-      const labelConfigService = new LabelConfigService(
+      const labelConfigService = createLabelConfigService(
         [labelConfigEntry1, labelConfigEntry2],
         [],
         jsDomWindow
@@ -127,7 +127,7 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should add the extra labels to the supported labels', () => {
-      const labelConfigService = new LabelConfigService(
+      const labelConfigService = createLabelConfigService(
         [],
         ['desktop', 'mobile', 'video', 'bottom'],
         jsDomWindow

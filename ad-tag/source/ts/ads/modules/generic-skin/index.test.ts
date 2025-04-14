@@ -9,13 +9,17 @@ import { AdSlot, headerbidding, modules, MoliConfig } from 'ad-tag/types/moliCon
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from 'ad-tag/stubs/moliStubs';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
-import { GlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
 import { initAdTag } from 'ad-tag/ads/moliGlobal';
 
 // setup sinon-chai
@@ -92,20 +96,20 @@ describe('Skin Module', () => {
 
   const adPipelineContext = (config: MoliConfig = emptyConfig): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: 1,
-      env: 'production',
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow as any,
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: 1,
+      env__: 'production',
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow as any,
       // no service dependencies required
-      labelConfigService: null as any,
-      tcData: fullConsent(),
-      adUnitPathVariables: {},
-      auction: new GlobalAuctionContext(jsDomWindow as any, noopLogger),
-      assetLoaderService: assetLoaderService
+      labelConfigService__: null as any,
+      tcData__: fullConsent(),
+      adUnitPathVariables__: {},
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: assetLoaderService
     };
   };
 
@@ -121,37 +125,37 @@ describe('Skin Module', () => {
 
   const skinModule = (skin: SkinModuleConfig = emptySkinModuleConfig): Skin => {
     const module = new Skin();
-    module.configure(modulesConfig(skin));
+    module.configure__(modulesConfig(skin));
     return module;
   };
 
   describe('configure', () => {
     it('should return no prebid bids back handler if not configured', () => {
       const module = new Skin();
-      expect(module.prebidBidsBackHandler).to.be.ok;
-      expect(module.prebidBidsBackHandler()).to.have.length(0);
+      expect(module.prebidBidsBackHandler__).to.be.ok;
+      expect(module.prebidBidsBackHandler__()).to.have.length(0);
     });
 
     it('should return no prebid bids back handler if disabled', () => {
       const module = new Skin();
-      module.configure({
+      module.configure__({
         skin: { enabled: false, configs: [] }
       });
-      expect(module.prebidBidsBackHandler).to.be.ok;
-      expect(module.prebidBidsBackHandler()).to.have.length(0);
+      expect(module.prebidBidsBackHandler__).to.be.ok;
+      expect(module.prebidBidsBackHandler__()).to.have.length(0);
     });
 
     it('should add a prebid bids back handler', () => {
       const module = skinModule();
-      expect(module.prebidBidsBackHandler).to.be.ok;
-      expect(module.prebidBidsBackHandler()).to.be.have.length(1);
+      expect(module.prebidBidsBackHandler__).to.be.ok;
+      expect(module.prebidBidsBackHandler__()).to.be.have.length(1);
     });
 
     it('should create only one bids back handler', () => {
       const module = skinModule();
-      expect(module.prebidBidsBackHandler).to.be.ok;
-      const handler1 = module.prebidBidsBackHandler()[0];
-      const handler2 = module.prebidBidsBackHandler()[0];
+      expect(module.prebidBidsBackHandler__).to.be.ok;
+      const handler1 = module.prebidBidsBackHandler__()[0];
+      const handler2 = module.prebidBidsBackHandler__()[0];
       expect(handler1).to.be.ok;
       expect(handler1).to.equal(handler2);
     });
@@ -645,7 +649,7 @@ describe('Skin Module', () => {
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
 
@@ -669,7 +673,7 @@ describe('Skin Module', () => {
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
 
@@ -702,7 +706,7 @@ describe('Skin Module', () => {
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(
           adPipelineContext(moliConfig()),
@@ -741,7 +745,7 @@ describe('Skin Module', () => {
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
 
@@ -781,7 +785,7 @@ describe('Skin Module', () => {
 
         const destroyAdSlotSpy = sandbox.spy(jsDomWindow.googletag, 'destroySlots');
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(adPipelineContext(moliConfig()), {}, slotDefinitions);
 
@@ -846,7 +850,7 @@ describe('Skin Module', () => {
           ]
         });
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(
           adPipelineContext(config),
@@ -883,7 +887,7 @@ describe('Skin Module', () => {
           ]
         });
 
-        const bidsBackHandler = module.prebidBidsBackHandler()[0];
+        const bidsBackHandler = module.prebidBidsBackHandler__()[0];
         expect(bidsBackHandler).to.be.ok;
         bidsBackHandler(
           adPipelineContext(config),

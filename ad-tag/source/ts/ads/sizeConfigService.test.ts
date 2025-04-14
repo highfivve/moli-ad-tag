@@ -152,6 +152,26 @@ describe('SizeConfigService', () => {
       expect(sizeConfigService.filterSlot(adSlot605x165)).to.be.false;
       expect(sizeConfigService.filterSlot(adSlotFluid985x380)).to.be.true;
     });
+
+    it('should maintain the order of the given slot sizes', () => {
+      const sizeConfigService1 = newSizeConfigService([sizeConfigEntry1, sizeConfigEntry3]);
+      const sizeConfigService2 = newSizeConfigService([sizeConfigEntry3, sizeConfigEntry1]);
+
+      const sizesOrdered: googleAdManager.SlotSize[] = [
+        [985, 380],
+        [205, 200]
+      ];
+
+      expect(sizeConfigService1.filterSupportedSizes(sizesOrdered)).to.deep.equal([
+        [985, 380],
+        [205, 200]
+      ]);
+
+      expect(sizeConfigService2.filterSupportedSizes(sizesOrdered)).to.deep.equal([
+        [985, 380],
+        [205, 200]
+      ]);
+    });
   });
 
   describe('additional label filtering', () => {

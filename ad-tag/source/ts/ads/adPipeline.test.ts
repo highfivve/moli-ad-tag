@@ -5,7 +5,12 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from '../stubs/moliStubs';
 import {
   AdPipeline,
   AdPipelineContext,
@@ -17,12 +22,9 @@ import {
   PrepareRequestAdsStep
 } from './adPipeline';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
-import { googletag } from '../types/googletag';
-import { prebidjs } from '../types/prebidjs';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import SlotDefinition = MoliRuntime.SlotDefinition;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
-import { GlobalAuctionContext } from './globalAuctionContext';
 import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
@@ -56,12 +58,7 @@ describe('AdPipeline', () => {
 
   // create a new DfpService for testing
   const newAdPipeline = (config: IAdPipelineConfiguration): AdPipeline => {
-    return new AdPipeline(
-      config,
-      noopLogger,
-      jsDomWindow,
-      new GlobalAuctionContext(jsDomWindow, noopLogger)
-    );
+    return new AdPipeline(config, noopLogger, jsDomWindow, newGlobalAuctionContext(jsDomWindow));
   };
 
   const adPipelineContext = (
@@ -71,19 +68,19 @@ describe('AdPipeline', () => {
     config: MoliConfig = emptyConfig
   ): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId,
-      requestAdsCalls: requestAdsCalls,
-      env: env,
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: requestId,
+      requestAdsCalls__: requestAdsCalls,
+      env__: env,
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
+      labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+      tcData__: tcData,
+      adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -127,7 +124,7 @@ describe('AdPipeline', () => {
       let timeout: number | undefined = 0;
       const initSteps: InitStep[] = [
         context => {
-          timeout = context.bucket?.timeout;
+          timeout = context.bucket__?.timeout;
           return Promise.resolve();
         }
       ];
@@ -152,7 +149,7 @@ describe('AdPipeline', () => {
       let timeout: number | undefined = 0;
       const initSteps: InitStep[] = [
         context => {
-          timeout = context.bucket?.timeout;
+          timeout = context.bucket__?.timeout;
           return Promise.resolve();
         }
       ];
@@ -254,6 +251,36 @@ describe('AdPipeline', () => {
       expect(spyFn.secondCall).calledWithExactly('2', 'priority 2');
       expect(spyFn.thirdCall).calledWithExactly('3', 'priority 1');
     });
+
+    it('should prioritize adUnitPathVariables from the runtime config over the static config', async () => {
+      const adUnitPathVariables = { domain: 'example.com', device: 'mobile' };
+      const runtimeConfig: MoliRuntime.MoliRuntimeConfig = {
+        ...emptyRuntimeConfig,
+        adUnitPathVariables: { ...adUnitPathVariables, device: 'desktop' }
+      };
+      const moliConfig: MoliConfig = {
+        ...emptyConfig,
+        targeting: {
+          keyValues: {},
+          adUnitPathVariables
+        }
+      };
+
+      const pipeline = newAdPipeline({
+        ...emptyPipelineConfig,
+        defineSlots: () => Promise.resolve([{ moliSlot: adSlot } as SlotDefinition]),
+        prepareRequestAds: [
+          mkPrepareRequestAdsStep('step', 1, context => {
+            expect(context.adUnitPathVariables__).to.deep.equal({
+              domain: 'example.com',
+              device: 'desktop'
+            });
+            return Promise.resolve();
+          })
+        ]
+      });
+      await pipeline.run([adSlot], moliConfig, runtimeConfig, 1);
+    });
   });
 
   describe('pipeline context', () => {
@@ -261,7 +288,7 @@ describe('AdPipeline', () => {
       let requestId: number | undefined;
       const configureStep: ConfigureStep[] = [
         context => {
-          requestId = context.requestId;
+          requestId = context.requestId__;
           return Promise.resolve();
         }
       ];
@@ -278,7 +305,7 @@ describe('AdPipeline', () => {
       let supportedLabels: string[] = [];
       const configureStep: ConfigureStep[] = [
         context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
           return Promise.resolve();
         }
       ];
@@ -295,7 +322,7 @@ describe('AdPipeline', () => {
       let supportedLabels: string[] = [];
       const configureStep: ConfigureStep[] = [
         context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
           return Promise.resolve();
         }
       ];
@@ -310,7 +337,7 @@ describe('AdPipeline', () => {
       let supportedLabels: string[] = [];
       const configureStep: ConfigureStep[] = [
         context => {
-          supportedLabels = context.labelConfigService.getSupportedLabels();
+          supportedLabels = context.labelConfigService__.getSupportedLabels();
           return Promise.resolve();
         }
       ];

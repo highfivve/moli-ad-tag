@@ -57,7 +57,9 @@ const stickyRenderedEvent = (
       window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
     };
 
-    window.googletag.pubads().addEventListener('slotRenderEnded', listener);
+    window.googletag.cmd.push(() => {
+      window.googletag.pubads().addEventListener('slotRenderEnded', listener);
+    });
   });
 
 /**

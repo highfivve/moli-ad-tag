@@ -5,7 +5,12 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
 import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import {
@@ -18,13 +23,11 @@ import {
   gptConfigure,
   gptRequestAds
 } from './googleAdManager';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import { prebidjs } from '../types/prebidjs';
-import { GlobalAuctionContext } from './globalAuctionContext';
-import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, gpt, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -45,25 +48,26 @@ describe('google ad manager', () => {
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
-      auctionId: 'xxxx-xxxx-xxxx-xxxx',
-      requestId: 0,
-      requestAdsCalls: requestAdsCalls,
-      env: env,
-      logger: noopLogger,
-      config: config,
-      runtimeConfig: emptyRuntimeConfig,
-      window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' },
-      auction: new GlobalAuctionContext(jsDomWindow, noopLogger),
-      assetLoaderService: createAssetLoaderService(jsDomWindow)
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 0,
+      requestAdsCalls__: requestAdsCalls,
+      env__: env,
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
+      labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+      tcData__: tcData,
+      adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
-  const matchMediaStub = sandbox.stub(dom.window, 'matchMedia');
-  const getElementByIdStub = sandbox.stub(dom.window.document, 'getElementById');
-  const createElementSpy = sandbox.spy(dom.window.document, 'createElement');
+  const matchMediaStub = sandbox.stub(jsDomWindow, 'matchMedia');
+  const getElementByIdStub = sandbox.stub(jsDomWindow.document, 'getElementById');
+  const createElementSpy = sandbox.spy(jsDomWindow.document, 'createElement');
+  const appendChildSpy = sandbox.spy(jsDomWindow.document.body, 'appendChild');
 
   const sleep = (timeInMs: number = 20) =>
     new Promise(resolve => {
@@ -91,7 +95,7 @@ describe('google ad manager', () => {
 
   beforeEach(() => {
     // reset the before each test
-    dom.window.googletag = createGoogletagStub();
+    jsDomWindow.googletag = createGoogletagStub();
     dom.window.__tcfapi = tcfapiFunction(tcData);
     matchMediaStub.returns({ matches: true } as MediaQueryList);
     loadScriptStub.resolves();
@@ -301,7 +305,7 @@ describe('google ad manager', () => {
       domain: string
     ): AdPipelineContext => ({
       ...adPipelineContext(),
-      adUnitPathVariables: { domain: domain, device: device }
+      adUnitPathVariables__: { domain: domain, device: device }
     });
     const domain = 'example.com';
 
@@ -333,25 +337,15 @@ describe('google ad manager', () => {
 
   describe('gptLDeviceLabelKeyValue', () => {
     const ctxWithLabelServiceStub = adPipelineContext('production', emptyConfig);
-    const getSupportedLabelsStub = sandbox.stub(
-      ctxWithLabelServiceStub.labelConfigService,
-      'getSupportedLabels'
+    const getDeviceLabelStub = sandbox.stub(
+      ctxWithLabelServiceStub.labelConfigService__,
+      'getDeviceLabel'
     );
-
-    it('should set no device label if no valid device labels are available', async () => {
-      const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns([]);
-
-      await step(ctxWithLabelServiceStub, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
-    });
 
     it('should set mobile as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile']);
+      getDeviceLabelStub.returns('mobile');
       await step(ctxWithLabelServiceStub, []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
@@ -360,27 +354,18 @@ describe('google ad manager', () => {
     it('should set desktop as a device label', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['desktop']);
+
+      getDeviceLabelStub.returns('desktop');
 
       await step(ctxWithLabelServiceStub, []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledWith('device_label', 'desktop');
     });
 
-    it('should filter out irrelevant labels', async () => {
-      const step = gptLDeviceLabelKeyValue();
-      const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile', 'mobile-320', 'ix']);
-
-      await step(ctxWithLabelServiceStub, []);
-      expect(setTargetingSpy).to.have.been.calledOnce;
-      expect(setTargetingSpy).to.have.been.calledWith('device_label', 'mobile');
-    });
-
     it('should not call googletag.pubads.setTargeting in env test', async () => {
       const step = gptLDeviceLabelKeyValue();
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
-      getSupportedLabelsStub.returns(['mobile']);
+      getDeviceLabelStub.returns('mobile');
 
       await step(adPipelineContext('test'), []);
       expect(setTargetingSpy).to.have.not.been.called;
@@ -391,7 +376,7 @@ describe('google ad manager', () => {
     it('should set full if gdpr does not apply', async () => {
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       const step = gptConsentKeyValue();
-      await step({ ...adPipelineContext(), tcData: tcDataNoGdpr }, []);
+      await step({ ...adPipelineContext(), tcData__: tcDataNoGdpr }, []);
       expect(setTargetingSpy).to.have.been.calledOnce;
       expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'full');
     });
@@ -411,7 +396,7 @@ describe('google ad manager', () => {
         const tcData = fullConsent();
         tcData.purpose.consents[purpose] = false;
 
-        await step({ ...adPipelineContext(), tcData }, []);
+        await step({ ...adPipelineContext(), tcData__: tcData }, []);
         expect(setTargetingSpy).to.have.been.calledOnceWithExactly('consent', 'none');
       });
     });
@@ -599,6 +584,39 @@ describe('google ad manager', () => {
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
         expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+      });
+
+      (['out-of-page', 'interstitial'] as gpt.Position[]).forEach(position => {
+        it(`should create a div container for position ${position} if it does not exist`, async () => {
+          const step = gptDefineSlots();
+          matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+          const outOfPageAdSlot: AdSlot = { ...adSlot, position: position };
+
+          await step(adPipelineContext(), [outOfPageAdSlot]);
+          expect(createElementSpy).to.have.been.calledOnce;
+          expect(createElementSpy).to.have.been.calledOnceWithExactly('div');
+          const createdElement = createElementSpy.firstCall.returnValue;
+          expect(createdElement.id).to.be.equal(adSlot.domId);
+          expect(createdElement.style.display).to.be.equal('none');
+          expect(createdElement.attributes.getNamedItem('data-h5v-position')?.value).to.be.equal(
+            position
+          );
+          expect(appendChildSpy).to.have.been.calledOnce;
+          expect(appendChildSpy).to.have.been.calledOnceWithExactly(createdElement);
+        });
+
+        it(`should not create a div container for position ${position} if the container already exists`, async () => {
+          const step = gptDefineSlots();
+          matchMediaStub.returns({ matches: true } as MediaQueryList);
+
+          const outOfPageAdSlot: AdSlot = { ...adSlot, position: position };
+
+          getElementByIdStub.returns({} as HTMLElement);
+          await step(adPipelineContext(), [outOfPageAdSlot]);
+          expect(createElementSpy).to.have.not.been.called;
+          expect(appendChildSpy).to.have.not.been.called;
+        });
       });
 
       it('should define out-of-page-interstitial slots', async () => {
@@ -797,7 +815,7 @@ describe('google ad manager', () => {
       const step = gptDefineSlots();
       const context = adPipelineContext();
 
-      const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+      const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
       filterSlotStub.returns(true);
 
       const slotDefinitions = await step(context, [adSlot]);
@@ -808,7 +826,7 @@ describe('google ad manager', () => {
       const step = gptDefineSlots();
       const context = adPipelineContext();
 
-      const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+      const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
       filterSlotStub.returns(false);
 
       const slotDefinitions = await step(context, [adSlot]);
@@ -830,7 +848,7 @@ describe('google ad manager', () => {
 
         const step = gptDefineSlots();
         const context = adPipelineContext();
-        const filterSlotStub = sandbox.stub(context.labelConfigService, 'filterSlot');
+        const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
         filterSlotStub.returns(true);
 
         return step(context, [{ ...adSlot, gpt: { collapseEmptyDiv } }]);
@@ -889,9 +907,6 @@ describe('google ad manager', () => {
       it('should call googletag.pubads().refresh with slots that are not throttled', async () => {
         const step = gptRequestAds();
         const ctx = adPipelineContext();
-        const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
-        isThrottledStub.withArgs('slot-1').returns(true);
-        isThrottledStub.withArgs('slot-2').returns(false);
 
         const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
         const slot1 = {
@@ -902,6 +917,10 @@ describe('google ad manager', () => {
           adSlot: googleAdSlotStub('/123/content_2', 'slot-2'),
           moliSlot: createdAdSlot('slot-2')
         } as MoliRuntime.SlotDefinition;
+
+        const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
+        isThrottledStub.withArgs(slot1.moliSlot.domId, slot1.adSlot.getAdUnitPath()).returns(true);
+        isThrottledStub.withArgs(slot2.moliSlot.domId, slot2.adSlot.getAdUnitPath()).returns(false);
 
         await step(ctx, [slot1, slot2]);
         expect(isThrottledStub).to.have.been.calledTwice;

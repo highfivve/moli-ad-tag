@@ -98,7 +98,7 @@ const createBlankTestSlots = (
     // render test creative
     setContent(moliSlot.domId, div.outerHTML);
 
-    context.logger.debug(
+    context.logger__.debug(
       'GAM',
       `Set content for slot: [DomID] ${moliSlot.domId} [AdUnitPath] ${moliSlot.adUnitPath}`
     );

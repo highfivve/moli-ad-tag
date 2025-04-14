@@ -346,6 +346,53 @@ export namespace auction {
     includedDomIds?: string[];
   }
 
+  /**
+   * How many requestAds calls are needed before the configured ad slot can be requested
+   */
+  export interface PositionFrequencyConfigDelay {
+    readonly minRequestAds: number;
+  }
+
+  /**
+   * how many impressions are allowed in the defined interval for the configured ad slot.
+   */
+  export interface PositionFrequencyConfigPacingInterval {
+    readonly maxImpressions: number;
+    readonly intervalInMs: number;
+  }
+
+  /**
+   *  how many requestAds call need to be between two winning impressions before the configured
+   *  ad slot can be requested again.
+   */
+  export interface PositionFrequencyConfigPacingRequestAds {
+    readonly requestAds: number;
+  }
+
+  /**
+   * A set of possible conditions that all need to be met before the ad slot can request ads.
+   */
+  export interface PositionFrequencyConfigConditions {
+    readonly delay?: PositionFrequencyConfigDelay;
+    readonly pacingInterval?: PositionFrequencyConfigPacingInterval;
+    readonly pacingRequestAds?: PositionFrequencyConfigPacingRequestAds;
+  }
+
+  export interface PositionFrequencyConfig {
+    /**
+     * references the ad slot that should be frequency capped.
+     *
+     * The `domId` or `adUnitCode` doesn't work for all possible use cases, as the interstitial
+     * and other out-of-page formats have an auto-generated domId at runtime by gpt.js
+     */
+    readonly adUnitPath: string;
+
+    /**
+     * all list of conditions that need to be met before the ad slot can request ads.
+     */
+    readonly conditions: PositionFrequencyConfigConditions;
+  }
+
   export interface BidderDisablingConfig {
     /** enable or disable this feature */
     readonly enabled: boolean;
@@ -387,6 +434,14 @@ export namespace auction {
     readonly enabled: boolean;
     /** capping configuration for bidders and positions */
     readonly configs: BidderFrequencyConfig[];
+
+    /**
+     * capping configuration for positions only.
+     *
+     * This mirrors general ad manager frequency capping and is useful for positions that have a
+     * high impact on the user experience and thus should be reduced in frequency.
+     */
+    readonly positions?: PositionFrequencyConfig[];
 
     /**
      * If frequency capping state should be persisted into session storage.
@@ -647,6 +702,17 @@ export namespace headerbidding {
     /** optional bidder settings */
     readonly bidderSettings?: prebidjs.IBidderSettings;
 
+    /**
+     * optional list of analytic adapters that will be enabled through the `enableAnalytics` API.
+     *
+     * Note: the configuration should contain no duplicate adapters as the ad tag will make no
+     *       attempt to deduplicate.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
+     * @see https://docs.prebid.org/overview/analytics.html
+     */
+    readonly analyticAdapters?: prebidjs.analytics.AnalyticsAdapter[];
+
     /** prebid bidder supply chain configuration */
     readonly schain: {
       /** supply chain node for each bidder */
@@ -776,8 +842,10 @@ export namespace headerbidding {
 
     /**
      * Supply Chain Object for Amazon TAM
+     *
+     * Recently Amazon TAM asked partners to remove the Amazon TAM specific node as it is not required anymore.
      */
-    readonly schainNode: SupplyChainObject.ISupplyChainNode;
+    readonly schainNode?: SupplyChainObject.ISupplyChainNode;
   }
 
   /**
@@ -902,6 +970,76 @@ export namespace modules {
       [slotDomId: string]: number;
     };
 
+    export type ViewabilityOverrideEntryBase = {
+      /**
+       * An optional bucket that is used to refresh the ad slot and all other ad slots in the same bucket.
+       * This is mainly used for the skin ad format, that requires the entire 'page' bucket to be refreshed,
+       * if the wallpaper_pixel ad slot is reloaded.
+       *
+       * NOTE: use with caution! This will refresh all ads in the same bucket, which could refresh slots that
+       *       are not in viewport.
+       */
+      refreshBucket?: boolean;
+    };
+
+    export type ViewabilityOverrideEntryCss = ViewabilityOverrideEntryBase & {
+      variant: 'css';
+      /** Used to select a single element to monitor for viewability */
+      cssSelector: string;
+    };
+
+    export type ViewabilityOverrideEntryDisabled = ViewabilityOverrideEntryBase & {
+      /**
+       * Enable reloading ads that are not in viewport. It is not advised to use this option.
+       * Impressions are usually only counted on ads that have been 50% visible, and it's generally not
+       * very user-centric to load stuff that is out of viewport.
+       */
+      variant: 'disabled';
+
+      /**
+       * Enable reloading ads that are not in viewport without any restrictions.
+       *
+       * It is not advised to use this option. Impressions are usually only counted on ads that
+       * have been 50% visible, and it's generally not very user-centric to load stuff that is out
+       * of viewport.
+       *
+       * Set this to false and provide additional configuration options to restrict the unconditional
+       * ad reload to certain advertisers.
+       */
+      disableAllAdVisibilityChecks: boolean;
+
+      /**
+       *  An optional list of advertisers that are allowed to be reloaded, but no additional ad visibility check is performed.
+       *  This is necessary for special formats that may take a bit of time to render and the DOM elements are not yet ready,
+       *  when the IntersectionObserver is about to be configured.
+       */
+      disabledAdVisibilityCheckAdvertiserIds?: number[];
+    };
+
+    /**
+     * A set of different configuration options for a viewability override setting.
+     * Each entry is per position and can be used to override the default viewability behavior.
+     */
+    export type ViewabilityOverrideEntry =
+      | ViewabilityOverrideEntryCss
+      | ViewabilityOverrideEntryDisabled;
+
+    /**
+     * Viewability is measured by gpt visibility events or a separate IntersectionObserver.
+     *
+     * This configuration object allows to provide a CSS selector to check for visibility.
+     * If set and available in the DOM it will be used to check for visibility with an IntersectionObserver.
+     * Otherwise, the configured default behavior will be used.
+     *
+     * A record in this overrides object is a mapping of a slot's DOM id to the override configuration.
+     */
+    export type ViewabilityOverrides = {
+      /**
+       * Ad Slot DOM ID to viewability configuration
+       */
+      [slotDomId: string]: ViewabilityOverrideEntry | undefined;
+    };
+
     export type UserActivityParameters = {
       /**
        * The duration in milliseconds the page is considered to be "actively used" after the last user action. Changes to page visibility
@@ -985,6 +1123,19 @@ export namespace modules {
        * very user-centric to load stuff that is out of viewport.
        */
       disableAdVisibilityChecks?: boolean;
+
+      /**
+       * Overrides the default viewability measurement with a custom target DOM element.
+       *
+       * This can be used to measure viewability of an ad slot that is not using the default ad slot
+       * div container, but creates a separate container on the page. This is the case for certain
+       * special ad formats like seedtag's or GumGum's inScreen, YOCs mystery scroller and similar mobile
+       * sticky formats.
+       *
+       * It can also be used to measure viewability for ad skin formats to apply ad reload accordingly.
+       *
+       */
+      viewabilityOverrides?: ViewabilityOverrides;
     }
   }
 

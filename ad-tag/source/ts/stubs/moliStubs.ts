@@ -1,5 +1,11 @@
 import { MoliRuntime } from '../types/moliRuntime';
-import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { AdSlot, Environment, MoliConfig } from '../types/moliConfig';
+import { createGlobalAuctionContext } from 'ad-tag/ads/globalAuctionContext';
+import { createEventService } from 'ad-tag/ads/eventService';
+import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import { createLabelConfigService } from 'ad-tag/ads/labelConfigService';
+import { tcData } from 'ad-tag/stubs/consentStubs';
+import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
 export const newNoopLogger = (withErrorLogs?: boolean): MoliRuntime.MoliLogger => {
   return {
@@ -52,6 +58,7 @@ export const newEmptyRuntimeConfig = (): MoliRuntime.MoliRuntimeConfig => ({
   logger: noopLogger,
   adUnitPathVariables: {},
   refreshSlots: [],
+  refreshBuckets: [],
   refreshInfiniteSlots: []
 });
 
@@ -61,4 +68,31 @@ export const emptyRuntimeConfig: MoliRuntime.MoliRuntimeConfig = newEmptyRuntime
 export const emptyTestRuntimeConfig: MoliRuntime.MoliRuntimeConfig = {
   ...newEmptyRuntimeConfig(),
   environment: 'test'
+};
+
+export const newGlobalAuctionContext = (jsDomWindow: any) => {
+  return createGlobalAuctionContext(jsDomWindow, noopLogger, createEventService());
+};
+
+export const newAdPipelineContext = (
+  jsDomWindow: any,
+  env: Environment = 'production',
+  config: MoliConfig = emptyConfig,
+  requestAdsCalls: number = 1
+): AdPipelineContext => {
+  return {
+    auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+    requestId__: 1,
+    requestAdsCalls__: requestAdsCalls,
+    env__: env,
+    logger__: noopLogger,
+    config__: config,
+    runtimeConfig__: emptyRuntimeConfig,
+    window__: jsDomWindow,
+    labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+    tcData__: tcData,
+    adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+    auction__: newGlobalAuctionContext(jsDomWindow),
+    assetLoaderService__: createAssetLoaderService(jsDomWindow)
+  };
 };
