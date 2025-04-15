@@ -889,7 +889,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         configureSteps: [],
         prepareRequestAdsSteps: [],
         requestBidsSteps: [],
-        prebidBidsBackHandler: []
+        // this handler must be kept in order to have it available in single page applications for
+        // in later calls - The prebidBidsBackHandler is a strange construct, only necessary because
+        // we cannot deterministicly know the auction end and react on it.
+        prebidBidsBackHandler: previous?.adPipelineConfig.prebidBidsBackHandler ?? []
       }
     };
   }
