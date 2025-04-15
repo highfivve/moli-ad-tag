@@ -1751,5 +1751,53 @@ describe('moli', () => {
         expect(targeting.labels).to.contain.oneOf(['sub.example.com']);
       });
     });
+
+    describe('single page application', () => {
+      it('should keep the prebidBidsBackHandler if set by a module', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const prebidBidsBackHandler = sandbox.spy();
+        adTag.registerModule({
+          name: 'test-module',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__(): void {
+            return;
+          },
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          },
+          prebidBidsBackHandler__(): MoliRuntime.PrebidBidsBackHandler[] {
+            return [prebidBidsBackHandler];
+          }
+        });
+
+        await adTag.configure({
+          ...defaultConfig,
+          spa: { enabled: true, validateLocation: 'href' }
+        });
+        expect(adTag.getRuntimeConfig().adPipelineConfig.prebidBidsBackHandler[0]).to.be.equal(
+          prebidBidsBackHandler
+        );
+        await adTag.requestAds();
+        dom.reconfigure({
+          url: 'https://example.com/foo'
+        });
+
+        // should still be available after next requestAds
+        await adTag.requestAds();
+        expect(adTag.getRuntimeConfig().adPipelineConfig.prebidBidsBackHandler[0]).to.be.equal(
+          prebidBidsBackHandler
+        );
+      });
+    });
   });
 });
