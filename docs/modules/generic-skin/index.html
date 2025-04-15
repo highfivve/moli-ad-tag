@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.5.2">
 <title data-rh="true">generic-skin | The Publisher Ad Tag</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="generic-skin | The Publisher Ad Tag"><meta data-rh="true" name="description" content="This module allows us to configure prebidResponse listener that when a just premium or dspx wallpaper has won the auction"><meta data-rh="true" property="og:description" content="This module allows us to configure prebidResponse listener that when a just premium or dspx wallpaper has won the auction"><link data-rh="true" rel="icon" href="/moli-ad-tag/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin" hreflang="en"><link data-rh="true" rel="alternate" href="https://highfivve.github.io/moli-ad-tag/docs/modules/generic-skin" hreflang="x-default"><link rel="stylesheet" href="/moli-ad-tag/assets/css/styles.d6ddab0a.css">
-<script src="/moli-ad-tag/assets/js/runtime~main.3949149f.js" defer="defer"></script>
+<script src="/moli-ad-tag/assets/js/runtime~main.15b73bc8.js" defer="defer"></script>
 <script src="/moli-ad-tag/assets/js/main.3f09a3e8.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -72,36 +72,36 @@ blocked ad slots is higher than the skin CPM.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-2">Implementation of<a href="#implementation-of-2" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
 <p><code>IModule.name</code></p>
 <h4 class="anchor anchorWithStickyNavbar_LWe7" id="methods">Methods<a href="#methods" class="hash-link" aria-label="Direct link to Methods" title="Direct link to Methods">​</a></h4>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="config">config()<a href="#config" class="hash-link" aria-label="Direct link to config()" title="Direct link to config()">​</a></h5>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="config__">config__()<a href="#config__" class="hash-link" aria-label="Direct link to config__()" title="Direct link to config__()">​</a></h5>
 <blockquote>
-<p><strong>config</strong>(): <code>null</code> | <code>Object</code></p>
+<p><strong>config__</strong>(): <code>null</code> | <code>Object</code></p>
 </blockquote>
 <p>If the module has some sort of configuration this can be fetched with this method</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-1">Returns<a href="#returns-1" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>null</code> | <code>Object</code></p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-3">Implementation of<a href="#implementation-of-3" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
-<p><code>IModule.config</code></p>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="configure">configure()<a href="#configure" class="hash-link" aria-label="Direct link to configure()" title="Direct link to configure()">​</a></h5>
+<p><code>IModule.config__</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="configuresteps__">configureSteps__()<a href="#configuresteps__" class="hash-link" aria-label="Direct link to configureSteps__()" title="Direct link to configureSteps__()">​</a></h5>
 <blockquote>
-<p><strong>configure</strong>(<code>moduleConfig</code>?): <code>void</code></p>
+<p><strong>configureSteps__</strong>(): <code>ConfigureStep</code>[]</p>
+</blockquote>
+<p>Returns a list of steps that should be executed in the ad pipeline.</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-2">Returns<a href="#returns-2" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
+<p><code>ConfigureStep</code>[]</p>
+<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-4">Implementation of<a href="#implementation-of-4" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
+<p><code>IModule.configureSteps__</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="configure__">configure__()<a href="#configure__" class="hash-link" aria-label="Direct link to configure__()" title="Direct link to configure__()">​</a></h5>
+<blockquote>
+<p><strong>configure__</strong>(<code>moduleConfig</code>?): <code>void</code></p>
 </blockquote>
 <p>Initialize the module with the given module configuration.
 Depending on the configuration the module may become active or inactive.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="parameters">Parameters<a href="#parameters" class="hash-link" aria-label="Direct link to Parameters" title="Direct link to Parameters">​</a></h6>
 <p>• <strong>moduleConfig?</strong>: <code>ModulesConfig</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-2">Returns<a href="#returns-2" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
-<p><code>void</code></p>
-<h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-4">Implementation of<a href="#implementation-of-4" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
-<p><code>IModule.configure</code></p>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="configuresteps">configureSteps()<a href="#configuresteps" class="hash-link" aria-label="Direct link to configureSteps()" title="Direct link to configureSteps()">​</a></h5>
-<blockquote>
-<p><strong>configureSteps</strong>(): <code>ConfigureStep</code>[]</p>
-</blockquote>
-<p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-3">Returns<a href="#returns-3" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
-<p><code>ConfigureStep</code>[]</p>
+<p><code>void</code></p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-5">Implementation of<a href="#implementation-of-5" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
-<p><code>IModule.configureSteps</code></p>
+<p><code>IModule.configure__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="destroyadslot">destroyAdSlot()<a href="#destroyadslot" class="hash-link" aria-label="Direct link to destroyAdSlot()" title="Direct link to destroyAdSlot()">​</a></h5>
 <blockquote>
 <p><strong>destroyAdSlot</strong>(<code>slotDefinitions</code>, <code>gWindow</code>): (<code>adSlotDomId</code>) =&gt; <code>void</code></p>
@@ -133,18 +133,18 @@ to see if we&#x27;d be missing out on revenue if we applied the skin to the page
 <p>• <strong>log</strong>: <code>MoliLogger</code></p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-6">Returns<a href="#returns-6" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><a href="/moli-ad-tag/docs/modules/generic-skin#skinconfigeffect"><code>SkinConfigEffect</code></a></p>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="initsteps">initSteps()<a href="#initsteps" class="hash-link" aria-label="Direct link to initSteps()" title="Direct link to initSteps()">​</a></h5>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="initsteps__">initSteps__()<a href="#initsteps__" class="hash-link" aria-label="Direct link to initSteps__()" title="Direct link to initSteps__()">​</a></h5>
 <blockquote>
-<p><strong>initSteps</strong>(): <code>InitStep</code>[]</p>
+<p><strong>initSteps__</strong>(): <code>InitStep</code>[]</p>
 </blockquote>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-7">Returns<a href="#returns-7" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>InitStep</code>[]</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-6">Implementation of<a href="#implementation-of-6" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
-<p><code>IModule.initSteps</code></p>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="prebidbidsbackhandler">prebidBidsBackHandler()<a href="#prebidbidsbackhandler" class="hash-link" aria-label="Direct link to prebidBidsBackHandler()" title="Direct link to prebidBidsBackHandler()">​</a></h5>
+<p><code>IModule.initSteps__</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="prebidbidsbackhandler__">prebidBidsBackHandler__()<a href="#prebidbidsbackhandler__" class="hash-link" aria-label="Direct link to prebidBidsBackHandler__()" title="Direct link to prebidBidsBackHandler__()">​</a></h5>
 <blockquote>
-<p><strong>prebidBidsBackHandler</strong>(): <code>PrebidBidsBackHandler</code>[]</p>
+<p><strong>prebidBidsBackHandler__</strong>(): <code>PrebidBidsBackHandler</code>[]</p>
 </blockquote>
 <p>This method is called in the bidsBackHandler of prebid.</p>
 <p>A module may provide those callbacks if it needs to alter the requests send to the ad server.
@@ -167,16 +167,16 @@ being requested.</p>
 <li><a href="https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids" target="_blank" rel="noopener noreferrer">https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids</a></li>
 </ul>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-7">Implementation of<a href="#implementation-of-7" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
-<p><code>IModule.prebidBidsBackHandler</code></p>
-<h5 class="anchor anchorWithStickyNavbar_LWe7" id="preparerequestadssteps">prepareRequestAdsSteps()<a href="#preparerequestadssteps" class="hash-link" aria-label="Direct link to prepareRequestAdsSteps()" title="Direct link to prepareRequestAdsSteps()">​</a></h5>
+<p><code>IModule.prebidBidsBackHandler__</code></p>
+<h5 class="anchor anchorWithStickyNavbar_LWe7" id="preparerequestadssteps__">prepareRequestAdsSteps__()<a href="#preparerequestadssteps__" class="hash-link" aria-label="Direct link to prepareRequestAdsSteps__()" title="Direct link to prepareRequestAdsSteps__()">​</a></h5>
 <blockquote>
-<p><strong>prepareRequestAdsSteps</strong>(): <code>PrepareRequestAdsStep</code>[]</p>
+<p><strong>prepareRequestAdsSteps__</strong>(): <code>PrepareRequestAdsStep</code>[]</p>
 </blockquote>
 <p>Returns a list of steps that should be executed in the ad pipeline.</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="returns-9">Returns<a href="#returns-9" class="hash-link" aria-label="Direct link to Returns" title="Direct link to Returns">​</a></h6>
 <p><code>PrepareRequestAdsStep</code>[]</p>
 <h6 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-of-8">Implementation of<a href="#implementation-of-8" class="hash-link" aria-label="Direct link to Implementation of" title="Direct link to Implementation of">​</a></h6>
-<p><code>IModule.prepareRequestAdsSteps</code></p>
+<p><code>IModule.prepareRequestAdsSteps__</code></p>
 <h5 class="anchor anchorWithStickyNavbar_LWe7" id="runskinconfigs">runSkinConfigs()<a href="#runskinconfigs" class="hash-link" aria-label="Direct link to runSkinConfigs()" title="Direct link to runSkinConfigs()">​</a></h5>
 <blockquote>
 <p><strong>runSkinConfigs</strong>(<code>skinModuleConfig</code>): (<code>ctx</code>, <code>bidResponses</code>, <code>slotDefinitions</code>) =&gt; <code>void</code></p>
