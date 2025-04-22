@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-sticky-header-ads",
-  "version": "4.25.1",
+  "version": "4.25.2",
   "license": "Apache-2.0",
   "description": "Business logic for sticky header ads",
   "main": "./lib/index.js",
@@ -47,6 +47,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.25.1"
+    "@highfivve/ad-tag": "4.25.2"
   }
 }
