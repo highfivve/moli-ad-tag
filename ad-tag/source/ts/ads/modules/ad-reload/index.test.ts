@@ -715,6 +715,7 @@ describe('Moli Ad Reload Module', () => {
 
         expect(setTargetingSpy).to.have.been.calledOnceWithExactly('native-ad-reload', 'true');
         expect(refreshBucketSpy).to.have.been.calledOnce;
+        expect(refreshBucketSpy).to.have.been.calledOnceWithExactly('page', { loaded: 'eager' });
       });
     });
   });
