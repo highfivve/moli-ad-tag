@@ -4353,7 +4353,15 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/bidders/improvedigital.html
    */
   export interface IImproveDigitalParams {
+    /**
+     * The placement ID from Improve Digital.
+     */
     readonly placementId: number;
+
+    /**
+     * The publisher ID from Improve Digital.
+     */
+    readonly publisherId: number;
     /**
      * Optional field to add additional targeting values.
      * Arbitrary keys can be added. The value is always a string array.
