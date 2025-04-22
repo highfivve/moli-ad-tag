@@ -38,7 +38,7 @@ type UtiqCommand = () => void;
 type UtiqStatus = 'utiq_popup_shown' | 'utiq_popup_accepted' | 'utiq_popup_rejected';
 
 /**
- * category will return ‘mobile’ or ‘fixed’, to differentiate if Utiq IDs are generated based the
+ * category will return 'mobile' or 'fixed', to differentiate if Utiq IDs are generated based the
  * mobile connection, or the fixed (household) connection.
  *
  * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onIdsAvailable
@@ -107,7 +107,7 @@ interface UtiqEventMap {
   onConsentManagerStatusChanged: (event: { status: UtiqStatus }) => void;
 
   /**
-   * This event is dispatched when Utiq’s mtid and atid are available for use and provides them via its parameters.
+   * This event is dispatched when Utiq's mtid and atid are available for use and provides them via its parameters.
    * It happens when the full Utiq flow is executed successfully and on the subsequent page loads when the IDs are
    * already set up.
    *
@@ -187,88 +187,78 @@ export type UtiqWindow = {
   };
 };
 
-/**
- * ## Confiant Ad Fraud Protection
- *
- * Confiant blocks malicious ads.
- *
- */
-export class Utiq implements IModule {
-  public readonly name: string = 'utiq';
-  public readonly description: string = 'user module';
-  public readonly moduleType: ModuleType = 'identity';
+const requiredPurposeIds = [
+  tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
+  tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
+  tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+  tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS,
+  tcfapi.responses.TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
+  tcfapi.responses.TCPurpose.SELECT_PERSONALISED_CONTENT,
+  tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
+  tcfapi.responses.TCPurpose.MEASURE_CONTENT_PERFORMANCE,
+  tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
+  tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS,
+  tcfapi.responses.TCPurpose.USE_LIMITED_DATA_TO_SElECT_CONTENT
+];
 
-  private readonly requiredPurposeIds = [
-    tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
-    tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
-    tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
-    tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS,
-    tcfapi.responses.TCPurpose.CREATE_PERSONALISED_CONTENT_PROFILE,
-    tcfapi.responses.TCPurpose.SELECT_PERSONALISED_CONTENT,
-    tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
-    tcfapi.responses.TCPurpose.MEASURE_CONTENT_PERFORMANCE,
-    tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
-    tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS,
-    tcfapi.responses.TCPurpose.USE_LIMITED_DATA_TO_SElECT_CONTENT
-  ];
+export const createUtiq = (): IModule => {
+  let utiqConfig: modules.utiq.UtiqConfig | null = null;
 
-  private utiqConfig: modules.utiq.UtiqConfig | null = null;
-
-  config__(): Object | null {
-    return this.utiqConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig) {
-    if (moduleConfig?.utiq && moduleConfig.utiq.enabled) {
-      this.utiqConfig = moduleConfig.utiq;
-    }
-  }
-
-  initSteps__(): InitStep[] {
-    const config = this.utiqConfig;
-    return config?.enabled ? [mkInitStep(this.name, ctx => this.loadUtiq(config, ctx))] : [];
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-
-  loadUtiq(utiqConfig: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> {
-    // test environment doesn't require confiant
+  const loadUtiq = (config: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> => {
     if (context.env__ === 'test') {
       return Promise.resolve();
     }
 
     const utiqWindow = context.window__ as unknown as UtiqWindow;
-    // merge any existing object. Existing configurations take precedence.
     utiqWindow.Utiq = utiqWindow.Utiq
-      ? { ...utiqWindow.Utiq, config: { ...utiqWindow.Utiq.config, ...utiqConfig.options } }
-      : { queue: [], config: utiqConfig.options };
+      ? { ...utiqWindow.Utiq, config: { ...utiqWindow.Utiq.config, ...config.options } }
+      : { queue: [], config: config.options };
 
-    // double check if the command queue is already created, in case some publisher added configs,
-    // but not the queue
     utiqWindow.Utiq.queue = utiqWindow.Utiq.queue || [];
 
-    // no consent if gdpr applies
     if (
       context.tcData__.gdprApplies &&
-      // this is only a safeguard to block utiq when checkGVLID is false
-      this.requiredPurposeIds.some(
+      requiredPurposeIds.some(
         purposeId => context.tcData__.gdprApplies && !context.tcData__.purpose.consents[purposeId]
       )
     ) {
       return Promise.resolve();
     }
+
     return context.assetLoaderService__
       .loadScript({
-        name: this.name,
+        name: 'utiq',
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl: utiqConfig.assetUrl
+        assetUrl: config.assetUrl
       })
       .catch(error => context.logger__.error('failed to load utiq', error));
-  }
-}
+  };
+
+  return {
+    name: 'utiq',
+    description: 'user module',
+    moduleType: 'identity' as ModuleType,
+
+    config__(): Object | null {
+      return utiqConfig;
+    },
+
+    configure__(moduleConfig?: modules.ModulesConfig) {
+      if (moduleConfig?.utiq && moduleConfig.utiq.enabled) {
+        utiqConfig = moduleConfig.utiq;
+      }
+    },
+
+    initSteps__(): InitStep[] {
+      return utiqConfig?.enabled ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))] : [];
+    },
+
+    configureSteps__(): ConfigureStep[] {
+      return [];
+    },
+
+    prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+      return [];
+    }
+  };
+};
