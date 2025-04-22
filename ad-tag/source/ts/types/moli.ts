@@ -295,8 +295,9 @@ export namespace Moli {
      * ad server if the `refreshAdSlot` calls are before the ad tag is loaded.
      *
      * @param bucket - identifies the bucket
+     * @param options
      */
-    refreshBucket(bucket: string): Promise<'queued' | 'refreshed'>;
+    refreshBucket(bucket: string, options?: RefreshAdSlotsOptions): Promise<'queued' | 'refreshed'>;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!
