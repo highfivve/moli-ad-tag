@@ -377,17 +377,24 @@ export class AdService {
     return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
   }
 
-  public refreshBucket(bucket: string, config: Moli.MoliConfig): Promise<void> {
+  public refreshBucket(
+    bucket: string,
+    config: Moli.MoliConfig,
+    options?: Moli.RefreshAdSlotsOptions
+  ): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
+
+    const { loaded } = options || { loaded: 'manual' };
     const device = getDeviceLabel(this.window, config.labelSizeConfig, config.targeting);
-    const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlotsInBucket = manualSlots.filter(slot => {
-      // TODO create label service here!
-      const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
-      return slotBucket === bucket;
-    });
+    const availableSlotsInBucket = config.slots
+      .filter(slot => slot.behaviour.loaded === loaded)
+      .filter(slot => {
+        // TODO create label service here!
+        const slotBucket = this.getBucketName(slot.behaviour.bucket, device);
+        return slotBucket === bucket;
+      });
 
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
     return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);

@@ -884,7 +884,11 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     }
   }
 
-  function refreshBucket(bucket: string): Promise<'queued' | 'refreshed'> {
+  function refreshBucket(
+    bucket: string,
+    options?: RefreshAdSlotsOptions
+  ): Promise<'queued' | 'refreshed'> {
+    // TODO this is still not up-to-date with the main (5.x) branch
     // A helper function to retrieve domIds that belong to buckets.
     function getBucketDomIds(config: Moli.MoliConfig): string[] {
       const slotsInBucket = config.slots.filter(
@@ -939,7 +943,7 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
       // slots can be refreshed immediately
       case 'finished':
       case 'requestAds': {
-        return adService.refreshBucket(bucket, state.config).then(() => 'refreshed');
+        return adService.refreshBucket(bucket, state.config, options).then(() => 'refreshed');
       }
       default: {
         getLogger(state.config, window).error(

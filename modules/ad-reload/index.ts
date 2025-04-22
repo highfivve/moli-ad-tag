@@ -401,33 +401,35 @@ export class AdReload implements IModule {
 
       googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-      const getBucketName = () => {
+      const getBucketAndLoadingBehaviour = () => {
         const bucketOverride = this.moduleConfig.viewabilityOverrides?.[slotId]?.refreshBucket;
         if (bucketOverride === true) {
+          const loaded = moliSlot.behaviour.loaded;
           const bucket = moliSlot.behaviour.bucket;
-          if (typeof bucket === 'string') {
-            return bucket;
-          } else if (bucket) {
-            const device = getDeviceLabel(
-              this.window,
-              moliConfig.labelSizeConfig || [],
-              moliConfig.targeting
-            );
-            return bucket[device];
-          }
+          const bucketName =
+            typeof bucket === 'string'
+              ? bucket
+              : bucket?.[
+                  getDeviceLabel(
+                    this.window,
+                    moliConfig.labelSizeConfig || [],
+                    moliConfig.targeting
+                  )
+                ];
+          return bucketName && loaded !== 'infinite' ? { name: bucketName, loaded } : undefined;
         }
       };
 
-      const bucketName = getBucketName();
+      const bucket = getBucketAndLoadingBehaviour();
 
-      if (bucketName) {
+      if (bucket) {
         this.window.moli
-          .refreshBucket(bucketName)
+          .refreshBucket(bucket.name, { loaded: bucket.loaded })
           .then(result =>
-            this.logger?.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
+            this.logger?.debug('AdReload', `refreshBucket '${bucket.name}' result`, result)
           )
           .catch(error =>
-            this.logger?.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
+            this.logger?.error('AdReload', `refreshBucket '${bucket.name}' failed`, error)
           );
       } else {
         adPipeline
