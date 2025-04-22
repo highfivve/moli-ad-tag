@@ -131,6 +131,7 @@ describe('Utiq Module', () => {
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: 'http://localhost/utiq.js'
       });
+      expect((jsDomWindow as any).Utiq.queue).to.be.deep.equal([]);
     });
   });
 });
