@@ -4692,7 +4692,7 @@ export namespace prebidjs {
      * The publisher’s ID provided by OneTag
      * @example `'386276e072'`
      */
-    readonly publisherId: string;
+    readonly pubId: string;
 
     /**
      * A set of custom key-value pairs
