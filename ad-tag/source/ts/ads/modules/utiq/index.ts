@@ -210,10 +210,13 @@ export const createUtiq = (): IModule => {
     }
 
     const utiqWindow = context.window__ as unknown as UtiqWindow;
+    // merge any existing object. Existing configurations take precedence.
     utiqWindow.Utiq = utiqWindow.Utiq
       ? { ...utiqWindow.Utiq, config: { ...utiqWindow.Utiq.config, ...config.options } }
       : { queue: [], config: config.options };
 
+    // double check queue initialization as publishers might already have set options, but did not
+    // properly initialize the queue
     utiqWindow.Utiq.queue = utiqWindow.Utiq.queue || [];
 
     if (
