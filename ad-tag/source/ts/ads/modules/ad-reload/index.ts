@@ -282,26 +282,29 @@ export class AdReload implements IModule {
 
         googleTagSlot.setTargeting(this.reloadKeyValue, 'true');
 
-        const getBucketName = () => {
+        const getBucketAndLoadingBehaviour = () => {
           const bucketOverride = config.viewabilityOverrides?.[slotId]?.refreshBucket;
           if (bucketOverride === true) {
+            const loaded = moliSlot.behaviour.loaded;
             const bucket = moliSlot.behaviour.bucket;
-            return typeof bucket === 'string'
-              ? bucket
-              : bucket?.[ctx.labelConfigService__.getDeviceLabel()];
+            const bucketName =
+              typeof bucket === 'string'
+                ? bucket
+                : bucket?.[ctx.labelConfigService__.getDeviceLabel()];
+            return bucketName && loaded !== 'infinite' ? { name: bucketName, loaded } : undefined;
           }
         };
 
-        const bucketName = getBucketName();
+        const bucket = getBucketAndLoadingBehaviour();
 
-        if (bucketName) {
+        if (bucket) {
           ctx.window__.moli
-            .refreshBucket(bucketName)
+            .refreshBucket(bucket.name, { loaded: bucket.loaded })
             .then(result =>
-              ctx.logger__.debug('AdReload', `refreshBucket '${bucketName}' result`, result)
+              ctx.logger__.debug('AdReload', `refreshBucket '${bucket.name}' result`, result)
             )
             .catch(error =>
-              ctx.logger__.error('AdReload', `refreshBucket '${bucketName}' failed`, error)
+              ctx.logger__.error('AdReload', `refreshBucket '${bucket.name}' failed`, error)
             );
         } else {
           ctx.window__.moli
