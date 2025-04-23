@@ -4697,7 +4697,7 @@ export namespace prebidjs {
     /**
      * A set of custom key-value pairs
      */
-    readonly ext: {
+    readonly ext?: {
       /**
        * OneTag automatically maps placements using the `code` parameter of the Prebid ad unit.
        * You can override this, with this parameter
