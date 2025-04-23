@@ -5142,6 +5142,21 @@ export namespace prebidjs {
    */
   export interface ITheTradeDeskBid extends IBidObject<typeof TheTradeDesk, ITheTradeDeskParams> {}
 
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/triplelift.html
+   */
+  export interface ITripleliftParams {
+    /**
+     * TripleLift inventory code for this ad unit (provided to you by your partner manager)
+     */
+    readonly inventoryCode: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/triplelift.html
+   */
+  export interface ITripleliftBid extends IBidObject<typeof Triplelift, ITripleliftParams> {}
+
   export interface IYieldlabParams {
     /**
      * Yieldlab Adslot ID
@@ -5680,6 +5695,7 @@ export namespace prebidjs {
     | IUnrulyBid
     | ITeadsBid
     | ITheTradeDeskBid
+    | ITripleliftBid
     | IYieldlabBid
     | ISeedtagBid
     | ISpotXBid
