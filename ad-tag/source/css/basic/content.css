@@ -5,7 +5,7 @@
 
   /** sticky content */
   & > div {
-    top: 0;
+    top: var(--h5v-navbar-height);
     position: sticky;
   }
 
