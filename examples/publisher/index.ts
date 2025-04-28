@@ -6,7 +6,7 @@ import { googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { Confiant } from '@highfivve/module-confiant';
 
 import { BlocklistedUrls } from '@highfivve/module-blocklist-url';
-import { AdexModule } from '@highfivve/module-the-adex-dmp';
+import { AdexModule, ITheAdexWindow } from '@highfivve/module-the-adex-dmp';
 import { AdReload } from '@highfivve/module-moli-ad-reload';
 import { YieldOptimization } from '@highfivve/module-yield-optimization';
 import { StickyFooterAdsV2 } from '@highfivve/module-sticky-footer-ads-v2';
@@ -33,7 +33,11 @@ prebid.processQueue();
 
 const moli = initAdTag(window);
 
-declare const window: Window & googletag.IGoogleTagWindow & MoliWindow & prebidjs.IPrebidjsWindow;
+declare const window: Window &
+  googletag.IGoogleTagWindow &
+  MoliWindow &
+  prebidjs.IPrebidjsWindow &
+  ITheAdexWindow;
 
 moli.enableSinglePageApp();
 // ad fraud protection
