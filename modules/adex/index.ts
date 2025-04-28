@@ -86,6 +86,7 @@ import {
 } from './adex-mapping';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { sendAdvertisingID } from './sendAdvertisingId';
+import { trackUtiqId } from './adexUtiq';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -94,10 +95,10 @@ export interface ITheAdexWindow extends Window {
    * Takes an array of plugin configurations that configure the TheAdex
    * tracking pixel.
    */
-  _adexc: AdexCommands[];
+  _adexc: AdexCommand[];
 }
 
-type AdexCommands = IUserTrackPluginKeyValueCommand | ICookieMatchingPluginCommand;
+export type AdexCommand = IUserTrackPluginKeyValueCommand | ICookieMatchingPluginCommand;
 
 /**
  * ## Usertrack Plugin KeyValue Configuration
@@ -330,7 +331,8 @@ export class AdexModule implements IModule {
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
   public track(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
-    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions, appConfig } = this.config();
+    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions, appConfig, enabledPartners } =
+      this.config();
     const dfpKeyValues = context.config.targeting?.keyValues;
     if (!dfpKeyValues) {
       context.logger.warn('Adex DMP', 'targeting key/values are empty');
@@ -369,6 +371,10 @@ export class AdexModule implements IModule {
         spaMode ? 1 : 0
       ]
     ]);
+
+    if (enabledPartners?.includes('utiq')) {
+      trackUtiqId(this.config(), this.window);
+    }
 
     // load script or make request (appMode) if consent is given
     if (this.hasRequiredConsent(context.tcData) && !this.isLoaded) {
