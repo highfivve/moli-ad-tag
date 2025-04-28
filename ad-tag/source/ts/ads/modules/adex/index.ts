@@ -85,6 +85,7 @@ import {
   toAdexStringOrNumberType
 } from 'ad-tag/ads/modules/adex/adex-mapping';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { trackUtiqId } from 'ad-tag/ads/modules/adex/adexUtiq';
 
 export interface ITheAdexWindow extends Window {
   /**
@@ -93,10 +94,10 @@ export interface ITheAdexWindow extends Window {
    * Takes an array of plugin configurations that configure the TheAdex
    * tracking pixel.
    */
-  _adexc: AdexCommands[];
+  _adexc: AdexCommand[];
 }
 
-type AdexCommands = IUserTrackPluginKeyValueCommand | ICookieMatchingPluginCommand;
+export type AdexCommand = IUserTrackPluginKeyValueCommand | ICookieMatchingPluginCommand;
 
 /**
  * ## Usertrack Plugin KeyValue Configuration
@@ -407,6 +408,9 @@ export class AdexModule implements IModule {
           config.spaMode ? 1 : 0
         ]
       ]);
+    }
+    if (config.enabledPartners?.includes('utiq')) {
+      trackUtiqId(config, context.window__ as any);
     }
   };
 }
