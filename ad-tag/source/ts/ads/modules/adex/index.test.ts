@@ -3,7 +3,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AdPipelineContext } from '../../adPipeline';
 import chaiAsPromised from 'chai-as-promised';
-import { AdexModule, ITheAdexWindow } from './index';
+import { AdexCommand, AdexModule, ITheAdexWindow } from './index';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { googletag } from 'ad-tag/types/googletag';
@@ -21,6 +21,7 @@ import { tcfapi } from 'ad-tag/types/tcfapi';
 import MappingDefinition = modules.adex.MappingDefinition;
 import AdexAppConfig = modules.adex.AdexAppConfig;
 import TCData = tcfapi.responses.TCData;
+import AdexPartner = modules.adex.AdexPartner;
 
 use(sinonChai);
 use(chaiAsPromised);
@@ -43,7 +44,8 @@ describe('The Adex DMP Module', () => {
   const modulesConfig = (
     isSpa: boolean,
     mappingDefinitions?: MappingDefinition[],
-    appConfig?: AdexAppConfig
+    appConfig?: AdexAppConfig,
+    enabledPartners?: AdexPartner[]
   ) => ({
     adex: {
       enabled: true,
@@ -51,7 +53,8 @@ describe('The Adex DMP Module', () => {
       adexCustomerId: '123',
       adexTagId: '456',
       mappingDefinitions: mappingDefinitions ?? [],
-      appConfig: appConfig ?? undefined
+      appConfig: appConfig ?? undefined,
+      enabledPartners
     }
   });
 
@@ -86,11 +89,16 @@ describe('The Adex DMP Module', () => {
   const createAndConfigureModule = (
     isSpa: boolean,
     mappingDefinitions?: MappingDefinition[],
-    appConfig?: AdexAppConfig
+    appConfig?: AdexAppConfig,
+    enabledPartners?: AdexPartner[]
   ) => {
     const module = new AdexModule();
-    module.configure__(modulesConfig(isSpa, mappingDefinitions, appConfig));
-    return module;
+    module.configure__(modulesConfig(isSpa, mappingDefinitions, appConfig, enabledPartners));
+    return {
+      module,
+      initStep: module.initSteps__()[0],
+      configureStep: module.configureSteps__()[0]
+    };
   };
 
   const testAdexLoad = async (
@@ -117,9 +125,95 @@ describe('The Adex DMP Module', () => {
     }
   };
 
+  describe('utiq integration', () => {
+    it('should not call trackUtiqId if not configured', async () => {
+      const { initStep } = createAndConfigureModule(false);
+      const adexCommands: AdexCommand[] = [];
+      jsDomWindow._adexc = adexCommands;
+
+      await initStep(adPipelineContext());
+
+      expect(adexCommands).to.have.length(0);
+    });
+
+    it('should not call trackUtiqId if partner is not enabled', async () => {
+      const { initStep } = createAndConfigureModule(false, [], undefined, []);
+      const adexCommands: AdexCommand[] = [];
+      jsDomWindow._adexc = adexCommands;
+
+      await initStep(adPipelineContext());
+
+      expect(adexCommands).to.have.length(0);
+    });
+
+    it('should call trackUtiqId if partner is enabled', async () => {
+      const { initStep } = createAndConfigureModule(false, [], undefined, ['utiq']);
+      const adexCommands: AdexCommand[] = [];
+      const utiqQueue: any[] = [];
+      const addEventListenerSpy = sandbox.spy();
+      jsDomWindow._adexc = adexCommands;
+      (jsDomWindow as any).Utiq = {
+        queue: utiqQueue,
+        API: { addEventListener: addEventListenerSpy }
+      };
+
+      await initStep(adPipelineContext());
+
+      // process the utiq command queue
+      expect(utiqQueue).to.have.length(1);
+      const queueCallback = utiqQueue[0];
+      queueCallback();
+
+      // process the addEventListener callback
+      expect(addEventListenerSpy).to.have.been.calledOnce;
+      expect(addEventListenerSpy).to.have.been.calledWith('onIdsAvailable', Sinon.match.func);
+      const addEventListenerCallback = addEventListenerSpy.args[0][1];
+      addEventListenerCallback({ mtid: '1234-5678-9123' });
+
+      // onIdsAvailable callback should have been called and adexCommands should have been updated
+      expect(adexCommands).to.have.length(1);
+      expect(adexCommands[0][0]).to.be.eq('/123/456/');
+      expect(adexCommands[0][1]).to.be.eq('cm');
+      expect(adexCommands[0][2]).to.be.eq('_cm');
+      expect(adexCommands[0][3]).to.deep.equal([308, '1234-5678-9123']);
+    });
+
+    it('should call trackUtiqId if partner is enabled in SPAs', async () => {
+      const { configureStep } = createAndConfigureModule(true, [], undefined, ['utiq']);
+      const adexCommands: AdexCommand[] = [];
+      const utiqQueue: any[] = [];
+      const addEventListenerSpy = sandbox.spy();
+      jsDomWindow._adexc = adexCommands;
+      (jsDomWindow as any).Utiq = {
+        queue: utiqQueue,
+        API: { addEventListener: addEventListenerSpy }
+      };
+
+      await configureStep(adPipelineContext(), []);
+
+      // process the utiq command queue
+      expect(utiqQueue).to.have.length(1);
+      const queueCallback = utiqQueue[0];
+      queueCallback();
+
+      // process the addEventListener callback
+      expect(addEventListenerSpy).to.have.been.calledOnce;
+      expect(addEventListenerSpy).to.have.been.calledWith('onIdsAvailable', Sinon.match.func);
+      const addEventListenerCallback = addEventListenerSpy.args[0][1];
+      addEventListenerCallback({ mtid: '1234-5678-9123' });
+
+      // onIdsAvailable callback should have been called and adexCommands should have been updated
+      expect(adexCommands).to.have.length(1);
+      expect(adexCommands[0][0]).to.be.eq('/123/456/');
+      expect(adexCommands[0][1]).to.be.eq('cm');
+      expect(adexCommands[0][2]).to.be.eq('_cm');
+      expect(adexCommands[0][3]).to.deep.equal([308, '1234-5678-9123']);
+    });
+  });
+
   describe('init step', () => {
     it('should add an init step', () => {
-      const module = createAndConfigureModule(false);
+      const { module } = createAndConfigureModule(false);
       const initSteps = module.initSteps__();
 
       expect(initSteps).to.have.length(1);
@@ -127,14 +221,14 @@ describe('The Adex DMP Module', () => {
     });
 
     it('should not add a configure step in non-spa mode', () => {
-      const module = createAndConfigureModule(false);
+      const { module } = createAndConfigureModule(false);
       const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(0);
     });
 
     it('should add a configure step in spa mode', () => {
-      const module = createAndConfigureModule(true);
+      const { module } = createAndConfigureModule(true);
       const configureSteps = module.configureSteps__();
 
       expect(configureSteps).to.have.length(1);
@@ -142,7 +236,7 @@ describe('The Adex DMP Module', () => {
   });
 
   it("shouldn't load the script if no consent is given", async () => {
-    const module = createAndConfigureModule(true);
+    const { module } = createAndConfigureModule(true);
     await testAdexLoad(
       module,
       adPipelineContext(fullConsent({ '44': false }), { keyValues: { channel: 'Medical' } }),
@@ -151,12 +245,12 @@ describe('The Adex DMP Module', () => {
   });
 
   it("shouldn't load the script if no targeting is given", async () => {
-    const module = createAndConfigureModule(true);
+    const { module } = createAndConfigureModule(true);
     await testAdexLoad(module, adPipelineContext(fullConsent({ '44': true }), undefined), false);
   });
 
   it("shouldn't load the script if no adex data can be produced with the given mappings", async () => {
-    const module = createAndConfigureModule(true, [
+    const { module } = createAndConfigureModule(true, [
       { key: 'subChannel', attribute: 'iab_cat', adexValueType: 'string' }
     ]);
 
@@ -185,7 +279,7 @@ describe('The Adex DMP Module', () => {
 
   consentSituations.forEach(situation =>
     it(`should load the script if ${situation.description}`, async () => {
-      const module = createAndConfigureModule(true, [
+      const { module } = createAndConfigureModule(true, [
         { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' }
       ]);
 
@@ -212,7 +306,7 @@ describe('The Adex DMP Module', () => {
     });
 
     it('should use targeting from config and runtimeConfig', async () => {
-      const module = createAndConfigureModule(true, [
+      const { module } = createAndConfigureModule(true, [
         { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' },
         { key: 'iab_v3', attribute: 'example_iab_v3', adexValueType: 'string' }
       ]);
@@ -243,7 +337,7 @@ describe('The Adex DMP Module', () => {
     });
 
     it('should override server side targeting with client side targeting', async () => {
-      const module = createAndConfigureModule(true, [
+      const { module } = createAndConfigureModule(true, [
         { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' },
         { key: 'iab_v3', attribute: 'example_iab_v3', adexValueType: 'string' }
       ]);
@@ -274,7 +368,7 @@ describe('The Adex DMP Module', () => {
     });
 
     it('should set runtime config targeting if no server side targeting is given', async () => {
-      const module = createAndConfigureModule(true, [
+      const { module } = createAndConfigureModule(true, [
         { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' },
         { key: 'iab_v3', attribute: 'example_iab_v3', adexValueType: 'string' }
       ]);
@@ -304,7 +398,7 @@ describe('The Adex DMP Module', () => {
   });
 
   it('should load the script only once despite multiple trackings in SPA mode', async () => {
-    const module = createAndConfigureModule(true, [
+    const { module } = createAndConfigureModule(true, [
       { key: 'channel', attribute: 'iab_cat', adexValueType: 'string' }
     ]);
 
@@ -358,7 +452,7 @@ describe('The Adex DMP Module', () => {
         advertiserIdKey: 'advertising_id'
       }
     );
-    const module = createAndConfigureModule(
+    const { module } = createAndConfigureModule(
       moduleConfig.adex.spaMode,
       moduleConfig.adex.mappingDefinitions,
       moduleConfig.adex.appConfig

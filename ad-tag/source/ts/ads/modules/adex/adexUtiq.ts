@@ -9,16 +9,15 @@ import { modules } from 'ad-tag/types/moliConfig';
  */
 export const trackUtiqId = (
   config: modules.adex.AdexConfig,
-  window: ITheAdexWindow & UtiqWindow
+  window__: ITheAdexWindow & UtiqWindow
 ): void => {
-  window.Utiq ||= { queue: [] };
-  window.Utiq.queue ||= [];
+  window__.Utiq ||= { queue: [] };
+  window__.Utiq.queue ||= [];
 
-  window.Utiq.queue.push(() => {
-    window.Utiq?.API?.addEventListener('onIdsAvailable', ({ mtid }) => {
+  window__.Utiq.queue.push(() => {
+    window__.Utiq?.API?.addEventListener('onIdsAvailable', ({ mtid }) => {
       // Callback action for onIdsAvailable
-      window._adexc = window._adexc || [];
-      window._adexc.push([
+      window__._adexc.push([
         `/${config.adexCustomerId}/${config.adexTagId}/`,
         'cm',
         '_cm',
