@@ -61,7 +61,7 @@ interface UtiqEventMap {
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onInitialised
    */
-  onInitialised: () => void;
+  onInitialised: void;
 
   /**
    * This event is dispatched when user eligibility check information is performed for the current client sending it
@@ -70,7 +70,7 @@ interface UtiqEventMap {
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onEligibilityChecked
    */
-  onEligibilityChecked: (event: { isEligible: boolean }) => void;
+  onEligibilityChecked: { isEligible: boolean };
 
   /**
    * This event is dispatched when the Utiq gets signal from the browser (or client) to change the consent status to
@@ -80,14 +80,14 @@ interface UtiqEventMap {
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onConsentChanging
    */
-  onConsentChanging: (event: { isConsentGranted: boolean }) => void;
+  onConsentChanging: { isConsentGranted: boolean };
 
   /**
    * This event is dispatched when Utiq consent status update has finished to the one held with the parameter.
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onConsentUpdateFinished
    */
-  onConsentUpdateFinished: (event: { isConsentGranted: boolean }) => void;
+  onConsentUpdateFinished: { isConsentGranted: boolean };
 
   /**
    * The event is dispatched each time the status of consent is changed. The possible values can be:
@@ -104,7 +104,7 @@ interface UtiqEventMap {
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onConsentManagerStatusChanged
    */
-  onConsentManagerStatusChanged: (event: { status: UtiqStatus }) => void;
+  onConsentManagerStatusChanged: { status: UtiqStatus };
 
   /**
    * This event is dispatched when Utiq's mtid and atid are available for use and provides them via its parameters.
@@ -113,7 +113,7 @@ interface UtiqEventMap {
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onIdsAvailable
    */
-  onIdsAvailable: (event: UtiqIdsAvailableEvent) => void;
+  onIdsAvailable: UtiqIdsAvailableEvent;
 
   /**
    * This event is dispatched when Utiq has completed its flow, either user was eligible and accepted/rejected, user
@@ -124,7 +124,7 @@ interface UtiqEventMap {
    *
    * @see https://docs.utiq.com/docs/event-listeners#EventListeners-onFlowCompleted
    */
-  onFlowCompleted: () => void;
+  onFlowCompleted: void;
 }
 
 type UtiqEventType = keyof UtiqEventMap;

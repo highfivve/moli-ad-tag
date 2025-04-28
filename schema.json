@@ -1344,6 +1344,13 @@
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
         },
+        "enabledPartners": {
+          "description": "A list of partners where cookie matching calls should be performed.",
+          "items": {
+            "$ref": "#/definitions/modules.adex.AdexPartner"
+          },
+          "type": "array"
+        },
         "mappingDefinitions": {
           "description": "extraction and conversion rules to produce Adex compatible data from key/value targeting.",
           "items": {
@@ -1364,6 +1371,10 @@
         "spaMode"
       ],
       "type": "object"
+    },
+    "modules.adex.AdexPartner": {
+      "const": "utiq",
+      "type": "string"
     },
     "modules.adex.MappingDefinition": {
       "anyOf": [
