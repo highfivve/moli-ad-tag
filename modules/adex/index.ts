@@ -91,14 +91,16 @@ export interface ITheAdexWindow extends Window {
   /**
    * The Adex command queue.
    *
-   * Takes an array of plugin configurations that configure the The Adex
+   * Takes an array of plugin configurations that configure the TheAdex
    * tracking pixel.
    */
-  _adexc?: IUserTrackPluginKeyValueConfiguration[];
+  _adexc: AdexCommands[];
 }
 
+type AdexCommands = IUserTrackPluginKeyValueCommand | ICookieMatchingPluginCommand;
+
 /**
- * == Usertrack Plugin KeyValue Configuration ==
+ * ## Usertrack Plugin KeyValue Configuration
  *
  * Basic core plugin that collects the users’ configurations, such as screen sizes, time & date,
  * location, the current page information and various settings.
@@ -118,9 +120,9 @@ export interface ITheAdexWindow extends Window {
  * - Optional freely defined key-value definitions (see below)
  * - Optional structured collection of campaign / advertising information
  */
-interface IUserTrackPluginKeyValueConfiguration {
+interface IUserTrackPluginKeyValueCommand {
   /**
-   * == Instance parameter ==
+   * ## Instance parameter
    * ID for the instance that should be configured
    *
    * Shape: "/:CID/:TID/”
@@ -130,20 +132,20 @@ interface IUserTrackPluginKeyValueConfiguration {
    */
   [0]: string;
   /**
-   * == Plugin name ==
+   * ## Plugin name
    *
    * Shortcut for `Usertrack`
    */
   [1]: 'ut';
   /**
-   * == Command name ==
+   * ## Command name
    *
    * Key Value setting
    */
   [2]: '_kv';
 
   /**
-   * == Values ==
+   * ## Values
    *
    * The values for the _kv command
    *
@@ -157,6 +159,71 @@ interface IUserTrackPluginKeyValueConfiguration {
      */
     [1]: 0 | 1;
   };
+}
+
+/**
+ * ## Cookie Matching Plugin
+ *
+ * The plugin cookie matching allows scripts to trigger a cookie match programmatically, based on
+ * incoming commands (rather than using the URL callback from redirect pixels). This is useful when
+ * you have exchange information that is only available after a user action has taken place on the
+ * website (for example, logging in)
+ *
+ *```js
+ * // Sending a foreign CookieID (fuid) from Partner (pid) to the DMP
+ * window._adexc.push(['/:CID/:TID/','cm','_cm',['pid','fuid']]);
+ * ```
+ *
+ * ## Custom endpoint and callback
+ *
+ * It's also possible to define a custom callback URL that points to your endpoint to retrieve
+ * our identifier via the macro `"{{UUID}}"`.
+ * This is done either by sending the dedicated _cb command or adding a third URL parameter to
+ * the standard `_cm` command
+ *
+ * ```js
+ * # Retrieving AdexUserID
+ * window._adexc.push(['/:CID/:TID/','cm','_cb',['http://calback.url?id={{UUID}
+ * }']]);
+ * ```
+ *
+ * or
+ *
+ * ```js
+ * # Sending a foreign CookieID (fuid) from Partner (pid)
+ * # to the DMP including a callback
+ * window._adexc.push(['/:CID/:TID/','cm','_cm',['pid','fid','http://calback.ur
+ * l?id={{UUID}}']]);
+ * ```
+ *
+ * @see https://api.theadex.com/collector/v1/docs/index.html#/Web%20Collection/get_d__customer___tag__i_2_gif
+ */
+interface ICookieMatchingPluginCommand {
+  /**
+   * ## Instance parameter
+   * ID for the instance that should be configured
+   *
+   * Shape: "/:CID/:TID/”
+   *
+   * CID: CustomerID
+   * TID: TagID
+   */
+  [0]: string;
+  /**
+   * ## Plugin name
+   *
+   * Shortcut for `Cookie Matching`
+   */
+  [1]: 'cm';
+  /**
+   * ## Command name
+   */
+  [2]: '_cm';
+
+  /**
+   * Foreign ID tuples. A tuple is [partnerId, foreignId].
+   */
+  [3]: [number, string];
 }
 
 export interface AdexAppConfig {
@@ -173,6 +240,8 @@ export interface AdexAppConfig {
    */
   readonly adexMobileTagId?: string;
 }
+
+export type AdexPartner = 'utiq';
 
 /**
  * TheADEX module configuration.
@@ -200,6 +269,12 @@ export interface AdexModuleConfig {
    * If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex
    */
   readonly appConfig?: AdexAppConfig;
+
+  /**
+   * A list of partners where cookie matching calls should be performed.
+   * @see https://api.theadex.com/collector/v1/docs/index.html#/Web%20Collection/get_d__customer___tag__i_2_gif
+   */
+  readonly enabledPartners?: AdexPartner[];
 }
 
 /**
