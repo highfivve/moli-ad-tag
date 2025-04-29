@@ -1,5 +1,5 @@
 import { AdexModuleConfig, ITheAdexWindow } from './index';
-import { UtiqWindow } from '../utiq';
+import type { UtiqWindow } from '../utiq';
 
 /**
  * Enables Utiq ID tracking for Adex.
