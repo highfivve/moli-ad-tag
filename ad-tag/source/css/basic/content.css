@@ -4,7 +4,7 @@
   align-items: center;
 
   /** sticky content */
-  & > div {
+  & > div:first-of-type {
     top: var(--h5v-navbar-height);
     position: sticky;
   }
