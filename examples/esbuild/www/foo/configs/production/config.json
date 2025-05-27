@@ -61,6 +61,21 @@
           "sizesSupported": [[728,90]]
         }
       ]
+    },
+    {
+      "domId": "interstitial",
+      "adUnitPath": "/1/interstitial",
+      "behaviour": {
+        "loaded": "eager"
+      },
+      "position": "in-page",
+      "sizes": [[300,250], [336, 280], [480, 320], [640, 480]],
+      "sizeConfig": [
+        {
+          "mediaQuery": "(max-width: 767px)",
+          "sizesSupported": [[300,250], [336, 280], [480, 320], [640, 480]]
+        }
+      ]
     }
   ],
   "schain": {
