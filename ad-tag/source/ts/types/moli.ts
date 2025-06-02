@@ -1396,7 +1396,6 @@ export namespace Moli {
       readonly reactivationPeriod: number;
     }
 
-
     /**
      * @deprecated in favor of BidderFrequencyCappingConfig
      */
