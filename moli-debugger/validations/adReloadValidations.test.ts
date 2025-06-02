@@ -3,7 +3,6 @@ import { checkAdReloadConfig } from './adReloadValidations';
 import { ModuleMeta } from '@highfivve/ad-tag';
 import { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
 import { prebidjs } from '@highfivve/ad-tag/source/ts/types/prebidjs';
-import video = prebidjs.video;
 import { Message } from '../components/globalConfig';
 import { AdReloadModuleConfig } from '@highfivve/module-moli-ad-reload';
 
@@ -42,12 +41,12 @@ describe('AdReload Validations', () => {
                       startdelay: 1,
                       minduration: 1,
                       maxduration: 30,
-                      playbackmethod: [video.PlaybackMethod.AutoPlaySoundOff],
-                      placement: video.Placement.InBanner,
-                      plcmt: video.Plcmt.NoContentStandalone,
-                      api: [video.Api.VPAID_1],
-                      protocols: [video.Protocol.VAST_1],
-                      skip: video.Skip.YES
+                      playbackmethod: [prebidjs.video.PlaybackMethod.AutoPlaySoundOff],
+                      placement: prebidjs.video.Placement.InBanner,
+                      plcmt: prebidjs.video.Plcmt.NoContentStandalone,
+                      api: [prebidjs.video.Api.VPAID_1],
+                      protocols: [prebidjs.video.Protocol.VAST_1],
+                      skip: prebidjs.video.Skip.YES
                     }
                   }
                 : {})
