@@ -1146,6 +1146,7 @@ export namespace Moli {
 
   export type IPosition =
     | 'in-page'
+    | 'interstitial'
     | 'out-of-page'
     | 'out-of-page-interstitial'
     | 'out-of-page-top-anchor'

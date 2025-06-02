@@ -432,6 +432,9 @@ export class AdService {
   private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
     return (
       !!this.window.document.getElementById(slot.domId) ||
+      // this is a custom position defined by the ad tag library. A temporary div is created
+      // if it does not exist to facilitate the prebid auction
+      slot.position === 'interstitial' ||
       // web interstitials and web anchors don't require a dom element
       slot.position === 'out-of-page-interstitial' ||
       slot.position === 'out-of-page-top-anchor' ||
