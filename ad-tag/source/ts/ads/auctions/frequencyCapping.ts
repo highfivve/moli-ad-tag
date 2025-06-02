@@ -75,7 +75,7 @@ export const createFrequencyCapping = (
   let numAdRequests = 0;
 
   const pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[] =
-    config.bidders?.filter(x => hasPacingInterval(x)) ?? [];
+    config.bidders?.filter(hasPacingInterval) ?? [];
 
   const bidWonConfigs =
     pacingIntervalConfigs.filter(
