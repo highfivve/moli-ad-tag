@@ -15,6 +15,18 @@ type FrequencyCappingPositionImpSchedules = ResumeCallbackData[];
 type FrequencyCappingBidderImpSchedules = ResumeCallbackData[];
 
 /**
+ * The frequency capping config for a bidder, with the pacing interval included.
+ */
+type BidderFrequencyCappingConfigWithPacingInterval = Omit<
+  auction.BidderFrequencyCappingConfig,
+  'conditions'
+> & {
+  conditions: Omit<auction.BidderFrequencyCappingConfig['conditions'], 'pacingInterval'> & {
+    pacingInterval: auction.BidderFrequencyConfigPacingInterval;
+  };
+};
+
+/**
  * The state of the frequency capping module is stored in a JSON array of the bidder/adunit key
  * that should be capped, along with the resume callback data, to re-schedule the callback if
  * the page is refreshed.
@@ -47,6 +59,11 @@ export interface FrequencyCapping {
   isFrequencyCapped(slotId: string, bidder: BidderCode): boolean;
 }
 
+const hasPacingInterval = (
+  config: auction.BidderFrequencyCappingConfig
+): config is BidderFrequencyCappingConfigWithPacingInterval =>
+  !!config.conditions && !!config.conditions.pacingInterval;
+
 export const createFrequencyCapping = (
   config: auction.FrequencyCappingConfig,
   _window: Window,
@@ -57,11 +74,8 @@ export const createFrequencyCapping = (
   const bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
   let numAdRequests = 0;
 
-  const pacingIntervalConfigs =
-    config.bidders?.flatMap(bidder => {
-      const pacingInterval = bidder.conditions.pacingInterval;
-      return pacingInterval ? [{ ...bidder, pacingInterval: pacingInterval }] : [];
-    }) ?? [];
+  const pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[] =
+    config.bidders?.filter(x => hasPacingInterval(x)) ?? [];
 
   const bidWonConfigs =
     pacingIntervalConfigs.filter(
@@ -185,7 +199,7 @@ export const createFrequencyCapping = (
       bidRequestedConfigs.forEach(config => {
         auction.bidderRequests?.forEach(bidderRequests => {
           bidderRequests?.bids?.forEach(bid => {
-            cap(now(), config, config.pacingInterval.intervalInMs, bid);
+            cap(now(), config, config.conditions.pacingInterval.intervalInMs, bid);
           });
         });
       });
@@ -193,7 +207,9 @@ export const createFrequencyCapping = (
     },
 
     onBidWon(bid: prebidjs.BidResponse) {
-      bidWonConfigs.forEach(config => cap(now(), config, config.pacingInterval.intervalInMs, bid));
+      bidWonConfigs.forEach(config =>
+        cap(now(), config, config.conditions.pacingInterval.intervalInMs, bid)
+      );
       persist();
     },
 
