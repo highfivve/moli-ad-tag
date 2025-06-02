@@ -22,18 +22,21 @@ describe('FrequencyCapping', () => {
 
   const wpDomId = 'wp-slot';
   const wpAdUnitPath = '/123,456/example/wp-slot';
-  const dspxWpConfig: Moli.auction.BidderFrequencyConfig = {
-    bidder: prebidjs.DSPX,
+  const dspxWpConfig: Moli.auction.BidderFrequencyCappingConfig = {
+    bidders: [prebidjs.DSPX],
     domId: wpDomId,
-    blockedForMs: 10000
+    conditions: {
+      pacingInterval: { intervalInMs: 10000, maxImpressions: 1 }
+    }
   };
 
   const interstitialDomId = 'interstitial';
-  const visxInterstitialConfig: Moli.auction.BidderFrequencyConfig = {
-    bidder: prebidjs.Visx,
+  const visxInterstitialConfig: Moli.auction.BidderFrequencyCappingConfig = {
+    bidders: [prebidjs.Visx],
     domId: interstitialDomId,
-    blockedForMs: 10000,
-    events: ['bidWon', 'bidRequested']
+    conditions: {
+      pacingInterval: { intervalInMs: 10000, maxImpressions: 1, events: ['bidWon', 'bidRequested'] }
+    }
   };
 
   const dspxBidResponse: BidResponse = {
@@ -80,7 +83,7 @@ describe('FrequencyCapping', () => {
 
   it('should not add a frequency cap if no events have been fired', () => {
     const frequencyCapping = new FrequencyCapping(
-      { enabled: true, configs: [dspxWpConfig] },
+      { enabled: true, bidders: [dspxWpConfig] },
       jsDomWindow,
       nowInstantStub,
       noopLogger
@@ -93,7 +96,7 @@ describe('FrequencyCapping', () => {
     let frequencyCapping: FrequencyCapping;
     beforeEach(() => {
       frequencyCapping = new FrequencyCapping(
-        { enabled: true, configs: [dspxWpConfig] },
+        { enabled: true, bidders: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -114,6 +117,7 @@ describe('FrequencyCapping', () => {
     });
 
     it('should remove the frequency cap after the specified timeout', () => {
+      nowInstantStub.returns(100000);
       frequencyCapping.onBidWon(dspxBidResponse);
       expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
 
@@ -127,7 +131,7 @@ describe('FrequencyCapping', () => {
     let frequencyCapping: FrequencyCapping;
     beforeEach(() => {
       frequencyCapping = new FrequencyCapping(
-        { enabled: true, configs: [dspxWpConfig, visxInterstitialConfig] },
+        { enabled: true, bidders: [dspxWpConfig, visxInterstitialConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -167,7 +171,7 @@ describe('FrequencyCapping', () => {
   describe('position frequency capping', () => {
     const makeFrequencyCapping = (configs: Moli.auction.PositionFrequencyConfig[]) =>
       new FrequencyCapping(
-        { enabled: true, configs: [], positions: configs },
+        { enabled: true, bidders: [], positions: configs },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -304,7 +308,7 @@ describe('FrequencyCapping', () => {
   describe('persistence', () => {
     it('should not add a frequency cap if no data is stored', () => {
       const frequencyCapping = new FrequencyCapping(
-        { enabled: true, persistent: true, configs: [] },
+        { enabled: true, persistent: true, bidders: [] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -317,7 +321,7 @@ describe('FrequencyCapping', () => {
       const logger = newNoopLogger();
       const errorSpy = sandbox.spy(logger, 'error');
       const frequencyCapping = new FrequencyCapping(
-        { enabled: true, persistent: true, configs: [] },
+        { enabled: true, persistent: true, bidders: [] },
         jsDomWindow,
         nowInstantStub,
         logger
@@ -332,19 +336,15 @@ describe('FrequencyCapping', () => {
       const waitTime = 3000;
       nowInstantStub.onFirstCall().returns(startTimestamp + timePassed);
       const storedData: PersistedFrequencyCappingState = {
-        caps: [
-          {
-            ts: startTimestamp,
-            wait: waitTime,
-            bid: { bidder: prebidjs.DSPX, adUnitCode: wpDomId }
-          }
-        ],
+        bCaps: {
+          [`${wpDomId}:${prebidjs.DSPX}`]: [{ ts: startTimestamp, wait: waitTime }]
+        },
         pCaps: {},
         requestAds: 0
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
       const frequencyCapping = new FrequencyCapping(
-        { enabled: true, persistent: true, configs: [dspxWpConfig] },
+        { enabled: true, persistent: true, bidders: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -362,7 +362,7 @@ describe('FrequencyCapping', () => {
       const waitTime = 3000;
       nowInstantStub.onFirstCall().returns(startTimestamp + timePassed);
       const storedData: PersistedFrequencyCappingState = {
-        caps: [],
+        bCaps: {},
         pCaps: {
           [wpAdUnitPath]: [{ ts: startTimestamp, wait: waitTime }]
         },
@@ -373,7 +373,7 @@ describe('FrequencyCapping', () => {
         {
           enabled: true,
           persistent: true,
-          configs: [],
+          bidders: [],
           positions: [
             {
               adUnitPath: wpAdUnitPath,
@@ -395,7 +395,7 @@ describe('FrequencyCapping', () => {
     it('should persist onAuctionEnd events', () => {
       nowInstantStub.returns(100000);
       const frequencyCapping = new FrequencyCapping(
-        { enabled: true, persistent: true, configs: [visxInterstitialConfig] },
+        { enabled: true, persistent: true, bidders: [visxInterstitialConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -406,12 +406,12 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('object').and.have.property('caps');
-      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(1);
-      expect(persistedState.caps[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('bCaps');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('interstitial:visx');
+      expect(persistedState.bCaps['interstitial:visx']).to.be.an('array');
+      expect(persistedState.bCaps['interstitial:visx'][0]).to.deep.equal({
         ts: 100000,
-        wait: visxInterstitialConfig.blockedForMs,
-        bid: { bidder: prebidjs.Visx, adUnitCode: interstitialDomId }
+        wait: visxInterstitialConfig.conditions.pacingInterval?.intervalInMs
       });
 
       expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
@@ -420,7 +420,7 @@ describe('FrequencyCapping', () => {
     it('should persist onBidWon events', () => {
       nowInstantStub.returns(100000);
       const frequencyCapping = new FrequencyCapping(
-        { enabled: true, persistent: true, configs: [dspxWpConfig] },
+        { enabled: true, persistent: true, bidders: [dspxWpConfig] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -429,15 +429,12 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('object').and.have.property('caps');
-      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(1);
-      expect(persistedState.caps[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('bCaps');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('wp-slot:dspx');
+      expect(persistedState.bCaps['wp-slot:dspx']).to.be.an('array');
+      expect(persistedState.bCaps['wp-slot:dspx'][0]).to.deep.equal({
         ts: 100000,
-        wait: dspxWpConfig.blockedForMs,
-        bid: {
-          bidder: dspxBidResponse.bidder,
-          adUnitCode: dspxBidResponse.adUnitCode
-        }
+        wait: dspxWpConfig.conditions.pacingInterval?.intervalInMs
       });
 
       expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
@@ -446,7 +443,7 @@ describe('FrequencyCapping', () => {
     it('should persist on afterRequestAds events', () => {
       nowInstantStub.returns(100000);
       const frequencyCapping = new FrequencyCapping(
-        { enabled: true, persistent: true, configs: [] },
+        { enabled: true, persistent: true, bidders: [] },
         jsDomWindow,
         nowInstantStub,
         noopLogger
@@ -465,7 +462,10 @@ describe('FrequencyCapping', () => {
         {
           enabled: true,
           persistent: true,
-          configs: [visxInterstitialConfig, { ...visxInterstitialConfig, bidder: prebidjs.GumGum }]
+          bidders: [
+            visxInterstitialConfig,
+            { ...visxInterstitialConfig, bidders: [prebidjs.GumGum] }
+          ]
         },
         jsDomWindow,
         nowInstantStub,
@@ -480,17 +480,16 @@ describe('FrequencyCapping', () => {
       const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
       expect(storedData).to.be.ok;
       const persistedState = JSON.parse(storedData!);
-      expect(persistedState).to.be.an('object').and.have.property('caps');
-      expect(persistedState.caps).to.be.an('array').and.have.lengthOf(2);
-      expect(persistedState.caps[0]).to.deep.equal({
+      expect(persistedState).to.be.an('object').and.have.property('bCaps');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('interstitial:visx');
+      expect(persistedState.bCaps).to.be.an('object').and.have.property('interstitial:gumgum');
+      expect(persistedState.bCaps['interstitial:visx'][0]).to.deep.equal({
         ts: 100000,
-        wait: visxInterstitialConfig.blockedForMs,
-        bid: { bidder: prebidjs.Visx, adUnitCode: interstitialDomId }
+        wait: visxInterstitialConfig.conditions.pacingInterval?.intervalInMs
       });
-      expect(persistedState.caps[1]).to.deep.equal({
+      expect(persistedState.bCaps['interstitial:gumgum'][0]).to.deep.equal({
         ts: 100000,
-        wait: visxInterstitialConfig.blockedForMs,
-        bid: { bidder: prebidjs.GumGum, adUnitCode: interstitialDomId }
+        wait: visxInterstitialConfig.conditions.pacingInterval?.intervalInMs
       });
 
       expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;

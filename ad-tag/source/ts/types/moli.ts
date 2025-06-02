@@ -1396,6 +1396,10 @@ export namespace Moli {
       readonly reactivationPeriod: number;
     }
 
+
+    /**
+     * @deprecated in favor of BidderFrequencyCappingConfig
+     */
     export interface BidderFrequencyConfig {
       /** bidder that should receive the frequency capping  */
       readonly bidder: string;
@@ -1420,11 +1424,81 @@ export namespace Moli {
       readonly events?: Array<'bidWon' | 'bidRequested'>;
     }
 
+    /**
+     * How many requestAds calls are needed before the configured ad slot can be requested
+     */
+    export interface BidderDelayConfig {
+      readonly minRequestAds: number;
+    }
+
+    export interface BidderFrequencyConfigPacingInterval {
+      /**
+       * maximum number of impressions that are allowed in the defined interval for the configured bidder
+       */
+      readonly maxImpressions: number;
+
+      /**
+       * The interval in milliseconds in which the maximum impressions are allowed.
+       * This is used to pace the bid requests for a specific bidder.
+       */
+      readonly intervalInMs: number;
+
+      /**
+       * Optional list of events that should trigger the frequency capping.
+       * The main use case is to reduce requests for high impact formats like wallpaper or interstitials.
+       *
+       * The default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won.
+       * For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial,
+       * the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other.
+       * This can happen if the first page view is a google web interstitial, because the visx interstitial was requested,
+       * but no bid came back and the second page view display the google interstitial, while a visx interstitial is
+       * requested directly after the google interstitial is closed.
+       *
+       * @default ['bidWon']
+       */
+      readonly events?: Array<'bidWon' | 'bidRequested'>;
+    }
+
+    export interface BidderFrequencyConfigConditions {
+      /**
+       * How many requestAds calls are needed before the configured ad slot can be requested
+       */
+      readonly delay?: BidderDelayConfig;
+
+      /**
+       * how many impressions are allowed in the defined interval for the configured ad slot.
+       */
+      readonly pacingInterval?: BidderFrequencyConfigPacingInterval;
+    }
+
+    export interface BidderFrequencyCappingConfig {
+      /**
+       * bidders that should be frequency capped.
+       *
+       * If not set or empty, all bidders that are configured for this ad slot will be frequency capped.
+       */
+      readonly bidders?: string[];
+
+      /** domId of the slot that should receive the capping  */
+      readonly domId: string;
+
+      /**
+       * The conditions that need to be met before the bidder can request ads again.
+       */
+      readonly conditions: BidderFrequencyConfigConditions;
+    }
+
     export interface FrequencyCappingConfig {
       /** enable or disable this feature */
       readonly enabled: boolean;
+      /**
+       * capping configuration for bidders and positions.
+       * @deprecated in favor of `bidders` and `positions`
+       */
+      readonly configs?: BidderFrequencyConfig[];
+
       /** capping configuration for bidders and positions */
-      readonly configs: BidderFrequencyConfig[];
+      readonly bidders?: BidderFrequencyCappingConfig[];
 
       /**
        * capping configuration for positions only.

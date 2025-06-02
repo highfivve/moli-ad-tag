@@ -9,11 +9,19 @@ import { AdUnitPathVariables, resolveAdUnitPath } from '../adUnitPath';
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
 
-type FrequencyCappingBid = ResumeCallbackData & {
-  readonly bid: { bidder: string; adUnitCode: string };
-};
+type BidderAdUnitKey = `${string}:${string}`;
 
 type FrequencyCappingPositionImpSchedules = ResumeCallbackData[];
+type FrequencyCappingBidderImpSchedules = ResumeCallbackData[];
+
+type BidderFrequencyCappingConfigWithPacingInterval = Omit<
+  auction.BidderFrequencyCappingConfig,
+  'conditions'
+> & {
+  conditions: Omit<auction.BidderFrequencyCappingConfig['conditions'], 'pacingInterval'> & {
+    pacingInterval: auction.BidderFrequencyConfigPacingInterval;
+  };
+};
 
 /**
  * The state of the frequency capping module is stored in a JSON array of the bidder/adunit key
@@ -23,9 +31,9 @@ type FrequencyCappingPositionImpSchedules = ResumeCallbackData[];
  */
 export type PersistedFrequencyCappingState = {
   /**
-   * The active frequency caps
+   * The active bidder impression schedules
    */
-  readonly caps: FrequencyCappingBid[];
+  readonly bCaps: { [key: BidderAdUnitKey]: FrequencyCappingBidderImpSchedules | undefined };
 
   /**
    * The active position impression schedules
@@ -40,14 +48,6 @@ export type PersistedFrequencyCappingState = {
 
 export class FrequencyCapping {
   /**
-   * Stores the information that a bidder should not be requested again on a slot in the given time interval.
-   *
-   * Useful to prevent continuous reloads of a bidder on a slot, e.g. on the wallpaper or interstitial.
-   * @private
-   */
-  private frequencyCaps: Map<string, FrequencyCappingBid> = new Map();
-
-  /**
    * Stores the number of impressions on a slot. Each entry in the list is a timestamp of the last impression
    * and a schedule to remove it.
    *
@@ -56,9 +56,12 @@ export class FrequencyCapping {
    * @private
    */
   private positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
+  private bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
 
-  private bidWonConfigs: auction.BidderFrequencyConfig[];
-  private bidRequestedConfigs: auction.BidderFrequencyConfig[];
+  private bidWonConfigs: BidderFrequencyCappingConfigWithPacingInterval[];
+  private bidRequestedConfigs: BidderFrequencyCappingConfigWithPacingInterval[];
+  private pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[];
+
   private resolvedAdUnitPathPositionConfigs: auction.PositionFrequencyConfig[];
 
   /**
@@ -73,12 +76,23 @@ export class FrequencyCapping {
     private readonly now: NowInstant,
     private readonly logger: Moli.MoliLogger
   ) {
-    this.bidWonConfigs = this.config.configs.filter(
-      config => !config.events || config.events?.includes('bidWon')
-    );
-    this.bidRequestedConfigs = this.config.configs.filter(config =>
-      config.events?.includes('bidRequested')
-    );
+    const hasPacingInterval = (
+      config: auction.BidderFrequencyCappingConfig
+    ): config is BidderFrequencyCappingConfigWithPacingInterval =>
+      !!config.conditions && !!config.conditions.pacingInterval;
+
+    this.pacingIntervalConfigs = config.bidders?.filter(hasPacingInterval) ?? [];
+
+    this.bidWonConfigs =
+      this.pacingIntervalConfigs?.filter(
+        config =>
+          !config.conditions.pacingInterval.events ||
+          config.conditions.pacingInterval.events?.includes('bidWon')
+      ) ?? [];
+    this.bidRequestedConfigs =
+      this.pacingIntervalConfigs?.filter(config =>
+        config.conditions.pacingInterval.events?.includes('bidRequested')
+      ) ?? [];
 
     this.resolvedAdUnitPathPositionConfigs = this.config.positions || [];
 
@@ -91,17 +105,16 @@ export class FrequencyCapping {
           this.numAdRequests = parsedData.requestAds;
 
           // re-schedule all the frequency caps
-          parsedData.caps.forEach(data => {
-            const blockedForMs = remainingTime(data, this.now());
-            this.#cap(
-              // the start timestamp is taken from the stored data
-              data.ts,
-              // generate the config from the stored data. This is a bit of a hack, but it keeps the
-              // caps method interface consistent
-              { bidder: data.bid.bidder, domId: data.bid.adUnitCode, blockedForMs },
-              // capping based on the previous bid data
-              data.bid
-            );
+          Object.entries(parsedData.bCaps).forEach(([adUnitBidderKey, schedules]) => {
+            //
+            schedules?.forEach(schedule => {
+              const [adUnitCode, bidder] = adUnitBidderKey.split(':');
+              const blockedForMs = remainingTime(schedule, now());
+              this.#cap(this.now(), { domId: adUnitCode, bidders: [bidder] }, blockedForMs, {
+                bidder,
+                adUnitCode
+              });
+            });
           });
           // reschedule frequency caps
           Object.entries(parsedData.pCaps).forEach(([adUnitPath, schedules]) => {
@@ -122,7 +135,7 @@ export class FrequencyCapping {
     this.bidRequestedConfigs.forEach(config => {
       auction.bidderRequests?.forEach(bidderRequests => {
         bidderRequests?.bids?.forEach(bid => {
-          this.#cap(this.now(), config, bid);
+          this.#cap(this.now(), config, config.conditions.pacingInterval.intervalInMs, bid);
         });
       });
     });
@@ -130,7 +143,9 @@ export class FrequencyCapping {
   }
 
   onBidWon(bid: prebidjs.BidResponse) {
-    this.bidWonConfigs.forEach(config => this.#cap(this.now(), config, bid));
+    this.bidWonConfigs.forEach(config =>
+      this.#cap(this.now(), config, config.conditions.pacingInterval.intervalInMs, bid)
+    );
     this.#persist();
   }
 
@@ -186,36 +201,65 @@ export class FrequencyCapping {
   }
 
   isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
-    return this.frequencyCaps.has(`${slotId}:${bidder}`);
+    if (!this.config.bidders) {
+      return false;
+    }
+    return this.config.bidders
+      .filter(c => !c.bidders || c.bidders.includes(bidder))
+      .some(({ conditions: { pacingInterval, delay } }) => {
+        return (
+          // pacing interval condition: check if the number of impressions for this bidder on this slot exceeds the max impressions
+          (pacingInterval &&
+            (this.bidderImpSchedules.get(`${slotId}:${bidder}`) ?? []).length >=
+              pacingInterval.maxImpressions) ||
+          // delay condition: check if the number of ad requests is less than the minimum required for a request
+          (delay && this.numAdRequests < delay.minRequestAds)
+        );
+      });
   }
 
   /**
    *
    * @param startTimestamp since when the capping should be active
    * @param config
+   * @param intervalInMs
    * @param bid
    * @private
    */
   #cap = (
     startTimestamp: number,
-    config: auction.BidderFrequencyConfig,
+    config: Pick<auction.BidderFrequencyCappingConfig, 'domId' | 'bidders'>,
+    intervalInMs: number,
     bid: { bidder: string; adUnitCode: string }
   ) => {
-    if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
-      const key = `${bid.adUnitCode}:${bid.bidder}`;
-      this.logger.debug('fc', `adding ${key}`);
-      this.frequencyCaps.set(key, {
+    //
+    // Note: this bidderImpSchedules is actually a FIFO queue of timestamps. We may use push & shift
+    // for better performance and less complexity.
+    const bidders = config.bidders;
+    if ((!bidders || bidders.includes(bid.bidder)) && config.domId === bid.adUnitCode) {
+      const key: BidderAdUnitKey = `${bid.adUnitCode}:${bid.bidder}`;
+      const currentSchedules = this.bidderImpSchedules.get(key) ?? [];
+      currentSchedules.push({
         ts: startTimestamp,
-        wait: config.blockedForMs,
-        bid: {
-          bidder: bid.bidder,
-          adUnitCode: bid.adUnitCode
-        }
+        wait: intervalInMs
       });
+      this.bidderImpSchedules.set(key, currentSchedules);
+
+      // remove the entry after the interval
       this._window.setTimeout(() => {
-        this.logger.debug('fc', `removing ${key}`);
-        this.frequencyCaps.delete(key);
-      }, config.blockedForMs);
+        this.logger.debug('fc', `removing ${key} at ${startTimestamp}`);
+        const schedules = this.bidderImpSchedules.get(key);
+        if (schedules) {
+          // instead of filtering, we could also use shift() to remove the first element.
+          // This would mean mutating in place - feels wrong though
+          this.bidderImpSchedules.set(
+            key,
+            schedules.filter(s => s.ts !== startTimestamp)
+          );
+        }
+      }, intervalInMs);
+
+      this.#persist();
     }
   };
 
@@ -247,7 +291,9 @@ export class FrequencyCapping {
     // store the state in session storage
     if (this.config.persistent === true) {
       const data: PersistedFrequencyCappingState = {
-        caps: Array.from(this.frequencyCaps.values()),
+        bCaps: Array.from(this.bidderImpSchedules.entries()).reduce<
+          PersistedFrequencyCappingState['bCaps']
+        >((acc, [key, schedules]) => ({ ...acc, [key]: schedules }), {}),
         pCaps: Array.from(this.positionImpSchedules.entries()).reduce<
           PersistedFrequencyCappingState['pCaps']
         >((acc, [adUnitPath, schedules]) => ({ ...acc, [adUnitPath]: schedules }), {}),
