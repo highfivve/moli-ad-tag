@@ -20,9 +20,6 @@ import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { GptTargetingMapping, PrebidFirstPartyDataModule } from './index';
-import PrebidFirstPartyData = prebidjs.firstpartydata.PrebidFirstPartyData;
-import OpenRtb2Site = prebidjs.firstpartydata.OpenRtb2Site;
-import OpenRtb2User = prebidjs.firstpartydata.OpenRtb2User;
 import { GlobalAuctionContext } from '@highfivve/ad-tag/lib/ads/globalAuctionContext';
 import { EventService } from '@highfivve/ad-tag/lib/ads/eventService';
 
@@ -161,7 +158,7 @@ describe('Prebid First Party Data Module', () => {
 
       await configureStep(adPipelineContext(moliConfig), []);
 
-      const expected: PrebidFirstPartyData = {
+      const expected: prebidjs.firstpartydata.PrebidFirstPartyData = {
         site: {
           cat: ['IAB-1'],
           sectioncat: ['IAB-1'],
@@ -236,7 +233,8 @@ describe('Prebid First Party Data Module', () => {
         await configureStep(adPipelineContext(moliConfig), []);
 
         expect(setConfigSpy).to.have.been.calledOnce;
-        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        const site = setConfigSpy.firstCall.firstArg.ortb2
+          .site as prebidjs.firstpartydata.OpenRtb2Site;
         expect(site.cat).to.deep.equals(['IAB-1']);
         expect(site.pagecat).to.deep.equals(['IAB-1']);
         expect(site.sectioncat).to.deep.equals(['IAB-2']);
@@ -251,7 +249,8 @@ describe('Prebid First Party Data Module', () => {
         await configureStep(adPipelineContext(moliConfig), []);
 
         expect(setConfigSpy).to.have.been.calledOnce;
-        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        const site = setConfigSpy.firstCall.firstArg.ortb2
+          .site as prebidjs.firstpartydata.OpenRtb2Site;
         expect(site.cat).to.deep.equals(['IAB-1']);
         expect(site.sectioncat).to.deep.equals(['IAB-1']);
         expect(site.pagecat).to.deep.equals(['IAB-2']);
@@ -298,7 +297,7 @@ describe('Prebid First Party Data Module', () => {
 
         await configureStep(adPipelineContext(moliConfig), []);
 
-        const expected: PrebidFirstPartyData = {
+        const expected: prebidjs.firstpartydata.PrebidFirstPartyData = {
           site: {
             cat: [],
             sectioncat: [],
@@ -366,8 +365,10 @@ describe('Prebid First Party Data Module', () => {
         });
         await configureStep(adPipelineContext(moliConfig), []);
         expect(setConfigSpy).to.have.been.calledOnce;
-        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
-        const user = setConfigSpy.firstCall.firstArg.ortb2.user as OpenRtb2User;
+        const site = setConfigSpy.firstCall.firstArg.ortb2
+          .site as prebidjs.firstpartydata.OpenRtb2Site;
+        const user = setConfigSpy.firstCall.firstArg.ortb2
+          .user as prebidjs.firstpartydata.OpenRtb2User;
         expect(site.cat).to.deep.equals(['IAB-9', 'IAB-1']);
         expect(user.keywords).to.be.equals('existing');
       });
@@ -385,7 +386,8 @@ describe('Prebid First Party Data Module', () => {
 
         await configureStep(adPipelineContext(moliConfig), []);
         expect(setConfigSpy).to.have.been.calledOnce;
-        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        const site = setConfigSpy.firstCall.firstArg.ortb2
+          .site as prebidjs.firstpartydata.OpenRtb2Site;
         expect(site.cat).to.deep.equals(['IAB-1', 'IAB-9']);
         expect(site.sectioncat).to.deep.equals(['IAB-9']);
         expect(site.pagecat).to.deep.equals(['IAB-9']);
@@ -404,7 +406,8 @@ describe('Prebid First Party Data Module', () => {
 
         await configureStep(adPipelineContext(moliConfig), []);
         expect(setConfigSpy).to.have.been.calledOnce;
-        const site = setConfigSpy.firstCall.firstArg.ortb2.site as OpenRtb2Site;
+        const site = setConfigSpy.firstCall.firstArg.ortb2
+          .site as prebidjs.firstpartydata.OpenRtb2Site;
         expect(site.cat).to.deep.equals(['IAB-1']);
       });
     });
