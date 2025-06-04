@@ -110,6 +110,22 @@ describe('FrequencyCapping', () => {
         expect(frequencyCapping.isFrequencyCapped('unrelated-slot', prebidjs.DSPX)).to.be.false;
       });
 
+      it('should not add a frequency cap if the slot id does not match and a delay is configured for all bidders', () => {
+        const frequencyCappingWithDelay = new FrequencyCapping(
+          {
+            enabled: true,
+            bidders: [{ domId: wpDomId, conditions: { delay: { minRequestAds: 1 } } }]
+          },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+        frequencyCappingWithDelay.onBidWon(dspxBidResponse);
+
+        expect(frequencyCappingWithDelay.isFrequencyCapped('unrelated-slot', prebidjs.DSPX)).to.be
+          .false;
+      });
+
       it('should not add a frequency cap if the slot id does not match and a delay is configured', () => {
         const frequencyCappingWithDelay = new FrequencyCapping(
           {
