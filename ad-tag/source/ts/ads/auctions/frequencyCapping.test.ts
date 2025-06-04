@@ -94,79 +94,109 @@ describe('FrequencyCapping', () => {
     expect(jsDomWindow.sessionStorage.getItem('h5v-fc'));
   });
 
-  describe('onBidWon', () => {
-    let frequencyCapping: FrequencyCapping;
-    beforeEach(() => {
-      frequencyCapping = createFrequencyCapping(
-        { enabled: true, bidders: [dspxWpConfig] },
-        jsDomWindow,
-        nowInstantStub,
-        noopLogger
-      );
+  describe('bidder frequency capping', () => {
+    describe('onBidWon', () => {
+      let frequencyCapping: FrequencyCapping;
+      beforeEach(() => {
+        frequencyCapping = createFrequencyCapping(
+          { enabled: true, bidders: [dspxWpConfig] },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+      });
+
+      it('should not add a frequency cap if the slot id does not match', () => {
+        frequencyCapping.onBidWon(dspxBidResponse);
+
+        expect(frequencyCapping.isFrequencyCapped('unrelated-slot', prebidjs.DSPX)).to.be.false;
+      });
+
+      it('should not add a frequency cap if the slot id does not match and a delay is configured', () => {
+        const frequencyCappingWithDelay = createFrequencyCapping(
+          {
+            enabled: true,
+            bidders: [
+              {
+                bidders: [prebidjs.DSPX],
+                domId: wpDomId,
+                conditions: { delay: { minRequestAds: 1 } }
+              }
+            ]
+          },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+        frequencyCappingWithDelay.onBidWon(dspxBidResponse);
+
+        expect(frequencyCappingWithDelay.isFrequencyCapped('unrelated-slot', prebidjs.DSPX)).to.be
+          .false;
+      });
+
+      it('should not add a frequency cap if the configured bidder did not win the auction on the slot', () => {
+        const bid: BidResponse = { bidder: prebidjs.GumGum, adUnitCode: wpDomId } as BidResponse;
+
+        frequencyCapping.onBidWon(bid);
+
+        expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
+      });
+
+      it('should add a frequency cap when a bid is won on the configured slot', () => {
+        frequencyCapping.onBidWon(dspxBidResponse);
+        expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+      });
+
+      it('should remove the frequency cap after the specified timeout', () => {
+        nowInstantStub.returns(100000);
+        frequencyCapping.onBidWon(dspxBidResponse);
+        expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+
+        sandbox.clock.tick(11000);
+        expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
+        expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
+      });
     });
 
-    it('should not add a frequency cap if the configured bidder did not win the auction on the slot', () => {
-      const bid: BidResponse = { bidder: prebidjs.GumGum, adUnitCode: wpDomId } as BidResponse;
+    describe('onAuctionEnd', () => {
+      let frequencyCapping: FrequencyCapping;
+      beforeEach(() => {
+        frequencyCapping = createFrequencyCapping(
+          { enabled: true, bidders: [dspxWpConfig, visxInterstitialConfig] },
+          jsDomWindow,
+          nowInstantStub,
+          noopLogger
+        );
+      });
 
-      frequencyCapping.onBidWon(bid);
+      it('should not add a frequency cap if no events have been fired', () => {
+        expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+      });
 
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
-    });
+      it('should not add a frequency cap if the configured bidder did not request a bid on the slot', () => {
+        frequencyCapping.onAuctionEnd(auction([]));
 
-    it('should add a frequency cap when a bid is won on the configured slot', () => {
-      frequencyCapping.onBidWon(dspxBidResponse);
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
-    });
+        expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+      });
 
-    it('should remove the frequency cap after the specified timeout', () => {
-      nowInstantStub.returns(100000);
-      frequencyCapping.onBidWon(dspxBidResponse);
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.true;
+      it('should add a frequency cap when a bid is requested on the configured slot', () => {
+        frequencyCapping.onAuctionEnd(
+          auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
+        );
 
-      sandbox.clock.tick(11000);
-      expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
-      expect(frequencyCapping.isFrequencyCapped(wpDomId, prebidjs.DSPX)).to.be.false;
-    });
-  });
+        expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
+      });
 
-  describe('onAuctionEnd', () => {
-    let frequencyCapping: FrequencyCapping;
-    beforeEach(() => {
-      frequencyCapping = createFrequencyCapping(
-        { enabled: true, bidders: [dspxWpConfig, visxInterstitialConfig] },
-        jsDomWindow,
-        nowInstantStub,
-        noopLogger
-      );
-    });
+      it('should remove the frequency cap after the specified timeout', () => {
+        frequencyCapping.onAuctionEnd(
+          auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
+        );
+        expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
 
-    it('should not add a frequency cap if no events have been fired', () => {
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
-    });
-
-    it('should not add a frequency cap if the configured bidder did not request a bid on the slot', () => {
-      frequencyCapping.onAuctionEnd(auction([]));
-
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
-    });
-
-    it('should add a frequency cap when a bid is requested on the configured slot', () => {
-      frequencyCapping.onAuctionEnd(
-        auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
-      );
-
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
-    });
-
-    it('should remove the frequency cap after the specified timeout', () => {
-      frequencyCapping.onAuctionEnd(
-        auction([{ bidder: prebidjs.Visx, adUnitCode: interstitialDomId }])
-      );
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.true;
-
-      sandbox.clock.tick(11000);
-      expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
-      expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+        sandbox.clock.tick(11000);
+        expect(setTimeoutSpy).to.have.been.calledOnceWithExactly(Sinon.match.func, 10000);
+        expect(frequencyCapping.isFrequencyCapped(interstitialDomId, prebidjs.Visx)).to.be.false;
+      });
     });
   });
 
