@@ -256,7 +256,7 @@ export const createFrequencyCapping = (
         return false;
       }
       return config.bidders
-        .filter(c => !c.bidders || (c.bidders.includes(bidder) && c.domId === slotId))
+        .filter(c => c.domId === slotId && (!c.bidders || c.bidders.includes(bidder)))
         .some(({ conditions: { pacingInterval, delay } }) => {
           return (
             // pacing interval condition: check if the number of impressions for this bidder on this slot exceeds the max impressions
