@@ -41,6 +41,12 @@ export type PersistedFrequencyCappingState = {
   readonly pCaps: { [adUnitPath: string]: FrequencyCappingPositionImpSchedules | undefined };
 
   /**
+   * The number of ad request when the last impression was one for this ad unit path
+   * This is used to check if the number of ad requests is sufficient for the next ad request
+   */
+  readonly pLastImpAdRequests: { [adUnitPath: string]: number | undefined };
+
+  /**
    * number of requestAds made so far
    */
   readonly requestAds: number;
@@ -56,6 +62,7 @@ export class FrequencyCapping {
    * @private
    */
   private positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
+  private positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
   private bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
 
   private bidWonConfigs: BidderFrequencyCappingConfigWithPacingInterval[];
@@ -151,8 +158,9 @@ export class FrequencyCapping {
 
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent) {
     if (!event.isEmpty) {
-      // FIXME for the google web interstitial, the slot id is not the same as the ad unit code
-      //       it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
+      // for the google web interstitial, the slot id is not the same as the ad unit code
+      // it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
+      // To avoid this issue, we use the ad unit path instead of the slot id
       const adUnitPath = event.slot.getAdUnitPath();
       // 1. search if there's a pacing:interval config
       const pacingInterval = this.resolvedAdUnitPathPositionConfigs.find(
@@ -163,6 +171,15 @@ export class FrequencyCapping {
         this.#capPosition(this.now(), adUnitPath, pacingInterval);
       }
       // the frequency capping check just needs to check if the impression count prohibits a new request
+      if (
+        this.resolvedAdUnitPathPositionConfigs.some(
+          config => config.adUnitPath === adUnitPath && config.conditions.pacingRequestAds
+        )
+      ) {
+        // 3. store the number of ad requests for this position
+        this.positionLastImpressionNumberOfAdRequests.set(adUnitPath, this.numAdRequests);
+        this.#persist();
+      }
     }
   }
 
@@ -191,7 +208,12 @@ export class FrequencyCapping {
           this.numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
         // cap if not at the right pacing interval yet
         (positionConfig.conditions.pacingRequestAds &&
-          this.numAdRequests % positionConfig.conditions.pacingRequestAds.requestAds !== 0) ||
+          // if there are no winning impressions yet, we can request ads
+          this.positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
+          // check if enough ad requests were made since the last impression
+          this.numAdRequests -
+            (this.positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
+            positionConfig.conditions.pacingRequestAds.requestAds) ||
         // cap if the maxImpressions is reached in the current window
         (positionConfig.conditions.pacingInterval &&
           (this.positionImpSchedules.get(adUnitPath) ?? []).length >=
@@ -297,6 +319,12 @@ export class FrequencyCapping {
         pCaps: Array.from(this.positionImpSchedules.entries()).reduce<
           PersistedFrequencyCappingState['pCaps']
         >((acc, [adUnitPath, schedules]) => ({ ...acc, [adUnitPath]: schedules }), {}),
+        pLastImpAdRequests: Array.from(
+          this.positionLastImpressionNumberOfAdRequests.entries()
+        ).reduce<PersistedFrequencyCappingState['pLastImpAdRequests']>(
+          (acc, [adUnitPath, numAdRequests]) => ({ ...acc, [adUnitPath]: numAdRequests }),
+          {}
+        ),
         requestAds: this.numAdRequests
       };
       this._window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
