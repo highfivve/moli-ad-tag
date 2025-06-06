@@ -382,8 +382,11 @@ export const gptDefineSlots =
         const [adSlot, format] = defineAdSlot();
         if (adSlot) {
           // transport the special GAM formats through the ad slot targeting
-          if (format) adSlot.setTargeting(formatKey, format.toString());
-          else adSlot.clearTargeting(formatKey);
+          if (format) {
+            adSlot.setTargeting(formatKey, format.toString());
+          } else {
+            adSlot.clearTargeting(formatKey);
+          }
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
           context.window.googletag.display(adSlot);
         }
