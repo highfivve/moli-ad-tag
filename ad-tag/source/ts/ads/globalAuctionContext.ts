@@ -114,6 +114,10 @@ export class GlobalAuctionContext {
         this.window.googletag.pubads().addEventListener('slotRenderEnded', event => {
           this.frequencyCapping?.onSlotRenderEnded(event);
         });
+
+        this.window.googletag.pubads().addEventListener('impressionViewable', event => {
+          this.frequencyCapping?.onImpressionViewable(event);
+        });
       });
 
       this.eventService.addEventListener('afterRequestAds', () => {

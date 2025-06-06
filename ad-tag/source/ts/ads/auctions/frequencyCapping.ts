@@ -5,6 +5,7 @@ import BidderCode = prebidjs.BidderCode;
 import { NowInstant, remainingTime, ResumeCallbackData } from './resume';
 import { googletag } from '../../types/googletag';
 import { AdUnitPathVariables, resolveAdUnitPath } from '../adUnitPath';
+import { formatKey } from '../keyValues';
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
@@ -156,30 +157,46 @@ export class FrequencyCapping {
     this.#persist();
   }
 
+  #onSlotRenderEndedOrImpressionViewable(adUnitPath: string) {
+    // check if the ad unit path is configured with a pacing:interval
+    this.resolvedAdUnitPathPositionConfigs
+      .filter(config => config.adUnitPath === adUnitPath)
+      .forEach(config => {
+        if (config.conditions.pacingInterval) {
+          // store the timestamp of the last impression as a schedule for persistence
+          this.#capPosition(this.now(), adUnitPath, config.conditions.pacingInterval);
+        }
+        // store the number of ad requests for this position. Doesn't matter we persist multiple times
+        // as the numAdRequests should not change. And there's rarely more than one config for a position
+        if (config.conditions.pacingRequestAds) {
+          this.positionLastImpressionNumberOfAdRequests.set(adUnitPath, this.numAdRequests);
+          this.#persist();
+        }
+      });
+  }
+
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent) {
-    if (!event.isEmpty) {
+    // check if the ad unit path is configured with a pacing:interval
+    const [format] = event.slot.getTargeting(formatKey);
+    if (
+      !event.isEmpty && // for the Google interstitials, we must use the viewable impression event
+      format !== googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+    ) {
       // for the google web interstitial, the slot id is not the same as the ad unit code
       // it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
       // To avoid this issue, we use the ad unit path instead of the slot id
-      const adUnitPath = event.slot.getAdUnitPath();
-      // 1. search if there's a pacing:interval config
-      const pacingInterval = this.resolvedAdUnitPathPositionConfigs.find(
-        config => config.adUnitPath === adUnitPath
-      )?.conditions.pacingInterval;
-      if (pacingInterval) {
-        // 2. store the timestamp of the last impression as a schedule for persistence
-        this.#capPosition(this.now(), adUnitPath, pacingInterval);
-      }
-      // the frequency capping check just needs to check if the impression count prohibits a new request
-      if (
-        this.resolvedAdUnitPathPositionConfigs.some(
-          config => config.adUnitPath === adUnitPath && config.conditions.pacingRequestAds
-        )
-      ) {
-        // 3. store the number of ad requests for this position
-        this.positionLastImpressionNumberOfAdRequests.set(adUnitPath, this.numAdRequests);
-        this.#persist();
-      }
+      this.#onSlotRenderEndedOrImpressionViewable(event.slot.getAdUnitPath());
+    }
+  }
+
+  onImpressionViewable(event: googletag.events.IImpressionViewableEvent) {
+    // check if the ad unit path is configured with a pacing:interval
+    const [format] = event.slot.getTargeting(formatKey);
+    if (format === googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()) {
+      // for the google web interstitial, the slot id is not the same as the ad unit code
+      // it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
+      // To avoid this issue, we use the ad unit path instead of the slot id
+      this.#onSlotRenderEndedOrImpressionViewable(event.slot.getAdUnitPath());
     }
   }
 

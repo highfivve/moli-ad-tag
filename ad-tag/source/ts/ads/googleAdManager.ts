@@ -21,6 +21,7 @@ import { createTestSlots } from '../util/test-slots';
 import SlotDefinition = Moli.SlotDefinition;
 import TCPurpose = tcfapi.responses.TCPurpose;
 import { resolveAdUnitPath } from './adUnitPath';
+import { formatKey } from './keyValues';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -314,10 +315,16 @@ export const gptDefineSlots =
       );
 
       // define an ad slot depending on the `position` parameter
-      const defineAdSlot = (): googletag.IAdSlot | null => {
+      const defineAdSlot = (): [
+        googletag.IAdSlot | null,
+        googletag.enums.OutOfPageFormat | null
+      ] => {
         switch (moliSlot.position) {
           case 'in-page':
-            return context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
+            return [
+              context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+              null
+            ];
           case 'interstitial':
             // note that the interstitial position first requests prebid demand and if none, switches
             // to the out-of-page-interstitial position if there are no bids or low quality bids
@@ -330,24 +337,39 @@ export const gptDefineSlots =
               slot.style.setProperty('display', 'none'); // should net be visible
               context.window.document.body.appendChild(slot);
             }
-            return context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
+            return [
+              context.window.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+              null
+            ];
           case 'out-of-page':
-            return context.window.googletag.defineOutOfPageSlot(resolvedAdUnitPath, moliSlot.domId);
+            return [
+              context.window.googletag.defineOutOfPageSlot(resolvedAdUnitPath, moliSlot.domId),
+              null
+            ];
           case 'out-of-page-interstitial':
-            return context.window.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
+              ),
               context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
-            );
+            ];
           case 'out-of-page-bottom-anchor':
-            return context.window.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+              ),
               context.window.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
-            );
+            ];
           case 'out-of-page-top-anchor':
-            return context.window.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
+              ),
               context.window.googletag.enums.OutOfPageFormat.TOP_ANCHOR
-            );
+            ];
         }
       };
 
@@ -357,8 +379,11 @@ export const gptDefineSlots =
         if (context.env === 'test') {
           return null;
         }
-        const adSlot = defineAdSlot();
+        const [adSlot, format] = defineAdSlot();
         if (adSlot) {
+          // transport the special GAM formats through the ad slot targeting
+          if (format) adSlot.setTargeting(formatKey, format.toString());
+          else adSlot.clearTargeting(formatKey);
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
           context.window.googletag.display(adSlot);
         }
