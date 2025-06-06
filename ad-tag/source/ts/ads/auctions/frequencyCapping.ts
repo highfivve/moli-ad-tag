@@ -44,6 +44,12 @@ export type PersistedFrequencyCappingState = {
   readonly pCaps: { [adUnitPath: string]: FrequencyCappingPositionImpSchedules | undefined };
 
   /**
+   * The number of ad request when the last impression was one for this ad unit path
+   * This is used to check if the number of ad requests is sufficient for the next ad request
+   */
+  readonly pLastImpAdRequests: { [adUnitPath: string]: number | undefined };
+
+  /**
    * number of requestAds made so far
    */
   readonly requestAds: number;
@@ -71,6 +77,7 @@ export const createFrequencyCapping = (
   logger: MoliRuntime.MoliLogger
 ): FrequencyCapping => {
   const positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
+  const positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
   const bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
   let numAdRequests = 0;
 
@@ -98,6 +105,9 @@ export const createFrequencyCapping = (
         pCaps: Array.from(positionImpSchedules.entries()).reduce<
           PersistedFrequencyCappingState['pCaps']
         >((acc, [adUnitPath, schedules]) => ({ ...acc, [adUnitPath]: schedules }), {}),
+        pLastImpAdRequests: Array.from(positionLastImpressionNumberOfAdRequests.entries()).reduce<
+          PersistedFrequencyCappingState['pLastImpAdRequests']
+        >((acc, [adUnitPath, numAdRequests]) => ({ ...acc, [adUnitPath]: numAdRequests }), {}),
         requestAds: numAdRequests
       };
       _window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
@@ -222,6 +232,16 @@ export const createFrequencyCapping = (
         if (pacingInterval) {
           capPosition(now(), adUnitPath, pacingInterval);
         }
+        // the frequency capping check just needs to check if the impression count prohibits a new request
+        if (
+          resolvedAdUnitPathPositionConfigs.some(
+            config => config.adUnitPath === adUnitPath && config.conditions.pacingRequestAds
+          )
+        ) {
+          // 3. store the number of ad requests for this position
+          positionLastImpressionNumberOfAdRequests.set(adUnitPath, numAdRequests);
+          persist();
+        }
       }
     },
 
@@ -240,10 +260,17 @@ export const createFrequencyCapping = (
       return resolvedAdUnitPathPositionConfigs.some(positionConfig => {
         return (
           (positionConfig.adUnitPath === adUnitPath &&
+            // cap if minRequestAds is not reached yet
             positionConfig.conditions.delay &&
             numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
+          // cap if not at the right pacing interval yet
           (positionConfig.conditions.pacingRequestAds &&
-            numAdRequests % positionConfig.conditions.pacingRequestAds.requestAds !== 0) ||
+            // if there are no winning impressions yet, we can request ads
+            positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
+            // check if enough ad requests were made since the last impression
+            numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
+              positionConfig.conditions.pacingRequestAds.requestAds) ||
+          // cap if the maxImpressions is reached in the current window
           (positionConfig.conditions.pacingInterval &&
             (positionImpSchedules.get(adUnitPath) ?? []).length >=
               positionConfig.conditions.pacingInterval.maxImpressions)

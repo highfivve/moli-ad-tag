@@ -57,6 +57,17 @@ describe('FrequencyCapping', () => {
   ): prebidjs.event.AuctionObject =>
     ({ bidderRequests: [{ bids: bidderRequestsBids }] }) as prebidjs.event.AuctionObject;
 
+  const slotRenderEndedEvent = (
+    isEmpty: boolean,
+    adUnitPath: string
+  ): googletag.events.ISlotRenderEndedEvent =>
+    ({
+      isEmpty,
+      slot: {
+        getAdUnitPath: () => adUnitPath
+      }
+    }) as googletag.events.ISlotRenderEndedEvent;
+
   after(() => {
     // bring everything back to normal after tests
     sandbox.restore();
@@ -250,12 +261,13 @@ describe('FrequencyCapping', () => {
     });
 
     describe('pacing by requestAds', () => {
-      it('should frequency cap if the slot has a pacing request ads configured and the number of ad requests is a multiple of the request ads', () => {
+      it('should frequency cap if the slot has a pacing request ads configured and not enough ad requests have been made since the last impressions', () => {
         const frequencyCapping = makeFrequencyCapping([
           { adUnitPath: wpAdUnitPath, conditions: { pacingRequestAds: { requestAds: 2 } } }
         ]);
 
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpAdUnitPath));
         frequencyCapping.afterRequestAds();
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
         frequencyCapping.afterRequestAds();
@@ -274,15 +286,9 @@ describe('FrequencyCapping', () => {
         ]);
 
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => wpAdUnitPath }
-        } as googletag.events.ISlotRenderEndedEvent);
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpAdUnitPath));
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => wpAdUnitPath }
-        } as googletag.events.ISlotRenderEndedEvent);
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpAdUnitPath));
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
 
         sandbox.clock.tick(30100);
@@ -302,15 +308,10 @@ describe('FrequencyCapping', () => {
 
         frequencyCapping.updateAdUnitPaths({ device: 'mobile' });
         expect(frequencyCapping.isAdUnitCapped(adUnitPathWithVarsResolved)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => adUnitPathWithVarsResolved }
-        } as googletag.events.ISlotRenderEndedEvent);
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, adUnitPathWithVarsResolved));
+
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
-        frequencyCapping.onSlotRenderEnded({
-          isEmpty: false,
-          slot: { getAdUnitPath: () => adUnitPathWithVarsResolved }
-        } as googletag.events.ISlotRenderEndedEvent);
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, adUnitPathWithVarsResolved));
         expect(frequencyCapping.isAdUnitCapped(adUnitPathWithVarsResolved)).to.be.true;
 
         sandbox.clock.tick(30100);
@@ -388,6 +389,7 @@ describe('FrequencyCapping', () => {
           [`${wpDomId}:${prebidjs.DSPX}`]: [{ ts: startTimestamp, wait: waitTime }]
         },
         pCaps: {},
+        pLastImpAdRequests: {},
         requestAds: 0
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
@@ -414,6 +416,7 @@ describe('FrequencyCapping', () => {
         pCaps: {
           [wpAdUnitPath]: [{ ts: startTimestamp, wait: waitTime }]
         },
+        pLastImpAdRequests: {},
         requestAds: 1
       };
       jsDomWindow.sessionStorage.setItem('h5v-fc', JSON.stringify(storedData));
@@ -502,6 +505,64 @@ describe('FrequencyCapping', () => {
       const persistedState = JSON.parse(storedData!);
       expect(persistedState).to.be.an('object').and.have.property('requestAds');
       expect(persistedState.requestAds).to.be.equal(1);
+    });
+
+    it('should persist position frequency capping', () => {
+      nowInstantStub.returns(100000);
+      const frequencyCapping = createFrequencyCapping(
+        {
+          enabled: true,
+          persistent: true,
+          positions: [
+            {
+              adUnitPath: wpAdUnitPath,
+              conditions: { pacingInterval: { intervalInMs: 10000, maxImpressions: 1 } }
+            }
+          ]
+        },
+        jsDomWindow,
+        nowInstantStub,
+        noopLogger
+      );
+      frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpAdUnitPath));
+      const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
+      expect(storedData).to.be.ok;
+      const persistedState = JSON.parse(storedData!);
+      expect(persistedState).to.be.an('object').and.have.property('pCaps');
+      expect(persistedState.pCaps).to.be.an('object').and.have.property(wpAdUnitPath);
+      expect(persistedState.pCaps[wpAdUnitPath][0]).to.deep.equal({
+        ts: 100000,
+        wait: 10000
+      });
+
+      expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+    });
+
+    it('should persist number of ad requests for ad unit path if slot was rendered', () => {
+      nowInstantStub.returns(100000);
+      const frequencyCapping = createFrequencyCapping(
+        {
+          enabled: true,
+          persistent: true,
+          positions: [
+            {
+              adUnitPath: wpAdUnitPath,
+              conditions: { pacingRequestAds: { requestAds: 1 } }
+            }
+          ]
+        },
+        jsDomWindow,
+        nowInstantStub,
+        noopLogger
+      );
+      frequencyCapping.afterRequestAds();
+      frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpAdUnitPath));
+      const storedData = jsDomWindow.sessionStorage.getItem('h5v-fc');
+      expect(storedData).to.be.ok;
+      const persistedState = JSON.parse(storedData!);
+      expect(persistedState).to.be.an('object').and.have.property('pLastImpAdRequests');
+      expect(persistedState.pLastImpAdRequests).to.be.an('object').and.have.property(wpAdUnitPath);
+      expect(persistedState.pLastImpAdRequests[wpAdUnitPath]).to.equal(1);
     });
 
     it('should persist multiple configs if applicable', () => {
