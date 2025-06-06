@@ -97,6 +97,9 @@ export const createGlobalAuctionContext = (
       window.googletag.pubads().addEventListener('slotRenderEnded', event => {
         frequencyCapping?.onSlotRenderEnded(event);
       });
+      window.googletag.pubads().addEventListener('impressionViewable', event => {
+        frequencyCapping?.onImpressionViewable(event);
+      });
     });
 
     eventService.addEventListener('afterRequestAds', () => {
