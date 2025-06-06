@@ -59,14 +59,31 @@ describe('FrequencyCapping', () => {
 
   const slotRenderEndedEvent = (
     isEmpty: boolean,
-    adUnitPath: string
+    adUnitPath: string,
+    format?: string
   ): googletag.events.ISlotRenderEndedEvent =>
     ({
       isEmpty,
       slot: {
-        getAdUnitPath: () => adUnitPath
+        getAdUnitPath: () => adUnitPath,
+        getTargeting(key: string): string[] {
+          return key === 'f' && format ? [format] : [];
+        }
       }
     }) as googletag.events.ISlotRenderEndedEvent;
+
+  const impressionViewableEvent = (
+    adUnitPath: string,
+    format?: string
+  ): googletag.events.IImpressionViewableEvent =>
+    ({
+      slot: {
+        getAdUnitPath: () => adUnitPath,
+        getTargeting(key: string): string[] {
+          return key === 'f' && format ? [format] : [];
+        }
+      }
+    } as googletag.events.IImpressionViewableEvent);
 
   after(() => {
     // bring everything back to normal after tests
@@ -273,6 +290,47 @@ describe('FrequencyCapping', () => {
         frequencyCapping.afterRequestAds();
         expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
       });
+
+      it('should use slotRenderEnded events for pacing by request ads if the format is not interstitial', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { pacingRequestAds: { requestAds: 2 } } }
+        ]);
+        const format = googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR.toString();
+
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, wpAdUnitPath, format));
+        frequencyCapping.afterRequestAds();
+
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+
+        frequencyCapping.afterRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+      });
+
+      it('should use impressionViewable events for pacing by request ads if the format is interstitial', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          {
+            adUnitPath: interstitialDomId,
+            conditions: { pacingRequestAds: { requestAds: 2 } }
+          }
+        ]);
+        const format = googletag.enums.OutOfPageFormat.INTERSTITIAL.toString();
+
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
+
+        // this has no effect
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, interstitialDomId, format));
+        frequencyCapping.afterRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
+
+        // this should cap the ad unit
+        frequencyCapping.onImpressionViewable(impressionViewableEvent(interstitialDomId, format));
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.true;
+
+        frequencyCapping.afterRequestAds();
+        frequencyCapping.afterRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
+      });
     });
 
     describe('pacing by interval', () => {
@@ -316,6 +374,30 @@ describe('FrequencyCapping', () => {
 
         sandbox.clock.tick(30100);
         expect(frequencyCapping.isAdUnitCapped(adUnitPathWithVarsResolved)).to.be.false;
+      });
+
+      it('should use impressionViewable events for pacing by interval if the format is interstitial', () => {
+        nowInstantStub.returns(100000);
+        const frequencyCapping = makeFrequencyCapping([
+          {
+            adUnitPath: interstitialDomId,
+            conditions: { pacingInterval: { intervalInMs: 30000, maxImpressions: 1 } }
+          }
+        ]);
+        const format = googletag.enums.OutOfPageFormat.INTERSTITIAL.toString();
+
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
+
+        // this has no effect
+        frequencyCapping.onSlotRenderEnded(slotRenderEndedEvent(false, interstitialDomId, format));
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
+
+        // this should cap the ad unit
+        frequencyCapping.onImpressionViewable(impressionViewableEvent(interstitialDomId, format));
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.true;
+
+        sandbox.clock.tick(30100);
+        expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
       });
     });
 

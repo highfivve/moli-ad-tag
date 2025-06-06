@@ -90,9 +90,16 @@ describe('Global auction context', () => {
 
       it('should add slotRenderEnded event listener', () => {
         makeAuctionContext(auctionContextConfig);
-        expect(googletagAddEventListenerSpy).to.have.been.calledOnce;
-        expect(googletagAddEventListenerSpy).to.have.been.calledOnceWithExactly(
+        expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
           'slotRenderEnded',
+          sinon.match.func
+        );
+      });
+
+      it('should add impressionViewable event listener', () => {
+        makeAuctionContext(auctionContextConfig);
+        expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
+          'impressionViewable',
           sinon.match.func
         );
       });

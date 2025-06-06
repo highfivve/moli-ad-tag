@@ -20,6 +20,7 @@ import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
 import { AdSlot, consent, googleAdManager } from '../types/moliConfig';
+import { formatKey } from './keyValues';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -341,38 +342,56 @@ export const gptDefineSlots =
       };
 
       // define an ad slot depending on the `position` parameter
-      const defineAdSlot = (): googletag.IAdSlot | null => {
+      const defineAdSlot = (): [
+        googletag.IAdSlot | null,
+        googletag.enums.OutOfPageFormat | null
+      ] => {
         switch (moliSlot.position) {
           case 'in-page':
-            return context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
+            return [
+              context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+              null
+            ];
           case 'interstitial':
             // note that the interstitial position first requests prebid demand and if none, switches
             // to the out-of-page-interstitial position if there are no bids or low quality bids
             createDivIfMissing(moliSlot.domId);
-            return context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId);
+            return [
+              context.window__.googletag.defineSlot(resolvedAdUnitPath, sizes, moliSlot.domId),
+              null
+            ];
           case 'out-of-page':
             // this the custom out-of-page position format provided by google ad manager, which
             // requires a div element to be present in the DOM.
             createDivIfMissing(moliSlot.domId);
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
-              moliSlot.domId
-            );
+            return [
+              context.window__.googletag.defineOutOfPageSlot(resolvedAdUnitPath, moliSlot.domId),
+              null
+            ];
           case 'out-of-page-interstitial':
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window__.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
+              ),
               context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL
-            );
+            ];
           case 'out-of-page-bottom-anchor':
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window__.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window__.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
+              ),
               context.window__.googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR
-            );
+            ];
           case 'out-of-page-top-anchor':
-            return context.window__.googletag.defineOutOfPageSlot(
-              resolvedAdUnitPath,
+            return [
+              context.window__.googletag.defineOutOfPageSlot(
+                resolvedAdUnitPath,
+                context.window__.googletag.enums.OutOfPageFormat.TOP_ANCHOR
+              ),
               context.window__.googletag.enums.OutOfPageFormat.TOP_ANCHOR
-            );
+            ];
         }
       };
 
@@ -382,8 +401,14 @@ export const gptDefineSlots =
         if (context.env__ === 'test') {
           return null;
         }
-        const adSlot = defineAdSlot();
+        const [adSlot, format] = defineAdSlot();
         if (adSlot) {
+          // transport the special GAM formats through the ad slot targeting
+          if (format) {
+            adSlot.setTargeting(formatKey, format.toString());
+          } else {
+            adSlot.clearTargeting(formatKey);
+          }
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
           context.window__.googletag.display(adSlot);
         }
