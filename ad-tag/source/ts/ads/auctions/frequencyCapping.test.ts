@@ -83,7 +83,7 @@ describe('FrequencyCapping', () => {
           return key === 'f' && format ? [format] : [];
         }
       }
-    } as googletag.events.IImpressionViewableEvent);
+    }) as googletag.events.IImpressionViewableEvent;
 
   after(() => {
     // bring everything back to normal after tests
