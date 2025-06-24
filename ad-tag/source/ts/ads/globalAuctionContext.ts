@@ -60,7 +60,8 @@ export const createGlobalAuctionContext = (
 
   // Ensure pbjs and googletag are initialized
   window.pbjs = window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
-  window.googletag = window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
+  window.googletag = window.googletag || ({} as unknown as googletag.IGoogleTag);
+  window.googletag.cmd = window.googletag.cmd || [];
 
   // Register events
   if (config.biddersDisabling?.enabled || config.previousBidCpms?.enabled) {
