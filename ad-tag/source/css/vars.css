@@ -1,8 +1,28 @@
 /** provided by publisher or generated through external system */
-/** sticky footer ad variables */
+/** sticky footer ad global variables */
 :root {
   --h5v-sticky-footer-bg: #f0f0f0;
   --h5v-sticky-footer-close-clickable-area: -20px;
+  --h5v-sticky-footer-z-index: 900;
+}
+
+/** sticky footer ad variables for slim-width design */
+:root {
+  --h5v-sticky-footer-box-shadow: 0 -1px 1px 0 rgba(0, 0, 0, 0.2);
+  --h5v-sticky-footer-container-transform: translate(-50%);
+  --h5v-sticky-footer-container-left: 50%;
+  --h5v-sticky-footer-container-width: fit-content;
+  --h5v-sticky-footer-container-padding: 0;
+  --h5v-sticky-footer-container-display-on-hidden: none;
+  --h5v-sticky-footer-container-transition-on-hidden: none;
+  --h5v-sticky-footer-button-border-radius: 12px 0 0 0;
+  --h5v-sticky-footer-button-padding: 0.1rem 0.5rem;
+}
+
+@media (--h5v-desktop) {
+  :root {
+    --h5v-sticky-footer-button-border-radius: 12px 12px 0 0;
+  }
 }
 
 /** sticky header ad - height variables */
