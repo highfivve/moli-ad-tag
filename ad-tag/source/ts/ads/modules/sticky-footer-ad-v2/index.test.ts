@@ -235,18 +235,22 @@ describe('Sticky-footer-v2 Module', () => {
     const slotRenderedCallback: (
       event: googletag.events.ISlotRenderEndedEvent,
       listenerSpy: Sinon.SinonSpy
-    ) => void = (event: googletag.events.ISlotRenderEndedEvent, listenerSpy: Sinon.SinonSpy) =>
-      listenerSpy.args.find(args => (args[0] as string) === 'slotRenderEnded')?.[1] as unknown as (
-        event: googletag.events.ISlotRenderEndedEvent
-      ) => void;
+    ) => void = (event: googletag.events.ISlotRenderEndedEvent, listenerSpy: Sinon.SinonSpy) => {
+      const callback = listenerSpy.args.find(
+        args => (args[0] as string) === 'slotRenderEnded'
+      )?.[1] as unknown as (event: googletag.events.ISlotRenderEndedEvent) => void;
+      callback(event);
+    };
 
     const slotLoadedCallback: (
       event: googletag.events.ISlotOnloadEvent,
       listenerSpy: Sinon.SinonSpy
-    ) => void = (event: googletag.events.ISlotOnloadEvent, listenerSpy: Sinon.SinonSpy) =>
-      listenerSpy.args.find(args => (args[0] as string) === 'slotOnload')?.[1] as unknown as (
-        event: googletag.events.ISlotOnloadEvent
-      ) => void;
+    ) => void = (event: googletag.events.ISlotOnloadEvent, listenerSpy: Sinon.SinonSpy) => {
+      const callback = listenerSpy.args.find(
+        args => (args[0] as string) === 'slotOnload'
+      )?.[1] as unknown as (event: googletag.events.ISlotOnloadEvent) => void;
+      callback(event);
+    };
 
     const adSticky = jsDomWindow.document.createElement('div');
     adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
@@ -363,7 +367,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [], 'close');
 
       slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
       slotLoadedCallback(slotLoadedEvent, listenerSpy);
