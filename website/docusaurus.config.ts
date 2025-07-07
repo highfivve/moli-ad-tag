@@ -27,9 +27,11 @@ const config: Config = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.ts'),
+          routeBasePath: '/docs',
           // Please change this to your repo.
           editUrl: 'https://github.com/highfivve/moli-ad-tag'
         },
+        blog: false,
         theme: {
           customCss: './src/css/custom.css'
         }
