@@ -6,7 +6,7 @@ title: Build your ad tag
 The ad tag is the javascript bundle that takes care of your ad setup. It's like any other js library.
 You can
 
-* build a bundle through the `bundle.ts` as described in the [README.md](https://github.com/highfivve/moli-ad-tag/tree/main?tab=readme-ov-file#building-a-bundle)
+* build a bundle through the `bundle.ts` as described in the [README.md](https://github.com/highfivve/moli-ad-tag?tab=readme-ov-file#ad-tag-library)
 * use a prebuilt ad tag from the [assets/bundle](https://github.com/highfivve/moli-ad-tag/tree/gh-pages/assets/bundle) on github pages ( not for prod though! )
 * use it as an NPM dependency in your project
 
