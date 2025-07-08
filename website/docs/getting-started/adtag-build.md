@@ -3,16 +3,19 @@ id: adtag-build
 title: Build your ad tag
 ---
 
-The ad tag is the javascript bundle that takes care of your ad setup.
-You can split and optimize as you like, but for this getting started we build one
-big bundle that contains everything.
+The ad tag is the javascript bundle that takes care of your ad setup. It's like any other js library.
+You can
+
+* build a bundle through the `bundle.ts` as described in the [README.md](https://github.com/highfivve/moli-ad-tag/tree/main?tab=readme-ov-file#building-a-bundle)
+* use a prebuilt ad tag from the [assets/bundle](https://github.com/highfivve/moli-ad-tag/tree/gh-pages/assets/bundle) on github pages ( not for prod though! )
+* use it as an NPM dependency in your project
 
 ## Replace the unconfigured ad tag
 
 Your `index.html` contains a pre built ad tag that has no configuration.
 
 ```html
-<script async="async" src="https://highfivve.github.io/moli-ad-tag/assets/js/latest.js"></script>
+<script async="async" src="https://highfivve.github.io/moli-ad-tag/assets/bundle/adtag.mjs"></script>
 ```
 
 The configuration is inlined on the page:
@@ -35,52 +38,8 @@ We highly recommend adding the configuration into the ad tag and use typescript 
 check for compilation errors.
 
 How to setup an ad tag then? It's a javascript bundle that you can build with the tools
-you like. `yarn` or `npm` as dependency management. `wepback` or `parcel` for minification.
-For this tutorial we'll use `yarn` and webpack`.
+you like. `yarn` or `npm` as dependency management. `wepback`, `esbuild` or `rollup` for minification.
 
-## Sample project
+## Sample projects
 
-:::important TODO
-link example projects
-:::
-
-```bash
-yarn init
-yarn add @highfivve/ad-tag
-```
-
-:::important TODO
-add webpack config
-:::
-
-## Prebid integration
-
-### Inlined
-
-:::important TODO
-:::
-
-### Separate webpack build
-
-:::important TODO
-:::
-### Separate project
-
-## Best practices
-
-We have found a few things that worked really well for us.
-
-### Immutable ad tags
-
-We highly recommend to version your ad tag builds and always deploy a new bundle.
-This is a little bit more effort, but comes with some nice benefits
-
-1. You can easily roll back
-2. You can cache the ad tag forever
-3. You can a/b test different bundles
-4. You can rollout incrementally
-
-### Build ES5 and ES6 bundles
-
-:::important TODO
-:::
+The repo contains a [few sample projects](https://github.com/highfivve/moli-ad-tag/tree/main/examples) that you can use as a starting point.
