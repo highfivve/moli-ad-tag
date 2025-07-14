@@ -280,25 +280,27 @@ export const createFrequencyCapping = (
     },
 
     isAdUnitCapped(adUnitPath: string): boolean {
-      return resolvedAdUnitPathPositionConfigs.some(positionConfig => {
-        return (
-          (positionConfig.adUnitPath === adUnitPath &&
-            // cap if minRequestAds is not reached yet
-            positionConfig.conditions.delay &&
-            numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
-          // cap if not at the right pacing interval yet
-          (positionConfig.conditions.pacingRequestAds &&
-            // if there are no winning impressions yet, we can request ads
-            positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
-            // check if enough ad requests were made since the last impression
-            numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
-              positionConfig.conditions.pacingRequestAds.requestAds) ||
-          // cap if the maxImpressions is reached in the current window
-          (positionConfig.conditions.pacingInterval &&
-            (positionImpSchedules.get(adUnitPath) ?? []).length >=
-              positionConfig.conditions.pacingInterval.maxImpressions)
-        );
-      });
+      return resolvedAdUnitPathPositionConfigs
+        .filter(config => config.adUnitPath === adUnitPath)
+        .some(positionConfig => {
+          return (
+            (positionConfig.adUnitPath === adUnitPath &&
+              // cap if minRequestAds is not reached yet
+              positionConfig.conditions.delay &&
+              numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
+            // cap if not at the right pacing interval yet
+            (positionConfig.conditions.pacingRequestAds &&
+              // if there are no winning impressions yet, we can request ads
+              positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
+              // check if enough ad requests were made since the last impression
+              numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
+                positionConfig.conditions.pacingRequestAds.requestAds) ||
+            // cap if the maxImpressions is reached in the current window
+            (positionConfig.conditions.pacingInterval &&
+              (positionImpSchedules.get(adUnitPath) ?? []).length >=
+                positionConfig.conditions.pacingInterval.maxImpressions)
+          );
+        });
     },
 
     isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
