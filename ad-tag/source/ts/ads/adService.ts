@@ -406,11 +406,19 @@ export class AdService {
 
     const { loaded } = { ...{ loaded: 'manual' }, ...options };
 
+    const allowedLoadingBehaviours = new Set<behaviour.ISlotLoading['loaded']>(['infinite']);
+    if (loaded === 'eager') {
+      allowedLoadingBehaviours.add('manual');
+      allowedLoadingBehaviours.add('eager');
+    } else {
+      allowedLoadingBehaviours.add(loaded as behaviour.ISlotLoading['loaded']);
+    }
+
     const availableSlots = config.slots
       .filter(
         slot =>
           domIds.some(domId => domId === slot.domId) &&
-          (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+          allowedLoadingBehaviours.has(slot.behaviour.loaded)
       )
       .filter(isSlotAvailable(this.window))
       // if sizesOverride is provided, override the sizes of the slots
