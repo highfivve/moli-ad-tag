@@ -1377,7 +1377,7 @@ export namespace prebidjs {
       readonly auctionStart?: number;
       readonly bidderCode?: BidderCode;
       readonly bidderRequestId?: string;
-      readonly bids?: [];
+      readonly bids?: Array<IBidObject<any, any> & { adUnitCode: string }>;
       readonly gdprConsent?: GdprConsent;
       /**
        * different functions to manage metrics

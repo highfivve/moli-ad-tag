@@ -1395,6 +1395,11 @@ export namespace Moli {
 
       /** milliseconds until a bidder becomes active again  */
       readonly reactivationPeriod: number;
+
+      /**
+       * Optional list of dom ids for positions that should never be disabled.
+       */
+      readonly excludedPositions?: string[];
     }
 
     /**

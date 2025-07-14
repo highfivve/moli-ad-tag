@@ -48,12 +48,16 @@ export class BiddersDisabling {
    *
    * Note that by default bidders are never disabled.
    *
-   * @param position the DOM id of the ad unit that should be checked
+   * @param domId the DOM id of the ad unit that should be checked
    * @param bidderCode the prebid.js client side bidder code
    * @returns true if the bidder is disabled for the given position, false otherwise
    */
-  public isBidderDisabled(position: string, bidderCode: BidderCode): boolean {
-    return this.participationInfo.get(position)?.get(bidderCode)?.disabled ?? false;
+  public isBidderDisabled(domId: string, bidderCode: BidderCode): boolean {
+    if (this.config.excludedPositions?.includes(domId)) {
+      return false;
+    }
+
+    return this.participationInfo.get(domId)?.get(bidderCode)?.disabled ?? false;
   }
 
   /**
@@ -62,10 +66,10 @@ export class BiddersDisabling {
    * For more info, execute => pbjs.getEvents().filter(event => (event.eventType === 'auctionEnd'))
    * or @see https://docs.prebid.org/dev-docs/publisher-api-reference/getEvents.html
    */
-  public onAuctionEnd(auction: any): void {
-    auction.bidderRequests.forEach(bidderRequest => {
+  public onAuctionEnd(auction: prebidjs.event.AuctionObject): void {
+    auction.bidderRequests?.forEach(bidderRequest => {
       // iterate over all bids and in each bid request and update participationInfo
-      bidderRequest.bids.forEach(bid => {
+      bidderRequest.bids?.forEach(bid => {
         const bidderCode = bid.bidder;
         const adUnitCode = bid.adUnitCode;
 
@@ -93,8 +97,8 @@ export class BiddersDisabling {
       });
     });
 
-    auction.bidsReceived.forEach(bidReceived => {
-      const bidderForPosition = bidReceived.bidderCode;
+    auction.bidsReceived?.forEach(bidReceived => {
+      const bidderForPosition = bidReceived.bidder;
       const position = bidReceived.adUnitCode;
 
       const bidderState = this.participationInfo.get(position)?.get(bidderForPosition);
