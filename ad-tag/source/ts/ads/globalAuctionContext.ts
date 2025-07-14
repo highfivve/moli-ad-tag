@@ -64,7 +64,11 @@ export const createGlobalAuctionContext = (
   window.googletag.cmd = window.googletag.cmd || [];
 
   // Register events
-  if (config.biddersDisabling?.enabled || config.previousBidCpms?.enabled) {
+  if (
+    config.biddersDisabling?.enabled ||
+    config.previousBidCpms?.enabled ||
+    config.frequencyCap?.enabled
+  ) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('auctionEnd', auction => {
         if (config.biddersDisabling?.enabled) {
@@ -72,6 +76,9 @@ export const createGlobalAuctionContext = (
         }
         if (config.previousBidCpms?.enabled && auction.bidsReceived) {
           previousBidCpms?.onAuctionEnd(auction.bidsReceived);
+        }
+        if (config.frequencyCap?.enabled) {
+          frequencyCapping?.onAuctionEnd(auction);
         }
       });
     });
