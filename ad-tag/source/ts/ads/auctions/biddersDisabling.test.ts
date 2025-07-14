@@ -1,63 +1,52 @@
 import { expect } from 'chai';
-import Sinon, { SinonSandbox, SinonFakeTimers } from 'sinon';
+import Sinon, { SinonSandbox } from 'sinon';
 import { BiddersDisabling } from './biddersDisabling';
 import { prebidjs } from '../../types/prebidjs';
-import BidderCode = prebidjs.BidderCode;
 import { createDom } from '../../stubs/browserEnvSetup';
 
-type BidType = {
-  bidder: BidderCode;
-  adUnitCode: string;
-};
+const position1 = 'position1';
 
-type AuctionType = {
-  bidderRequests: {
-    bids: BidType[];
-  }[];
-  bidsReceived: { bidderCode: BidderCode; adUnitCode: string }[];
-};
-
-const auction1: AuctionType = {
+const auction1: prebidjs.event.AuctionObject = {
   bidderRequests: [
     {
       bids: [
-        { bidder: 'gumgum', adUnitCode: 'position1' },
-        { bidder: 'seedtag', adUnitCode: 'position1' }
+        { bidder: 'gumgum', adUnitCode: position1 } as any,
+        { bidder: 'seedtag', adUnitCode: position1 as any }
       ]
     }
   ],
-  bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
-};
+  bidsReceived: [{ bidder: 'gumgum', adUnitCode: position1 } as any]
+} as prebidjs.event.AuctionObject;
 
-const auction2: AuctionType = {
+const auction2: prebidjs.event.AuctionObject = {
   bidderRequests: [
     {
       bids: [
-        { bidder: 'gumgum', adUnitCode: 'position1' },
-        { bidder: 'seedtag', adUnitCode: 'position1' }
+        { bidder: 'gumgum', adUnitCode: position1 } as any,
+        { bidder: 'seedtag', adUnitCode: position1 } as any
       ]
     }
   ],
-  bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: 'position1' }]
-};
+  bidsReceived: [{ bidderCode: 'gumgum', adUnitCode: position1 } as any]
+} as prebidjs.event.AuctionObject;
 
-const auction3: AuctionType = {
+const auction3: prebidjs.event.AuctionObject = {
   bidderRequests: [
     {
       bids: [
-        { bidder: 'gumgum', adUnitCode: 'position1' },
+        { bidder: 'gumgum', adUnitCode: position1 } as any,
         {
           bidder: 'seedtag',
-          adUnitCode: 'position1'
-        }
+          adUnitCode: position1
+        } as any
       ]
     }
   ],
   bidsReceived: [
-    { bidderCode: 'gumgum', adUnitCode: 'position1' },
-    { bidderCode: 'seedtag', adUnitCode: 'position1' }
+    { bidder: 'gumgum', adUnitCode: position1 } as any,
+    { bidder: 'seedtag', adUnitCode: position1 } as any
   ]
-};
+} as prebidjs.event.AuctionObject;
 
 describe('BiddersDisabling', () => {
   const dom = createDom();
@@ -95,7 +84,7 @@ describe('BiddersDisabling', () => {
 
   it('should return false if bidder is not in participationInfo config', () => {
     biddersDisablingConfig.onAuctionEnd(auction1);
-    const result = biddersDisablingConfig.isBidderDisabled('position1', 'onetag');
+    const result = biddersDisablingConfig.isBidderDisabled(position1, 'onetag');
     expect(result).to.be.false;
   });
 
@@ -105,7 +94,7 @@ describe('BiddersDisabling', () => {
     });
 
     // three bid requests, three bid received, rate is 1 > 0.5 => gumgum should not be disabled
-    const gumGumResult = biddersDisablingConfig.isBidderDisabled('position1', 'gumgum');
+    const gumGumResult = biddersDisablingConfig.isBidderDisabled(position1, 'gumgum');
     expect(gumGumResult).to.be.false;
   });
 
@@ -115,7 +104,7 @@ describe('BiddersDisabling', () => {
     });
 
     // three bid requests, one bid received, rate is 0.33 < 0.5 and bidRequestCount is 3 > 2 => seedtag should be disabled
-    const seedTagResult = biddersDisablingConfig.isBidderDisabled('position1', 'seedtag');
+    const seedTagResult = biddersDisablingConfig.isBidderDisabled(position1, 'seedtag');
     expect(seedTagResult).to.be.true;
   });
 
@@ -125,23 +114,36 @@ describe('BiddersDisabling', () => {
     });
 
     // three bid requests, one bid received, rate is 0.33 < 0.5 and bidRequestCount is 3 > 2 => seedtag should be disabled
-    const seedTagResult = biddersDisablingConfig.isBidderDisabled('position1', 'seedtag');
+    const seedTagResult = biddersDisablingConfig.isBidderDisabled(position1, 'seedtag');
     expect(seedTagResult).to.be.true;
 
     // 1 hour didn't pass yet, seedtag should still be disabled
     sandbox.clock.tick(3599999);
-    const seedTagResultBeforeAnHour = biddersDisablingConfig.isBidderDisabled(
-      'position1',
-      'seedtag'
-    );
+    const seedTagResultBeforeAnHour = biddersDisablingConfig.isBidderDisabled(position1, 'seedtag');
     expect(seedTagResultBeforeAnHour).to.be.true;
 
     // 1 hour passed, seedtag should be reactivated
     sandbox.clock.tick(3600000);
-    const seedTagResultAfterAnHour = biddersDisablingConfig.isBidderDisabled(
-      'position1',
-      'seedtag'
-    );
+    const seedTagResultAfterAnHour = biddersDisablingConfig.isBidderDisabled(position1, 'seedtag');
     expect(seedTagResultAfterAnHour).to.be.false;
+  });
+
+  it('should not disable excluded positions', () => {
+    const biddersDisablingWithExclusion = new BiddersDisabling(
+      {
+        enabled: true,
+        minBidRequests: 2,
+        minRate: 0.5,
+        reactivationPeriod: 3600000,
+        excludedPositions: [position1]
+      },
+      window
+    );
+    [auction1, auction2, auction3].forEach(auction => {
+      biddersDisablingWithExclusion.onAuctionEnd(auction);
+    });
+
+    const result = biddersDisablingConfig.isBidderDisabled(position1, 'seedtag');
+    expect(result).to.be.false;
   });
 });
