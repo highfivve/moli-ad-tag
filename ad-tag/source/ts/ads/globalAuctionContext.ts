@@ -80,14 +80,21 @@ export class GlobalAuctionContext {
       this.window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
 
     // Register events, if enabled
-    if (this.config.biddersDisabling?.enabled || this.config.previousBidCpms?.enabled) {
+    if (
+      this.config.biddersDisabling?.enabled ||
+      this.config.previousBidCpms?.enabled ||
+      this.config.frequencyCap?.enabled
+    ) {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('auctionEnd', auction => {
           if (this.config.biddersDisabling?.enabled) {
-            this.handleAuctionEndEvent(auction);
+            this.biddersDisabling?.onAuctionEnd(auction);
           }
           if (this.config.previousBidCpms?.enabled && auction.bidsReceived) {
             this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
+          }
+          if (this.config.frequencyCap?.enabled) {
+            this.frequencyCapping?.onAuctionEnd(auction);
           }
         });
       });
@@ -148,9 +155,5 @@ export class GlobalAuctionContext {
 
   configureStep(): ConfigureStep {
     return this.#configureStep;
-  }
-
-  private handleAuctionEndEvent(auction: any) {
-    this.biddersDisabling?.onAuctionEnd(auction);
   }
 }
