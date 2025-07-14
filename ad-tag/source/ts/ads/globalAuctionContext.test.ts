@@ -178,10 +178,11 @@ describe('Global auction context', () => {
         expect(context.isBidderFrequencyCappedOnSlot('slot-1', 'dspx')).to.be.false;
       });
 
-      it('should add bidWon event listener', () => {
+      it('should add bidWon and auctionEnd event listener', () => {
         makeAuctionContext(auctionContextConfig);
-        expect(pbjsOnEventSpy).to.have.been.calledOnce;
-        expect(pbjsOnEventSpy).to.have.been.calledOnceWithExactly('bidWon', sinon.match.func);
+        expect(pbjsOnEventSpy).to.have.been.calledTwice;
+        expect(pbjsOnEventSpy).to.have.been.calledWithExactly('bidWon', sinon.match.func);
+        expect(pbjsOnEventSpy).to.have.been.calledWithExactly('auctionEnd', sinon.match.func);
       });
     });
 
