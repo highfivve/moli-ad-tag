@@ -1009,6 +1009,48 @@ describe('AdService', () => {
       );
     });
 
+    it('should call adPipeline.run with the slot if slot is manual and in the DOM', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        loaded: 'manual'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual and in the DOM and the override option is manual', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        loaded: 'eager'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number
+      );
+    });
+
     it('should call adPipeline.run with updates slots with the options.sizesOverride', async () => {
       const adService = makeAdService();
       const slot: AdSlot = {
