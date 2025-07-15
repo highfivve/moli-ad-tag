@@ -21,6 +21,7 @@ import {
 } from './googleAdManager';
 import domready from '../util/domready';
 import {
+  prebidClearAuction,
   prebidConfigure,
   prebidDefineSlots,
   prebidInit,
@@ -237,6 +238,9 @@ export class AdService {
       configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {
         configure.push(prebidRemoveAdUnits(config.prebid));
+        if (config.prebid.clearAllAuctions) {
+          configure.push(prebidClearAuction());
+        }
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
       requestBids.push(prebidRequestBids(config.prebid, adServer));
