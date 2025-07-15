@@ -860,7 +860,8 @@ describe('AdService', () => {
         [],
         emptyConfig,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -878,7 +879,8 @@ describe('AdService', () => {
         [],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -896,7 +898,8 @@ describe('AdService', () => {
         [],
         configWithEagerSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -913,7 +916,8 @@ describe('AdService', () => {
         [],
         configWithEagerSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -933,7 +937,8 @@ describe('AdService', () => {
         [slot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -955,7 +960,8 @@ describe('AdService', () => {
         [infiniteSlot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: undefined }
       );
     });
 
@@ -980,7 +986,8 @@ describe('AdService', () => {
         [backfillSlot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { loaded: 'backfill' } }
       );
     });
 
@@ -1005,7 +1012,8 @@ describe('AdService', () => {
         [backfillSlot, infiniteSlot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { loaded: 'backfill' } }
       );
     });
 
@@ -1026,7 +1034,8 @@ describe('AdService', () => {
         [slot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { loaded: 'manual' } }
       );
     });
 
@@ -1047,7 +1056,8 @@ describe('AdService', () => {
         [slot],
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { loaded: 'eager' } }
       );
     });
 
@@ -1075,7 +1085,8 @@ describe('AdService', () => {
         Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 250]] }]),
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { sizesOverride: [[300, 250]] } }
       );
     });
 
@@ -1100,7 +1111,8 @@ describe('AdService', () => {
         Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 600]] }]),
         configWithManualSlot,
         emptyRuntimeConfig,
-        Sinon.match.number
+        Sinon.match.number,
+        { options: { sizesOverride: [[300, 600]] } }
       );
     });
   });
@@ -1155,7 +1167,7 @@ describe('AdService', () => {
         Sinon.match.same(moliConfig),
         Sinon.match.same(emptyTestRuntimeConfig),
         Sinon.match.number,
-        Sinon.match.same('bucket1')
+        { bucketName: 'bucket1', options: undefined }
       );
     });
 
@@ -1174,7 +1186,7 @@ describe('AdService', () => {
         Sinon.match.same(moliConfig),
         Sinon.match.same(emptyTestRuntimeConfig),
         Sinon.match.number,
-        Sinon.match.same('bucket1')
+        { bucketName: 'bucket1', options: { loaded: 'eager' } }
       );
     });
 
@@ -1192,7 +1204,7 @@ describe('AdService', () => {
         Sinon.match.same(moliConfig),
         Sinon.match.same(emptyTestRuntimeConfig),
         Sinon.match.number,
-        Sinon.match.same('bucket1')
+        { bucketName: 'bucket1', options: { sizesOverride: [[300, 250]] } }
       );
     });
   });

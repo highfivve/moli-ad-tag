@@ -258,12 +258,12 @@ export namespace MoliRuntime {
     refreshBucket(bucket: string, options?: RefreshAdSlotsOptions): Promise<'queued' | 'refreshed'>;
 
     /**
-     * Destroys the ad slots with the given domIds, which means
+     * Resumes all ad pipelines that have been delayed through a `refreshAdSlots()` call with a
+     * delay option:
      *
-     * 1. Calling cleanup functions for the ad slot
-     * 2. Call `googletag.destroySlots` for the ad slot
-     *
-     * The slot will remain in the configuration and in the DOM, but all inner state will be removed.
+     * ```ts
+     * moli.refreshAdSlots(['content_1'], { delay: { } });
+     * ```
      *
      * ## Use cases
      *
@@ -274,13 +274,29 @@ export namespace MoliRuntime {
      * but refreshed after another interaction. A common example would be modal popups that are opened.
      *
      * 1. User opens a modal
-     * 2. Remove ad slot that would collide with the modal, e.g. a sticky footer or sticky header
+     * 2. Refresh ad slot with delay option
      * 3. User closes the modal
-     * 4. Refresh the ad slot that was previously been removed
+     * 4. Call `moli.triggerDelay()` to resume the ad pipeline and refresh the ad slot
      *
-     * @param domIds
+     * ## Note
+     *
+     * The current implementation uses `window` event listeners to trigger the delayed ad pipeline.
+     * This might change in the future, so don't try to send those events manually.
+     *
+     * ### Event
+     *
+     * The current implementation sends a custom event like this
+     *
+     * ```ts
+     * window.dispatchEvent(new CustomEvent('h5v.trigger-delay'))
+     * ```
+     *
+     * In the future, we might add a `detail` property to the event that contains the domIds for,
+     * which the pipeline should be resumed. This is not trivial as the pipeline can't be resumed for
+     * a subset of ad slots, but only for all ad slots that have been delayed.
+     *
      */
-    // triggerDelay(domIds: string[]): void;
+    triggerDelay(): void;
 
     /**
      * Returns the  current state of the configuration. This configuration may not be final!

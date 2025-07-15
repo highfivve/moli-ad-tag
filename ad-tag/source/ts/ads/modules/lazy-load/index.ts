@@ -49,8 +49,8 @@ import { modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
-  HIGH_PRIORITY,
   InitStep,
+  LOW_PRIORITY,
   mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
@@ -124,30 +124,34 @@ export class LazyLoad implements IModule {
   }
 
   prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    // register a delay module step that keeps the state of lazy loaded slots
-
-    mkPrepareRequestAdsStep('lazy-module-delay', HIGH_PRIORITY, (context, slots) => {
-      return new Promise((resolve, reject) => {
-        const delay = context.options__?.options?.delay;
-        if (delay) {
-          context.logger__?.debug(this.name, 'delaying slots', slots);
-          const delayTrigger = new Promise<boolean>(resolve => {
-            context.window__.addEventListener('h5v.trigger-delay', () => resolve(true), {
-              once: true
+    return [
+      // this step is always enabled. It does not need any configuration and is only triggered
+      // by external API calls.
+      mkPrepareRequestAdsStep('lazy-module-delay', LOW_PRIORITY, (context, slots) => {
+        return new Promise((resolve, reject) => {
+          const delay = context.options__?.options?.delay;
+          if (delay) {
+            context.logger__?.debug(this.name, 'delaying slots', slots);
+            const delayTrigger = new Promise<boolean>(resolve => {
+              context.window__.addEventListener('h5v.trigger-delay', () => resolve(true), {
+                once: true
+              });
             });
-          });
-          const timeout = new Promise<boolean>(resolve => {
-            setTimeout(() => resolve(false), delay.timeoutMs);
-          });
-          return Promise.race([delayTrigger, timeout]).then(triggered => {
-            return triggered ? resolve() : reject(new Error('Delay timeout exceeded'));
-          });
-        } else {
-          resolve();
-        }
-      });
-    });
-    return [];
+            const timeout = new Promise<boolean>(resolve => {
+              context.window__.setTimeout(() => resolve(false), delay.timeoutMs ?? 30000);
+            });
+            // if the failsafe delay kicks in, we reject the promise and fail the entire ad pipeline
+            // this is to prevent the ad pipeline from hanging indefinitely, most likely creating
+            // memory leaks
+            return Promise.race([delayTrigger, timeout]).then(triggered => {
+              return triggered ? resolve() : reject(new Error('Delay timeout exceeded'));
+            });
+          } else {
+            resolve();
+          }
+        });
+      })
+    ];
   }
 
   registerIntersectionObservers = (
