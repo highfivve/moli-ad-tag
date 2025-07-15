@@ -785,6 +785,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     }
   }
 
+  function triggerDelay(): void {
+    window.dispatchEvent(new CustomEvent('h5v.trigger-delay'));
+    return;
+  }
+
   function getState(): MoliRuntime.state.States {
     return state.state;
   }
@@ -922,6 +927,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     refreshAdSlot: refreshAdSlot,
     refreshBucket: refreshBucket,
     refreshInfiniteAdSlot: refreshInfiniteAdSlot,
+    triggerDelay: triggerDelay,
     getState: getState,
     openConsole: openConsole,
     addEventListener: eventService.addEventListener,

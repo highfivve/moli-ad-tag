@@ -138,7 +138,7 @@ describe('AdPipeline', () => {
           },
           emptyRuntimeConfig,
           1,
-          'one'
+          { bucketName: 'one' }
         )
         .then(() => {
           expect(timeout).to.be.equals(3000);
@@ -163,7 +163,7 @@ describe('AdPipeline', () => {
           },
           emptyRuntimeConfig,
           1,
-          'bla'
+          { bucketName: 'bla' }
         )
         .then(() => {
           expect(timeout).not.to.equals(3000);
