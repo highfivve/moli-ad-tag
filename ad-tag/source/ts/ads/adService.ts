@@ -449,7 +449,9 @@ export class AdService {
     }
 
     this.logger.debug('AdService', 'refresh ad slots', availableSlots);
-    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls);
+    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls, {
+      options
+    });
   }
 
   public refreshBucket(
@@ -480,7 +482,7 @@ export class AdService {
       config,
       runtimeConfig,
       this.requestAdsCalls,
-      bucket
+      { bucketName: bucket, options: options }
     );
   }
 

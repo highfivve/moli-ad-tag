@@ -49,7 +49,9 @@ import { modules } from 'ad-tag/types/moliConfig';
 import {
   AdPipelineContext,
   ConfigureStep,
+  HIGH_PRIORITY,
   InitStep,
+  mkPrepareRequestAdsStep,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { IModule, ModuleType } from 'ad-tag/types/module';
@@ -122,6 +124,29 @@ export class LazyLoad implements IModule {
   }
 
   prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+    // register a delay module step that keeps the state of lazy loaded slots
+
+    mkPrepareRequestAdsStep('lazy-module-delay', HIGH_PRIORITY, (context, slots) => {
+      return new Promise((resolve, reject) => {
+        const delay = context.options__?.options?.delay;
+        if (delay) {
+          context.logger__?.debug(this.name, 'delaying slots', slots);
+          const delayTrigger = new Promise<boolean>(resolve => {
+            context.window__.addEventListener('h5v.trigger-delay', () => resolve(true), {
+              once: true
+            });
+          });
+          const timeout = new Promise<boolean>(resolve => {
+            setTimeout(() => resolve(false), delay.timeoutMs);
+          });
+          return Promise.race([delayTrigger, timeout]).then(triggered => {
+            return triggered ? resolve() : reject(new Error('Delay timeout exceeded'));
+          });
+        } else {
+          resolve();
+        }
+      });
+    });
     return [];
   }
 
