@@ -5,6 +5,7 @@ import {
   InitStep,
   LOW_PRIORITY,
   mkConfigureStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   mkPrepareRequestAdsStep,
   mkRequestBidsStep,
@@ -293,6 +294,21 @@ export const prebidRemoveAdUnits = (prebidConfig: Moli.headerbidding.PrebidConfi
       })
   );
 
+export const prebidClearAuction = (): ConfigureStep => {
+  return mkConfigureStepOncePerRequestAdsCycle(
+    'prebid-clear-auction',
+    (context: AdPipelineContext) =>
+      new Promise<void>(resolve => {
+        context.window.pbjs = context.window.pbjs || ({ que: [] } as unknown as IPrebidJs);
+        context.window.pbjs.que.push(() => {
+          context.logger.debug('Prebid', 'Clearing prebid auctions');
+          context.window.pbjs.clearAllAuctions();
+        });
+        resolve();
+      })
+  );
+};
+
 export const prebidConfigure = (
   prebidConfig: Moli.headerbidding.PrebidConfig,
   schainConfig: Moli.schain.SupplyChainConfig
@@ -340,8 +356,9 @@ export const prebidConfigure = (
 
             // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
             // don't add this to the init step.
-            context.window.pbjs.registerSignalSources &&
+            if (context.window.pbjs.registerSignalSources) {
               context.window.pbjs.registerSignalSources();
+            }
           });
 
           // the resolve is intentionally not inside the pbjs.que.push. At this point we do not need to block the pipeline
