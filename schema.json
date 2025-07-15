@@ -453,6 +453,13 @@
           "description": "enable or disable this feature",
           "type": "boolean"
         },
+        "excludedPositions": {
+          "description": "Optional list of dom ids for positions that should never be disabled.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "minBidRequests": {
           "description": "define a minimum number of bid requests sent by a bidder before it can be deactivated",
           "type": "number"
