@@ -243,6 +243,26 @@ export namespace prebidjs {
     getAllWinningBids(): prebidjs.BidResponse[];
 
     /**
+     * This function returns the bid responses at the given moment.
+     *
+     * Note that prebidjs doesn't clean up old bid responses, so this function will return all bid responses
+     * over time. You have to use clearAllAuctions() to clear the bid responses.
+     *
+     * @param adUnitCode
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getBidResponsesForAdUnitCode.html
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getBidResponses.html
+     */
+    getBidResponsesForAdUnitCode(adUnitCode: string): IBidsResponse;
+
+    /**
+     * Utility to clear all ad units of bids. This is useful for testing or to clear caches in a
+     * single page application.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/clearAllAuctions.html
+     */
+    clearAllAuctions(): void;
+
+    /**
      * Defining an alias can help avoid user confusion since it’s possible to send parameters to the same adapter
      * but in different contexts (e.g, The publisher uses "appnexus" for demand and also uses "newAlias" which is an
      * SSP partner that uses the "appnexus" adapter to serve their own unique demand).
@@ -5707,6 +5727,10 @@ export namespace prebidjs {
     readonly auctionId: string;
   }
 
+  export interface IBidsResponse {
+    bids: prebidjs.BidResponse[];
+  }
+
   /**
    * The Object returned by the bidsBackHandler when requesting the Prebidjs bids.
    */
@@ -5714,14 +5738,7 @@ export namespace prebidjs {
     /**
      * The adUnit code, e.g. 'ad-presenter-desktop'
      */
-    [adUnitCode: string]:
-      | {
-          /**
-           * The bids that were returned by prebid
-           */
-          bids: prebidjs.BidResponse[];
-        }
-      | undefined;
+    [adUnitCode: string]: IBidsResponse | undefined;
   }
 
   /**

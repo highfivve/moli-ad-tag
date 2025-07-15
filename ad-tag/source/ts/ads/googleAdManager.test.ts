@@ -186,65 +186,129 @@ describe('google ad manager', () => {
   });
 
   describe('gptDestroyAdSlots', () => {
-    it('should call googletag.destroySlots', () => {
-      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
-      const step = gptDestroyAdSlots();
+    const domId1 = 'slot-1';
+    const googleSlot1 = googleAdSlotStub('', domId1);
+    describe('cleanup all', () => {
+      it('should call googletag.destroySlots', async () => {
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
 
-      return step(adPipelineContext(), []).then(() => {
+        await step(adPipelineContext(), []);
         expect(destroySlotsSpy).to.have.been.calledOnce;
         expect(destroySlotsSpy.firstCall.args).to.have.length(0);
       });
+
+      it('should only run once per requestAds cycle', async () => {
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
+
+        await step(adPipelineContext('production', emptyConfig, 1), []);
+        await step(adPipelineContext('production', emptyConfig, 1), []);
+        await step(adPipelineContext('production', emptyConfig, 2), []);
+        await step(adPipelineContext('production', emptyConfig, 2), []);
+        expect(destroySlotsSpy).to.have.been.calledTwice;
+      });
     });
 
-    it('should call googletag.destroySlots with existing slots if destroyAllAdSlots is set to false', async () => {
-      const domId = 'slot-1';
-      const googleSlot = googleAdSlotStub('', domId);
-      sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot]);
-      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
-      const step = gptDestroyAdSlots();
+    describe('cleanup requested', () => {
+      it('should call googletag.destroySlots with existing slots if cleanup is set to requested', async () => {
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot1]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
 
-      await step(
-        adPipelineContext('production', {
+        await step(
+          adPipelineContext('production', {
+            ...emptyConfig,
+            spa: { enabled: true, cleanup: { slots: 'requested' }, validateLocation: 'href' }
+          }),
+          [createdAdSlot(domId1), createdAdSlot('slot-2')]
+        );
+        expect(destroySlotsSpy).to.have.been.calledOnce;
+        expect(destroySlotsSpy.firstCall.args).to.have.length(1);
+        const destroyedSlots: googletag.IAdSlot[] = destroySlotsSpy.firstCall.args[0];
+        expect(destroyedSlots).to.be.an('array');
+        expect(destroyedSlots).to.have.length(1);
+        expect(destroyedSlots[0]).to.deep.equals(googleSlot1);
+      });
+
+      it('should only run on each requestAds cycle if cleanup is set to requested', async () => {
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot1]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
+        const config: Moli.MoliConfig = {
           ...emptyConfig,
-          spa: { enabled: true, destroyAllAdSlots: false, validateLocation: 'href' }
-        }),
-        [createdAdSlot(domId), createdAdSlot('slot-2')]
-      );
-      expect(destroySlotsSpy).to.have.been.calledOnce;
-      expect(destroySlotsSpy.firstCall.args).to.have.length(1);
-      const destroyedSlots: googletag.IAdSlot[] = destroySlotsSpy.firstCall.args[0];
-      expect(destroyedSlots).to.be.an('array');
-      expect(destroyedSlots).to.have.length(1);
-      expect(destroyedSlots[0]).to.deep.equals(googleSlot);
+          spa: { enabled: true, cleanup: { slots: 'requested' }, validateLocation: 'href' }
+        };
+
+        await step(adPipelineContext('production', config, 1), [createdAdSlot(domId1)]);
+        await step(adPipelineContext('production', config, 1), [createdAdSlot(domId1)]);
+        await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
+        await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
+        expect(destroySlotsSpy).callCount(4);
+      });
     });
 
-    it('should only run once per requestAds cycle', async () => {
-      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
-      const step = gptDestroyAdSlots();
+    describe('cleanup excluded', () => {
+      it('should call googletag.destroySlots with existing slots if no excludes are defined', async () => {
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot1]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
 
-      await step(adPipelineContext('production', emptyConfig, 1), []);
-      await step(adPipelineContext('production', emptyConfig, 1), []);
-      await step(adPipelineContext('production', emptyConfig, 2), []);
-      await step(adPipelineContext('production', emptyConfig, 2), []);
-      expect(destroySlotsSpy).to.have.been.calledTwice;
-    });
+        const config: Moli.MoliConfig = {
+          ...emptyConfig,
+          spa: {
+            enabled: true,
+            cleanup: { slots: 'excluded', slotIds: [] },
+            validateLocation: 'href'
+          }
+        };
+        await step(adPipelineContext('production', config), [createdAdSlot(domId1)]);
+        expect(destroySlotsSpy).to.have.been.calledOnce;
+        expect(destroySlotsSpy).to.have.been.calledWith([googleSlot1]);
+      });
 
-    it('should only run on each requestAds cycle if destroyAllAdSlots is set to false', async () => {
-      const domId = 'slot-1';
-      const googleSlot = googleAdSlotStub('', domId);
-      sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot]);
-      const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
-      const step = gptDestroyAdSlots();
-      const config: Moli.MoliConfig = {
-        ...emptyConfig,
-        spa: { enabled: true, destroyAllAdSlots: false, validateLocation: 'href' }
-      };
+      it('should call googletag.destroySlots with existing slots that are not in slotIds', async () => {
+        const domId2 = 'slot-2';
+        const googleSlot2 = googleAdSlotStub('', domId2);
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot1, googleSlot2]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
 
-      await step(adPipelineContext('production', config, 1), [createdAdSlot(domId)]);
-      await step(adPipelineContext('production', config, 1), [createdAdSlot(domId)]);
-      await step(adPipelineContext('production', config, 2), [createdAdSlot(domId)]);
-      await step(adPipelineContext('production', config, 2), [createdAdSlot(domId)]);
-      expect(destroySlotsSpy).callCount(4);
+        const config: Moli.MoliConfig = {
+          ...emptyConfig,
+          spa: {
+            enabled: true,
+            cleanup: { slots: 'excluded', slotIds: [domId1] },
+            validateLocation: 'href'
+          }
+        };
+        await step(adPipelineContext('production', config), [
+          createdAdSlot(domId1),
+          createdAdSlot(domId2)
+        ]);
+        expect(destroySlotsSpy).to.have.been.calledOnce;
+        expect(destroySlotsSpy).to.have.been.calledWith([googleSlot2]);
+      });
+
+      it('should only run on each requestAds cycle if cleanup is set to excluded', async () => {
+        sandbox.stub(dom.window.googletag.pubads(), 'getSlots').returns([googleSlot1]);
+        const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
+        const step = gptDestroyAdSlots();
+        const config: Moli.MoliConfig = {
+          ...emptyConfig,
+          spa: {
+            enabled: true,
+            cleanup: { slots: 'excluded', slotIds: [] },
+            validateLocation: 'href'
+          }
+        };
+
+        await step(adPipelineContext('production', config, 1), [createdAdSlot(domId1)]);
+        await step(adPipelineContext('production', config, 1), [createdAdSlot(domId1)]);
+        await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
+        await step(adPipelineContext('production', config, 2), [createdAdSlot(domId1)]);
+        expect(destroySlotsSpy).callCount(2);
+      });
     });
   });
 

@@ -87,6 +87,12 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     getAllWinningBids(): prebidjs.BidResponse[] {
       return [];
     },
+    getBidResponsesForAdUnitCode(adUnitCode: string): prebidjs.IBidsResponse {
+      return { bids: [] };
+    },
+    clearAllAuctions(): void {
+      return;
+    },
     aliasBidder(
       bidderCode: string,
       alias: string,

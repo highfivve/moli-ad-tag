@@ -153,24 +153,45 @@ export const gptDestroyAdSlots = (): ConfigureStep => {
     if (context.env === 'test') {
       return Promise.resolve();
     }
-    if (context.config.spa?.destroyAllAdSlots === false) {
-      const allGptSlots = context.window.googletag.pubads().getSlots();
-      const gptSlots = slots
-        .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
-        .filter(isNotNull);
-      if (gptSlots.length === 0) {
-        context.logger.debug('GAM', 'no ad slots to destroy');
-      } else {
-        context.logger.debug('GAM', `destroy ${gptSlots.length} ad slots`, gptSlots);
-        context.window.googletag.destroySlots(gptSlots);
-      }
-    } else if (currentRequestAdsCalls !== context.requestAdsCalls) {
-      currentRequestAdsCalls = context.requestAdsCalls;
-      context.logger.debug('GAM', 'destroy all ad slots');
-      context.window.googletag.destroySlots();
-    }
+    const cleanup = context.config.spa?.cleanup ?? { slots: 'all' };
 
-    return Promise.resolve();
+    const destroySelectedSlots = (slots: googletag.IAdSlot[]): Promise<void> => {
+      if (slots.length === 0) {
+        context.logger.debug('GAM', 'no ad slots to destroy');
+        return Promise.resolve();
+      }
+      context.logger.debug('GAM', `destroy ${slots.length} ad slots`, slots);
+      context.window.googletag.destroySlots(slots);
+      return Promise.resolve();
+    };
+    const isNextRequestAdsCall = currentRequestAdsCalls !== context.requestAdsCalls;
+    currentRequestAdsCalls = context.requestAdsCalls;
+
+    context.logger.debug('GAM', `destroy ${cleanup.slots} ad slots`);
+    switch (cleanup.slots) {
+      case 'all':
+        if (isNextRequestAdsCall) {
+          context.window.googletag.destroySlots();
+        }
+        return Promise.resolve();
+      case 'requested':
+        const allGptSlots = context.window.googletag.pubads().getSlots();
+        const gptSlots = slots
+          .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
+          .filter(isNotNull);
+        // destroy all slots that are in the provided slot array
+        return destroySelectedSlots(gptSlots);
+      case 'excluded':
+        if (isNextRequestAdsCall) {
+          // destroy all slots that are not in the provided slot array
+          const destroyableSlots = context.window.googletag
+            .pubads()
+            .getSlots()
+            .filter(slot => !cleanup.slotIds.includes(slot.getSlotElementId()));
+          return destroySelectedSlots(destroyableSlots);
+        }
+        return Promise.resolve();
+    }
   });
 };
 
@@ -457,7 +478,7 @@ const checkAndSwitchToWebInterstitial = (
 
   if (interstitialSlot) {
     // for now, we only check if a bid is available. This can be more sophisticated in the future
-    // to check for a certain bid CPM. However prebid.js floor price feature should already filter
+    // to check for a certain bid CPM. However, prebid.js floor price feature should already filter
     // out all bids below a certain CPM
     const priceBuckets = interstitialSlot.adSlot.getTargeting('hb_pb');
     if (priceBuckets.length === 0) {
