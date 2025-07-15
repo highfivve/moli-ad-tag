@@ -120,6 +120,72 @@ export type ResolveAdUnitPathOptions = {
 
 export namespace spa {
   /**
+   * Default cleanup behaviour for single page applications.
+   * All slots are being destroyed on navigation.
+   */
+  export interface SinglePageAppCleanupConfigAll {
+    readonly slots: 'all';
+  }
+
+  /**
+   * This cleanup configuration destroys only the ad slots that are requested after navigation.
+   * Replacement for the old `destroyAllAdSlots` setting.
+   *
+   * It allows publishers to keep all ad slots alive on navigation and only destroy the ones
+   * that are requested.
+   *
+   * Use with caution and test properly.
+   *
+   * ## Use cases
+   *
+   * This setting can be used for publishers that have more "static" ad slots, like
+   * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+   * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+   * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+   * publisher, while other content positions are refreshed on navigation.
+   */
+  export interface SinglePageAppCleanupConfigRequested {
+    readonly slots: 'requested';
+  }
+
+  /**
+   * This cleanup configuration allows publishers to select which ad slots should not be destroyed
+   * on navigation. Currently only the `excluded` option is supported, which means that all ad slots
+   * are destroyed on navigation, except the ones listed in `slotIds`.
+   *
+   * ## Use cases
+   *
+   * There are a couple of use cases for this setting.
+   *
+   * ### Static out-of-content ad slots
+   *
+   * Sidebars or sticky footers that are always present are handled by the regular ad reload.
+   * Especially if the user navigates a lot on the page, e.g. swiping through images or profiles,
+   * this leads to a better user experience and advertiser performance as ad refreshing is less frequent.
+   *
+   * ### Render on navigation slots like interstitials
+   *
+   * Certain slots are rendered on navigation, e.g. interstitials that are shown on navigation.
+   * Those slots should not be destroyed on navigation, to be able to render them properly.
+   */
+  export interface SinglePageAppCleanupConfigSelected {
+    /**
+     * excluded: a list of ad slots that should not be destroyed on navigation.
+     *
+     * Note: This might be extended the future to support including only certain slots.
+     */
+    readonly slots: 'excluded';
+    /**
+     * A list of ad slot IDs that should not be destroyed on navigation.
+     */
+    readonly slotIds: string[];
+  }
+
+  export type SinglePageAppCleanupConfig =
+    | SinglePageAppCleanupConfigAll
+    | SinglePageAppCleanupConfigRequested
+    | SinglePageAppCleanupConfigSelected;
+  /**
    * Additional configuration for single page application publishers.
    */
   export interface SinglePageAppConfig {
@@ -127,6 +193,11 @@ export namespace spa {
      * Set to true if this publisher has a single page application.
      */
     readonly enabled: boolean;
+
+    /**
+     * Defines the cleanup behaviour on navigation.
+     */
+    readonly cleanup?: SinglePageAppCleanupConfig;
 
     /**
      * If set to `false`, `requestAds` will not destroy all existing ad slots,
@@ -143,6 +214,7 @@ export namespace spa {
      * publisher, while other content positions are refreshed on navigation.
      *
      * @default true
+     * @deprecated use the cleanup configuration instead.
      */
     readonly destroyAllAdSlots?: boolean;
 
@@ -824,6 +896,17 @@ export namespace headerbidding {
        */
       readonly url: string;
     };
+
+    /**
+     * If set to true, the prebid auction will be clear on every `requestAds` call.
+     * This can be useful in single page applications where the ad slots are reused.
+     *
+     * By default, this is false and the prebid auction will not be cleared.
+     * Make sure if you enable this, to monitor the impact.
+     *
+     * @default false
+     */
+    readonly clearAllAuctions?: boolean;
 
     /** optional listener for prebid events */
     // FIXME must be moved somewhere else. This is a runtime config thing for modules

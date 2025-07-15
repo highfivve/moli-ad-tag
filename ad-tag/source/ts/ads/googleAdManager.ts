@@ -157,24 +157,48 @@ export const gptDestroyAdSlots = (): ConfigureStep => {
     if (context.env__ === 'test') {
       return Promise.resolve();
     }
-    if (context.config__.spa?.destroyAllAdSlots === false) {
-      const allGptSlots = context.window__.googletag.pubads().getSlots();
-      const gptSlots = slots
-        .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
-        .filter(isNotNull);
-      if (gptSlots.length === 0) {
-        context.logger__.debug('GAM', 'no ad slots to destroy');
-      } else {
-        context.logger__.debug('GAM', `destroy ${gptSlots.length} ad slots`, gptSlots);
-        context.window__.googletag.destroySlots(gptSlots);
-      }
-    } else if (currentRequestAdsCalls !== context.requestAdsCalls__) {
-      currentRequestAdsCalls = context.requestAdsCalls__;
-      context.logger__.debug('GAM', 'destroy all ad slots');
-      context.window__.googletag.destroySlots();
-    }
 
-    return Promise.resolve();
+    const cleanup = context.config__.spa?.cleanup ?? { slots: 'all' };
+
+    const destroySelectedSlots = (slots: googletag.IAdSlot[]): Promise<void> => {
+      if (slots.length === 0) {
+        context.logger__.debug('GAM', 'no ad slots to destroy');
+        return Promise.resolve();
+      }
+      context.logger__.debug('GAM', `destroy ${slots.length} ad slots`, slots);
+      context.window__.googletag.destroySlots(slots);
+      return Promise.resolve();
+    };
+    const isNextRequestAdsCall = currentRequestAdsCalls !== context.requestAdsCalls__;
+    currentRequestAdsCalls = context.requestAdsCalls__;
+
+    context.logger__.debug('GAM', `destroy ${cleanup.slots} ad slots`);
+    switch (cleanup.slots) {
+      case 'all':
+        if (isNextRequestAdsCall) {
+          context.window__.googletag.destroySlots();
+        }
+        return Promise.resolve();
+      case 'requested':
+        const allGptSlots = context.window__.googletag.pubads().getSlots();
+        const gptSlots = slots
+          .map(slot => allGptSlots.find(s => s.getSlotElementId() === slot.domId))
+          .filter(isNotNull);
+        // destroy all slots that are in the provided slot array
+        return destroySelectedSlots(gptSlots);
+      case 'excluded':
+        if (isNextRequestAdsCall) {
+          // destroy all slots that are not in the provided slot array
+          const destroyableSlots = context.window__.googletag
+            .pubads()
+            .getSlots()
+            .filter(slot => !cleanup.slotIds.includes(slot.getSlotElementId()));
+          return destroySelectedSlots(destroyableSlots);
+        }
+        return Promise.resolve();
+      default:
+        return Promise.resolve();
+    }
   });
 };
 

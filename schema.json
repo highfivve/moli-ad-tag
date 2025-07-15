@@ -1289,6 +1289,11 @@
           "$ref": "#/definitions/prebidjs.IBidderSettings",
           "description": "optional bidder settings"
         },
+        "clearAllAuctions": {
+          "default": false,
+          "description": "If set to true, the prebid auction will be clear on every `requestAds` call. This can be useful in single page applications where the ad slots are reused.\n\nBy default, this is false and the prebid auction will not be cleared. Make sure if you enable this, to monitor the impact.",
+          "type": "boolean"
+        },
         "config": {
           "$ref": "#/definitions/prebidjs.IPrebidJsConfig",
           "description": "https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig"
@@ -8609,7 +8614,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-195373-195376-248365657-195366-195376-248365657-195334-196162-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-196166-196169-248365657-196159-196169-248365657-196127-196955-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203%3E"
           },
           "type": "array"
         }
@@ -8619,7 +8624,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559&alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-195070-195240-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031149092559&alias-248365657-195240-195373-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8629,7 +8634,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559%26alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-195070-195240-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031149092559%26alias-248365657-195240-195373-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031210238678)%3E"
           },
           "type": "array"
         }
@@ -8639,7 +8644,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-194643-194829-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-20920398888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8649,7 +8654,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-194643-194829-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-20920398888365%3E"
           },
           "type": "array"
         }
@@ -8659,7 +8664,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8669,7 +8674,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090%3E"
           },
           "type": "array"
         }
@@ -8679,7 +8684,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559&alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-195070-195240-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031149092559&alias-248365657-195240-195373-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8742,7 +8747,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-194643-194829-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-20920398888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8801,7 +8806,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8856,7 +8861,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-195373-195376-248365657-195366-195376-248365657-195334-196162-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-196166-196169-248365657-196159-196169-248365657-196127-196955-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8912,7 +8917,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194643-194829-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-20920398888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -8924,7 +8929,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -8932,23 +8937,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559%26alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-195070-195240-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031149092559%26alias-248365657-195240-195373-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-2092031210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194829-195070-248365657-194062-200137-248365657-193947-200137-248365657-190-209202-248365657-163-209202-248365657-0-209203187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -11980,12 +11985,81 @@
       ],
       "type": "object"
     },
+    "spa.SinglePageAppCleanupConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfigAll"
+        },
+        {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfigRequested"
+        },
+        {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfigSelected"
+        }
+      ]
+    },
+    "spa.SinglePageAppCleanupConfigAll": {
+      "additionalProperties": false,
+      "description": "Default cleanup behaviour for single page applications. All slots are being destroyed on navigation.",
+      "properties": {
+        "slots": {
+          "const": "all",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots"
+      ],
+      "type": "object"
+    },
+    "spa.SinglePageAppCleanupConfigRequested": {
+      "additionalProperties": false,
+      "description": "This cleanup configuration destroys only the ad slots that are requested after navigation. Replacement for the old `destroyAllAdSlots` setting.\n\nIt allows publishers to keep all ad slots alive on navigation and only destroy the ones that are requested.\n\nUse with caution and test properly.\n\n## Use cases\n\nThis setting can be used for publishers that have more \"static\" ad slots, like mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation and that have users that navigation a lot on the page, e.g. swiping through images or profiles. With this setting the more persistent ad slots are refreshed through ad reload or timed by the publisher, while other content positions are refreshed on navigation.",
+      "properties": {
+        "slots": {
+          "const": "requested",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots"
+      ],
+      "type": "object"
+    },
+    "spa.SinglePageAppCleanupConfigSelected": {
+      "additionalProperties": false,
+      "description": "This cleanup configuration allows publishers to select which ad slots should not be destroyed on navigation. Currently only the `excluded` option is supported, which means that all ad slots are destroyed on navigation, except the ones listed in `slotIds`.\n\n## Use cases\n\nThere are a couple of use cases for this setting.\n\n### Static out-of-content ad slots\n\nSidebars or sticky footers that are always present are handled by the regular ad reload. Especially if the user navigates a lot on the page, e.g. swiping through images or profiles, this leads to a better user experience and advertiser performance as ad refreshing is less frequent.\n\n### Render on navigation slots like interstitials\n\nCertain slots are rendered on navigation, e.g. interstitials that are shown on navigation. Those slots should not be destroyed on navigation, to be able to render them properly.",
+      "properties": {
+        "slotIds": {
+          "description": "A list of ad slot IDs that should not be destroyed on navigation.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "slots": {
+          "const": "excluded",
+          "description": "excluded: a list of ad slots that should not be destroyed on navigation.\n\nNote: This might be extended the future to support including only certain slots.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots",
+        "slotIds"
+      ],
+      "type": "object"
+    },
     "spa.SinglePageAppConfig": {
       "additionalProperties": false,
       "description": "Additional configuration for single page application publishers.",
       "properties": {
+        "cleanup": {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfig",
+          "description": "Defines the cleanup behaviour on navigation."
+        },
         "destroyAllAdSlots": {
           "default": true,
+          "deprecated": "use the cleanup configuration instead.",
           "description": "If set to `false`, `requestAds` will not destroy all existing ad slots, but only the ones being requested.\n\nUse with caution and test properly.\n\n## Use cases\n\nThis setting can be used for publishers that have more \"static\" ad slots, like mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation and that have users that navigation a lot on the page, e.g. swiping through images or profiles. With this setting the more persistent ad slots are refreshed through ad reload or timed by the publisher, while other content positions are refreshed on navigation.",
           "type": "boolean"
         },
