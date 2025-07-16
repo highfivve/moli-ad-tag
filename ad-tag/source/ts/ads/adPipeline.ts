@@ -340,10 +340,6 @@ export class AdPipeline {
     requestAdsCalls: number,
     options?: IAdPipelineRunOptions
   ): Promise<void> {
-    if (slots.length === 0) {
-      return Promise.resolve();
-    }
-
     // increase the prebid request count
     this.requestId = this.requestId + 1;
     const currentRequestId = this.requestId;
