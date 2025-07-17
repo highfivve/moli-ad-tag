@@ -371,16 +371,23 @@ export class AdService {
           }
         });
 
-        const arr = await Promise.all(
-          Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
-            this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
-            return this.adPipeline
-              .run(bucketSlots, config, runtimeConfig, this.requestAdsCalls)
-              .then(() => bucketSlots);
-          })
-        );
+        const result =
+          buckets.size === 0
+            ? this.adPipeline.run([], config, runtimeConfig, this.requestAdsCalls).then(() => [])
+            : Promise.all(
+                Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
+                  this.logger.debug(
+                    'AdPipeline',
+                    `running bucket ${bucketId}, slots:`,
+                    bucketSlots
+                  );
+                  return this.adPipeline
+                    .run(bucketSlots, config, runtimeConfig, this.requestAdsCalls)
+                    .then(() => bucketSlots);
+                })
+              );
         this.eventService.emit('afterRequestAds', { state: 'finished' });
-        return flatten(arr);
+        return result.then(slots => flatten(slots));
       } else {
         await this.adPipeline.run(
           immediatelyLoadedSlots,

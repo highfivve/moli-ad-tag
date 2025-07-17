@@ -490,6 +490,22 @@ describe('AdService', () => {
 
     describe('slot buckets', () => {
       describe('runtimeConfig refreshBuckets queue', () => {
+        it('should run the ad pipeline even if there are no slots available', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          await adService.requestAds(
+            { ...emptyConfig, buckets: { enabled: true }, slots: [eagerAdSlot()] },
+            emptyRuntimeConfig
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+
         it('should run the ad pipeline with the refreshBuckets', async () => {
           const adService = makeAdService();
           const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
