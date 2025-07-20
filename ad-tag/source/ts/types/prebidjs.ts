@@ -3668,7 +3668,7 @@ export namespace prebidjs {
     readonly pubstack?: IPubstackConfig;
 
     /**
-     * Configure additional information per ad unit that should be send along
+     * Configure additional information per ad unit that should be sent along
      * with a prebid server auction call.
      */
     readonly ortb2Imp?: IOrtb2Imp;
@@ -3754,6 +3754,12 @@ export namespace prebidjs {
    * @see https://github.com/prebid/Prebid.js/issues/6528
    */
   export interface IOrtb2Imp {
+    /**
+     * 1 = the ad is interstitial or full screen, 0 = not interstitial.
+     * @default 0
+     */
+    readonly instl?: 0 | 1;
+
     readonly ext?: {
       readonly data?: IOrtb2ImpDataAdagio | any;
 
