@@ -5162,8 +5162,11 @@ export namespace prebidjs {
 
     /**
      * Adunit placement
+     *
+     * It's really called `inTerstitial`, even it is a typo. It is weirdly consistent with the
+     * other placement values.
      */
-    readonly placement: 'inScreen' | 'inArticle' | 'inBanner';
+    readonly placement: 'inScreen' | 'inArticle' | 'inBanner' | 'inTerstitial';
   }
 
   /**
