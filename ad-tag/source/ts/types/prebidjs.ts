@@ -2089,6 +2089,11 @@ export namespace prebidjs {
       page?: string;
 
       /**
+       *
+       */
+      publisher?: OpenRtb2Publisher;
+
+      /**
        * Details about the Content (Section 3.2.16) within the site.
        */
       content?: {
@@ -2256,11 +2261,31 @@ export namespace prebidjs {
       ext?: any & CriteoOpenRtb2UserExt;
     }
 
+    /**
+     * This object describes the entity who directly supplies inventory to and is paid by the exchange. This may be a publisher, intermediary exchange, ad network, etc.
+     */
     export interface OpenRtb2Publisher {
+      /**
+       * Exchange-specific seller ID. Every ID must map to only a single entity that is paid for
+       * inventory transacted via that ID.
+       * Corresponds to a `seller_id` of a seller in the exchange’s sellers.json file.
+       */
+      id?: string;
+
+      /**
+       * Seller name (may be aliased at the seller's request).
+       */
+      name?: string;
+
       /**
        * Array of IAB content categories that describe the publisher.
        */
       cat?: string[];
+
+      /**
+       * Highest level domain of the seller (e.g., "seller.com").
+       */
+      domain?: string;
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
@@ -2343,8 +2368,6 @@ export namespace prebidjs {
       site?: OpenRtb2Site;
 
       user?: OpenRtb2User;
-
-      publisher?: OpenRtb2Publisher;
 
       /**
        * This object contains any legal, governmental, or industry regulations that apply to the request. The
