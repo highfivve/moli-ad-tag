@@ -2650,7 +2650,7 @@ export namespace prebidjs {
      *
      * https://prebid.org/dev-docs/modules/currency.html
      */
-    readonly currency: currency.ICurrencyConfig;
+    readonly currency?: currency.ICurrencyConfig;
 
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
