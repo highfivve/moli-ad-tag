@@ -619,15 +619,23 @@ export class GlobalConfig
                     <h5>Currency</h5>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Ad server currency</TagLabel>
-                      <Tag>{config.prebid.config.currency.adServerCurrency}</Tag>
+                      <Tag>
+                        {config.prebid.config.currency?.adServerCurrency ?? 'EUR (default)'}
+                      </Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Granularity multiplier</TagLabel>
-                      <Tag>{config.prebid.config.currency.granularityMultiplier.toString()}</Tag>
+                      <Tag>
+                        {config.prebid.config.currency?.granularityMultiplier.toString() ??
+                          'not set'}
+                      </Tag>
                     </div>
                     <div className="MoliDebug-tagContainer">
                       <TagLabel>Default Rates, USD → EUR</TagLabel>
-                      <Tag>{config.prebid.config.currency.defaultRates.USD.EUR?.toString()}</Tag>
+                      <Tag>
+                        {config.prebid.config.currency?.defaultRates.USD.EUR?.toString() ??
+                          'not set'}
+                      </Tag>
                     </div>
                   </div>
                 )}

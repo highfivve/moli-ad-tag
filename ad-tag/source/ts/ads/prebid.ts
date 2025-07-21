@@ -103,7 +103,7 @@ const createdAdUnits = (
       const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
         ? {
             floors: {
-              currency: prebidConfig.config.currency.adServerCurrency,
+              currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
               schema: {
                 delimiter: '|',
                 fields: ['mediaType']
