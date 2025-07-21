@@ -299,6 +299,45 @@ describe('prebid', () => {
       });
     });
 
+    describe('setBidderConfig options', () => {
+      it('should not call pbjs.setBidderConfig if bidderConfigs is not defined', () => {
+        const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.not.been.called;
+      });
+
+      it('should call pbjs.setBidderConfig with the bidderConfigs', () => {
+        const bidderConfigA: prebidjs.IBidderConfig = {
+          bidders: ['appnexus'],
+          config: { ortb2: { site: { page: 'example.com' } } }
+        };
+        const bidderConfigB: prebidjs.IBidderConfig = {
+          bidders: ['rubicon'],
+          config: {
+            schain: { validation: 'relaxed', config: { ver: '1.0', complete: 1, nodes: [] } }
+          }
+        };
+        const step = prebidConfigure(
+          {
+            ...moliPrebidTestConfig,
+            bidderConfigs: [
+              { options: bidderConfigA, merge: true },
+              { options: bidderConfigB, merge: false }
+            ]
+          },
+          dummySchainConfig
+        );
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.been.calledTwice;
+        expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(bidderConfigA, true);
+        expect(setBidderConfigSpy.secondCall).to.have.been.calledWithExactly(bidderConfigB, false);
+      });
+    });
+
     describe('s2s config', () => {
       afterEach(() => {
         // remove any traces of moli

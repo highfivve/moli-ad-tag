@@ -843,6 +843,36 @@ export namespace headerbidding {
     readonly appendNode: boolean;
   };
 
+  /**
+   * Configuration object for `pbjs.setBidderConfig` calls.
+   *
+   * ## Prebid setBidderConfig docs
+   *
+   * This function is similar to setConfig, but is designed to support certain bidder-specific
+   * scenarios.
+   *
+   * Configuration provided through the setConfig function is globally available to all bidder
+   * adapters. This makes sense because most of these settings are global in nature. However,
+   * there are use cases where different bidders require different data, or where certain parameters
+   * apply only to a given bidder. Use setBidderConfig when you need to support these cases.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+   */
+  export interface SetBidderConfig {
+    /**
+     * The configuration object that will be passed to `pbjs.setBidderConfig`.
+     */
+    readonly options: prebidjs.IBidderConfig;
+
+    /**
+     * Note if you would like to add to existing config you can pass true for the optional second
+     * mergeFlag argument like setBidderConfig(options, true).
+     *
+     * If not passed, this argument defaults to false and setBidderConfig replaces all values for specified bidders.
+     */
+    readonly merge?: boolean;
+  }
+
   export interface PrebidConfig {
     /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
     readonly config: prebidjs.IPrebidJsConfig;
@@ -852,6 +882,29 @@ export namespace headerbidding {
 
     /** optional bidder settings */
     readonly bidderSettings?: prebidjs.IBidderSettings;
+
+    /**
+     * An optional list of configs that will be applied through `pbjs.setBidderConfig`.
+     *
+     * This is useful for configuring bidder specific settings that are not part of the
+     * `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as
+     *
+     * - schain configuration
+     * - bidder specific openrtb extensions
+     *
+     * ## Prebid setBidderConfig docs
+     *
+     * This function is similar to setConfig, but is designed to support certain bidder-specific
+     * scenarios.
+     *
+     * Configuration provided through the setConfig function is globally available to all bidder
+     * adapters. This makes sense because most of these settings are global in nature. However,
+     * there are use cases where different bidders require different data, or where certain parameters
+     * apply only to a given bidder. Use setBidderConfig when you need to support these cases.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+     */
+    readonly bidderConfigs?: SetBidderConfig[];
 
     /**
      * optional list of analytic adapters that will be enabled through the `enableAnalytics` API.
