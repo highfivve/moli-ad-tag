@@ -1292,6 +1292,13 @@
           ],
           "type": "object"
         },
+        "bidderConfigs": {
+          "description": "An optional list of configs that will be applied through `pbjs.setBidderConfig`.\n\nThis is useful for configuring bidder specific settings that are not part of the `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as\n\n- schain configuration\n- bidder specific openrtb extensions\n\n## Prebid setBidderConfig docs\n\nThis function is similar to setConfig, but is designed to support certain bidder-specific scenarios.\n\nConfiguration provided through the setConfig function is globally available to all bidder adapters. This makes sense because most of these settings are global in nature. However, there are use cases where different bidders require different data, or where certain parameters apply only to a given bidder. Use setBidderConfig when you need to support these cases.",
+          "items": {
+            "$ref": "#/definitions/headerbidding.SetBidderConfig"
+          },
+          "type": "array"
+        },
         "bidderSettings": {
           "$ref": "#/definitions/prebidjs.IBidderSettings",
           "description": "optional bidder settings"
@@ -1340,6 +1347,24 @@
       "required": [
         "config",
         "schain"
+      ],
+      "type": "object"
+    },
+    "headerbidding.SetBidderConfig": {
+      "additionalProperties": false,
+      "description": "Configuration object for `pbjs.setBidderConfig` calls.\n\n## Prebid setBidderConfig docs\n\nThis function is similar to setConfig, but is designed to support certain bidder-specific scenarios.\n\nConfiguration provided through the setConfig function is globally available to all bidder adapters. This makes sense because most of these settings are global in nature. However, there are use cases where different bidders require different data, or where certain parameters apply only to a given bidder. Use setBidderConfig when you need to support these cases.",
+      "properties": {
+        "merge": {
+          "description": "Note if you would like to add to existing config you can pass true for the optional second mergeFlag argument like setBidderConfig(options, true).\n\nIf not passed, this argument defaults to false and setBidderConfig replaces all values for specified bidders.",
+          "type": "boolean"
+        },
+        "options": {
+          "$ref": "#/definitions/prebidjs.IBidderConfig",
+          "description": "The configuration object that will be passed to `pbjs.setBidderConfig`."
+        }
+      },
+      "required": [
+        "options"
       ],
       "type": "object"
     },
@@ -4560,6 +4585,267 @@
         "pbAg",
         "pbDg",
         "pbCg"
+      ],
+      "type": "object"
+    },
+    "prebidjs.IBidderConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bidders": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
+        "config": {
+          "additionalProperties": false,
+          "properties": {
+            "adagio": {
+              "additionalProperties": false,
+              "description": "Global Adagio property",
+              "properties": {
+                "siteId": {
+                  "description": "a global `siteId` is a shortcut to facilitate the integration for publisher.",
+                  "type": "string"
+                },
+                "useAdUnitCodeAsPlacement": {
+                  "description": "Edge case. Useful when Prebid Manager cannot handle properly params setting",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "allowActivities": {
+              "$ref": "#/definitions/prebidjs.activitycontrols.IAllowActivities"
+            },
+            "auctionOptions": {
+              "$ref": "#/definitions/prebidjs.auctionOptions.IAuctionOptionsConfig",
+              "description": "The auctionOptions object controls aspects related to auctions."
+            },
+            "bidCacheFilterFunction": {
+              "$comment": "(bid: any) => boolean",
+              "description": "When Bid Caching is turned on, a custom Filter Function can be defined to gain more granular control over which “cached” bids can be used. This function will only be called for “cached” bids from previous auctions, not “current” bids from the most recent auction. The function should take a single bid object argument, and return true to use the cached bid, or false to not use the cached bid. For Example, to turn on Bid Caching, but exclude cached video bids, you could do this:",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bid": {}
+                  },
+                  "required": [
+                    "bid"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidderSequence": {
+              "default": "`'random'`",
+              "description": "Set the order in which bidders are called.",
+              "enum": [
+                "random",
+                "fixed"
+              ],
+              "type": "string"
+            },
+            "bidderTimeout": {
+              "description": "global bidder timeout",
+              "type": "number"
+            },
+            "consentManagement": {
+              "$ref": "#/definitions/prebidjs.consent.IConsentManagementConfig",
+              "description": "'Consent Management' module configuration"
+            },
+            "currency": {
+              "$ref": "#/definitions/prebidjs.currency.ICurrencyConfig",
+              "description": "The configuration for the currency module\n\nhttps://prebid.org/dev-docs/modules/currency.html"
+            },
+            "debug": {
+              "description": "Turn on debugging",
+              "type": "boolean"
+            },
+            "deviceAccess": {
+              "description": "You can prevent Prebid.js from reading or writing cookies or HTML localstorage by setting this flag:\n\n```js pbjs.setConfig({ deviceAccess: false }); ```\n\nThis can be useful in GDPR, CCPA, COPPA or other privacy scenarios where a publisher has determined that header bidding should not read from or write the user’s device.",
+              "type": "boolean"
+            },
+            "disableAjaxTimeout": {
+              "description": "Prebid core adds a timeout on XMLHttpRequest request to terminate the request once auction is timedout. Since Prebid is ignoring all the bids after timeout it does not make sense to continue the request after timeout. However, you have the option to disable this by using",
+              "type": "boolean"
+            },
+            "enableSendAllBids": {
+              "description": "After this method is called, Prebid.js will generate bid keywords for all bids, instead of the default behavior of only sending the top winning bid to the ad server.\n\nWith the sendAllBids mode enabled, your page can send all bid keywords to your ad server. Your ad server will see all the bids, then make the ultimate decision on which one will win. Some ad servers, such as DFP, can then generate reporting on historical bid prices from all bidders.\n\nNote that this config option must be called before pbjs.setTargetingForGPTAsync() or pbjs.getAdserverTargeting().\n\nAfter this option is set, pbjs.getAdserverTargeting() will give you the below JSON (example). pbjs.setTargetingForGPTAsync() will apply the below keywords in the JSON to GPT (example below)\n\nDefault: true",
+              "type": "boolean"
+            },
+            "enableTIDs": {
+              "description": "These identifiers are extremely powerful for discrepancy reconciliation, ad quality investigations, consent audits, and a huge range of other applications. They also allow data appended to different requests (e.g. dealIds) to be commingled downstream. For this reason, our publisher committee and Prebid.org counsel have decided to require publisher opt-in to their inclusion in the bid stream. This means Prebid engineering changed every openrtb request in the project to potentially transmit a null in these fields. Comments were added to bid adapters not using OpenRTB that send them over the wire to confirm they can accept null values.",
+              "type": "boolean"
+            },
+            "eventHistoryTTL": {
+              "description": "By default, Prebid keeps in memory a log of every event since the initial page load, and makes it available to analytics adapters and getEvents(). This can cause high memory usage on long-running single-page apps; you can set a limit on how long events are preserved with eventHistoryTTL",
+              "type": "number"
+            },
+            "floors": {
+              "$ref": "#/definitions/prebidjs.floors.IFloorConfig",
+              "description": "Floor price configuration\n\nRequires the prebid floor price module to be enabled"
+            },
+            "gptPreAuction": {
+              "$ref": "#/definitions/prebidjs.gptPreAuction.GptPreAuctionConfig",
+              "description": "_GPT Pre-Auction Module_ must be enabled."
+            },
+            "gvlMapping": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "description": "Prebid offers an additional gvl mapping configuration that allows us to defined GVL IDs for a module or bidder by name.\n\nThis is useful in various cases\n\n1. bidders that do not have a GVL ID defined in their adapter yet 2. bidders where we use aliases. The alias is not part of the registry\n\nThis is the static variant of the runtime configuration option through `pbjs.aliasBidder`",
+              "type": "object"
+            },
+            "improvedigital": {
+              "additionalProperties": false,
+              "description": "Global Improve Digital property",
+              "properties": {
+                "singleRequest": {
+                  "description": "Enable the single request mode, which will send all bids in one request.\n\nAvailable since prebid 1.37.0",
+                  "type": "boolean"
+                },
+                "usePrebidSizes": {
+                  "description": "By default, the adapter doesn't send Prebid ad unit sizes to Improve Digital's ad server and the sizes defined for each placement in the Polaris platform will be used.\n\nThis configuration makes improve use the prebid sizes parameter.\n\nAvailable since prebid 2.8.0",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "singleRequest",
+                "usePrebidSizes"
+              ],
+              "type": "object"
+            },
+            "maxNestedIframes": {
+              "default": "`10`",
+              "description": "Prebid.js will loop upward through nested iframes to find the top-most referrer. This setting limits how many iterations it will attempt before giving up and not setting referrer.",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ],
+              "type": "number"
+            },
+            "maxRequestsPerOrigin": {
+              "description": "Since browsers have a limit of how many requests they will allow to a specific domain before they block, Prebid.js will queue auctions that would cause requests to a specific origin to exceed that limit. The limit is different for each browser. Prebid.js defaults to a max of *4* requests per origin.",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ],
+              "type": "number"
+            },
+            "mediaTypePriceGranularity": {
+              "$ref": "#/definitions/prebidjs.priceGranularity.IMediaTypePriceGranularityConfig",
+              "description": "The default Prebid price granularities cap out at $20, which isn't always convenient for video ads, which can command more than $20. One solution is to just set up a custom price granularity as described above. Another approach is mediaTypePriceGranularity config that may be set to define granularities for each of five media types: banner, video, video-instream, video-outstream, and native. e.g."
+            },
+            "ortb2": {
+              "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
+              "description": "Publishers supply First Party Data (FPD) by specifying attributes as configuration.\n\nNote that supplying first party *user* data may require special consent in certain regions. Prebid.js does *not* police the passing of user data as part of its GDPR or CCPA modules."
+            },
+            "pageUrl": {
+              "description": "Override the Prebid.js page referrer for some bidders.",
+              "type": "string"
+            },
+            "priceGranularity": {
+              "$ref": "#/definitions/prebidjs.priceGranularity.PriceGranularityConfig",
+              "description": "This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword."
+            },
+            "publisherDomain": {
+              "deprecated": "This API is deprecated. Please use ‘pageUrl’ instead.",
+              "description": "Set the publisher's domain where Prebid is running, for cross-domain iframe communication",
+              "type": "string"
+            },
+            "realTimeData": {
+              "$ref": "#/definitions/prebidjs.realtimedata.IRealTimeDataConfig"
+            },
+            "rubicon": {
+              "additionalProperties": false,
+              "description": "Global Rubicon property",
+              "properties": {
+                "singleRequest": {
+                  "description": "Enable the single request mode, which will send all bids in one request.\n\nAvailable since prebid 1.12.0",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "singleRequest"
+              ],
+              "type": "object"
+            },
+            "s2sConfig": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/prebidjs.server.S2SConfig"
+                },
+                {
+                  "items": {
+                    "$ref": "#/definitions/prebidjs.server.S2SConfig"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "schain": {
+              "$ref": "#/definitions/prebidjs.schain.ISupplyChainConfig",
+              "description": "## Supply Chain Object Module Config"
+            },
+            "targetingControls": {
+              "$ref": "#/definitions/prebidjs.targetingcontrols.ITargetingControls",
+              "description": "The `targetingControls` object passed to pbjs.setConfig provides some options to influence how an auction's targeting keys are generated and managed."
+            },
+            "timeoutBuffer": {
+              "default": "`400` ms",
+              "description": "Prebid core adds a timeout buffer to extend the time that bidders have to return a bid after the auction closes. This buffer is used to offset the “time slippage” of the setTimeout behavior in browsers. Prebid.js sets the default value to *400ms*.\n\nYou can change this value by setting `timeoutBuffer` to the amount of time you want to use. The following example sets the buffer to 300ms.\n\n```js pbjs.setConfig({ timeoutBuffer: 300 }); ```",
+              "type": "number"
+            },
+            "useBidCache": {
+              "default": false,
+              "description": "Prebid.js currently allows for caching and reusing bids in  [a very narrowly defined scope](https://docs.prebid.org/dev-docs/faq.html#does-prebidjs-cache-bids).\n\nHowever, if you’d like, you can disable this feature and prevent Prebid.js from using anything but the latest bids for a given auction.",
+              "type": "boolean"
+            },
+            "userSync": {
+              "$ref": "#/definitions/prebidjs.userSync.IUserSyncConfig"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "bidders",
+        "config"
       ],
       "type": "object"
     },
@@ -8640,7 +8926,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-196451-196454-248365657-196444-196454-248365657-196412-197240-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-196574-196577-248365657-196567-196577-248365657-196535-197363-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611%3E"
           },
           "type": "array"
         }
@@ -8650,7 +8936,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-195355-195525-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881149092559&alias-248365657-195525-195658-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-195478-195648-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111149092559&alias-248365657-195648-195781-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8660,7 +8946,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-195355-195525-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881149092559%26alias-248365657-195525-195658-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-195478-195648-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111149092559%26alias-248365657-195648-195781-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111210238678)%3E"
           },
           "type": "array"
         }
@@ -8670,7 +8956,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-194928-195114-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-20948898888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-195051-195237-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-20961198888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8680,7 +8966,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-194928-195114-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-20948898888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-195051-195237-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-20961198888365%3E"
           },
           "type": "array"
         }
@@ -8690,7 +8976,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8700,7 +8986,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090%3E"
           },
           "type": "array"
         }
@@ -8710,7 +8996,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-195355-195525-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881149092559&alias-248365657-195525-195658-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-195478-195648-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111149092559&alias-248365657-195648-195781-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8773,7 +9059,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-194928-195114-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-20948898888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-195051-195237-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-20961198888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8832,7 +9118,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8887,7 +9173,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-196451-196454-248365657-196444-196454-248365657-196412-197240-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-196574-196577-248365657-196567-196577-248365657-196535-197363-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8943,7 +9229,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194928-195114-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-20948898888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195051-195237-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-20961198888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -8955,7 +9241,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -8963,23 +9249,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-195355-195525-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881149092559%26alias-248365657-195525-195658-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-2094881210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-195478-195648-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111149092559%26alias-248365657-195648-195781-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-2096111210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195114-195355-248365657-194347-200422-248365657-194232-200422-248365657-190-209487-248365657-163-209487-248365657-0-209488187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-195237-195478-248365657-194470-200545-248365657-194355-200545-248365657-190-209610-248365657-163-209610-248365657-0-209611187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },

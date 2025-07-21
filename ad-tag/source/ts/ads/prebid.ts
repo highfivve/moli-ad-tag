@@ -363,6 +363,11 @@ export const prebidConfigure = (
             ...{ floors: prebidConfig.config.floors || {} }
           });
 
+          // set additional bidder configurations if provided
+          prebidConfig.bidderConfigs?.forEach(({ options, merge }) => {
+            context.window__.pbjs.setBidderConfig(options, merge);
+          });
+
           prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
             const nodes = [schainConfig.supplyChainStartNode];
             if (appendNode) {

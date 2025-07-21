@@ -2389,6 +2389,11 @@ export namespace prebidjs {
     export type OpenRtb2 = PrebidFirstPartyData;
   }
 
+  export interface IBidderConfig {
+    readonly bidders: BidderCode[];
+    readonly config: Partial<IPrebidJsConfig>;
+  }
+
   /**
    * ## Global Prebid Configuration
    *
