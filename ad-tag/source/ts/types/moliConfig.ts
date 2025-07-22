@@ -1561,8 +1561,66 @@ export namespace modules {
       readonly matchType: 'regex' | 'contains' | 'exact';
     };
 
+    /**
+     * A label blocklist entry that can be used to set a label dynamically during an ad pipeline run.
+     *
+     * ## Use cases
+     *
+     * Labels control various aspects of the ad pipeline, such as:
+     * - ad slots that can be requested
+     * - size configs that can be applied
+     * - bidders that are active
+     *
+     * Adding labels dynamically based on url patterns allows us to control those aspects dynamically
+     * through the ad tag configuration.
+     */
+    export type BlocklistLabelEntry = {
+      /**
+       * The label that is set if the url matches the label blocklist entry
+       */
+      readonly label: string;
+
+      /**
+       * The regex pattern for the complete href of the page
+       */
+      readonly pattern: string;
+
+      /**
+       * If set to true, the pattern is matched in reverse, meaning that if the url does not match the pattern,
+       * the label will be set.
+       *
+       * This is useful for adding labels to all urls with certain exceptions, like the homepage or
+       * a login page.
+       */
+      readonly reverseMatch?: boolean;
+
+      /**
+       * Defines how the pattern should be matched against the url
+       *
+       * - `regex` - transform the pattern into a regex and runs `regex.test(url)`
+       * - `contains` - checks if the url contains the given pattern string
+       * - `exact` - checks if the url exactly matches the given pattern string
+       */
+      readonly matchType: 'regex' | 'contains' | 'exact';
+    };
+
     export type Blocklist = {
+      /**
+       * A list of blocklisted urls.
+       *
+       * The urls are matched against the ad request url and if a match is found, the ad pipeline
+       * run is
+       *
+       * - either aborted (if the mode is `block`)
+       * - or a key value is set (if the mode is `key-value`)
+       */
       readonly urls: BlocklistEntry[];
+
+      /**
+       * Configuration to set labels dynamically during the ad pipeline run.
+       * See [[BlocklistLabelEntry]] for more information.
+       */
+      readonly labels?: BlocklistLabelEntry[];
     };
 
     /**

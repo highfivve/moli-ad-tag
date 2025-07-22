@@ -1870,7 +1870,15 @@
     "modules.blocklist.Blocklist": {
       "additionalProperties": false,
       "properties": {
+        "labels": {
+          "description": "Configuration to set labels dynamically during the ad pipeline run. See [[BlocklistLabelEntry]] for more information.",
+          "items": {
+            "$ref": "#/definitions/modules.blocklist.BlocklistLabelEntry"
+          },
+          "type": "array"
+        },
         "urls": {
+          "description": "A list of blocklisted urls.\n\nThe urls are matched against the ad request url and if a match is found, the ad pipeline run is\n\n- either aborted (if the mode is `block`)\n- or a key value is set (if the mode is `key-value`)",
           "items": {
             "$ref": "#/definitions/modules.blocklist.BlocklistEntry"
           },
@@ -1900,6 +1908,39 @@
         }
       },
       "required": [
+        "pattern",
+        "matchType"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.BlocklistLabelEntry": {
+      "additionalProperties": false,
+      "description": "A label blocklist entry that can be used to set a label dynamically during an ad pipeline run.\n\n## Use cases\n\nLabels control various aspects of the ad pipeline, such as:\n- ad slots that can be requested\n- size configs that can be applied\n- bidders that are active\n\nAdding labels dynamically based on url patterns allows us to control those aspects dynamically through the ad tag configuration.",
+      "properties": {
+        "label": {
+          "description": "The label that is set if the url matches the label blocklist entry",
+          "type": "string"
+        },
+        "matchType": {
+          "description": "Defines how the pattern should be matched against the url\n\n- `regex` - transform the pattern into a regex and runs `regex.test(url)`\n- `contains` - checks if the url contains the given pattern string\n- `exact` - checks if the url exactly matches the given pattern string",
+          "enum": [
+            "regex",
+            "contains",
+            "exact"
+          ],
+          "type": "string"
+        },
+        "pattern": {
+          "description": "The regex pattern for the complete href of the page",
+          "type": "string"
+        },
+        "reverseMatch": {
+          "description": "If set to true, the pattern is matched in reverse, meaning that if the url does not match the pattern, the label will be set.\n\nThis is useful for adding labels to all urls with certain exceptions, like the homepage or a login page.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
         "pattern",
         "matchType"
       ],
