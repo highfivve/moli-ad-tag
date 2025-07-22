@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { modules, MoliConfig } from 'ad-tag/types/moliConfig';
-import { BlocklistedUrls } from '../blocklist-url/index';
+import { createBlocklistedUrls, isBlocklisted } from '../blocklist-url/index';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
@@ -21,6 +21,8 @@ import StaticBlocklistProvider = modules.blocklist.StaticBlocklistProvider;
 import DynamicBlocklistProvider = modules.blocklist.DynamicBlocklistProvider;
 import BlocklistUrlsBlockingConfig = modules.blocklist.BlocklistUrlsBlockingConfig;
 import BlocklistUrlsKeyValueConfig = modules.blocklist.BlocklistUrlsKeyValueConfig;
+import { IModule } from 'ad-tag/types/module';
+import BlocklistLabelEntry = modules.blocklist.BlocklistLabelEntry;
 
 // setup sinon-chai
 use(sinonChai);
@@ -51,7 +53,14 @@ describe('BlocklistedUrls Module', () => {
     config__: config ?? emptyConfig,
     runtimeConfig__: emptyRuntimeConfig,
     window__: jsDomWindow as any,
-    labelConfigService__: null as any,
+    labelConfigService__: {
+      filterSlot: () => true,
+      getSupportedLabels: () => [],
+      getDeviceLabel: () => 'mobile',
+      addLabel: () => {
+        return;
+      }
+    },
     tcData__: fullConsent(),
     adUnitPathVariables__: {},
     auction__: newGlobalAuctionContext(jsDomWindow),
@@ -103,7 +112,7 @@ describe('BlocklistedUrls Module', () => {
   const createAndConfigureModule = (
     config?: BlocklistUrlsBlockingConfig | BlocklistUrlsKeyValueConfig
   ) => {
-    const module = new BlocklistedUrls();
+    const module = createBlocklistedUrls();
     module.configure__(modulesConfig(config));
     return module;
   };
@@ -117,7 +126,7 @@ describe('BlocklistedUrls Module', () => {
   describe('block mode with static provider', () => {
     const createInitializedModule = (
       patterns: string[]
-    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: MoliConfig } => {
+    ): { initStep: ConfigureStep; module: IModule; config: MoliConfig } => {
       const config = newEmptyConfig();
 
       const blocklistConfig: BlocklistUrlsBlockingConfig = {
@@ -134,16 +143,16 @@ describe('BlocklistedUrls Module', () => {
       const initSteps = module.initSteps__();
       expect(initSteps).to.have.length(1);
 
-      return { configureStep: initSteps[0], module, config };
+      return { initStep: initSteps[0], module, config };
     };
 
-    it('should add a configure step that resolves if no blocklisted urls are defined', () => {
-      const { configureStep, config } = createInitializedModule([]);
-      return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+    it('should add an init step that resolves if no blocklisted urls are defined', () => {
+      const { initStep, config } = createInitializedModule([]);
+      return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
     });
-    it('should add a configure step that resolves if no blocklisted urls are found', () => {
-      const { configureStep, config } = createInitializedModule(['foo']);
-      return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+    it('should add an init step that resolves if no blocklisted urls are found', () => {
+      const { initStep, config } = createInitializedModule(['foo']);
+      return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
     });
 
     describe('configure step that rejects if a url is blocklisted', () => {
@@ -155,27 +164,27 @@ describe('BlocklistedUrls Module', () => {
         '^https://localhost/blocklisted/url$'
       ].forEach(pattern =>
         it(`should match pattern ${pattern}`, () => {
-          const { configureStep, config } = createInitializedModule([pattern]);
+          const { initStep, config } = createInitializedModule([pattern]);
           dom.reconfigure({
             url: 'https://localhost/blocklisted/url'
           });
-          return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+          return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
         })
       );
     });
     it('should ignore invalid patterns', () => {
-      const { configureStep, config } = createInitializedModule(['http://localhost']);
+      const { initStep, config } = createInitializedModule(['http://localhost']);
       dom.reconfigure({
         url: 'https://localhost/blocklisted/url'
       });
-      return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+      return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
     });
   });
 
   describe('block mode with dynamic provider', () => {
     const createInitializedModule = (
       patterns: string[]
-    ): { configureStep: ConfigureStep; module: BlocklistedUrls; config: MoliConfig } => {
+    ): { initStep: ConfigureStep; module: IModule; config: MoliConfig } => {
       const config = newEmptyConfig();
       const blocklistConfig: BlocklistUrlsBlockingConfig = {
         enabled: true,
@@ -193,20 +202,20 @@ describe('BlocklistedUrls Module', () => {
       const initSteps = module.initSteps__();
       expect(initSteps).to.have.length(1);
 
-      return { configureStep: initSteps[0], module, config };
+      return { initStep: initSteps[0], module, config };
     };
 
-    it('should add a configure step that resolves if no blocklisted urls are defined', () => {
-      const { configureStep, config } = createInitializedModule([]);
-      return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+    it('should add an init step that resolves if no blocklisted urls are defined', () => {
+      const { initStep, config } = createInitializedModule([]);
+      return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
     });
 
-    it('should add a configure step that resolves if no blocklisted urls are found', () => {
-      const { configureStep, config } = createInitializedModule(['foo']);
-      return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+    it('should add an init step that resolves if no blocklisted urls are found', () => {
+      const { initStep, config } = createInitializedModule(['foo']);
+      return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
     });
 
-    describe('configure step that rejects if a url is blocklisted', () => {
+    describe('init step that rejects if a url is blocklisted', () => {
       [
         '/blocklisted',
         'blocklisted',
@@ -215,27 +224,27 @@ describe('BlocklistedUrls Module', () => {
         '^https://localhost/blocklisted/url$'
       ].forEach(pattern =>
         it(`should match pattern ${pattern}`, () => {
-          const { configureStep, config } = createInitializedModule([pattern]);
+          const { initStep, config } = createInitializedModule([pattern]);
           dom.reconfigure({
             url: 'https://localhost/blocklisted/url'
           });
-          return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+          return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
         })
       );
     });
 
     it('should ignore invalid patterns', () => {
-      const { configureStep, config } = createInitializedModule(['http://localhost']);
+      const { initStep, config } = createInitializedModule(['http://localhost']);
       dom.reconfigure({
         url: 'https://localhost/blocklisted/url'
       });
-      return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+      return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
     });
 
     it('should fetch the blocklist only once', async () => {
-      const { configureStep, config } = createInitializedModule([]);
+      const { initStep, config } = createInitializedModule([]);
 
-      const calls = [1, 2, 3].map(_ => configureStep(adPipelineContext(config), []));
+      const calls = [1, 2, 3].map(_ => initStep(adPipelineContext(config), []));
 
       await Promise.all(calls);
       expect(loadJsonStub).to.have.been.calledOnce;
@@ -260,8 +269,8 @@ describe('BlocklistedUrls Module', () => {
         patterns: string[],
         isBlocklistedValue?: string
       ): {
-        configureStep: ConfigureStep;
-        module: BlocklistedUrls;
+        initStep: ConfigureStep;
+        module: IModule;
         config: MoliConfig;
       } => {
         const config = newEmptyConfig();
@@ -283,19 +292,19 @@ describe('BlocklistedUrls Module', () => {
         const initSteps = module.initSteps__();
         expect(initSteps).to.have.length(1);
 
-        return { configureStep: initSteps[0], module, config };
+        return { initStep: initSteps[0], module, config };
       };
 
       it('should add an init step that sets not key values if no blocklisted urls are defined', async () => {
-        const { configureStep, config } = createInitializedModule([]);
-        return configureStep(adPipelineContext(config), []).then(() => {
+        const { initStep, config } = createInitializedModule([]);
+        return initStep(adPipelineContext(config), []).then(() => {
           expect(setTargetingSpy).to.have.not.been.called;
         });
       });
 
       it('should add an init step that resolves if no blocklisted urls are found', () => {
-        const { configureStep, config } = createInitializedModule(['foo']);
-        return configureStep(adPipelineContext(config), []).then(() => {
+        const { initStep, config } = createInitializedModule(['foo']);
+        return initStep(adPipelineContext(config), []).then(() => {
           expect(setTargetingSpy).to.have.not.been.called;
         });
       });
@@ -314,16 +323,16 @@ describe('BlocklistedUrls Module', () => {
           '^https://localhost/blocklisted/url$'
         ].forEach(pattern =>
           it(`should match pattern ${pattern}`, async () => {
-            const { configureStep, config } = createInitializedModule([pattern]);
-            return configureStep(adPipelineContext(config), []).then(() => {
+            const { initStep, config } = createInitializedModule([pattern]);
+            return initStep(adPipelineContext(config), []).then(() => {
               expect(setTargetingSpy).to.have.been.calledOnce;
               expect(setTargetingSpy).to.have.been.calledOnceWithExactly('isBlocklisted', 'true');
             });
           })
         );
         it('should set a custom key-value value', async () => {
-          const { configureStep, config } = createInitializedModule(['blocklisted'], 'yes');
-          return configureStep(adPipelineContext(config), []).then(() => {
+          const { initStep, config } = createInitializedModule(['blocklisted'], 'yes');
+          return initStep(adPipelineContext(config), []).then(() => {
             expect(setTargetingSpy).to.have.been.calledOnce;
             expect(setTargetingSpy).to.have.been.calledOnceWithExactly('isBlocklisted', 'yes');
           });
@@ -331,17 +340,17 @@ describe('BlocklistedUrls Module', () => {
       });
 
       it('should ignore invalid patterns', () => {
-        const { configureStep, config } = createInitializedModule(['http://localhost']);
+        const { initStep, config } = createInitializedModule(['http://localhost']);
         dom.reconfigure({
           url: 'https://localhost/blocklisted/url'
         });
-        return expect(configureStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
+        return expect(initStep(adPipelineContext(config), [])).to.eventually.not.be.rejected;
       });
 
       it('should fetch the blocklist only once', async () => {
-        const { configureStep, config } = createInitializedModule([]);
+        const { initStep, config } = createInitializedModule([]);
 
-        const calls = [1, 2, 3].map(_ => configureStep(adPipelineContext(config), []));
+        const calls = [1, 2, 3].map(_ => initStep(adPipelineContext(config), []));
 
         // todo: fix this test
         /*
@@ -355,6 +364,72 @@ describe('BlocklistedUrls Module', () => {
     });
   });
 
+  describe('labels configure step', () => {
+    const createConfiguredModuleWithLabels = (labels?: BlocklistLabelEntry[]) => {
+      const module = createAndConfigureModule({
+        enabled: true,
+        mode: 'block',
+        blocklist: {
+          provider: 'static',
+          blocklist: {
+            urls: [],
+            labels
+          }
+        }
+      });
+      const configureSteps = module.configureSteps__();
+      expect(configureSteps).to.have.length(1);
+      return { configureStep: configureSteps[0] };
+    };
+
+    it('should add a configure step that adds the blocklisted urls as labels', () => {
+      const { configureStep } = createConfiguredModuleWithLabels();
+      expect(configureStep.name).to.equal('blocklist-labels');
+    });
+
+    it('should add the blocklisted urls as labels', async () => {
+      const { configureStep } = createConfiguredModuleWithLabels([
+        { pattern: 'labelled-url', matchType: 'contains', label: 'labelled-url' },
+        { pattern: 'blocklisted-urls', matchType: 'contains', label: 'blocklisted-urls' }
+      ]);
+      const ctx = adPipelineContext(emptyConfig);
+      const addLabelSpy = sandbox.spy(ctx.labelConfigService__, 'addLabel');
+
+      dom.reconfigure({
+        url: 'https://localhost/labelled-url'
+      });
+      await configureStep(ctx, []);
+      expect(addLabelSpy).to.have.been.calledOnce;
+      expect(addLabelSpy).to.have.been.calledWith('labelled-url');
+    });
+
+    it('should add the blocklisted urls as labels for non matching urls if reverseMatch is true', async () => {
+      const { configureStep } = createConfiguredModuleWithLabels([
+        {
+          pattern: 'labelled-url',
+          matchType: 'contains',
+          label: 'labelled-url',
+          reverseMatch: true
+        },
+        {
+          pattern: 'blocklisted-urls',
+          matchType: 'contains',
+          label: 'blocklisted-urls',
+          reverseMatch: true
+        }
+      ]);
+      const ctx = adPipelineContext(emptyConfig);
+      const addLabelSpy = sandbox.spy(ctx.labelConfigService__, 'addLabel');
+
+      dom.reconfigure({
+        url: 'https://localhost/labelled-url'
+      });
+      await configureStep(ctx, []);
+      expect(addLabelSpy).to.have.been.calledOnce;
+      expect(addLabelSpy).to.have.been.calledWith('blocklisted-urls');
+    });
+  });
+
   describe('isBlocklisted method', () => {
     // the isBlocklisted method is stateless
     const module = createAndConfigureModule({
@@ -365,25 +440,21 @@ describe('BlocklistedUrls Module', () => {
 
     describe('matchType: regex', () => {
       it('is not blocklisted for empty urls array', () => {
-        const isBlocklisted = module.isBlocklisted(
-          blocklist([], 'regex'),
-          'http://www.example.com',
-          noopLogger
-        );
-        expect(isBlocklisted).to.be.false;
+        const result = isBlocklisted(blocklist([], 'regex'), 'http://www.example.com', noopLogger);
+        expect(result).to.be.false;
       });
 
       it('is not blocklisted if no url matches', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(['foo', 'bar'], 'regex'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.false;
+        expect(result).to.be.false;
       });
 
       it('is not blocklisted if the pattern is not a valid regex', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(
             [
               //  it seems to be impossible to create an invalid regex in js
@@ -394,72 +465,68 @@ describe('BlocklistedUrls Module', () => {
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.false;
+        expect(result).to.be.false;
       });
 
       it('is blocklisted if an url matches', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(['example.com$'], 'regex'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.true;
+        expect(result).to.be.true;
       });
     });
     describe('matchType: contains', () => {
       it('is not blocklisted for empty urls array', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist([], 'contains'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.false;
+        expect(result).to.be.false;
       });
 
       it('is not blocklisted if no url matches', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(['foo', 'bar'], 'contains'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.false;
+        expect(result).to.be.false;
       });
 
       it('is blocklisted if an url matches', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(['http://www.example'], 'contains'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.true;
+        expect(result).to.be.true;
       });
     });
     describe('matchType: exact', () => {
       it('is not blocklisted for empty urls array', () => {
-        const isBlocklisted = module.isBlocklisted(
-          blocklist([], 'exact'),
-          'http://www.example.com',
-          noopLogger
-        );
-        expect(isBlocklisted).to.be.false;
+        const result = isBlocklisted(blocklist([], 'exact'), 'http://www.example.com', noopLogger);
+        expect(result).to.be.false;
       });
 
       it('is not blocklisted if no url matches', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(['http://www.example.de', 'bar'], 'exact'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.false;
+        expect(result).to.be.false;
       });
 
       it('is blocklisted if an url matches', () => {
-        const isBlocklisted = module.isBlocklisted(
+        const result = isBlocklisted(
           blocklist(['http://www.example.com'], 'exact'),
           'http://www.example.com',
           noopLogger
         );
-        expect(isBlocklisted).to.be.true;
+        expect(result).to.be.true;
       });
     });
   });
