@@ -4054,7 +4054,7 @@ export namespace prebidjs {
      * object that is sent to Criteo. Prefer the `ortb2.site.publisher.id` object, as it leaves
      * less room for error and fixes are applied globally.
      */
-    readonly publisherId?: string;
+    readonly pubid?: string;
 
     /**
      * Used for reporting: we use de div-id here.
