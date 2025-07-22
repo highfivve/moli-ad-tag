@@ -4050,6 +4050,13 @@ export namespace prebidjs {
     readonly networkId: number;
 
     /**
+     * The publisherId must either be set through this property or in the `ortb2.site.publisher.id`
+     * object that is sent to Criteo. Prefer the `ortb2.site.publisher.id` object, as it leaves
+     * less room for error and fixes are applied globally.
+     */
+    readonly pubid?: string;
+
+    /**
      * Used for reporting: we use de div-id here.
      */
     readonly publisherSubId?: string;
