@@ -818,14 +818,12 @@ export class GlobalConfig
                     <>
                       <hr />
                       <h4>Percentage of ad slot area on total ad area</h4>
-                      {adDensity.percentagePerSlot.map(adArea => {
-                        return adArea && adDensity.totalAdDensity ? (
-                          <div className="MoliDebug-tagContainer" key={adArea.adSlotId}>
-                            <TagLabel>{extractPositionFromPath(adArea.adSlotId)}</TagLabel>
-                            <Tag variant={'green'}>{adArea.percentage}%</Tag>
+                      {adDensity.percentagePerSlot.map(percentage => {
+                        return (
+                          <div className="MoliDebug-tagContainer" key={percentage.adSlotId}>
+                            <TagLabel>{extractPositionFromPath(percentage.adSlotId)}</TagLabel>
+                            <Tag variant={'green'}>{percentage.percentage}%</Tag>
                           </div>
-                        ) : (
-                          <div>Ad area calculation not possible!</div>
                         );
                       })}
                       <hr />
