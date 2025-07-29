@@ -50,6 +50,7 @@
   }
 
   &-info {
+    max-width: 450px;
     margin-top: 8px;
   }
 
@@ -250,6 +251,7 @@
   &-panel {
     margin-bottom: 10px;
     padding: 5px;
+    max-width: 450px;
 
     & ul {
       margin: 5px 0;
@@ -296,7 +298,7 @@
     &Container {
       display: flex;
       gap: 10px;
-      align-items: center;
+      flex-direction: column;
     }
   }
 
@@ -306,7 +308,7 @@
     background: #76949f;
     border-radius: var(--MoliDebug-border-radius);
     display: inline-block;
-    margin-right: 5px;
+    margin-left: 5px;
     padding: 1px 5px;
 
     &--red {
@@ -357,6 +359,7 @@
     &Label {
       display: inline-block;
       min-width: 140px;
+      max-width: 400px;
       padding-right: 5px;
     }
 
@@ -378,7 +381,7 @@
     }
 
     &Container {
-      margin-top: 5px;
+      margin-top: 10px;
 
       &&--subEntry {
         margin-left: 10px;
