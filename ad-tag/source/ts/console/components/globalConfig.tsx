@@ -832,30 +832,6 @@ export class GlobalConfig
                 </>
               )}
             </div>
-
-            <div className="MoliDebug-sidebarSection MoliDebug-sidebarSection--linting">
-              <h4>Moli configuration issues and warnings</h4>
-              {this.state.messages.map((message, index) => (
-                <div
-                  key={`${message.text}-${index}`}
-                  className={classList(
-                    'MoliDebug-configMessage',
-                    `MoliDebug-configMessage--${message.kind}`
-                  )}
-                >
-                  {this.iconForMessageKind(message.kind)}
-                  {message.text}
-                </div>
-              ))}
-              {this.state.messages.length === 0 && (
-                <div
-                  className={classList('MoliDebug-configMessage', `MoliDebug-configMessage--empty`)}
-                >
-                  {this.iconForMessageKind('empty')}
-                  No errors or warnings found. You're all set!
-                </div>
-              )}
-            </div>
           </div>
         )}
       </div>
