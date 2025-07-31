@@ -2741,27 +2741,6 @@
     "modules.skin.SkinConfig": {
       "additionalProperties": false,
       "properties": {
-        "adReload": {
-          "additionalProperties": false,
-          "deprecated": "use the regular ad reload module instead with a proper visibility override configuration.",
-          "description": "If set, the skin of the configured bidder reloads after the given interval (in ms).",
-          "properties": {
-            "allowed": {
-              "items": {
-                "$ref": "#/definitions/prebidjs.BidderCode"
-              },
-              "type": "array"
-            },
-            "intervalMs": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "intervalMs",
-            "allowed"
-          ],
-          "type": "object"
-        },
         "blockedAdSlotDomIds": {
           "description": "dom ids of the ad slots that should not be requested when a just premium skin appears in the bid responses.\n\nDepending on the wallpaperAdSlot these are usually skyscrapers left and right and if there's a specific wallpaper ad slot the header as well.",
           "items": {
@@ -2844,46 +2823,6 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
-        },
-        "trackSkinCpmLow": {
-          "$comment": "(\n        cpms: { skin: number; combinedNonSkinSlots: number },\n        skinConfig: SkinConfig,\n        skinBid: prebidjs.IBidResponse) => void",
-          "description": "Function to track when the skin cpm is lower than the combined cpm of the ad slots that would be removed in its favour.",
-          "properties": {
-            "namedArgs": {
-              "additionalProperties": false,
-              "properties": {
-                "cpms": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "combinedNonSkinSlots": {
-                      "type": "number"
-                    },
-                    "skin": {
-                      "type": "number"
-                    }
-                  },
-                  "required": [
-                    "skin",
-                    "combinedNonSkinSlots"
-                  ],
-                  "type": "object"
-                },
-                "skinBid": {
-                  "$ref": "#/definitions/prebidjs.IBidResponse"
-                },
-                "skinConfig": {
-                  "$ref": "#/definitions/modules.skin.SkinConfig"
-                }
-              },
-              "required": [
-                "cpms",
-                "skinConfig",
-                "skinBid"
-              ],
-              "type": "object"
-            }
-          },
-          "type": "object"
         }
       },
       "required": [
