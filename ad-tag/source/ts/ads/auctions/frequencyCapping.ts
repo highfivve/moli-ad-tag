@@ -43,6 +43,15 @@ export interface FrequencyCapping {
   onBidWon(bid: prebidjs.BidResponse): void;
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent): void;
   afterRequestAds(): void;
+
+  /**
+   * Ad unit paths can contain variables that need to be resolved at runtime.
+   * The global auction context and hence the frequency capping is initialized early on.
+   * Once the `adUnitPathVariables` are available, this method should be called, so ad unit paths
+   * can be resolved from the config and matched against the ad unit paths in the auction.
+   *
+   * @param adUnitPathVariables
+   */
   updateAdUnitPaths(adUnitPathVariables: AdUnitPathVariables): void;
   isAdUnitCapped(adUnitPath: string): boolean;
   isFrequencyCapped(slotId: string, bidder: BidderCode): boolean;

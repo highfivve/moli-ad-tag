@@ -482,6 +482,41 @@ export namespace auction {
      */
     readonly previousBidCpms?: PreviousBidCpmsConfig;
   }
+
+  /**
+   * ## Interstitial Config
+   *
+   * The global auction context can add additional behaviour to the interstitial ad format through
+   * this extension.
+   *
+   * Note that this does not replace, but extend the frequency capping feature. While the frequency
+   * capping is used to limit the overall number of interstitials displayed to a user, this
+   * configuration is used to control the order and types of channels and interstitial may be requested.
+   */
+  export interface InterstitialConfig {
+    /**
+     * Enable or disable the interstitial ad format.
+     * This is a global setting that applies to all ad slots.
+     */
+    readonly enabled: boolean;
+
+    /**
+     * The ad unit path for the interstitial ad slot.
+     * This is used to identify the interstitial ad slot in the ad server.
+     */
+    readonly adUnitPath: string;
+
+    /**
+     * The DOM ID of the interstitial ad slot.
+     *
+     * The Google Web Interstitials use a dynamic DOM ID that is generated at runtime, but all
+     * other integrations require a DOM ID to properly perform an auction.
+     */
+    readonly domId?: string;
+
+    // TODO configure the loading behaviour of the interstitial ad slot
+    //      gam, gam+prebid, prebid+gam, prebid ... first pi, lazy, triggered-by, ...
+  }
 }
 
 /** slot behaviour namespace */
