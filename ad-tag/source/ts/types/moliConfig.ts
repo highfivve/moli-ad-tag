@@ -1728,16 +1728,6 @@ export namespace modules {
        * format filters will be used.
        */
       readonly configs: SkinConfig[];
-
-      /**
-       * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
-       * would be removed in its favour.
-       */
-      readonly trackSkinCpmLow?: (
-        cpms: { skin: number; combinedNonSkinSlots: number },
-        skinConfig: SkinConfig,
-        skinBid: prebidjs.IBidResponse
-      ) => void;
     }
 
     /**
@@ -1863,9 +1853,25 @@ export namespace modules {
       readonly destroySkinSlot?: boolean;
 
       /**
-       * If set, the skin of the configured bidder reloads after the given interval (in ms).
+       * If set, the ad tag will add a page level targeting key value pair that can be used to
+       * react if a skin configuration was applied or not
+       *
+       * The key value pair will only be added if a skin was detected and requested. You should
+       * always
        */
-      readonly adReload?: { intervalMs: number; allowed: prebidjs.BidderCode[] };
+      readonly targeting?: {
+        /**
+         * Will be set at the page level and can be used to check if a skin was applied.
+         */
+        readonly key: string;
+
+        /**
+         * The value that is set if a skin was detected and requested.
+         *
+         * @default is '1'
+         */
+        readonly value?: string;
+      };
     };
   }
 

@@ -2741,26 +2741,6 @@
     "modules.skin.SkinConfig": {
       "additionalProperties": false,
       "properties": {
-        "adReload": {
-          "additionalProperties": false,
-          "description": "If set, the skin of the configured bidder reloads after the given interval (in ms).",
-          "properties": {
-            "allowed": {
-              "items": {
-                "$ref": "#/definitions/prebidjs.BidderCode"
-              },
-              "type": "array"
-            },
-            "intervalMs": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "intervalMs",
-            "allowed"
-          ],
-          "type": "object"
-        },
         "blockedAdSlotDomIds": {
           "description": "dom ids of the ad slots that should not be requested when a just premium skin appears in the bid responses.\n\nDepending on the wallpaperAdSlot these are usually skyscrapers left and right and if there's a specific wallpaper ad slot the header as well.",
           "items": {
@@ -2799,6 +2779,25 @@
         "skinAdSlotDomId": {
           "description": "This is usually the dom id of the header ad slot.\n\nSome setups may have an ad slot only for the just premium skin. This is the case if there are direct campaign formats for wallpapers that require a DFP road block.",
           "type": "string"
+        },
+        "targeting": {
+          "additionalProperties": false,
+          "description": "If set, the ad tag will add a page level targeting key value pair that can be used to react if a skin configuration was applied or not\n\nThe key value pair will only be added if a skin was detected and requested. You should always",
+          "properties": {
+            "key": {
+              "description": "Will be set at the page level and can be used to check if a skin was applied.",
+              "type": "string"
+            },
+            "value": {
+              "default": "is '1'",
+              "description": "The value that is set if a skin was detected and requested.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "type": "object"
         }
       },
       "required": [
@@ -2824,46 +2823,6 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
-        },
-        "trackSkinCpmLow": {
-          "$comment": "(\n        cpms: { skin: number; combinedNonSkinSlots: number },\n        skinConfig: SkinConfig,\n        skinBid: prebidjs.IBidResponse) => void",
-          "description": "Function to track when the skin cpm is lower than the combined cpm of the ad slots that would be removed in its favour.",
-          "properties": {
-            "namedArgs": {
-              "additionalProperties": false,
-              "properties": {
-                "cpms": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "combinedNonSkinSlots": {
-                      "type": "number"
-                    },
-                    "skin": {
-                      "type": "number"
-                    }
-                  },
-                  "required": [
-                    "skin",
-                    "combinedNonSkinSlots"
-                  ],
-                  "type": "object"
-                },
-                "skinBid": {
-                  "$ref": "#/definitions/prebidjs.IBidResponse"
-                },
-                "skinConfig": {
-                  "$ref": "#/definitions/modules.skin.SkinConfig"
-                }
-              },
-              "required": [
-                "cpms",
-                "skinConfig",
-                "skinBid"
-              ],
-              "type": "object"
-            }
-          },
-          "type": "object"
         }
       },
       "required": [
