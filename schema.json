@@ -2743,6 +2743,7 @@
       "properties": {
         "adReload": {
           "additionalProperties": false,
+          "deprecated": "use the regular ad reload module instead with a proper visibility override configuration.",
           "description": "If set, the skin of the configured bidder reloads after the given interval (in ms).",
           "properties": {
             "allowed": {
@@ -2799,6 +2800,25 @@
         "skinAdSlotDomId": {
           "description": "This is usually the dom id of the header ad slot.\n\nSome setups may have an ad slot only for the just premium skin. This is the case if there are direct campaign formats for wallpapers that require a DFP road block.",
           "type": "string"
+        },
+        "targeting": {
+          "additionalProperties": false,
+          "description": "If set, the ad tag will add a page level targeting key value pair that can be used to react if a skin configuration was applied or not\n\nThe key value pair will only be added if a skin was detected and requested. You should always",
+          "properties": {
+            "key": {
+              "description": "Will be set at the page level and can be used to check if a skin was applied.",
+              "type": "string"
+            },
+            "value": {
+              "default": "is '1'",
+              "description": "The value that is set if a skin was detected and requested.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "type": "object"
         }
       },
       "required": [
