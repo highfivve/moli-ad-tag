@@ -261,8 +261,7 @@ moli.registerModule(
           hideBlockedSlots: false,
           blockedAdSlotDomIds: ['gf_header', 'gf_sidebar_1', 'gf_sidebar_2'],
           destroySkinSlot: true,
-          enableCpmComparison: true, // set this to true to prevent skin from rendering if its cpm is too low
-          adReload: { intervalMs: 30000, allowed: ['dspx'] }
+          enableCpmComparison: true // set this to true to prevent skin from rendering if its cpm is too low
         }
       ]
     },

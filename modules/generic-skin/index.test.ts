@@ -2,9 +2,9 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { createAssetLoaderService, googletag, initAdTag, Moli, prebidjs } from '@highfivve/ad-tag';
+import { googletag, Moli, prebidjs } from '@highfivve/ad-tag';
 import { newNoopLogger } from '@highfivve/ad-tag/lib/stubs/moliStubs';
-import { pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
+import { moliPrebidTestConfig, pbjsTestConfig } from '@highfivve/ad-tag/lib/stubs/prebidjsStubs';
 import { createDom } from '@highfivve/ad-tag/lib/stubs/browserEnvSetup';
 import { FormatFilter, Skin, SkinConfig, SkinConfigEffect } from './index';
 import IBidResponsesMap = prebidjs.IBidResponsesMap;
@@ -53,6 +53,11 @@ describe('Skin Module', () => {
     });
   };
 
+  const createGoogleAdSlot = (domId: string): googletag.IAdSlot =>
+    ({
+      getSlotElementId: () => domId
+    } as googletag.IAdSlot);
+
   const genericBidResponse = (
     bidder: prebidjs.IGenericBidResponse['bidder'],
     cpm: number
@@ -81,7 +86,6 @@ describe('Skin Module', () => {
   describe('init', () => {
     it('should set the prebidResponse listener', () => {
       const noopLogger = newNoopLogger();
-      const assetLoaderService = createAssetLoaderService(jsDomWindow);
       const module = new Skin(
         {
           configs: [
@@ -120,7 +124,6 @@ describe('Skin Module', () => {
 
     it('should fail if not all slots are available in the config', () => {
       const noopLogger = newNoopLogger();
-      const assetLoaderService = createAssetLoaderService(jsDomWindow);
       const module = new Skin(
         {
           configs: [
@@ -553,7 +556,6 @@ describe('Skin Module', () => {
     });
 
     describe('destroySkinSlot', () => {
-      const assetLoaderService = createAssetLoaderService(jsDomWindow);
       let slots: Moli.AdSlot[] = [];
       let slotDefinitions: Moli.SlotDefinition[] = [];
 
@@ -820,66 +822,36 @@ describe('Skin Module', () => {
         );
       });
     });
+    describe('targeting', () => {
+      const skinConfig: SkinConfig = {
+        formatFilter: [{ bidder: prebidjs.DSPX }],
+        skinAdSlotDomId: 'wp-slot',
+        blockedAdSlotDomIds: ['sky-slot'],
+        hideSkinAdSlot: false,
+        hideBlockedSlots: false,
+        enableCpmComparison: false,
+        targeting: {
+          key: 'skin'
+        }
+      };
 
-    describe('adReload', () => {
-      let refreshAdSlotSpy: Sinon.SinonSpy;
+      const slots = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
+      const slotDefinitions = slots.map(
+        slot =>
+          ({
+            moliSlot: slot,
+            adSlot: createGoogleAdSlot(slot.domId)
+          } as Moli.SlotDefinition)
+      );
 
-      const slots: Moli.AdSlot[] = createAdSlots(jsDomWindow, ['wp-slot', 'sky-slot']);
-      const slotDefinitions: Moli.SlotDefinition[] = slots.map(slot => ({
-        moliSlot: slot,
-        adSlot: {
-          getSlotElementId: () => slot.domId
-        } as googletag.IAdSlot,
-        filterSupportedSizes: () => []
-      }));
-      const assetLoaderService = createAssetLoaderService(jsDomWindow);
-
-      after(() => {
-        sandbox.restore();
-      });
-
-      beforeEach(() => {
-        initAdTag(jsDomWindow);
-        refreshAdSlotSpy = sandbox.spy(jsDomWindow.moli, 'refreshAdSlot');
-        sandbox.useFakeTimers();
-      });
-
-      afterEach(() => {
-        sandbox.reset();
-        sandbox.clock.restore();
-        sandbox.clock.reset();
-      });
-
-      it('should reload the skin if bidder is configured in adReload and is about to win the auction', () => {
-        const module = new Skin(
-          {
-            configs: [
-              {
-                formatFilter: [{ bidder: prebidjs.DSPX }],
-                skinAdSlotDomId: 'wp-slot',
-                blockedAdSlotDomIds: ['sky-slot'],
-                hideSkinAdSlot: false,
-                hideBlockedSlots: false,
-                enableCpmComparison: false,
-                destroySkinSlot: true,
-                adReload: { allowed: [prebidjs.DSPX], intervalMs: 30000 }
-              }
-            ]
-          },
-          jsDomWindow
-        );
-
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          schain: { nodes: [] }
-        };
+      const skinModule = (moduleConfig: { configs: SkinConfig[] }) => {
+        const module = new Skin(moduleConfig, jsDomWindow);
 
         const config: Moli.MoliConfig = {
           slots: slots,
-          prebid: prebidConfig,
+          prebid: { ...moliPrebidTestConfig },
           schain: dummySchainConfig
         };
-
         module.init(config);
 
         expect(config.prebid?.listener).to.be.ok;
@@ -888,93 +860,63 @@ describe('Skin Module', () => {
           config.prebid!.listener as Moli.headerbidding.PrebidListener
         ).preSetTargetingForGPTAsync!;
 
+        return { preSetTargetingForGPTAsync };
+      };
+
+      it('should set page level targeting if a skin is selected', () => {
+        const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
+        const { preSetTargetingForGPTAsync } = skinModule({ configs: [skinConfig] });
         preSetTargetingForGPTAsync(
           {
-            'wp-slot': {
-              bids: [
-                genericBidResponse(prebidjs.DSPX, 1),
-                genericBidResponse(prebidjs.Seedtag, 0.5),
-                genericBidResponse(prebidjs.Criteo, 0.99)
-              ]
-            }
+            'wp-slot': { bids: [dspxBidResponse(1)] },
+            'sky-slot': { bids: [genericBidResponse('openx', 0.5)] }
           },
           false,
           slotDefinitions
         );
 
-        sandbox.clock.tick(31000);
-
-        expect(refreshAdSlotSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledWithExactly('skin', '1');
       });
 
-      it('should clear an "old" timeout before activating a new one', () => {
-        const module = new Skin(
-          {
-            configs: [
-              {
-                formatFilter: [{ bidder: prebidjs.DSPX }],
-                skinAdSlotDomId: 'wp-slot',
-                blockedAdSlotDomIds: ['sky-slot'],
-                hideSkinAdSlot: false,
-                hideBlockedSlots: false,
-                enableCpmComparison: false,
-                destroySkinSlot: true,
-                adReload: { allowed: [prebidjs.DSPX], intervalMs: 30000 }
-              }
-            ]
-          },
-          jsDomWindow
-        );
+      it('should set page level targeting with the given value', () => {
+        const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
 
-        const prebidConfig: Moli.headerbidding.PrebidConfig = {
-          config: pbjsTestConfig,
-          schain: { nodes: [] }
+        const skinConfigWithValue: SkinConfig = {
+          ...skinConfig,
+          targeting: {
+            key: 'skin',
+            value: 'foo'
+          }
         };
-
-        const config: Moli.MoliConfig = {
-          slots: slots,
-          prebid: prebidConfig,
-          schain: dummySchainConfig
-        };
-
-        module.init(config);
-
-        expect(config.prebid?.listener).to.be.ok;
-
-        const preSetTargetingForGPTAsync = (
-          config.prebid!.listener as Moli.headerbidding.PrebidListener
-        ).preSetTargetingForGPTAsync!;
-
+        const { preSetTargetingForGPTAsync } = skinModule({ configs: [skinConfigWithValue] });
         preSetTargetingForGPTAsync(
           {
-            'wp-slot': {
-              bids: [genericBidResponse(prebidjs.DSPX, 1)]
-            }
+            'wp-slot': { bids: [dspxBidResponse(1)] },
+            'sky-slot': { bids: [genericBidResponse('openx', 0.5)] }
           },
           false,
           slotDefinitions
         );
 
-        // needed to make the test succeed if other tests have run before
-        sandbox.clock.reset();
+        expect(setTargetingSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.been.calledWithExactly('skin', 'foo');
+      });
 
-        sandbox.clock.tick(10000);
+      it('should not set page level targeting if no skin is selected', () => {
+        const setTargetingSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'setTargeting');
 
+        const { preSetTargetingForGPTAsync } = skinModule({ configs: [skinConfig] });
         preSetTargetingForGPTAsync(
           {
-            'wp-slot': {
-              bids: [genericBidResponse(prebidjs.DSPX, 1)]
-            }
+            'wp-slot': { bids: [] },
+            'sky-slot': { bids: [genericBidResponse('openx', 1.5)] }
           },
           false,
           slotDefinitions
         );
 
-        sandbox.clock.tick(21000);
-        expect(refreshAdSlotSpy).to.have.not.been.called;
-
-        sandbox.clock.tick(10000);
-        expect(refreshAdSlotSpy).to.have.been.calledOnce;
+        expect(setTargetingSpy).to.have.not.been.called;
       });
     });
   });
