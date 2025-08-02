@@ -3066,6 +3066,25 @@
           "description": "Utiq loads a single javascript. It will only load if consent for **all** purposes is given.",
           "type": "string"
         },
+        "delay": {
+          "additionalProperties": false,
+          "description": "## Utiq Loading Delay Configuration\n\nIf you wish to delay the loading of the Utiq script, you can use the `delay` configuration option. There are different ways to delay the loading of the Utiq script, but only one is currently supported:\n\n- `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.\n- `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.",
+          "properties": {
+            "enabled": {
+              "description": "Delaying the utiq script, must be explicitly enabled.",
+              "type": "boolean"
+            },
+            "minAdRequests": {
+              "default": 0,
+              "description": "After which number of ad requests should the Utiq script be loaded.\n\nYou can use this to slowly roll out Utiq to your users and to not overwhelm them with the Utiq pop-up.",
+              "type": "number"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object"
+        },
         "enabled": {
           "type": "boolean"
         },
