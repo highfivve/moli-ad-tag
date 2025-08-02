@@ -203,11 +203,17 @@ const requiredPurposeIds = [
 
 export const createUtiq = (): IModule => {
   let utiqConfig: modules.utiq.UtiqConfig | null = null;
+  let loaded = false;
 
   const loadUtiq = (config: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> => {
     if (context.env__ === 'test') {
       return Promise.resolve();
     }
+
+    if (loaded) {
+      return Promise.resolve();
+    }
+    loaded = true;
 
     const utiqWindow = context.window__ as unknown as UtiqWindow;
     // merge any existing object. Existing configurations take precedence.
@@ -228,6 +234,16 @@ export const createUtiq = (): IModule => {
       return Promise.resolve();
     }
 
+    const minAdRequests =
+      config.delay?.enabled && config.delay.minAdRequests ? config.delay.minAdRequests : 0;
+    if (context.requestAdsCalls__ < minAdRequests) {
+      context.logger__.info(
+        'Utiq',
+        `not enough ad requests (${context.requestAdsCalls__}) to load Utiq. ${minAdRequests} required.`
+      );
+      return Promise.resolve();
+    }
+
     return context.assetLoaderService__
       .loadScript({
         name: 'utiq',
@@ -235,6 +251,10 @@ export const createUtiq = (): IModule => {
         assetUrl: config.assetUrl
       })
       .catch(error => context.logger__.error('failed to load utiq', error));
+  };
+
+  const hasDelayEnabled = (config: modules.utiq.UtiqConfig | null): boolean => {
+    return config?.delay?.enabled ?? false;
   };
 
   return {
@@ -253,11 +273,15 @@ export const createUtiq = (): IModule => {
     },
 
     initSteps__(): InitStep[] {
-      return utiqConfig?.enabled ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))] : [];
+      return utiqConfig?.enabled && !hasDelayEnabled(utiqConfig)
+        ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
+        : [];
     },
 
     configureSteps__(): ConfigureStep[] {
-      return [];
+      return utiqConfig?.enabled && hasDelayEnabled(utiqConfig)
+        ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
+        : [];
     },
 
     prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {

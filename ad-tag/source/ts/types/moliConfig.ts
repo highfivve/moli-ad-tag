@@ -2122,6 +2122,32 @@ export namespace modules {
        * @see https://docs.utiq.com/docs/configuration-options
        */
       readonly options?: UtiqConfigOptions;
+
+      /**
+       * ## Utiq Loading Delay Configuration
+       *
+       * If you wish to delay the loading of the Utiq script, you can use the `delay` configuration option.
+       * There are different ways to delay the loading of the Utiq script, but only one is currently supported:
+       *
+       * - `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.
+       * - `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.
+       *               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.
+       *
+       */
+      readonly delay?: {
+        /**
+         * Delaying the utiq script, must be explicitly enabled.
+         */
+        readonly enabled: boolean;
+        /**
+         * After which number of ad requests should the Utiq script be loaded.
+         *
+         * You can use this to slowly roll out Utiq to your users and to not overwhelm them with the Utiq pop-up.
+         *
+         * @default 0
+         */
+        readonly minAdRequests?: number;
+      };
     };
   }
 
