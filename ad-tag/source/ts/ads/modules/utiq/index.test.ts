@@ -16,7 +16,6 @@ import {
 } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { createUtiq } from './index';
-import { IModule } from 'ad-tag/types/module';
 
 // setup sinon-chai
 use(sinonChai);
@@ -28,16 +27,25 @@ describe('Utiq Module', () => {
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
-  const createUtiqModule = (enabled: boolean = true, options?: modules.utiq.UtiqConfigOptions) => {
+  const createUtiqModule = (
+    enabled: boolean = true,
+    options?: modules.utiq.UtiqConfigOptions,
+    delay?: modules.utiq.UtiqConfig['delay']
+  ) => {
     const module = createUtiq();
     module.configure__({
       utiq: {
         enabled: enabled,
         assetUrl: 'http://localhost/utiqLoader.js',
-        ...options
+        ...(delay ? { delay: delay } : {}),
+        ...(options ? { options: options } : {})
       }
     });
-    return { module, initStep: module.initSteps__()[0] };
+    return {
+      module,
+      initStep: module.initSteps__()[0],
+      configureStep: module.configureSteps__()[0]
+    };
   };
 
   beforeEach(() => {
@@ -48,13 +56,30 @@ describe('Utiq Module', () => {
     sandbox.reset();
   });
 
-  it('should add an init step', async () => {
-    const { module } = createUtiqModule();
+  describe('pipeline steps', () => {
+    it('should add an init step if enabled and no delay config', async () => {
+      const { initStep, configureStep } = createUtiqModule();
 
-    const initStep = module.initSteps__()[0];
+      expect(initStep).to.be.ok;
+      expect(initStep.name).to.be.eq('utiq');
+      expect(configureStep).to.be.undefined;
+    });
 
-    expect(initStep).to.have.length(1);
-    expect(initStep.name).to.be.eq('utiq');
+    it('should add an init step if enabled and delay config is disabled', async () => {
+      const { initStep, configureStep } = createUtiqModule(true, undefined, { enabled: false });
+
+      expect(initStep).to.be.ok;
+      expect(initStep.name).to.be.eq('utiq');
+      expect(configureStep).to.be.undefined;
+    });
+
+    it('should add a configure step if enabled and delay config is enabled', async () => {
+      const { initStep, configureStep } = createUtiqModule(true, undefined, { enabled: true });
+
+      expect(initStep).to.be.undefined;
+      expect(configureStep).to.be.ok;
+      expect(configureStep.name).to.be.eq('utiq');
+    });
   });
 
   describe('loadUtiq', () => {
@@ -134,6 +159,36 @@ describe('Utiq Module', () => {
         assetUrl: 'http://localhost/utiqLoader.js'
       });
       expect((jsDomWindow as any).Utiq.queue).to.be.deep.equal([]);
+    });
+
+    it('should load utiq script only once', async () => {
+      const { initStep } = createUtiqModule();
+      await initStep(adPipelineContext());
+      expect(loadScriptStub).to.have.been.calledOnce;
+
+      // call again, should not load again
+      await initStep(adPipelineContext());
+      expect(loadScriptStub).to.have.been.calledOnce;
+    });
+
+    describe('delay with minAdRequests', () => {
+      it('should not load utiq if minAdRequest requirement is not met', async () => {
+        const { configureStep } = createUtiqModule(true, undefined, {
+          enabled: true,
+          minAdRequests: 2
+        });
+        await configureStep({ ...adPipelineContext(), requestAdsCalls__: 1 }, []);
+        expect(loadScriptStub).to.have.not.been.called;
+      });
+
+      it('should load utiq if minAdRequest requirement is met', async () => {
+        const { configureStep } = createUtiqModule(true, undefined, {
+          enabled: true,
+          minAdRequests: 1
+        });
+        await configureStep({ ...adPipelineContext(), requestAdsCalls__: 1 }, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+      });
     });
   });
 });
