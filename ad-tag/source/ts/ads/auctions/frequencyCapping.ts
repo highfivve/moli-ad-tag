@@ -5,6 +5,7 @@ import { NowInstant, remainingTime, ResumeCallbackData } from './resume';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdUnitPathVariables, resolveAdUnitPath } from '../adUnitPath';
 import { googletag } from 'ad-tag/types/googletag';
+import { formatKey } from 'ad-tag/ads/keyValues';
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
@@ -42,6 +43,12 @@ export interface FrequencyCapping {
   onAuctionEnd(auction: prebidjs.event.AuctionObject): void;
   onBidWon(bid: prebidjs.BidResponse): void;
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent): void;
+
+  /**
+   * Required for google web interstitials to capture if an impression was actually rendered.
+   * The rendered event fires even if the ad was not rendered.
+   */
+  onImpressionViewable(event: googletag.events.IImpressionViewableEvent): void;
   afterRequestAds(): void;
 
   /**
@@ -65,6 +72,7 @@ export const createFrequencyCapping = (
 ): FrequencyCapping => {
   const frequencyCaps: Map<string, FrequencyCappingBid> = new Map();
   const positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
+  const positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
   let numAdRequests = 0;
 
   const bidWonConfigs = config.configs.filter(
@@ -161,6 +169,24 @@ export const createFrequencyCapping = (
     }
   }
 
+  const onSlotRenderEndedOrImpressionViewable = (adUnitPath: string) => {
+    resolvedAdUnitPathPositionConfigs
+      .filter(config => config.adUnitPath === adUnitPath)
+      .forEach(config => {
+        // what
+        if (config.conditions.pacingInterval) {
+          // store the timestamp of the last impression as a schedule for persistence
+          capPosition(now(), adUnitPath, config.conditions.pacingInterval);
+        }
+        // store the number of ad requests for this position. Doesn't matter we persist multiple times
+        // as the numAdRequests should not change. And there's rarely more than one config for a position
+        if (config.conditions.pacingRequestAds) {
+          positionLastImpressionNumberOfAdRequests.set(adUnitPath, numAdRequests);
+          persist();
+        }
+      });
+  };
+
   return {
     onAuctionEnd(auction: prebidjs.event.AuctionObject) {
       bidRequestedConfigs.forEach(config => {
@@ -179,14 +205,27 @@ export const createFrequencyCapping = (
     },
 
     onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent) {
-      if (!event.isEmpty) {
-        const adUnitPath = event.slot.getAdUnitPath();
-        const pacingInterval = resolvedAdUnitPathPositionConfigs.find(
-          config => config.adUnitPath === adUnitPath
-        )?.conditions.pacingInterval;
-        if (pacingInterval) {
-          capPosition(now(), adUnitPath, pacingInterval);
-        }
+      // check if the ad unit path is configured with a pacing:interval
+      const [format] = event.slot.getTargeting(formatKey);
+      if (
+        !event.isEmpty && // for the Google interstitials, we must use the viewable impression event
+        format !== googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+      ) {
+        // for the google web interstitial, the slot id is not the same as the ad unit code
+        // it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
+        // To avoid this issue, we use the ad unit path instead of the slot id
+        onSlotRenderEndedOrImpressionViewable(event.slot.getAdUnitPath());
+      }
+    },
+
+    onImpressionViewable(event: googletag.events.IImpressionViewableEvent) {
+      // check if the ad unit path is configured with a pacing:interval
+      const [format] = event.slot.getTargeting(formatKey);
+      if (format === googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()) {
+        // for the google web interstitial, the slot id is not the same as the ad unit code
+        // it can look like this 'gpt_unit_/33559401,22597236956/gutefrage/gf_interstitial/desktop/gutefrage.net_0'
+        // To avoid this issue, we use the ad unit path instead of the slot id
+        onSlotRenderEndedOrImpressionViewable(event.slot.getAdUnitPath());
       }
     },
 
@@ -208,7 +247,11 @@ export const createFrequencyCapping = (
             positionConfig.conditions.delay &&
             numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
           (positionConfig.conditions.pacingRequestAds &&
-            numAdRequests % positionConfig.conditions.pacingRequestAds.requestAds !== 0) ||
+            // if there are no winning impressions yet, we can request ads
+            positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
+            // check if enough ad requests were made since the last impression
+            numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
+              positionConfig.conditions.pacingRequestAds.requestAds) ||
           (positionConfig.conditions.pacingInterval &&
             (positionImpSchedules.get(adUnitPath) ?? []).length >=
               positionConfig.conditions.pacingInterval.maxImpressions)

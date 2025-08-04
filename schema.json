@@ -546,11 +546,59 @@
           "$ref": "#/definitions/auction.FrequencyCappingConfig",
           "description": "Set frequency capping for a specific slot and bidder"
         },
+        "interstitial": {
+          "$ref": "#/definitions/auction.InterstitialConfig",
+          "description": "Additional configuration options for the interstitial ad format.\n\n- Set priorities which channel ( gam web interstitial or custom interstitial )\n- Configure waterfall scenarios for the interstitial ad format \"gam > custom\" or \"custom > gam\""
+        },
         "previousBidCpms": {
           "$ref": "#/definitions/auction.PreviousBidCpmsConfig",
           "description": "Save previous prebid bid cpms on this position"
         }
       },
+      "type": "object"
+    },
+    "auction.InterstitialChannel": {
+      "description": "## Interstitial channels\n\nA channel is the type of integration, which the ad will be rendered through.\n\n- `gam`: The interstitial ad is rendered through the Google Ad Manager Web Interstitials.\n- `c`: The interstitial ad is rendered through custom a custom ad tag configuration, which        could be a header bidding interstitial or a custom implementation.",
+      "enum": [
+        "gam",
+        "c"
+      ],
+      "type": "string"
+    },
+    "auction.InterstitialConfig": {
+      "additionalProperties": false,
+      "description": "## Interstitial Config\n\nThe global auction context can add additional behaviour to the interstitial ad format through this extension.\n\nNote that this does not replace, but extend the frequency capping feature. While the frequency capping is used to limit the overall number of interstitials displayed to a user, this configuration is used to control the order and types of channels and interstitial may be requested.",
+      "properties": {
+        "adUnitPath": {
+          "description": "The ad unit path for the interstitial ad slot. This is used to identify the interstitial ad slot in the ad server.",
+          "type": "string"
+        },
+        "domId": {
+          "description": "The DOM ID of the interstitial ad slot.\n\nThe Google Web Interstitials use a dynamic DOM ID that is generated at runtime, but all other integrations require a DOM ID to properly perform an auction.",
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "priority": {
+          "description": "The channels that are allowed to be used for the interstitial ad format and in which order they should be requested.\n\nDuplicate channels are not allowed. After the first appearance of a channel, all subsequent appearances are ignored.\n\nIf the priority is empty, the interstitial ad format will not be requested at all.",
+          "items": {
+            "$ref": "#/definitions/auction.InterstitialChannel"
+          },
+          "type": "array"
+        },
+        "ttlStorage": {
+          "default": "is 30 minutes",
+          "description": "Time-to-live in milliseconds for the interstitial state stored in local storage.\n\nThis value can influence the priority of the interstitial ad format as a channel might get more share of ad requests if the interstitial state is not cleared frequently or cleared too frequently.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enabled",
+        "adUnitPath",
+        "domId",
+        "priority"
+      ],
       "type": "object"
     },
     "auction.PositionFrequencyConfig": {

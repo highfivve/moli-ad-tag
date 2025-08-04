@@ -459,6 +459,73 @@ export namespace auction {
     readonly enabled: boolean;
   }
 
+  /**
+   * ## Interstitial channels
+   *
+   * A channel is the type of integration, which the ad will be rendered through.
+   *
+   * - `gam`: The interstitial ad is rendered through the Google Ad Manager Web Interstitials.
+   * - `c`: The interstitial ad is rendered through custom a custom ad tag configuration, which
+   *        could be a header bidding interstitial or a custom implementation.
+   *
+   */
+  export type InterstitialChannel = 'gam' | 'c';
+
+  /**
+   *
+   */
+  export type CustomInterstitialTrigger = 'eager' | 'manual' | 'navigation';
+
+  /**
+   * ## Interstitial Config
+   *
+   * The global auction context can add additional behaviour to the interstitial ad format through
+   * this extension.
+   *
+   * Note that this does not replace, but extend the frequency capping feature. While the frequency
+   * capping is used to limit the overall number of interstitials displayed to a user, this
+   * configuration is used to control the order and types of channels and interstitial may be requested.
+   */
+  export interface InterstitialConfig {
+    readonly enabled: boolean;
+
+    /**
+     * The ad unit path for the interstitial ad slot.
+     * This is used to identify the interstitial ad slot in the ad server.
+     */
+    readonly adUnitPath: string;
+
+    /**
+     * The DOM ID of the interstitial ad slot.
+     *
+     * The Google Web Interstitials use a dynamic DOM ID that is generated at runtime, but all
+     * other integrations require a DOM ID to properly perform an auction.
+     */
+    readonly domId: string;
+
+    /**
+     * The channels that are allowed to be used for the interstitial ad format and in which order
+     * they should be requested.
+     *
+     * Duplicate channels are not allowed. After the first appearance of a channel, all subsequent
+     * appearances are ignored.
+     *
+     * If the priority is empty, the interstitial ad format will not be requested at all.
+     */
+    readonly priority: InterstitialChannel[];
+
+    /**
+     * Time-to-live in milliseconds for the interstitial state stored in local storage.
+     *
+     * This value can influence the priority of the interstitial ad format as a channel might get
+     * more share of ad requests if the interstitial state is not cleared frequently or cleared too
+     * frequently.
+     *
+     * @default is 30 minutes
+     */
+    readonly ttlStorage?: number;
+  }
+
   export interface GlobalAuctionContextConfig {
     /**
      * Disable bidders that lack auction participation
@@ -481,41 +548,14 @@ export namespace auction {
      * Save previous prebid bid cpms on this position
      */
     readonly previousBidCpms?: PreviousBidCpmsConfig;
-  }
-
-  /**
-   * ## Interstitial Config
-   *
-   * The global auction context can add additional behaviour to the interstitial ad format through
-   * this extension.
-   *
-   * Note that this does not replace, but extend the frequency capping feature. While the frequency
-   * capping is used to limit the overall number of interstitials displayed to a user, this
-   * configuration is used to control the order and types of channels and interstitial may be requested.
-   */
-  export interface InterstitialConfig {
-    /**
-     * Enable or disable the interstitial ad format.
-     * This is a global setting that applies to all ad slots.
-     */
-    readonly enabled: boolean;
 
     /**
-     * The ad unit path for the interstitial ad slot.
-     * This is used to identify the interstitial ad slot in the ad server.
-     */
-    readonly adUnitPath: string;
-
-    /**
-     * The DOM ID of the interstitial ad slot.
+     * Additional configuration options for the interstitial ad format.
      *
-     * The Google Web Interstitials use a dynamic DOM ID that is generated at runtime, but all
-     * other integrations require a DOM ID to properly perform an auction.
+     * - Set priorities which channel ( gam web interstitial or custom interstitial )
+     * - Configure waterfall scenarios for the interstitial ad format "gam > custom" or "custom > gam"
      */
-    readonly domId?: string;
-
-    // TODO configure the loading behaviour of the interstitial ad slot
-    //      gam, gam+prebid, prebid+gam, prebid ... first pi, lazy, triggered-by, ...
+    readonly interstitial?: InterstitialConfig;
   }
 }
 

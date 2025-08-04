@@ -26,6 +26,7 @@ import IPrebidJs = prebidjs.IPrebidJs;
 import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
+import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -431,7 +432,11 @@ export const prebidRequestBids = (
       const auction = new Promise<void>(resolve => {
         const slotsToRefresh = slots.filter(
           slot =>
-            !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
+            // keep slots that are not throttled
+            !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath()) &&
+            // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
+            (!isGamInterstitial(slot.adSlot, context.window__) ||
+              context.auction__.interstitialChannel() !== 'gam')
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
