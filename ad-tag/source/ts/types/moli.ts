@@ -349,6 +349,33 @@ export namespace Moli {
      * @param listener The callback function to remove
      */
     removeEventListener: EventService['removeEventListener'];
+
+    /**
+     * Load a content feed on your page.
+     *
+     * The `options.selector` is a CSS selector that can match multiple elements on the page.
+     * Each element will be filled a content feed with the given `feedId`.
+     * @param options
+     */
+    loadFeed(options: FeedOptions): Promise<void>;
+  }
+
+  export interface FeedOptions {
+    /**
+     * CSS selector that matches the elements on the page that should be filled with the content feed.
+     */
+    readonly selector: string;
+
+    /**
+     * The feed ID that identifies the content feed. You can add various configurations for a feed,
+     * like context, search queries, layouts and blocklists.
+     */
+    readonly feedId: string;
+
+    /**
+     * Optional list of keywords that _can_ be used by the feed, depending on your configuration.
+     */
+    readonly keywords?: string[];
   }
 
   /**
