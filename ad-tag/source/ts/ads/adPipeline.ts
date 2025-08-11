@@ -12,6 +12,21 @@ import { AdSlot, bucket, consent, Environment, MoliConfig } from '../types/moliC
 import { IAssetLoaderService, createAssetLoaderService } from '../util/assetLoaderService';
 import { uuidV4 } from '../util/uuid';
 
+export interface IAdPipelineRunOptions {
+  /**
+   * If the ad pipeline was started through a refreshBucket call, this value is set.
+   */
+  readonly bucketName?: string;
+
+  /**
+   * This is available if the ad pipeline is run was started through a refreshAdSlots call.
+   *
+   * If this is set, the ad pipeline is run in the context of a refreshAdSlots call and the options
+   * are passed through the pipeline so modules can act on those options.
+   */
+  readonly options?: MoliRuntime.RefreshAdSlotsOptions;
+}
+
 /**
  * Context passed to every pipeline step.
  *
@@ -99,6 +114,11 @@ export type AdPipelineContext = {
    * Takes care of loading (external) assets
    */
   readonly assetLoaderService__: IAssetLoaderService;
+
+  /**
+   * Options provided through the public moli API that are passed through the ad pipeline.
+   */
+  readonly options__?: IAdPipelineRunOptions;
 };
 
 /**
@@ -318,12 +338,8 @@ export class AdPipeline {
     config: MoliConfig,
     runtimeConfig: MoliRuntime.MoliRuntimeConfig,
     requestAdsCalls: number,
-    bucketName?: string
+    options?: IAdPipelineRunOptions
   ): Promise<void> {
-    if (slots.length === 0) {
-      return Promise.resolve();
-    }
-
     // increase the prebid request count
     this.requestId = this.requestId + 1;
     const currentRequestId = this.requestId;
@@ -361,6 +377,7 @@ export class AdPipeline {
         this.window
       );
 
+      const bucketName = options?.bucketName;
       const bucketConfig =
         bucketName && config.buckets?.bucket && config.buckets.bucket[bucketName]
           ? config.buckets.bucket[bucketName]
@@ -393,7 +410,8 @@ export class AdPipeline {
         bucket__: bucketConfig,
         adUnitPathVariables__: adUnitPathVariables,
         auction__: this.auction,
-        assetLoaderService__: createAssetLoaderService(this.window)
+        assetLoaderService__: createAssetLoaderService(this.window),
+        options__: options
       };
 
       this.init = this.init

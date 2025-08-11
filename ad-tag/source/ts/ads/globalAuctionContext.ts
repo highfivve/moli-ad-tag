@@ -68,12 +68,14 @@ export const createGlobalAuctionContext = (
 
   // Ensure pbjs and googletag are initialized
   window.pbjs = window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
-  window.googletag = window.googletag || ({ cmd: [] } as unknown as googletag.IGoogleTag);
+  window.googletag = window.googletag || ({} as unknown as googletag.IGoogleTag);
+  window.googletag.cmd = window.googletag.cmd || [];
 
   // Register events
   if (
     config.biddersDisabling?.enabled ||
     config.previousBidCpms?.enabled ||
+    config.frequencyCap?.enabled ||
     config.interstitial?.enabled
   ) {
     window.pbjs.que.push(() => {
@@ -83,6 +85,7 @@ export const createGlobalAuctionContext = (
         if (config.previousBidCpms?.enabled && auction.bidsReceived) {
           previousBidCpms?.onAuctionEnd(auction.bidsReceived);
         }
+        frequencyCapping?.onAuctionEnd(auction);
       });
     });
   }
@@ -114,6 +117,9 @@ export const createGlobalAuctionContext = (
       window.googletag.pubads().addEventListener('slotRenderEnded', event => {
         frequencyCapping?.onSlotRenderEnded(event);
         interstitial?.onSlotRenderEnded(event);
+      });
+      window.googletag.pubads().addEventListener('impressionViewable', event => {
+        frequencyCapping?.onImpressionViewable(event);
       });
     });
   }

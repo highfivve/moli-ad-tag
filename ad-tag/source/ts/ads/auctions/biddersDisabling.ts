@@ -33,7 +33,22 @@ type BidderState = {
  * @param window - window object
  */
 export interface BiddersDisabling {
-  isBidderDisabled(position: string, bidderCode: prebidjs.BidderCode): boolean;
+  /**
+   * Disable bidders that have low bid rate as specified in the configuration.
+   * This method should be used to filter bid objects before an auction starts.
+   *
+   * Note that by default bidders are never disabled.
+   *
+   * @param domId the DOM id of the ad unit that should be checked
+   * @param bidderCode the prebid.js client side bidder code
+   * @returns true if the bidder is disabled for the given position, false otherwise
+   */
+  isBidderDisabled(domId: string, bidderCode: prebidjs.BidderCode): boolean;
+
+  /**
+   * prebid.js event handler that is called when an auction ends.
+   * Mutates the internal state of the bidders disabling feature.
+   */
   onAuctionEnd(auction: prebidjs.event.AuctionObject): void;
 }
 
@@ -46,8 +61,12 @@ export const createBiddersDisabling = (
 
   logger?.info(`Bidders disabling feature is ${config.enabled ? 'enabled' : 'disabled'}`);
 
-  const isBidderDisabled = (position: string, bidderCode: prebidjs.BidderCode): boolean => {
-    return participationInfo.get(position)?.get(bidderCode)?.disabled ?? false;
+  const isBidderDisabled = (domId: string, bidderCode: prebidjs.BidderCode): boolean => {
+    if (config.excludedPositions?.includes(domId)) {
+      return false;
+    }
+
+    return participationInfo.get(domId)?.get(bidderCode)?.disabled ?? false;
   };
 
   const onAuctionEnd = (auction: prebidjs.event.AuctionObject): void => {

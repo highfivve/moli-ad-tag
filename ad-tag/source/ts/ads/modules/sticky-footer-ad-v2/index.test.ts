@@ -235,18 +235,22 @@ describe('Sticky-footer-v2 Module', () => {
     const slotRenderedCallback: (
       event: googletag.events.ISlotRenderEndedEvent,
       listenerSpy: Sinon.SinonSpy
-    ) => void = (event: googletag.events.ISlotRenderEndedEvent, listenerSpy: Sinon.SinonSpy) =>
-      listenerSpy.args.find(args => (args[0] as string) === 'slotRenderEnded')?.[1] as unknown as (
-        event: googletag.events.ISlotRenderEndedEvent
-      ) => void;
+    ) => void = (event: googletag.events.ISlotRenderEndedEvent, listenerSpy: Sinon.SinonSpy) => {
+      const callback = listenerSpy.args.find(
+        args => (args[0] as string) === 'slotRenderEnded'
+      )?.[1] as unknown as (event: googletag.events.ISlotRenderEndedEvent) => void;
+      callback(event);
+    };
 
     const slotLoadedCallback: (
       event: googletag.events.ISlotOnloadEvent,
       listenerSpy: Sinon.SinonSpy
-    ) => void = (event: googletag.events.ISlotOnloadEvent, listenerSpy: Sinon.SinonSpy) =>
-      listenerSpy.args.find(args => (args[0] as string) === 'slotOnload')?.[1] as unknown as (
-        event: googletag.events.ISlotOnloadEvent
-      ) => void;
+    ) => void = (event: googletag.events.ISlotOnloadEvent, listenerSpy: Sinon.SinonSpy) => {
+      const callback = listenerSpy.args.find(
+        args => (args[0] as string) === 'slotOnload'
+      )?.[1] as unknown as (event: googletag.events.ISlotOnloadEvent) => void;
+      callback(event);
+    };
 
     const adSticky = jsDomWindow.document.createElement('div');
     adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
@@ -274,7 +278,7 @@ describe('Sticky-footer-v2 Module', () => {
       );
     });
 
-    it('should log that the stickAd is running when adStickAd elements are available in the html', function () {
+    it('should log that the stickyAd is running when adStickAd elements are available in the html', function () {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
@@ -363,7 +367,7 @@ describe('Sticky-footer-v2 Module', () => {
 
       const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [111], 'close');
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [], 'close');
 
       slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
       slotLoadedCallback(slotLoadedEvent, listenerSpy);
@@ -423,6 +427,31 @@ describe('Sticky-footer-v2 Module', () => {
       // Wait for the event loop to finish, so the adSticky can be shown or hidden.
       await new Promise(resolve => setTimeout(resolve, 0));
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
+    });
+    it('should remove all hidden classes from the stickyAd container if there is an ad', async function () {
+      const adSticky = jsDomWindow.document.createElement('div');
+      adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+      adSticky.classList.add('h5v-footerAd--hidden-m', 'h5v-footerAd--hidden-d');
+
+      const closeButton = jsDomWindow.document.createElement('div');
+      closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+
+      jsDomWindow.document.body.appendChild(adSticky);
+      jsDomWindow.document.body.appendChild(closeButton);
+
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [], 'close');
+
+      slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
+      slotLoadedCallback(slotLoadedEvent, listenerSpy);
+
+      // Wait for the event loop to finish, so the adSticky can be shown or hidden.
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.false;
+      expect(adSticky.classList.contains('h5v-footerAd--hidden-m')).to.be.false;
+      expect(adSticky.classList.contains('h5v-footerAd--hidden-d')).to.be.false;
     });
   });
 });

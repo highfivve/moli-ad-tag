@@ -10,11 +10,22 @@ import { formatKey } from 'ad-tag/ads/keyValues';
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
 
-type FrequencyCappingBid = ResumeCallbackData & {
-  readonly bid: { bidder: string; adUnitCode: string };
-};
+type BidderAdUnitKey = `${string}:${string}`;
 
 type FrequencyCappingPositionImpSchedules = ResumeCallbackData[];
+type FrequencyCappingBidderImpSchedules = ResumeCallbackData[];
+
+/**
+ * The frequency capping config for a bidder, with the pacing interval included.
+ */
+type BidderFrequencyCappingConfigWithPacingInterval = Omit<
+  auction.BidderFrequencyCappingConfig,
+  'conditions'
+> & {
+  conditions: Omit<auction.BidderFrequencyCappingConfig['conditions'], 'pacingInterval'> & {
+    pacingInterval: auction.BidderFrequencyConfigPacingInterval;
+  };
+};
 
 /**
  * The state of the frequency capping module is stored in a JSON array of the bidder/adunit key
@@ -24,14 +35,20 @@ type FrequencyCappingPositionImpSchedules = ResumeCallbackData[];
  */
 export type PersistedFrequencyCappingState = {
   /**
-   * The active frequency caps
+   * The active bidder impression schedules
    */
-  readonly caps: FrequencyCappingBid[];
+  readonly bCaps: { [key: BidderAdUnitKey]: FrequencyCappingBidderImpSchedules | undefined };
 
   /**
    * The active position impression schedules
    */
   readonly pCaps: { [adUnitPath: string]: FrequencyCappingPositionImpSchedules | undefined };
+
+  /**
+   * The number of ad request when the last impression was one for this ad unit path
+   * This is used to check if the number of ad requests is sufficient for the next ad request
+   */
+  readonly pLastImpAdRequests: { [adUnitPath: string]: number | undefined };
 
   /**
    * number of requestAds made so far
@@ -43,26 +60,17 @@ export interface FrequencyCapping {
   onAuctionEnd(auction: prebidjs.event.AuctionObject): void;
   onBidWon(bid: prebidjs.BidResponse): void;
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent): void;
-
-  /**
-   * Required for google web interstitials to capture if an impression was actually rendered.
-   * The rendered event fires even if the ad was not rendered.
-   */
   onImpressionViewable(event: googletag.events.IImpressionViewableEvent): void;
   afterRequestAds(): void;
-
-  /**
-   * Ad unit paths can contain variables that need to be resolved at runtime.
-   * The global auction context and hence the frequency capping is initialized early on.
-   * Once the `adUnitPathVariables` are available, this method should be called, so ad unit paths
-   * can be resolved from the config and matched against the ad unit paths in the auction.
-   *
-   * @param adUnitPathVariables
-   */
   updateAdUnitPaths(adUnitPathVariables: AdUnitPathVariables): void;
   isAdUnitCapped(adUnitPath: string): boolean;
   isFrequencyCapped(slotId: string, bidder: BidderCode): boolean;
 }
+
+const hasPacingInterval = (
+  config: auction.BidderFrequencyCappingConfig
+): config is BidderFrequencyCappingConfigWithPacingInterval =>
+  !!config.conditions && !!config.conditions.pacingInterval;
 
 export const createFrequencyCapping = (
   config: auction.FrequencyCappingConfig,
@@ -70,26 +78,38 @@ export const createFrequencyCapping = (
   now: NowInstant,
   logger: MoliRuntime.MoliLogger
 ): FrequencyCapping => {
-  const frequencyCaps: Map<string, FrequencyCappingBid> = new Map();
   const positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
   const positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
+  const bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
   let numAdRequests = 0;
 
-  const bidWonConfigs = config.configs.filter(
-    config => !config.events || config.events?.includes('bidWon')
-  );
-  const bidRequestedConfigs = config.configs.filter(config =>
-    config.events?.includes('bidRequested')
-  );
+  const pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[] =
+    config.bidders?.filter(hasPacingInterval) ?? [];
+
+  const bidWonConfigs =
+    pacingIntervalConfigs.filter(
+      config =>
+        !config.conditions.pacingInterval?.events ||
+        config.conditions.pacingInterval?.events?.includes('bidWon')
+    ) ?? [];
+  const bidRequestedConfigs =
+    pacingIntervalConfigs.filter(config =>
+      config.conditions.pacingInterval?.events?.includes('bidRequested')
+    ) ?? [];
   let resolvedAdUnitPathPositionConfigs = config.positions || [];
 
   const persist = () => {
     if (config.persistent === true) {
       const data: PersistedFrequencyCappingState = {
-        caps: Array.from(frequencyCaps.values()),
+        bCaps: Array.from(bidderImpSchedules.entries()).reduce<
+          PersistedFrequencyCappingState['bCaps']
+        >((acc, [key, schedules]) => ({ ...acc, [key]: schedules }), {}),
         pCaps: Array.from(positionImpSchedules.entries()).reduce<
           PersistedFrequencyCappingState['pCaps']
         >((acc, [adUnitPath, schedules]) => ({ ...acc, [adUnitPath]: schedules }), {}),
+        pLastImpAdRequests: Array.from(positionLastImpressionNumberOfAdRequests.entries()).reduce<
+          PersistedFrequencyCappingState['pLastImpAdRequests']
+        >((acc, [adUnitPath, numAdRequests]) => ({ ...acc, [adUnitPath]: numAdRequests }), {}),
         requestAds: numAdRequests
       };
       _window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
@@ -98,24 +118,37 @@ export const createFrequencyCapping = (
 
   const cap = (
     startTimestamp: number,
-    config: auction.BidderFrequencyConfig,
+    config: Pick<auction.BidderFrequencyCappingConfig, 'domId' | 'bidders'>,
+    intervalInMs: number,
     bid: { bidder: string; adUnitCode: string }
   ) => {
-    if (config.bidder === bid.bidder && config.domId === bid.adUnitCode) {
-      const key = `${bid.adUnitCode}:${bid.bidder}`;
-      logger.debug('fc', `adding ${key}`);
-      frequencyCaps.set(key, {
+    // Note: this bidderImpSchedules is actually a FIFO queue of timestamps. We may use push & shift
+    // for better performance and less complexity.
+    const bidders = config.bidders;
+    if ((!bidders || bidders.includes(bid.bidder)) && config.domId === bid.adUnitCode) {
+      const key: BidderAdUnitKey = `${bid.adUnitCode}:${bid.bidder}`;
+      const currentSchedules = bidderImpSchedules.get(key) ?? [];
+      currentSchedules.push({
         ts: startTimestamp,
-        wait: config.blockedForMs,
-        bid: {
-          bidder: bid.bidder,
-          adUnitCode: bid.adUnitCode
-        }
+        wait: intervalInMs
       });
+      bidderImpSchedules.set(key, currentSchedules);
+
+      // remove the entry after the interval
       _window.setTimeout(() => {
-        logger.debug('fc', `removing ${key}`);
-        frequencyCaps.delete(key);
-      }, config.blockedForMs);
+        logger.debug('fc', `removing ${key} at ${startTimestamp}`);
+        const schedules = bidderImpSchedules.get(key);
+        if (schedules) {
+          // instead of filtering, we could also use shift() to remove the first element.
+          // This would mean mutating in place - feels wrong though
+          bidderImpSchedules.set(
+            key,
+            schedules.filter(s => s.ts !== startTimestamp)
+          );
+        }
+      }, intervalInMs);
+
+      persist();
     }
   };
 
@@ -141,6 +174,25 @@ export const createFrequencyCapping = (
     persist();
   };
 
+  const onSlotRenderEndedOrImpressionViewable = (adUnitPath: string) => {
+    // check if the ad unit path is configured with a pacing:interval
+    resolvedAdUnitPathPositionConfigs
+      .filter(config => config.adUnitPath === adUnitPath)
+      .forEach(config => {
+        if (config.conditions.pacingInterval) {
+          // store the timestamp of the last impression as a schedule for persistence
+          capPosition(now(), adUnitPath, config.conditions.pacingInterval);
+        }
+        // store the number of ad requests for this position. Doesn't matter we persist multiple times
+        // as the numAdRequests should not change. And there's rarely more than one config for a position
+        if (config.conditions.pacingRequestAds) {
+          positionLastImpressionNumberOfAdRequests.set(adUnitPath, numAdRequests);
+          persist();
+        }
+      });
+  };
+
+  // initialize frequency caps from session storage if available
   if (config.persistent === true) {
     const storedData = _window.sessionStorage.getItem(sessionStorageKey);
     if (storedData) {
@@ -148,13 +200,16 @@ export const createFrequencyCapping = (
         const parsedData = JSON.parse(storedData) as PersistedFrequencyCappingState;
         numAdRequests = parsedData.requestAds;
 
-        parsedData.caps.forEach(data => {
-          const blockedForMs = remainingTime(data, now());
-          cap(
-            data.ts,
-            { bidder: data.bid.bidder, domId: data.bid.adUnitCode, blockedForMs },
-            data.bid
-          );
+        Object.entries(parsedData.bCaps).forEach(([adUnitBidderKey, schedules]) => {
+          //
+          schedules?.forEach(schedule => {
+            const [adUnitCode, bidder] = adUnitBidderKey.split(':');
+            const blockedForMs = remainingTime(schedule, now());
+            cap(now(), { domId: adUnitCode, bidders: [bidder] }, blockedForMs, {
+              bidder,
+              adUnitCode
+            });
+          });
         });
 
         Object.entries(parsedData.pCaps).forEach(([adUnitPath, schedules]) => {
@@ -169,30 +224,12 @@ export const createFrequencyCapping = (
     }
   }
 
-  const onSlotRenderEndedOrImpressionViewable = (adUnitPath: string) => {
-    resolvedAdUnitPathPositionConfigs
-      .filter(config => config.adUnitPath === adUnitPath)
-      .forEach(config => {
-        // what
-        if (config.conditions.pacingInterval) {
-          // store the timestamp of the last impression as a schedule for persistence
-          capPosition(now(), adUnitPath, config.conditions.pacingInterval);
-        }
-        // store the number of ad requests for this position. Doesn't matter we persist multiple times
-        // as the numAdRequests should not change. And there's rarely more than one config for a position
-        if (config.conditions.pacingRequestAds) {
-          positionLastImpressionNumberOfAdRequests.set(adUnitPath, numAdRequests);
-          persist();
-        }
-      });
-  };
-
   return {
     onAuctionEnd(auction: prebidjs.event.AuctionObject) {
       bidRequestedConfigs.forEach(config => {
         auction.bidderRequests?.forEach(bidderRequests => {
           bidderRequests?.bids?.forEach(bid => {
-            cap(now(), config, bid);
+            cap(now(), config, config.conditions.pacingInterval.intervalInMs, bid);
           });
         });
       });
@@ -200,7 +237,9 @@ export const createFrequencyCapping = (
     },
 
     onBidWon(bid: prebidjs.BidResponse) {
-      bidWonConfigs.forEach(config => cap(now(), config, bid));
+      bidWonConfigs.forEach(config =>
+        cap(now(), config, config.conditions.pacingInterval.intervalInMs, bid)
+      );
       persist();
     },
 
@@ -241,26 +280,45 @@ export const createFrequencyCapping = (
     },
 
     isAdUnitCapped(adUnitPath: string): boolean {
-      return resolvedAdUnitPathPositionConfigs.some(positionConfig => {
-        return (
-          (positionConfig.adUnitPath === adUnitPath &&
-            positionConfig.conditions.delay &&
-            numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
-          (positionConfig.conditions.pacingRequestAds &&
-            // if there are no winning impressions yet, we can request ads
-            positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
-            // check if enough ad requests were made since the last impression
-            numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
-              positionConfig.conditions.pacingRequestAds.requestAds) ||
-          (positionConfig.conditions.pacingInterval &&
-            (positionImpSchedules.get(adUnitPath) ?? []).length >=
-              positionConfig.conditions.pacingInterval.maxImpressions)
-        );
-      });
+      return resolvedAdUnitPathPositionConfigs
+        .filter(config => config.adUnitPath === adUnitPath)
+        .some(positionConfig => {
+          return (
+            (positionConfig.adUnitPath === adUnitPath &&
+              // cap if minRequestAds is not reached yet
+              positionConfig.conditions.delay &&
+              numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
+            // cap if not at the right pacing interval yet
+            (positionConfig.conditions.pacingRequestAds &&
+              // if there are no winning impressions yet, we can request ads
+              positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
+              // check if enough ad requests were made since the last impression
+              numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
+                positionConfig.conditions.pacingRequestAds.requestAds) ||
+            // cap if the maxImpressions is reached in the current window
+            (positionConfig.conditions.pacingInterval &&
+              (positionImpSchedules.get(adUnitPath) ?? []).length >=
+                positionConfig.conditions.pacingInterval.maxImpressions)
+          );
+        });
     },
 
     isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
-      return frequencyCaps.has(`${slotId}:${bidder}`);
+      if (!config.bidders) {
+        return false;
+      }
+      return config.bidders
+        .filter(c => c.domId === slotId && (!c.bidders || c.bidders.includes(bidder)))
+        .some(({ conditions: { pacingInterval, delay } }) => {
+          return (
+            // pacing interval condition: check if the number of impressions for this bidder on this slot exceeds the max impressions
+            (pacingInterval &&
+              (bidderImpSchedules.get(`${slotId}:${bidder}`) ?? []).length >=
+                pacingInterval.maxImpressions) ||
+            // delay condition: check if the number of ad requests is less than the minimum required for a request
+            (delay && numAdRequests < delay.minRequestAds)
+          );
+        });
     }
   };
 };

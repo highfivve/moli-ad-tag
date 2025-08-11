@@ -120,6 +120,72 @@ export type ResolveAdUnitPathOptions = {
 
 export namespace spa {
   /**
+   * Default cleanup behaviour for single page applications.
+   * All slots are being destroyed on navigation.
+   */
+  export interface SinglePageAppCleanupConfigAll {
+    readonly slots: 'all';
+  }
+
+  /**
+   * This cleanup configuration destroys only the ad slots that are requested after navigation.
+   * Replacement for the old `destroyAllAdSlots` setting.
+   *
+   * It allows publishers to keep all ad slots alive on navigation and only destroy the ones
+   * that are requested.
+   *
+   * Use with caution and test properly.
+   *
+   * ## Use cases
+   *
+   * This setting can be used for publishers that have more "static" ad slots, like
+   * mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation
+   * and that have users that navigation a lot on the page, e.g. swiping through images or profiles.
+   * With this setting the more persistent ad slots are refreshed through ad reload or timed by the
+   * publisher, while other content positions are refreshed on navigation.
+   */
+  export interface SinglePageAppCleanupConfigRequested {
+    readonly slots: 'requested';
+  }
+
+  /**
+   * This cleanup configuration allows publishers to select which ad slots should not be destroyed
+   * on navigation. Currently only the `excluded` option is supported, which means that all ad slots
+   * are destroyed on navigation, except the ones listed in `slotIds`.
+   *
+   * ## Use cases
+   *
+   * There are a couple of use cases for this setting.
+   *
+   * ### Static out-of-content ad slots
+   *
+   * Sidebars or sticky footers that are always present are handled by the regular ad reload.
+   * Especially if the user navigates a lot on the page, e.g. swiping through images or profiles,
+   * this leads to a better user experience and advertiser performance as ad refreshing is less frequent.
+   *
+   * ### Render on navigation slots like interstitials
+   *
+   * Certain slots are rendered on navigation, e.g. interstitials that are shown on navigation.
+   * Those slots should not be destroyed on navigation, to be able to render them properly.
+   */
+  export interface SinglePageAppCleanupConfigSelected {
+    /**
+     * excluded: a list of ad slots that should not be destroyed on navigation.
+     *
+     * Note: This might be extended the future to support including only certain slots.
+     */
+    readonly slots: 'excluded';
+    /**
+     * A list of ad slot IDs that should not be destroyed on navigation.
+     */
+    readonly slotIds: string[];
+  }
+
+  export type SinglePageAppCleanupConfig =
+    | SinglePageAppCleanupConfigAll
+    | SinglePageAppCleanupConfigRequested
+    | SinglePageAppCleanupConfigSelected;
+  /**
    * Additional configuration for single page application publishers.
    */
   export interface SinglePageAppConfig {
@@ -127,6 +193,11 @@ export namespace spa {
      * Set to true if this publisher has a single page application.
      */
     readonly enabled: boolean;
+
+    /**
+     * Defines the cleanup behaviour on navigation.
+     */
+    readonly cleanup?: SinglePageAppCleanupConfig;
 
     /**
      * If set to `false`, `requestAds` will not destroy all existing ad slots,
@@ -143,6 +214,7 @@ export namespace spa {
      * publisher, while other content positions are refreshed on navigation.
      *
      * @default true
+     * @deprecated use the cleanup configuration instead.
      */
     readonly destroyAllAdSlots?: boolean;
 
@@ -404,7 +476,16 @@ export namespace auction {
 
     /** milliseconds until a bidder becomes active again  */
     readonly reactivationPeriod: number;
+
+    /**
+     * Optional list of dom ids for positions that should never be disabled.
+     */
+    readonly excludedPositions?: string[];
   }
+
+  /**
+   * @deprecated in favor of BidderFrequencyCappingConfig
+   */
   export interface BidderFrequencyConfig {
     /** bidder that should receive the frequency capping  */
     readonly bidder: string;
@@ -429,11 +510,81 @@ export namespace auction {
     readonly events?: Array<'bidWon' | 'bidRequested'>;
   }
 
+  /**
+   * How many requestAds calls are needed before the configured ad slot can be requested
+   */
+  export interface BidderDelayConfig {
+    readonly minRequestAds: number;
+  }
+
+  export interface BidderFrequencyConfigPacingInterval {
+    /**
+     * maximum number of impressions that are allowed in the defined interval for the configured bidder
+     */
+    readonly maxImpressions: number;
+
+    /**
+     * The interval in milliseconds in which the maximum impressions are allowed.
+     * This is used to pace the bid requests for a specific bidder.
+     */
+    readonly intervalInMs: number;
+
+    /**
+     * Optional list of events that should trigger the frequency capping.
+     * The main use case is to reduce requests for high impact formats like wallpaper or interstitials.
+     *
+     * The default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won.
+     * For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial,
+     * the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other.
+     * This can happen if the first page view is a google web interstitial, because the visx interstitial was requested,
+     * but no bid came back and the second page view display the google interstitial, while a visx interstitial is
+     * requested directly after the google interstitial is closed.
+     *
+     * @default ['bidWon']
+     */
+    readonly events?: Array<'bidWon' | 'bidRequested'>;
+  }
+
+  export interface BidderFrequencyConfigConditions {
+    /**
+     * How many requestAds calls are needed before the configured ad slot can be requested
+     */
+    readonly delay?: BidderDelayConfig;
+
+    /**
+     * how many impressions are allowed in the defined interval for the configured ad slot.
+     */
+    readonly pacingInterval?: BidderFrequencyConfigPacingInterval;
+  }
+
+  export interface BidderFrequencyCappingConfig {
+    /**
+     * bidders that should be frequency capped.
+     *
+     * If not set or empty, all bidders that are configured for this ad slot will be frequency capped.
+     */
+    readonly bidders?: string[];
+
+    /** domId of the slot that should receive the capping  */
+    readonly domId: string;
+
+    /**
+     * The conditions that need to be met before the bidder can request ads again.
+     */
+    readonly conditions: BidderFrequencyConfigConditions;
+  }
+
   export interface FrequencyCappingConfig {
     /** enable or disable this feature */
     readonly enabled: boolean;
+    /**
+     * capping configuration for bidders and positions.
+     * @deprecated in favor of `bidders` and `positions`
+     */
+    readonly configs?: BidderFrequencyConfig[];
+
     /** capping configuration for bidders and positions */
-    readonly configs: BidderFrequencyConfig[];
+    readonly bidders?: BidderFrequencyCappingConfig[];
 
     /**
      * capping configuration for positions only.
@@ -767,6 +918,36 @@ export namespace headerbidding {
     readonly appendNode: boolean;
   };
 
+  /**
+   * Configuration object for `pbjs.setBidderConfig` calls.
+   *
+   * ## Prebid setBidderConfig docs
+   *
+   * This function is similar to setConfig, but is designed to support certain bidder-specific
+   * scenarios.
+   *
+   * Configuration provided through the setConfig function is globally available to all bidder
+   * adapters. This makes sense because most of these settings are global in nature. However,
+   * there are use cases where different bidders require different data, or where certain parameters
+   * apply only to a given bidder. Use setBidderConfig when you need to support these cases.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+   */
+  export interface SetBidderConfig {
+    /**
+     * The configuration object that will be passed to `pbjs.setBidderConfig`.
+     */
+    readonly options: prebidjs.IBidderConfig;
+
+    /**
+     * Note if you would like to add to existing config you can pass true for the optional second
+     * mergeFlag argument like setBidderConfig(options, true).
+     *
+     * If not passed, this argument defaults to false and setBidderConfig replaces all values for specified bidders.
+     */
+    readonly merge?: boolean;
+  }
+
   export interface PrebidConfig {
     /** https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig  */
     readonly config: prebidjs.IPrebidJsConfig;
@@ -776,6 +957,29 @@ export namespace headerbidding {
 
     /** optional bidder settings */
     readonly bidderSettings?: prebidjs.IBidderSettings;
+
+    /**
+     * An optional list of configs that will be applied through `pbjs.setBidderConfig`.
+     *
+     * This is useful for configuring bidder specific settings that are not part of the
+     * `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as
+     *
+     * - schain configuration
+     * - bidder specific openrtb extensions
+     *
+     * ## Prebid setBidderConfig docs
+     *
+     * This function is similar to setConfig, but is designed to support certain bidder-specific
+     * scenarios.
+     *
+     * Configuration provided through the setConfig function is globally available to all bidder
+     * adapters. This makes sense because most of these settings are global in nature. However,
+     * there are use cases where different bidders require different data, or where certain parameters
+     * apply only to a given bidder. Use setBidderConfig when you need to support these cases.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setBidderConfig.html
+     */
+    readonly bidderConfigs?: SetBidderConfig[];
 
     /**
      * optional list of analytic adapters that will be enabled through the `enableAnalytics` API.
@@ -825,6 +1029,17 @@ export namespace headerbidding {
        */
       readonly url: string;
     };
+
+    /**
+     * If set to true, the prebid auction will be clear on every `requestAds` call.
+     * This can be useful in single page applications where the ad slots are reused.
+     *
+     * By default, this is false and the prebid auction will not be cleared.
+     * Make sure if you enable this, to monitor the impact.
+     *
+     * @default false
+     */
+    readonly clearAllAuctions?: boolean;
 
     /** optional listener for prebid events */
     // FIXME must be moved somewhere else. This is a runtime config thing for modules
@@ -1421,8 +1636,66 @@ export namespace modules {
       readonly matchType: 'regex' | 'contains' | 'exact';
     };
 
+    /**
+     * A label blocklist entry that can be used to set a label dynamically during an ad pipeline run.
+     *
+     * ## Use cases
+     *
+     * Labels control various aspects of the ad pipeline, such as:
+     * - ad slots that can be requested
+     * - size configs that can be applied
+     * - bidders that are active
+     *
+     * Adding labels dynamically based on url patterns allows us to control those aspects dynamically
+     * through the ad tag configuration.
+     */
+    export type BlocklistLabelEntry = {
+      /**
+       * The label that is set if the url matches the label blocklist entry
+       */
+      readonly label: string;
+
+      /**
+       * The regex pattern for the complete href of the page
+       */
+      readonly pattern: string;
+
+      /**
+       * If set to true, the pattern is matched in reverse, meaning that if the url does not match the pattern,
+       * the label will be set.
+       *
+       * This is useful for adding labels to all urls with certain exceptions, like the homepage or
+       * a login page.
+       */
+      readonly reverseMatch?: boolean;
+
+      /**
+       * Defines how the pattern should be matched against the url
+       *
+       * - `regex` - transform the pattern into a regex and runs `regex.test(url)`
+       * - `contains` - checks if the url contains the given pattern string
+       * - `exact` - checks if the url exactly matches the given pattern string
+       */
+      readonly matchType: 'regex' | 'contains' | 'exact';
+    };
+
     export type Blocklist = {
+      /**
+       * A list of blocklisted urls.
+       *
+       * The urls are matched against the ad request url and if a match is found, the ad pipeline
+       * run is
+       *
+       * - either aborted (if the mode is `block`)
+       * - or a key value is set (if the mode is `key-value`)
+       */
       readonly urls: BlocklistEntry[];
+
+      /**
+       * Configuration to set labels dynamically during the ad pipeline run.
+       * See [[BlocklistLabelEntry]] for more information.
+       */
+      readonly labels?: BlocklistLabelEntry[];
     };
 
     /**
@@ -1530,16 +1803,6 @@ export namespace modules {
        * format filters will be used.
        */
       readonly configs: SkinConfig[];
-
-      /**
-       * Function to track when the skin cpm is lower than the combined cpm of the ad slots that
-       * would be removed in its favour.
-       */
-      readonly trackSkinCpmLow?: (
-        cpms: { skin: number; combinedNonSkinSlots: number },
-        skinConfig: SkinConfig,
-        skinBid: prebidjs.IBidResponse
-      ) => void;
     }
 
     /**
@@ -1665,9 +1928,25 @@ export namespace modules {
       readonly destroySkinSlot?: boolean;
 
       /**
-       * If set, the skin of the configured bidder reloads after the given interval (in ms).
+       * If set, the ad tag will add a page level targeting key value pair that can be used to
+       * react if a skin configuration was applied or not
+       *
+       * The key value pair will only be added if a skin was detected and requested. You should
+       * always
        */
-      readonly adReload?: { intervalMs: number; allowed: prebidjs.BidderCode[] };
+      readonly targeting?: {
+        /**
+         * Will be set at the page level and can be used to check if a skin was applied.
+         */
+        readonly key: string;
+
+        /**
+         * The value that is set if a skin was detected and requested.
+         *
+         * @default is '1'
+         */
+        readonly value?: string;
+      };
     };
   }
 
@@ -1918,6 +2197,32 @@ export namespace modules {
        * @see https://docs.utiq.com/docs/configuration-options
        */
       readonly options?: UtiqConfigOptions;
+
+      /**
+       * ## Utiq Loading Delay Configuration
+       *
+       * If you wish to delay the loading of the Utiq script, you can use the `delay` configuration option.
+       * There are different ways to delay the loading of the Utiq script, but only one is currently supported:
+       *
+       * - `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.
+       * - `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.
+       *               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.
+       *
+       */
+      readonly delay?: {
+        /**
+         * Delaying the utiq script, must be explicitly enabled.
+         */
+        readonly enabled: boolean;
+        /**
+         * After which number of ad requests should the Utiq script be loaded.
+         *
+         * You can use this to slowly roll out Utiq to your users and to not overwhelm them with the Utiq pop-up.
+         *
+         * @default 0
+         */
+        readonly minAdRequests?: number;
+      };
     };
   }
 

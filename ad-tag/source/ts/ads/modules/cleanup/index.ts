@@ -181,10 +181,12 @@ export class Cleanup implements IModule {
     context: AdPipelineContext,
     config: modules.cleanup.CleanupConfig
   ): boolean => {
+    // get the all winning bids from PrebidJS and filter for the last winning bid on the configured slot
     const prebidWinningBids = context.window__.pbjs.getAllWinningBids();
-    const bidderThatWonLastAuctionOnSlot = prebidWinningBids.find(
-      bid => bid.adUnitCode === config.domId
-    )?.bidder;
+    const bidderThatWonLastAuctionOnSlot = prebidWinningBids
+      .filter(bid => bid.adUnitCode === config.domId)
+      .at(-1)?.bidder;
+
     // look at the single cleanup config and check if the configured bidder has won the last auction on the configured slot
     return bidderThatWonLastAuctionOnSlot === config.bidder;
   };

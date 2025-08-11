@@ -184,4 +184,18 @@ describe('LabelConfigConfigService', () => {
       });
     });
   });
+
+  describe('addLabel', () => {
+    it('should add a label to the supported labels', () => {
+      const sizeConfigService = newLabelConfigService([], ['mobile']);
+      sizeConfigService.addLabel('new-label');
+      expect(sizeConfigService.getSupportedLabels()).to.include('new-label');
+    });
+
+    it('should not add a device label to the supported labels', () => {
+      const sizeConfigService = newLabelConfigService([], ['mobile']);
+      sizeConfigService.addLabel('desktop');
+      expect(sizeConfigService.getSupportedLabels()).to.not.include('desktop');
+    });
+  });
 });

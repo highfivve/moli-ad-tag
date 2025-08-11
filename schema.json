@@ -433,12 +433,32 @@
       ],
       "type": "object"
     },
+    "auction.BidderDelayConfig": {
+      "additionalProperties": false,
+      "description": "How many requestAds calls are needed before the configured ad slot can be requested",
+      "properties": {
+        "minRequestAds": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "minRequestAds"
+      ],
+      "type": "object"
+    },
     "auction.BidderDisablingConfig": {
       "additionalProperties": false,
       "properties": {
         "enabled": {
           "description": "enable or disable this feature",
           "type": "boolean"
+        },
+        "excludedPositions": {
+          "description": "Optional list of dom ids for positions that should never be disabled.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "minBidRequests": {
           "description": "define a minimum number of bid requests sent by a bidder before it can be deactivated",
@@ -461,8 +481,34 @@
       ],
       "type": "object"
     },
+    "auction.BidderFrequencyCappingConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bidders": {
+          "description": "bidders that should be frequency capped.\n\nIf not set or empty, all bidders that are configured for this ad slot will be frequency capped.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "conditions": {
+          "$ref": "#/definitions/auction.BidderFrequencyConfigConditions",
+          "description": "The conditions that need to be met before the bidder can request ads again."
+        },
+        "domId": {
+          "description": "domId of the slot that should receive the capping",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domId",
+        "conditions"
+      ],
+      "type": "object"
+    },
     "auction.BidderFrequencyConfig": {
       "additionalProperties": false,
+      "deprecated": "in favor of BidderFrequencyCappingConfig",
       "properties": {
         "bidder": {
           "description": "bidder that should receive the frequency capping",
@@ -498,11 +544,65 @@
       ],
       "type": "object"
     },
+    "auction.BidderFrequencyConfigConditions": {
+      "additionalProperties": false,
+      "properties": {
+        "delay": {
+          "$ref": "#/definitions/auction.BidderDelayConfig",
+          "description": "How many requestAds calls are needed before the configured ad slot can be requested"
+        },
+        "pacingInterval": {
+          "$ref": "#/definitions/auction.BidderFrequencyConfigPacingInterval",
+          "description": "how many impressions are allowed in the defined interval for the configured ad slot."
+        }
+      },
+      "type": "object"
+    },
+    "auction.BidderFrequencyConfigPacingInterval": {
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "default": [
+            "bidWon"
+          ],
+          "description": "Optional list of events that should trigger the frequency capping. The main use case is to reduce requests for high impact formats like wallpaper or interstitials.\n\nThe default is `['bidWon']` which means that the frequency capping is only triggered when a bid is won. For an interstitial format (e.g. from visx) that should be optimized against the google web interstitial, the `bidRequested` event should be added, so the user doesn't see two interstitial directly after each other. This can happen if the first page view is a google web interstitial, because the visx interstitial was requested, but no bid came back and the second page view display the google interstitial, while a visx interstitial is requested directly after the google interstitial is closed.",
+          "items": {
+            "enum": [
+              "bidWon",
+              "bidRequested"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "intervalInMs": {
+          "description": "The interval in milliseconds in which the maximum impressions are allowed. This is used to pace the bid requests for a specific bidder.",
+          "type": "number"
+        },
+        "maxImpressions": {
+          "description": "maximum number of impressions that are allowed in the defined interval for the configured bidder",
+          "type": "number"
+        }
+      },
+      "required": [
+        "maxImpressions",
+        "intervalInMs"
+      ],
+      "type": "object"
+    },
     "auction.FrequencyCappingConfig": {
       "additionalProperties": false,
       "properties": {
-        "configs": {
+        "bidders": {
           "description": "capping configuration for bidders and positions",
+          "items": {
+            "$ref": "#/definitions/auction.BidderFrequencyCappingConfig"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "deprecated": "in favor of `bidders` and `positions`",
+          "description": "capping configuration for bidders and positions.",
           "items": {
             "$ref": "#/definitions/auction.BidderFrequencyConfig"
           },
@@ -526,8 +626,7 @@
         }
       },
       "required": [
-        "enabled",
-        "configs"
+        "enabled"
       ],
       "type": "object"
     },
@@ -1241,9 +1340,21 @@
           ],
           "type": "object"
         },
+        "bidderConfigs": {
+          "description": "An optional list of configs that will be applied through `pbjs.setBidderConfig`.\n\nThis is useful for configuring bidder specific settings that are not part of the `pbjs.setConfig` API or custom extensions that are not part of the prebid.js core, such as\n\n- schain configuration\n- bidder specific openrtb extensions\n\n## Prebid setBidderConfig docs\n\nThis function is similar to setConfig, but is designed to support certain bidder-specific scenarios.\n\nConfiguration provided through the setConfig function is globally available to all bidder adapters. This makes sense because most of these settings are global in nature. However, there are use cases where different bidders require different data, or where certain parameters apply only to a given bidder. Use setBidderConfig when you need to support these cases.",
+          "items": {
+            "$ref": "#/definitions/headerbidding.SetBidderConfig"
+          },
+          "type": "array"
+        },
         "bidderSettings": {
           "$ref": "#/definitions/prebidjs.IBidderSettings",
           "description": "optional bidder settings"
+        },
+        "clearAllAuctions": {
+          "default": false,
+          "description": "If set to true, the prebid auction will be clear on every `requestAds` call. This can be useful in single page applications where the ad slots are reused.\n\nBy default, this is false and the prebid auction will not be cleared. Make sure if you enable this, to monitor the impact.",
+          "type": "boolean"
         },
         "config": {
           "$ref": "#/definitions/prebidjs.IPrebidJsConfig",
@@ -1284,6 +1395,24 @@
       "required": [
         "config",
         "schain"
+      ],
+      "type": "object"
+    },
+    "headerbidding.SetBidderConfig": {
+      "additionalProperties": false,
+      "description": "Configuration object for `pbjs.setBidderConfig` calls.\n\n## Prebid setBidderConfig docs\n\nThis function is similar to setConfig, but is designed to support certain bidder-specific scenarios.\n\nConfiguration provided through the setConfig function is globally available to all bidder adapters. This makes sense because most of these settings are global in nature. However, there are use cases where different bidders require different data, or where certain parameters apply only to a given bidder. Use setBidderConfig when you need to support these cases.",
+      "properties": {
+        "merge": {
+          "description": "Note if you would like to add to existing config you can pass true for the optional second mergeFlag argument like setBidderConfig(options, true).\n\nIf not passed, this argument defaults to false and setBidderConfig replaces all values for specified bidders.",
+          "type": "boolean"
+        },
+        "options": {
+          "$ref": "#/definitions/prebidjs.IBidderConfig",
+          "description": "The configuration object that will be passed to `pbjs.setBidderConfig`."
+        }
+      },
+      "required": [
+        "options"
       ],
       "type": "object"
     },
@@ -1789,7 +1918,15 @@
     "modules.blocklist.Blocklist": {
       "additionalProperties": false,
       "properties": {
+        "labels": {
+          "description": "Configuration to set labels dynamically during the ad pipeline run. See [[BlocklistLabelEntry]] for more information.",
+          "items": {
+            "$ref": "#/definitions/modules.blocklist.BlocklistLabelEntry"
+          },
+          "type": "array"
+        },
         "urls": {
+          "description": "A list of blocklisted urls.\n\nThe urls are matched against the ad request url and if a match is found, the ad pipeline run is\n\n- either aborted (if the mode is `block`)\n- or a key value is set (if the mode is `key-value`)",
           "items": {
             "$ref": "#/definitions/modules.blocklist.BlocklistEntry"
           },
@@ -1819,6 +1956,39 @@
         }
       },
       "required": [
+        "pattern",
+        "matchType"
+      ],
+      "type": "object"
+    },
+    "modules.blocklist.BlocklistLabelEntry": {
+      "additionalProperties": false,
+      "description": "A label blocklist entry that can be used to set a label dynamically during an ad pipeline run.\n\n## Use cases\n\nLabels control various aspects of the ad pipeline, such as:\n- ad slots that can be requested\n- size configs that can be applied\n- bidders that are active\n\nAdding labels dynamically based on url patterns allows us to control those aspects dynamically through the ad tag configuration.",
+      "properties": {
+        "label": {
+          "description": "The label that is set if the url matches the label blocklist entry",
+          "type": "string"
+        },
+        "matchType": {
+          "description": "Defines how the pattern should be matched against the url\n\n- `regex` - transform the pattern into a regex and runs `regex.test(url)`\n- `contains` - checks if the url contains the given pattern string\n- `exact` - checks if the url exactly matches the given pattern string",
+          "enum": [
+            "regex",
+            "contains",
+            "exact"
+          ],
+          "type": "string"
+        },
+        "pattern": {
+          "description": "The regex pattern for the complete href of the page",
+          "type": "string"
+        },
+        "reverseMatch": {
+          "description": "If set to true, the pattern is matched in reverse, meaning that if the url does not match the pattern, the label will be set.\n\nThis is useful for adding labels to all urls with certain exceptions, like the homepage or a login page.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label",
         "pattern",
         "matchType"
       ],
@@ -2619,26 +2789,6 @@
     "modules.skin.SkinConfig": {
       "additionalProperties": false,
       "properties": {
-        "adReload": {
-          "additionalProperties": false,
-          "description": "If set, the skin of the configured bidder reloads after the given interval (in ms).",
-          "properties": {
-            "allowed": {
-              "items": {
-                "$ref": "#/definitions/prebidjs.BidderCode"
-              },
-              "type": "array"
-            },
-            "intervalMs": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "intervalMs",
-            "allowed"
-          ],
-          "type": "object"
-        },
         "blockedAdSlotDomIds": {
           "description": "dom ids of the ad slots that should not be requested when a just premium skin appears in the bid responses.\n\nDepending on the wallpaperAdSlot these are usually skyscrapers left and right and if there's a specific wallpaper ad slot the header as well.",
           "items": {
@@ -2677,6 +2827,25 @@
         "skinAdSlotDomId": {
           "description": "This is usually the dom id of the header ad slot.\n\nSome setups may have an ad slot only for the just premium skin. This is the case if there are direct campaign formats for wallpapers that require a DFP road block.",
           "type": "string"
+        },
+        "targeting": {
+          "additionalProperties": false,
+          "description": "If set, the ad tag will add a page level targeting key value pair that can be used to react if a skin configuration was applied or not\n\nThe key value pair will only be added if a skin was detected and requested. You should always",
+          "properties": {
+            "key": {
+              "description": "Will be set at the page level and can be used to check if a skin was applied.",
+              "type": "string"
+            },
+            "value": {
+              "default": "is '1'",
+              "description": "The value that is set if a skin was detected and requested.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "type": "object"
         }
       },
       "required": [
@@ -2702,46 +2871,6 @@
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
-        },
-        "trackSkinCpmLow": {
-          "$comment": "(\n        cpms: { skin: number; combinedNonSkinSlots: number },\n        skinConfig: SkinConfig,\n        skinBid: prebidjs.IBidResponse) => void",
-          "description": "Function to track when the skin cpm is lower than the combined cpm of the ad slots that would be removed in its favour.",
-          "properties": {
-            "namedArgs": {
-              "additionalProperties": false,
-              "properties": {
-                "cpms": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "combinedNonSkinSlots": {
-                      "type": "number"
-                    },
-                    "skin": {
-                      "type": "number"
-                    }
-                  },
-                  "required": [
-                    "skin",
-                    "combinedNonSkinSlots"
-                  ],
-                  "type": "object"
-                },
-                "skinBid": {
-                  "$ref": "#/definitions/prebidjs.IBidResponse"
-                },
-                "skinConfig": {
-                  "$ref": "#/definitions/modules.skin.SkinConfig"
-                }
-              },
-              "required": [
-                "cpms",
-                "skinConfig",
-                "skinBid"
-              ],
-              "type": "object"
-            }
-          },
-          "type": "object"
         }
       },
       "required": [
@@ -2984,6 +3113,25 @@
         "assetUrl": {
           "description": "Utiq loads a single javascript. It will only load if consent for **all** purposes is given.",
           "type": "string"
+        },
+        "delay": {
+          "additionalProperties": false,
+          "description": "## Utiq Loading Delay Configuration\n\nIf you wish to delay the loading of the Utiq script, you can use the `delay` configuration option. There are different ways to delay the loading of the Utiq script, but only one is currently supported:\n\n- `minAdRequests` (supported): This option allows you to specify the minimum number of ad requests that must be made before the Utiq script is loaded.\n- `consent` (planned): 'existed'. If set to `existed`, the Utiq script will only be loaded if the user has already given consent for all purposes.               This would mitigate the risk of overwhelming users with the Utiq pop-up if they have just seen the CMP pop-up.",
+          "properties": {
+            "enabled": {
+              "description": "Delaying the utiq script, must be explicitly enabled.",
+              "type": "boolean"
+            },
+            "minAdRequests": {
+              "default": 0,
+              "description": "After which number of ad requests should the Utiq script be loaded.\n\nYou can use this to slowly roll out Utiq to your users and to not overwhelm them with the Utiq pop-up.",
+              "type": "number"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object"
         },
         "enabled": {
           "type": "boolean"
@@ -3393,19 +3541,23 @@
         "adf",
         "connectad",
         "criteo",
+        "cwire",
         "appnexusAst",
         "appnexus",
         "gumgum",
         "improvedigital",
         "ix",
         "invibes",
+        "inmobi",
         "nanointeractive",
+        "nextMillennium",
         "pubmatic",
         "ogury",
         "onetag",
         "openx",
         "smartadserver",
         "smartx",
+        "smilewanted",
         "unruly",
         "teads",
         "ttd",
@@ -3465,7 +3617,7 @@
         },
         "ortb2Imp": {
           "$ref": "#/definitions/prebidjs.IOrtb2Imp",
-          "description": "Configure additional information per ad unit that should be send along with a prebid server auction call."
+          "description": "Configure additional information per ad unit that should be sent along with a prebid server auction call."
         },
         "pubstack": {
           "$ref": "#/definitions/prebidjs.IPubstackConfig",
@@ -4120,6 +4272,9 @@
           "$ref": "#/definitions/prebidjs.ICriteoBid"
         },
         {
+          "$ref": "#/definitions/prebidjs.ICwireBid"
+        },
+        {
           "$ref": "#/definitions/prebidjs.IAppNexusASTBid"
         },
         {
@@ -4133,6 +4288,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.IInvibesBid"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.IInMobiBid"
         },
         {
           "$ref": "#/definitions/prebidjs.INanoInteractiveBid"
@@ -4507,6 +4665,271 @@
       ],
       "type": "object"
     },
+    "prebidjs.IBidderConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "bidders": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidderCode"
+          },
+          "type": "array"
+        },
+        "config": {
+          "additionalProperties": false,
+          "properties": {
+            "adagio": {
+              "additionalProperties": false,
+              "description": "Global Adagio property",
+              "properties": {
+                "siteId": {
+                  "description": "a global `siteId` is a shortcut to facilitate the integration for publisher.",
+                  "type": "string"
+                },
+                "useAdUnitCodeAsPlacement": {
+                  "description": "Edge case. Useful when Prebid Manager cannot handle properly params setting",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "allowActivities": {
+              "$ref": "#/definitions/prebidjs.activitycontrols.IAllowActivities"
+            },
+            "auctionOptions": {
+              "$ref": "#/definitions/prebidjs.auctionOptions.IAuctionOptionsConfig",
+              "description": "The auctionOptions object controls aspects related to auctions."
+            },
+            "bidCacheFilterFunction": {
+              "$comment": "(bid: any) => boolean",
+              "description": "When Bid Caching is turned on, a custom Filter Function can be defined to gain more granular control over which “cached” bids can be used. This function will only be called for “cached” bids from previous auctions, not “current” bids from the most recent auction. The function should take a single bid object argument, and return true to use the cached bid, or false to not use the cached bid. For Example, to turn on Bid Caching, but exclude cached video bids, you could do this:",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "bid": {}
+                  },
+                  "required": [
+                    "bid"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidderSequence": {
+              "default": "`'random'`",
+              "description": "Set the order in which bidders are called.",
+              "enum": [
+                "random",
+                "fixed"
+              ],
+              "type": "string"
+            },
+            "bidderTimeout": {
+              "description": "global bidder timeout",
+              "type": "number"
+            },
+            "consentManagement": {
+              "$ref": "#/definitions/prebidjs.consent.IConsentManagementConfig",
+              "description": "'Consent Management' module configuration"
+            },
+            "currency": {
+              "$ref": "#/definitions/prebidjs.currency.ICurrencyConfig",
+              "description": "The configuration for the currency module\n\nhttps://prebid.org/dev-docs/modules/currency.html"
+            },
+            "debug": {
+              "description": "Turn on debugging",
+              "type": "boolean"
+            },
+            "deviceAccess": {
+              "description": "You can prevent Prebid.js from reading or writing cookies or HTML localstorage by setting this flag:\n\n```js pbjs.setConfig({ deviceAccess: false }); ```\n\nThis can be useful in GDPR, CCPA, COPPA or other privacy scenarios where a publisher has determined that header bidding should not read from or write the user’s device.",
+              "type": "boolean"
+            },
+            "disableAjaxTimeout": {
+              "description": "Prebid core adds a timeout on XMLHttpRequest request to terminate the request once auction is timedout. Since Prebid is ignoring all the bids after timeout it does not make sense to continue the request after timeout. However, you have the option to disable this by using",
+              "type": "boolean"
+            },
+            "disabledSendingStatisticData": {
+              "description": "The disabledSendingStatisticData parameter disables sending statistics data to the nextMillennium server, such as bidRequested, bidResponse, noBid and bidTimeout events.\n\nAn example of enabling this option:\n\n```javascript pbjs.setBidderConfig({   bidders: ['nextMillennium'],   config: {     disabledSendingStatisticData: true,   }, }) ```",
+              "type": "boolean"
+            },
+            "enableSendAllBids": {
+              "description": "After this method is called, Prebid.js will generate bid keywords for all bids, instead of the default behavior of only sending the top winning bid to the ad server.\n\nWith the sendAllBids mode enabled, your page can send all bid keywords to your ad server. Your ad server will see all the bids, then make the ultimate decision on which one will win. Some ad servers, such as DFP, can then generate reporting on historical bid prices from all bidders.\n\nNote that this config option must be called before pbjs.setTargetingForGPTAsync() or pbjs.getAdserverTargeting().\n\nAfter this option is set, pbjs.getAdserverTargeting() will give you the below JSON (example). pbjs.setTargetingForGPTAsync() will apply the below keywords in the JSON to GPT (example below)\n\nDefault: true",
+              "type": "boolean"
+            },
+            "enableTIDs": {
+              "description": "These identifiers are extremely powerful for discrepancy reconciliation, ad quality investigations, consent audits, and a huge range of other applications. They also allow data appended to different requests (e.g. dealIds) to be commingled downstream. For this reason, our publisher committee and Prebid.org counsel have decided to require publisher opt-in to their inclusion in the bid stream. This means Prebid engineering changed every openrtb request in the project to potentially transmit a null in these fields. Comments were added to bid adapters not using OpenRTB that send them over the wire to confirm they can accept null values.",
+              "type": "boolean"
+            },
+            "eventHistoryTTL": {
+              "description": "By default, Prebid keeps in memory a log of every event since the initial page load, and makes it available to analytics adapters and getEvents(). This can cause high memory usage on long-running single-page apps; you can set a limit on how long events are preserved with eventHistoryTTL",
+              "type": "number"
+            },
+            "floors": {
+              "$ref": "#/definitions/prebidjs.floors.IFloorConfig",
+              "description": "Floor price configuration\n\nRequires the prebid floor price module to be enabled"
+            },
+            "gptPreAuction": {
+              "$ref": "#/definitions/prebidjs.gptPreAuction.GptPreAuctionConfig",
+              "description": "_GPT Pre-Auction Module_ must be enabled."
+            },
+            "gvlMapping": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "description": "Prebid offers an additional gvl mapping configuration that allows us to defined GVL IDs for a module or bidder by name.\n\nThis is useful in various cases\n\n1. bidders that do not have a GVL ID defined in their adapter yet 2. bidders where we use aliases. The alias is not part of the registry\n\nThis is the static variant of the runtime configuration option through `pbjs.aliasBidder`",
+              "type": "object"
+            },
+            "improvedigital": {
+              "additionalProperties": false,
+              "description": "Global Improve Digital property",
+              "properties": {
+                "singleRequest": {
+                  "description": "Enable the single request mode, which will send all bids in one request.\n\nAvailable since prebid 1.37.0",
+                  "type": "boolean"
+                },
+                "usePrebidSizes": {
+                  "description": "By default, the adapter doesn't send Prebid ad unit sizes to Improve Digital's ad server and the sizes defined for each placement in the Polaris platform will be used.\n\nThis configuration makes improve use the prebid sizes parameter.\n\nAvailable since prebid 2.8.0",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "singleRequest",
+                "usePrebidSizes"
+              ],
+              "type": "object"
+            },
+            "maxNestedIframes": {
+              "default": "`10`",
+              "description": "Prebid.js will loop upward through nested iframes to find the top-most referrer. This setting limits how many iterations it will attempt before giving up and not setting referrer.",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ],
+              "type": "number"
+            },
+            "maxRequestsPerOrigin": {
+              "description": "Since browsers have a limit of how many requests they will allow to a specific domain before they block, Prebid.js will queue auctions that would cause requests to a specific origin to exceed that limit. The limit is different for each browser. Prebid.js defaults to a max of *4* requests per origin.",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ],
+              "type": "number"
+            },
+            "mediaTypePriceGranularity": {
+              "$ref": "#/definitions/prebidjs.priceGranularity.IMediaTypePriceGranularityConfig",
+              "description": "The default Prebid price granularities cap out at $20, which isn't always convenient for video ads, which can command more than $20. One solution is to just set up a custom price granularity as described above. Another approach is mediaTypePriceGranularity config that may be set to define granularities for each of five media types: banner, video, video-instream, video-outstream, and native. e.g."
+            },
+            "ortb2": {
+              "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
+              "description": "Publishers supply First Party Data (FPD) by specifying attributes as configuration.\n\nNote that supplying first party *user* data may require special consent in certain regions. Prebid.js does *not* police the passing of user data as part of its GDPR or CCPA modules."
+            },
+            "pageUrl": {
+              "description": "Override the Prebid.js page referrer for some bidders.",
+              "type": "string"
+            },
+            "priceGranularity": {
+              "$ref": "#/definitions/prebidjs.priceGranularity.PriceGranularityConfig",
+              "description": "This configuration defines the price bucket granularity setting that will be used for the hb_pb keyword."
+            },
+            "publisherDomain": {
+              "deprecated": "This API is deprecated. Please use ‘pageUrl’ instead.",
+              "description": "Set the publisher's domain where Prebid is running, for cross-domain iframe communication",
+              "type": "string"
+            },
+            "realTimeData": {
+              "$ref": "#/definitions/prebidjs.realtimedata.IRealTimeDataConfig"
+            },
+            "rubicon": {
+              "additionalProperties": false,
+              "description": "Global Rubicon property",
+              "properties": {
+                "singleRequest": {
+                  "description": "Enable the single request mode, which will send all bids in one request.\n\nAvailable since prebid 1.12.0",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "singleRequest"
+              ],
+              "type": "object"
+            },
+            "s2sConfig": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/prebidjs.server.S2SConfig"
+                },
+                {
+                  "items": {
+                    "$ref": "#/definitions/prebidjs.server.S2SConfig"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "schain": {
+              "$ref": "#/definitions/prebidjs.schain.ISupplyChainConfig",
+              "description": "## Supply Chain Object Module Config"
+            },
+            "targetingControls": {
+              "$ref": "#/definitions/prebidjs.targetingcontrols.ITargetingControls",
+              "description": "The `targetingControls` object passed to pbjs.setConfig provides some options to influence how an auction's targeting keys are generated and managed."
+            },
+            "timeoutBuffer": {
+              "default": "`400` ms",
+              "description": "Prebid core adds a timeout buffer to extend the time that bidders have to return a bid after the auction closes. This buffer is used to offset the “time slippage” of the setTimeout behavior in browsers. Prebid.js sets the default value to *400ms*.\n\nYou can change this value by setting `timeoutBuffer` to the amount of time you want to use. The following example sets the buffer to 300ms.\n\n```js pbjs.setConfig({ timeoutBuffer: 300 }); ```",
+              "type": "number"
+            },
+            "useBidCache": {
+              "default": false,
+              "description": "Prebid.js currently allows for caching and reusing bids in  [a very narrowly defined scope](https://docs.prebid.org/dev-docs/faq.html#does-prebidjs-cache-bids).\n\nHowever, if you’d like, you can disable this feature and prevent Prebid.js from using anything but the latest bids for a given auction.",
+              "type": "boolean"
+            },
+            "userSync": {
+              "$ref": "#/definitions/prebidjs.userSync.IUserSyncConfig"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "bidders",
+        "config"
+      ],
+      "type": "object"
+    },
     "prebidjs.IBidderSetting": {
       "additionalProperties": false,
       "properties": {
@@ -4618,6 +5041,9 @@
         "criteo": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
+        "cwire": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
         "dspx": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
@@ -4627,6 +5053,9 @@
         "improvedigital": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
+        "inmobi": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
         "invibes": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
@@ -4634,6 +5063,9 @@
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "nanointeractive": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
+        "nextMillennium": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "ogury": {
@@ -4670,6 +5102,9 @@
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "smartx": {
+          "$ref": "#/definitions/prebidjs.IBidderSetting"
+        },
+        "smilewanted": {
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         },
         "spotx": {
@@ -4709,6 +5144,25 @@
           "$ref": "#/definitions/prebidjs.IBidderSetting"
         }
       },
+      "type": "object"
+    },
+    "prebidjs.ICWireParams": {
+      "additionalProperties": false,
+      "properties": {
+        "domainId": {
+          "description": "C-WIRE page id (compatibility purposes)",
+          "type": "number"
+        },
+        "pageId": {
+          "type": "number"
+        },
+        "placementId": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "domainId"
+      ],
       "type": "object"
     },
     "prebidjs.IConnectAdBid": {
@@ -4811,6 +5265,10 @@
           "description": "Required for all new criteo implementations",
           "type": "number"
         },
+        "pubid": {
+          "description": "The publisherId must either be set through this property or in the `ortb2.site.publisher.id` object that is sent to Criteo. Prefer the `ortb2.site.publisher.id` object, as it leaves less room for error and fixes are applied globally.",
+          "type": "string"
+        },
         "publisherSubId": {
           "description": "Used for reporting: we use de div-id here.",
           "type": "string"
@@ -4822,6 +5280,43 @@
       },
       "required": [
         "networkId"
+      ],
+      "type": "object"
+    },
+    "prebidjs.ICwireBid": {
+      "additionalProperties": false,
+      "properties": {
+        "bidSource": {
+          "$ref": "#/definitions/prebidjs.server.BidSource",
+          "description": "Only available with the s2sTesting module. Overrides the global bidSource configuration"
+        },
+        "bidder": {
+          "const": "cwire",
+          "description": "Unique code identifying the bidder. For bidder codes, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).",
+          "type": "string"
+        },
+        "labelAll": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "params": {
+          "$ref": "#/definitions/prebidjs.ICWireParams",
+          "description": "Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html)."
+        }
+      },
+      "required": [
+        "bidder",
+        "params"
       ],
       "type": "object"
     },
@@ -5098,6 +5593,56 @@
       "required": [
         "placementId",
         "publisherId"
+      ],
+      "type": "object"
+    },
+    "prebidjs.IInMobiBid": {
+      "additionalProperties": false,
+      "properties": {
+        "bidSource": {
+          "$ref": "#/definitions/prebidjs.server.BidSource",
+          "description": "Only available with the s2sTesting module. Overrides the global bidSource configuration"
+        },
+        "bidder": {
+          "const": "inmobi",
+          "description": "Unique code identifying the bidder. For bidder codes, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html).",
+          "type": "string"
+        },
+        "labelAll": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Used for [conditional ads](https://prebid.org/dev-docs/conditional-ad-units.html). Works with sizeConfig argument to [pbjs.setConfig](https://prebid.org/dev-docs/publisher-api-reference.html#setConfig-Configure-Responsive-Ads).\n\nNote: will be removed by the ad tag and thus hidden for prebid",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "params": {
+          "$ref": "#/definitions/prebidjs.IInMobiParams",
+          "description": "Bid request parameters for a given bidder. For allowed params, see the [bidder param reference](https://prebid.org/dev-docs/bidders.html)."
+        }
+      },
+      "required": [
+        "bidder",
+        "params"
+      ],
+      "type": "object"
+    },
+    "prebidjs.IInMobiParams": {
+      "additionalProperties": false,
+      "description": "InMobi bid parameters.",
+      "properties": {
+        "plc": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "plc"
       ],
       "type": "object"
     },
@@ -6417,6 +6962,15 @@
             }
           },
           "type": "object"
+        },
+        "instl": {
+          "default": 0,
+          "description": "1 = the ad is interstitial or full screen, 0 = not interstitial.",
+          "enum": [
+            0,
+            1
+          ],
+          "type": "number"
         }
       },
       "type": "object"
@@ -6451,12 +7005,15 @@
             "appnexusAst": {},
             "connectad": {},
             "criteo": {},
+            "cwire": {},
             "dspx": {},
             "gumgum": {},
             "improvedigital": {},
+            "inmobi": {},
             "invibes": {},
             "ix": {},
             "nanointeractive": {},
+            "nextMillennium": {},
             "ogury": {},
             "onetag": {},
             "openx": {},
@@ -6469,6 +7026,7 @@
             "showheroesBs": {},
             "smartadserver": {},
             "smartx": {},
+            "smilewanted": {},
             "spotx": {},
             "stailamedia": {},
             "stroeerCore": {},
@@ -6488,19 +7046,23 @@
             "adf",
             "connectad",
             "criteo",
+            "cwire",
             "appnexusAst",
             "appnexus",
             "gumgum",
             "improvedigital",
             "ix",
             "invibes",
+            "inmobi",
             "nanointeractive",
+            "nextMillennium",
             "pubmatic",
             "ogury",
             "onetag",
             "openx",
             "smartadserver",
             "smartx",
+            "smilewanted",
             "unruly",
             "teads",
             "ttd",
@@ -6647,6 +7209,10 @@
         },
         "disableAjaxTimeout": {
           "description": "Prebid core adds a timeout on XMLHttpRequest request to terminate the request once auction is timedout. Since Prebid is ignoring all the bids after timeout it does not make sense to continue the request after timeout. However, you have the option to disable this by using",
+          "type": "boolean"
+        },
+        "disabledSendingStatisticData": {
+          "description": "The disabledSendingStatisticData parameter disables sending statistics data to the nextMillennium server, such as bidRequested, bidResponse, noBid and bidTimeout events.\n\nAn example of enabling this option:\n\n```javascript pbjs.setBidderConfig({   bidders: ['nextMillennium'],   config: {     disabledSendingStatisticData: true,   }, }) ```",
           "type": "boolean"
         },
         "enableSendAllBids": {
@@ -6817,9 +7383,6 @@
           "$ref": "#/definitions/prebidjs.userSync.IUserSyncConfig"
         }
       },
-      "required": [
-        "currency"
-      ],
       "type": "object"
     },
     "prebidjs.IPrebidServerBid": {
@@ -6868,6 +7431,15 @@
                 }
               },
               "type": "object"
+            },
+            "instl": {
+              "default": 0,
+              "description": "1 = the ad is interstitial or full screen, 0 = not interstitial.",
+              "enum": [
+                0,
+                1
+              ],
+              "type": "number"
             }
           },
           "type": "object"
@@ -7476,11 +8048,12 @@
           "type": "string"
         },
         "placement": {
-          "description": "Adunit placement",
+          "description": "Adunit placement\n\nIt's really called `inTerstitial`, even it is a typo. It is weirdly consistent with the other placement values.",
           "enum": [
             "inScreen",
             "inArticle",
-            "inBanner"
+            "inBanner",
+            "inTerstitial"
           ],
           "type": "string"
         },
@@ -8273,14 +8846,19 @@
       "additionalProperties": false,
       "description": "Unruly bid parameters",
       "properties": {
+        "featureOverrides": {
+          "additionalProperties": false,
+          "description": "This param is a generic object for configuring Unruly outstream demand. To run UNmissable, set ‘canRunUnmissable’ to true.",
+          "properties": {
+            "canRunUnmissable": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
         "siteId": {
           "description": "The site ID from Unruly.",
           "type": "number"
-        },
-        "targetingUUID": {
-          "deprecated": "this field is still marked as required in the docs, but is never used nor provided by unruly",
-          "description": "The targeting UUID from Unruly.",
-          "type": "string"
         }
       },
       "required": [
@@ -8565,7 +9143,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-195373-195376-248365657-195366-195376-248365657-195334-196162-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-200452-200455-248365657-200445-200455-248365657-200413-201241-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489%3E"
           },
           "type": "array"
         }
@@ -8575,7 +9153,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559&alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-199356-199526-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891149092559&alias-248365657-199526-199659-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8585,7 +9163,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559%26alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-199356-199526-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891149092559%26alias-248365657-199526-199659-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891210238678)%3E"
           },
           "type": "array"
         }
@@ -8595,7 +9173,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-198929-199115-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-21348998888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8605,7 +9183,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-198929-199115-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-21348998888365%3E"
           },
           "type": "array"
         }
@@ -8615,7 +9193,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -8625,7 +9203,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090%3E"
           },
           "type": "array"
         }
@@ -8635,7 +9213,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559&alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-199356-199526-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891149092559&alias-248365657-199526-199659-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8698,7 +9276,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-198929-199115-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-21348998888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8757,7 +9335,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8812,7 +9390,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-195373-195376-248365657-195366-195376-248365657-195334-196162-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-200452-200455-248365657-200445-200455-248365657-200413-201241-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -8868,7 +9446,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-193850-194036-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-20841098888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-198929-199115-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-21348998888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -8880,7 +9458,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -8888,23 +9466,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-194277-194447-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101149092559%26alias-248365657-194447-194580-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-2084101210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-199356-199526-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891149092559%26alias-248365657-199526-199659-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-2134891210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-194036-194277-248365657-193269-199344-248365657-193154-199344-248365657-190-208409-248365657-163-208409-248365657-0-208410187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-199115-199356-248365657-198348-204423-248365657-198233-204423-248365657-190-213488-248365657-163-213488-248365657-0-213489187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -9202,6 +9780,9 @@
         "criteo": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
+        "cwire": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
         "dspx": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
@@ -9211,6 +9792,9 @@
         "improvedigital": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
+        "inmobi": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
         "invibes": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
@@ -9218,6 +9802,9 @@
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "nanointeractive": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
+        "nextMillennium": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "ogury": {
@@ -9254,6 +9841,9 @@
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "smartx": {
+          "$ref": "#/definitions/prebidjs.currency.ICurrency"
+        },
+        "smilewanted": {
           "$ref": "#/definitions/prebidjs.currency.ICurrency"
         },
         "spotx": {
@@ -9297,19 +9887,23 @@
         "adf",
         "connectad",
         "criteo",
+        "cwire",
         "appnexusAst",
         "appnexus",
         "gumgum",
         "improvedigital",
         "ix",
         "invibes",
+        "inmobi",
         "nanointeractive",
+        "nextMillennium",
         "pubmatic",
         "ogury",
         "onetag",
         "openx",
         "smartadserver",
         "smartx",
+        "smilewanted",
         "unruly",
         "teads",
         "ttd",
@@ -9485,6 +10079,7 @@
     },
     "prebidjs.firstpartydata.OpenRtb2Publisher": {
       "additionalProperties": false,
+      "description": "This object describes the entity who directly supplies inventory to and is paid by the exchange. This may be a publisher, intermediary exchange, ad network, etc.",
       "properties": {
         "cat": {
           "description": "Array of IAB content categories that describe the publisher.",
@@ -9493,8 +10088,20 @@
           },
           "type": "array"
         },
+        "domain": {
+          "description": "Highest level domain of the seller (e.g., \"seller.com\").",
+          "type": "string"
+        },
         "ext": {
           "description": "Placeholder for exchange-specific extensions to OpenRTB"
+        },
+        "id": {
+          "description": "Exchange-specific seller ID. Every ID must map to only a single entity that is paid for inventory transacted via that ID. Corresponds to a `seller_id` of a seller in the exchange’s sellers.json file.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Seller name (may be aliased at the seller's request).",
+          "type": "string"
         }
       },
       "type": "object"
@@ -9713,6 +10320,9 @@
           ],
           "type": "number"
         },
+        "publisher": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Publisher"
+        },
         "sectioncat": {
           "description": "Array of IAB content categories that describe the current section of the site.",
           "items": {
@@ -9836,9 +10446,6 @@
             {}
           ],
           "description": "community extensions"
-        },
-        "publisher": {
-          "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Publisher"
         },
         "regs": {
           "$ref": "#/definitions/prebidjs.firstpartydata.OpenRtb2Regs",
@@ -10427,12 +11034,15 @@
         "appnexusAst": {},
         "connectad": {},
         "criteo": {},
+        "cwire": {},
         "dspx": {},
         "gumgum": {},
         "improvedigital": {},
+        "inmobi": {},
         "invibes": {},
         "ix": {},
         "nanointeractive": {},
+        "nextMillennium": {},
         "ogury": {},
         "onetag": {},
         "openx": {},
@@ -10445,6 +11055,7 @@
         "showheroesBs": {},
         "smartadserver": {},
         "smartx": {},
+        "smilewanted": {},
         "spotx": {},
         "stailamedia": {},
         "stroeerCore": {},
@@ -10724,6 +11335,9 @@
             "criteo": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
+            "cwire": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
             "dspx": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
@@ -10733,6 +11347,9 @@
             "improvedigital": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
+            "inmobi": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
             "invibes": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
@@ -10740,6 +11357,9 @@
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "nanointeractive": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
+            "nextMillennium": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "ogury": {
@@ -10776,6 +11396,9 @@
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "smartx": {
+              "$ref": "#/definitions/prebidjs.server.BidderControl"
+            },
+            "smilewanted": {
               "$ref": "#/definitions/prebidjs.server.BidderControl"
             },
             "spotx": {
@@ -11936,12 +12559,81 @@
       ],
       "type": "object"
     },
+    "spa.SinglePageAppCleanupConfig": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfigAll"
+        },
+        {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfigRequested"
+        },
+        {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfigSelected"
+        }
+      ]
+    },
+    "spa.SinglePageAppCleanupConfigAll": {
+      "additionalProperties": false,
+      "description": "Default cleanup behaviour for single page applications. All slots are being destroyed on navigation.",
+      "properties": {
+        "slots": {
+          "const": "all",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots"
+      ],
+      "type": "object"
+    },
+    "spa.SinglePageAppCleanupConfigRequested": {
+      "additionalProperties": false,
+      "description": "This cleanup configuration destroys only the ad slots that are requested after navigation. Replacement for the old `destroyAllAdSlots` setting.\n\nIt allows publishers to keep all ad slots alive on navigation and only destroy the ones that are requested.\n\nUse with caution and test properly.\n\n## Use cases\n\nThis setting can be used for publishers that have more \"static\" ad slots, like mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation and that have users that navigation a lot on the page, e.g. swiping through images or profiles. With this setting the more persistent ad slots are refreshed through ad reload or timed by the publisher, while other content positions are refreshed on navigation.",
+      "properties": {
+        "slots": {
+          "const": "requested",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots"
+      ],
+      "type": "object"
+    },
+    "spa.SinglePageAppCleanupConfigSelected": {
+      "additionalProperties": false,
+      "description": "This cleanup configuration allows publishers to select which ad slots should not be destroyed on navigation. Currently only the `excluded` option is supported, which means that all ad slots are destroyed on navigation, except the ones listed in `slotIds`.\n\n## Use cases\n\nThere are a couple of use cases for this setting.\n\n### Static out-of-content ad slots\n\nSidebars or sticky footers that are always present are handled by the regular ad reload. Especially if the user navigates a lot on the page, e.g. swiping through images or profiles, this leads to a better user experience and advertiser performance as ad refreshing is less frequent.\n\n### Render on navigation slots like interstitials\n\nCertain slots are rendered on navigation, e.g. interstitials that are shown on navigation. Those slots should not be destroyed on navigation, to be able to render them properly.",
+      "properties": {
+        "slotIds": {
+          "description": "A list of ad slot IDs that should not be destroyed on navigation.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "slots": {
+          "const": "excluded",
+          "description": "excluded: a list of ad slots that should not be destroyed on navigation.\n\nNote: This might be extended the future to support including only certain slots.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slots",
+        "slotIds"
+      ],
+      "type": "object"
+    },
     "spa.SinglePageAppConfig": {
       "additionalProperties": false,
       "description": "Additional configuration for single page application publishers.",
       "properties": {
+        "cleanup": {
+          "$ref": "#/definitions/spa.SinglePageAppCleanupConfig",
+          "description": "Defines the cleanup behaviour on navigation."
+        },
         "destroyAllAdSlots": {
           "default": true,
+          "deprecated": "use the cleanup configuration instead.",
           "description": "If set to `false`, `requestAds` will not destroy all existing ad slots, but only the ones being requested.\n\nUse with caution and test properly.\n\n## Use cases\n\nThis setting can be used for publishers that have more \"static\" ad slots, like mobile sticky, footer ad or skyscraper that should not be destroyed on every page navigation and that have users that navigation a lot on the page, e.g. swiping through images or profiles. With this setting the more persistent ad slots are refreshed through ad reload or timed by the publisher, while other content positions are refreshed on navigation.",
           "type": "boolean"
         },

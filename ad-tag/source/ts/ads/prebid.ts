@@ -5,6 +5,7 @@ import {
   InitStep,
   LOW_PRIORITY,
   mkConfigureStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   mkPrepareRequestAdsStep,
   mkRequestBidsStep,
@@ -103,7 +104,7 @@ const createdAdUnits = (
       const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
         ? {
             floors: {
-              currency: prebidConfig.config.currency.adServerCurrency,
+              currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
               schema: {
                 delimiter: '|',
                 fields: ['mediaType']
@@ -297,6 +298,21 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
       })
   );
 
+export const prebidClearAuction = (): ConfigureStep => {
+  return mkConfigureStepOncePerRequestAdsCycle(
+    'prebid-clear-auction',
+    (context: AdPipelineContext) =>
+      new Promise<void>(resolve => {
+        context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+        context.window__.pbjs.que.push(() => {
+          context.logger__.debug('Prebid', 'Clearing prebid auctions');
+          context.window__.pbjs.clearAllAuctions();
+        });
+        resolve();
+      })
+  );
+};
+
 export const prebidConfigure = (
   prebidConfig: headerbidding.PrebidConfig,
   schainConfig: schain.SupplyChainConfig
@@ -348,6 +364,11 @@ export const prebidConfigure = (
             ...{ floors: prebidConfig.config.floors || {} }
           });
 
+          // set additional bidder configurations if provided
+          prebidConfig.bidderConfigs?.forEach(({ options, merge }) => {
+            context.window__.pbjs.setBidderConfig(options, merge);
+          });
+
           prebidConfig.schain.nodes.forEach(({ bidder, node, appendNode }) => {
             const nodes = [schainConfig.supplyChainStartNode];
             if (appendNode) {
@@ -361,8 +382,9 @@ export const prebidConfigure = (
 
           // configure ESP for googletag. This has to be called after setConfig and after the googletag has loaded.
           // don't add this to the init step.
-          context.window__.pbjs.registerSignalSources &&
+          if (context.window__.pbjs.registerSignalSources) {
             context.window__.pbjs.registerSignalSources();
+          }
         });
 
         // the resolve is intentionally not inside the pbjs.que.push. At this point we do not need to block the pipeline
