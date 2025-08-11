@@ -50,9 +50,14 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
 };
 
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
-  const targetingMap: Record<string, string[]> = {};
+  let targetingMap: Record<string, string[]> = {};
   const stub: googletag.IAdSlot = {
-    clearTargeting(_key?: string): void {
+    clearTargeting(key?: string): void {
+      if (key) {
+        delete targetingMap[key];
+      } else {
+        targetingMap = {};
+      }
       return;
     },
     setTargeting: (key: string, value: string | string[]): googletag.IAdSlot => {

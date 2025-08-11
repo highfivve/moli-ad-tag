@@ -24,21 +24,18 @@ describe('InterstitialContext', () => {
   jsDomWindow.googletag = createGoogletagStub();
 
   // stubs
-  const slotGetTargetingStub = sandbox.stub(slot, 'getTargeting');
   const jsDateNowStub = sandbox.stub<[], number>().returns(0);
 
-  const markSlotAsGamInterstitial = () => {
-    slotGetTargetingStub.callsFake(key => {
-      if (key === formatKey) {
-        return ['5']; // OutOfPageFormat.INTERSTITIAL.toString()
-      }
-      return [];
-    });
+  const markSlotAsGamInterstitial = (interstitialSlot: googletag.IAdSlot = slot) => {
+    interstitialSlot.setTargeting(formatKey, '5');
   };
 
-  const slotRenderEnded = (isEmpty: boolean = false): googletag.events.ISlotRenderEndedEvent =>
+  const slotRenderEnded = (
+    isEmpty: boolean = false,
+    slotOverride?: googletag.IAdSlot
+  ): googletag.events.ISlotRenderEndedEvent =>
     ({
-      slot,
+      slot: slotOverride ?? slot,
       isEmpty
     }) as googletag.events.ISlotRenderEndedEvent;
 
@@ -51,10 +48,13 @@ describe('InterstitialContext', () => {
     cpm: 3
   } as prebidjs.BidResponse;
 
-  const auctionEnd = (bidsReceived: prebidjs.BidResponse[]): prebidjs.event.AuctionObject =>
+  const auctionEnd = (
+    bidsReceived: prebidjs.BidResponse[],
+    adUnitCodes: string[] = [slotDomId]
+  ): prebidjs.event.AuctionObject =>
     ({
       bidsReceived: bidsReceived,
-      adUnitCodes: [slotDomId]
+      adUnitCodes: adUnitCodes
     }) as prebidjs.event.AuctionObject;
 
   const interstitialContext = (priority: auction.InterstitialChannel[], ttl?: number) => {
@@ -68,13 +68,10 @@ describe('InterstitialContext', () => {
     return createInterstitialContext(config, jsDomWindow, jsDateNowStub, noopLogger);
   };
 
-  beforeEach(() => {
-    slotGetTargetingStub.callThrough();
-  });
-
   afterEach(() => {
     sandbox.reset();
     jsDomWindow.sessionStorage.clear();
+    slot.clearTargeting();
   });
 
   describe('gam only setup', () => {
@@ -268,6 +265,65 @@ describe('InterstitialContext', () => {
       const interstitial = interstitialContext(['c', 'gam'], 500);
       expect(interstitial.interstitialState().updatedAt).to.be.eq(2000);
       expect(interstitial.interstitialState().priority).to.be.deep.eq(['c', 'gam']);
+    });
+  });
+
+  describe('ad unit path variables', () => {
+    const dynamicAdUnitPath = '/123/interstitial/{device}';
+    const resolvedAdUnitPath = '/123/interstitial/mobile';
+    const slot: googletag.IAdSlot = googleAdSlotStub(resolvedAdUnitPath, slotDomId);
+    const interstitialContextDynamicPath = (priority: auction.InterstitialChannel[]) => {
+      const config: auction.InterstitialConfig = {
+        enabled: true,
+        adUnitPath: dynamicAdUnitPath,
+        domId: slotDomId,
+        priority
+      };
+      return createInterstitialContext(config, jsDomWindow, jsDateNowStub, noopLogger);
+    };
+
+    beforeEach(() => {
+      slot.clearTargeting();
+    });
+
+    it('should use resolved ad unit path in onSlotRenderEnded to skip events', () => {
+      const interstitial = interstitialContextDynamicPath(['c', 'gam']);
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
+      interstitial.onSlotRenderEnded(slotRenderEnded(true, slot));
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
+      // only one initialization call
+      expect(jsDateNowStub).to.have.been.calledOnce;
+
+      // after resolving the ad unit path, demand shifting works
+      interstitial.updateAdUnitPaths({ device: 'mobile' });
+      interstitial.onSlotRenderEnded(slotRenderEnded(true, slot));
+      expect(interstitial.interstitialChannel()).to.be.eq('gam');
+      expect(jsDateNowStub).to.have.been.calledTwice; // initialization and update
+    });
+
+    it('should use resolved ad unit path in onImpressionViewable to skip events', () => {
+      const interstitial = interstitialContextDynamicPath(['gam', 'c']);
+      expect(interstitial.interstitialChannel()).to.be.eq('gam');
+      markSlotAsGamInterstitial(slot);
+      interstitial.onImpressionViewable({ ...impressionViewableEvent, slot });
+      expect(interstitial.interstitialChannel()).to.be.eq('gam');
+      // only one initialization call
+      expect(jsDateNowStub).to.have.been.calledOnce;
+
+      // after resolving the ad unit path, demand shifting works
+      interstitial.updateAdUnitPaths({ device: 'mobile' });
+      interstitial.onImpressionViewable({ ...impressionViewableEvent, slot });
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
+      expect(jsDateNowStub).to.have.been.calledTwice; // initialization and update
+    });
+
+    it('should use the domId and adUnitCodes in onAuctionEnd to skip events', () => {
+      const interstitial = interstitialContextDynamicPath(['c', 'gam']);
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
+      interstitial.onAuctionEnd(auctionEnd([bidResponse], ['another-slot']));
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
+      // only one initialization call
+      expect(jsDateNowStub).to.have.been.calledOnce;
     });
   });
 });
