@@ -87,11 +87,10 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.adRequestThrottling?.enabled || config.interstitial?.enabled) {
+  if (config.adRequestThrottling?.enabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRequested', event => {
         adRequestThrottling?.onSlotRequested(event);
-        interstitial?.onSlotRequested(event);
       });
     });
   }

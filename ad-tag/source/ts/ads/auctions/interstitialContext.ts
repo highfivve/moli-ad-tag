@@ -14,22 +14,10 @@ import { NowInstant } from 'ad-tag/ads/auctions/resume';
  * - 'not-requested': Interstitial ad has not been requested yet. Neither through GAM nor through HB.
  * - 'gam': Interstitial has been rendered through GAM Web Interstitial.
  * - 'c': Interstitial has been rendered through a custom implementation, e.g. header bidding.
- * - 'pending-navigation': Interstitial has been requested and is waiting for a navigation event to display.
- *                         This is used for GAM Web Interstitials that are displayed on user navigation.
- *                         Or for custom implementations to wait for a user navigation and display the ad
- *                         on the next page.
  * - 'empty': Interstitial has been requested but no ad was returned.
  */
 type InterstitialState = {
-  /**
-   * The current state of the interstitial ad format.
-   */
-  state: 'init' | 'not-requested' | 'requested' | 'bid' | 'no-bid' | 'rendered';
-
-  /**
-   * The channel that is currently being used to request the interstitial ad.
-   */
-  channel: auction.InterstitialChannel;
+  priority: auction.InterstitialChannel[];
 
   /**
    * UTC timestamp in ms to track when the state was last updated.
@@ -54,7 +42,7 @@ export interface InterstitialContext {
    *
    * @return the channel that should be used to request the interstitial ad, or null if no channel is allowed.
    */
-  interstitialChannel(): auction.InterstitialChannel | null | undefined;
+  interstitialChannel(): auction.InterstitialChannel | undefined;
 
   /**
    * Ad unit paths can contain variables that need to be resolved at runtime.
@@ -65,11 +53,6 @@ export interface InterstitialContext {
    * @param adUnitPathVariables
    */
   updateAdUnitPaths(adUnitPathVariables: AdUnitPathVariables): void;
-
-  /**
-   * Persists the interstitial channel that is actually being requested.
-   */
-  onSlotRequested(event: googletag.events.ISlotRequestedEvent): void;
 
   /**
    * Check if an interstitial ad has been rendered through GAM.
@@ -115,8 +98,7 @@ export const createInterstitialContext = (
   const currentTime = now();
   let interstitialAdUnitPath = config.adUnitPath;
   let currentInterstitialState: InterstitialState = {
-    state: 'init',
-    channel: config.priority[0] ?? 'gam',
+    priority: config.priority,
     updatedAt: currentTime
   };
 
@@ -149,22 +131,13 @@ export const createInterstitialContext = (
     }
   };
 
-  const hasState = (
-    channel: auction.InterstitialChannel,
-    state: InterstitialState['state']
-  ): boolean => {
-    return currentInterstitialState.channel === channel && currentInterstitialState.state === state;
-  };
-
-  const onSlotRequested = (event: googletag.events.ISlotRequestedEvent): void => {
-    // early return if the slot is not the interstitial ad unit
-    if (event.slot.getAdUnitPath() !== interstitialAdUnitPath) {
-      return;
+  const shiftDemandPriority = (
+    arr: auction.InterstitialChannel[]
+  ): auction.InterstitialChannel[] => {
+    if (arr.length === 0) {
+      return [];
     }
-
-    currentInterstitialState.state = 'requested';
-    currentInterstitialState.channel = isGamInterstitial(event.slot, window__) ? 'gam' : 'c';
-    persistInterstitialState();
+    return [...arr.slice(1), arr[0]];
   };
 
   const onSlotRenderEnded = (event: googletag.events.ISlotRenderEndedEvent): void => {
@@ -173,14 +146,11 @@ export const createInterstitialContext = (
       return;
     }
 
+    // if there's no demand, shift the demand priority
     if (event.isEmpty) {
-      currentInterstitialState.state = 'no-bid';
-    } else {
-      // GAM interstitials are rendered on user navigation, so we set the state to 'bid'. It will
-      // be updated to 'rendered' once the impression viewable event is fired.
-      currentInterstitialState.state = isGamInterstitial(event.slot, window__) ? 'bid' : 'rendered';
+      currentInterstitialState.priority = shiftDemandPriority(currentInterstitialState.priority);
+      persistInterstitialState();
     }
-    persistInterstitialState();
   };
 
   const onImpressionViewable = (event: googletag.events.IImpressionViewableEvent): void => {
@@ -189,9 +159,9 @@ export const createInterstitialContext = (
       return;
     }
 
-    // update the state to 'rendered' if it was previously 'bid'
+    // if GAM interstitial was rendered, we choose the next demand priority
     if (isGamInterstitial(event.slot, window__)) {
-      currentInterstitialState.state = 'rendered';
+      currentInterstitialState.priority = shiftDemandPriority(currentInterstitialState.priority);
       persistInterstitialState();
     }
   };
@@ -206,33 +176,9 @@ export const createInterstitialContext = (
     // to check for a certain bid CPM. However, prebid.js floor price feature should already filter
     // out all bids below a certain CPM
     const interstitialBids = event.bidsReceived?.filter(bid => bid.adUnitCode === config.domId);
-    const hasBids = (interstitialBids?.length ?? 0) > 0;
-    currentInterstitialState.channel = 'c'; // custom interstitial channel
-    currentInterstitialState.state = hasBids ? 'bid' : 'no-bid';
-    persistInterstitialState();
-  };
-
-  /**
-   * This method is called in the requestAds() methods, before ads are actually requested.
-   * It translates to a new page view, so to say.
-   */
-  const beforeRequestAds = (): void => {
-    if (
-      // requestAds has been called for the first time
-      currentInterstitialState.state === 'init' ||
-      // we had prebid demand on the previous page, so we keep the channel
-      hasState('c', 'bid') ||
-      hasState('c', 'rendered')
-    ) {
-      currentInterstitialState.state = 'not-requested';
-    } else {
-      // rotate to the next channel in the priority list.
-      // - prebid is handled above.
-      // - the GAM interstitial has a hard frequency cap, so we try only once per session
-      const channelIndex = config.priority.indexOf(currentInterstitialState.channel);
-      const nextChannelIndex = (channelIndex + 1) % config.priority.length;
-      currentInterstitialState.state = 'not-requested';
-      currentInterstitialState.channel = config.priority[nextChannelIndex] ?? 'gam'; // fallback to 'gam' if no channel is configured
+    if ((interstitialBids?.length ?? 0) === 0) {
+      // if there are no bids, we shift the demand priority
+      currentInterstitialState.priority = shiftDemandPriority(currentInterstitialState.priority);
       persistInterstitialState();
     }
   };
@@ -240,44 +186,18 @@ export const createInterstitialContext = (
   /**
    * Determines which interstitial channel should be used to request the interstitial ad.
    */
-  const interstitialChannel = (): auction.InterstitialChannel | null | undefined => {
-    return config.priority.find(channel => {
-      // determine if the channel is allowed
-      switch (channel) {
-        case 'gam':
-          return (
-            // priority: ['gam', 'c'] or ['gam']
-            // gam has first priority and has not yet been requested
-            hasState('gam', 'not-requested') ||
-            hasState('gam', 'init') ||
-            // priority: ['c', 'gam']
-            // if gam has second priority and the custom interstitial has no demand
-            hasState('c', 'no-bid')
-          );
-
-        case 'c':
-          return (
-            // priority: ['c', 'gam'] or ['c']
-            // custom interstitial has first priority and has not yet been requested
-            hasState('c', 'not-requested') ||
-            hasState('c', 'init') ||
-            // priority: ['gam', 'c']
-            // if custom interstitial has second priority and the gam interstitial has no demand
-            hasState('gam', 'no-bid')
-          );
-        default:
-          return false;
-      }
-    });
+  const interstitialChannel = (): auction.InterstitialChannel | undefined => {
+    return currentInterstitialState.priority[0];
   };
 
   return {
     interstitialChannel,
-    onSlotRequested,
     onSlotRenderEnded,
     onImpressionViewable,
     onAuctionEnd,
-    beforeRequestAds,
+    beforeRequestAds: (): void => {
+      // TODO
+    },
     interstitialState: (): InterstitialState => {
       return currentInterstitialState;
     },

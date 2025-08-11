@@ -44,10 +44,6 @@ describe('InterstitialContext', () => {
     });
   };
 
-  const slotRequested: googletag.events.ISlotRequestedEvent = {
-    slot
-  } as googletag.events.ISlotRequestedEvent;
-
   const slotRenderEnded = (isEmpty: boolean = false): googletag.events.ISlotRenderEndedEvent =>
     ({
       slot,
@@ -101,36 +97,10 @@ describe('InterstitialContext', () => {
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
-    // FIXME this will be fixed, once we put the channel priority into the state logic
-    it.skip('should allow gam in initial state with no priority', () => {
-      const interstitial = interstitialContext([]);
-      expect(interstitial.interstitialChannel()).to.be.eq('gam');
-    });
-
-    it('should not allow gam after an ad has been rendered', () => {
-      const interstitial = interstitialContext(['gam']);
-      interstitial.beforeRequestAds();
-      markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
-      interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      expect(interstitial.interstitialChannel()).to.be.undefined;
-    });
-
-    it('should allow gam after an ad has been displayed', () => {
-      const interstitial = interstitialContext(['gam']);
-      interstitial.beforeRequestAds();
-      markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
-      interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      interstitial.onImpressionViewable(impressionViewableEvent);
-      expect(interstitial.interstitialChannel()).to.be.undefined;
-    });
-
     it('should allow gam after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['gam']);
       interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.onImpressionViewable(impressionViewableEvent);
       interstitial.beforeRequestAds();
@@ -142,7 +112,6 @@ describe('InterstitialContext', () => {
         const interstitial = interstitialContext(['gam']);
         const otherSlot = googleAdSlotStub('/12345678/other_slot', 'other-slot');
         interstitial.beforeRequestAds();
-        interstitial.onSlotRequested({ ...slotRequested, slot: otherSlot });
         interstitial.onSlotRenderEnded({ ...slotRenderEnded(false), slot: otherSlot });
         expect(interstitial.interstitialChannel()).to.be.eq('gam');
       });
@@ -161,20 +130,10 @@ describe('InterstitialContext', () => {
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should not prebid gam after an ad has been rendered', () => {
-      const interstitial = interstitialContext(['gam']);
-      interstitial.beforeRequestAds();
-      interstitial.onAuctionEnd(auctionEnd([bidResponse]));
-      interstitial.onSlotRequested(slotRequested);
-      interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      expect(interstitial.interstitialChannel()).to.be.undefined;
-    });
-
     it('should allow prebid after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['c']);
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([bidResponse]));
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
@@ -193,51 +152,47 @@ describe('InterstitialContext', () => {
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should not allow prebid after an ad has been rendered', () => {
+    it('should keep prebid as first priority after an ad has been rendered', () => {
       const interstitial = interstitialContext(['c', 'gam']);
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([bidResponse]));
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      expect(interstitial.interstitialChannel()).to.be.undefined;
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should allow prebid after an ad has been displayed and next requestAds cycle has started', () => {
+    it('should keep prebid as first priority after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['c', 'gam']);
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([bidResponse]));
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should allow gam if prebid has no demand', () => {
+    it('should shift priority to gam if prebid has no demand', () => {
       const interstitial = interstitialContext(['c', 'gam']);
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
-    it('should allow prebid again if prebid and gam have no demand', () => {
+    it('should shift back to prebid again if prebid and gam have no demand', () => {
       const interstitial = interstitialContext(['c', 'gam']);
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       markSlotAsGamInterstitial(); // performed by the checkAndSwitch method in googleAdManager.ts
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(true));
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should not allow prebid or gam if prebid had no demand, but gam delivered', () => {
+    it('should shift priority to prebid after gam delivered', () => {
       const interstitial = interstitialContext(['c', 'gam']);
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       markSlotAsGamInterstitial(); // performed by the checkAndSwitch method in googleAdManager.ts
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.onImpressionViewable(impressionViewableEvent);
-      expect(interstitial.interstitialChannel()).to.be.undefined;
+      expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
     it('should allow prebid again after requestAds if prebid had no demand, but gam delivered', () => {
@@ -245,7 +200,6 @@ describe('InterstitialContext', () => {
       interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       markSlotAsGamInterstitial(); // performed by the checkAndSwitch method in googleAdManager.ts
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.onImpressionViewable(impressionViewableEvent);
       interstitial.beforeRequestAds();
@@ -265,20 +219,18 @@ describe('InterstitialContext', () => {
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
-    it('should not allow gam after an ad has been rendered', () => {
+    it('should keep gam in first priority after an ad has been rendered, but not visible', () => {
       const interstitial = interstitialContext(['gam', 'c']);
       interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      expect(interstitial.interstitialChannel()).to.be.undefined;
+      expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
     it('should allow prebid if gam has no demand', () => {
       const interstitial = interstitialContext(['gam', 'c']);
       interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(true));
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
@@ -287,18 +239,17 @@ describe('InterstitialContext', () => {
       const interstitial = interstitialContext(['gam', 'c']);
       interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(true));
       interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should allow prebid after an ad has been displayed and next requestAds cycle has started', () => {
+    it('should shift priority to prebid after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['gam', 'c']);
       interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
-      interstitial.onSlotRequested(slotRequested);
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
+      interstitial.onImpressionViewable(impressionViewableEvent);
       interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
@@ -309,32 +260,22 @@ describe('InterstitialContext', () => {
       jsDateNowStub.returns(2000);
       jsDomWindow.sessionStorage.setItem(
         'h5v_intstl',
-        JSON.stringify({
-          state: 'rendered',
-          channel: 'gam',
-          updatedAt: 1000
-        })
+        JSON.stringify({ priority: ['gam', 'c'], updatedAt: 1000 })
       );
       const interstitial = interstitialContext(['gam']);
       expect(interstitial.interstitialState().updatedAt).to.be.eq(1000);
-      expect(interstitial.interstitialState().state).to.be.eq('rendered');
-      expect(interstitial.interstitialState().channel).to.be.eq('gam');
+      expect(interstitial.interstitialState().priority).to.be.deep.eq(['gam', 'c']);
     });
 
     it('should not load state from localStorage if ttl is exceeded', () => {
       jsDateNowStub.returns(2000);
       jsDomWindow.sessionStorage.setItem(
         'h5v_intstl',
-        JSON.stringify({
-          state: 'rendered',
-          channel: 'gam',
-          updatedAt: 1000
-        })
+        JSON.stringify({ priority: ['gam', 'c'], updatedAt: 1000 })
       );
-      const interstitial = interstitialContext(['gam'], 500);
+      const interstitial = interstitialContext(['c', 'gam'], 500);
       expect(interstitial.interstitialState().updatedAt).to.be.eq(2000);
-      expect(interstitial.interstitialState().state).to.be.eq('init');
-      expect(interstitial.interstitialState().channel).to.be.eq('gam');
+      expect(interstitial.interstitialState().priority).to.be.deep.eq(['c', 'gam']);
     });
   });
 });
