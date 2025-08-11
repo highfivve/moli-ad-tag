@@ -72,11 +72,6 @@ export interface InterstitialContext {
    * event is necessary to determine if a switch to the GAM interstitial should be made.
    */
   onAuctionEnd(event: prebidjs.event.AuctionObject): void;
-
-  /**
-   * Reset the interstitial state.
-   */
-  beforeRequestAds(): void;
 }
 
 export const isGamInterstitial = (
@@ -195,9 +190,6 @@ export const createInterstitialContext = (
     onSlotRenderEnded,
     onImpressionViewable,
     onAuctionEnd,
-    beforeRequestAds: (): void => {
-      // TODO
-    },
     interstitialState: (): InterstitialState => {
       return currentInterstitialState;
     },

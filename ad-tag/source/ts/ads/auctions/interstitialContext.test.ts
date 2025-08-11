@@ -82,17 +82,14 @@ describe('InterstitialContext', () => {
 
     it('should allow gam after requestAds has been called', () => {
       const interstitial = interstitialContext(['gam']);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
     it('should allow gam after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['gam']);
-      interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.onImpressionViewable(impressionViewableEvent);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
@@ -100,7 +97,6 @@ describe('InterstitialContext', () => {
       it('should not change interstitial channel if slot is not an interstitial', () => {
         const interstitial = interstitialContext(['gam']);
         const otherSlot = googleAdSlotStub('/12345678/other_slot', 'other-slot');
-        interstitial.beforeRequestAds();
         interstitial.onSlotRenderEnded({ ...slotRenderEnded(false), slot: otherSlot });
         expect(interstitial.interstitialChannel()).to.be.eq('gam');
       });
@@ -115,16 +111,13 @@ describe('InterstitialContext', () => {
 
     it('should allow prebid after requestAds has been called', () => {
       const interstitial = interstitialContext(['c']);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
     it('should allow prebid after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['c']);
-      interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([bidResponse]));
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
   });
@@ -137,61 +130,36 @@ describe('InterstitialContext', () => {
 
     it('should allow prebid after requestAds has been called', () => {
       const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
     it('should keep prebid as first priority after an ad has been rendered', () => {
       const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([bidResponse]));
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      expect(interstitial.interstitialChannel()).to.be.eq('c');
-    });
-
-    it('should keep prebid as first priority after an ad has been displayed and next requestAds cycle has started', () => {
-      const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
-      interstitial.onAuctionEnd(auctionEnd([bidResponse]));
-      interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
     it('should shift priority to gam if prebid has no demand', () => {
       const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
     it('should shift back to prebid again if prebid and gam have no demand', () => {
       const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       markSlotAsGamInterstitial(); // performed by the checkAndSwitch method in googleAdManager.ts
       interstitial.onSlotRenderEnded(slotRenderEnded(true));
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
-    it('should shift priority to prebid after gam delivered', () => {
-      const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
-      interstitial.onAuctionEnd(auctionEnd([]));
-      markSlotAsGamInterstitial(); // performed by the checkAndSwitch method in googleAdManager.ts
-      interstitial.onSlotRenderEnded(slotRenderEnded(false));
-      interstitial.onImpressionViewable(impressionViewableEvent);
-      expect(interstitial.interstitialChannel()).to.be.eq('c');
-    });
-
     it('should allow prebid again after requestAds if prebid had no demand, but gam delivered', () => {
       const interstitial = interstitialContext(['c', 'gam']);
-      interstitial.beforeRequestAds();
       interstitial.onAuctionEnd(auctionEnd([]));
       markSlotAsGamInterstitial(); // performed by the checkAndSwitch method in googleAdManager.ts
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.onImpressionViewable(impressionViewableEvent);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
   });
@@ -204,13 +172,11 @@ describe('InterstitialContext', () => {
 
     it('should allow gam after requestAds has been called', () => {
       const interstitial = interstitialContext(['gam', 'c']);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
     });
 
     it('should keep gam in first priority after an ad has been rendered, but not visible', () => {
       const interstitial = interstitialContext(['gam', 'c']);
-      interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       expect(interstitial.interstitialChannel()).to.be.eq('gam');
@@ -218,28 +184,16 @@ describe('InterstitialContext', () => {
 
     it('should allow prebid if gam has no demand', () => {
       const interstitial = interstitialContext(['gam', 'c']);
-      interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
       interstitial.onSlotRenderEnded(slotRenderEnded(true));
-      expect(interstitial.interstitialChannel()).to.be.eq('c');
-    });
-
-    it('should allow prebid if gam has no demand after next requestAds cycle has started', () => {
-      const interstitial = interstitialContext(['gam', 'c']);
-      interstitial.beforeRequestAds();
-      markSlotAsGamInterstitial();
-      interstitial.onSlotRenderEnded(slotRenderEnded(true));
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
 
     it('should shift priority to prebid after an ad has been displayed and next requestAds cycle has started', () => {
       const interstitial = interstitialContext(['gam', 'c']);
-      interstitial.beforeRequestAds();
       markSlotAsGamInterstitial();
       interstitial.onSlotRenderEnded(slotRenderEnded(false));
       interstitial.onImpressionViewable(impressionViewableEvent);
-      interstitial.beforeRequestAds();
       expect(interstitial.interstitialChannel()).to.be.eq('c');
     });
   });

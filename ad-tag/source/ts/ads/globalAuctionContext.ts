@@ -124,12 +124,6 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.interstitial?.enabled) {
-    eventService.addEventListener('beforeRequestAds', () => {
-      interstitial?.beforeRequestAds();
-    });
-  }
-
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
