@@ -90,10 +90,11 @@ export const createGlobalAuctionContext = (
     });
   }
 
-  if (config.adRequestThrottling?.enabled) {
+  if (config.adRequestThrottling?.enabled || config.frequencyCap?.enabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRequested', event => {
         adRequestThrottling?.onSlotRequested(event);
+        frequencyCapping?.onSlotRequested(event);
       });
     });
   }
@@ -107,6 +108,9 @@ export const createGlobalAuctionContext = (
       });
     });
 
+    eventService.addEventListener('beforeRequestAds', () => {
+      frequencyCapping?.beforeRequestAds();
+    });
     eventService.addEventListener('afterRequestAds', () => {
       frequencyCapping?.afterRequestAds();
     });

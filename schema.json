@@ -718,10 +718,27 @@
       ],
       "type": "object"
     },
+    "auction.PositionFrequencyConfigAdRequestLimit": {
+      "additionalProperties": false,
+      "description": "Limit the number of ad requests for a specific ad slot that can be made per requestAds cycle. This is useful for high impact ad slots that should not be requested too often, e.g. interstitials, wallpapers or video ads.\n\nNote that this frequency cap does not care if an impression was delivered or not.",
+      "properties": {
+        "maxAdRequests": {
+          "description": "Setting this to `1`means that only one ad request is allowed per requestAds cycle, which translates to one ad request per page view.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "maxAdRequests"
+      ],
+      "type": "object"
+    },
     "auction.PositionFrequencyConfigConditions": {
       "additionalProperties": false,
       "description": "A set of possible conditions that all need to be met before the ad slot can request ads.",
       "properties": {
+        "adRequestLimit": {
+          "$ref": "#/definitions/auction.PositionFrequencyConfigAdRequestLimit"
+        },
         "delay": {
           "$ref": "#/definitions/auction.PositionFrequencyConfigDelay"
         },

@@ -12,6 +12,7 @@ import BidResponse = prebidjs.BidResponse;
 import { auction } from 'ad-tag/types/moliConfig';
 import { newNoopLogger, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { googletag } from 'ad-tag/types/googletag';
+import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 use(sinonChai);
 
 describe('FrequencyCapping', () => {
@@ -398,6 +399,37 @@ describe('FrequencyCapping', () => {
 
         sandbox.clock.tick(30100);
         expect(frequencyCapping.isAdUnitCapped(interstitialDomId)).to.be.false;
+      });
+    });
+
+    describe('limit ad requests by requestAds cycle', () => {
+      const slotRequestedEvent: googletag.events.ISlotRequestedEvent = {
+        slot: googleAdSlotStub(wpAdUnitPath, wpDomId)
+      } as googletag.events.ISlotRequestedEvent;
+      it('should not cap if no request ads have been made', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
+      });
+
+      it('should cap if the number of ad requests exceeds the configured limit', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+        frequencyCapping.onSlotRequested(slotRequestedEvent);
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+      });
+
+      it('should reset the cap for the next request ads cycle', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+        frequencyCapping.onSlotRequested(slotRequestedEvent);
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.true;
+        frequencyCapping.beforeRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(wpAdUnitPath)).to.be.false;
       });
     });
 

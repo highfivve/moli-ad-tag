@@ -59,9 +59,11 @@ export type PersistedFrequencyCappingState = {
 export interface FrequencyCapping {
   onAuctionEnd(auction: prebidjs.event.AuctionObject): void;
   onBidWon(bid: prebidjs.BidResponse): void;
+  onSlotRequested(event: googletag.events.ISlotRequestedEvent): void;
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent): void;
   onImpressionViewable(event: googletag.events.IImpressionViewableEvent): void;
   afterRequestAds(): void;
+  beforeRequestAds(): void;
   updateAdUnitPaths(adUnitPathVariables: AdUnitPathVariables): void;
   isAdUnitCapped(adUnitPath: string): boolean;
   isFrequencyCapped(slotId: string, bidder: BidderCode): boolean;
@@ -81,6 +83,7 @@ export const createFrequencyCapping = (
   const positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
   const positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
   const bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
+  const positionAdRequests: Map<string, number> = new Map();
   let numAdRequests = 0;
 
   const pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[] =
@@ -225,6 +228,19 @@ export const createFrequencyCapping = (
   }
 
   return {
+    onSlotRequested(event: googletag.events.ISlotRequestedEvent) {
+      // check if the ad unit path is configured with a requestAds limit
+      resolvedAdUnitPathPositionConfigs
+        .filter(config => config.adUnitPath === event.slot.getAdUnitPath())
+        .forEach(config => {
+          if (config.conditions.adRequestLimit) {
+            // store the number of ad requests for this position
+            const adUnitPath = config.adUnitPath;
+            const currentAdRequests = positionAdRequests.get(adUnitPath) ?? 0;
+            positionAdRequests.set(adUnitPath, currentAdRequests + 1);
+          }
+        });
+    },
     onAuctionEnd(auction: prebidjs.event.AuctionObject) {
       bidRequestedConfigs.forEach(config => {
         auction.bidderRequests?.forEach(bidderRequests => {
@@ -268,6 +284,10 @@ export const createFrequencyCapping = (
       }
     },
 
+    beforeRequestAds() {
+      positionAdRequests.clear();
+    },
+
     afterRequestAds() {
       numAdRequests++;
       persist();
@@ -298,7 +318,11 @@ export const createFrequencyCapping = (
             // cap if the maxImpressions is reached in the current window
             (positionConfig.conditions.pacingInterval &&
               (positionImpSchedules.get(adUnitPath) ?? []).length >=
-                positionConfig.conditions.pacingInterval.maxImpressions)
+                positionConfig.conditions.pacingInterval.maxImpressions) ||
+            // cap if the ad unit path has an ad request limit
+            (positionConfig.conditions.adRequestLimit &&
+              (positionAdRequests.get(adUnitPath) ?? 0) >=
+                positionConfig.conditions.adRequestLimit.maxAdRequests)
           );
         });
     },

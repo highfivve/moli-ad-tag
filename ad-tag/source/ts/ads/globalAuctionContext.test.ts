@@ -88,6 +88,14 @@ describe('Global auction context', () => {
         }
       };
 
+      it('should add slotRequested event listener', () => {
+        makeAuctionContext(auctionContextConfig);
+        expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
+          'slotRequested',
+          sinon.match.func
+        );
+      });
+
       it('should add slotRenderEnded event listener', () => {
         makeAuctionContext(auctionContextConfig);
         expect(googletagAddEventListenerSpy).to.have.been.calledWithExactly(
@@ -106,9 +114,16 @@ describe('Global auction context', () => {
 
       it('should add afterRequestAds event listener', () => {
         makeAuctionContext(auctionContextConfig);
-        expect(eventServiceAddEventListenerSpy).to.have.been.calledOnce;
-        expect(eventServiceAddEventListenerSpy).to.have.been.calledOnceWithExactly(
+        expect(eventServiceAddEventListenerSpy).to.have.been.calledWithExactly(
           'afterRequestAds',
+          sinon.match.func
+        );
+      });
+
+      it('should add beforeRequestAds event listener', () => {
+        makeAuctionContext(auctionContextConfig);
+        expect(eventServiceAddEventListenerSpy).to.have.been.calledWithExactly(
+          'beforeRequestAds',
           sinon.match.func
         );
       });
