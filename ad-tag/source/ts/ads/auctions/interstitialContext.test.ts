@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { googletag } from 'ad-tag/types/googletag';
-import { googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
@@ -21,15 +21,7 @@ describe('InterstitialContext', () => {
 
   // globals
   const { jsDomWindow } = createDomAndWindow();
-
-  // mock the static values for googletag enums
-  jsDomWindow.googletag = {
-    enums: {
-      OutOfPageFormat: {
-        INTERSTITIAL: 5 // OutOfPageFormat.INTERSTITIAL.toString()
-      }
-    }
-  } as any;
+  jsDomWindow.googletag = createGoogletagStub();
 
   // stubs
   const slotGetTargetingStub = sandbox.stub(slot, 'getTargeting');

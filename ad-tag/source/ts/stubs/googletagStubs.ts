@@ -50,18 +50,24 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
 };
 
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
+  const targetingMap: Record<string, string[]> = {};
   const stub: googletag.IAdSlot = {
     clearTargeting(_key?: string): void {
       return;
     },
-    setTargeting: (_key: string, _value: string | string[]): googletag.IAdSlot => {
+    setTargeting: (key: string, value: string | string[]): googletag.IAdSlot => {
+      if (typeof value === 'string') {
+        targetingMap[key] = [value];
+      } else {
+        targetingMap[key] = value;
+      }
       return stub;
     },
-    getTargeting: (_key: string): string[] => {
-      return [];
+    getTargeting: (key: string): string[] => {
+      return targetingMap[key] || [];
     },
     getTargetingKeys(): string[] {
-      return [];
+      return Object.keys(targetingMap);
     },
     setCollapseEmptyDiv: (_doCollapse: boolean, _collapseBeforeAdFetch: boolean): void => {
       return;
