@@ -623,11 +623,6 @@ export namespace auction {
   export type InterstitialChannel = 'gam' | 'c';
 
   /**
-   *
-   */
-  export type CustomInterstitialTrigger = 'eager' | 'manual' | 'navigation';
-
-  /**
    * ## Interstitial Config
    *
    * The global auction context can add additional behaviour to the interstitial ad format through
