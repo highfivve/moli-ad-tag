@@ -1,6 +1,6 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
-import { LazyLoad } from 'ad-tag/ads/modules/lazy-load/index';
+import { createLazyLoad } from 'ad-tag/ads/modules/lazy-load/index';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import { AdSlot, MoliConfig } from 'ad-tag/types/moliConfig';
@@ -193,7 +193,7 @@ describe('Lazy-load Module', () => {
 
   describe('Lazy-slots', () => {
     it('Add configure pipeline step', () => {
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const modulesConfig = {
         lazyload: {
           enabled: true,
@@ -213,7 +213,7 @@ describe('Lazy-load Module', () => {
       const observeSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [domId1], options: {} }],
@@ -244,7 +244,7 @@ describe('Lazy-load Module', () => {
 
       const slots = createAdSlots(jsDomWindow, [domId1, domId2]);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [domId1, domId2], options: {} }],
@@ -276,7 +276,7 @@ describe('Lazy-load Module', () => {
     it('Observe only slots that have a manual behaviour', () => {
       const observeSpy = sandbox.spy(observer, 'observe');
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [domId1, domId2], options: {} }],
@@ -305,7 +305,7 @@ describe('Lazy-load Module', () => {
     it('Every slot should consider its own observer options', () => {
       const slots = createAdSlots(jsDomWindow, ['lazy-1', 'lazy-2']);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [
@@ -346,7 +346,7 @@ describe('Lazy-load Module', () => {
       const oberserveSpy = sandbox.spy(observer, 'observe');
       const slots = createAdSlots(jsDomWindow, [domId1, domId2], 'manual', 'lazy_bucket');
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [],
@@ -380,7 +380,7 @@ describe('Lazy-load Module', () => {
         ...createAdSlots(jsDomWindow, [domId4], 'manual', 'another_lazy_bucket')
       ];
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [],
@@ -430,7 +430,7 @@ describe('Lazy-load Module', () => {
       createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 1);
       createInfiniteAdSlotInDOM(jsDomWindow, infiniteSelector1, 2);
 
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const lazyConfig = {
         enabled: true,
         slots: [{ domIds: [], options: {} }],
@@ -467,7 +467,7 @@ describe('Lazy-load Module', () => {
 
   describe('Delayed Loading', () => {
     const createModule = () => {
-      const module = new LazyLoad();
+      const module = createLazyLoad();
       const modulesConfig = {
         lazyload: { enabled: true, slots: [], buckets: [] }
       };
