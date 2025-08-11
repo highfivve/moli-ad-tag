@@ -39,7 +39,7 @@ type InterstitialState = {
 
 export interface InterstitialContext {
   /**
-   *
+   * INTERNAL: for testing purposes only.
    */
   interstitialState(): InterstitialState;
 
@@ -77,6 +77,12 @@ export interface InterstitialContext {
   onSlotRenderEnded(event: googletag.events.ISlotRenderEndedEvent): void;
 
   /**
+   * Required for google web interstitials to capture if an impression was actually rendered.
+   * The rendered event fires even if the ad was not rendered.
+   */
+  onImpressionViewable(event: googletag.events.IImpressionViewableEvent): void;
+
+  /**
    * Required to check if there are bids for the interstitial ad format.
    *
    * If the custom interstitial has a higher priority than the GAM interstitial, the auction end
@@ -100,28 +106,30 @@ export const isGamInterstitial = (
 
 export const createInterstitialContext = (
   config: auction.InterstitialConfig,
-  window: Window & googletag.IGoogleTagWindow,
+  window__: Window & googletag.IGoogleTagWindow,
   now: NowInstant,
   logger: MoliRuntime.MoliLogger
 ): InterstitialContext => {
   const sessionStorageKey = 'h5v_intstl';
   const sessionStorageTimeToLive = config.ttlStorage ?? 30 * 60 * 1000; // 30 minutes
+  const currentTime = now();
   let interstitialAdUnitPath = config.adUnitPath;
   let currentInterstitialState: InterstitialState = {
     state: 'init',
     channel: config.priority[0] ?? 'gam',
-    updatedAt: now()
+    updatedAt: currentTime
   };
 
   // Load any previous interstitial state from session storage.
   try {
-    const sessionState = window.sessionStorage.getItem(sessionStorageKey);
+    const sessionState = window__.sessionStorage.getItem(sessionStorageKey);
     if (sessionState) {
       const parsedState: InterstitialState = JSON.parse(sessionState);
-
       // Check if the session state is still valid based on the TTL.
-      if (now() - parsedState.updatedAt < sessionStorageTimeToLive) {
+      if (currentTime - parsedState.updatedAt < sessionStorageTimeToLive) {
         currentInterstitialState = parsedState;
+      } else {
+        currentInterstitialState.updatedAt = currentTime;
       }
     }
   } catch (e) {
@@ -155,7 +163,7 @@ export const createInterstitialContext = (
     }
 
     currentInterstitialState.state = 'requested';
-    currentInterstitialState.channel = isGamInterstitial(event.slot, window) ? 'gam' : 'c';
+    currentInterstitialState.channel = isGamInterstitial(event.slot, window__) ? 'gam' : 'c';
     persistInterstitialState();
   };
 
@@ -170,9 +178,22 @@ export const createInterstitialContext = (
     } else {
       // GAM interstitials are rendered on user navigation, so we set the state to 'bid'. It will
       // be updated to 'rendered' once the impression viewable event is fired.
-      currentInterstitialState.state = isGamInterstitial(event.slot, window) ? 'bid' : 'rendered';
+      currentInterstitialState.state = isGamInterstitial(event.slot, window__) ? 'bid' : 'rendered';
     }
     persistInterstitialState();
+  };
+
+  const onImpressionViewable = (event: googletag.events.IImpressionViewableEvent): void => {
+    // early return if the slot is not the interstitial ad unit
+    if (event.slot.getAdUnitPath() !== interstitialAdUnitPath) {
+      return;
+    }
+
+    // update the state to 'rendered' if it was previously 'bid'
+    if (isGamInterstitial(event.slot, window__)) {
+      currentInterstitialState.state = 'rendered';
+      persistInterstitialState();
+    }
   };
 
   // check if there is demand from a prebid auction
@@ -228,6 +249,7 @@ export const createInterstitialContext = (
             // priority: ['gam', 'c'] or ['gam']
             // gam has first priority and has not yet been requested
             hasState('gam', 'not-requested') ||
+            hasState('gam', 'init') ||
             // priority: ['c', 'gam']
             // if gam has second priority and the custom interstitial has no demand
             hasState('c', 'no-bid')
@@ -238,6 +260,7 @@ export const createInterstitialContext = (
             // priority: ['c', 'gam'] or ['c']
             // custom interstitial has first priority and has not yet been requested
             hasState('c', 'not-requested') ||
+            hasState('c', 'init') ||
             // priority: ['gam', 'c']
             // if custom interstitial has second priority and the gam interstitial has no demand
             hasState('gam', 'no-bid')
@@ -252,6 +275,7 @@ export const createInterstitialContext = (
     interstitialChannel,
     onSlotRequested,
     onSlotRenderEnded,
+    onImpressionViewable,
     onAuctionEnd,
     beforeRequestAds,
     interstitialState: (): InterstitialState => {
