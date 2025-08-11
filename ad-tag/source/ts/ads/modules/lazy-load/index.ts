@@ -73,65 +73,57 @@ export type LazyLoadWindow = Window &
     };
   };
 
-/**
- * This module can be used to refresh ads based on slot visibility.
- */
-export class LazyLoad implements IModule {
-  public readonly name: string = 'moli-lazy-load';
-  public readonly description: string = 'Moli implementation of an ad lazy load module.';
-  public readonly moduleType: ModuleType = 'lazy-load';
+/** for testing purposes */
+type LazyLoadModule = {
+  registerIntersectionObservers(
+    context: AdPipelineContext,
+    moduleConfig: modules.lazyload.LazyLoadModuleConfig
+  ): void;
+};
 
-  /**
-   * Prevents multiple initialization, which would ap pend multiple googletag event listeners.
-   */
-  private initialized: boolean = false;
+export const createLazyLoad = (): IModule & LazyLoadModule => {
+  let initialized = false;
+  const observers: IntersectionObserver[] = [];
+  let lazyloadConfig: modules.lazyload.LazyLoadModuleConfig | null = null;
 
-  /**
-   * Preserve observers for garbage collecting in SPA apps
-   */
-  private readonly observers: IntersectionObserver[] = [];
+  const name = 'moli-lazy-load';
+  const description = 'Moli implementation of an ad lazy load module.';
+  const moduleType: ModuleType = 'lazy-load';
 
-  private lazyloadConfig: modules.lazyload.LazyLoadModuleConfig | null = null;
+  const config__ = () => lazyloadConfig;
 
-  config__(): modules.lazyload.LazyLoadModuleConfig | null {
-    return this.lazyloadConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig): void {
+  const configure__ = (moduleConfig?: modules.ModulesConfig) => {
     if (moduleConfig?.lazyload && moduleConfig.lazyload.enabled) {
-      this.lazyloadConfig = moduleConfig.lazyload;
+      lazyloadConfig = moduleConfig.lazyload;
     }
-  }
+  };
 
-  initSteps__(): InitStep[] {
+  const initSteps__ = (): InitStep[] => {
     return [];
-  }
+  };
 
-  configureSteps__(): ConfigureStep[] {
-    const config = this.lazyloadConfig;
+  const configureSteps__ = (): ConfigureStep[] => {
+    const config = lazyloadConfig;
     return config
       ? [
           mkConfigureStepOncePerRequestAdsCycle('lazy-module-configuration', context => {
-            this.initialized = false;
-            // Disconnect all initialized observers at every requestAd(), useful for SPA apps
-            this.observers.forEach(observer => observer.disconnect());
-            this.observers.length = 0;
-            this.registerIntersectionObservers(context, config);
+            initialized = false;
+            observers.forEach(observer => observer.disconnect());
+            observers.length = 0;
+            registerIntersectionObservers(context, config);
             return Promise.resolve();
           })
         ]
       : [];
-  }
+  };
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => {
     return [
-      // this step is always enabled. It does not need any configuration and is only triggered
-      // by external API calls.
       mkPrepareRequestAdsStep('lazy-module-delay', LOW_PRIORITY, (context, slots) => {
         return new Promise((resolve, reject) => {
           const delay = context.options__?.options?.delay;
           if (delay) {
-            context.logger__?.debug(this.name, 'delaying slots', slots);
+            context.logger__?.debug(name, 'delaying slots', slots);
             const delayTrigger = new Promise<boolean>(resolve => {
               context.window__.addEventListener('h5v.trigger-delay', () => resolve(true), {
                 once: true
@@ -140,9 +132,6 @@ export class LazyLoad implements IModule {
             const timeout = new Promise<boolean>(resolve => {
               context.window__.setTimeout(() => resolve(false), delay.timeoutMs ?? 30000);
             });
-            // if the failsafe delay kicks in, we reject the promise and fail the entire ad pipeline
-            // this is to prevent the ad pipeline from hanging indefinitely, most likely creating
-            // memory leaks
             return Promise.race([delayTrigger, timeout]).then(triggered => {
               return triggered ? resolve() : reject(new Error('Delay timeout exceeded'));
             });
@@ -152,17 +141,17 @@ export class LazyLoad implements IModule {
         });
       })
     ];
-  }
+  };
 
-  registerIntersectionObservers = (
+  const registerIntersectionObservers = (
     context: AdPipelineContext,
     moduleConfig: modules.lazyload.LazyLoadModuleConfig
   ) => {
-    if (this.initialized) {
+    if (initialized) {
       return;
     }
-    this.initialized = true;
-    context.logger__?.debug(this.name, 'initialize moli lazy load module');
+    initialized = true;
+    context.logger__?.debug(name, 'initialize moli lazy load module');
 
     const slotsConfig = moduleConfig.slots;
     const bucketsConfig = moduleConfig.buckets;
@@ -172,10 +161,10 @@ export class LazyLoad implements IModule {
     slotsConfig.forEach(config => {
       const observer = new window.IntersectionObserver(
         entries => {
-          context.logger__?.debug(this.name, 'lazy-load slots called with', entries);
+          context.logger__?.debug(name, 'lazy-load slots called with', entries);
           entries.forEach((entry: IntersectionObserverEntry) => {
             if (entry.isIntersecting) {
-              context.logger__?.debug(this.name, `Trigger ad slot with DOM ID ${entry.target.id}`);
+              context.logger__?.debug(name, `Trigger ad slot with DOM ID ${entry.target.id}`);
               window.moli.refreshAdSlot(entry.target.id);
               observer.unobserve(entry.target);
             }
@@ -189,15 +178,15 @@ export class LazyLoad implements IModule {
           rootMargin: config.options.rootMargin
         }
       );
-      this.observers.push(observer);
+      observers.push(observer);
 
       config.domIds.forEach(domId => {
         const slot = context.config__.slots.find(slot => slot.domId === domId);
         if (!slot) {
-          context.logger__?.warn(this.name, `Lazy-load non-existing slot with domID ${domId}`);
+          context.logger__?.warn(name, `Lazy-load non-existing slot with domID ${domId}`);
         } else if (slot.behaviour.loaded !== 'manual') {
           context.logger__?.warn(
-            this.name,
+            name,
             `Lazy-load configured for slot without manual loading behaviour. ${domId}`
           );
         } else if (slot.behaviour.loaded === 'manual') {
@@ -219,7 +208,7 @@ export class LazyLoad implements IModule {
 
               if (correspondingBucket !== config.bucket) {
                 context.logger__?.warn(
-                  this.name,
+                  name,
                   `${config.observedDomId} doesn't belong to ${config.bucket}`
                 );
               } else {
@@ -245,17 +234,14 @@ export class LazyLoad implements IModule {
           rootMargin: config.options.rootMargin
         }
       );
-      this.observers.push(observer);
+      observers.push(observer);
 
       if (!context.config__.buckets?.enabled) {
-        context.logger__?.warn(this.name, "GlobalBucket config isn't enabled");
+        context.logger__?.warn(name, "GlobalBucket config isn't enabled");
       }
 
       if (!(context.config__.buckets?.bucket && context.config__.buckets.bucket[config.bucket])) {
-        context.logger__?.error(
-          this.name,
-          `Lazy-load non-existing bucket with name ${config.bucket}`
-        );
+        context.logger__?.error(name, `Lazy-load non-existing bucket with name ${config.bucket}`);
       } else {
         const elementToObserve = window.document.getElementById(config.observedDomId);
         elementToObserve && observer.observe(elementToObserve);
@@ -280,14 +266,14 @@ export class LazyLoad implements IModule {
                   const createdDomId = `${configuredInfiniteSlot.domId}-${serialNumber}`;
                   entry.target.setAttribute('id', createdDomId);
                   context.logger__?.debug(
-                    this.name,
+                    name,
                     `Trigger ad slot with newly created DOM ID ${createdDomId}`
                   );
                   window.moli.refreshInfiniteAdSlot(createdDomId, configuredInfiniteSlot.domId);
                   observer.unobserve(entry.target);
                 } else {
                   context.logger__?.error(
-                    this.name,
+                    name,
                     `No infinite-scrolling slot configured for ${configSlotDomId}`
                   );
                   observer.unobserve(entry.target);
@@ -303,7 +289,7 @@ export class LazyLoad implements IModule {
             rootMargin: config.options.rootMargin
           }
         );
-        this.observers.push(observer);
+        observers.push(observer);
 
         const infiniteElements = window.document.querySelectorAll(config.selector);
         infiniteElements.forEach((element, index) => {
@@ -311,8 +297,20 @@ export class LazyLoad implements IModule {
           element && observer.observe(element);
         });
       } else {
-        context.logger__?.warn(this.name, `No infinite-scrolling slots configured!`);
+        context.logger__?.warn(name, `No infinite-scrolling slots configured!`);
       }
     });
   };
-}
+
+  return {
+    name,
+    description,
+    moduleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__,
+    registerIntersectionObservers
+  };
+};
