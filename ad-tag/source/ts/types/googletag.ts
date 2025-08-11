@@ -474,7 +474,7 @@ export namespace googletag {
     /**
      * @see https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat
      */
-    export enum OutOfPageFormat {
+    export const enum OutOfPageFormat {
       TOP_ANCHOR = 2,
       BOTTOM_ANCHOR = 3,
       REWARDED = 4,

@@ -1,5 +1,4 @@
-www/moli.mjs
-www/moli.mjs.map
-www/console.js
-www/console.js.map
+www/moli.mjs*
+www/console.js*
 www/console.mjs.map
+www/moli.css*

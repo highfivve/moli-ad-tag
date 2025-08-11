@@ -32,5 +32,9 @@
     // live reload: https://esbuild.github.io/api/#live-reload
     new EventSource('/esbuild').addEventListener('change', () => location.reload())
   </script>
+  <div class="h5v-interstitial--container">
+    <button class="h5v-interstitial--close">&#x2715;</button>
+    <div class="h5v-interstitial" id="interstitial"></div>
+  </div>
 </body>
 </html>

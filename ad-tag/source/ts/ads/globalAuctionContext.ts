@@ -8,6 +8,7 @@ import { createPreviousBidCpms, PreviousBidCpms } from './auctions/previousBidCp
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
+import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialContext';
 
 /**
  * ## Global Auction Context
@@ -32,6 +33,9 @@ export interface GlobalAuctionContext {
   isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean;
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean;
+
+  interstitialChannel(): auction.InterstitialChannel | null | undefined;
+
   configureStep(): ConfigureStep;
 }
 
@@ -58,6 +62,10 @@ export const createGlobalAuctionContext = (
 
   const previousBidCpms = config.previousBidCpms?.enabled ? createPreviousBidCpms() : undefined;
 
+  const interstitial = config.interstitial?.enabled
+    ? createInterstitialContext(config.interstitial, window, window.Date.now, logger)
+    : undefined;
+
   // Ensure pbjs and googletag are initialized
   window.pbjs = window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
   window.googletag = window.googletag || ({} as unknown as googletag.IGoogleTag);
@@ -67,19 +75,17 @@ export const createGlobalAuctionContext = (
   if (
     config.biddersDisabling?.enabled ||
     config.previousBidCpms?.enabled ||
-    config.frequencyCap?.enabled
+    config.frequencyCap?.enabled ||
+    config.interstitial?.enabled
   ) {
     window.pbjs.que.push(() => {
       window.pbjs.onEvent('auctionEnd', auction => {
-        if (config.biddersDisabling?.enabled) {
-          biddersDisabling?.onAuctionEnd(auction);
-        }
+        biddersDisabling?.onAuctionEnd(auction);
+        interstitial?.onAuctionEnd(auction);
         if (config.previousBidCpms?.enabled && auction.bidsReceived) {
           previousBidCpms?.onAuctionEnd(auction.bidsReceived);
         }
-        if (config.frequencyCap?.enabled) {
-          frequencyCapping?.onAuctionEnd(auction);
-        }
+        frequencyCapping?.onAuctionEnd(auction);
       });
     });
   }
@@ -101,17 +107,20 @@ export const createGlobalAuctionContext = (
       });
     });
 
+    eventService.addEventListener('afterRequestAds', () => {
+      frequencyCapping?.afterRequestAds();
+    });
+  }
+
+  if (config.frequencyCap?.enabled || config.interstitial?.enabled) {
     window.googletag.cmd.push(() => {
       window.googletag.pubads().addEventListener('slotRenderEnded', event => {
         frequencyCapping?.onSlotRenderEnded(event);
+        interstitial?.onSlotRenderEnded(event);
       });
       window.googletag.pubads().addEventListener('impressionViewable', event => {
         frequencyCapping?.onImpressionViewable(event);
       });
-    });
-
-    eventService.addEventListener('afterRequestAds', () => {
-      frequencyCapping?.afterRequestAds();
     });
   }
 
@@ -134,6 +143,9 @@ export const createGlobalAuctionContext = (
     },
     isBidderDisabled(domId: string, bidder: prebidjs.BidderCode): boolean {
       return biddersDisabling?.isBidderDisabled(domId, bidder) ?? false;
+    },
+    interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
+      return interstitial?.interstitialChannel();
     },
     configureStep(): ConfigureStep {
       return configureStep;
