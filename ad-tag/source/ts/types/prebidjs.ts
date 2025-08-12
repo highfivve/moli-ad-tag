@@ -935,6 +935,7 @@ export namespace prebidjs {
       | IIdentityLinkProvider
       | IPubCommonIdProvider
       | IZeotapIdPlusIdProvider
+      | ITaboolaIdProvider
       | IUtiqIdProvider
       | IUtiqMtpIdProvider
       | ISharedIdProvider
@@ -1182,6 +1183,8 @@ export namespace prebidjs {
        */
       readonly maxDelayTime?: number;
     }
+
+    export interface ITaboolaIdProvider extends IUserIdProvider<'taboolaId'> {}
 
     /**
      * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
@@ -3850,6 +3853,7 @@ export namespace prebidjs {
   export const Smartx = 'smartx';
   export const SmileWanted = 'smilewanted';
   export const Unruly = 'unruly';
+  export const Taboola = 'taboola';
   export const Teads = 'teads';
   export const TheTradeDesk = 'ttd';
   export const Triplelift = 'triplelift';
@@ -3896,6 +3900,7 @@ export namespace prebidjs {
     | typeof Smartx
     | typeof SmileWanted
     | typeof Unruly
+    | typeof Taboola
     | typeof Teads
     | typeof TheTradeDesk
     | typeof Triplelift
@@ -5251,6 +5256,59 @@ export namespace prebidjs {
   export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/taboola.html
+   */
+  export interface ITaboolaParams {
+    /**
+     * Tag ID / Unique Placement Name
+     * @example `'Below The Article'`
+     */
+    readonly tagId: string;
+
+    /**
+     * Numeric Publisher ID (as provided by Taboola)
+     * @example `'1234567'`
+     */
+    readonly publisherId: string;
+
+    /**
+     * Kind of content present in the page. Recommended.
+     * @example `'homepage'`
+     */
+    readonly pageType?: string;
+
+    /**
+     * NOTE: this information is also present in `mediaTypes.banner.pos`.
+     *       however taboola is not using that field, but rather the `position` field in
+     *       its own `params` object.
+     *
+     * OpenRTB page position value:
+     *
+     * - 0=unknown
+     * - 1=above-the-fold
+     * - 3=below-the-fold
+     * - 4=header
+     * - 5=footer
+     * - 6=sidebar
+     * - 7=full-screen
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    readonly position?: 0 | 1 | 3 | 4 | 5 | 6 | 7;
+
+    /**
+     * Publisher Domain (server-side adapter only)
+     * @example `'example.com'`
+     */
+    readonly publisherDomain?: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/taboola.html
+   */
+  export interface ITaboolaBid extends IBidObject<typeof Taboola, ITaboolaParams> {}
+
+  /**
    * Teads bid parameters
    *
    * @see https://prebid.org/dev-docs/bidders#teads
@@ -5865,6 +5923,7 @@ export namespace prebidjs {
     | ISmartAdServerBid
     | ISmartxBid
     | IUnrulyBid
+    | ITaboolaBid
     | ITeadsBid
     | ITheTradeDeskBid
     | ITripleliftBid
