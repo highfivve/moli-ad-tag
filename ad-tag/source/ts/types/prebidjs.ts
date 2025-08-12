@@ -354,6 +354,32 @@ export namespace prebidjs {
   }
 
   /**
+   * ## Global NextMillennium configuration
+   *
+   * This extends the [[IPrebidJsConfig]] with NextMillennium specific configuration options.
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
+   */
+  interface INextMillenniumConfig {
+    /**
+     * The disabledSendingStatisticData parameter disables sending statistics data to the
+     * nextMillennium server, such as bidRequested, bidResponse, noBid and bidTimeout events.
+     *
+     * An example of enabling this option:
+     *
+     * ```javascript
+     * pbjs.setBidderConfig({
+     *   bidders: ['nextMillennium'],
+     *   config: {
+     *     disabledSendingStatisticData: true,
+     *   },
+     * })
+     * ```
+     */
+    readonly disabledSendingStatisticData?: boolean;
+  }
+
+  /**
    *
    * The `targetingControls` object passed to `pbjs.setConfig` provides some options to influence how an auction’s
    * targeting keys are generated and managed.
@@ -908,6 +934,7 @@ export namespace prebidjs {
       | IIdentityLinkProvider
       | IPubCommonIdProvider
       | IZeotapIdPlusIdProvider
+      | ITaboolaIdProvider
       | IUtiqIdProvider
       | IUtiqMtpIdProvider
       | ISharedIdProvider
@@ -1155,6 +1182,8 @@ export namespace prebidjs {
        */
       readonly maxDelayTime?: number;
     }
+
+    export interface ITaboolaIdProvider extends IUserIdProvider<'taboolaId'> {}
 
     /**
      * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
@@ -2332,7 +2361,8 @@ export namespace prebidjs {
     extends IImproveDigitalConfig,
       IRubiconConfig,
       IIndexExchangeConfig,
-      IAdagioConfig {
+      IAdagioConfig,
+      INextMillenniumConfig {
     /**
      * Turn on debugging
      */
@@ -3704,21 +3734,26 @@ export namespace prebidjs {
   export const Adform = 'adf';
   export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
+  export const CWire = 'cwire';
   export const ConnectAd = 'connectad';
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
   export const GumGum = 'gumgum';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
+  export const InMobi = 'inmobi';
   export const Invibes = 'invibes';
   export const NanoInteractive = 'nanointeractive';
+  export const NextMillennium = 'nextMillennium';
   export const PubMatic = 'pubmatic';
   export const Ogury = 'ogury';
   export const OneTag = 'onetag';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
   export const Smartx = 'smartx';
+  export const SmileWanted = 'smilewanted';
   export const Unruly = 'unruly';
+  export const Taboola = 'taboola';
   export const Teads = 'teads';
   export const TheTradeDesk = 'ttd';
   export const Triplelift = 'triplelift';
@@ -3747,20 +3782,25 @@ export namespace prebidjs {
     | typeof Adform
     | typeof ConnectAd
     | typeof Criteo
+    | typeof CWire
     | typeof AppNexusAst
     | typeof AppNexus
     | typeof GumGum
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof Invibes
+    | typeof InMobi
     | typeof NanoInteractive
+    | typeof NextMillennium
     | typeof PubMatic
     | typeof Ogury
     | typeof OneTag
     | typeof OpenX
     | typeof SmartAdServer
     | typeof Smartx
+    | typeof SmileWanted
     | typeof Unruly
+    | typeof Taboola
     | typeof Teads
     | typeof TheTradeDesk
     | typeof Triplelift
@@ -4063,6 +4103,25 @@ export namespace prebidjs {
   }
 
   export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/cwire.html
+   */
+  export interface ICWireParams {
+    /**
+     * C-WIRE page id (compatibility purposes)
+     */
+    readonly domainId: number;
+
+    readonly pageId?: number;
+
+    readonly placementId?: number;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/cwire.html
+   */
+  export interface ICwireBid extends IBidObject<typeof CWire, ICWireParams> {}
 
   export interface IAppNexusASTKeyword {
     [key: string]: string[];
@@ -4602,6 +4661,20 @@ export namespace prebidjs {
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
 
   /**
+   * InMobi bid parameters.
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/inmobi.html
+   */
+  export interface IInMobiParams {
+    readonly plc: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/inmobi.html
+   */
+  export interface IInMobiBid extends IBidObject<typeof InMobi, IInMobiParams> {}
+
+  /**
    * NanoInteractive bid parameters.
    *
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/nanointeractiveBidAdapter.js
@@ -4626,6 +4699,31 @@ export namespace prebidjs {
    */
   export interface INanoInteractiveBid
     extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
+
+  /**
+   * Required one of the two parameters placement_id or group_id.
+   *
+   * Further information for the auction on NextMillennium side is generated automatically.
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
+   */
+  export interface INextMillenniumParams {
+    /**
+     * Required if group_id is not set.
+     */
+    readonly placement_id?: string;
+
+    /**
+     * Required if placement_id is not set.
+     */
+    readonly group_id?: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
+   */
+  export interface INextMillenniumBid
+    extends IBidObject<typeof NextMillennium, INextMillenniumParams> {}
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
@@ -5021,6 +5119,18 @@ export namespace prebidjs {
   export interface ISmartxBid extends IBidObject<typeof Smartx, ISmartxParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/smilewanted.html
+   */
+  export interface ISmileWantedParams {
+    readonly zoneId: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/smilewanted.html
+   */
+  export interface ISmileWantedBid extends IBidObject<typeof SmileWanted, ISmileWantedParams> {}
+
+  /**
    * Unruly bid parameters
    *
    * @see https://docs.prebid.org/dev-docs/bidders/unruly.html
@@ -5032,17 +5142,71 @@ export namespace prebidjs {
     readonly siteId: number;
 
     /**
-     * The targeting UUID from Unruly.
-     *
-     * @deprecated this field is still marked as required in the docs, but is never used nor provided by unruly
+     * This param is a generic object for configuring Unruly outstream demand. To run UNmissable,
+     * set ‘canRunUnmissable’ to true.
      */
-    readonly targetingUUID?: string;
+    readonly featureOverrides?: {
+      readonly canRunUnmissable?: boolean;
+    };
   }
 
   /**
    * Unruly bid object
    */
   export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/taboola.html
+   */
+  export interface ITaboolaParams {
+    /**
+     * Tag ID / Unique Placement Name
+     * @example `'Below The Article'`
+     */
+    readonly tagId: string;
+
+    /**
+     * Numeric Publisher ID (as provided by Taboola)
+     * @example `'1234567'`
+     */
+    readonly publisherId: string;
+
+    /**
+     * Kind of content present in the page. Recommended.
+     * @example `'homepage'`
+     */
+    readonly pageType?: string;
+
+    /**
+     * NOTE: this information is also present in `mediaTypes.banner.pos`.
+     *       however taboola is not using that field, but rather the `position` field in
+     *       its own `params` object.
+     *
+     * OpenRTB page position value:
+     *
+     * - 0=unknown
+     * - 1=above-the-fold
+     * - 3=below-the-fold
+     * - 4=header
+     * - 5=footer
+     * - 6=sidebar
+     * - 7=full-screen
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    readonly position?: 0 | 1 | 3 | 4 | 5 | 6 | 7;
+
+    /**
+     * Publisher Domain (server-side adapter only)
+     * @example `'example.com'`
+     */
+    readonly publisherDomain?: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/taboola.html
+   */
+  export interface ITaboolaBid extends IBidObject<typeof Taboola, ITaboolaParams> {}
 
   /**
    * Teads bid parameters
@@ -5643,11 +5807,13 @@ export namespace prebidjs {
     | IAdUpBid
     | IConnectAdBid
     | ICriteoBid
+    | ICwireBid
     | IAppNexusASTBid
     | IGumGumBid
     | IImproveDigitalBid
     | IIndexExchangeBid
     | IInvibesBid
+    | IInMobiBid
     | INanoInteractiveBid
     | IPrebidServerBid
     | IPubMaticBid
@@ -5657,6 +5823,7 @@ export namespace prebidjs {
     | ISmartAdServerBid
     | ISmartxBid
     | IUnrulyBid
+    | ITaboolaBid
     | ITeadsBid
     | ITheTradeDeskBid
     | ITripleliftBid
