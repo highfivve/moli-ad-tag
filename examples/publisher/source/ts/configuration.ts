@@ -85,12 +85,11 @@ const criteoBid = (adUnitName: string, labelAllAdditional: Array<string>): prebi
   labelAll: [prebidjs.Criteo, ...labelAllAdditional]
 });
 
-const unrulyBid = (siteId: number, targetingUUID: string): prebidjs.IUnrulyBid => {
+const unrulyBid = (siteId: number): prebidjs.IUnrulyBid => {
   return {
     bidder: prebidjs.Unruly,
     params: {
-      siteId,
-      targetingUUID
+      siteId
     },
     labelAll: [prebidjs.Unruly, 'purpose-1']
   };
@@ -691,7 +690,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
             },
             bids: [
               // Unruly test placement
-              unrulyBid(1081534, '6f15e139-5f18-49a1-b52f-87e5e69ee65e'),
+              unrulyBid(1081534),
               // SpotX test placement
               spotxBid('85394', 'ad-content-1'),
               // Teads fallback placements
@@ -898,7 +897,7 @@ export const adConfiguration = (moliVersion: string): Moli.MoliConfig => ({
             },
             bids: [
               // Unruly test placement
-              unrulyBid(1081534, '6f15e139-5f18-49a1-b52f-87e5e69ee65e'),
+              unrulyBid(1081534),
               // SpotX test placement
               spotxBid('85394', 'prebid-adslot'),
               // Teads fallback placements
