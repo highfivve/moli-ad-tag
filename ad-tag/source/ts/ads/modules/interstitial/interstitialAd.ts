@@ -1,6 +1,7 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
+import { getBrowserStorageValue } from 'ad-tag/util/localStorage';
 
 const interstitialContainerSelector = '.h5v-interstitial--container';
 const interstitialCloseButtonSelector = '.h5v-interstitial--close';
@@ -133,27 +134,21 @@ export const initInterstitialModule = (
 
     // hide interstitial for advertisers with custom creative
     if (env === 'production') {
-      if (interstitialDomId) {
-        const interstitialOnLoadEventPromise = interstitialOnLoadEvent(interstitialDomId, window);
+      const interstitialOnLoadEventPromise = interstitialOnLoadEvent(interstitialDomId, window);
 
-        interstitialRenderedEvent(interstitialDomId, disallowedAdvertiserIds, window)
-          .then(result =>
-            result === 'empty' || result === 'disallowed'
-              ? Promise.resolve(result)
-              : interstitialOnLoadEventPromise.then(() => result)
-          )
-          .then(onRenderResult);
-      } else {
-        log.warn(
-          '[interstitial-module]',
-          `Could not find interstitial container ${interstitialContainerSelector} or closeButton ${interstitialCloseButtonSelector}`,
-          interstitial,
-          closeButton
-        );
-      }
-    } else {
-      // fake a render event
+      interstitialRenderedEvent(interstitialDomId, disallowedAdvertiserIds, window)
+        .then(result =>
+          result === 'empty' || result === 'disallowed'
+            ? Promise.resolve(result)
+            : interstitialOnLoadEventPromise.then(() => result)
+        )
+        .then(onRenderResult);
+    } else if (!!getBrowserStorageValue('test-interstitial', localStorage)) {
+      // fake a render event if test mode for interstitial is enabled
       onRenderResult('standard');
+    } else {
+      // if env is not production and test mode for interstitial is not enabled, we treat it as empty (hidden)
+      onRenderResult('empty');
     }
   } else {
     log.warn(

@@ -39,6 +39,11 @@ import { QueryParameters } from 'ad-tag/util/queryParameters';
 import { BrowserStorageKeys } from 'ad-tag/util/browserStorageKeys';
 import { calculateAdDensity } from 'ad-tag/console/util/calculateAdDensity';
 import { extractPositionFromPath } from 'ad-tag/console/util/extractPositionFromPath';
+import {
+  getBrowserStorageValue,
+  removeBrowserStorageValue,
+  setBrowserStorageValue
+} from 'ad-tag/util/localStorage';
 
 declare const window: Window &
   prebidjs.IPrebidjsWindow &
@@ -240,6 +245,8 @@ export class GlobalConfig
     const classes = classList('MoliDebug-sidebar', [sidebarHidden, 'is-hidden']);
     const showHideMessage = `${sidebarHidden ? 'Show' : 'Hide'} moli global config panel`;
     const isEnvironmentOverridden = !!getActiveEnvironmentOverride(window);
+    const interstitialTestKey = 'test-interstitial';
+    const isInterstitialTestEnabled = !!getBrowserStorageValue(interstitialTestKey, localStorage);
     const debugDelay = getDebugDelayFromLocalStorage(window);
     const isDarkTheme = theme === 'dark';
     const switchToDarkTheme = () => this.setTheme('dark');
@@ -321,7 +328,7 @@ export class GlobalConfig
               {expandSection.moli && (
                 <div>
                   <div className="MoliDebug-tagContainer">
-                    <TagLabel>Mode</TagLabel>
+                    <TagLabel>Overall Mode</TagLabel>
                     {runtimeConfig.environment === 'test' ? (
                       <Tag variant="yellow">Test</Tag>
                     ) : (
@@ -341,6 +348,36 @@ export class GlobalConfig
                       >
                         ▶ Override to test
                       </button>
+                    )}
+                  </div>
+                  <div className="MoliDebug-tagContainer">
+                    <TagLabel>Interstitital Test Mode</TagLabel>
+                    {isInterstitialTestEnabled ? (
+                      <button
+                        className="MoliDebug-button MoliDebug-button--green"
+                        onClick={() => {
+                          removeBrowserStorageValue(interstitialTestKey, localStorage);
+                          window.location.reload();
+                        }}
+                      >
+                        ◀ Reset interstitial test
+                      </button>
+                    ) : (
+                      <button
+                        className={`MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText ${!isEnvironmentOverridden ? 'MoliDebug-button--disabled' : ''}`}
+                        onClick={() => {
+                          setBrowserStorageValue(interstitialTestKey, 'true', localStorage);
+                          window.location.reload();
+                        }}
+                        disabled={!isEnvironmentOverridden}
+                      >
+                        ▶ Test interstitial
+                      </button>
+                    )}
+                    {!isEnvironmentOverridden && (
+                      <p className="MoliDebug-info">
+                        ❗️Please activate overall test mode before testing the interstitial.
+                      </p>
                     )}
                   </div>
                   <div className="MoliDebug-tagContainer">
@@ -372,8 +409,6 @@ export class GlobalConfig
                     >
                       ▶ Reset all test slot sizes
                     </button>
-                    <br />
-                    <br />
                   </div>
                   {modules && (
                     <>

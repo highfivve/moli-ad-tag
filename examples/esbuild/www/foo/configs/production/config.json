@@ -68,7 +68,7 @@
       "behaviour": {
         "loaded": "eager"
       },
-      "position": "in-page",
+      "position": "out-of-page-interstitial",
       "sizes": [[300,250], [336, 280], [480, 320], [640, 480]],
       "sizeConfig": [
         {
