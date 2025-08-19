@@ -160,6 +160,11 @@
         "pageCat": "openrtb_page_cat",
         "sectionCat": "openrtb_page_cat"
       }
+    },
+    "interstitial": {
+      "enabled": true,
+      "interstitialDomId": "interstitial",
+      "disallowedAdvertiserIds": [ 123, 456, 678 ]
     }
   }
 }

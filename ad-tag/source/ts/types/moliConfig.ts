@@ -2723,6 +2723,19 @@ export namespace modules {
     }
   }
 
+  export namespace interstitial {
+    export type InterstitialModuleConfig = {
+      readonly enabled: boolean;
+      readonly interstitialDomId: string;
+
+      /**
+       * Disable rendering the interstitial ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       */
+      readonly disallowedAdvertiserIds: number[];
+    };
+  }
+
   export interface ModulesConfig {
     readonly adex?: adex.AdexConfig;
     readonly adReload?: adreload.AdReloadModuleConfig;
@@ -2743,6 +2756,7 @@ export namespace modules {
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
     readonly zeotap?: zeotap.ZeotapModuleConfig;
+    readonly interstitial?: interstitial.InterstitialModuleConfig;
   }
 }
 
