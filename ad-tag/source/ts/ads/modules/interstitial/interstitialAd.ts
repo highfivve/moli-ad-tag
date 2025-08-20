@@ -132,23 +132,30 @@ export const initInterstitialModule = (
       return Promise.resolve();
     };
 
-    // hide interstitial for advertisers with custom creative
-    if (env === 'production') {
-      const interstitialOnLoadEventPromise = interstitialOnLoadEvent(interstitialDomId, window);
+    switch (env) {
+      case 'production':
+        const interstitialOnLoadEventPromise = interstitialOnLoadEvent(interstitialDomId, window);
 
-      interstitialRenderedEvent(interstitialDomId, disallowedAdvertiserIds, window)
-        .then(result =>
-          result === 'empty' || result === 'disallowed'
-            ? Promise.resolve(result)
-            : interstitialOnLoadEventPromise.then(() => result)
-        )
-        .then(onRenderResult);
-    } else if (!!getBrowserStorageValue('test-interstitial', localStorage)) {
-      // fake a render event if test mode for interstitial is enabled
-      onRenderResult('standard');
-    } else {
-      // if env is not production and test mode for interstitial is not enabled, we treat it as empty (hidden)
-      onRenderResult('empty');
+        interstitialRenderedEvent(interstitialDomId, disallowedAdvertiserIds, window)
+          .then(result =>
+            result === 'empty' || result === 'disallowed'
+              ? Promise.resolve(result)
+              : interstitialOnLoadEventPromise.then(() => result)
+          )
+          .then(onRenderResult);
+        break;
+      case 'test':
+        if (!!getBrowserStorageValue('test-interstitial', localStorage)) {
+          // if test mode for interstitial is enabled, fake a render event
+          onRenderResult('standard');
+        } else {
+          // if test mode for interstitial is not enabled, we treat it as empty (hidden)
+          onRenderResult('empty');
+        }
+        break;
+      default:
+        log.warn(interstitial, `Unknown environment: ${env}`);
+        break;
     }
   } else {
     log.warn(
