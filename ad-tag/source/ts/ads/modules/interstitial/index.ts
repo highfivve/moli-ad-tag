@@ -53,7 +53,8 @@ export class InterstitialModule implements IModule {
                 ctx.env__,
                 ctx.logger__,
                 interstitialSlot.moliSlot.domId,
-                config.disallowedAdvertiserIds
+                config.disallowedAdvertiserIds,
+                config.closeAutomaticallyAfterMs
               );
             }
             return Promise.resolve();

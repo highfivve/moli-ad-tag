@@ -69,6 +69,8 @@ const hideAdSlot = (element: HTMLElement): void => {
 const showAdSlot = (element: HTMLElement): void => {
   element.classList.remove(interstitialHidingClass);
 };
+
+let timeoutToBeClearedWhenModuleIsInitialized: number | undefined;
 /**
  * ## Interstitial
  *
@@ -79,8 +81,12 @@ export const initInterstitialModule = (
   env: Environment,
   log: MoliRuntime.MoliLogger,
   interstitialDomId: string,
-  disallowedAdvertiserIds: number[]
+  disallowedAdvertiserIds: number[],
+  closeAutomaticallyAfterMs?: number
 ): void => {
+  // clear the timeout that was set during the last initialization
+  clearTimeout(timeoutToBeClearedWhenModuleIsInitialized);
+
   const interstitial = 'interstitial-module';
 
   const interstitialAdContainer = window.document.querySelector<HTMLElement>(
@@ -91,7 +97,7 @@ export const initInterstitialModule = (
   if (closeButton && interstitialAdContainer) {
     log.debug(interstitial, 'Running interstitial module with defined container and close button');
 
-    closeButton.addEventListener('click', () => {
+    const closeInterstitial = () => {
       hideAdSlot(interstitialAdContainer);
 
       const slot = window.googletag
@@ -102,6 +108,10 @@ export const initInterstitialModule = (
       if (slot) {
         window.googletag.destroySlots([slot]);
       }
+    };
+
+    closeButton.addEventListener('click', () => {
+      closeInterstitial();
     });
 
     const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {
@@ -117,6 +127,12 @@ export const initInterstitialModule = (
         return Promise.resolve();
       } else if (renderResult === 'standard') {
         showAdSlot(interstitialAdContainer);
+
+        if (closeAutomaticallyAfterMs) {
+          timeoutToBeClearedWhenModuleIsInitialized = window.setTimeout(() => {
+            closeInterstitial();
+          }, closeAutomaticallyAfterMs);
+        }
 
         // if it's a standard render then create a new listener set and
         // wait for the results

@@ -2733,6 +2733,11 @@ export namespace modules {
        * Most of the time you would use this for partners who ship their own special format or behaviour.
        */
       readonly disallowedAdvertiserIds: number[];
+
+      /**
+       * Interstitial is automatically closed after a certain time.
+       */
+      readonly closeAutomaticallyAfterMs?: number;
     };
   }
 
