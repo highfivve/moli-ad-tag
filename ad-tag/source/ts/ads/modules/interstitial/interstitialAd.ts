@@ -3,8 +3,8 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
 import { getBrowserStorageValue } from 'ad-tag/util/localStorage';
 
-const interstitialContainerSelector = '.h5v-interstitial--container';
-const interstitialCloseButtonSelector = '.h5v-interstitial--close';
+const interstitialContainerSelector = '[data-ref="h5v-interstitial"]';
+const interstitialCloseButtonSelector = '[data-ref="h5v-interstitial-close"]';
 const interstitialHidingClass = 'h5v-interstitial--hidden';
 
 /**
