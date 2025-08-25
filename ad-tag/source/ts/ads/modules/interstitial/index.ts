@@ -21,52 +21,49 @@ import { initInterstitialModule } from 'ad-tag/ads/modules/interstitial/intersti
  *
  * @module
  */
-export class InterstitialModule implements IModule {
-  public readonly name: string = 'interstitial-module';
-  public readonly description: string = 'interstitial ad creatives';
-  public readonly moduleType: ModuleType = 'creatives';
+export const createInterstitialModule = (): IModule => {
+  let interstitialModuleConfig: modules.interstitial.InterstitialModuleConfig | null = null;
 
-  private interstitialModuleConfig: modules.interstitial.InterstitialModuleConfig | null = null;
-
-  config__(): Object | null {
-    return this.interstitialModuleConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
-    if (moduleConfig?.interstitial && moduleConfig.interstitial.enabled) {
-      this.interstitialModuleConfig = moduleConfig.interstitial;
-    }
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    const config = this.interstitialModuleConfig;
-    return config
-      ? [
-          mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-            const interstitialSlot = slots.find(
-              slot => slot.moliSlot.domId === config.interstitialDomId
-            );
-
-            if (interstitialSlot) {
-              initInterstitialModule(
-                ctx.window__,
-                ctx.env__,
-                ctx.logger__,
-                interstitialSlot.moliSlot.domId,
-                config.disallowedAdvertiserIds,
-                config.closeAutomaticallyAfterMs
+  return {
+    name: 'interstitial-module',
+    description: 'interstitial ad creatives',
+    moduleType: 'creatives' as ModuleType,
+    config__(): Object | null {
+      return interstitialModuleConfig;
+    },
+    configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
+      if (moduleConfig?.interstitial && moduleConfig.interstitial.enabled) {
+        interstitialModuleConfig = moduleConfig.interstitial;
+      }
+    },
+    prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+      const config = interstitialModuleConfig;
+      return config
+        ? [
+            mkPrepareRequestAdsStep('interstitial-module', LOW_PRIORITY, (ctx, slots) => {
+              const interstitialSlot = slots.find(
+                slot => slot.moliSlot.domId === config.interstitialDomId
               );
-            }
-            return Promise.resolve();
-          })
-        ]
-      : [];
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
-  initSteps__(): InitStep[] {
-    return [];
-  }
-}
+              if (interstitialSlot) {
+                initInterstitialModule(
+                  ctx.window__,
+                  ctx.env__,
+                  ctx.logger__,
+                  interstitialSlot.moliSlot.domId,
+                  config.disallowedAdvertiserIds,
+                  config.closeAutomaticallyAfterMs
+                );
+              }
+              return Promise.resolve();
+            })
+          ]
+        : [];
+    },
+    configureSteps__(): ConfigureStep[] {
+      return [];
+    },
+    initSteps__(): InitStep[] {
+      return [];
+    }
+  };
+};

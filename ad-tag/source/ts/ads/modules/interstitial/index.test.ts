@@ -10,7 +10,8 @@ import { initInterstitialModule } from './interstitialAd';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { AdSlot, MoliConfig } from 'ad-tag/types/moliConfig';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { InterstitialModule } from 'ad-tag/ads/modules/interstitial/index';
+import { createInterstitialModule } from 'ad-tag/ads/modules/interstitial/index';
+import { IModule } from 'ad-tag/types/module';
 
 // setup sinon-chai
 use(sinonChai);
@@ -27,7 +28,7 @@ const createAndConfigureModule = (
   interstitialDomId: string,
   disallowedAdvertiserIds: number[] = []
 ) => {
-  const module = new InterstitialModule();
+  const module = createInterstitialModule();
   module.configure__({
     interstitial: {
       enabled: true,
@@ -46,7 +47,7 @@ const createInitializedModule = (
   slots: AdSlot[] = []
 ): {
   prepareSteps: PrepareRequestAdsStep;
-  module: InterstitialModule;
+  module: IModule;
   config: MoliConfig;
 } => {
   const config = newEmptyConfig(slots);
