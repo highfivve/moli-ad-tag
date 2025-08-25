@@ -490,8 +490,6 @@ const checkAndSwitchToWebInterstitial = (
         context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL
       );
       if (gamWebInterstitial) {
-        console.log('GAM', 'Display out-of-page-interstitial slot');
-
         // this little dance is annoying - refresh is done afterwards
         gamWebInterstitial.addService(context.window.googletag.pubads());
         context.window.googletag.display(gamWebInterstitial);
