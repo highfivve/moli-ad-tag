@@ -60,6 +60,10 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
   },
   getResponseInformation(): null | googletag.IResponseInformation {
     return null;
+  },
+
+  setConfig(_config: googletag.GptSlotSettingsConfig) {
+    return;
   }
 });
 
@@ -469,6 +473,13 @@ export const gptDefineSlots =
       switch (context.env__) {
         case 'production':
           if (adSlot) {
+            if (moliSlot.gpt) {
+              adSlot.setConfig(moliSlot.gpt);
+              context.logger__.debug(
+                'GAM',
+                `Add slot settings: [AdSlot] ${adSlot} [Settings] ${moliSlot.gpt}`
+              );
+            }
             adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
             adSlot.addService(context.window__.googletag.pubads());
             context.logger__.debug(

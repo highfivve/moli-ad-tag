@@ -470,6 +470,49 @@ export namespace googletag {
     };
   };
 
+  /**
+   * Collapsing behavior of the ad slot:
+   *
+   * null (default): The slot will not be collapsed.
+   * DISABLED: The slot will not collapse, whether or not an ad is returned.
+   * BEFORE_FETCH: The slot will start out collapsed, and expand when an ad is returned.
+   * ON_NO_FILL: The slot will start out expanded, and collapse if no ad is returned.
+   */
+  export type CollapseDivBehavior = 'DISABLED' | 'BEFORE_FETCH' | 'ON_NO_FILL';
+
+  export type GptSlotSettingsConfig = {
+    /**
+     * Settings to control/override ad expansion behavior.
+     */
+    readonly adExpansion?: { enabled: boolean };
+
+    readonly safeFrame?: {
+      /**
+       * Whether SafeFrame should allow ad content to expand by overlaying page content.
+       */
+      allowOverlayExpansion?: boolean;
+      /**
+       * Whether SafeFrame should allow ad content to expand by pushing page content.
+       */
+      allowPushExpansion?: boolean;
+      /**
+       * Whether ad(s) should be forced to be rendered using a SafeFrame container.
+       */
+      forceSafeFrame?: boolean;
+      /**
+       *
+       * Whether SafeFrame should use the HTML5 sandbox attribute to prevent top level navigation without user interaction.
+       */
+      sandbox?: boolean;
+    };
+
+    /**
+     * Setting to configure the collapsing behavior of the ad slot.
+     * A collapsed ad slot does not take up any space on the page.
+     */
+    readonly collapseDiv?: CollapseDivBehavior;
+  };
+
   export namespace enums {
     /**
      * @see https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat
@@ -554,6 +597,13 @@ export namespace googletag {
      * @return The latest ad response information, or null if the slot has no ad.
      */
     getResponseInformation(): null | IResponseInformation;
+
+    /**
+     * Sets general configuration options for the slot.
+     *
+     * @param config - Configuration object for the slot.
+     */
+    setConfig(config: GptSlotSettingsConfig): void;
   }
 
   export interface IResponseInformation {
