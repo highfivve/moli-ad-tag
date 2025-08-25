@@ -116,23 +116,24 @@ describe('Interstitial module', () => {
         callback(event);
       };
 
-      const interstitialContainerClass = 'h5v-interstitial--container';
-      const closeButtonClass = 'h5v-interstitial--close';
+      const interstitialContainerSelector = '[data-ref="h5v-interstitial"]';
+      const interstitialCloseButtonSelector = '[data-ref="h5v-interstitial-close"]';
+      const interstitialHidingClass = 'h5v-interstitial--hidden';
 
       const interstitialAd = jsDomWindow.document.createElement('div');
-      interstitialAd.classList.add(interstitialContainerClass);
+      interstitialAd.setAttribute('data-ref', 'h5v-interstitial');
 
       const closeButton = jsDomWindow.document.createElement('button');
-      closeButton.classList.add(closeButtonClass);
+      closeButton.setAttribute('data-ref', 'h5v-interstitial-close');
 
       it('should throw a warning if there is no interstitial container in the html', function () {
-        jsDomWindow.document.querySelector(`.${interstitialContainerClass}`)?.remove();
+        jsDomWindow.document.querySelector(interstitialContainerSelector)?.remove();
         jsDomWindow.document.body.appendChild(closeButton);
         initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
         expect(errorLogSpy.calledOnce).to.have.been.true;
         expect(errorLogSpy.args[0][0]).to.eq('[interstitial-module]');
         expect(errorLogSpy.args[0][1]).to.eq(
-          `Could not find interstitial container .${interstitialContainerClass} or closeButton .${closeButtonClass}`
+          `Could not find interstitial container ${interstitialContainerSelector} or closeButton ${interstitialCloseButtonSelector}`
         );
       });
 
@@ -184,7 +185,7 @@ describe('Interstitial module', () => {
 
         // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
-        expect(interstitialAd.classList.contains('h5v-interstitial--hidden')).to.be.true;
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
 
       it('should hide the interstitial after clicking the close button', async function () {
@@ -200,12 +201,12 @@ describe('Interstitial module', () => {
 
         // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
-        expect(interstitialAd.classList.contains('h5v-interstitial--hidden')).to.be.false;
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
         closeButton.click();
-        expect(interstitialAd.classList.contains('h5v-interstitial--hidden')).to.be.true;
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
 
-      it('should show the interstitial only if there was an ad', async function () {
+      it('should show the interstitial if there was an ad', async function () {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
@@ -219,10 +220,10 @@ describe('Interstitial module', () => {
         // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(interstitialAd.classList.contains('h5v-interstitial--hidden')).to.be.false;
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
       });
 
-      it('should hide the stickyAd if the slotRenderEndedEvent was empty', async function () {
+      it('should hide the interstitial if the slotRenderEndedEvent was empty', async function () {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
@@ -246,9 +247,9 @@ describe('Interstitial module', () => {
 
         // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
-        expect(interstitialAd.classList.contains('h5v-interstitial--hidden')).to.be.true;
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
-      it('should remove all hidden classes from the interstitial container if there is an ad', async function () {
+      it('should remove the hidden class from the interstitial container if there is an ad', async function () {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
@@ -259,10 +260,32 @@ describe('Interstitial module', () => {
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
-        // Wait for the event loop to finish, so the adSticky can be shown or hidden.
+        // Wait for the event loop to finish, so the interstitial can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(interstitialAd.classList.contains('h5v-interstitial--hidden')).to.be.false;
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
+      });
+      it('should show the interstitial when slot is rendered and hide it after timeout', async function () {
+        jsDomWindow.document.body.appendChild(interstitialAd);
+        jsDomWindow.document.body.appendChild(closeButton);
+
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+        await initInterstitialModule(
+          jsDomWindow,
+          'production',
+          noopLogger,
+          'interstitial',
+          [],
+          1000
+        );
+
+        slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
+        slotLoadedCallback(slotLoadedEvent, listenerSpy);
+
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
+        await new Promise(resolve => setTimeout(resolve, 1100));
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
     });
   });
