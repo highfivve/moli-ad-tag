@@ -2750,7 +2750,7 @@
           "type": "number"
         },
         "disallowedAdvertiserIds": {
-          "description": "Disable rendering the interstitial ad format for certain advertisers by specifying them here. Most of the time you would use this for partners who ship their own special format or behaviour.",
+          "description": "Disable rendering the custom interstitial ad format for certain advertisers by specifying them here. Most of the time you would use this for partners who ship their own special format or behaviour.",
           "items": {
             "type": "number"
           },
