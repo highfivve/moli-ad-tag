@@ -889,6 +889,7 @@ export namespace gpt {
 
   /**
    * ## Gpt ad slot configuration
+   * @deprecated in favor of googletag.GptSlotSettingsConfig.
    */
   export interface GptAdSlotConfig {
     /**
@@ -2730,7 +2731,7 @@ export namespace modules {
       readonly interstitialDomId: string;
 
       /**
-       * Disable rendering the interstitial ad format for certain advertisers by specifying them here.
+       * Disable rendering the custom interstitial ad format for certain advertisers by specifying them here.
        * Most of the time you would use this for partners who ship their own special format or behaviour.
        */
       readonly disallowedAdvertiserIds: number[];
