@@ -194,7 +194,7 @@ describe('Sticky-footer-v2 Module', () => {
         filterSupportedSizes: {} as any
       };
 
-      const { prepareSteps, config, module } = createInitializedModule(
+      const { prepareSteps, config } = createInitializedModule(
         {
           stickyFooterDomIds: { desktop: 'ad-desktop-sticky' },
           disallowedAdvertiserIds: [111]
