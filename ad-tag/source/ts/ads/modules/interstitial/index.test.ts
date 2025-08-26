@@ -68,8 +68,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  sandbox.reset();
   sandbox.resetHistory();
+  sandbox.restore();
 });
 
 describe('Interstitial module', () => {
@@ -83,8 +83,16 @@ describe('Interstitial module', () => {
       expect(prepareSteps.name).to.be.eq('interstitial-module');
     });
 
-    describe('initialize initAdSticky function', () => {
-      const errorLogSpy = sandbox.spy(noopLogger, 'warn');
+    describe('initialize initInterstitial function', () => {
+      let errorLogSpy: Sinon.SinonSpy;
+
+      beforeEach(() => {
+        errorLogSpy = sandbox.spy(noopLogger, 'warn');
+      });
+
+      afterEach(() => {
+        errorLogSpy.restore();
+      });
 
       const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
         slot: { getSlotElementId: () => 'interstitial' } as googletag.IAdSlot,
@@ -184,7 +192,6 @@ describe('Interstitial module', () => {
         slotRenderedCallback(slotRenderEndedEvent);
         slotLoadedCallback(slotLoadedEvent);
 
-        // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
@@ -200,7 +207,6 @@ describe('Interstitial module', () => {
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
-        // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
         closeButton.click();
@@ -218,7 +224,6 @@ describe('Interstitial module', () => {
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
-        // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
@@ -246,7 +251,6 @@ describe('Interstitial module', () => {
 
         slotRenderedCallback(emptySlotRenderEndedEvent);
 
-        // Wait for the event loop to finish, so the adSticky can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
