@@ -24,6 +24,7 @@ import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredReques
 import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import IPrebidJs = prebidjs.IPrebidJs;
+import { isGamInterstitial } from './auctions/interstitialContext';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -436,7 +437,11 @@ export const prebidRequestBids = (
       );
       const auction = new Promise<void>(resolve => {
         const slotsToRefresh = slots.filter(
-          slot => !context.auction.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
+          slot =>
+            !context.auction.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath()) &&
+            // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
+            (!isGamInterstitial(slot.adSlot, context.window) ||
+              context.auction.interstitialChannel() !== 'gam')
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits

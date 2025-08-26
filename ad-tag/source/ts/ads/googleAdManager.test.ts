@@ -26,6 +26,8 @@ import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { EventService } from './eventService';
+import SlotDefinition = Moli.SlotDefinition;
+import { formatKey } from './keyValues';
 
 // setup sinon-chai
 use(sinonChai);
@@ -985,6 +987,23 @@ describe('google ad manager', () => {
           ...createdAdSlot('content_1'),
           position: 'interstitial'
         };
+        const context = adPipelineContext();
+        const interstitialChannelStub = sandbox.stub(context.auction, 'interstitialChannel');
+
+        it('should use the existing slot if no channel is returned', async () => {
+          const step = gptRequestAds();
+          const slot: SlotDefinition = {
+            adSlot: googleAdSlotStub('/123/content_1', 'content_1'),
+            moliSlot: moliInterstitialSlot
+          } as SlotDefinition;
+          const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+          interstitialChannelStub.returns(undefined);
+
+          await step(context, [slot]);
+          expect(refreshSpy).to.have.been.calledOnce;
+          expect(refreshSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
+          expect(interstitialChannelStub).to.have.been.calledOnce;
+        });
 
         it('should use the existing slot if prebid demand is detected', async () => {
           const step = gptRequestAds();
@@ -992,43 +1011,45 @@ describe('google ad manager', () => {
             adSlot: googleAdSlotStub('/123/content_1', 'content_1'),
             moliSlot: moliInterstitialSlot
           } as Moli.SlotDefinition;
-          const getTargetingStub = sandbox
-            .stub(slot.adSlot, 'getTargeting')
-            .callsFake(key => (key === 'hb_pb' ? ['1.00'] : []));
-          const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
 
-          await step(adPipelineContext(), [slot]);
+          const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
+          interstitialChannelStub.returns('c');
+
+          await step(context, [slot]);
           expect(refreshSpy).to.have.been.calledOnce;
           expect(refreshSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
-          expect(getTargetingStub).to.have.been.calledOnce;
-          expect(getTargetingStub).to.have.been.calledOnceWithExactly('hb_pb');
+          expect(interstitialChannelStub).to.have.been.calledOnce;
+          expect(slot.adSlot.getTargeting(formatKey)).to.deep.eq([]);
         });
 
-        it('should recreate the slot as out-of-page-interstitial if prebid demand is not detected', async () => {
+        it('should recreate the slot as out-of-page-interstitial if prebid demand is not detected (channel is gam)', async () => {
           const step = gptRequestAds();
           const slot: Moli.SlotDefinition = {
             adSlot: googleAdSlotStub('/123/content_1/mobile', 'slot-1'),
             moliSlot: moliInterstitialSlot
           } as Moli.SlotDefinition;
-          const getTargetingStub = sandbox.stub(slot.adSlot, 'getTargeting').returns([]);
+
           const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
           const destroySlotsSpy = sandbox.spy(dom.window.googletag, 'destroySlots');
           const defineOutOfPageSlotSpy = sandbox.spy(dom.window.googletag, 'defineOutOfPageSlot');
+          interstitialChannelStub.returns('gam');
 
-          await step(adPipelineContext(), [slot]);
+          await step(context, [slot]);
           expect(defineOutOfPageSlotSpy).to.have.been.calledOnce;
           expect(defineOutOfPageSlotSpy).to.have.been.calledOnceWithExactly(
             '/123/content_1/mobile',
             5
           );
-          const newSlot = defineOutOfPageSlotSpy.firstCall.returnValue;
+          const newSlot: googletag.IAdSlot = defineOutOfPageSlotSpy.firstCall.returnValue;
 
           expect(refreshSpy).to.have.been.calledOnce;
           expect(refreshSpy).to.have.been.calledOnceWithExactly([newSlot]);
-          expect(getTargetingStub).to.have.been.calledOnce;
-          expect(getTargetingStub).to.have.been.calledOnceWithExactly('hb_pb');
+          expect(interstitialChannelStub).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
+          expect(newSlot.getTargeting(formatKey)).to.deep.eq([
+            jsDomWindow.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+          ]);
         });
       });
     });

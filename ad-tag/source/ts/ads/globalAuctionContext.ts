@@ -7,7 +7,8 @@ import { FrequencyCapping } from './auctions/frequencyCapping';
 import { PreviousBidCpms } from './auctions/previousBidCpms';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
-import { AdUnitPathVariables } from './adUnitPath';
+import { InterstitialContextImpl } from './auctions/interstitialContext';
+import auction = Moli.auction;
 
 /**
  * ## Global Auction Context
@@ -29,6 +30,7 @@ export class GlobalAuctionContext {
   readonly adRequestThrottling?: AdRequestThrottling;
   readonly frequencyCapping?: FrequencyCapping;
   readonly previousBidCpms?: PreviousBidCpms;
+  readonly interstitial?: InterstitialContextImpl;
 
   /**
    * The ad unit path variables that are used to resolve the ad unit path.
@@ -73,6 +75,15 @@ export class GlobalAuctionContext {
       this.previousBidCpms = new PreviousBidCpms();
     }
 
+    if (config.interstitial?.enabled) {
+      this.interstitial = new InterstitialContextImpl(
+        config.interstitial,
+        this.window,
+        this.window.Date.now,
+        this.logger
+      );
+    }
+
     // FIXME we need to make sure that pbjs.que and googletag.que are initialized globally in moli ad tag, so we don't
     //       have to put this init code across the entire codebase
     this.window.pbjs = this.window.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
@@ -83,19 +94,17 @@ export class GlobalAuctionContext {
     if (
       this.config.biddersDisabling?.enabled ||
       this.config.previousBidCpms?.enabled ||
-      this.config.frequencyCap?.enabled
+      this.config.frequencyCap?.enabled ||
+      config.interstitial?.enabled
     ) {
       this.window.pbjs.que.push(() => {
         this.window.pbjs.onEvent('auctionEnd', auction => {
-          if (this.config.biddersDisabling?.enabled) {
-            this.biddersDisabling?.onAuctionEnd(auction);
-          }
-          if (this.config.previousBidCpms?.enabled && auction.bidsReceived) {
+          this.biddersDisabling?.onAuctionEnd(auction);
+          if (config.previousBidCpms?.enabled && auction.bidsReceived) {
             this.previousBidCpms?.onAuctionEnd(auction.bidsReceived);
           }
-          if (this.config.frequencyCap?.enabled) {
-            this.frequencyCapping?.onAuctionEnd(auction);
-          }
+          this.frequencyCapping?.onAuctionEnd(auction);
+          this.interstitial?.onAuctionEnd(auction);
         });
       });
     }
@@ -117,18 +126,21 @@ export class GlobalAuctionContext {
         });
       });
 
+      this.eventService.addEventListener('afterRequestAds', () => {
+        this.frequencyCapping?.afterRequestAds();
+      });
+    }
+
+    if (this.config?.frequencyCap?.enabled || this.config.interstitial?.enabled) {
       this.window.googletag.cmd.push(() => {
         this.window.googletag.pubads().addEventListener('slotRenderEnded', event => {
           this.frequencyCapping?.onSlotRenderEnded(event);
+          this.interstitial?.onSlotRenderEnded(event);
         });
 
         this.window.googletag.pubads().addEventListener('impressionViewable', event => {
           this.frequencyCapping?.onImpressionViewable(event);
         });
-      });
-
-      this.eventService.addEventListener('afterRequestAds', () => {
-        this.frequencyCapping?.afterRequestAds();
       });
     }
   }
@@ -151,6 +163,10 @@ export class GlobalAuctionContext {
 
   getLastBidCpmsOfAdUnit(slotId: string): number[] {
     return this.previousBidCpms?.getLastBidCpms(slotId) ?? [];
+  }
+
+  interstitialChannel(): auction.InterstitialChannel | null | undefined {
+    return this.interstitial?.interstitialChannel();
   }
 
   configureStep(): ConfigureStep {
