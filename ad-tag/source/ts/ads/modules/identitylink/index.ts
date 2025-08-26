@@ -110,7 +110,7 @@ export class IdentityLink implements IModule {
       // For example, you can directly feed it emails, like so:
       window.atsenvelopemodule.setAdditionalData({
         type: 'emailHashes',
-        id: moduleConfig.hashedEmailAddresses
+        id: moduleConfig.hashedEmailAddresses // TODO this can be augmented with the runtimeConfig.audience information. moduleConfig takes precedence.
       });
     });
 

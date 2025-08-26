@@ -197,6 +197,8 @@ export class Emetriq implements IModule {
               return Promise.resolve();
             }
 
+            // TODO the config.login.guid property maybe optional as we can get the guid from the runtimeConfig.audience
+            //      note that the sha256 must be base64 encoded ( window.btoa(identity.sha256Email) )
             if (
               config.login &&
               shouldTrackLoginEvent(ctx.window__.sessionStorage, Date.now(), ctx.logger__)
