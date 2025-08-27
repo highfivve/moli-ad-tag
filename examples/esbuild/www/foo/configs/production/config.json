@@ -9,11 +9,17 @@
         "loaded": "eager"
       },
       "position": "in-page",
-      "sizes": [ [ 300, 250 ], [ 300, 600 ] ],
+      "sizes": [
+        [300, 250],
+        [300, 600]
+      ],
       "sizeConfig": [
         {
           "mediaQuery": "(min-width: 0px)",
-          "sizesSupported": [ [ 300, 250 ], [ 300, 600 ] ]
+          "sizesSupported": [
+            [300, 250],
+            [300, 600]
+          ]
         }
       ]
     },
@@ -24,11 +30,17 @@
         "loaded": "eager"
       },
       "position": "in-page",
-      "sizes": [ [ 300, 250 ], [ 300, 600 ] ],
+      "sizes": [
+        [300, 250],
+        [300, 600]
+      ],
       "sizeConfig": [
         {
           "mediaQuery": "(min-width: 0px)",
-          "sizesSupported": [ [ 300, 250 ], [ 300, 600 ] ]
+          "sizesSupported": [
+            [300, 250],
+            [300, 600]
+          ]
         }
       ]
     },
@@ -39,11 +51,17 @@
         "loaded": "eager"
       },
       "position": "in-page",
-      "sizes": [ [ 300, 50 ], [ 320, 50 ]],
+      "sizes": [
+        [300, 50],
+        [320, 50]
+      ],
       "sizeConfig": [
         {
           "mediaQuery": "(max-width: 767px)",
-          "sizesSupported": [ [ 300, 50 ], [ 320, 50 ]]
+          "sizesSupported": [
+            [300, 50],
+            [320, 50]
+          ]
         }
       ]
     },
@@ -54,11 +72,11 @@
         "loaded": "eager"
       },
       "position": "in-page",
-      "sizes": [[728,90]],
+      "sizes": [[728, 90]],
       "sizeConfig": [
         {
           "mediaQuery": "(min-width: 768px)",
-          "sizesSupported": [[728,90]]
+          "sizesSupported": [[728, 90]]
         }
       ]
     },
@@ -68,14 +86,27 @@
       "behaviour": {
         "loaded": "eager"
       },
-      "position": "in-page",
-      "sizes": [[300,250], [336, 280], [480, 320], [640, 480]],
+      "position": "interstitial",
+      "sizes": [
+        [300, 250],
+        [336, 280],
+        [480, 320],
+        [640, 480]
+      ],
       "sizeConfig": [
         {
           "mediaQuery": "(max-width: 767px)",
-          "sizesSupported": [[300,250], [336, 280], [480, 320], [640, 480]]
+          "sizesSupported": [
+            [300, 250],
+            [336, 280],
+            [480, 320],
+            [640, 480]
+          ]
         }
-      ]
+      ],
+      "gpt": {
+        "safeFrame": { "forceSafeFrame": true }
+      }
     }
   ],
   "schain": {
@@ -90,7 +121,7 @@
       "configs": [
         {
           "adReload": {
-            "allowed": [ "bidderA" ],
+            "allowed": ["bidderA"],
             "intervalMs": 30000
           },
           "formatFilter": [
@@ -102,7 +133,7 @@
           "destroySkinSlot": true,
           "skinAdSlotDomId": "ad_wallpaper_pixel",
           "hideBlockedSlots": false,
-          "blockedAdSlotDomIds": [ "ad_header", "ad_sidebar", "ad_sidebar_left", "ad_floor" ],
+          "blockedAdSlotDomIds": ["ad_header", "ad_sidebar", "ad_sidebar_left", "ad_floor"],
           "enableCpmComparison": true
         }
       ],
@@ -114,7 +145,7 @@
           "domId": "ad_wallpaper_pixel",
           "bidder": "bidderA",
           "deleteMethod": {
-            "jsAsString": [ "window.cleanup()", "console.log('removed everything')" ]
+            "jsAsString": ["window.cleanup()", "console.log('removed everything')"]
           }
         }
       ],
@@ -122,13 +153,21 @@
     },
     "adReload": {
       "enabled": false,
-      "excludeOrderIds": [ 111, 222, 333 ],
-      "includeOrderIds": [ 444, 555 ],
+      "excludeOrderIds": [111, 222, 333],
+      "includeOrderIds": [444, 555],
       "refreshIntervalMs": 20000,
-      "excludeAdSlotDomIds": [ "ad_wallpaper_pixel", "ad_content_2" ],
-      "includeAdvertiserIds": [ 1222, 2333, 3444 ],
-      "includeYieldGroupIds": [ 443900, 412220, 108918 ],
-      "optimizeClsScoreDomIds": [ "ad_content_1", "ad_content_2", "ad_content_3", "ad_content_4", "ad_content_5", "ad_content_6", "ad_content_x" ],
+      "excludeAdSlotDomIds": ["ad_wallpaper_pixel", "ad_content_2"],
+      "includeAdvertiserIds": [1222, 2333, 3444],
+      "includeYieldGroupIds": [443900, 412220, 108918],
+      "optimizeClsScoreDomIds": [
+        "ad_content_1",
+        "ad_content_2",
+        "ad_content_3",
+        "ad_content_4",
+        "ad_content_5",
+        "ad_content_6",
+        "ad_content_x"
+      ],
       "userActivityLevelControl": {
         "level": "moderate"
       }
@@ -143,13 +182,13 @@
         "mobile": "mobile_stickyad",
         "desktop": "floorad"
       },
-      "disallowedAdvertiserIds": [ 123, 456, 678 ]
+      "disallowedAdvertiserIds": [123, 456, 678]
     },
     "yieldOptimization": {
       "enabled": false,
       "provider": "dynamic",
       "configEndpoint": "https://yield.h5v.eu/config/foo",
-      "excludedAdUnitPaths": [  ]
+      "excludedAdUnitPaths": []
     },
     "prebidFirstPartyData": {
       "enabled": true,
@@ -160,6 +199,12 @@
         "pageCat": "openrtb_page_cat",
         "sectionCat": "openrtb_page_cat"
       }
+    },
+    "interstitial": {
+      "enabled": true,
+      "interstitialDomId": "interstitial",
+      "disallowedAdvertiserIds": [123, 456, 678],
+      "closeAutomaticallyAfterMs": 5000
     }
   }
 }

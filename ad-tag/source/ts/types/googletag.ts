@@ -470,6 +470,200 @@ export namespace googletag {
     };
   };
 
+  export interface GptAdSenseAttributesConfig {
+    /**
+     * AdSense ad format.
+     */
+    adsense_ad_format?:
+      | '120x240_as'
+      | '120x600_as'
+      | '125x125_as'
+      | '160x600_as'
+      | '180x150_as'
+      | '200x200_as'
+      | '234x60_as'
+      | '250x250_as'
+      | '300x250_as'
+      | '336x280_as'
+      | '468x60_as'
+      | '728x90_as';
+
+    /**
+     * AdSense channel IDs.
+     *
+     * Allowed values are channel IDs separated by '+'.
+     * Example: 271828183+314159265
+     */
+    adsense_channel_ids?: string;
+
+    /**
+     * Whether or not test mode is enabled.
+     *
+     * When set to on, ads are marked as test-only, and won't be included in counting or billing.
+     * This setting must be unset for production, non-test traffic.
+     */
+    adsense_test_mode?: 'on';
+
+    /**
+     * Language of the page on which ads are displayed.
+     *
+     * Allowed values are valid ISO 639-1 language codes.
+     * Example: en
+     */
+    document_language?: string;
+
+    /**
+     * URL of the page on which ads are displayed.
+     * Allowed values are valid URLs.
+     *
+     * Example: http://www.example.com
+     */
+    page_url?: string;
+  }
+
+  export interface GptComponentAuctionConfig {
+    /**
+     * An auction configuration object for this component auction.
+     * If this value is set to null, any existing configuration for the specified configKey will be deleted.
+     */
+    auctionConfig: {
+      auctionSignals?: unknown;
+      decisionLogicURL: string;
+      interestGroupBuyers?: string[];
+      perBuyerExperimentGroupIds?: {
+        [buyer: string]: number;
+      };
+      perBuyerGroupLimits?: {
+        [buyer: string]: number;
+      };
+      perBuyerSignals?: {
+        [buyer: string]: unknown;
+      };
+      perBuyerTimeouts?: {
+        [buyer: string]: number;
+      };
+      seller: string;
+      sellerExperimentGroupId?: number;
+      sellerSignals?: unknown;
+      sellerTimeout?: number;
+      trustedScoringSignalsURL?: string;
+    };
+    /**
+     * The configuration key associated with this component auction.
+     *
+     * This value must be non-empty and should be unique.
+     * If two ComponentAuctionConfig objects share the same configKey value,
+     * the last to be set will overwrite prior configurations.
+     */
+    configKey: string;
+  }
+
+  /**
+   * Supported interstitial ad triggers.
+   */
+  export type GptInterstitialTrigger = 'unhideWindow' | 'navBar';
+
+  export interface GptInterstitialConfig {
+    /**
+     * Whether local storage consent is required to display this interstitial ad.
+     *
+     * GPT uses local storage to enforce a frequency cap for interstitial ads.
+     * However, users who have not provided local storage consent are still eligible to be served interstitial ads.
+     * Setting this property to true opts out of the default behavior, and ensures interstial ads are only shown to users who have provided local storage consent.
+     */
+    requireStorageAccess?: boolean;
+
+    /**
+     * The interstitial trigger configuration for this interstitial ad.
+     *
+     * Setting the value of an interstitial trigger to true will enable it and false will disable it.
+     * This will override the default values configured in Google Ad Manager.
+     */
+    triggers?: Partial<Record<GptInterstitialTrigger, boolean>>;
+  }
+
+  /**
+   * Collapsing behavior of the ad slot:
+   *
+   * null (default): The slot will not be collapsed.
+   * DISABLED: The slot will not collapse, whether or not an ad is returned.
+   * BEFORE_FETCH: The slot will start out collapsed, and expand when an ad is returned.
+   * ON_NO_FILL: The slot will start out expanded, and collapse if no ad is returned.
+   */
+  export type GptCollapseDivBehavior = 'DISABLED' | 'BEFORE_FETCH' | 'ON_NO_FILL';
+
+  export interface GptSafeFrameConfig {
+    /**
+     * Whether SafeFrame should allow ad content to expand by overlaying page content.
+     */
+    allowOverlayExpansion?: boolean;
+    /**
+     * Whether SafeFrame should allow ad content to expand by pushing page content.
+     */
+    allowPushExpansion?: boolean;
+    /**
+     * Whether ad(s) should be forced to be rendered using a SafeFrame container.
+     */
+    forceSafeFrame?: boolean;
+    /**
+     *
+     * Whether SafeFrame should use the HTML5 sandbox attribute to prevent top level navigation without user interaction.
+     */
+    sandbox?: boolean;
+  }
+
+  export interface GptSlotSettingsConfig {
+    /**
+     * Settings to control/override ad expansion behavior.
+     */
+    readonly adExpansion?: { enabled: boolean };
+
+    /**
+     * Setting to configure AdSense attributes.
+     *
+     * AdSense attribute changes only apply to ads requested after this method has been called.
+     * For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh.
+     */
+    readonly adSenseAttributes?: GptAdSenseAttributesConfig;
+
+    /**
+     * Setting to configure ad category exclusions.
+     */
+    readonly categoryExclusion?: string[];
+
+    /**
+     * Setting to configure the URL to which users will be redirected after clicking on the ad.
+     */
+    readonly clickUrl?: string;
+
+    /**
+     * Setting to configure the collapsing behavior of the ad slot.
+     * A collapsed ad slot does not take up any space on the page.
+     */
+    readonly collapseDiv?: GptCollapseDivBehavior;
+
+    /**
+     * An array of component auctions to be included in an on-device ad auction.
+     */
+    readonly componentAuction?: GptComponentAuctionConfig[];
+
+    /**
+     * An object which defines the behavior of a single interstitial ad slot.
+     */
+    readonly interstitial?: GptInterstitialConfig;
+
+    /**
+     * Settings to configure the use of SafeFrame in GPT.
+     */
+    readonly safeFrame?: GptSafeFrameConfig;
+
+    /**
+     * Setting to configure key-value targeting.
+     * Targeting configured via this setting will only apply to the ad slot.
+     */
+    readonly targeting?: Record<string, string | string[]>;
+  }
+
   export namespace enums {
     /**
      * @see https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat
@@ -554,6 +748,13 @@ export namespace googletag {
      * @return The latest ad response information, or null if the slot has no ad.
      */
     getResponseInformation(): null | IResponseInformation;
+
+    /**
+     * Sets general configuration options for the slot.
+     *
+     * @param config - Configuration object for the slot.
+     */
+    setConfig(config: GptSlotSettingsConfig): void;
   }
 
   export interface IResponseInformation {

@@ -3,4 +3,5 @@ import '../../dist/styles.css';
 import '../../lib/bundle/init';
 import '../../lib/bundle/pubstack';
 import '../../lib/bundle/stickyFooterAds2';
+import '../../lib/bundle/interstitialModule';
 import '../../lib/bundle/configureFromEndpoint';

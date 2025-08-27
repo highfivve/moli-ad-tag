@@ -29,8 +29,80 @@
           "type": "string"
         },
         "gpt": {
-          "$ref": "#/definitions/gpt.GptAdSlotConfig",
-          "description": "Supplementary gpt configuration. Gpt is always configured, regardless of the existence of this configuration."
+          "additionalProperties": false,
+          "description": "Supplementary gpt configuration. Gpt is always configured, regardless of the existence of this configuration.",
+          "properties": {
+            "adExpansion": {
+              "additionalProperties": false,
+              "description": "Settings to control/override ad expansion behavior.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "type": "object"
+            },
+            "adSenseAttributes": {
+              "$ref": "#/definitions/googletag.GptAdSenseAttributesConfig",
+              "description": "Setting to configure AdSense attributes.\n\nAdSense attribute changes only apply to ads requested after this method has been called. For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh."
+            },
+            "categoryExclusion": {
+              "description": "Setting to configure ad category exclusions.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "clickUrl": {
+              "description": "Setting to configure the URL to which users will be redirected after clicking on the ad.",
+              "type": "string"
+            },
+            "collapseDiv": {
+              "$ref": "#/definitions/googletag.GptCollapseDivBehavior",
+              "description": "Setting to configure the collapsing behavior of the ad slot. A collapsed ad slot does not take up any space on the page."
+            },
+            "collapseEmptyDiv": {
+              "deprecated": "please use googletag.GptSlotSettingsConfig.collapseDiv instead.",
+              "description": "Sets whether the slot div should be hidden when there is no ad in the slot. Defaults to true.\n\nCorrelates directly to googletag.IAdSlot.setCollapseEmptyDiv().",
+              "type": "boolean"
+            },
+            "componentAuction": {
+              "description": "An array of component auctions to be included in an on-device ad auction.",
+              "items": {
+                "$ref": "#/definitions/googletag.GptComponentAuctionConfig"
+              },
+              "type": "array"
+            },
+            "interstitial": {
+              "$ref": "#/definitions/googletag.GptInterstitialConfig",
+              "description": "An object which defines the behavior of a single interstitial ad slot."
+            },
+            "safeFrame": {
+              "$ref": "#/definitions/googletag.GptSafeFrameConfig",
+              "description": "Settings to configure the use of SafeFrame in GPT."
+            },
+            "targeting": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                ]
+              },
+              "description": "Setting to configure key-value targeting. Targeting configured via this setting will only apply to the ad slot.",
+              "type": "object"
+            }
+          },
+          "type": "object"
         },
         "labelAll": {
           "items": {
@@ -1063,6 +1135,149 @@
       ],
       "type": "object"
     },
+    "googletag.GptAdSenseAttributesConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "adsense_ad_format": {
+          "description": "AdSense ad format.",
+          "enum": [
+            "120x240_as",
+            "120x600_as",
+            "125x125_as",
+            "160x600_as",
+            "180x150_as",
+            "200x200_as",
+            "234x60_as",
+            "250x250_as",
+            "300x250_as",
+            "336x280_as",
+            "468x60_as",
+            "728x90_as"
+          ],
+          "type": "string"
+        },
+        "adsense_channel_ids": {
+          "description": "AdSense channel IDs.\n\nAllowed values are channel IDs separated by '+'. Example: 271828183+314159265",
+          "type": "string"
+        },
+        "adsense_test_mode": {
+          "const": "on",
+          "description": "Whether or not test mode is enabled.\n\nWhen set to on, ads are marked as test-only, and won't be included in counting or billing. This setting must be unset for production, non-test traffic.",
+          "type": "string"
+        },
+        "document_language": {
+          "description": "Language of the page on which ads are displayed.\n\nAllowed values are valid ISO 639-1 language codes. Example: en",
+          "type": "string"
+        },
+        "page_url": {
+          "description": "URL of the page on which ads are displayed. Allowed values are valid URLs.\n\nExample: http://www.example.com",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "googletag.GptCollapseDivBehavior": {
+      "description": "Collapsing behavior of the ad slot:\n\nnull (default): The slot will not be collapsed. DISABLED: The slot will not collapse, whether or not an ad is returned. BEFORE_FETCH: The slot will start out collapsed, and expand when an ad is returned. ON_NO_FILL: The slot will start out expanded, and collapse if no ad is returned.",
+      "enum": [
+        "DISABLED",
+        "BEFORE_FETCH",
+        "ON_NO_FILL"
+      ],
+      "type": "string"
+    },
+    "googletag.GptComponentAuctionConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "auctionConfig": {
+          "additionalProperties": false,
+          "description": "An auction configuration object for this component auction. If this value is set to null, any existing configuration for the specified configKey will be deleted.",
+          "properties": {
+            "auctionSignals": {},
+            "decisionLogicURL": {
+              "type": "string"
+            },
+            "interestGroupBuyers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "perBuyerExperimentGroupIds": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "perBuyerGroupLimits": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "perBuyerSignals": {
+              "additionalProperties": {},
+              "type": "object"
+            },
+            "perBuyerTimeouts": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "seller": {
+              "type": "string"
+            },
+            "sellerExperimentGroupId": {
+              "type": "number"
+            },
+            "sellerSignals": {},
+            "sellerTimeout": {
+              "type": "number"
+            },
+            "trustedScoringSignalsURL": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "decisionLogicURL",
+            "seller"
+          ],
+          "type": "object"
+        },
+        "configKey": {
+          "description": "The configuration key associated with this component auction.\n\nThis value must be non-empty and should be unique. If two ComponentAuctionConfig objects share the same configKey value, the last to be set will overwrite prior configurations.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "auctionConfig",
+        "configKey"
+      ],
+      "type": "object"
+    },
+    "googletag.GptInterstitialConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "requireStorageAccess": {
+          "description": "Whether local storage consent is required to display this interstitial ad.\n\nGPT uses local storage to enforce a frequency cap for interstitial ads. However, users who have not provided local storage consent are still eligible to be served interstitial ads. Setting this property to true opts out of the default behavior, and ensures interstial ads are only shown to users who have provided local storage consent.",
+          "type": "boolean"
+        },
+        "triggers": {
+          "additionalProperties": false,
+          "description": "The interstitial trigger configuration for this interstitial ad.\n\nSetting the value of an interstitial trigger to true will enable it and false will disable it. This will override the default values configured in Google Ad Manager.",
+          "properties": {
+            "navBar": {
+              "type": "boolean"
+            },
+            "unhideWindow": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
     "googletag.GptPageSettingsConfig": {
       "additionalProperties": false,
       "properties": {
@@ -1145,12 +1360,23 @@
       },
       "type": "object"
     },
-    "gpt.GptAdSlotConfig": {
+    "googletag.GptSafeFrameConfig": {
       "additionalProperties": false,
-      "description": "## Gpt ad slot configuration",
       "properties": {
-        "collapseEmptyDiv": {
-          "description": "Sets whether the slot div should be hidden when there is no ad in the slot. Defaults to true.\n\nCorrelates directly to googletag.IAdSlot.setCollapseEmptyDiv().",
+        "allowOverlayExpansion": {
+          "description": "Whether SafeFrame should allow ad content to expand by overlaying page content.",
+          "type": "boolean"
+        },
+        "allowPushExpansion": {
+          "description": "Whether SafeFrame should allow ad content to expand by pushing page content.",
+          "type": "boolean"
+        },
+        "forceSafeFrame": {
+          "description": "Whether ad(s) should be forced to be rendered using a SafeFrame container.",
+          "type": "boolean"
+        },
+        "sandbox": {
+          "description": "Whether SafeFrame should use the HTML5 sandbox attribute to prevent top level navigation without user interaction.",
           "type": "boolean"
         }
       },
@@ -1463,6 +1689,9 @@
         },
         "identitylink": {
           "$ref": "#/definitions/modules.identitylink.IdentityLinkModuleConfig"
+        },
+        "interstitial": {
+          "$ref": "#/definitions/modules.interstitial.InterstitialModuleConfig"
         },
         "lazyload": {
           "$ref": "#/definitions/modules.lazyload.LazyLoadModuleConfig"
@@ -2510,6 +2739,34 @@
         "enabled",
         "hashedEmailAddresses",
         "launchPadId"
+      ],
+      "type": "object"
+    },
+    "modules.interstitial.InterstitialModuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "closeAutomaticallyAfterMs": {
+          "description": "Interstitial is automatically closed after a certain time.",
+          "type": "number"
+        },
+        "disallowedAdvertiserIds": {
+          "description": "Disable rendering the custom interstitial ad format for certain advertisers by specifying them here. Most of the time you would use this for partners who ship their own special format or behaviour.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "interstitialDomId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "interstitialDomId",
+        "disallowedAdvertiserIds"
       ],
       "type": "object"
     },

@@ -86,7 +86,7 @@ export interface AdSlot {
    * Supplementary gpt configuration.
    * Gpt is always configured, regardless of the existence of this configuration.
    */
-  readonly gpt?: gpt.GptAdSlotConfig;
+  readonly gpt?: googletag.GptSlotSettingsConfig & gpt.GptAdSlotConfig;
 
   /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
   readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
@@ -889,6 +889,7 @@ export namespace gpt {
 
   /**
    * ## Gpt ad slot configuration
+   * @deprecated in favor of googletag.GptSlotSettingsConfig.
    */
   export interface GptAdSlotConfig {
     /**
@@ -896,6 +897,7 @@ export namespace gpt {
      * Defaults to true.
      *
      * Correlates directly to googletag.IAdSlot.setCollapseEmptyDiv().
+     * @deprecated please use googletag.GptSlotSettingsConfig.collapseDiv instead.
      */
     collapseEmptyDiv?: boolean;
   }
@@ -2723,6 +2725,24 @@ export namespace modules {
     }
   }
 
+  export namespace interstitial {
+    export type InterstitialModuleConfig = {
+      readonly enabled: boolean;
+      readonly interstitialDomId: string;
+
+      /**
+       * Disable rendering the custom interstitial ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       */
+      readonly disallowedAdvertiserIds: number[];
+
+      /**
+       * Interstitial is automatically closed after a certain time.
+       */
+      readonly closeAutomaticallyAfterMs?: number;
+    };
+  }
+
   export interface ModulesConfig {
     readonly adex?: adex.AdexConfig;
     readonly adReload?: adreload.AdReloadModuleConfig;
@@ -2743,6 +2763,7 @@ export namespace modules {
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
     readonly zeotap?: zeotap.ZeotapModuleConfig;
+    readonly interstitial?: interstitial.InterstitialModuleConfig;
   }
 }
 
