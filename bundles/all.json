@@ -17,6 +17,7 @@
     "skin",
     "utiq",
     "yieldOptimization",
-    "configureFromEndpoint"
+    "configureFromEndpoint",
+    "interstitialModule"
   ]
 }
