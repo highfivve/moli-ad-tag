@@ -292,6 +292,29 @@ describe('Interstitial module', () => {
         await new Promise(resolve => setTimeout(resolve, 1100));
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
+
+      it('should set safeframe config if advertiser is disallowed', async function () {
+        jsDomWindow.document.body.appendChild(interstitialAd);
+        jsDomWindow.document.body.appendChild(closeButton);
+
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+        const slot = {
+          getSlotElementId: () => 'interstitial',
+          setConfig: sandbox.spy()
+        } as unknown as googletag.IAdSlot;
+        jsDomWindow.googletag.pubads().getSlots = () => [slot];
+
+        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
+
+        const disallowedEvent: googletag.events.ISlotRenderEndedEvent = {
+          slot,
+          advertiserId: 111,
+          campaignId: 42
+        } as googletag.events.ISlotRenderEndedEvent;
+
+        slotRenderedCallback(disallowedEvent, listenerSpy);
+        expect(slot.setConfig).to.have.been.calledWith({ safeFrame: { forceSafeFrame: true } });
+      });
     });
   });
 });

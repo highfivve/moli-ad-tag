@@ -31,6 +31,7 @@ const interstitialRenderedEvent = (
       if (event.isEmpty) {
         resolve('empty');
       } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+        event.slot.setConfig({ safeFrame: { forceSafeFrame: true } });
         resolve('disallowed');
       } else {
         resolve('standard');
@@ -55,6 +56,7 @@ const interstitialOnLoadEvent = (
       if (event.slot.getSlotElementId() !== interstitialDomId) {
         return;
       }
+
       resolve();
       window.googletag.pubads().removeEventListener('slotOnload', listener);
     };
