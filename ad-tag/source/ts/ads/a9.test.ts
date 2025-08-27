@@ -368,8 +368,8 @@ describe('a9', () => {
       const slot2 = createSlotDefinitions(domId2, {});
 
       const isThrottled = sandbox.stub(contextWithConsent.auction__, 'isSlotThrottled');
-      isThrottled.withArgs(domId1, slot1.adSlot.getAdUnitPath()).returns(false);
-      isThrottled.withArgs(domId2, slot2.adSlot.getAdUnitPath()).returns(true);
+      isThrottled.withArgs(slot1.adSlot).returns(false);
+      isThrottled.withArgs(slot2.adSlot).returns(true);
 
       await step(contextWithConsent, [slot1, slot2]);
       expect(addAdUnitsSpy).to.have.been.calledOnce;

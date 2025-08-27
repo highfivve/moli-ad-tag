@@ -1140,14 +1140,15 @@ describe('prebid', () => {
       const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
       const step = prebidRequestBids(moliPrebidTestConfig, 'gam');
       const slot = createAdSlot('none-prebid');
+      const googleAdSlot = googleAdSlotStub(slot.adUnitPath, slot.domId);
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
-      isThrottledStub.withArgs(slot.domId, slot.adUnitPath).returns(true);
+      isThrottledStub.withArgs(googleAdSlot).returns(true);
 
       await step(ctx, [
         {
           moliSlot: slot,
-          adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
+          adSlot: googleAdSlot,
           filterSupportedSizes: sizes => sizes
         }
       ]);
@@ -1179,8 +1180,8 @@ describe('prebid', () => {
 
       const ctx = adPipelineContext();
       const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
-      isThrottledStub.withArgs(domId1, slotDef1.adSlot.getAdUnitPath()).returns(false);
-      isThrottledStub.withArgs(domId2, slotDef2.adSlot.getAdUnitPath()).returns(true);
+      isThrottledStub.withArgs(slotDef1.adSlot).returns(false);
+      isThrottledStub.withArgs(slotDef2.adSlot).returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);
       expect(requestBidsSpy).to.have.been.calledOnce;
@@ -1271,9 +1272,9 @@ describe('prebid', () => {
       const ctx = adPipelineContext();
       sandbox
         .stub(ctx.auction__, 'isSlotThrottled')
-        .withArgs(domId1, slotDef1.adSlot.getAdUnitPath())
+        .withArgs(slotDef1.adSlot)
         .returns(false)
-        .withArgs(domId2, slotDef2.adSlot.getAdUnitPath())
+        .withArgs(slotDef2.adSlot)
         .returns(true);
 
       await step(ctx, [slotDef1, slotDef2]);
