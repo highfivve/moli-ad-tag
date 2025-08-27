@@ -273,6 +273,7 @@ describe('Interstitial module', () => {
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
       });
       it('should show the interstitial when slot is rendered and hide it after timeout', async function () {
+        const clock = Sinon.useFakeTimers();
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
@@ -291,8 +292,11 @@ describe('Interstitial module', () => {
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
-        await new Promise(resolve => setTimeout(resolve, 1100));
+
+        // tickAsync() needed because pubads().getSlots() and destroySlots(...) trigger microtasks / async work internally
+        await clock.tickAsync(1100);
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
+        clock.restore();
       });
 
       it('should set safeframe config if advertiser is allowed to use custom creative', async function () {
