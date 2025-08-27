@@ -94,14 +94,18 @@ describe('Interstitial module', () => {
         errorLogSpy.restore();
       });
 
+      const slot = {
+        getSlotElementId: () => 'interstitial',
+        setConfig: sandbox.spy()
+      } as unknown as googletag.IAdSlot;
       const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
-        slot: { getSlotElementId: () => 'interstitial' } as googletag.IAdSlot,
+        slot,
         advertiserId: 111,
         campaignId: 42
       } as googletag.events.ISlotRenderEndedEvent;
 
       const slotLoadedEvent: googletag.events.ISlotOnloadEvent = {
-        slot: { getSlotElementId: () => 'interstitial' } as googletag.IAdSlot,
+        slot,
         serviceName: 'gpt'
       } as googletag.events.ISlotOnloadEvent;
 
@@ -168,29 +172,23 @@ describe('Interstitial module', () => {
 
         await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
 
+        const slot = {
+          getSlotElementId: () => 'interstitial',
+          setConfig: sandbox.spy()
+        } as unknown as googletag.IAdSlot;
         const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
-          slot: { getSlotElementId: () => 'interstitial' } as googletag.IAdSlot,
+          slot,
           advertiserId: 111,
           campaignId: 42
         } as googletag.events.ISlotRenderEndedEvent;
 
         const slotLoadedEvent: googletag.events.ISlotOnloadEvent = {
-          slot: { getSlotElementId: () => 'interstitial' } as googletag.IAdSlot,
+          slot,
           serviceName: 'gpt'
         } as googletag.events.ISlotOnloadEvent;
 
-        const slotRenderedCallback: (event: googletag.events.ISlotRenderEndedEvent) => void =
-          listenerSpy.args.find(
-            args => (args[0] as string) === 'slotRenderEnded'
-          )?.[1] as unknown as (event: googletag.events.ISlotRenderEndedEvent) => void;
-
-        const slotLoadedCallback: (event: googletag.events.ISlotOnloadEvent) => void =
-          listenerSpy.args.find(args => (args[0] as string) === 'slotOnload')?.[1] as unknown as (
-            event: googletag.events.ISlotOnloadEvent
-          ) => void;
-
-        slotRenderedCallback(slotRenderEndedEvent);
-        slotLoadedCallback(slotLoadedEvent);
+        slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
+        slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
@@ -237,8 +235,12 @@ describe('Interstitial module', () => {
 
         await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
 
+        const slot = {
+          getSlotElementId: () => 'interstitial',
+          setConfig: sandbox.spy()
+        } as unknown as googletag.IAdSlot;
         const emptySlotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
-          slot: { getSlotElementId: () => 'interstitial' } as googletag.IAdSlot,
+          slot,
           advertiserId: 999,
           campaignId: 42,
           isEmpty: true
@@ -293,7 +295,7 @@ describe('Interstitial module', () => {
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
 
-      it('should set safeframe config if advertiser is disallowed', async function () {
+      it('should set safeframe config if advertiser is allowed to use custom creative', async function () {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
@@ -306,13 +308,13 @@ describe('Interstitial module', () => {
 
         await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
 
-        const disallowedEvent: googletag.events.ISlotRenderEndedEvent = {
+        const allowedEvent: googletag.events.ISlotRenderEndedEvent = {
           slot,
-          advertiserId: 111,
+          advertiserId: 110,
           campaignId: 42
         } as googletag.events.ISlotRenderEndedEvent;
 
-        slotRenderedCallback(disallowedEvent, listenerSpy);
+        slotRenderedCallback(allowedEvent, listenerSpy);
         expect(slot.setConfig).to.have.been.calledWith({ safeFrame: { forceSafeFrame: true } });
       });
     });
