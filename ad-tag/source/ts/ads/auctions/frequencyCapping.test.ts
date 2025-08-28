@@ -350,6 +350,37 @@ describe('FrequencyCapping', () => {
       });
     });
 
+    describe('limit ad requests by requestAds cycle', () => {
+      const slotRequestedEvent: googletag.events.ISlotRequestedEvent = {
+        slot: googleAdSlotStub(wpAdUnitPath, wpDomId)
+      } as googletag.events.ISlotRequestedEvent;
+      it('should not cap if no request ads have been made', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+      });
+
+      it('should cap if the number of ad requests exceeds the configured limit', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+        frequencyCapping.onSlotRequested(slotRequestedEvent);
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+      });
+
+      it('should reset the cap for the next request ads cycle', () => {
+        const frequencyCapping = makeFrequencyCapping([
+          { adUnitPath: wpAdUnitPath, conditions: { adRequestLimit: { maxAdRequests: 1 } } }
+        ]);
+        frequencyCapping.onSlotRequested(slotRequestedEvent);
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.true;
+        frequencyCapping.beforeRequestAds();
+        expect(frequencyCapping.isAdUnitCapped(wpSlot)).to.be.false;
+      });
+    });
+
     describe('pacing by interval', () => {
       it('should frequency cap if the slot has a pacing interval configured', () => {
         nowInstantStub.returns(100000);

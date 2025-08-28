@@ -67,6 +67,7 @@ export class FrequencyCapping {
   private positionImpSchedules: Map<string, FrequencyCappingPositionImpSchedules> = new Map();
   private positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
   private bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
+  private positionAdRequests: Map<string, number> = new Map();
 
   private bidWonConfigs: BidderFrequencyCappingConfigWithPacingInterval[];
   private bidRequestedConfigs: BidderFrequencyCappingConfigWithPacingInterval[];
@@ -141,6 +142,20 @@ export class FrequencyCapping {
     }
   }
 
+  onSlotRequested(event: googletag.events.ISlotRequestedEvent) {
+    // check if the ad unit path is configured with a requestAds limit
+    this.resolvedAdUnitPathPositionConfigs
+      .filter(config => config.adUnitPath === event.slot.getAdUnitPath())
+      .forEach(config => {
+        if (config.conditions.adRequestLimit) {
+          // store the number of ad requests for this position
+          const adUnitPath = config.adUnitPath;
+          const currentAdRequests = this.positionAdRequests.get(adUnitPath) ?? 0;
+          this.positionAdRequests.set(adUnitPath, currentAdRequests + 1);
+        }
+      });
+  }
+
   onAuctionEnd(auction: prebidjs.event.AuctionObject) {
     this.bidRequestedConfigs.forEach(config => {
       auction.bidderRequests?.forEach(bidderRequests => {
@@ -202,6 +217,10 @@ export class FrequencyCapping {
     }
   }
 
+  beforeRequestAds() {
+    this.positionAdRequests.clear();
+  }
+
   afterRequestAds() {
     this.numAdRequests++;
     this.#persist();
@@ -247,7 +266,11 @@ export class FrequencyCapping {
           // cap if the maxImpressions is reached in the current window
           (positionConfig.conditions.pacingInterval &&
             (this.positionImpSchedules.get(adUnitPath) ?? []).length >=
-              positionConfig.conditions.pacingInterval.maxImpressions)
+              positionConfig.conditions.pacingInterval.maxImpressions) ||
+          // cap if the ad unit path has an ad request limit
+          (positionConfig.conditions.adRequestLimit &&
+            (this.positionAdRequests.get(adUnitPath) ?? 0) >=
+              positionConfig.conditions.adRequestLimit.maxAdRequests)
         );
       });
   }
