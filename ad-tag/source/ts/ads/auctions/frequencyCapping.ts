@@ -6,6 +6,8 @@ import { NowInstant, remainingTime, ResumeCallbackData } from './resume';
 import { googletag } from '../../types/googletag';
 import { AdUnitPathVariables, resolveAdUnitPath } from '../adUnitPath';
 import { formatKey } from '../keyValues';
+import { isGamInterstitial } from './interstitialContext';
+import IGoogleTagWindow = googletag.IGoogleTagWindow;
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
@@ -80,7 +82,7 @@ export class FrequencyCapping {
 
   constructor(
     private readonly config: auction.FrequencyCappingConfig,
-    private readonly _window: Window,
+    private readonly _window: Window & IGoogleTagWindow,
     private readonly now: NowInstant,
     private readonly logger: Moli.MoliLogger
   ) {
@@ -216,14 +218,24 @@ export class FrequencyCapping {
     });
   }
 
-  isAdUnitCapped(adUnitPath: string): boolean {
+  /**
+   * Check if an ad unit path is capped.
+   *
+   * @param slot the ad slot to check
+   */
+  isAdUnitCapped(slot: googletag.IAdSlot): boolean {
+    const adUnitPath = slot.getAdUnitPath();
+    const isGamInst = isGamInterstitial(slot, this._window);
     return this.resolvedAdUnitPathPositionConfigs
       .filter(config => config.adUnitPath === adUnitPath)
       .some(positionConfig => {
         return (
-          // cap if minRequestAds is not reached yet
+          // cap if minRequestAds is not reached yet. Note: for GAM interstitials are requested
+          // one request ads cycle earlier, because they are actually rendered on navigation and
+          // not immediately after the ad request.
           (positionConfig.conditions.delay &&
-            this.numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
+            this.numAdRequests <
+              positionConfig.conditions.delay.minRequestAds - (isGamInst ? 1 : 0)) ||
           // cap if not at the right pacing interval yet
           (positionConfig.conditions.pacingRequestAds &&
             // if there are no winning impressions yet, we can request ads
@@ -240,7 +252,13 @@ export class FrequencyCapping {
       });
   }
 
-  isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
+  /**
+   * Check if a bidder is capped for a given slot id.
+   *
+   * @param slotId the DOM ID of the ad slot
+   * @param bidder a prebid bidder code
+   */
+  isBidderCapped(slotId: string, bidder: BidderCode): boolean {
     if (!this.config.bidders) {
       return false;
     }
