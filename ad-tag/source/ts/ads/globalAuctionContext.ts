@@ -147,18 +147,17 @@ export class GlobalAuctionContext {
 
   /**
    *
-   * @param slotId
-   * @param adUnitPath received from a google slot via getAdUnitPath(), thus fully resolved
+   *  @param slot The GPT ad slot to check
    */
-  isSlotThrottled(slotId: string, adUnitPath: string): boolean {
+  isSlotThrottled(slot: googletag.IAdSlot): boolean {
     return !!(
-      this.adRequestThrottling?.isThrottled(slotId) ||
-      this.frequencyCapping?.isAdUnitCapped(adUnitPath)
+      this.adRequestThrottling?.isThrottled(slot.getSlotElementId()) ||
+      this.frequencyCapping?.isAdUnitCapped(slot)
     );
   }
 
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
-    return this.frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
+    return this.frequencyCapping?.isBidderCapped(slotId, bidder) ?? false;
   }
 
   getLastBidCpmsOfAdUnit(slotId: string): number[] {
