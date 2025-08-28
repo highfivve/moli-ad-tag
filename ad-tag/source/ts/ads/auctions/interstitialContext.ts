@@ -88,16 +88,12 @@ export class InterstitialContextImpl implements InterstitialContext {
   private sessionStorageTimeToLive: number;
   private interstitialAdUnitPath: string;
   private currentInterstitialState: InterstitialState;
-  private config: auction.InterstitialConfig;
-  private window__: Window & googletag.IGoogleTagWindow;
-  private now: NowInstant;
-  private logger: MoliLogger;
 
   constructor(
-    config: auction.InterstitialConfig,
-    window__: Window & googletag.IGoogleTagWindow,
-    now: NowInstant,
-    logger: MoliLogger
+    private readonly config: auction.InterstitialConfig,
+    private readonly window__: Window & googletag.IGoogleTagWindow,
+    private readonly now: NowInstant,
+    private readonly logger: MoliLogger
   ) {
     this.config = config;
     this.window__ = window__;
