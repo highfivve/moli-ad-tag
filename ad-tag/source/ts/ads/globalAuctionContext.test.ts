@@ -5,7 +5,7 @@ import { prebidjs } from '../types/prebidjs';
 import { googletag } from '../types/googletag';
 import { GlobalAuctionContext } from './globalAuctionContext';
 import { createPbjsStub } from '../stubs/prebidjsStubs';
-import { createGoogletagStub } from '../stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from '../stubs/googletagStubs';
 import sinonChai from 'sinon-chai';
 import { noopLogger } from '../stubs/moliStubs';
 import { EventService } from './eventService';
@@ -144,7 +144,7 @@ describe('Global auction context', () => {
 
       it('should never throttle requests in initial state', () => {
         const context = makeAuctionContext(auctionContextConfig);
-        expect(context.isSlotThrottled('slot-1', '/123/slot-1')).to.be.false;
+        expect(context.isSlotThrottled(googleAdSlotStub('slot-1', '/123/slot-1'))).to.be.false;
       });
 
       it('should add slotRequested event listener', () => {
@@ -172,7 +172,7 @@ describe('Global auction context', () => {
 
       it('should never throttle requests', () => {
         const context = makeAuctionContext(auctionContextConfig);
-        expect(context.isSlotThrottled('slot-1', '/123/slot-1')).to.be.false;
+        expect(context.isSlotThrottled(googleAdSlotStub('slot-1', '/123/slot-1'))).to.be.false;
       });
 
       it('should not add slotRequested event listener if disabled', () => {

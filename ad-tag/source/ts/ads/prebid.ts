@@ -438,7 +438,7 @@ export const prebidRequestBids = (
       const auction = new Promise<void>(resolve => {
         const slotsToRefresh = slots.filter(
           slot =>
-            !context.auction.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath()) &&
+            !context.auction.isSlotThrottled(slot.adSlot) &&
             // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
             (!isGamInterstitial(slot.adSlot, context.window) ||
               context.auction.interstitialChannel() !== 'gam')

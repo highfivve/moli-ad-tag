@@ -1415,12 +1415,28 @@ export namespace Moli {
     }
 
     /**
+     * Limit the number of ad requests for a specific ad slot that can be made per requestAds cycle.
+     * This is useful for high impact ad slots that should not be requested too often, e.g. interstitials, wallpapers
+     * or video ads.
+     *
+     * Note that this frequency cap does not care if an impression was delivered or not.
+     */
+    export interface PositionFrequencyConfigAdRequestLimit {
+      /**
+       * Setting this to `1`means that only one ad request is allowed per requestAds cycle, which
+       * translates to one ad request per page view.
+       */
+      readonly maxAdRequests: number;
+    }
+
+    /**
      * A set of possible conditions that all need to be met before the ad slot can request ads.
      */
     export interface PositionFrequencyConfigConditions {
       readonly delay?: PositionFrequencyConfigDelay;
       readonly pacingInterval?: PositionFrequencyConfigPacingInterval;
       readonly pacingRequestAds?: PositionFrequencyConfigPacingRequestAds;
+      readonly adRequestLimit?: PositionFrequencyConfigAdRequestLimit;
     }
 
     export interface PositionFrequencyConfig {

@@ -971,8 +971,8 @@ describe('google ad manager', () => {
         } as any;
 
         const isThrottledStub = sandbox.stub(ctx.auction, 'isSlotThrottled');
-        isThrottledStub.withArgs(slot1.moliSlot.domId, slot1.adSlot.getAdUnitPath()).returns(true);
-        isThrottledStub.withArgs(slot2.moliSlot.domId, slot2.adSlot.getAdUnitPath()).returns(false);
+        isThrottledStub.withArgs(slot1.adSlot).returns(true);
+        isThrottledStub.withArgs(slot2.adSlot).returns(false);
 
         const refreshSpy = sandbox.spy(dom.window.googletag.pubads(), 'refresh');
 
