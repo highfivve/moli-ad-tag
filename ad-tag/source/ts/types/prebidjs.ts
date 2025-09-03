@@ -5915,6 +5915,7 @@ export namespace prebidjs {
     | IInvibesBid
     | IInMobiBid
     | INanoInteractiveBid
+    | INextMillenniumBid
     | IPrebidServerBid
     | IPubMaticBid
     | IOguryBid
