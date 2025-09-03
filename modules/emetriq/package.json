@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-emetriq",
-  "version": "4.28.4",
+  "version": "4.28.5",
   "license": "Apache-2.0",
   "description": "Emetriq Data Module",
   "main": "./lib/index.js",
@@ -50,6 +50,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.28.4"
+    "@highfivve/ad-tag": "4.28.5"
   }
 }
