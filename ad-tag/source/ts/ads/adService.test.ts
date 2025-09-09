@@ -3,14 +3,23 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { createAssetLoaderService } from '../util/assetLoaderService';
-import { IAdPipelineConfiguration } from './adPipeline';
+import { IAdPipelineConfiguration, mkPrepareRequestAdsStep } from './adPipeline';
 import { AdService } from './adService';
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  emptyTestRuntimeConfig,
+  newEmptyRuntimeConfig,
+  noopLogger
+} from '../stubs/moliStubs';
 import { tcData, tcfapiFunction } from '../stubs/consentStubs';
-import MoliLogger = Moli.MoliLogger;
+import MoliLogger = MoliRuntime.MoliLogger;
 import { dummySupplyChainNode } from '../stubs/schainStubs';
+import { AdSlot, MoliConfig } from '../types/moliConfig';
+import { afterEach } from 'mocha';
+import { createEventService } from 'ad-tag/ads/eventService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -23,8 +32,9 @@ describe('AdService', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
+  const eventService = createEventService();
 
-  const emptyConfigWithPrebid: Moli.MoliConfig = {
+  const emptyConfigWithPrebid: MoliConfig = {
     ...emptyConfig,
     prebid: {
       config: {
@@ -36,13 +46,14 @@ describe('AdService', () => {
           granularityMultiplier: 1
         }
       },
+      distributionUrl: 'https://cdn.h5v.eu/prebid/dist/8.52.0/prebid.js',
       schain: {
         nodes: []
       }
     }
   };
 
-  const emptyConfigWithA9: Moli.MoliConfig = {
+  const emptyConfigWithA9: MoliConfig = {
     ...emptyConfig,
     a9: {
       cmpTimeout: 500,
@@ -52,15 +63,79 @@ describe('AdService', () => {
     }
   };
 
-  const initialize = (
-    config: Moli.MoliConfig = emptyConfig,
-    isSinglePageApp: boolean = false
-  ): Promise<IAdPipelineConfiguration> => {
-    const adService = new AdService(assetLoaderService, jsDomWindow);
-    return adService
-      .initialize(config, isSinglePageApp)
-      .then(() => adService.getAdPipeline().config);
+  const withSpaEnabled = (config: MoliConfig): MoliConfig => ({
+    ...config,
+    spa: { enabled: true, validateLocation: 'href' }
+  });
+
+  const makeAdService = (): AdService => {
+    const adPipelineConfiguration: IAdPipelineConfiguration = {
+      init: [],
+      configure: [],
+      defineSlots: () => Promise.resolve([]),
+      prepareRequestAds: [],
+      requestBids: [],
+      requestAds: () => Promise.resolve()
+    };
+    const service = new AdService(
+      assetLoaderService,
+      eventService,
+      jsDomWindow,
+      adPipelineConfiguration
+    );
+    service.setLogger(noopLogger);
+    return service;
   };
+
+  const initialize: (
+    config?: MoliConfig,
+    runtimeConfig?: MoliRuntime.MoliRuntimeConfig
+  ) => Promise<IAdPipelineConfiguration> = async (
+    config: MoliConfig = emptyConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig = emptyRuntimeConfig
+  ): Promise<IAdPipelineConfiguration> => {
+    const adService = makeAdService();
+    await adService.initialize(config, runtimeConfig);
+    return adService.getAdPipeline().config;
+  };
+
+  let domIdCounter: number = 0;
+  const eagerAdSlot = (): AdSlot => {
+    domIdCounter = domIdCounter + 1;
+    return {
+      domId: `dom-id-${domIdCounter}`,
+      adUnitPath: `/123/ad-unit-${domIdCounter}`,
+      sizes: [],
+      position: 'in-page',
+      sizeConfig: [],
+      behaviour: { loaded: 'eager' }
+    };
+  };
+
+  const createDomElementAndAddToDOM = (id: string): HTMLElement => {
+    const adDiv = dom.window.document.createElement('div');
+    adDiv.id = id;
+    dom.window.document.body.appendChild(adDiv);
+    return adDiv;
+  };
+
+  const addToDom = (adSlots: AdSlot[]): void => {
+    adSlots.forEach(slot => createDomElementAndAddToDOM(slot.domId));
+  };
+
+  const manualAdSlot = (): AdSlot => {
+    return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
+  };
+
+  const backfillAdSlot = (): AdSlot => ({
+    ...eagerAdSlot(),
+    behaviour: { loaded: 'backfill' }
+  });
+
+  const infiniteSlot = (): AdSlot => ({
+    ...eagerAdSlot(),
+    behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
+  });
 
   after(() => {
     // bring everything back to normal after tests
@@ -79,320 +154,274 @@ describe('AdService', () => {
 
   describe('initialize', () => {
     // FIXME try to make this test work
-    it.skip('should wait until the dom is initialized', () => {
+    it.skip('should wait until the dom is initialized', async () => {
       const documentLoadedSpy = sandbox.spy(dom.window.document, 'addEventListener');
 
-      return initialize().then(() => {
-        expect(documentLoadedSpy).to.have.been.calledOnce;
-        expect(documentLoadedSpy).to.have.been.calledOnceWithExactly('DOMContentLoaded');
+      await initialize();
+      expect(documentLoadedSpy).to.have.been.calledOnce;
+      expect(documentLoadedSpy).to.have.been.calledOnceWithExactly('DOMContentLoaded');
+    });
+
+    it('should add the gptInit step', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.init.map(step => step.name);
+      expect(stepNames).to.contain('gpt-init');
+    });
+
+    describe('bridge', () => {
+      it('should init bridge', async () => {
+        const pipeline = await initialize({ ...emptyConfig, bridge: { enabled: true } });
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('bridge');
       });
     });
 
-    it('should add the gptInit step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.init.map(step => step.name);
-        expect(stepNames).to.contain('gpt-init');
+    describe('modules', () => {
+      it('should add the modules-init step', async () => {
+        const initStepSpy = sandbox.spy();
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.initSteps.push(initStepSpy);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.init).to.deep.contain(initStepSpy);
+      });
+
+      it('should add the modules-configure step', async () => {
+        const configureStepSpy = sandbox.spy();
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.configureSteps.push(configureStepSpy);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.configure).to.deep.contain(configureStepSpy);
+      });
+
+      it('should add the modules-prepareRequestAds step', async () => {
+        const prepareRequestAdsStepSpy = sandbox.spy();
+        const prepareRequestAdsStep = mkPrepareRequestAdsStep(
+          'prep-test',
+          1,
+          prepareRequestAdsStepSpy
+        );
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(prepareRequestAdsStep);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.prepareRequestAds).to.deep.contain(prepareRequestAdsStepSpy);
+      });
+
+      it('should add the modules-requestsBids step', async () => {
+        const requestBidsStepSpy = sandbox.spy();
+        const runtimeConfig = newEmptyRuntimeConfig();
+        runtimeConfig.adPipelineConfig.requestBidsSteps.push(requestBidsStepSpy);
+        const pipeline = await initialize(emptyConfig, runtimeConfig);
+        expect(pipeline.requestBids).to.deep.contain(requestBidsStepSpy);
       });
     });
 
     describe('prebid', () => {
-      it('should add the prebid-init step if prebid is available', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).to.contain('prebid-init');
-        });
+      it('should add the prebid-init step if prebid is available', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('prebid-init');
       });
 
-      it('should not add the prebid-init step if prebid is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-init');
-        });
+      it('should not add the prebid-init step if prebid is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-init');
       });
     });
 
     describe('a9', () => {
-      it('should add the a9-init step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).to.contain('a9-init');
-        });
+      it('should add the a9-init step if a9 is available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('a9-init');
       });
 
-      it('should not add the a9-init step if a9 is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.init.map(step => step.name);
-          expect(stepNames).not.to.contain('a9-init');
-        });
+      it('should not add the a9-init step if a9 is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-init');
       });
     });
   });
 
   describe('configure', () => {
-    it('should add the gptConfigure step', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-configure');
-      });
+    it('should add the gptConfigure step', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).to.contain('gpt-configure');
     });
 
-    it('should add the gpt-destroy-ad-slots for single page apps', () => {
-      return initialize(emptyConfig, true).then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-destroy-ad-slots');
-      });
+    it('should add the gpt-destroy-ad-slots for single page apps', async () => {
+      const pipeline = await initialize(withSpaEnabled(emptyConfig), emptyRuntimeConfig);
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).to.contain('gpt-destroy-ad-slots');
     });
 
-    it('should not add the gpt-destroy-ad-slots for none single page apps', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).not.to.contain('gpt-destroy-ad-slots');
-      });
+    it('should not add the gpt-destroy-ad-slots for none single page apps', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).not.to.contain('gpt-destroy-ad-slots');
     });
 
-    it('should add the gpt-reset-targeting for single page apps', () => {
-      return initialize(emptyConfig, true).then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).to.contain('gpt-reset-targeting');
-      });
+    it('should add the gpt-reset-targeting for single page apps', async () => {
+      const pipeline = await initialize(withSpaEnabled(emptyConfig), emptyRuntimeConfig);
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).to.contain('gpt-reset-targeting');
     });
 
-    it('should not add the gpt-reset-targeting for none single page apps', () => {
-      return initialize().then(pipeline => {
-        const stepNames = pipeline.configure.map(step => step.name);
-        expect(stepNames).not.to.contain('gpt-reset-targeting');
-      });
+    it('should not add the gpt-reset-targeting for none single page apps', async () => {
+      const pipeline = await initialize();
+      const stepNames = pipeline.configure.map(step => step.name);
+      expect(stepNames).not.to.contain('gpt-reset-targeting');
     });
 
     describe('prebid', () => {
-      it('should add pbjs if available in the config', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('prebid-configure');
-        });
+      it('should add pbjs if available in the config', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('prebid-configure');
       });
 
-      it('should not initialize pbjs if not set in the config', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-configure');
-        });
+      it('should not initialize pbjs if not set in the config', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-configure');
       });
 
-      it('should add the prebid-remove-adunits for single page apps', () => {
-        return initialize(emptyConfigWithPrebid, true).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('prebid-remove-adunits');
-        });
+      it('should add the prebid-remove-adunits for single page apps', async () => {
+        const pipeline = await initialize(
+          withSpaEnabled(emptyConfigWithPrebid),
+          emptyRuntimeConfig
+        );
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('prebid-remove-adunits');
       });
 
-      it('should not add the prebid-remove-adunits for none single page apps', () => {
-        return initialize(emptyConfigWithPrebid, false).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-remove-adunits');
-        });
+      it('should not add the prebid-remove-adunits for none single page apps', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid, emptyRuntimeConfig);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-remove-adunits');
       });
 
-      it('should not add the prebid-remove-adunits for single page apps if prebid is not available', () => {
-        return initialize(emptyConfig, false).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-remove-adunits');
-        });
+      it('should not add the prebid-remove-adunits for single page apps if prebid is not available', async () => {
+        const pipeline = await initialize(emptyConfig, emptyRuntimeConfig);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-remove-adunits');
       });
     });
 
     describe('a9', () => {
-      it('should initialize apstag if available in config', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('a9-configure');
-        });
+      it('should initialize apstag if available in config', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('a9-configure');
       });
 
-      it('should not initialize apstag if not available in config', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).not.to.contain('a9-configure');
-        });
+      it('should not initialize apstag if not available in config', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-configure');
       });
 
-      it('should configure publisher audiences if available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.configure.map(step => step.name);
-          expect(stepNames).to.contain('a9-publisher-audiences');
-        });
+      it('should configure publisher audiences if available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.configure.map(step => step.name);
+        expect(stepNames).to.contain('a9-publisher-audiences');
       });
     });
   });
 
   describe('defineSlots', () => {
-    it('should add the gptDefineSlots step', () => {
-      return initialize().then(pipeline => {
-        expect(pipeline.defineSlots).to.be.ok;
-      });
+    it('should add the gptDefineSlots step', async () => {
+      const pipeline = await initialize();
+      expect(pipeline.defineSlots).to.be.ok;
     });
   });
 
   describe('prepareRequestAds', () => {
     describe('gpt', () => {
-      it('should add the gpt-device-label-keyValue step', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('gpt-device-label-keyValue');
-        });
+      it('should add the gpt-device-label-keyValue step', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('gpt-device-label-keyValue');
       });
 
-      it('should add the gpt-consent-keyValue step', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('gpt-consent-keyValue');
-        });
+      it('should add the gpt-consent-keyValue step', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('gpt-consent-keyValue');
       });
     });
 
     describe('prebid', () => {
-      it('should add the prebid-prepare-adunits step if prebid is available', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('prebid-prepare-adunits');
-        });
+      it('should add the prebid-prepare-adunits step if prebid is available', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('prebid-prepare-adunits');
       });
 
-      it('should not add the prebid-prepare-adunits step if prebid is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-prepare-adunits');
-        });
+      it('should not add the prebid-prepare-adunits step if prebid is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-prepare-adunits');
       });
     });
 
     describe('a9', () => {
-      it('should add the a9-clear-targeting-step step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('a9-clear-targeting');
-        });
-      });
-    });
-
-    describe('passback', () => {
-      it('should configure passback slots', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('passback-prepare-slots');
-        });
-      });
-    });
-
-    describe('reporting', () => {
-      it('should not add the reporting-enabled step if no reporter is set', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.not.contain('reporting-enabled');
-        });
-      });
-
-      it('should add the reporting-enabled step if reporting config is set', () => {
-        return initialize({
-          ...emptyConfig,
-          reporting: {
-            sampleRate: 1,
-            reporters: []
-          }
-        }).then(pipeline => {
-          const stepNames = pipeline.prepareRequestAds.map(step => step.name);
-          expect(stepNames).to.contain('reporting-enabled');
-        });
+      it('should add the a9-clear-targeting-step step if a9 is available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.prepareRequestAds.map(step => step.name);
+        expect(stepNames).to.contain('a9-clear-targeting');
       });
     });
   });
 
   describe('requestBids', () => {
     describe('prebid', () => {
-      it('should add the request prebid bids step if prebid is available', () => {
-        return initialize(emptyConfigWithPrebid).then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).to.contain('prebid-request-bids');
-        });
+      it('should add the request prebid bids step if prebid is available', async () => {
+        const pipeline = await initialize(emptyConfigWithPrebid);
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).to.contain('prebid-request-bids');
       });
 
-      it('should not add the request prebid bids step if prebid is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).not.to.contain('prebid-request-bids');
-        });
+      it('should not add the request prebid bids step if prebid is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).not.to.contain('prebid-request-bids');
       });
     });
     describe('a9', () => {
-      it('should add the a9 fetch bids step if a9 is available', () => {
-        return initialize(emptyConfigWithA9).then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).to.contain('a9-fetch-bids');
-        });
+      it('should add the a9 fetch bids step if a9 is available', async () => {
+        const pipeline = await initialize(emptyConfigWithA9);
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).to.contain('a9-fetch-bids');
       });
 
-      it('should not the a9 fetch bids step if a9 is not available', () => {
-        return initialize().then(pipeline => {
-          const stepNames = pipeline.requestBids.map(step => step.name);
-          expect(stepNames).not.to.contain('a9-fetch-bids');
-        });
+      it('should not the a9 fetch bids step if a9 is not available', async () => {
+        const pipeline = await initialize();
+        const stepNames = pipeline.requestBids.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-fetch-bids');
       });
     });
   });
 
   describe('requestAds', () => {
-    let domIdCounter: number = 0;
-
-    const makeAdService = (): AdService => {
-      const adPipelineConfiguration: IAdPipelineConfiguration = {
-        init: [],
-        configure: [],
-        defineSlots: () => Promise.resolve([]),
-        prepareRequestAds: [],
-        requestBids: [],
-        requestAds: () => Promise.resolve()
-      };
-      return new AdService(assetLoaderService, jsDomWindow, adPipelineConfiguration);
-    };
-
     const requestAds = (
-      slots: Moli.AdSlot[],
+      slots: AdSlot[],
       refreshSlots: string[] = [],
-      refreshInfiniteSlots: Moli.state.IRefreshInfiniteSlot[],
+      refreshInfiniteSlots: MoliRuntime.IRefreshInfiniteSlot[] = [],
+      refreshBuckets: MoliRuntime.IRefreshBucket[] = [],
       logger: MoliLogger = noopLogger
-    ): Promise<Moli.AdSlot[]> => {
+    ): Promise<AdSlot[]> => {
       const adService = makeAdService();
       adService.setLogger(logger);
       return adService.requestAds(
         { ...emptyConfig, slots: slots },
-        refreshSlots,
-        refreshInfiniteSlots
+        { ...emptyRuntimeConfig, refreshSlots, refreshInfiniteSlots, refreshBuckets }
       );
     };
 
-    const eventTrigger: Moli.behaviour.Trigger = {
-      name: 'event',
-      event: 'noop',
-      source: jsDomWindow
-    };
-
-    const eagerAdSlot = (): Moli.AdSlot => {
-      domIdCounter = domIdCounter + 1;
-      return {
-        domId: `dom-id-${domIdCounter}`,
-        adUnitPath: `/123/ad-unit-${domIdCounter}`,
-        sizes: [],
-        position: 'in-page',
-        sizeConfig: [],
-        behaviour: { loaded: 'eager' }
-      };
-    };
-
-    const manualAdSlot = (): Moli.AdSlot => {
-      return { ...eagerAdSlot(), behaviour: { loaded: 'manual' } };
-    };
-
-    const addToDom = (adSlots: Moli.AdSlot[]): void => {
+    const addToDom = (adSlots: AdSlot[]): void => {
       adSlots.forEach(slot => {
         const adDiv = dom.window.document.createElement('div');
         adDiv.id = slot.domId;
@@ -400,16 +429,28 @@ describe('AdService', () => {
       });
     };
 
-    it('should return an empty slots array for any empty slots array input', () => {
-      return expect(requestAds([], [], [])).to.eventually.be.deep.equals([]);
+    it('should return an empty slots array for any empty slots array input', async () => {
+      const requestAdSlots = await requestAds([], [], []);
+      expect(requestAdSlots).to.be.deep.equals([]);
     });
 
-    it('should filter out all slots that are not available in the DOM', () => {
-      return expect(requestAds([eagerAdSlot()], [], [])).to.eventually.be.deep.equals([]);
+    it('should filter out all slots that are not available in the DOM', async () => {
+      const requestedSlots = await requestAds([eagerAdSlot()], [], []);
+      expect(requestedSlots).to.be.deep.equals([]);
+    });
+
+    it('should filter out all slots that are not available in the DOM except out-of-page', async () => {
+      const outOfPageSlot: AdSlot = {
+        ...eagerAdSlot(),
+        position: 'out-of-page'
+      };
+      const slots = [outOfPageSlot];
+      const requestedSlots = await requestAds(slots, [], []);
+      expect(requestedSlots).to.be.deep.equals(slots);
     });
 
     it('should filter out all slots that are not available in the DOM except out-of-page-interstitials', () => {
-      const outOfPageInterstitial: Moli.AdSlot = {
+      const outOfPageInterstitial: AdSlot = {
         ...eagerAdSlot(),
         position: 'out-of-page-interstitial'
       };
@@ -417,112 +458,800 @@ describe('AdService', () => {
       return expect(requestAds(slots, [], [])).to.eventually.be.deep.equals(slots);
     });
 
-    it('should return all eagerly loaded slots that are available in the DOM', () => {
-      const slots = [eagerAdSlot(), eagerAdSlot()];
+    it('should return all eagerly loaded slots that are available in the DOM', async () => {
+      const eagerSlots = [eagerAdSlot(), eagerAdSlot()];
+      const slots = [...eagerSlots, backfillAdSlot(), manualAdSlot()];
       addToDom(slots);
-      return expect(requestAds(slots, [], [])).to.eventually.be.deep.equals(slots);
+      const result = await requestAds(slots, [], []);
+      expect(result).to.be.deep.equals(eagerSlots);
+    });
+
+    it('should return all manual slots if present in the refreshSlots array', async () => {
+      const slot1 = manualAdSlot();
+      const slot2 = manualAdSlot();
+      const slots = [slot1, slot2];
+      addToDom(slots);
+      const result = await requestAds(slots, [slot1.domId], []);
+      expect(result).to.be.deep.equals([slot1]);
+    });
+
+    it('should return all infinite slots if present in the refreshSlots array', async () => {
+      const slot1 = infiniteSlot();
+      const slots = [slot1];
+      addToDom(slots);
+      createDomElementAndAddToDOM('another-id');
+      const result = await requestAds(
+        slots,
+        [],
+        [{ artificialDomId: slot1.domId, idOfConfiguredSlot: 'another-id' }]
+      );
+      expect(result).to.be.deep.equals([slot1]);
     });
 
     describe('slot buckets', () => {
-      const eagerAdSlot1: Moli.AdSlot = {
-        ...eagerAdSlot(),
-        behaviour: { loaded: 'eager', bucket: 'bucket1' }
-      };
+      describe('runtimeConfig refreshBuckets queue', () => {
+        it('should run the ad pipeline even if there are no slots available', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          await adService.requestAds(
+            { ...emptyConfig, buckets: { enabled: true }, slots: [eagerAdSlot()] },
+            emptyRuntimeConfig
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
 
-      const eagerAdSlot3: Moli.AdSlot = {
-        ...eagerAdSlot(),
-        behaviour: { loaded: 'eager' }
-      };
+        it('should run the ad pipeline with the refreshBuckets', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot2: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket2' } }
+          };
+          const slots = [slot1, slot2];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [
+            { bucket: 'bucket1' },
+            { bucket: 'bucket2' }
+          ];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            { ...emptyRuntimeConfig, refreshBuckets }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1, slot2]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
 
-      const allSlots = [eagerAdSlot1, eagerAdSlot3];
+        it('should run the ad pipeline with the refreshBuckets and refreshSlots without running a slot twice', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot2: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket2' } }
+          };
+          const slots = [slot1, slot2];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [{ bucket: 'bucket1' }];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            {
+              ...emptyRuntimeConfig,
+              refreshSlots: [slot1.domId],
+              refreshBuckets
+            }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
 
-      it('should load ad slots in specified buckets', async () => {
-        const adService = makeAdService();
-        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
-        const debugStub = sandbox.stub();
-        const logger: Moli.MoliLogger = { ...noopLogger, debug: debugStub };
-        adService.setLogger(logger);
+        it('should run no backfill slots if specified in the refreshBuckets with default options', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const slot1: AdSlot = {
+            ...manualAdSlot(),
+            behaviour: { loaded: 'manual', bucket: { mobile: 'bucket1' } }
+          };
+          const slot1Backfill: AdSlot = {
+            ...slot1,
+            behaviour: { loaded: 'backfill', bucket: { mobile: 'bucket1' } }
+          };
+          const slots = [slot1, slot1Backfill];
+          addToDom(slots);
+          const refreshBuckets: MoliRuntime.IRefreshBucket[] = [{ bucket: 'bucket1' }];
+          await adService.requestAds(
+            { ...emptyConfig, slots },
+            { ...emptyRuntimeConfig, refreshBuckets }
+          );
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([slot1]),
+            Sinon.match.any,
+            Sinon.match.any,
+            Sinon.match.number
+          );
+        });
+      });
 
-        addToDom(allSlots);
+      describe('generic buckets', () => {
+        const eagerAdSlot1: AdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager', bucket: 'bucket1' }
+        };
 
-        await adService.requestAds(
-          {
+        const eagerAdSlot3: AdSlot = {
+          ...eagerAdSlot(),
+          behaviour: { loaded: 'eager' }
+        };
+
+        const allSlots = [eagerAdSlot1, eagerAdSlot3];
+        it('should load ad slots in specified buckets', async () => {
+          const adService = makeAdService();
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          const debugStub = sandbox.stub();
+          const logger: MoliRuntime.MoliLogger = { ...noopLogger, debug: debugStub };
+          adService.setLogger(logger);
+
+          addToDom(allSlots);
+          const moliConfig = {
             ...emptyConfig,
             buckets: { enabled: true },
             slots: allSlots
-          },
-          [],
-          []
-        );
+          };
 
-        expect(runSpy).to.have.been.calledTwice;
-        expect(runSpy.firstCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals([eagerAdSlot1]),
-          Sinon.match.any,
-          Sinon.match.number
-        );
+          await adService.requestAds(moliConfig, emptyRuntimeConfig);
 
-        expect(debugStub).to.have.been.calledWithExactly(
-          'AdPipeline',
-          `running bucket bucket1, slots:`,
-          [eagerAdSlot1]
-        );
+          expect(runSpy).to.have.been.calledTwice;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals([eagerAdSlot1]),
+            Sinon.match.same(moliConfig),
+            Sinon.match.same(emptyRuntimeConfig),
+            Sinon.match.number
+          );
 
-        expect(debugStub).to.have.been.calledWithExactly(
-          'AdPipeline',
-          `running bucket default, slots:`,
-          [eagerAdSlot3]
-        );
-      });
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket bucket1, slots:`,
+            [eagerAdSlot1]
+          );
 
-      it('should not load ad slots in specified buckets if disabled', async () => {
-        const adService = makeAdService();
-        adService.setLogger(noopLogger);
-        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          expect(debugStub).to.have.been.calledWithExactly(
+            'AdPipeline',
+            `running bucket default, slots:`,
+            [eagerAdSlot3]
+          );
+        });
 
-        addToDom(allSlots);
+        it('should not load ad slots in specified buckets if disabled', async () => {
+          const adService = makeAdService();
+          adService.setLogger(noopLogger);
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
 
-        await adService.requestAds(
-          {
+          addToDom(allSlots);
+          const moliConfig = {
             ...emptyConfig,
             buckets: { enabled: false },
             slots: allSlots
-          },
-          [],
-          []
-        );
+          };
 
-        expect(runSpy).to.have.been.calledOnce;
-        expect(runSpy.firstCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals(allSlots),
-          Sinon.match.any,
-          Sinon.match.number
-        );
-      });
+          await adService.requestAds(moliConfig, emptyRuntimeConfig);
 
-      it('should not load ad slots in specified buckets if no bucket config is provided', async () => {
-        const adService = makeAdService();
-        adService.setLogger(noopLogger);
-        const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals(allSlots),
+            Sinon.match.same(moliConfig),
+            Sinon.match.same(emptyRuntimeConfig),
+            Sinon.match.number
+          );
+        });
 
-        addToDom(allSlots);
+        it('should not load ad slots in specified buckets if no bucket config is provided', async () => {
+          const adService = makeAdService();
+          adService.setLogger(noopLogger);
+          const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
 
-        await adService.requestAds(
-          {
+          addToDom(allSlots);
+          const moliConfig = {
             ...emptyConfig,
             slots: allSlots
-          },
-          [],
-          []
-        );
+          };
 
-        expect(runSpy).to.have.been.calledOnce;
-        expect(runSpy.firstCall).to.have.been.calledWith(
-          Sinon.match.array.deepEquals(allSlots),
-          Sinon.match.any,
-          Sinon.match.number
-        );
+          await adService.requestAds(moliConfig, emptyRuntimeConfig);
+
+          expect(runSpy).to.have.been.calledOnce;
+          expect(runSpy.firstCall).to.have.been.calledWith(
+            Sinon.match.array.deepEquals(allSlots),
+            Sinon.match.same(moliConfig),
+            Sinon.match.same(emptyRuntimeConfig),
+            Sinon.match.number
+          );
+        });
       });
+
+      describe('device specific buckets', () => {
+        [
+          {
+            testName: 'should run pipeline twice for mobile if buckets differ',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'page' },
+            slot2Bucket: { mobile: 'page', desktop: 'page' }
+          },
+          {
+            testName: 'should run pipeline twice for mobile if buckets differ #2',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'page' },
+            slot2Bucket: 'page'
+          },
+          {
+            testName: 'should run pipeline twice for desktop if buckets differ',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'page', desktop: 'content' },
+            slot2Bucket: { mobile: 'page', desktop: 'page' }
+          },
+          {
+            testName: 'should run pipeline twice for desktop if buckets differ #2',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'page', desktop: 'content' },
+            slot2Bucket: 'page'
+          }
+        ].forEach(({ testName, deviceLabel, slot1Bucket, slot2Bucket }) => {
+          it(testName, async () => {
+            const adService = makeAdService();
+            const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+            const slot1: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot1Bucket }
+            };
+
+            const slot2: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot2Bucket }
+            };
+            addToDom([slot1, slot2]);
+
+            const moliConfig = {
+              ...emptyConfig,
+              buckets: { enabled: true },
+              slots: [slot1, slot2]
+            };
+
+            await adService.requestAds(moliConfig, {
+              ...emptyRuntimeConfig,
+              labels: [deviceLabel]
+            });
+            expect(runSpy).to.have.been.calledTwice;
+            expect(runSpy.firstCall).to.have.been.calledWith(
+              Sinon.match.array.deepEquals([slot1]),
+              Sinon.match.same(moliConfig),
+              Sinon.match.any,
+              Sinon.match.number
+            );
+            expect(runSpy.secondCall).to.have.been.calledWith(
+              Sinon.match.array.deepEquals([slot2]),
+              Sinon.match.same(moliConfig),
+              Sinon.match.any,
+              Sinon.match.number
+            );
+          });
+        });
+
+        //
+        [
+          {
+            testName: 'should run pipeline once for mobile if buckets differ',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'content' },
+            slot2Bucket: { mobile: 'content', desktop: 'page' }
+          },
+          {
+            testName: 'should run pipeline once for mobile if buckets differ #2',
+            deviceLabel: 'mobile',
+            slot1Bucket: { mobile: 'content', desktop: 'page' },
+            slot2Bucket: 'content'
+          },
+          {
+            testName: 'should run pipeline once for desktop if buckets differ',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'content', desktop: 'content' },
+            slot2Bucket: { mobile: 'page', desktop: 'content' }
+          },
+          {
+            testName: 'should run pipeline once for desktop if buckets differ #2',
+            deviceLabel: 'desktop',
+            slot1Bucket: { mobile: 'page', desktop: 'content' },
+            slot2Bucket: 'content'
+          }
+        ].forEach(({ testName, deviceLabel, slot1Bucket, slot2Bucket }) => {
+          it(testName, async () => {
+            const adService = makeAdService();
+            const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+            const slot1: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot1Bucket }
+            };
+
+            const slot2: AdSlot = {
+              ...eagerAdSlot(),
+              behaviour: { loaded: 'eager', bucket: slot2Bucket }
+            };
+            addToDom([slot1, slot2]);
+
+            const moliConfig = {
+              ...emptyConfig,
+              buckets: { enabled: true },
+              slots: [slot1, slot2]
+            };
+
+            await adService.requestAds(moliConfig, {
+              ...emptyRuntimeConfig,
+              labels: [deviceLabel]
+            });
+            expect(adService.getAdPipeline().run).to.have.been.calledOnce;
+            expect(adService.getAdPipeline().run).to.have.been.calledWith(
+              Sinon.match.array.deepEquals([slot1, slot2]),
+              Sinon.match.same(moliConfig),
+              Sinon.match.any,
+              Sinon.match.number
+            );
+          });
+        });
+      });
+    });
+
+    describe('events', () => {
+      it('should emit a beforeRequestAds event with the runtimeConfig', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('beforeRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, emptyRuntimeConfig);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ runtimeConfig: emptyRuntimeConfig });
+      });
+
+      it('should emit an afterRequestAds event the result state', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(emptyConfig, emptyRuntimeConfig);
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
+      });
+
+      it('should emit an afterRequestAds event the result state if buckets are enabled', async () => {
+        const adService = makeAdService();
+        const listenerSpy = sandbox.spy();
+        eventService.addEventListener('afterRequestAds', listenerSpy);
+        await adService.requestAds(
+          { ...emptyConfig, buckets: { enabled: true } },
+          emptyRuntimeConfig
+        );
+        expect(listenerSpy).to.have.been.calledOnce;
+        expect(listenerSpy).to.have.been.calledWith({ state: 'finished' });
+      });
+    });
+  });
+
+  describe('refreshAdSlots', () => {
+    const backfillSlot: AdSlot = { ...eagerAdSlot(), behaviour: { loaded: 'backfill' } };
+    const infiniteSlot: AdSlot = {
+      ...eagerAdSlot(),
+      behaviour: { loaded: 'infinite', selector: '.ad-infinite' }
+    };
+
+    it('should do nothing if domIds is empty', async () => {
+      const adService = makeAdService();
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([], emptyConfig, emptyRuntimeConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should call adPipeline.run with an empty array if no slots are available', async () => {
+      const adService = makeAdService();
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots(['content_1'], emptyConfig, emptyRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        emptyConfig,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with an empty array if slots are available, but not in DOM', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with an empty array if slot is eager', async () => {
+      const adService = makeAdService();
+      const slot = eagerAdSlot();
+      const configWithEagerSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithEagerSlot, emptyRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        configWithEagerSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with an empty array if slot is backfill', async () => {
+      const adService = makeAdService();
+      const configWithEagerSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [backfillSlot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([backfillSlot.domId], configWithEagerSlot, emptyRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [],
+        configWithEagerSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is infinite', async () => {
+      const adService = makeAdService();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [infiniteSlot]
+      };
+      addToDom([infiniteSlot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots(
+        [infiniteSlot.domId],
+        configWithManualSlot,
+        emptyRuntimeConfig
+      );
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [infiniteSlot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if backfill is provided as loaded option', async () => {
+      const adService = makeAdService();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [backfillSlot]
+      };
+      addToDom([backfillSlot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots(
+        [backfillSlot.domId],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        {
+          loaded: 'backfill'
+        }
+      );
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [backfillSlot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { loaded: 'backfill' } }
+      );
+    });
+
+    it('should call adPipeline.run with the backfill and infinite slot if backfill is provided as loaded option', async () => {
+      const adService = makeAdService();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [backfillSlot, infiniteSlot]
+      };
+      addToDom([backfillSlot, infiniteSlot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots(
+        [backfillSlot.domId, infiniteSlot.domId],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        {
+          loaded: 'backfill'
+        }
+      );
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [backfillSlot, infiniteSlot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { loaded: 'backfill' } }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual and in the DOM', async () => {
+      const adService = makeAdService();
+      const slot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        loaded: 'manual'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { loaded: 'manual' } }
+      );
+    });
+
+    it('should call adPipeline.run with the slot if slot is manual and in the DOM and the override option is manual', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = manualAdSlot();
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      addToDom([slot]);
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        loaded: 'eager'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        [slot],
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { loaded: 'eager' } }
+      );
+    });
+
+    it('should call adPipeline.run with updates slots with the options.sizesOverride', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = {
+        ...manualAdSlot(),
+        sizes: [
+          [300, 250],
+          [300, 600]
+        ]
+      };
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      addToDom([slot]);
+
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        sizesOverride: [[300, 250]]
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 250]] }]),
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { sizesOverride: [[300, 250]] } }
+      );
+    });
+
+    it('should call adPipeline.run with updates slots with the options.sizesOverride even if they are not part of the original sizes', async () => {
+      const adService = makeAdService();
+      const slot: AdSlot = {
+        ...manualAdSlot(),
+        sizes: [[300, 250]]
+      };
+      const configWithManualSlot: MoliConfig = {
+        ...emptyConfig,
+        slots: [slot]
+      };
+      const runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+      addToDom([slot]);
+
+      await adService.refreshAdSlots([slot.domId], configWithManualSlot, emptyRuntimeConfig, {
+        sizesOverride: [[300, 600]]
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...slot, sizes: [[300, 600]] }]),
+        configWithManualSlot,
+        emptyRuntimeConfig,
+        Sinon.match.number,
+        { options: { sizesOverride: [[300, 600]] } }
+      );
+    });
+  });
+
+  describe('refresh bucket', () => {
+    const withBucket = (adSlot: AdSlot, bucket: string): AdSlot => ({
+      ...adSlot,
+      behaviour: { loaded: adSlot.behaviour.loaded, bucket }
+    });
+
+    const bucketMoliConfig = (slots: AdSlot[]): MoliConfig => ({
+      ...emptyConfig,
+      buckets: { enabled: true },
+      slots
+    });
+
+    let adService: AdService = makeAdService();
+    let runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+
+    beforeEach(() => {
+      adService = makeAdService();
+      runSpy = sandbox.spy(adService.getAdPipeline(), 'run');
+    });
+
+    it('should not call adPipeline.run if the ad slots are not in the DOM', async () => {
+      const slot: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      const moliConfig = bucketMoliConfig([slot]);
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should not call adPipeline.run if no slots are in the bucket', async () => {
+      const slot: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      addToDom([slot]);
+      const moliConfig = bucketMoliConfig([slot]);
+      await adService.refreshBucket('bucket2', moliConfig, emptyTestRuntimeConfig);
+      expect(runSpy).to.not.have.been.called;
+    });
+
+    it('should call adPipeline.run with the slots in the bucket', async () => {
+      const slot1: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      const slot2: AdSlot = withBucket(eagerAdSlot(), 'bucket1');
+
+      addToDom([slot1, slot2]);
+
+      const moliConfig = bucketMoliConfig([slot1, slot2]);
+
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig);
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([slot1]),
+        Sinon.match.same(moliConfig),
+        Sinon.match.same(emptyTestRuntimeConfig),
+        Sinon.match.number,
+        { bucketName: 'bucket1', options: undefined }
+      );
+    });
+
+    it('should call adPipeline.run with the slots in the bucket and the options', async () => {
+      const slot1: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      const slot2: AdSlot = withBucket(eagerAdSlot(), 'bucket1');
+      addToDom([slot1, slot2]);
+
+      const moliConfig = bucketMoliConfig([slot1, slot2]);
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig, {
+        loaded: 'eager'
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([slot2]),
+        Sinon.match.same(moliConfig),
+        Sinon.match.same(emptyTestRuntimeConfig),
+        Sinon.match.number,
+        { bucketName: 'bucket1', options: { loaded: 'eager' } }
+      );
+    });
+
+    it('should override slot sizes from options', async () => {
+      const slot1: AdSlot = withBucket(manualAdSlot(), 'bucket1');
+      addToDom([slot1]);
+
+      const moliConfig = bucketMoliConfig([slot1]);
+      await adService.refreshBucket('bucket1', moliConfig, emptyTestRuntimeConfig, {
+        sizesOverride: [[300, 250]]
+      });
+      expect(runSpy).to.have.been.calledOnce;
+      expect(runSpy).to.have.been.calledWithExactly(
+        Sinon.match.array.deepEquals([{ ...slot1, sizes: [[300, 250]] }]),
+        Sinon.match.same(moliConfig),
+        Sinon.match.same(emptyTestRuntimeConfig),
+        Sinon.match.number,
+        { bucketName: 'bucket1', options: { sizesOverride: [[300, 250]] } }
+      );
+    });
+  });
+
+  describe('global auction context', () => {
+    it('should instantiate auction in adPipeline by default config', async () => {
+      const emptyConfigWithGlobalAuction: MoliConfig = {
+        ...emptyConfig,
+        globalAuctionContext: undefined
+      };
+      const adService = makeAdService();
+      await adService.initialize(emptyConfigWithGlobalAuction, emptyRuntimeConfig);
+      expect(adService.getAdPipeline().getAuction()).to.be.ok;
+    });
+
+    it('should instantiate auction in adPipeline with config', async () => {
+      const emptyConfigWithGlobalAuction: MoliConfig = {
+        ...emptyConfig,
+        globalAuctionContext: {
+          adRequestThrottling: { enabled: true, throttle: 15 },
+          biddersDisabling: {
+            enabled: false,
+            minBidRequests: 2,
+            minRate: 0.2,
+            reactivationPeriod: 3600000
+          }
+        }
+      };
+      const adService = makeAdService();
+      await adService.initialize(emptyConfigWithGlobalAuction, emptyRuntimeConfig);
+      expect(adService.getAdPipeline().getAuction()).to.be.ok;
     });
   });
 });

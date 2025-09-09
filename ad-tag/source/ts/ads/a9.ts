@@ -11,7 +11,7 @@ import {
   PrepareRequestAdsStep,
   RequestBidsStep
 } from './adPipeline';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
 import { isSizeEqual } from '../util/sizes';
 import { SizeConfigService } from './sizeConfigService';
@@ -20,12 +20,11 @@ import { tcfapi } from '../types/tcfapi';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
+import { AdSlot, headerbidding, schain } from '../types/moliConfig';
 
 const isA9SlotDefinition = (
-  slotDefinition: Moli.SlotDefinition
-): slotDefinition is Moli.SlotDefinition<
-  Moli.AdSlot & { a9: Moli.headerbidding.A9AdSlotConfig }
-> => {
+  slotDefinition: MoliRuntime.SlotDefinition
+): slotDefinition is MoliRuntime.SlotDefinition<AdSlot & { a9: headerbidding.A9AdSlotConfig }> => {
   return !!slotDefinition.moliSlot.a9;
 };
 
@@ -54,20 +53,20 @@ const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
  * @returns {Promise<void>}
  */
 export const a9Init = (
-  config: Moli.headerbidding.A9Config,
+  config: headerbidding.A9Config,
   assetService: IAssetLoaderService
 ): InitStep =>
   mkInitStep(
     'a9-init',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        context.window.apstag = context.window.apstag || {
+        context.window__.apstag = context.window__.apstag || {
           _Q: [],
           init: function (): void {
-            context.window.apstag._Q.push(['i', arguments]);
+            context.window__.apstag._Q.push(['i', arguments]);
           },
           fetchBids: function (): void {
-            context.window.apstag._Q.push(['f', arguments]);
+            context.window__.apstag._Q.push(['f', arguments]);
           },
           setDisplayBids: function (): void {
             return;
@@ -76,18 +75,18 @@ export const a9Init = (
             return;
           },
           dpa: function (): void {
-            context.window.apstag._Q.push(['di', arguments]);
+            context.window__.apstag._Q.push(['di', arguments]);
           },
           rpa: function (): void {
-            context.window.apstag._Q.push(['ri', arguments]);
+            context.window__.apstag._Q.push(['ri', arguments]);
           },
           upa: function (): void {
-            context.window.apstag._Q.push(['ui', arguments]);
+            context.window__.apstag._Q.push(['ui', arguments]);
           }
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
-        if (hasRequiredConsent(context.tcData)) {
+        if (context.env__ !== 'test' && hasRequiredConsent(context.tcData__)) {
           // async fetch as everything is already initialized
           assetService
             .loadScript({
@@ -97,7 +96,7 @@ export const a9Init = (
                 ? config.scriptUrl
                 : '//c.amazon-adsystem.com/aax2/apstag.js'
             })
-            .catch(error => context.logger.error('failed to load apstag.js', error));
+            .catch(error => context.logger__.error('failed to load apstag.js', error));
         }
 
         resolve();
@@ -105,12 +104,16 @@ export const a9Init = (
   );
 
 export const a9Configure = (
-  config: Moli.headerbidding.A9Config,
-  schainConfig: Moli.schain.SupplyChainConfig
+  config: headerbidding.A9Config,
+  schainConfig: schain.SupplyChainConfig
 ): ConfigureStep =>
-  mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: Moli.AdSlot[]) => {
+  mkConfigureStep('a9-configure', (context: AdPipelineContext, _slots: AdSlot[]) => {
     return new Promise<void>(resolve => {
-      context.window.apstag.init({
+      const schainNodes = [schainConfig.supplyChainStartNode];
+      if (config.schainNode) {
+        schainNodes.push(config.schainNode);
+      }
+      context.window__.apstag.init({
         pubID: config.pubID,
         adServer: 'googletag',
         // videoAdServer: '', TODO: Add video ad server
@@ -121,17 +124,17 @@ export const a9Configure = (
         schain: {
           complete: 1,
           ver: '1.0',
-          nodes: [schainConfig.supplyChainStartNode, config.schainNode]
+          nodes: schainNodes
         }
       });
       resolve();
     });
   });
 
-export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): ConfigureStep =>
+export const a9PublisherAudiences = (config: headerbidding.A9Config): ConfigureStep =>
   mkConfigureStepOnce(
     'a9-publisher-audiences',
-    (context: AdPipelineContext, _slots: Moli.AdSlot[]) =>
+    (context: AdPipelineContext, _slots: AdSlot[]) =>
       new Promise<void>(resolve => {
         const publisherAudience = config.publisherAudience;
         if (publisherAudience && publisherAudience.enabled) {
@@ -144,13 +147,13 @@ export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): Confi
             ]
           };
 
-          context.logger.debug('A9', 'Enable publisher audiences');
-          context.window.apstag.rpa(tokenConfig);
+          context.logger__.debug('A9', 'Enable publisher audiences');
+          context.window__.apstag.rpa(tokenConfig);
 
           // if the user consent changes update the token config
-          if (context.window.__tcfapi) {
+          if (context.window__.__tcfapi) {
             let firstCall = true;
-            context.window.__tcfapi('addEventListener', 2, tcdata => {
+            context.window__.__tcfapi('addEventListener', 2, tcdata => {
               // The event listener is called with the current state when added,
               // which would trigger an unnecessary update
               if (firstCall) {
@@ -158,8 +161,8 @@ export const a9PublisherAudiences = (config: Moli.headerbidding.A9Config): Confi
                 return;
               }
               if (tcdata.eventStatus === tcfapi.status.EventStatus.USER_ACTION_COMPLETE) {
-                context.logger.debug('A9', 'Update publisher audience token');
-                context.window.apstag.upa(tokenConfig);
+                context.logger__.debug('A9', 'Update publisher audience token');
+                context.window__.apstag.upa(tokenConfig);
               }
             });
           }
@@ -172,13 +175,13 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
   mkPrepareRequestAdsStep(
     'a9-clear-targeting',
     LOW_PRIORITY,
-    (context: AdPipelineContext, slots: Array<Moli.SlotDefinition>) => {
-      if (context.requestId === 0) {
-        context.logger.debug('A9', 'skip ad slot clearing for first pipeline run');
+    (context: AdPipelineContext, slots: Array<MoliRuntime.SlotDefinition>) => {
+      if (context.requestId__ === 0) {
+        context.logger__.debug('A9', 'skip ad slot clearing for first pipeline run');
         return Promise.resolve();
       }
       return new Promise<void>(resolve => {
-        context.logger.debug('A9', 'clear a9 targetings');
+        context.logger__.debug('A9', 'clear a9 targetings');
         slots.forEach(({ adSlot }) => {
           adSlot
             .getTargetingKeys()
@@ -192,7 +195,7 @@ export const a9ClearTargetingStep = (): PrepareRequestAdsStep =>
 
 const resolveAdUnitPath = (
   path: string,
-  slotDepth: Moli.headerbidding.A9SlotNamePathDepth | undefined,
+  slotDepth: headerbidding.A9SlotNamePathDepth | undefined,
   variables: AdUnitPathVariables
 ): string => {
   const adUnitPathWithoutChildId = adUnitPath.removeChildId(path);
@@ -202,22 +205,23 @@ const resolveAdUnitPath = (
   return adUnitPath.resolveAdUnitPath(truncated, variables);
 };
 
-export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsStep =>
+export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =>
   mkRequestBidsStep(
     'a9-fetch-bids',
-    (context: AdPipelineContext, slotDefinitions: Moli.SlotDefinition[]) =>
+    (context: AdPipelineContext, slotDefinitions: MoliRuntime.SlotDefinition[]) =>
       new Promise<void>(resolve => {
-        if (!hasRequiredConsent(context.tcData)) {
-          context.logger.debug('A9', 'Skip any due to missing consent');
+        if (!hasRequiredConsent(context.tcData__)) {
+          context.logger__.debug('A9', 'Skip any due to missing consent');
           resolve();
           return;
         }
 
         const slots = slotDefinitions
           .filter(isA9SlotDefinition)
+          .filter(slot => !context.auction__.isSlotThrottled(slot.adSlot))
           .filter(slot => {
             const isVideo = slot.moliSlot.a9.mediaType === 'video';
-            const filterSlot = context.labelConfigService.filterSlot(slot.moliSlot.a9);
+            const filterSlot = context.labelConfigService__.filterSlot(slot.moliSlot.a9);
             const sizesNotEmpty =
               slot.filterSupportedSizes(slot.moliSlot.sizes).filter(SizeConfigService.isFixedSize)
                 .length > 0;
@@ -243,7 +247,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
               const adUnitPath = resolveAdUnitPath(
                 moliSlot.adUnitPath,
                 moliSlot.a9.slotNamePathDepth ?? config.slotNamePathDepth,
-                context.adUnitPathVariables
+                context.adUnitPathVariables__
               );
 
               return {
@@ -257,8 +261,8 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
                     {
                       floor: {
                         value: Math.ceil(
-                          context.window.pbjs?.convertCurrency
-                            ? context.window.pbjs.convertCurrency(
+                          context.window__.pbjs?.convertCurrency
+                            ? context.window__.pbjs.convertCurrency(
                                 priceRule.floorprice,
                                 'EUR',
                                 config.floorPriceCurrency || 'USD'
@@ -273,7 +277,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
             }
           });
 
-        context.logger.debug(
+        context.logger__.debug(
           'A9',
           `Fetch '${slots.length}' A9 slots: ${slots.map(slot => `[slotID] ${slot.slotID}`)}`
         );
@@ -281,12 +285,10 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
         if (slots.length === 0) {
           resolve();
         } else {
-          context.reportingService.markA9fetchBids(context.requestId);
-          context.window.apstag.fetchBids(
-            { slots, ...(context.bucket?.timeout && { bidTimeout: context.bucket.timeout }) },
+          context.window__.apstag.fetchBids(
+            { slots, ...(context.bucket__?.timeout && { bidTimeout: context.bucket__.timeout }) },
             (_bids: Object[]) => {
-              context.reportingService.measureAndReportA9BidsBack(context.requestId);
-              context.window.apstag.setDisplayBids();
+              context.window__.apstag.setDisplayBids();
               resolve();
             }
           );

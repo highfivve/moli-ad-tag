@@ -23,6 +23,11 @@ export namespace prebidjs {
     };
 
     /**
+     * indicates that the Prebid library has been loaded
+     */
+    readonly libLoaded: boolean;
+
+    /**
      * Prebid version
      */
     readonly version: string;
@@ -118,7 +123,7 @@ export namespace prebidjs {
     /**
      * Request bids. When adUnits or adUnitCodes are not specified, request bids for all ad units added.
      */
-    requestBids(requestParam?: IRequestObj): void;
+    requestBids(requestParam?: IRequestObj): Promise<IRequestBidsResult>;
 
     /**
      * This function returns the query string targeting parameters available at this moment for a given ad unit.
@@ -146,8 +151,9 @@ export namespace prebidjs {
      * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)
      *
      * @param adapters
-     * @see [[http://prebid.org/overview/analytics.html]]
-     * @see [[http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html]]
+     * @see http://prebid.org/overview/analytics.html
+     * @see http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
      */
     enableAnalytics(adapters: analytics.AnalyticsAdapter[]): void;
 
@@ -162,7 +168,11 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    onEvent: event.OnEventHandler;
+    onEvent<E extends keyof event.PrebidEventMap>(
+      event: E,
+      handler: (data: event.PrebidEvent<E>) => void,
+      id?: string
+    ): void;
 
     /**
      * Deregister
@@ -173,7 +183,11 @@ export namespace prebidjs {
      *        This makes it possible to register callback events for a specific item in the event context
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.onEvent
      */
-    offEvent(event: event.EventName, handler: Function, id?: any): void;
+    offEvent<E extends keyof event.PrebidEventMap>(
+      event: E,
+      handler: (data: event.PrebidEvent<E>) => void,
+      id?: string
+    ): void;
 
     /**
      * Convert a cpm from a currency to another one.
@@ -206,7 +220,7 @@ export namespace prebidjs {
      * @param adUnitCode - optional filter for the given ad unit code
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getHighestCpmBids.html
      */
-    getHighestCpmBids(adUnitCode?: string): event.BidWonEvent[];
+    getHighestCpmBids(adUnitCode?: string): prebidjs.BidResponse[];
 
     /**
      * This function will render the ad (based on params) in the given iframe document passed through.
@@ -225,7 +239,50 @@ export namespace prebidjs {
      * @see https://github.com/prebid/Prebid.js/issues/8532
      * @see https://github.com/prebid/prebid.github.io/issues/3830
      */
-    registerSignalSources(): void;
+    registerSignalSources?: () => void;
+
+    getAllWinningBids(): prebidjs.BidResponse[];
+
+    /**
+     * This function returns the bid responses at the given moment.
+     *
+     * Note that prebidjs doesn't clean up old bid responses, so this function will return all bid responses
+     * over time. You have to use clearAllAuctions() to clear the bid responses.
+     *
+     * @param adUnitCode
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getBidResponsesForAdUnitCode.html
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/getBidResponses.html
+     */
+    getBidResponsesForAdUnitCode(adUnitCode: string): IBidsResponse;
+
+    /**
+     * Utility to clear all ad units of bids. This is useful for testing or to clear caches in a
+     * single page application.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/clearAllAuctions.html
+     */
+    clearAllAuctions(): void;
+
+    /**
+     * Defining an alias can help avoid user confusion since it’s possible to send parameters to the same adapter
+     * but in different contexts (e.g, The publisher uses "appnexus" for demand and also uses "newAlias" which is an
+     * SSP partner that uses the "appnexus" adapter to serve their own unique demand).
+     *
+     * @example ```javascript
+     * pbjs.aliasBidder('bidderA', 'aliasOfBidderA', {gvlid: 9999});
+     * ```
+     *
+     * @param bidderCode
+     * @param alias
+     * @param options - `gvlid` IAB Global Vendor List ID for this alias for use with the TCF control module.
+     *                - `useBaseGvlid` Flag determining if the GVL ID of the original adapter should be re-used. (PBJS 9.14+)
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/aliasBidder.html
+     */
+    aliasBidder(
+      bidderCode: string,
+      alias: string,
+      options?: { gvlid?: number; useBaseGvlid?: boolean }
+    ): void;
   }
 
   /**
@@ -295,6 +352,32 @@ export namespace prebidjs {
        */
       readonly useAdUnitCodeAsPlacement?: boolean;
     };
+  }
+
+  /**
+   * ## Global NextMillennium configuration
+   *
+   * This extends the [[IPrebidJsConfig]] with NextMillennium specific configuration options.
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
+   */
+  interface INextMillenniumConfig {
+    /**
+     * The disabledSendingStatisticData parameter disables sending statistics data to the
+     * nextMillennium server, such as bidRequested, bidResponse, noBid and bidTimeout events.
+     *
+     * An example of enabling this option:
+     *
+     * ```javascript
+     * pbjs.setBidderConfig({
+     *   bidders: ['nextMillennium'],
+     *   config: {
+     *     disabledSendingStatisticData: true,
+     *   },
+     * })
+     * ```
+     */
+    readonly disabledSendingStatisticData?: boolean;
   }
 
   /**
@@ -694,7 +777,39 @@ export namespace prebidjs {
       };
     }
 
+    /**
+     * This module can be used in combination with Adagio Bid Adapter (SSP) and/or with Adagio prebid server endpoint.
+     * It computes and collects data required to leverage Adagio viewability and attention prediction engine.
+     *
+     * > Disclosure: This module loads external code that is not open source and has not been reviewed by Prebid.org.
+     *
+     * NOTE: This is available since prebid 9.6.0 and is recommended
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/adagioRtdProvider.html
+     */
+    export interface IAdagioDataProviderModule extends IDataProvider {
+      readonly name: 'adagio';
+      readonly params: {
+        /**
+         * Account id provided by Adagio.
+         */
+        readonly organizationId: string;
+
+        /**
+         * Account site name provided by Adagio.
+         */
+        readonly site: string;
+
+        /**
+         * Programmatically set the `ortb2Imp.ext.data.placement` signal based on location.
+         * Possible values: ortb (default), code, gpid.
+         */
+        readonly placementSource?: 'ortb' | 'code' | 'gpid';
+      };
+    }
+
     type DataProvider =
+      | IAdagioDataProviderModule
       | IGeolocationDataProviderModule
       | ITimeoutDataProviderModule
       | IIntersectionDataProviderModule
@@ -773,6 +888,12 @@ export namespace prebidjs {
        */
       readonly enableOverride?: boolean;
 
+      /**
+       * Enable/disable registered syncs for aliased adapters.
+       * @default: `false`
+       */
+      readonly aliasSyncEnabled?: boolean;
+
       readonly userIds?: UserIdProvider[];
 
       /**
@@ -814,10 +935,15 @@ export namespace prebidjs {
       | IIdentityLinkProvider
       | IPubCommonIdProvider
       | IZeotapIdPlusIdProvider
+      | ITaboolaIdProvider
       | IUtiqIdProvider
+      | IUtiqMtpIdProvider
       | ISharedIdProvider
       | IPairIdProvider;
 
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/userId.html#basic-configuration
+     */
     interface IUserIdProvider<N extends string> {
       /**
        * the provider name
@@ -830,6 +956,17 @@ export namespace prebidjs {
        * the ID system is managing its own storage
        */
       readonly storage?: IUserIdStorage;
+
+      /**
+       * An array of bidder codes to which this user ID may be sent.
+       */
+      readonly bidders?: BidderCode[];
+
+      /**
+       * Used only if the page has a separate mechanism for storing a User ID. The value is an object containing the
+       * values to be sent to the adapters.
+       */
+      readonly value?: any;
     }
 
     /**
@@ -1030,24 +1167,42 @@ export namespace prebidjs {
      */
     export interface IPubCommonIdProvider extends IUserIdProvider<'pubCommonId'> {}
 
+    /**
+     * Params are identical for UtiqId and UtiqMtpId
+     */
     export interface IUtiqIdProviderParams {
       /**
        * Max amount of time (in seconds) before looking into storage for data
        */
-      readonly maxDelayTime: number;
+      readonly maxDelayTime?: number;
     }
 
+    export interface IUtiqMtpIdProviderParams {
+      /**
+       * Max amount of time (in seconds) before looking into storage for data
+       */
+      readonly maxDelayTime?: number;
+    }
+
+    export interface ITaboolaIdProvider extends IUserIdProvider<'taboolaId'> {}
+
     /**
+     * Prebid 9+ utiq id provider type. The Prebid 8 module was not typed to avoid confusion and
+     * unintended behaviour, because prebid filters out unconfigured modules.
+     *
      * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiq.html
+     * @see https://docs.utiq.com/docs/programmatic-integration
      */
     export interface IUtiqIdProvider
-      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiq'> {
-      /**
-       * An array of bidder codes to which this user ID may be sent.
-       * Currently, required and supporting AdformOpenRTB
-       */
-      readonly bidders: BidderCode[];
-    }
+      extends IParameterizedUserIdProvider<IUtiqIdProviderParams, 'utiqId'> {}
+    /**
+     * MTP stands for MarTechPass.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/userid-submodules/utiqMtp.html
+     * @see https://docs.utiq.com/docs/programmatic-integration
+     */
+    export interface IUtiqMtpIdProvider
+      extends IParameterizedUserIdProvider<IUtiqMtpIdProviderParams, 'utiqMtpId'> {}
 
     /**
      * ID+, powered by zeotap, enables the marketing ecosystem to overcome challenges posed by the demise of identifiers
@@ -1142,7 +1297,9 @@ export namespace prebidjs {
       | 'kpuid.com'
       | 'yahoo.com'
       | 'thenewco.it'
-      | 'pubcid.org';
+      | 'pubcid.org'
+      | 'utiq.com'
+      | 'utiq-mtp.com';
 
     export interface IEncryptedSignalSource {
       /**
@@ -1213,191 +1370,177 @@ export namespace prebidjs {
   }
 
   export namespace event {
-    export type EventName =
-      | 'auctionInit'
-      | 'auctionEnd'
-      | 'beforeRequestBids'
-      | 'bidRequested'
-      | 'bidResponse'
-      | 'bidAdjustment'
-      | 'bidWon'
-      | 'noBid'
-      | 'bidTimeout'
-      | 'setTargeting'
-      | 'requestBids'
-      | 'addAdUnits'
-      | 'adRenderFailed'
-      | 'auctionDebug'
-      | 'bidderDone'
-      | 'tcf2Enforcement';
+    export interface PrebidEventMap {
+      addAdUnits: void;
+      adRenderFailed: RenderFailure;
+      adRenderSucceeded: BidResponse;
+      auctionDebug: AuctionDebugInfo;
+      auctionEnd: AuctionObject;
+      auctionInit: AuctionObject;
+      auctionTimeout: AuctionObject;
+      beforeBidderHttp: BidderRequests;
+      beforeRequestBids: BeforeRequestBidsAdUnitInfo;
+      bidAccepted: BidResponse;
+      bidAdjustment: BidResponse;
+      bidderDone: BidderRequests;
+      bidRequested: BidderRequests;
+      bidResponse: BidResponse;
+      bidWon: BidResponse;
+      bidTimeout: NoBidObject[];
+      noBid: NoBidObject;
+      requestBids: void;
+      setTargeting: { [key: string]: AdServerTargeting };
+      tcf2Enforcement: TCF2Enforcement;
+    }
 
-    /**
-     * All events that have no type definitions
-     */
-    export type UntypedEventName = Exclude<EventName, 'bidWon'>;
+    export type PrebidEvent<E extends keyof PrebidEventMap> = PrebidEventMap[E];
 
-    export type OnEventHandler = {
-      /**
-       * Triggered when a prebid bid has won the entire auction.
-       *
-       * @param event
-       * @param handler
-       * @param id - ad unit code
-       */
-      (event: 'bidWon', handler: (bid: BidWonEvent) => void, id?: string): void;
-
-      (event: UntypedEventName, bid: any, id?: string): void;
+    export type TCF2Enforcement = {
+      readonly storageBlocked: string[];
+      readonly bidderBlocked: string[];
+      readonly analyticsBlocked: string[];
     };
 
-    export type BidWonEvent = {
-      readonly bidder: string;
-      readonly bidderCode: BidderCode;
+    export type RenderFailure = { readonly reason?: string; readonly message?: string };
 
+    export type AuctionDebugInfo = {
+      readonly type: 'WARNING' | 'ERROR';
+      readonly arguments?: any[];
+    };
+
+    export interface BeforeRequestBidsAdUnitInfo extends IAdUnit {
+      readonly sizes?: [number, number][];
+      readonly transactionId?: string;
+    }
+
+    export type GdprConsent = {
+      readonly addtlConsent?: string;
+      readonly apiVersion?: number;
+      readonly consentString?: string;
+      readonly gdprApplies?: boolean;
+      readonly vendorData?: any;
+    };
+
+    export type BidderRequestBid = {
+      readonly bidder: prebidjs.BidderCode;
+      readonly adUnitCode: string;
+      readonly auctionId: string;
+
+      readonly sizes: [number, number][];
+      readonly mediaTypes: prebidjs.IMediaTypes;
+
+      readonly bidId?: string;
+      readonly bidderRequestId: string;
+
+      readonly deferBilling?: boolean;
+      readonly src: 's2s' | 'client';
+      readonly transactionId?: string;
+
+      readonly ortb2: prebidjs.firstpartydata.PrebidFirstPartyData;
+      readonly ortb2Imp?: prebidjs.IOrtb2Imp;
+
+      readonly serverResponseTimeMs?: number;
+    };
+
+    export type BidderRequests = {
+      readonly adUnitsS2SCopy?: IAdUnit[];
+      readonly auctionId?: string;
+      readonly auctionStart?: number;
+      readonly bidderCode?: BidderCode;
+      readonly bidderRequestId?: string;
+      readonly bids?: BidderRequestBid[];
+      readonly gdprConsent?: GdprConsent;
       /**
-       * Contains all configured bids for the placement
-       * This depends on the bidder code.
+       * different functions to manage metrics
+       */
+      readonly metrics?: any;
+      readonly ortb2?: firstpartydata.PrebidFirstPartyData;
+      readonly refererInfo?: any;
+      readonly src?: string;
+      readonly start?: number;
+      readonly timeout?: number;
+      readonly uniquePbsTid?: string;
+    };
+
+    export type AuctionObject = {
+      /**
+       * The ad unit codes that are participating in the auction.
        *
-       * Note: future versions of this typing may refine the type based on the
-       *       `bidderCode` property.
+       * Note that ad unit codes may appear multiple times. This is likely caused by prebid
+       * twin ad unit feature
        */
-      readonly params: any[];
+      readonly adUnitCodes: string[];
+      readonly adUnits?: IAdUnit[];
+      readonly auctionId: string;
+      readonly auctionStatus?: 'inProgress' | 'completed';
+      readonly bidderRequests?: BidderRequests[];
+      readonly bidsReceived?: prebidjs.BidResponse[];
+      readonly bidsRejected?: NoBidObject[];
+      /**
+       * different functions to manage metrics
+       */
+      readonly metrics?: any;
+      readonly noBids?: NoBidObject[];
+      readonly seatNonBids?: any[];
+      readonly timeout?: number;
+      readonly timestamp?: number;
 
       /**
-       * Depends on SSP what's inside
+       * This is probably always empty, because when the auction ends, the results must be sent
+       * back to the ad server. After that, the winners will be determined.
        */
-      readonly meta: any;
+      readonly winningBids: prebidjs.BidResponse[];
+    };
 
+    export type NoBidObject = {
       /**
-       * can be undefined for native / outstream media types
-       */
-      readonly width?: number;
-
-      /**
-       * can be undefined for native / outstream media types
-       */
-      readonly height?: number;
-
-      /**
-       * If the bid is associated with a Deal, this field contains the deal ID.
-       * @see https://docs.prebid.org/adops/deals.html
-       */
-      readonly dealId?: string;
-
-      /**
-       * The unique identifier of a bid creative. It’s used by the line item’s creative
+       * unique identifier by prebid for a creative returned in an auction
        */
       readonly adId: string;
-      readonly requestId: string;
-      readonly mediaType: 'banner' | 'video' | 'native';
-      readonly source: 'client' | 's2s';
 
       /**
-       * The exact bid price from the bidder
+       * The DOM ID of the ad unit
        */
-      readonly cpm: number;
-
-      /**
-       * Bidder-specific creative ID
-       */
-      readonly creativeId: number;
-      readonly currency: 'EUR' | 'USD';
-      readonly netRevenue: boolean;
-      readonly ttl: number;
       readonly adUnitCode: string;
-
-      readonly ad: string;
-      readonly originalCpm?: number;
-      readonly originalCurrency?: 'EUR' | 'USD';
+      readonly adUnitId?: string;
       readonly auctionId: string;
-      readonly responseTimestamp: number;
-      readonly requestTimestamp: number;
-      readonly timeToRespond: number;
-
+      readonly bidId?: string;
       /**
-       * price bucket: 'low granularity'
+       * the current count of the bid requests on the page
+       * (each request increases the count)
        */
-      readonly pbLg: string;
+      readonly bidRequestsCount?: number;
+      readonly bidder: string;
+      readonly bidderCode: string;
+      readonly bidderRequestId?: string;
       /**
-       * price bucket: 'medium granularity'
+       * the current count of the bidder requests on the page
+       * (each request to the bidder increases the count)
        */
-      readonly pbMg: string;
+      readonly bidderRequestsCount?: number;
       /**
-       * price bucket: 'high granularity'
+       * the current count of auctions the bidder won
        */
-      readonly pbHg: string;
+      readonly bidderWinsCount?: number;
+      readonly floorData?: floors.IFloorConfig;
+      readonly mediaTypes?: IMediaTypes;
       /**
-       * price bucket: 'auto granularity'
+       * different functions to manage metrics
        */
-      readonly pbAg: string;
+      readonly metrics?: any;
+      readonly ortb2?: firstpartydata.PrebidFirstPartyData;
+      readonly ortb2Imp?: IOrtb2Imp;
       /**
-       * price bucket: 'dense granularity'
-       */ number;
-      readonly pbDg: string;
-      /**
-       * price bucket: 'custom granularity'
+       * provider specific params
        */
-      readonly pbCg: string;
-      /**
-       * @example 728x90
-       */
-      readonly size: string;
-
-      /**
-       * Contains all the adserver targeting parameters
-       */
-      readonly adserverTargeting: {
-        readonly hb_bidder: string;
-        readonly hb_adid: string;
-        readonly hb_pb: string;
-        readonly hb_size: string;
-        readonly hb_source: string;
-        readonly hb_format: string;
-        readonly hb_adomain: string;
-      };
-
-      /**
-       * Status of the bid. Possible values: targetingSet, rendered
-       */
-      readonly status: 'rendered' | 'targetingSet';
-
-      /**
-       *  The bid’s status message
-       */
-      readonly statusMessage: 'Bid returned empty or error response' | 'Bid available';
-
-      // outstream
-      readonly vastXml?: string;
-      readonly vastImpUrl?: string;
-
-      // native
-      /**
-       *  Contains native key value pairs.
-       */
-      readonly native: {
-        readonly address?: string;
-        readonly body?: string;
-        readonly body2?: string;
-        readonly cta?: string;
-        readonly clickTrackers?: string[];
-        readonly clickUrl?: string;
-        readonly displayUrl?: string;
-        readonly downloads?: string;
-        readonly image?: {
-          readonly url: string;
-          readonly height: number;
-          readonly width: number;
-        };
-        readonly impressionTrackers?: string[];
-        readonly javascriptTrackers?: string;
-        readonly likes?: any;
-        readonly phone?: string;
-        readonly price?: string;
-        readonly privacyLink?: string;
-        readonly rating?: string;
-        readonly salePrice?: string;
-        readonly sponsoredBy?: string;
-        readonly title?: string;
-      };
+      readonly params?: any;
+      readonly schain?: SupplyChainObject.ISupplyChainObject;
+      readonly sizes?: [number, number][];
+      readonly src?: 'client' | 's2s';
+      readonly timeout?: number;
+      readonly transactionId?: string;
+      readonly userId?: userSync.UserIds;
+      readonly userIdsAsEids?: any;
     };
   }
 
@@ -1466,6 +1609,7 @@ export namespace prebidjs {
 
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
+     * @see https://docs.prebid.org/dev-docs/modules/prebidServer.html#configuration
      */
     export interface IS2SConfig {
       /**
@@ -1477,6 +1621,12 @@ export namespace prebidjs {
        * Which bidders auctions should take place on the server side
        */
       readonly bidders: ReadonlyArray<BidderCode>;
+
+      /**
+       * An optional name for this configuration. This is necessary if you have multiple configurations and want to
+       * reference them in a `BidObject` via the `module` property.
+       */
+      readonly name?: string;
 
       /**
        * Automatically includes all following options in the config with vendor's default values.
@@ -1750,8 +1900,17 @@ export namespace prebidjs {
          * Meta info about the versions of moli and of the publisher ad tag in use.
          */
         h5v: {
+          /** initial value comes from the server and is overridden during runtime by the ad tag */
           moliVersion: string;
-          adTagVersion: string | undefined;
+
+          /** replaced by configVersion */
+          adTagVersion?: string;
+
+          /** information will come from the server */
+          configVersion?: string;
+
+          /** information set by the configureFromEndpoint bundle */
+          configLabel?: string;
         };
       };
     };
@@ -1799,13 +1958,77 @@ export namespace prebidjs {
     }
   }
 
+  /**
+   * @see http://prebid.org/overview/analytics.html
+   * @see http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
+   */
   export namespace analytics {
-    export type AnalyticsAdapter = IGoogleAnalyticsAdapter;
-    export type AnalyticsProviders = 'ga';
+    export type AnalyticsAdapter =
+      | IAdagioAnalyticsAdapter
+      | IAgmaAnalyticsAdapter
+      | IGoogleAnalyticsAdapter;
+    export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
+    /**
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
+     */
     export interface IAnalyticsAdapter<T> {
+      /**
+       * Analytics adapter code
+       */
       readonly provider: AnalyticsProviders;
+
+      /**
+       * Adapter specific options
+       */
       readonly options: T;
+
+      /**
+       * Event include list; if provided, only these events will be forwarded to the adapter
+       */
+      readonly includeEvents?: string[];
+
+      /**
+       * Event blocklist; if provided, these events will not be forwarded to the adapter
+       */
+      readonly excludeEvents?: string[];
+    }
+
+    export interface IAgmaAnalyticsAdapterOptions {
+      /**
+       * provided by AGMA
+       */
+      readonly code: string;
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/analytics/agma.html
+     */
+    export interface IAgmaAnalyticsAdapter extends IAnalyticsAdapter<IAgmaAnalyticsAdapterOptions> {
+      readonly provider: 'agma';
+    }
+
+    export interface IAdagioAnalyticsAdapterOptions {
+      /**
+       * Required. Provided by Adagio
+       * @example `'1000'`
+       */
+      readonly organizationId: string;
+
+      /**
+       * Required. Provided by Adagio
+       * @example `'my-website'`
+       */
+      readonly site: string;
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/analytics/adagio.html
+     */
+    export interface IAdagioAnalyticsAdapter
+      extends IAnalyticsAdapter<IAdagioAnalyticsAdapterOptions> {
+      readonly provider: 'adagio';
     }
 
     /**
@@ -1895,6 +2118,11 @@ export namespace prebidjs {
       page?: string;
 
       /**
+       *
+       */
+      publisher?: OpenRtb2Publisher;
+
+      /**
        * Details about the Content (Section 3.2.16) within the site.
        */
       content?: {
@@ -1925,12 +2153,29 @@ export namespace prebidjs {
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
+       *
+       * @see https://docs.prebid.org/features/firstPartyData.html#supplying-bidder-specific-data
+       * @see https://adagioio.notion.site/Prebid-9-Adagio-required-updates-compatible-from-Prebid-9-5-f62d02d67d604e0187a800afefadb29d
        */
-      ext?: any;
+      ext?:
+        | any // basically anything can still be put here
+        | {
+            data?: {
+              /**
+               * used by adagio. Example would be `article`
+               */
+              pagetype?: string;
+
+              /**
+               * used by adagio. Example would be `economy`
+               */
+              category?: string;
+            };
+          };
     }
 
     /**
-     * Data segment that allos additional data about the related object (e.g. content).
+     * Data segment that allows additional data about the related object (e.g. content).
      */
     export interface OpenRtb2Data {
       /**
@@ -2045,11 +2290,31 @@ export namespace prebidjs {
       ext?: any & CriteoOpenRtb2UserExt;
     }
 
+    /**
+     * This object describes the entity who directly supplies inventory to and is paid by the exchange. This may be a publisher, intermediary exchange, ad network, etc.
+     */
     export interface OpenRtb2Publisher {
+      /**
+       * Exchange-specific seller ID. Every ID must map to only a single entity that is paid for
+       * inventory transacted via that ID.
+       * Corresponds to a `seller_id` of a seller in the exchange’s sellers.json file.
+       */
+      id?: string;
+
+      /**
+       * Seller name (may be aliased at the seller's request).
+       */
+      name?: string;
+
       /**
        * Array of IAB content categories that describe the publisher.
        */
       cat?: string[];
+
+      /**
+       * Highest level domain of the seller (e.g., "seller.com").
+       */
+      domain?: string;
 
       /**
        * Placeholder for exchange-specific extensions to OpenRTB
@@ -2057,13 +2322,128 @@ export namespace prebidjs {
       ext?: any;
     }
 
+    /**
+     * Entity that applied user parameters and the parameters they applied.
+     */
+    export interface OpenRtb2RegsExtDsaTransparency {
+      /**
+       * Domain of the entity that applied user parameters
+       */
+      domain: string;
+
+      /**
+       * Array for platform or sell-side use of any user parameters (using the list provided by DSA Transparency Taskforce).
+       * Note: See definition and list of possible user parameters as listed here, applied consistently in both bid
+       *      request and/or bid response.
+       *
+       * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/extensions/community_extensions/dsa_transparency.md#user_parameters
+       */
+      params: Array<1 | 2 | 3>;
+    }
+
+    /**
+     * Extension for DSA transparency information
+     * @see https://github.com/InteractiveAdvertisingBureau/openrtb/blob/main/extensions/community_extensions/dsa_transparency.md
+     */
+    export interface OpenRtb2RegsExtDsa {
+      dsa?: {
+        /**
+         * Flag to indicate if DSA information should be made available. This will signal if the bid request belongs to
+         * an Online Platform/VLOP, such that a buyer should respond with DSA Transparency information based on the
+         * pubrender value.
+         *
+         * 0 = Not required
+         * 1 = Supported, bid responses with or without DSA object will be accepted
+         * 2 = Required, bid responses without DSA object will not be accepted
+         * 3 = Required, bid responses without DSA object will not be accepted, Publisher is an Online Platform
+         */
+        dsarequired: 0 | 1 | 2 | 3;
+
+        /**
+         * Flag to indicate if the publisher will render the DSA Transparency info. This will signal if the publisher is
+         * able to and intends to render an icon or other appropriate user-facing symbol and display the DSA
+         * transparency info to the end user.
+         *
+         * 0 = Publisher can't render
+         * 1 = Publisher could render depending on adrender
+         * 2 = Publisher will render
+         */
+        pubrender: 0 | 1 | 2;
+
+        /**
+         * Independent of pubrender, the publisher may need the transparency data for audit purposes.
+         *
+         * 0 = do not send transparency data
+         * 1 = optional to send transparency data
+         * 2 = send transparency data
+         */
+        datatopub: 0 | 1 | 2;
+
+        /**
+         * Array of objects of the entities that applied user parameters and the parameters they applied.
+         */
+        transparency?: OpenRtb2RegsExtDsaTransparency[];
+      };
+    }
+
+    export interface OpenRtb2Regs {
+      /**
+       * Placeholder for exchange-specific extensions to OpenRTB
+       */
+      ext?: OpenRtb2RegsExtDsa;
+    }
+
     export interface PrebidFirstPartyData {
       site?: OpenRtb2Site;
 
       user?: OpenRtb2User;
 
-      publisher?: OpenRtb2Publisher;
+      /**
+       * This object contains any legal, governmental, or industry regulations that apply to the request. The
+       * coppa flag signals whether or not the request falls under the United States Federal Trade Commission’s
+       * regulations for the United States Children’s Online Privacy Protection Act (“COPPA”)
+       */
+      regs?: OpenRtb2Regs;
+
+      /**
+       * community extensions
+       */
+      ext?:
+        | {
+            prebid?: {
+              data?: {
+                /**
+                 * Publishers can constrain which bidders receive which user.ext.eids entries.
+                 * See the [Prebid.js user ID permissions](https://docs.prebid.org/dev-docs/modules/userId.html#permissions) reference for background.
+                 *
+                 * @see https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#eid-permissions
+                 * @see https://docs.prebid.org/dev-docs/modules/userId.html#permissions
+                 */
+                eidpermissions?: Array<{
+                  /**
+                   * Which user.ext.eids.source is receiving the permissions, one entry per source is allowed
+                   */
+                  source: prebidjs.userSync.EIDSource;
+                  /**
+                   * Which bidders are allowed to receive the named eid source
+                   */
+                  permissions: Array<BidderCode | '*'>;
+                }>;
+              };
+            };
+          }
+        | any;
     }
+
+    /**
+     * The OpenRTB 2.5 bid request object.
+     */
+    export type OpenRtb2 = PrebidFirstPartyData;
+  }
+
+  export interface IBidderConfig {
+    readonly bidders: BidderCode[];
+    readonly config: Partial<IPrebidJsConfig>;
   }
 
   /**
@@ -2081,7 +2461,8 @@ export namespace prebidjs {
     extends IImproveDigitalConfig,
       IRubiconConfig,
       IIndexExchangeConfig,
-      IAdagioConfig {
+      IAdagioConfig,
+      INextMillenniumConfig {
     /**
      * Turn on debugging
      */
@@ -2254,6 +2635,12 @@ export namespace prebidjs {
     readonly bidderSequence?: 'random' | 'fixed';
 
     /**
+     * The auctionOptions object controls aspects related to auctions.
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#auction-options
+     */
+    readonly auctionOptions?: auctionOptions.IAuctionOptionsConfig;
+
+    /**
      * By default, Prebid keeps in memory a log of every event since the initial page load, and makes it available to
      * analytics adapters and getEvents(). This can cause high memory usage on long-running single-page apps;
      * you can set a limit on how long events are preserved with eventHistoryTTL
@@ -2316,7 +2703,7 @@ export namespace prebidjs {
      *
      * https://prebid.org/dev-docs/modules/currency.html
      */
-    readonly currency: currency.ICurrencyConfig;
+    readonly currency?: currency.ICurrencyConfig;
 
     /**
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html#setConfig-Server-to-Server
@@ -2368,6 +2755,22 @@ export namespace prebidjs {
     readonly enableTIDs?: boolean;
 
     readonly allowActivities?: activitycontrols.IAllowActivities;
+
+    /**
+     * Prebid offers an additional gvl mapping configuration that allows us to defined GVL IDs
+     * for a module or bidder by name.
+     *
+     * This is useful in various cases
+     *
+     * 1. bidders that do not have a GVL ID defined in their adapter yet
+     * 2. bidders where we use aliases. The alias is not part of the registry
+     *
+     * This is the static variant of the runtime configuration option through `pbjs.aliasBidder`
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/tcfControl.html#page-integration
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/aliasBidder.html
+     */
+    readonly gvlMapping?: Record<string, number>;
   }
 
   /**
@@ -2379,6 +2782,22 @@ export namespace prebidjs {
      * Hint: Some SSPs handles only the first size, so keep that in mind.
      */
     readonly sizes: [number, number][];
+
+    /**
+     * OpenRTB page position value:
+     *
+     * - 0=unknown
+     * - 1=above-the-fold
+     * - 3=below-the-fold
+     * - 4=header
+     * - 5=footer
+     * - 6=sidebar
+     * - 7=full-screen
+     *
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    readonly pos?: 0 | 1 | 3 | 4 | 5 | 6 | 7;
   }
 
   /**
@@ -2489,6 +2908,16 @@ export namespace prebidjs {
       InArticle = 3,
       InFeed = 4,
       Interstitial = 5
+    }
+
+    /**
+     * @see [OpenRTB 2.6 specification, Plcmt Subtypes - Video](https://github.com/InteractiveAdvertisingBureau/AdCOM/blob/develop/AdCOM%20v1.0%20FINAL.md#list_plcmtsubtypesvideo)
+     */
+    export const enum Plcmt {
+      Instream = 1,
+      AccompanyingContent = 2,
+      Interstitial = 3,
+      NoContentStandalone = 4
     }
 
     /**
@@ -2697,6 +3126,11 @@ export namespace prebidjs {
     readonly placement: video.Placement;
 
     /**
+     * @see [OpenRTB 2.6 specification, Plcmt Subtypes -  Video](https://github.com/InteractiveAdvertisingBureau/AdCOM/blob/develop/AdCOM%20v1.0%20FINAL.md#list_plcmtsubtypesvideo)
+     */
+    readonly plcmt: video.Plcmt;
+
+    /**
      * Minimum bit rate in Kbps.
      * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
      */
@@ -2714,7 +3148,7 @@ export namespace prebidjs {
      *   1: Linear/In-Stream
      *   2: Non-Linear/Overlay.
      *
-     * @see [OpenRTB spec|https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf]
+     * @see [OpenRTB spec](https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf)
      */
     readonly linearity?: video.Linearity;
 
@@ -3292,7 +3726,7 @@ export namespace prebidjs {
     readonly pubstack?: IPubstackConfig;
 
     /**
-     * Configure additional information per ad unit that should be send along
+     * Configure additional information per ad unit that should be sent along
      * with a prebid server auction call.
      */
     readonly ortb2Imp?: IOrtb2Imp;
@@ -3337,29 +3771,60 @@ export namespace prebidjs {
   }
 
   /**
+   * custom prebid ortb2 extension. Mainly used for prebid server communication
+   */
+  export interface IOrtb2ImpPrebid {
+    readonly bidder?: {
+      readonly [Bidder in BidderCode]: any;
+    };
+    readonly storedrequest?: IOrtb2ImpStoredRequest;
+  }
+
+  export interface IOrtb2ImpStoredRequest {
+    /**
+     * Specify a stored request id
+     */
+    readonly id?: string;
+  }
+
+  /**
+   * Adagio moved some of their logic into an RTD Module with Prebid 9.5.0.
+   * The change also requires to put some additional information in the `adUnit.ortb2Imp.ext.data` object.
+   *
+   * @see https://adagioio.notion.site/Prebid-9-Adagio-required-updates-compatible-from-Prebid-9-5-f62d02d67d604e0187a800afefadb29d
+   */
+  export interface IOrtb2ImpDataAdagio {
+    /**
+     * Required - Former 'bids.params.adUnitElementId'
+     */
+    divId?: string;
+
+    /**
+     * Same as 'bids.params.placement'
+     */
+    placement?: string;
+  }
+
+  /**
    * Values passed by prebid during a prebid server auction call.
    *
    * @see https://github.com/prebid/Prebid.js/pull/6494
    * @see https://github.com/prebid/Prebid.js/issues/6528
    */
   export interface IOrtb2Imp {
+    /**
+     * 1 = the ad is interstitial or full screen, 0 = not interstitial.
+     * @default 0
+     */
+    readonly instl?: 0 | 1;
+
     readonly ext?: {
-      readonly data?: any;
+      readonly data?: IOrtb2ImpDataAdagio | any;
 
       /**
        * custom prebid extensions
        */
-      readonly prebid?: {
-        readonly bidder?: {
-          readonly [Bidder in BidderCode]: any;
-        };
-        readonly storedrequest?: {
-          /**
-           * Specify a stored request id
-           */
-          readonly id?: string;
-        };
-      };
+      readonly prebid?: IOrtb2ImpPrebid;
     };
   }
 
@@ -3369,31 +3834,38 @@ export namespace prebidjs {
   export const Adform = 'adf';
   export const AdUp = 'aduptech';
   export const Criteo = 'criteo';
+  export const CWire = 'cwire';
   export const ConnectAd = 'connectad';
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
   export const GumGum = 'gumgum';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
+  export const InMobi = 'inmobi';
   export const Invibes = 'invibes';
   export const NanoInteractive = 'nanointeractive';
-  export const JustPremium = 'justpremium';
+  export const NextMillennium = 'nextMillennium';
   export const PubMatic = 'pubmatic';
   export const Ogury = 'ogury';
   export const OneTag = 'onetag';
   export const OpenX = 'openx';
   export const SmartAdServer = 'smartadserver';
   export const Smartx = 'smartx';
+  export const SmileWanted = 'smilewanted';
   export const Unruly = 'unruly';
+  export const Taboola = 'taboola';
   export const Teads = 'teads';
+  export const TheTradeDesk = 'ttd';
   export const Triplelift = 'triplelift';
   export const Yieldlab = 'yieldlab';
   export const Seedtag = 'seedtag';
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
   export const StroeerCore = 'stroeerCore';
+  export const StailaMedia = 'stailamedia';
   export const Xaxis = 'xhb';
   export const DSPX = 'dspx';
+  export const RichAudience = 'ra'; // using the shorter alias
   export const Rubicon = 'rubicon';
   export const Recognified = 'rads';
   export const Visx = 'visx';
@@ -3410,30 +3882,37 @@ export namespace prebidjs {
     | typeof Adform
     | typeof ConnectAd
     | typeof Criteo
+    | typeof CWire
     | typeof AppNexusAst
     | typeof AppNexus
     | typeof GumGum
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof Invibes
-    | typeof JustPremium
+    | typeof InMobi
     | typeof NanoInteractive
+    | typeof NextMillennium
     | typeof PubMatic
     | typeof Ogury
     | typeof OneTag
     | typeof OpenX
     | typeof SmartAdServer
     | typeof Smartx
+    | typeof SmileWanted
     | typeof Unruly
+    | typeof Taboola
     | typeof Teads
+    | typeof TheTradeDesk
     | typeof Triplelift
     | typeof Yieldlab
     | typeof Seedtag
     | typeof Spotx
     | typeof ShowHeroes
+    | typeof StailaMedia
     | typeof StroeerCore
     | typeof Xaxis
     | typeof DSPX
+    | typeof RichAudience
     | typeof Rubicon
     | typeof Recognified
     | typeof Visx
@@ -3548,6 +4027,15 @@ export namespace prebidjs {
      * @example `{context: 1, plcmttype: 2}`
      */
     readonly native?: any;
+
+    /**
+     * The splitKeyword parameter lets Adagio know that the traffic is eligible to be sent to a Direct Seat using the Optimised Prebid Server offering.
+     * When it’s not included in the configuration, Adagio will only send the traffic to its resellers set up through the Demand Library.
+     *
+     * You can pick any value for splitKeyword (30 alphabetic-numeric string with dash and underscore), e.g. ss-pubmatic (standing for server-side pubmatic).
+     * Once communicated to our team, any change made to its value needs to be communicated again (otw. traffic won’t be recognised as eligible for the Optimised Prebid Server offering)
+     */
+    readonly splitKeyword?: string;
   }
 
   export interface IAdagioBid extends IBidObject<typeof Adagio, IAdagioParams> {}
@@ -3702,12 +4190,38 @@ export namespace prebidjs {
     readonly networkId: number;
 
     /**
+     * The publisherId must either be set through this property or in the `ortb2.site.publisher.id`
+     * object that is sent to Criteo. Prefer the `ortb2.site.publisher.id` object, as it leaves
+     * less room for error and fixes are applied globally.
+     */
+    readonly pubid?: string;
+
+    /**
      * Used for reporting: we use de div-id here.
      */
     readonly publisherSubId?: string;
   }
 
   export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/cwire.html
+   */
+  export interface ICWireParams {
+    /**
+     * C-WIRE page id (compatibility purposes)
+     */
+    readonly domainId: number;
+
+    readonly pageId?: number;
+
+    readonly placementId?: number;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/cwire.html
+   */
+  export interface ICwireBid extends IBidObject<typeof CWire, ICWireParams> {}
 
   export interface IAppNexusASTKeyword {
     [key: string]: string[];
@@ -3796,7 +4310,21 @@ export namespace prebidjs {
     /**
      * Indicates the type of supply for this placement. Possible values are web, mobile_web, mobile_app
      */
-    readonly supplyType?: 'web' | 'mobile_web' | 'mobile_app';
+    readonly supply_type?: 'web' | 'mobile_web' | 'mobile_app';
+
+    /**
+     * If true, Appnexus will return net price to Prebid.js after publisher payment rules have been applied.
+     */
+    readonly use_pmt_rule?: boolean;
+
+    /**
+     * 	Identify the placement as above or below the fold.
+     * 	Allowed values:
+     * 	- Unknown: unknown
+     * 	- Above the fold: above
+     * 	- Below the fold: below
+     */
+    readonly position?: 'above' | 'below' | 'unknown';
 
     /**
      * Optional configuration for video placements
@@ -3863,17 +4391,23 @@ export namespace prebidjs {
   }
 
   /**
+   * All available app nexus bidder codes and aliases
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/stailamedia.html
+   */
+  type AppNexusAliases = typeof AppNexusAst | typeof AppNexus | typeof StailaMedia;
+
+  /**
    * AppNexus bid object.
    */
-  export interface IAppNexusASTBid
-    extends IBidObject<typeof AppNexusAst | typeof AppNexus, IAppNexusASTParams> {}
+  export interface IAppNexusASTBid extends IBidObject<AppNexusAliases, IAppNexusASTParams> {}
 
   export interface IGumGumParams {
     /**
      * TrackingID.
      * required for all bid requests tracking a single domain or site
      *
-     * @example `'ggumtest`
+     * @example `'ggumtest'`
      */
     readonly zone: string;
 
@@ -3939,7 +4473,15 @@ export namespace prebidjs {
    * @see https://prebid.org/dev-docs/bidders/improvedigital.html
    */
   export interface IImproveDigitalParams {
+    /**
+     * The placement ID from Improve Digital.
+     */
     readonly placementId: number;
+
+    /**
+     * The publisher ID from Improve Digital.
+     */
+    readonly publisherId: number;
     /**
      * Optional field to add additional targeting values.
      * Arbitrary keys can be added. The value is always a string array.
@@ -4039,69 +4581,38 @@ export namespace prebidjs {
 
   export interface IInvibesBid extends IBidObject<typeof Invibes, IInvibesParams> {}
 
-  // ----- JustPremium ----- //
-
-  export const JustPremiumPushUpBillboard = 'pu';
-  export const JustPremiumPushDownBillboard = 'pd';
-  export const JustPremiumLeaderboard = 'as';
-  export const JustPremiumFloorAd = 'fa';
-  export const JustPremiumClassicFloorAd = 'cf';
-  export const JustPremiumSideAd = 'sa';
-  export const JustPremiumWallpaper = 'wp';
-  export const JustPremiumMobileScroller = 'is';
-  export const JustPremiumMobileSkin = 'mt';
-  export const JustPremiumCascadeAd = 'ca';
-  export const JustPremiumVideoWallpaper = 'wv';
-  export const JustPremiumVideoFloorAd = 'fv';
-  export const JustPremiumMobileStickyExpandable = 'ms';
-  export const JustPremiumMobileVideo = 'mv';
-
-  /**
-   * The JustPremium HeaderBidding Guide offers a complete list of all formats.
-   * This type only contains the formats in use.
-   *
-   * IMPORTANT: The format identifier is used by the prebid adapter to identify the correct adslot.
-   *            AdUnit and DOM id are irrelevant. Make sure that the allow / exclude settings are
-   *            unique for each ad slot. Otherwise only one ad slot will be filled, while the others
-   *            stay empty.
-   */
-  export type JustPremiumFormat =
-    | typeof JustPremiumPushUpBillboard
-    | typeof JustPremiumPushDownBillboard
-    | typeof JustPremiumLeaderboard
-    | typeof JustPremiumFloorAd
-    | typeof JustPremiumClassicFloorAd
-    | typeof JustPremiumSideAd
-    | typeof JustPremiumWallpaper
-    | typeof JustPremiumMobileScroller
-    | typeof JustPremiumMobileSkin
-    | typeof JustPremiumCascadeAd
-    | typeof JustPremiumVideoWallpaper
-    | typeof JustPremiumVideoFloorAd
-    | typeof JustPremiumMobileStickyExpandable
-    | typeof JustPremiumMobileVideo;
-
-  /**
-   * JustPremium bid parameters
-   */
-  export interface IJustPremiumParams {
+  export interface IPrebidServerBidParams {
     /**
-     * The zone ID provided by JustPremium.
+     * this must reference the `name` of an `s2sConfig` object
      */
-    readonly zone: string;
-
-    /**
-     * Permits a publisher to decide which products can be run from a specific ad unit
-     */
-    readonly allow?: Array<JustPremiumFormat>;
-
-    /**
-     * Permits a publisher to decide which products should be excluded from running in specific ad unit
-     */
-    readonly exclude?: Array<JustPremiumFormat>;
+    readonly configName: string;
   }
+  /**
+   * The prebid server bid object is special as it doesn't user the `bidder` property, but rather a `module` property.
+   *
+   * @see https://github.com/prebid/Prebid.js/issues/7688
+   * @see https://github.com/prebid/Prebid.js/issues/8668
+   * @see https://github.com/prebid/Prebid.js/pull/9470
+   * @see https://docs.prebid.org/dev-docs/adunit-reference.html#stored-imp
+   */
+  export interface IPrebidServerBid
+    extends Omit<IBidObject<any, IPrebidServerBidParams>, 'bidder'> {
+    /** bidder is not used and can be left out */
+    readonly bidder?: never;
+    readonly module: 'pbsBidAdapter';
+    readonly params: IPrebidServerBidParams;
 
-  export interface IJustPremiumBid extends IBidObject<typeof JustPremium, IJustPremiumParams> {}
+    readonly ortb2Imp: IOrtb2Imp & {
+      readonly ext?: {
+        readonly prebid: IOrtb2ImpPrebid & {
+          /**
+           * stored request is required for prebid server calls
+           */
+          readonly storedrequest: IOrtb2ImpStoredRequest;
+        };
+      };
+    };
+  }
 
   export interface IPubMaticParams {
     /**
@@ -4250,6 +4761,20 @@ export namespace prebidjs {
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
 
   /**
+   * InMobi bid parameters.
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/inmobi.html
+   */
+  export interface IInMobiParams {
+    readonly plc: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/inmobi.html
+   */
+  export interface IInMobiBid extends IBidObject<typeof InMobi, IInMobiParams> {}
+
+  /**
    * NanoInteractive bid parameters.
    *
    * @see https://github.com/prebid/Prebid.js/blob/master/modules/nanointeractiveBidAdapter.js
@@ -4274,6 +4799,31 @@ export namespace prebidjs {
    */
   export interface INanoInteractiveBid
     extends IBidObject<typeof NanoInteractive, INanoInteractiveParams> {}
+
+  /**
+   * Required one of the two parameters placement_id or group_id.
+   *
+   * Further information for the auction on NextMillennium side is generated automatically.
+   *
+   * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
+   */
+  export interface INextMillenniumParams {
+    /**
+     * Required if group_id is not set.
+     */
+    readonly placement_id?: string;
+
+    /**
+     * Required if placement_id is not set.
+     */
+    readonly group_id?: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/nextMillennium.html
+   */
+  export interface INextMillenniumBid
+    extends IBidObject<typeof NextMillennium, INextMillenniumParams> {}
 
   /**
    * @see https://docs.prebid.org/dev-docs/bidders/ogury.html
@@ -4373,12 +4923,12 @@ export namespace prebidjs {
      * The publisher’s ID provided by OneTag
      * @example `'386276e072'`
      */
-    readonly publisherId: string;
+    readonly pubId: string;
 
     /**
      * A set of custom key-value pairs
      */
-    readonly ext: {
+    readonly ext?: {
       /**
        * OneTag automatically maps placements using the `code` parameter of the Prebid ad unit.
        * You can override this, with this parameter
@@ -4669,6 +5219,18 @@ export namespace prebidjs {
   export interface ISmartxBid extends IBidObject<typeof Smartx, ISmartxParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/smilewanted.html
+   */
+  export interface ISmileWantedParams {
+    readonly zoneId: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/smilewanted.html
+   */
+  export interface ISmileWantedBid extends IBidObject<typeof SmileWanted, ISmileWantedParams> {}
+
+  /**
    * Unruly bid parameters
    *
    * @see https://docs.prebid.org/dev-docs/bidders/unruly.html
@@ -4680,17 +5242,71 @@ export namespace prebidjs {
     readonly siteId: number;
 
     /**
-     * The targeting UUID from Unruly.
-     *
-     * @deprecated this field is still marked as required in the docs, but is never used nor provided by unruly
+     * This param is a generic object for configuring Unruly outstream demand. To run UNmissable,
+     * set ‘canRunUnmissable’ to true.
      */
-    readonly targetingUUID?: string;
+    readonly featureOverrides?: {
+      readonly canRunUnmissable?: boolean;
+    };
   }
 
   /**
    * Unruly bid object
    */
   export interface IUnrulyBid extends IBidObject<typeof Unruly, IUnrulyParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/taboola.html
+   */
+  export interface ITaboolaParams {
+    /**
+     * Tag ID / Unique Placement Name
+     * @example `'Below The Article'`
+     */
+    readonly tagId: string;
+
+    /**
+     * Numeric Publisher ID (as provided by Taboola)
+     * @example `'1234567'`
+     */
+    readonly publisherId: string;
+
+    /**
+     * Kind of content present in the page. Recommended.
+     * @example `'homepage'`
+     */
+    readonly pageType?: string;
+
+    /**
+     * NOTE: this information is also present in `mediaTypes.banner.pos`.
+     *       however taboola is not using that field, but rather the `position` field in
+     *       its own `params` object.
+     *
+     * OpenRTB page position value:
+     *
+     * - 0=unknown
+     * - 1=above-the-fold
+     * - 3=below-the-fold
+     * - 4=header
+     * - 5=footer
+     * - 6=sidebar
+     * - 7=full-screen
+     *
+     * @see https://www.iab.com/wp-content/uploads/2016/03/OpenRTB-API-Specification-Version-2-5-FINAL.pdf
+     */
+    readonly position?: 0 | 1 | 3 | 4 | 5 | 6 | 7;
+
+    /**
+     * Publisher Domain (server-side adapter only)
+     * @example `'example.com'`
+     */
+    readonly publisherDomain?: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/taboola.html
+   */
+  export interface ITaboolaBid extends IBidObject<typeof Taboola, ITaboolaParams> {}
 
   /**
    * Teads bid parameters
@@ -4713,6 +5329,58 @@ export namespace prebidjs {
    * Teads bid object
    */
   export interface ITeadsBid extends IBidObject<typeof Teads, ITeadsParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/ttd.html
+   */
+  export interface ITheTradeDeskParams {
+    /**
+     * The TTD-provided supply source name.
+     * @example `'supplier'`
+     */
+    readonly supplySourceId: string;
+
+    /**
+     * The publisher ID. If there is a sellers.json, this should be the same as the seller_id in the
+     * sellers.json for the site being trafficked. If there is no sellers.json, this should be hardcoded to “1”.
+     *
+     * @example `'1427ab10f2e448057ed3b422'`
+     */
+    readonly publisherId: string;
+
+    /**
+     * This field is optional if GPID is passed through the GPT module https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html.
+     * If that module isn’t used, the GPID value should be passed in this field.
+     *
+     * @see https://docs.prebid.org/dev-docs/modules/gpt-pre-auction.html
+     */
+    readonly placementId?: string;
+
+    /**
+     * Display banner targeting parameters.
+     */
+    readonly banner?: any;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/ttd.html
+   */
+  export interface ITheTradeDeskBid extends IBidObject<typeof TheTradeDesk, ITheTradeDeskParams> {}
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/triplelift.html
+   */
+  export interface ITripleliftParams {
+    /**
+     * TripleLift inventory code for this ad unit (provided to you by your partner manager)
+     */
+    readonly inventoryCode: string;
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/triplelift.html
+   */
+  export interface ITripleliftBid extends IBidObject<typeof Triplelift, ITripleliftParams> {}
 
   export interface IYieldlabParams {
     /**
@@ -4765,8 +5433,11 @@ export namespace prebidjs {
 
     /**
      * Adunit placement
+     *
+     * It's really called `inTerstitial`, even it is a typo. It is weirdly consistent with the
+     * other placement values.
      */
-    readonly placement: 'inScreen' | 'inArticle' | 'inBanner';
+    readonly placement: 'inScreen' | 'inArticle' | 'inBanner' | 'inTerstitial';
   }
 
   /**
@@ -4989,6 +5660,53 @@ export namespace prebidjs {
   export interface IDSPXBid extends IBidObject<typeof DSPX, IDSPXParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/richaudience.html
+   */
+  export interface IRichAudienceParams {
+    /**
+     * The placement ID from Rich Audience.
+     * @example `'ADb1f40rmi'`
+     */
+    readonly pid: string;
+
+    /**
+     * Define if site or app.
+     */
+    readonly supplyType: 'site' | 'app';
+
+    /**
+     * Identifier For Advertisers
+     *
+     * @example `'AAAAAAAAA-BBBB-CCCC-1111-222222220000234234234234234'`
+     */
+    readonly ifa?: string;
+
+    /**
+     * A key-value applied only to the configured bid. This value is optional. Strings separated by semicolon.
+     *
+     * @example `car=mercedes;car=audi;`
+     */
+    readonly keywords?: string;
+
+    /**
+     * Object containing video targeting parameters.
+     */
+    readonly player?: {
+      /** Start mode of the player open or close*/
+      readonly init?: 'open' | 'close';
+      /** End mode of the player open or close	 */
+      readonly end?: 'open' | 'close';
+      /** Choose the background color	 */
+      readonly skin?: 'light' | 'dark';
+    };
+  }
+
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidders/richaudience.html
+   */
+  export interface IRichAudienceBid extends IBidObject<typeof RichAudience, IRichAudienceParams> {}
+
+  /**
    * @see http://prebid.org/dev-docs/bidders/rubicon.html
    */
   export interface IRubiconParams {
@@ -5009,6 +5727,12 @@ export namespace prebidjs {
      * @example '23948'
      */
     readonly zoneId: string;
+
+    /**
+     * By default, the Magnite exchange will bid on only one media type in this order: video, banner, native.
+     * Setting this flag to true will cause it to bid on all mediatypes.
+     */
+    readonly bidonmultiformat?: boolean;
 
     /**
      * Array of Rubicon Project size IDs. If not specified, the system will try to
@@ -5051,20 +5775,14 @@ export namespace prebidjs {
      */
     readonly video?: {
       /**
-       *  Video player width in pixels. If not specified, takes width set in mediaTypes.video.playerSize
-       *  @example '640'
+       * 203 for outstream and 201 for instream
        */
-      readonly playerWidth?: string;
-
+      readonly size_id?: 203 | 201;
       /**
-       *  Video player height in pixels. If not specified, takes height set in mediaTypes.video.playerSize
-       *  @example '360'
-       */
-      readonly playerHeight?: string;
-
-      /**
-       * Indicates the language of the content video, in ISO 639-1/alpha2. Highly recommended for successful
+       * ed	Indicates the language of the content video, in ISO 639-1/alpha2. Highly recommended for successful
        * monetization for pre-, mid-, and post-roll video ads. Not applicable for interstitial and outstream.
+       *
+       * @example 'en'
        */
       readonly language?: string;
     };
@@ -5147,7 +5865,7 @@ export namespace prebidjs {
      * Placement Id.
      * @example `"somePlacement"`
      */
-    readonly placementId: String;
+    readonly placementId: string;
 
     /**
      * Placement floor price.
@@ -5189,13 +5907,16 @@ export namespace prebidjs {
     | IAdUpBid
     | IConnectAdBid
     | ICriteoBid
+    | ICwireBid
     | IAppNexusASTBid
     | IGumGumBid
     | IImproveDigitalBid
     | IIndexExchangeBid
     | IInvibesBid
-    | IJustPremiumBid
+    | IInMobiBid
     | INanoInteractiveBid
+    | INextMillenniumBid
+    | IPrebidServerBid
     | IPubMaticBid
     | IOguryBid
     | IOneTagBid
@@ -5203,7 +5924,10 @@ export namespace prebidjs {
     | ISmartAdServerBid
     | ISmartxBid
     | IUnrulyBid
+    | ITaboolaBid
     | ITeadsBid
+    | ITheTradeDeskBid
+    | ITripleliftBid
     | IYieldlabBid
     | ISeedtagBid
     | ISpotXBid
@@ -5211,6 +5935,7 @@ export namespace prebidjs {
     | IStroeerCoreBid
     | IXaxisBid
     | IDSPXBid
+    | IRichAudienceBid
     | IRubiconBid
     | IRecognifiedBid
     | IVlybyBid
@@ -5229,7 +5954,7 @@ export namespace prebidjs {
     /**
      * AdUnitObjects to request. Use this or requestObj.adUnitCodes
      */
-    adUnits?: string[];
+    adUnits?: IAdUnit[];
 
     /**
      * Timeout for requesting the bids specified in milliseconds
@@ -5260,6 +5985,34 @@ export namespace prebidjs {
      * is desired to tie them together in analytics.
      */
     readonly auctionId?: string;
+
+    /**
+     * Additional first-party data to use for this auction only
+     * @see https://docs.prebid.org/features/firstPartyData.html
+     */
+    readonly ortb2?: firstpartydata.OpenRtb2;
+
+    /**
+     * TTL buffer override for this auction.
+     * @see [`setConfig({ttlBuffer})`](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-ttlBuffer)
+     */
+    readonly ttlBuffer?: number;
+  }
+
+  /**
+   * Result returned from a requestBids call.
+   * You can either use this or the callback.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html#result
+   */
+  export interface IRequestBidsResult {
+    readonly bidResponses: IBidResponsesMap | undefined;
+    readonly timedOut: boolean;
+    readonly auctionId: string;
+  }
+
+  export interface IBidsResponse {
+    bids: prebidjs.BidResponse[];
   }
 
   /**
@@ -5269,14 +6022,7 @@ export namespace prebidjs {
     /**
      * The adUnit code, e.g. 'ad-presenter-desktop'
      */
-    [adUnitCode: string]:
-      | {
-          /**
-           * The bids that were returned by prebid
-           */
-          bids: prebidjs.BidResponse[];
-        }
-      | undefined;
+    [adUnitCode: string]: IBidsResponse | undefined;
   }
 
   /**
@@ -5288,21 +6034,44 @@ export namespace prebidjs {
    *
    * 1. Creating a new interface that extends IBidResponse
    * 2. Narrow the `bidder` property to the header bidder, e.g.
-   *    readonly bidder: typeof JustPremium
+   *    readonly bidder: typeof GumGum
    * 3. Add the interface to the `BidResponse` union type
    * 4. Match on the `bidder` (acts as the union discriminator) to get the specific response you want.
    *
    */
   export interface IBidResponse {
     /**
+     * The unique identifier of a bid creative. It’s used by the line item’s creative
+     */
+    readonly requestId: string;
+
+    /**
      * The bidder code.
      */
     readonly bidder: BidderCode;
 
     /**
+     * the actual creative
+     * Most of the time this a string containing the markup, but in some cases it's an object with more information.
+     */
+    readonly ad: string | any;
+
+    /**
+     * the unique prebid auction ID in which this bid response was created
+     */
+    readonly auctionId: string;
+
+    /**
+     * The `code` property in the adUnit object. This is usually the `domId` of the ad unit.
+     */
+    readonly adUnitCode: string;
+
+    /**
      * The exact bid price from the bidder.
      */
     readonly cpm: number;
+
+    readonly originalCpm?: number;
 
     /**
      * The unique identifier of a bid creative.
@@ -5311,13 +6080,20 @@ export namespace prebidjs {
 
     /**
      * The width of the returned creative size.
+     * can be undefined for native / outstream media types
      */
-    readonly width: number;
+    readonly width?: number;
 
     /**
      * The height of the returned creative size.
+     * can be undefined for native / outstream media types
      */
-    readonly height: number;
+    readonly height?: number;
+
+    /**
+     * @example 728x90
+     */
+    readonly size: string;
 
     /**
      * The media type of the bid response
@@ -5327,13 +6103,154 @@ export namespace prebidjs {
     /**
      * Origin of the bid
      */
-    readonly source: 'client' | 'server';
+    readonly source: 'client' | 's2s';
 
     /**
-     * (Optional) If the bid is associated with a Deal, this field contains the deal ID.
+     * The currency of the bid
+     */
+    readonly currency: string;
+
+    /**
+     * If currencyModule performed any currency conversion, this is the original currency.
+     */
+    readonly originalCurrency: string;
+
+    /**
+     * True if the CPM is the one this bidder will pay
+     */
+    readonly netRevenue: boolean;
+
+    /**
+     * (propably optional) - the time to live for this bid response in seconds
+     */
+    readonly ttl?: number;
+
+    /**
+     * If the bid is associated with a Deal, this field contains the deal ID.
+     * @see https://docs.prebid.org/adops/deals.html
      */
     readonly dealId?: string;
+
+    readonly creativeId?: number;
+
+    /**
+     * Status of the bid. Possible values: targetingSet, rendered
+     */
+    readonly status?: 'rendered' | 'targetingSet';
+
+    /**
+     *  The bid’s status message
+     */
+    readonly statusMessage: 'Bid returned empty or error response' | 'Bid available';
+
+    // outstream
+    readonly vastXml?: string;
+    readonly vastImpUrl?: string;
+
+    // native
+    /**
+     *  Contains native key value pairs.
+     */
+    readonly native: {
+      readonly address?: string;
+      readonly body?: string;
+      readonly body2?: string;
+      readonly cta?: string;
+      readonly clickTrackers?: string[];
+      readonly clickUrl?: string;
+      readonly displayUrl?: string;
+      readonly downloads?: string;
+      readonly image?: {
+        readonly url: string;
+        readonly height: number;
+        readonly width: number;
+      };
+      readonly impressionTrackers?: string[];
+      readonly javascriptTrackers?: string;
+      readonly likes?: any;
+      readonly phone?: string;
+      readonly price?: string;
+      readonly privacyLink?: string;
+      readonly rating?: string;
+      readonly salePrice?: string;
+      readonly sponsoredBy?: string;
+      readonly title?: string;
+    };
+
+    /**
+     * Contains all the adserver targeting parameters
+     */
+    readonly adserverTargeting: AdServerTargeting;
+    readonly responseTimestamp: number;
+    readonly requestTimestamp: number;
+    readonly timeToRespond: number;
+
+    /**
+     * Additional meta data for this bid response
+     */
+    readonly meta?: {
+      /**
+       * A list of advertiser domains this bid is for.
+       * This field is populated by at least some bidders.
+       */
+      readonly advertiserDomains?: string[];
+
+      /**
+       * Seen on Criteo bids
+       */
+      readonly networkName?: string;
+
+      /**
+       * Seen on IX bids
+       */
+      readonly networkId?: string;
+
+      /**
+       * Seen on IX bids
+       */
+      readonly brandId?: number;
+
+      /**
+       * Seen on IX bids
+       */
+      readonly brandName?: string;
+    };
+
+    /**
+     * price bucket: 'low granularity'
+     */
+    readonly pbLg: string;
+    /**
+     * price bucket: 'medium granularity'
+     */
+    readonly pbMg: string;
+    /**
+     * price bucket: 'high granularity'
+     */
+    readonly pbHg: string;
+    /**
+     * price bucket: 'auto granularity'
+     */
+    readonly pbAg: string;
+    /**
+     * price bucket: 'dense granularity'
+     */
+    readonly pbDg: string;
+    /**
+     * price bucket: 'custom granularity'
+     */
+    readonly pbCg: string;
   }
+
+  export type AdServerTargeting = {
+    readonly hb_bidder: string;
+    readonly hb_adid: string;
+    readonly hb_pb: string;
+    readonly hb_size: string;
+    readonly hb_source: string;
+    readonly hb_format: string;
+    readonly hb_adomain: string;
+  };
 
   export interface IGenericBidResponse extends IBidResponse {
     /**
@@ -5343,22 +6260,22 @@ export namespace prebidjs {
      * Add more bidders by extending the union type, e.g.
      *
      * ```
-     * Exclude<BidderCode, typeof JustPremium | typeof AppNexusAst>;
+     * Exclude<BidderCode, typeof AppNexusAst>;
      * ```
      */
-    readonly bidder: Exclude<BidderCode, typeof JustPremium | typeof GumGum>;
-  }
-
-  export interface IJustPremiumBidResponse extends IBidResponse {
-    /**
-     * narrow this bid response type to justpremium
-     */
-    readonly bidder: typeof JustPremium;
+    readonly bidder: Exclude<BidderCode, typeof GumGum>;
 
     /**
-     * The format that justpremium wants to deliever
+     * The bidder code.
+     *
+     * Excludes all the bidder codes which have a more specific implementation.
+     * Add more bidders by extending the union type, e.g.
+     *
+     * ```
+     * Exclude<BidderCode, typeof AppNexusAst>;
+     * ```
      */
-    readonly format: JustPremiumFormat;
+    readonly bidderCode: IGenericBidResponse['bidder'];
   }
 
   /**
@@ -5377,9 +6294,14 @@ export namespace prebidjs {
 
   export interface IGumGumBidResponse extends IBidResponse {
     /**
-     * narrow this bid response type to justpremium
+     * narrow this bid response type to gumgum
      */
     readonly bidder: typeof GumGum;
+
+    /**
+     * narrow this bid response type to gumgum
+     */
+    readonly bidderCode: IGumGumBidResponse['bidder'];
 
     /**
      * Contains the GumGum ad creative.
@@ -5390,7 +6312,10 @@ export namespace prebidjs {
     readonly ad: IGumGumBidResponseWrapper | string;
   }
 
-  export type BidResponse = IGenericBidResponse | IJustPremiumBidResponse | IGumGumBidResponse;
+  /**
+   * @see https://docs.prebid.org/dev-docs/bidder-adaptor.html#interpreting-the-response
+   */
+  export type BidResponse = IGenericBidResponse | IGumGumBidResponse;
 
   /**
    * The bidderSettings object provides a way to define some behaviors for the platform

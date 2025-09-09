@@ -1,4 +1,4 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { createMoliTag } from './moli';
 
 // =============================
@@ -13,13 +13,13 @@ import { createMoliTag } from './moli';
  * @param window object
  * @return moli ad tag
  */
-export const initAdTag = (window: Window): Moli.MoliTag => {
-  const moliWindow = window as Moli.MoliWindow;
+export const initAdTag = (window: Window): MoliRuntime.MoliTag => {
+  const moliWindow = window as MoliRuntime.MoliWindow;
   const queueCommands = moliWindow.moli
-    ? [...(moliWindow.moli.que as Moli.MoliCommand[])] || []
+    ? [...(moliWindow.moli.que as MoliRuntime.MoliCommand[])] || []
     : [];
 
-  const moli: Moli.MoliTag = createMoliTag(window);
+  const moli: MoliRuntime.MoliTag = createMoliTag(window);
   moliWindow.moli = moli;
 
   queueCommands.forEach(cmd => cmd(moli));

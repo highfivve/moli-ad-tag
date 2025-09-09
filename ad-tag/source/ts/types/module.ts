@@ -1,6 +1,6 @@
-import { Moli } from './moli';
-import { IAssetLoaderService } from '../util/assetLoaderService';
-import { AdPipeline } from '../ads/adPipeline';
+import { ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from '../ads/adPipeline';
+import { modules } from './moliConfig';
+import { MoliRuntime } from './moliRuntime';
 
 export type ModuleType =
   | 'cmp'
@@ -23,44 +23,65 @@ export interface IModule {
   /**
    * If the module has some sort of configuration this can be fetched with this method
    */
-  config(): Object | null;
+  config__(): Object | null;
 
   /**
-   * Initialize the module. This method is allowed to do the following things
+   * Initialize the module with the given module configuration.
+   * Depending on the configuration the module may become active or inactive.
    *
-   * - request external resources. The rest of the application won't wait until this is finished
-   * - alter the config in place
-   * - set values in global scope
-   * - use the ad pipeline to execute moli commands
-   *
-   * **Important**: If you want to access any elements in the DOM you must do this
-   *                in an ad pipeline step as the DOM may not be ready, when the
-   *                `init` method is called!
-   *
-   * @param config
-   * @param assetLoaderService
-   * @param getAdPipeline this method returns the current ad pipeline. When you
-   *                      call it in the `init` method, it will return an empty
-   *                      pipeline as the ad tag is not yet initialized.
+   * @param moduleConfig
    */
-  init(
-    config: Moli.MoliConfig,
-    assetLoaderService: IAssetLoaderService,
-    getAdPipeline: () => AdPipeline
-  ): void;
+  configure__(moduleConfig?: modules.ModulesConfig): void;
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   */
+  initSteps__(): InitStep[];
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   */
+  configureSteps__(): ConfigureStep[];
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   */
+  prepareRequestAdsSteps__(): PrepareRequestAdsStep[];
+
+  /**
+   * Returns a list of steps that should be executed in the ad pipeline.
+   *
+   * This step is optional, as should have been all steps to reduce implementation complexity of
+   * modules.
+   *
+   * Note: prebid and amazon tam (a9) maybe implemented as modules in the future as they add those
+   *       steps to the ad pipeline.
+   */
+  requestBidsSteps__?(): RequestBidsStep[];
+
+  /**
+   * This method is called in the bidsBackHandler of prebid.
+   *
+   * A module may provide those callbacks if it needs to alter the requests send to the ad server.
+   * The `auctionEnd` event cannot be used for this, as there's no guarantee the event handler
+   * will run before the `requestAds` step.
+   *
+   * Note: Amazon TAM (A9) also has a callback that could be used for similar things. Unfortunately
+   *       does the callback not provide the necessary information to implement any meaningful
+   *       business logic. Especially the `cpm` parameter and `bidder`
+   *
+   * The callback receives additional information coming from the ad pipeline run.
+   *
+   * Note: These callbacks should not perform any initialization code or only be created once
+   *       as this array will be accessed on every pbjs.requestBids() callback.
+   *
+   * ## Use cases
+   *
+   * The `generic-skin` module provides prebid bids back handlers to block certain ad units from
+   * being requested.
+   *
+   * @see https://docs.prebid.org/dev-docs/publisher-api-reference/requestBids.html
+   * @see https://ams.amazon.com/webpublisher/uam/docs/web-integration-documentation/integration-guide/javascript-guide/api-reference.html#apstagfetchbids
+   */
+  prebidBidsBackHandler__?(): MoliRuntime.PrebidBidsBackHandler[];
 }
-
-export type ModuleMeta = Pick<IModule, 'name' | 'description' | 'moduleType'> & {
-  config: Object | null;
-};
-
-/**
- * @returns a copy of the module, containing meta data like module name, type, description, and config, without access
- *          to its methods.
- */
-export const metaFromModule = (module: IModule): ModuleMeta => ({
-  moduleType: module.moduleType,
-  name: module.name,
-  description: module.description,
-  config: module.config()
-});

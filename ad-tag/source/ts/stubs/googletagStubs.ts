@@ -53,18 +53,29 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
 };
 
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
+  let targetingMap: Record<string, string[]> = {};
   const stub: googletag.IAdSlot = {
-    clearTargeting(_key?: string): void {
+    clearTargeting(key?: string): void {
+      if (key) {
+        delete targetingMap[key];
+      } else {
+        targetingMap = {};
+      }
       return;
     },
-    setTargeting: (_key: string, _value: string | string[]): googletag.IAdSlot => {
+    setTargeting: (key: string, value: string | string[]): googletag.IAdSlot => {
+      if (typeof value === 'string') {
+        targetingMap[key] = [value];
+      } else {
+        targetingMap[key] = value;
+      }
       return stub;
     },
-    getTargeting: (_key: string): string[] => {
-      return [];
+    getTargeting: (key: string): string[] => {
+      return targetingMap[key] || [];
     },
     getTargetingKeys(): string[] {
-      return [];
+      return Object.keys(targetingMap);
     },
     setCollapseEmptyDiv: (_doCollapse: boolean, _collapseBeforeAdFetch: boolean): void => {
       return;
@@ -80,6 +91,9 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     },
     getResponseInformation: (): googletag.IResponseInformation | null => {
       return null;
+    },
+    setConfig(_config: googletag.GptSlotSettingsConfig) {
+      return;
     }
   };
   return stub;
@@ -125,5 +139,17 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
     },
     pubads: (): googletag.IPubAdsService => pubAdsStub,
     companionAds: (): googletag.ICompanionAdsService => ({} as any)
+    pubads: (): googletag.IPubAdsService => pubAdsStub,
+    setConfig: (): void => {
+      return;
+    },
+    secureSignalProviders: {
+      push(provider: { id: string; collectorFunction(): any }) {
+        return;
+      },
+      clearAllCache() {
+        return;
+      }
+    }
   };
 };

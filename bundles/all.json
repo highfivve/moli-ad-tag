@@ -1,0 +1,23 @@
+{
+  "description": "This contains all the modules that are available in the system",
+  "modules": [
+    "adex",
+    "adReload",
+    "blocklistUrls",
+    "cleanup",
+    "confiant",
+    "emetriq",
+    "identityLink",
+    "lazyLoad",
+    "prebidFirstPartyData",
+    "pubstack",
+    "stickyFooterAd",
+    "stickyFooterAds2",
+    "stickyHeaderAd",
+    "skin",
+    "utiq",
+    "yieldOptimization",
+    "configureFromEndpoint",
+    "interstitialModule"
+  ]
+}

@@ -1,5 +1,5 @@
-import { Moli } from '../types/moli';
 import { prebidjs } from '../types/prebidjs';
+import { headerbidding } from '../types/moliConfig';
 
 export const createPbjsStub = (): prebidjs.IPrebidJs => {
   return {
@@ -9,6 +9,7 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
         callback();
       }
     },
+    libLoaded: true,
     version: 'none',
     adUnits: [],
     addAdUnits: (_adUnits: prebidjs.IAdUnit[]): void => {
@@ -21,11 +22,16 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     getAdserverTargeting: (): Object => {
       return {};
     },
-    requestBids: (requestParam?: prebidjs.IRequestObj): void => {
+    requestBids: (requestParam?: prebidjs.IRequestObj): Promise<prebidjs.IRequestBidsResult> => {
       // invoke bidsBackHandler immediately
       if (requestParam && requestParam.bidsBackHandler) {
-        requestParam.bidsBackHandler({}, false, requestParam.auctionId || 'auction-id');
+        requestParam.bidsBackHandler({}, false, requestParam.auctionId ?? 'auction-id');
       }
+      return Promise.resolve({
+        bidResponses: {},
+        timedOut: false,
+        auctionId: requestParam?.auctionId ?? 'auction-id'
+      });
     },
     getConfig: (): prebidjs.IPrebidJsConfig => ({
       currency: {
@@ -59,23 +65,39 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
     enableAnalytics(_: prebidjs.analytics.AnalyticsAdapter[]): void {
       return;
     },
-    onEvent: () => {
+    onEvent(_event: keyof prebidjs.event.PrebidEventMap, _handler: Function, _id?: any): void {
       return;
     },
-    offEvent(_event: prebidjs.event.EventName, _handler: Function, _id?: any): void {
+    offEvent(_event: keyof prebidjs.event.PrebidEventMap, _handler: Function, _id?: any): void {
       return;
     },
     convertCurrency(cpm: number, fromCurrency: string, toCurrency: string): number {
       // We use an unrealistic value here to easily check the value in tests.
       return cpm * 2;
     },
-    getHighestCpmBids(adUnitCode?: string): prebidjs.event.BidWonEvent[] {
+    getHighestCpmBids(adUnitCode?: string): prebidjs.BidResponse[] {
       return [];
     },
     renderAd(iframeDocument: Document, adId: string): void {
       return;
     },
     registerSignalSources(): void {
+      return;
+    },
+    getAllWinningBids(): prebidjs.BidResponse[] {
+      return [];
+    },
+    getBidResponsesForAdUnitCode(adUnitCode: string): prebidjs.IBidsResponse {
+      return { bids: [] };
+    },
+    clearAllAuctions(): void {
+      return;
+    },
+    aliasBidder(
+      bidderCode: string,
+      alias: string,
+      options?: { gvlid?: number; useBaseGvlid?: boolean }
+    ) {
       return;
     }
   };
@@ -97,8 +119,9 @@ export const pbjsTestConfig: prebidjs.IPrebidJsConfig = {
   floors: {}
 };
 
-export const moliPrebidTestConfig: Moli.headerbidding.PrebidConfig = {
+export const moliPrebidTestConfig: headerbidding.PrebidConfig = {
   config: pbjsTestConfig,
+  distributionUrl: 'https://cdn.h5v.eu/prebid/dist/8.52.0/prebid.js',
   schain: {
     nodes: []
   }

@@ -1,0 +1,39 @@
+.h5v-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /** sticky content */
+  & > div:first-of-type {
+    top: var(--h5v-navbar-height);
+    position: sticky;
+  }
+
+  /** cls optimizations */
+  @media (--h5v-mobile) {
+    &.h5v-content-50-m {
+      min-height: 50px;
+    }
+    &.h5v-content-250-m {
+      min-height: 250px;
+    }
+    &.h5v-content-300-m {
+      min-height: 300px;
+    }
+    &.h5v-content-600-m {
+      min-height: 600px;
+    }
+  }
+
+  @media (--h5v-desktop) {
+    &.h5v-content-90-d {
+      min-height: 90px;
+    }
+    &.h5v-content-250-d {
+      min-height: 250px;
+    }
+    &.h5v-content-300-d {
+      min-height: 300px;
+    }
+  }
+}

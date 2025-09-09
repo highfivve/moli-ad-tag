@@ -1,0 +1,4 @@
+{
+  "description": "Contains no modules and must be configured externally. Use this module for small test cases",
+  "modules": []
+}

@@ -1,6 +1,6 @@
 import { IAssetLoaderService } from '../util/assetLoaderService';
 import { getDefaultLogger, getLogger, ProxyLogger } from '../util/logging';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import {
   AdPipeline,
   AdPipelineContext,
@@ -13,12 +13,6 @@ import {
   RequestBidsStep
 } from './adPipeline';
 import {
-  noopReportingService,
-  reportingPrepareRequestAds,
-  ReportingService
-} from './reportingService';
-import { createPerformanceService } from '../util/performanceService';
-import {
   gptConfigure,
   gptConsentKeyValue,
   gptDefineSlots,
@@ -30,6 +24,7 @@ import {
 } from './googleAdManager';
 import domready from '../util/domready';
 import {
+  prebidClearAuction,
   prebidConfigure,
   prebidDefineSlots,
   prebidInit,
@@ -46,15 +41,96 @@ import {
   a9PublisherAudiences
 } from './a9';
 import { flatten, isNotNull } from '../util/arrayUtils';
-import { passbackPrepareRequestAds } from './passback';
-import { PassbackService } from './passbackService';
 import { googletag } from '../types/googletag';
 import { prebidjs } from '../types/prebidjs';
 import { executeDebugDelay, getDebugDelayFromLocalStorage } from '../util/debugDelay';
+import { createGlobalAuctionContext } from './globalAuctionContext';
+import { AdSlot, behaviour, bucket, Device, Environment, MoliConfig } from '../types/moliConfig';
+import { getDeviceLabel } from 'ad-tag/ads/labelConfigService';
+import { EventService } from 'ad-tag/ads/eventService';
+import { bridgeInitStep } from 'ad-tag/ads/bridge/bridge';
 import IGoogleTagWindow = googletag.IGoogleTagWindow;
 import IRewardedSlotGrantedEvent = googletag.events.IRewardedSlotGrantedEvent;
-import RewardedAdResponse = Moli.RewardedAdResponse;
 import IGoogleTag = googletag.IGoogleTag;
+
+/**
+ * All relevant information about the global window
+ */
+type AdServiceWindow = Window &
+  MoliRuntime.MoliWindow &
+  googletag.IGoogleTagWindow &
+  prebidjs.IPrebidjsWindow &
+  Pick<typeof globalThis, 'Date' | 'console'>;
+
+const isManualSlot = (slot: AdSlot): slot is AdSlot & { behaviour: behaviour.Manual } => {
+  return slot.behaviour.loaded === 'manual';
+};
+
+const isInfiniteSlot = (slot: AdSlot): slot is AdSlot & { behaviour: behaviour.Infinite } => {
+  return slot.behaviour.loaded === 'infinite';
+};
+
+const isBackfillSlot = (slot: AdSlot): slot is AdSlot & { behaviour: behaviour.Backfill } => {
+  return slot.behaviour.loaded === 'backfill';
+};
+
+const isRewardedSlot = (slot: AdSlot): slot is AdSlot => {
+  return slot.position === 'rewarded';
+};
+
+const isSlotAvailable =
+  (_window: Window) =>
+  (slot: AdSlot): boolean => {
+    return (
+      !!_window.document.getElementById(slot.domId) ||
+      // this is a custom position defined by the ad tag library. A temporary div is created
+      // if it does not exist to facilitate the prebid auction
+      slot.position === 'interstitial' ||
+      // gpt.js position for custom out-of-page formats. A DOM element is required, which we create
+      // on demand if it is missing
+      slot.position === 'out-of-page' ||
+      // web interstitials and web anchors don't require a dom element
+      slot.position === 'out-of-page-interstitial' ||
+      slot.position === 'out-of-page-top-anchor' ||
+      slot.position === 'out-of-page-bottom-anchor' ||
+      slot.position === 'rewarded'
+    );
+  };
+
+const getBucketName = (bucket: bucket.AdSlotBucket | undefined, device: Device): string => {
+  // if no bucket is defined, return the default bucket
+  if (!bucket) {
+    return 'default';
+  }
+  // a single bucket for all devices
+  if (typeof bucket === 'string') {
+    return bucket;
+  }
+  return bucket[device] || 'default';
+};
+
+const slotsInBucket = (
+  _window: Window,
+  config: MoliConfig,
+  device: Device,
+  bucket: string,
+  options?: MoliRuntime.RefreshAdSlotsOptions
+): AdSlot[] => {
+  const { loaded } = { ...{ loaded: 'manual' }, ...options };
+  return (
+    config.slots
+      .filter(isSlotAvailable(_window))
+      .filter(slot => {
+        const slotBucket = getBucketName(slot.behaviour.bucket, device);
+        return (
+          slotBucket === bucket &&
+          (slot.behaviour.loaded === loaded || slot.behaviour.loaded === 'infinite')
+        );
+      })
+      // if sizesOverride is provided, override the sizes of the slots
+      .map(slot => (options?.sizesOverride ? { ...slot, sizes: options.sizesOverride } : slot))
+  );
+};
 
 /**
  * @internal
@@ -85,23 +161,29 @@ export class AdService {
       requestAds: () => Promise.resolve()
     },
     getDefaultLogger(),
-    this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-    noopReportingService
+    this.window as AdServiceWindow,
+    createGlobalAuctionContext(
+      this.window as AdServiceWindow,
+      getDefaultLogger(),
+      this.eventService
+    )
   );
 
-  private static getEnvironment(config: Moli.MoliConfig): Moli.Environment {
+  private static getEnvironment(config: MoliRuntime.MoliRuntimeConfig): Environment {
     return config.environment || 'production';
   }
 
   /**
    *
    * @param assetService
+   * @param eventService
    * @param window
    * @param adPipelineConfig only for testing purpose at this point. This configuration will be overridden by
    *        a call to initialize. This should not be the API for extending the pipeline!
    */
   constructor(
     private readonly assetService: IAssetLoaderService,
+    private readonly eventService: EventService,
     private readonly window: Window,
     private readonly adPipelineConfig?: IAdPipelineConfiguration
   ) {
@@ -111,8 +193,8 @@ export class AdService {
       this.adPipeline = new AdPipeline(
         adPipelineConfig,
         this.logger,
-        window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-        noopReportingService
+        window as AdServiceWindow,
+        createGlobalAuctionContext(window as AdServiceWindow, this.logger, this.eventService)
       );
     }
   }
@@ -127,38 +209,27 @@ export class AdService {
    *
    *
    * @param config
-   * @param isSinglePageApp
+   * @param runtimeConfig
    */
   public initialize = (
-    config: Readonly<Moli.MoliConfig>,
-    isSinglePageApp: boolean
-  ): Promise<Readonly<Moli.MoliConfig>> => {
-    const env = AdService.getEnvironment(config);
+    config: Readonly<MoliConfig>,
+    runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>
+  ): Promise<Readonly<MoliConfig>> => {
+    const env = AdService.getEnvironment(runtimeConfig);
     const adServer = config.adServer || 'gam';
     const isGam = adServer === 'gam';
+    const isSinglePageApp = config.spa?.enabled === true;
     // 1. setup all services
-    this.logger.setLogger(getLogger(config, this.window));
+    this.logger.setLogger(getLogger(runtimeConfig, this.window));
     this.logger.debug(
       'AdService',
       `Initializing with environment ${env} and ad server ${adServer}`
     );
 
-    // only create performance marks if configured
-    const reportingService =
-      isGam && config.reporting && config.reporting.sampleRate > 0
-        ? new ReportingService(
-            createPerformanceService(this.window),
-            config.reporting,
-            this.logger,
-            env,
-            this.window as Window & googletag.IGoogleTagWindow
-          )
-        : noopReportingService;
-
     // 2. build the AdPipeline
-    const init: InitStep[] = isGam ? [gptInit(this.assetService)] : [];
+    const init: InitStep[] = isGam ? [gptInit(), bridgeInitStep()] : [];
 
-    const configure: ConfigureStep[] = isGam ? [gptConfigure(config)] : [];
+    const configure: ConfigureStep[] = isGam ? [gptConfigure()] : [];
 
     if (isGam && isSinglePageApp) {
       configure.push(gptDestroyAdSlots(), gptResetTargeting());
@@ -166,32 +237,24 @@ export class AdService {
 
     const prepareRequestAds: PrepareRequestAdsStep[] = [];
     if (isGam) {
-      prepareRequestAds.push(
-        gptLDeviceLabelKeyValue(),
-        gptConsentKeyValue(),
-        passbackPrepareRequestAds(
-          new PassbackService(this.logger, this.window as Window & googletag.IGoogleTagWindow)
-        )
-      );
-    }
-
-    // only add reporting if there's a reporter
-    if (config.reporting) {
-      prepareRequestAds.push(reportingPrepareRequestAds(reportingService));
+      prepareRequestAds.push(gptLDeviceLabelKeyValue(), gptConsentKeyValue());
     }
 
     const requestBids: RequestBidsStep[] = [];
 
     // prebid
     if (config.prebid && env === 'production') {
-      init.push(prebidInit());
+      init.push(prebidInit(this.assetService));
 
       configure.push(prebidConfigure(config.prebid, config.schain));
       if (isSinglePageApp) {
-        configure.push(prebidRemoveAdUnits());
+        configure.push(prebidRemoveAdUnits(config.prebid));
+        if (config.prebid.clearAllAuctions) {
+          configure.push(prebidClearAuction());
+        }
       }
       prepareRequestAds.push(prebidPrepareRequestAds(config.prebid));
-      requestBids.push(prebidRequestBids(config.prebid, adServer, config.targeting));
+      requestBids.push(prebidRequestBids(config.prebid, adServer));
     }
 
     // amazon a9
@@ -203,12 +266,20 @@ export class AdService {
       requestBids.push(a9RequestBids(config.a9));
     }
 
-    // add additional steps if configured
-    if (config.pipeline) {
-      init.push(...config.pipeline.initSteps);
-      configure.push(...config.pipeline.configureSteps);
-      prepareRequestAds.push(...config.pipeline.prepareRequestAdsSteps);
-    }
+    // create global auction context and add it to the pipeline
+    const globalAuctionContext = createGlobalAuctionContext(
+      this.window as AdServiceWindow,
+      this.logger,
+      this.eventService,
+      config.globalAuctionContext
+    );
+    configure.push(globalAuctionContext.configureStep());
+
+    // add module steps to pipeline
+    init.push(...runtimeConfig.adPipelineConfig.initSteps);
+    configure.push(...runtimeConfig.adPipelineConfig.configureSteps);
+    prepareRequestAds.push(...runtimeConfig.adPipelineConfig.prepareRequestAdsSteps);
+    requestBids.push(...runtimeConfig.adPipelineConfig.requestBidsSteps);
 
     // delay ad requests for debugging
     if (env === 'test') {
@@ -228,11 +299,11 @@ export class AdService {
         requestAds: isGam ? gptRequestAds() : prebidRenderAds()
       },
       this.logger,
-      this.window as Window & googletag.IGoogleTagWindow & prebidjs.IPrebidjsWindow,
-      reportingService
+      this.window as AdServiceWindow,
+      globalAuctionContext
     );
 
-    return new Promise<Readonly<Moli.MoliConfig>>(resolve => {
+    return new Promise<Readonly<MoliConfig>>(resolve => {
       domready(this.window, () => {
         this.logger.debug('DOM', 'dom ready');
         resolve(config);
@@ -243,42 +314,66 @@ export class AdService {
   /**
    *
    * @param config
-   * @param refreshSlots a list of ad slots that are already manually refreshed via the `moli.refreshAdSlot` API
-   *         and can be part of the requestAds cycle
-   * @param refreshInfiniteSlots a list of infinite ad slots that are already manually refreshed via the `moli.refreshInfiniteAdSlot` API
-   *         and can be part of the requestAds cycle
+   * @param runtimeConfig contains configuration and APIs call made through the JS API. For instance:
+   *        Contains refreshSlots - a list of ad slots that are already manually refreshed via the `moli.refreshAdSlot` API
+   *        and can be part of the requestAds cycle
+   *        Contains refreshInfiniteSlots - a list of infinite ad slots that are already manually refreshed via the `moli.refreshInfiniteAdSlot` API
+   *        and can be part of the requestAds cycle
    */
-  public requestAds = (
-    config: Readonly<Moli.MoliConfig>,
-    refreshSlots: string[],
-    refreshInfiniteSlots: Moli.state.IRefreshInfiniteSlot[]
-  ): Promise<Moli.AdSlot[]> => {
+  public requestAds = async (
+    config: Readonly<MoliConfig>,
+    runtimeConfig: Readonly<MoliRuntime.MoliRuntimeConfig>
+  ): Promise<AdSlot[]> => {
     this.requestAdsCalls = this.requestAdsCalls + 1;
-    this.logger.info('AdService', `RequestAds[${this.requestAdsCalls}]`, refreshSlots);
+    const { refreshSlots, refreshInfiniteSlots, refreshBuckets } = runtimeConfig;
+    const device = getDeviceLabel(
+      this.window,
+      runtimeConfig,
+      config.labelSizeConfig,
+      config.targeting
+    );
+
+    const refreshSlotsFromBuckets = refreshBuckets.flatMap(bucket =>
+      slotsInBucket(this.window, config, device, bucket.bucket, bucket.options).map(
+        slot => slot.domId
+      )
+    );
+    this.logger.info(
+      'AdService',
+      `RequestAds[${this.requestAdsCalls}]`,
+      refreshSlots,
+      refreshBuckets
+    );
+    this.eventService.emit('beforeRequestAds', { runtimeConfig: runtimeConfig });
     try {
-      const immediatelyLoadedSlots: Moli.AdSlot[] = config.slots
+      const immediatelyLoadedSlots: AdSlot[] = config.slots
         .map(slot => {
-          if (this.isManualSlot(slot)) {
+          if (isManualSlot(slot)) {
             // only load the slot immediately if it's available in the refreshSlots array
-            return refreshSlots.some(domId => domId === slot.domId) ? slot : null;
-          } else if (this.isInfiniteSlot(slot)) {
+            return refreshSlots.includes(slot.domId) || refreshSlotsFromBuckets.includes(slot.domId)
+              ? slot
+              : null;
+          } else if (isInfiniteSlot(slot)) {
             return refreshInfiniteSlots.some(
               infiniteSlot => infiniteSlot.artificialDomId === slot.domId
             )
               ? slot
               : null;
+          } else if (isBackfillSlot(slot)) {
+            // backfill slots must never be eagerly loaded
+            return null;
           } else {
             return slot;
           }
         })
         .filter(isNotNull)
-        .filter(this.isSlotAvailable);
+        .filter(isSlotAvailable(this.window));
 
       if (config.buckets?.enabled) {
         // create buckets
-        const buckets = new Map<string, Moli.AdSlot[]>();
+        const buckets = new Map<string, AdSlot[]>();
         immediatelyLoadedSlots.forEach(slot => {
-          const bucket = slot.behaviour.bucket || 'default';
+          const bucket = getBucketName(slot.behaviour.bucket, device);
           const slots = buckets.get(bucket);
           if (slots) {
             slots.push(slot);
@@ -287,40 +382,69 @@ export class AdService {
           }
         });
 
-        return Promise.all(
-          Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
-            this.logger.debug('AdPipeline', `running bucket ${bucketId}, slots:`, bucketSlots);
-            return this.adPipeline
-              .run(bucketSlots, config, this.requestAdsCalls)
-              .then(() => bucketSlots);
-          })
-        ).then(flatten);
+        const result =
+          buckets.size === 0
+            ? this.adPipeline.run([], config, runtimeConfig, this.requestAdsCalls).then(() => [])
+            : Promise.all(
+                Array.from(buckets.entries()).map(([bucketId, bucketSlots]) => {
+                  this.logger.debug(
+                    'AdPipeline',
+                    `running bucket ${bucketId}, slots:`,
+                    bucketSlots
+                  );
+                  return this.adPipeline
+                    .run(bucketSlots, config, runtimeConfig, this.requestAdsCalls)
+                    .then(() => bucketSlots);
+                })
+              );
+        this.eventService.emit('afterRequestAds', { state: 'finished' });
+        return result.then(slots => flatten(slots));
       } else {
-        return this.adPipeline
-          .run(immediatelyLoadedSlots, config, this.requestAdsCalls)
-          .then(() => immediatelyLoadedSlots);
+        await this.adPipeline.run(
+          immediatelyLoadedSlots,
+          config,
+          runtimeConfig,
+          this.requestAdsCalls
+        );
+        this.eventService.emit('afterRequestAds', { state: 'finished' });
+        return immediatelyLoadedSlots;
       }
     } catch (e) {
       this.logger.error('AdPipeline', 'slot filtering failed', e);
+      this.eventService.emit('afterRequestAds', { state: 'error' });
       return Promise.reject(e);
     }
   };
 
-  public refreshAdSlots(domIds: string[], config: Moli.MoliConfig): Promise<void> {
+  public refreshAdSlots(
+    domIds: string[],
+    config: MoliConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+    options?: MoliRuntime.RefreshAdSlotsOptions
+  ): Promise<void> {
     if (domIds.length === 0) {
       return Promise.resolve();
     }
-    const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableManualSlots = manualSlots.filter(slot =>
-      domIds.some(domId => domId === slot.domId)
-    );
 
-    const infiniteSlots = config.slots.filter(this.isInfiniteSlot);
-    const availableInfiniteSlots = infiniteSlots.filter(slot =>
-      domIds.some(domId => domId === slot.domId)
-    );
+    const { loaded } = { ...{ loaded: 'manual' }, ...options };
 
-    const availableSlots = [...availableManualSlots, ...availableInfiniteSlots];
+    const allowedLoadingBehaviours = new Set<behaviour.ISlotLoading['loaded']>(['infinite']);
+    if (loaded === 'eager') {
+      allowedLoadingBehaviours.add('manual');
+      allowedLoadingBehaviours.add('eager');
+    } else {
+      allowedLoadingBehaviours.add(loaded as behaviour.ISlotLoading['loaded']);
+    }
+
+    const availableSlots = config.slots
+      .filter(
+        slot =>
+          domIds.some(domId => domId === slot.domId) &&
+          allowedLoadingBehaviours.has(slot.behaviour.loaded)
+      )
+      .filter(isSlotAvailable(this.window))
+      // if sizesOverride is provided, override the sizes of the slots
+      .map(slot => (options?.sizesOverride ? { ...slot, sizes: options.sizesOverride } : slot));
 
     if (domIds.length !== availableSlots.length) {
       const slotsInConfigOnly = availableSlots.filter(slot =>
@@ -333,7 +457,7 @@ export class AdService {
       if (slotsInConfigOnly.length) {
         this.logger.warn(
           'AdService',
-          'The following slots does not exist on the page DOM.',
+          'The following slots do not exist on the page DOM.',
           slotsInConfigOnly
         );
       }
@@ -346,19 +470,42 @@ export class AdService {
       }
     }
 
-    this.logger.debug('AdService', 'refresh ad slots', availableSlots, config.targeting);
-    return this.adPipeline.run(availableSlots, config, this.requestAdsCalls);
+    this.logger.debug('AdService', 'refresh ad slots', availableSlots);
+    return this.adPipeline.run(availableSlots, config, runtimeConfig, this.requestAdsCalls, {
+      options
+    });
   }
 
-  public refreshBucket(bucket: string, config: Moli.MoliConfig): Promise<void> {
+  public refreshBucket(
+    bucket: string,
+    config: MoliConfig,
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+    options?: MoliRuntime.RefreshAdSlotsOptions
+  ): Promise<void> {
     if (!config.buckets?.enabled) {
       return Promise.resolve();
     }
-    const manualSlots = config.slots.filter(this.isManualSlot);
-    const availableSlotsInBucket = manualSlots.filter(slot => slot.behaviour.bucket === bucket);
+    const device = getDeviceLabel(
+      this.window,
+      runtimeConfig,
+      config.labelSizeConfig,
+      config.targeting
+    );
+    const availableSlotsInBucket = slotsInBucket(this.window, config, device, bucket, options);
+
+    if (availableSlotsInBucket.length === 0) {
+      this.logger.warn('AdService', 'No slots found in bucket', bucket);
+      return Promise.resolve();
+    }
 
     this.logger.debug('AdService', 'refresh ad buckets', availableSlotsInBucket, config.targeting);
-    return this.adPipeline.run(availableSlotsInBucket, config, this.requestAdsCalls, bucket);
+    return this.adPipeline.run(
+      availableSlotsInBucket,
+      config,
+      runtimeConfig,
+      this.requestAdsCalls,
+      { bucketName: bucket, options: options }
+    );
   }
 
   public refreshRewardedAdSlot = (
@@ -413,34 +560,7 @@ export class AdService {
     return this.adPipeline;
   };
 
-  public setLogger = (logger: Moli.MoliLogger): void => {
+  public setLogger = (logger: MoliRuntime.MoliLogger): void => {
     this.logger.setLogger(logger);
-  };
-
-  private isManualSlot = (
-    slot: Moli.AdSlot
-  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Manual } => {
-    return slot.behaviour.loaded === 'manual';
-  };
-
-  private isInfiniteSlot = (
-    slot: Moli.AdSlot
-  ): slot is Moli.AdSlot & { behaviour: Moli.behaviour.Infinite } => {
-    return slot.behaviour.loaded === 'infinite';
-  };
-
-  private isRewardedSlot = (slot: Moli.AdSlot): slot is Moli.AdSlot => {
-    return slot.position === 'rewarded';
-  };
-
-  private isSlotAvailable = (slot: Moli.AdSlot): boolean => {
-    return (
-      !!this.window.document.getElementById(slot.domId) ||
-      // web interstitials and web anchors don't require a dom element
-      slot.position === 'out-of-page-interstitial' ||
-      slot.position === 'out-of-page-top-anchor' ||
-      slot.position === 'out-of-page-bottom-anchor' ||
-      slot.position === 'rewarded'
-    );
   };
 }

@@ -1,14 +1,18 @@
-import { createDom } from '../stubs/browserEnvSetup';
+import { createDomAndWindow } from '../stubs/browserEnvSetup';
 import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as Sinon from 'sinon';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 
-import { emptyConfig, noopLogger } from '../stubs/moliStubs';
+import {
+  emptyConfig,
+  emptyRuntimeConfig,
+  newGlobalAuctionContext,
+  noopLogger
+} from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import { noopReportingService } from './reportingService';
-import { LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
 import { a9ConfigStub, apstagStub } from '../stubs/a9Stubs';
 import { pbjsStub } from '../stubs/prebidjsStubs';
@@ -21,13 +25,12 @@ import {
 } from './a9';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
-import { prebidjs } from '../types/prebidjs';
 import { createAssetLoaderService } from '../util/assetLoaderService';
 import { tcfapi } from '../types/tcfapi';
-import { apstag } from '../types/apstag';
 import TCPurpose = tcfapi.responses.TCPurpose;
 import EventStatus = tcfapi.status.EventStatus;
 import { dummySchainConfig } from '../stubs/schainStubs';
+import { AdSlot, Environment, headerbidding, MoliConfig } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
@@ -37,28 +40,26 @@ describe('a9', () => {
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
 
-  const dom = createDom();
-  const jsDomWindow: Window &
-    googletag.IGoogleTagWindow &
-    apstag.WindowA9 &
-    prebidjs.IPrebidjsWindow &
-    tcfapi.TCFApiWindow = dom.window as any;
+  const { dom, jsDomWindow } = createDomAndWindow();
   const adPipelineContext = (
-    env: Moli.Environment = 'production',
-    config: Moli.MoliConfig = emptyConfig,
+    env: Environment = 'production',
+    config: MoliConfig = emptyConfig,
     requestAdsCalls: number = 1
   ): AdPipelineContext => {
     return {
-      requestId: 1,
-      requestAdsCalls: requestAdsCalls,
-      env: env,
-      logger: noopLogger,
-      config: config,
-      window: jsDomWindow,
-      labelConfigService: new LabelConfigService([], [], jsDomWindow),
-      reportingService: noopReportingService,
-      tcData: tcData,
-      adUnitPathVariables: { domain: 'example.com', device: 'mobile' }
+      auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+      requestId__: 1,
+      requestAdsCalls__: requestAdsCalls,
+      env__: env,
+      logger__: noopLogger,
+      config__: config,
+      runtimeConfig__: emptyRuntimeConfig,
+      window__: jsDomWindow,
+      labelConfigService__: createLabelConfigService([], [], jsDomWindow),
+      tcData__: tcData,
+      adUnitPathVariables__: { domain: 'example.com', device: 'mobile' },
+      auction__: newGlobalAuctionContext(jsDomWindow),
+      assetLoaderService__: createAssetLoaderService(jsDomWindow)
     };
   };
 
@@ -73,7 +74,7 @@ describe('a9', () => {
     return `dom-id-${domIdCounter}`;
   };
 
-  const a9Slot = (domId: string, a9: Moli.headerbidding.A9AdSlotConfig): Moli.AdSlot => {
+  const a9Slot = (domId: string, a9: headerbidding.A9AdSlotConfig): AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
@@ -88,8 +89,8 @@ describe('a9', () => {
 
   const createSlotDefinitions = (
     domId: string,
-    provider: Moli.headerbidding.A9AdSlotConfig
-  ): Moli.SlotDefinition => {
+    provider: headerbidding.A9AdSlotConfig
+  ): MoliRuntime.SlotDefinition => {
     const slot = a9Slot(domId, provider);
     return {
       moliSlot: slot,
@@ -100,7 +101,7 @@ describe('a9', () => {
 
   const contextWithConsent: AdPipelineContext = {
     ...adPipelineContext(),
-    tcData: fullConsent({ '793': true })
+    tcData__: fullConsent({ '793': true })
   };
 
   after(() => {
@@ -126,18 +127,26 @@ describe('a9', () => {
       assetLoaderStub = sandbox.stub(assetLoaderService, 'loadScript').resolves();
     });
 
+    it('should not load the a9 script in test mode', async () => {
+      const step = a9Init(a9ConfigStub, assetLoaderService);
+      const tcData = fullConsent({ '793': true });
+
+      await step({ ...adPipelineContext('test'), tcData__: tcData });
+      expect(assetLoaderStub).to.have.not.been.called;
+    });
+
     it('should load the a9 script if consent is given', async () => {
       const step = a9Init(a9ConfigStub, assetLoaderService);
       const tcData = fullConsent({ '793': true });
 
-      await step({ ...adPipelineContext(), tcData });
+      await step({ ...adPipelineContext(), tcData__: tcData });
       expect(assetLoaderStub).to.have.been.calledOnce;
     });
 
     it('should load the a9 script if gdpr does not apply', async () => {
       const step = a9Init(a9ConfigStub, assetLoaderService);
 
-      await step({ ...adPipelineContext(), tcData: tcDataNoGdpr });
+      await step({ ...adPipelineContext(), tcData__: tcDataNoGdpr });
       expect(assetLoaderStub).to.have.been.calledOnce;
     });
 
@@ -145,8 +154,7 @@ describe('a9', () => {
       const step = a9Init(a9ConfigStub, assetLoaderService);
       const tcData = fullConsent({ '793': false });
 
-      await step({ ...adPipelineContext(), tcData });
-      console.log(assetLoaderStub.firstCall);
+      await step({ ...adPipelineContext(), tcData__: tcData });
       expect(assetLoaderStub).not.have.been.called;
     });
 
@@ -171,40 +179,58 @@ describe('a9', () => {
         const tcData = fullConsent({ '793': true });
         tcData.purpose.consents[purpose] = false;
 
-        await step({ ...adPipelineContext(), tcData });
+        await step({ ...adPipelineContext(), tcData__: tcData });
         expect(assetLoaderStub).not.have.been.called;
       });
     });
   });
 
   describe('a9 configure step', () => {
-    it('should set the a9 config', () => {
+    it('should set the a9 config', async () => {
       const step = a9Configure(a9ConfigStub, dummySchainConfig);
       const apstagInitSpy = sandbox.spy(dom.window.apstag, 'init');
+      await step(adPipelineContext(), []);
+      expect(apstagInitSpy).to.have.been.calledOnce;
+      expect(apstagInitSpy).to.have.been.calledOnceWithExactly({
+        pubID: a9ConfigStub.pubID,
+        adServer: 'googletag',
+        bidTimeout: a9ConfigStub.timeout,
+        gdpr: {
+          cmpTimeout: a9ConfigStub.cmpTimeout
+        },
+        schain: {
+          complete: 1,
+          ver: '1.0',
+          nodes: [dummySchainConfig.supplyChainStartNode, a9ConfigStub.schainNode]
+        }
+      });
+    });
 
-      return step(adPipelineContext(), []).then(() => {
-        expect(apstagInitSpy).to.have.been.calledOnce;
-        expect(apstagInitSpy).to.have.been.calledOnceWithExactly({
-          pubID: a9ConfigStub.pubID,
-          adServer: 'googletag',
-          bidTimeout: a9ConfigStub.timeout,
-          gdpr: {
-            cmpTimeout: a9ConfigStub.cmpTimeout
-          },
-          schain: {
-            complete: 1,
-            ver: '1.0',
-            nodes: [dummySchainConfig.supplyChainStartNode, a9ConfigStub.schainNode]
-          }
-        });
+    it('should add only the supplyChainStartNode if no schainNode is provided', async () => {
+      const step = a9Configure({ ...a9ConfigStub, schainNode: undefined }, dummySchainConfig);
+      const apstagInitSpy = sandbox.spy(dom.window.apstag, 'init');
+      await step(adPipelineContext(), []);
+      expect(apstagInitSpy).to.have.been.calledOnce;
+      expect(apstagInitSpy).to.have.been.calledOnceWithExactly({
+        pubID: a9ConfigStub.pubID,
+        adServer: 'googletag',
+        bidTimeout: a9ConfigStub.timeout,
+        gdpr: {
+          cmpTimeout: a9ConfigStub.cmpTimeout
+        },
+        schain: {
+          complete: 1,
+          ver: '1.0',
+          nodes: [dummySchainConfig.supplyChainStartNode]
+        }
       });
     });
   });
 
   describe('a9 publisher audiences step', () => {
     const a9Config = (
-      publisherAudiencesConfig: Moli.headerbidding.A9PublisherAudienceConfig
-    ): Moli.headerbidding.A9Config => {
+      publisherAudiencesConfig: headerbidding.A9PublisherAudienceConfig
+    ): headerbidding.A9Config => {
       return {
         ...a9ConfigStub,
         publisherAudience: publisherAudiencesConfig
@@ -303,40 +329,65 @@ describe('a9', () => {
   });
 
   describe('a9 request bids step', () => {
-    it('should add empty adunits array when the slots array is empty', () => {
+    it('should add empty adunits array when the slots array is empty', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
-
-      return step(contextWithConsent, []).then(() => {
-        expect(addAdUnitsSpy).not.to.have.been.called;
-      });
+      await step(contextWithConsent, []);
+      expect(addAdUnitsSpy).not.to.have.been.called;
     });
 
-    it('should request for the wanted ad slot', () => {
+    it('should request for the wanted ad slot', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
-
-      return step(contextWithConsent, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: domId,
-                slotName: singleSlot.adSlot.getAdUnitPath(),
-                sizes: mediumRec
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
+      await step(contextWithConsent, [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
 
-    it('should respect the supportedSizes configuration in the global a9 config', () => {
+    it('should fetchBids only for un-throttled slots', async () => {
+      const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids(a9ConfigStub);
+
+      const domId1 = getDomId();
+      const domId2 = getDomId();
+      const slot1 = createSlotDefinitions(domId1, {});
+      const slot2 = createSlotDefinitions(domId2, {});
+
+      const isThrottled = sandbox.stub(contextWithConsent.auction__, 'isSlotThrottled');
+      isThrottled.withArgs(slot1.adSlot).returns(false);
+      isThrottled.withArgs(slot2.adSlot).returns(true);
+
+      await step(contextWithConsent, [slot1, slot2]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId1,
+              slotName: slot1.adSlot.getAdUnitPath(),
+              sizes: mediumRec
+            }
+          ]
+        },
+        Sinon.match.func
+      );
+    });
+
+    it('should respect the supportedSizes configuration in the global a9 config', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids({
         ...a9ConfigStub,
@@ -345,25 +396,23 @@ describe('a9', () => {
 
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
-
-      return step(contextWithConsent, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: domId,
-                slotName: singleSlot.adSlot.getAdUnitPath(),
-                sizes: [[300, 250]]
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
+      await step(contextWithConsent, [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              slotName: singleSlot.adSlot.getAdUnitPath(),
+              sizes: [[300, 250]]
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
 
-    it('should return mediaType video when wanted', () => {
+    it('should return mediaType video when wanted', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
 
@@ -371,24 +420,22 @@ describe('a9', () => {
       const singleSlot = createSlotDefinitions(domId, {
         mediaType: 'video'
       });
-
-      return step(contextWithConsent, [singleSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: domId,
-                mediaType: 'video'
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
+      await step(contextWithConsent, [singleSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: domId,
+              mediaType: 'video'
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
 
-    it('should return video and display slots', () => {
+    it('should return video and display slots', async () => {
       const addAdUnitsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
       const step = a9RequestBids(a9ConfigStub);
 
@@ -399,26 +446,24 @@ describe('a9', () => {
       const videoSlot = createSlotDefinitions(videoDomId, {
         mediaType: 'video'
       });
-
-      return step(contextWithConsent, [displaySlot, videoSlot]).then(() => {
-        expect(addAdUnitsSpy).to.have.been.calledOnce;
-        expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
-          {
-            slots: [
-              {
-                slotID: displayDomId,
-                slotName: displaySlot.adSlot.getAdUnitPath(),
-                sizes: mediumRec
-              },
-              {
-                slotID: videoDomId,
-                mediaType: 'video'
-              }
-            ]
-          },
-          Sinon.match.func
-        );
-      });
+      await step(contextWithConsent, [displaySlot, videoSlot]);
+      expect(addAdUnitsSpy).to.have.been.calledOnce;
+      expect(addAdUnitsSpy).to.have.been.calledOnceWithExactly(
+        {
+          slots: [
+            {
+              slotID: displayDomId,
+              slotName: displaySlot.adSlot.getAdUnitPath(),
+              sizes: mediumRec
+            },
+            {
+              slotID: videoDomId,
+              mediaType: 'video'
+            }
+          ]
+        },
+        Sinon.match.func
+      );
     });
 
     it('should add floor config if enabled', async () => {
@@ -494,7 +539,7 @@ describe('a9', () => {
       tcDataNoPurpose1.purpose.consents['1'] = false;
       const context: AdPipelineContext = {
         ...adPipelineContext(),
-        tcData: tcDataNoPurpose1
+        tcData__: tcDataNoPurpose1
       };
 
       await step(context, [singleSlot]);
@@ -538,9 +583,9 @@ describe('a9', () => {
     });
 
     describe('slotId ad unit path resolving', () => {
-      const slotWithAdUnitPath = (adUnitPath: string): Moli.SlotDefinition => {
+      const slotWithAdUnitPath = (adUnitPath: string): MoliRuntime.SlotDefinition => {
         const domId = getDomId();
-        const slot: Moli.AdSlot = {
+        const slot: AdSlot = {
           ...a9Slot(domId, {}),
           adUnitPath
         };
@@ -582,13 +627,13 @@ describe('a9', () => {
         it(`should resolve the ad unit path with [${labels.join(
           ','
         )}], device: ${device}, domain: ${domain}`, async () => {
-          const ctxWithLabelServiceStub = {
+          const ctxWithLabelServiceStub: AdPipelineContext = {
             ...adPipelineContext('production', emptyConfig),
-            adUnitPathVariables: { domain, device },
-            tcData: fullConsent({ '793': true })
+            adUnitPathVariables__: { domain, device },
+            tcData__: fullConsent({ '793': true })
           };
           const getSupportedLabelsStub = sandbox.stub(
-            ctxWithLabelServiceStub.labelConfigService,
+            ctxWithLabelServiceStub.labelConfigService__,
             'getSupportedLabels'
           );
           getSupportedLabelsStub.returns(labels);
@@ -623,7 +668,7 @@ describe('a9', () => {
       const step = a9RequestBids(a9ConfigStub);
       const contextWithConsentWithTimeout: AdPipelineContext = {
         ...contextWithConsent,
-        bucket: { timeout: 3000 }
+        bucket__: { timeout: 3000 }
       };
       const domId = getDomId();
       const singleSlot = createSlotDefinitions(domId, {});
@@ -648,7 +693,7 @@ describe('a9', () => {
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
-      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId: 0 };
+      const ctx: AdPipelineContext = { ...adPipelineContext(), requestId__: 0 };
 
       await step(ctx, [slot]);
       expect(clearTargetingSpy).to.have.not.been.called;
@@ -661,7 +706,7 @@ describe('a9', () => {
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot);
-      const ctx: AdPipelineContext = { ...contextWithConsent, requestId: 1 };
+      const ctx: AdPipelineContext = { ...contextWithConsent, requestId__: 1 };
 
       await step(ctx, [slot]);
       expect(getTargetingKeysStub).to.have.been.calledOnce;
@@ -677,7 +722,7 @@ describe('a9', () => {
 
       const clearTargetingSpy = sandbox.spy(slot.adSlot, 'clearTargeting');
       const getTargetingKeysStub = makeGetTargetingKeysStub(slot.adSlot, ['amznp', 'foo']);
-      const ctx: AdPipelineContext = { ...contextWithConsent, requestId: 1 };
+      const ctx: AdPipelineContext = { ...contextWithConsent, requestId__: 1 };
 
       await step(ctx, [slot]);
       expect(getTargetingKeysStub).to.have.been.calledOnce;

@@ -4,29 +4,27 @@ import { expect, use } from 'chai';
 import sinonChai from 'sinon-chai';
 import * as Sinon from 'sinon';
 
-import { Moli } from '../types/moli';
-
-import { LabelConfigService } from './labelConfigService';
-import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
+import { createLabelConfigService } from './labelConfigService';
+import { AdSlot, sizeConfigs } from '../types/moliConfig';
 
 // setup sinon-chai
 use(sinonChai);
 
 describe('LabelConfigConfigService', () => {
   const sandbox = Sinon.createSandbox();
-  const labelConfigEntry1: LabelSizeConfigEntry = {
+  const labelConfigEntry1: sizeConfigs.LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
     labelsSupported: ['desktop', 'video']
   };
-  const labelConfigEntry2: LabelSizeConfigEntry = {
+  const labelConfigEntry2: sizeConfigs.LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
     labelsSupported: ['mobile', 'video', 'bottom']
   };
-  const labelConfigEntryWithoutLabels: LabelSizeConfigEntry = {
+  const labelConfigEntryWithoutLabels: sizeConfigs.LabelSizeConfigEntry = {
     mediaQuery: 'min-width: 300px',
     labelsSupported: []
   };
-  const adSlotWithLabelAny: Moli.AdSlot = {
+  const adSlotWithLabelAny: AdSlot = {
     position: 'in-page',
     domId: 'not-available-3',
     behaviour: { loaded: 'eager' },
@@ -35,7 +33,7 @@ describe('LabelConfigConfigService', () => {
     sizeConfig: [],
     labelAny: ['video', 'visitor-uk']
   };
-  const adSlotWithLabelAll: Moli.AdSlot = {
+  const adSlotWithLabelAll: AdSlot = {
     position: 'in-page',
     domId: 'not-available-4',
     behaviour: { loaded: 'eager' },
@@ -44,7 +42,7 @@ describe('LabelConfigConfigService', () => {
     sizeConfig: [],
     labelAll: ['video', 'visitor-uk']
   };
-  const adSlotWithLabelAnyLabelAll: Moli.AdSlot = {
+  const adSlotWithLabelAnyLabelAll: AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
     behaviour: { loaded: 'eager' },
@@ -55,7 +53,7 @@ describe('LabelConfigConfigService', () => {
     labelAll: ['video', 'visitor-uk']
   };
 
-  const adSlotWithDifferentLabelAnyLabelAll: Moli.AdSlot = {
+  const adSlotWithDifferentLabelAnyLabelAll: AdSlot = {
     position: 'in-page',
     domId: 'not-available-5',
     behaviour: { loaded: 'eager' },
@@ -67,9 +65,12 @@ describe('LabelConfigConfigService', () => {
   };
 
   const jsDomWindow: Window = dom.window as any;
+  const matchMediaStub = sandbox.stub(jsDomWindow, 'matchMedia');
 
-  const newLabelConfigService = (labelConfig: LabelSizeConfigEntry[], extraLabels: string[] = []) =>
-    new LabelConfigService(labelConfig, extraLabels, jsDomWindow);
+  const newLabelConfigService = (
+    labelConfig: sizeConfigs.LabelSizeConfigEntry[],
+    extraLabels: string[] = []
+  ) => createLabelConfigService(labelConfig, extraLabels, jsDomWindow);
 
   afterEach(() => {
     sandbox.reset();
@@ -81,6 +82,7 @@ describe('LabelConfigConfigService', () => {
 
   describe('slot label matching logic', () => {
     it('should let the given slot pass if label configuration is empty', () => {
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
       const slotPassed = newLabelConfigService([labelConfigEntryWithoutLabels]).filterSlot(
         adSlotWithLabelAll
       );
@@ -89,7 +91,8 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should filter out duplicate labels from the label config', () => {
-      const labelConfigService = new LabelConfigService(
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
+      const labelConfigService = createLabelConfigService(
         [labelConfigEntry1, labelConfigEntry2],
         [],
         jsDomWindow
@@ -101,6 +104,7 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should check if given slots with labelAny/labelAll match the configured label criteria', () => {
+      matchMediaStub.returns({ matches: true } as MediaQueryList);
       const sizeConfigService = newLabelConfigService([labelConfigEntry1, labelConfigEntry2]);
       expect(sizeConfigService.getSupportedLabels()).to.deep.equal([
         'desktop',
@@ -123,7 +127,7 @@ describe('LabelConfigConfigService', () => {
     });
 
     it('should add the extra labels to the supported labels', () => {
-      const labelConfigService = new LabelConfigService(
+      const labelConfigService = createLabelConfigService(
         [],
         ['desktop', 'mobile', 'video', 'bottom'],
         jsDomWindow
@@ -158,17 +162,40 @@ describe('LabelConfigConfigService', () => {
   });
 
   describe('extraLabels overriding labelSizeConfig', () => {
-    [
-      { labels: [], deviceLabel: 'desktop' },
+    const inputs = [
       { labels: ['mobile'], deviceLabel: 'mobile' },
       { labels: ['desktop'], deviceLabel: 'desktop' },
       { labels: ['ios'], deviceLabel: 'ios' },
       { labels: ['android', 'test'], deviceLabel: 'android' }
-    ].forEach(({ labels, deviceLabel }) => {
-      it(`should return ${deviceLabel} if labels are [${labels.join(',')}]`, () => {
+    ];
+    inputs.forEach(({ labels, deviceLabel }) => {
+      it(`should return ${deviceLabel} if labels are [${labels.join(',')}] and matchMedia matches:true`, () => {
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
         const sizeConfigService = newLabelConfigService([labelConfigEntry1], labels);
         expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
       });
+    });
+
+    inputs.forEach(({ labels, deviceLabel }) => {
+      it(`should return ${deviceLabel} if labels are [${labels.join(',')}] and matchMedia matches:false`, () => {
+        matchMediaStub.returns({ matches: false } as MediaQueryList);
+        const sizeConfigService = newLabelConfigService([labelConfigEntry1], labels);
+        expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
+      });
+    });
+  });
+
+  describe('addLabel', () => {
+    it('should add a label to the supported labels', () => {
+      const sizeConfigService = newLabelConfigService([], ['mobile']);
+      sizeConfigService.addLabel('new-label');
+      expect(sizeConfigService.getSupportedLabels()).to.include('new-label');
+    });
+
+    it('should not add a device label to the supported labels', () => {
+      const sizeConfigService = newLabelConfigService([], ['mobile']);
+      sizeConfigService.addLabel('desktop');
+      expect(sizeConfigService.getSupportedLabels()).to.not.include('desktop');
     });
   });
 });

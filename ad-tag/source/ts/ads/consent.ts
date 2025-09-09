@@ -1,7 +1,8 @@
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 import { tcfapi } from '../types/tcfapi';
 import EventStatus = tcfapi.status.EventStatus;
 import CmpStatus = tcfapi.status.CmpStatus;
+import { consent, Environment } from '../types/moliConfig';
 
 const allPurposes: tcfapi.responses.TCPurpose[] = [
   tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
@@ -18,7 +19,7 @@ const allPurposes: tcfapi.responses.TCPurpose[] = [
 
 /**
  * This method returns false as soon as there's at least one purpose where
- * legitimate interest is available, but consent is not.
+ * consent is missing, regardless of whether the legitimate interest is set or not.
  *
  * @param tcData
  */
@@ -27,7 +28,7 @@ export const missingPurposeConsent = (tcData: tcfapi.responses.TCData): boolean 
     // gdpr must apply
     !!tcData.gdprApplies &&
     // for all purposes
-    allPurposes.some(p => !tcData.purpose.consents[p] && tcData.purpose.legitimateInterests[p])
+    allPurposes.some(p => !tcData.purpose.consents[p])
   );
 };
 
@@ -48,10 +49,10 @@ export const missingPurposeConsent = (tcData: tcfapi.responses.TCData): boolean 
  * @param env test environment requires no CMP
  */
 export const consentReady = (
-  consentConfig: Moli.consent.ConsentConfig,
+  consentConfig: consent.ConsentConfig,
   window: Window & tcfapi.TCFApiWindow,
-  log: Moli.MoliLogger,
-  env: Moli.Environment | undefined
+  log: MoliRuntime.MoliLogger,
+  env: Environment | undefined
 ): Promise<tcfapi.responses.TCData> => {
   if (env === 'test') {
     log.info('gdprApplies is set to false in test mode!');

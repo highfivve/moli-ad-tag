@@ -1,9 +1,7 @@
-import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
 import { isSizeEqual } from '../util/sizes';
 
-import DfpSlotSize = Moli.DfpSlotSize;
-import SizeConfigEntry = Moli.SizeConfigEntry;
+import { googleAdManager, sizeConfigs } from '../types/moliConfig';
 
 /**
  * Filter sizes of an ad slot depending on media queries.
@@ -17,7 +15,7 @@ export interface ISizedSlot {
    *    to filter the slot as well
    *
    */
-  readonly sizes?: DfpSlotSize[];
+  readonly sizes?: googleAdManager.SlotSize[];
 }
 
 /**
@@ -26,7 +24,7 @@ export interface ISizedSlot {
  * It provides methods for evaluating if a given slot or a given set of slot sizes match the configured criteria.
  */
 export class SizeConfigService {
-  private readonly supportedSizes: DfpSlotSize[];
+  private readonly supportedSizes: googleAdManager.SlotSize[];
 
   /**
    * True:  Either no size config is used or the size config produced supported sizes.
@@ -34,12 +32,12 @@ export class SizeConfigService {
    */
   private readonly isValid: boolean;
 
-  public static isFixedSize(size: Moli.DfpSlotSize): size is [number, number] {
+  public static isFixedSize(size: googleAdManager.SlotSize): size is [number, number] {
     return size !== 'fluid';
   }
 
   constructor(
-    private readonly sizeConfig: SizeConfigEntry[],
+    private readonly sizeConfig: sizeConfigs.SizeConfigEntry[],
     private readonly supportedLabels: string[],
     private readonly window: Window
   ) {
@@ -89,16 +87,18 @@ export class SizeConfigService {
    * https://github.com/prebid/Prebid.js/blob/master/src/sizeMapping.js#L129-L131
    *
    * @param givenSizes
-   * @returns {DfpSlotSize[]}
+   * @returns {googleAdManager.SlotSize[]}
    */
-  public filterSupportedSizes = (givenSizes: DfpSlotSize[]): DfpSlotSize[] => {
+  public filterSupportedSizes = (
+    givenSizes: googleAdManager.SlotSize[]
+  ): googleAdManager.SlotSize[] => {
     if (!this.isValid) {
       return [];
     }
     return this.supportedSizes.length === 0
       ? givenSizes
-      : this.supportedSizes.filter(configuredSize =>
-          givenSizes.some(givenSize => {
+      : givenSizes.filter(givenSize =>
+          this.supportedSizes.some(configuredSize => {
             if (configuredSize === 'fluid') {
               return givenSize === 'fluid';
             } else if (givenSize === 'fluid') {
@@ -110,7 +110,10 @@ export class SizeConfigService {
         );
   };
 
-  private areLabelsMatching = (conf: Moli.SizeConfigEntry, supportedLabels: string[]): boolean => {
+  private areLabelsMatching = (
+    conf: sizeConfigs.SizeConfigEntry,
+    supportedLabels: string[]
+  ): boolean => {
     return (
       // either labelAll is not set or _all_ labels must be present
       (!conf.labelAll ||

@@ -1,0 +1,28 @@
+{
+  "name": "rollup",
+  "version": "1.0.0",
+  "description": "Ad Tag build with rollup",
+  "main": "index.js",
+  "scripts": {
+    "build": "BUILD_TARGET=production rollup -c",
+    "start": "rollup -c --watch"
+  },
+  "keywords": [
+    "publisher",
+    "example",
+    "rollup"
+  ],
+  "author": "Muki",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@rollup/plugin-html": "^1.0.3",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "rollup": "^4.18.0",
+    "rollup-plugin-serve": "^1.1.1"
+  },
+  "dependencies": {
+    "rollup-plugin-copy": "^3.5.0"
+  }
+}

@@ -1,8 +1,6 @@
-import { Moli } from '../types/moli';
 import { flatten, uniquePrimitiveFilter } from '../util/arrayUtils';
-
-import LabelSizeConfigEntry = Moli.LabelSizeConfigEntry;
-import Device = Moli.Device;
+import type { Device, googleAdManager, sizeConfigs } from '../types/moliConfig';
+import { MoliRuntime } from '../types/moliRuntime';
 
 /**
  * Conditionally select the ad unit based on labels.
@@ -28,92 +26,114 @@ export interface ILabelledSlot {
  *
  * It provides methods for evaluating if a given slot matches the configured criteria.
  */
-export class LabelConfigService {
-  private readonly supportedLabels: string[];
+export interface LabelConfigService {
   /**
-   * True:  Either no label config is used or the label config produced supported labels.
-   * False: label config produced no supported labels thus all slots should be filtered.
+   * @param slot check the `labelAny` and `labelAll` properties of the slot against the configured labels.
    */
-  private readonly isValid: boolean;
+  filterSlot(slot: ILabelledSlot): boolean;
 
   /**
-   * List of possible devices that can be configured.
-   * This list is used to check if any of the configured labels by the publisher contains
-   * a device label. If no device label is found, we use the label based on the labelSizeConfig.
+   * Returns all labels currently available. Sources labels can come from:
+   *
+   * - the sizeConfig object in the top level moli configuration
+   * - the `labels` property in the runtime config
+   * - `addLabel` calls during adPipeline#run calls
    */
-  private readonly possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
-
-  constructor(
-    private readonly labelSizeConfig: LabelSizeConfigEntry[],
-    private readonly extraLabels: string[],
-    private readonly window: Window
-  ) {
-    // Check if the device label is already defined by the publisher
-    const isPublisherDeviceDefined: boolean = extraLabels.some(
-      (label): label is Device => this.possibleDevices.indexOf(<Device>label) > -1
-    );
-
-    // Matches the given slot sizes against the window's dimensions.
-    const supportedLabelSizeConfigs = labelSizeConfig.filter(
-      conf => window.matchMedia(conf.mediaQuery).matches
-    );
-
-    this.isValid =
-      labelSizeConfig.length === 0 ||
-      !(labelSizeConfig.length > 0 && supportedLabelSizeConfigs.length === 0);
-
-    const supportedLabels = flatten(supportedLabelSizeConfigs.map(conf => conf.labelsSupported));
-
-    // Use labels from labelSizeConfig when no publisher defined device label was found.
-    this.supportedLabels = [
-      ...(isPublisherDeviceDefined ? [] : supportedLabels),
-      ...extraLabels
-    ].filter(uniquePrimitiveFilter);
-  }
+  getSupportedLabels(): string[];
+  getDeviceLabel(): Device;
 
   /**
-   * Checks if the given slot fulfills the configured slot label matching criteria.
+   * Adds a label to the list of supported labels. This API is for pipeline steps that want to add
+   * labels dynamically during the ad pipeline run.
    *
-   * Labels are matched in this order: labelAll, labelAny. If both are specified, only labelAll will be
-   * taken into account.
+   * Note: each adPipeline run creates a new labelConfigService instance, so this method only
+   *       ever alters a single ad pipeline run.
    *
-   * If no labels have been configured, all labels are considered matching. See the implementation in prebid.js:
-   * https://github.com/prebid/Prebid.js/blob/master/src/sizeMapping.js#L96
-   *
-   * @param slot the ad slot to check
-   * @returns {boolean} is this slot supported (label)?
+   * @param label - device labels are not allowed and will be ignored.
    */
-  public filterSlot(slot: ILabelledSlot): boolean {
+  addLabel(label: string): void;
+}
+
+const possibleDevices: Device[] = ['mobile', 'desktop', 'android', 'ios'];
+
+export const createLabelConfigService = (
+  labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[],
+  extraLabels: string[],
+  window: Window
+): LabelConfigService => {
+  const isPublisherDeviceDefined: boolean = extraLabels.some(
+    (label): label is Device => possibleDevices.indexOf(<Device>label) > -1
+  );
+
+  const supportedLabelSizeConfigs = labelSizeConfig.filter(
+    conf => window.matchMedia(conf.mediaQuery).matches
+  );
+
+  const supportedLabels = [
+    ...(isPublisherDeviceDefined
+      ? []
+      : flatten(supportedLabelSizeConfigs.map(conf => conf.labelsSupported))),
+    ...extraLabels
+  ].filter(uniquePrimitiveFilter);
+
+  const filterSlot = (slot: ILabelledSlot): boolean => {
     let labelsMatching = true;
 
-    // filtering by labels is only done if any labels were configured.
-    if (this.supportedLabels.length && slot.labelAll?.length) {
-      labelsMatching = slot.labelAll.every(label => this.supportedLabels.indexOf(label) > -1);
+    if (supportedLabels.length && slot.labelAll?.length) {
+      labelsMatching = slot.labelAll.every(label => supportedLabels.indexOf(label) > -1);
     }
 
-    // if labelAll was already evaluated, labelAny will be ignored.
-    if (this.supportedLabels.length && slot.labelAny && !slot.labelAll?.length) {
-      labelsMatching = slot.labelAny.some(label => this.supportedLabels.indexOf(label) > -1);
+    if (supportedLabels.length && slot.labelAny && !slot.labelAll?.length) {
+      labelsMatching = slot.labelAny.some(label => supportedLabels.indexOf(label) > -1);
     }
 
     return labelsMatching;
-  }
+  };
 
-  /**
-   * @returns the configured supported labels
-   */
-  public getSupportedLabels(): string[] {
-    return this.supportedLabels;
-  }
+  const getSupportedLabels = (): string[] => {
+    return supportedLabels;
+  };
 
-  /**
-   * @returns the currently configured device. If no device label is found, mobile is being returned
-   */
-  public getDeviceLabel(): Device {
+  const getDeviceLabel = (): Device => {
     return (
-      this.getSupportedLabels().find(
-        (label): label is Device => this.possibleDevices.indexOf(<Device>label) > -1
+      supportedLabels.find(
+        (label): label is Device => possibleDevices.indexOf(<Device>label) > -1
       ) || 'mobile'
     );
-  }
-}
+  };
+
+  const addLabel = (label: string): void => {
+    // do not allow device labels to be added
+    if (!possibleDevices.includes(<Device>label)) {
+      supportedLabels.push(label);
+    }
+  };
+
+  return {
+    filterSlot,
+    getSupportedLabels,
+    getDeviceLabel,
+    addLabel
+  };
+};
+
+/**
+ * A small helper function to get the device label from a fresh LabelService instance.
+ *
+ * @param window used for the media query matching
+ * @param targeting access static labels from the config
+ * @param runtimeConfig access labels set during runtime (e.g. from the ad tag or the publisher)
+ * @param labelSizeConfig configuration from the server side config
+ */
+export const getDeviceLabel = (
+  window: Window,
+  runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+  labelSizeConfig: sizeConfigs.LabelSizeConfigEntry[] | undefined,
+  targeting: googleAdManager.Targeting | undefined
+): Device => {
+  return createLabelConfigService(
+    labelSizeConfig ?? [],
+    [...(targeting?.labels || []), ...runtimeConfig.labels],
+    window
+  ).getDeviceLabel();
+};

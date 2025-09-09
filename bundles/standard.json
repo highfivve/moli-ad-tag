@@ -1,0 +1,20 @@
+{
+  "description": "This bundle contains all relevant modules for publishers that have no authenticated traffic.",
+  "modules": [
+    "adex",
+    "adReload",
+    "blocklistUrls",
+    "cleanup",
+    "confiant",
+    "lazyLoad",
+    "prebidFirstPartyData",
+    "pubstack",
+    "stickyFooterAd",
+    "stickyFooterAds2",
+    "stickyHeaderAd",
+    "skin",
+    "yieldOptimization",
+    "configureFromEndpoint",
+    "interstitialModule"
+  ]
+}

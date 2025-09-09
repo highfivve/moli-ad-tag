@@ -1,5 +1,4 @@
 import domready from '../util/domready';
-import { IPerformanceMeasurementService, createPerformanceService } from './performanceService';
 
 /**
  * @internal
@@ -27,6 +26,12 @@ export interface ILoadAssetParams {
    * Configure how to the script is being loaded
    */
   loadMethod: AssetLoadMethod;
+
+  /**
+   * [optional] type of the script tag. Defaults to 'text/javascript'
+   * if not set, it should be detected from the extension of the assetUrl and set to 'module' if it is a .mjs file
+   */
+  type?: 'module' | 'nomodule';
 }
 
 /**
@@ -37,7 +42,7 @@ export interface IAssetLoaderService {
    * Loads the script and append it to the DOM.
    *
    * @param config
-   * @param parent [optional] the element to which the assetLoader should append the asset. defaults to document.head.
+   * @param parent (optional) the element to which the assetLoader should append the asset. defaults to document.head.
    */
   loadScript(config: ILoadAssetParams, parent?: Element): Promise<void>;
 
@@ -54,30 +59,23 @@ export interface IAssetLoaderService {
  * @internal
  */
 export class AssetLoaderService implements IAssetLoaderService {
-  constructor(
-    private readonly performanceService: IPerformanceMeasurementService,
-    private readonly window: Window
-  ) {}
+  constructor(private readonly window: Window) {}
 
   public loadScript(
     config: ILoadAssetParams,
     parent: Element = this.window.document.head!
   ): Promise<void> {
-    return this.awaitDomReady()
-      .then(() => this.startPerformance(config.name))
-      .then(() => {
-        switch (config.loadMethod) {
-          case AssetLoadMethod.FETCH:
-            return this.loadAssetViaFetch(config, parent);
-          case AssetLoadMethod.TAG:
-            return this.loadAssetViaTag(config, parent);
-        }
-      })
-      .finally(() => this.measurePerformance(config.name));
+    return this.awaitDomReady().then(() => {
+      switch (config.loadMethod) {
+        case AssetLoadMethod.FETCH:
+          return this.loadAssetViaFetch(config, parent);
+        case AssetLoadMethod.TAG:
+          return this.loadAssetViaTag(config, parent);
+      }
+    });
   }
 
   public loadJson<T>(name: string, assetUrl: string): Promise<T> {
-    this.startPerformance(name);
     return this.window
       .fetch(assetUrl, {
         method: 'GET',
@@ -87,7 +85,6 @@ export class AssetLoaderService implements IAssetLoaderService {
         }
       })
       .then(response => {
-        this.measurePerformance(name);
         return response.ok
           ? response.json()
           : response
@@ -95,7 +92,6 @@ export class AssetLoaderService implements IAssetLoaderService {
               .then(errorMessage => Promise.reject(`${response.statusText}: ${errorMessage}`));
       })
       .catch(error => {
-        this.measurePerformance(name);
         return Promise.reject(error);
       });
   }
@@ -120,7 +116,7 @@ export class AssetLoaderService implements IAssetLoaderService {
   }
 
   private loadAssetViaTag(config: ILoadAssetParams, parentElement: Element): Promise<void> {
-    const tag: HTMLElement = this.scriptTagWithSrc(config.assetUrl);
+    const tag: HTMLElement = this.scriptTag(config);
 
     return new Promise<void>((resolve: () => void, reject: () => void) => {
       tag.onload = resolve;
@@ -129,11 +125,22 @@ export class AssetLoaderService implements IAssetLoaderService {
     });
   }
 
-  private scriptTagWithSrc(src: string): HTMLScriptElement {
+  private scriptTag(config: ILoadAssetParams): HTMLScriptElement {
     const scriptTag = this.window.document.createElement('script');
-    scriptTag.type = 'text/javascript';
+    if (config.type === 'module') {
+      scriptTag.type = 'module';
+    } else if (config.type === 'nomodule') {
+      scriptTag.type = 'text/javascript';
+      scriptTag.setAttribute('nomodule', '');
+    } else {
+      if (config.assetUrl.endsWith('mjs')) {
+        scriptTag.type = 'module';
+      } else {
+        scriptTag.type = 'text/javascript';
+      }
+    }
     scriptTag.async = true;
-    scriptTag.src = src;
+    scriptTag.src = config.assetUrl;
     return scriptTag;
   }
 
@@ -147,19 +154,10 @@ export class AssetLoaderService implements IAssetLoaderService {
       domready(this.window, resolve);
     });
   }
-
-  private startPerformance(name: string): void {
-    this.performanceService.mark(`${name}_load_start`);
-  }
-
-  private measurePerformance(name: string): void {
-    this.performanceService.mark(`${name}_load_stop`);
-    this.performanceService.measure(`${name}_load_time`, `${name}_load_start`, `${name}_load_stop`);
-  }
 }
 
 /**
  * @internal
  */
 export const createAssetLoaderService = (window: Window): IAssetLoaderService =>
-  new AssetLoaderService(createPerformanceService(window), window);
+  new AssetLoaderService(window);

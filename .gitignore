@@ -1,3 +1,7 @@
+ad-tag/source/css/publisher.vars.css
+ad-tag/source/css/publisher.media.css
+ad-tag/source/css/publisher.media.json
+
 ### Node template
 # Logs
 logs
@@ -8,6 +12,7 @@ yarn-error.log*
 lerna-debug.log
 
 # output
+lib/
 dist/
 public/
 ad-tag/lib
@@ -36,3 +41,6 @@ pids
 node_modules
 .idea
 *.iml
+
+# intellij
+.run

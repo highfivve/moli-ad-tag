@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Page</title>
+
+  <!-- see https://tailwindcss.com/docs/installation/play-cdn -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="moli.css">
+
+</head>
+<body class="p-4">
+  <h1 class="text-3xl">Demo page</h1>
+  <hr class="mb-4"/>
+  <h2 class="text-2xl mb-2">Content 1</h2>
+  <div class="flex items-start w-80 bg-gray-300 h5v-content h5v-placeholder h5v-content-600" id="content_1"></div>
+  <h2 class="text-2xl mb-2">Content 2</h2>
+  <div class="flex items-start w-80 bg-gray-300 h5v-content h5v-content-600" id="content_2"></div>
+
+  <h2 class="text-2xl mb-2">Footer Ads</h2>
+  <div class="h5v-sticky-ad-container" data-ref="h5v-sticky-ad">
+    <div id="floorad"></div>
+    <div id="mobile_stickyad"></div>
+    <button class="h5v-sticky-ad-close-button" data-ref="h5v-sticky-ad-close"></button>
+  </div>
+
+  <script async type="module" src="moli.mjs" data-publisher-code="foo" data-version="production" data-endpoint="localhost:8000" id="moli-ad-tag"></script>
+
+  <script>
+    // live reload: https://esbuild.github.io/api/#live-reload
+    new EventSource('/esbuild').addEventListener('change', () => location.reload())
+  </script>
+  <div class="h5v-interstitial--container h5v-interstitial--hidden" data-ref="h5v-interstitial">
+    <button class="h5v-interstitial--close" data-ref="h5v-interstitial-close">&#x2715;</button>
+    <div class="h5v-interstitial" id="interstitial"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+/** styles the container for the actual ad. You may name this CSS class as you wish */
+.h5v-header-ad {
+  /** background is required for sticky ads */
+  background-color: var(--h5v-header-ad-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: var(--h5v-header-ad-height);
+  width: 100%;
+}
+
+@media (--h5v-mobile) {
+  .h5v-header-ad {
+    /** you may change the style according to your needs */
+    border-bottom: var(--h5v-header-ad-border);
+    box-shadow: var(--h5v-header-ad-shadow);
+
+    /** all properties below are for the sticky behaviour */
+    position: fixed;
+    top: var(--h5v-navbar-height);
+    transition: transform 800ms ease;
+    transform: translateY(0);
+    z-index: 10;
+  }
+
+  /** if this classname doesn't fit your css rules, you can propose a separate name, which
+   * must be configured in your ad tag.
+   */
+  .h5v-header-ad--fadeOut {
+    /** this is the hiding animiation */
+    transform: translateY(
+      calc(-1 * (var(--h5v-navbar-height) + var(--h5v-header-ad-height) + 50px))
+    );
+  }
+
+  /**
+   * this class is added to the ad container when the navbar is hidden.
+   * It's required to prevent the ad from overlapping the content.
+   *
+   * Only necessary if you have a none sticky navbar configuration.
+   */
+  .h5v-header-ad--navbarHidden {
+    top: var(--h5v-header-ad-navbar-hidden-top);
+  }
+
+  /** this an example on how the close button may look like.
+   * if you don't want a close button, this is optional.
+   */
+  .h5v-header-ad--button {
+    background-color: var(--h5v-header-ad-bg);
+    bottom: -25px;
+    border-bottom: var(--h5v-header-ad-border);
+    border-right: var(--h5v-header-ad-border);
+    border-width: inherit;
+    box-shadow: var(--h5v-header-ad-shadow);
+    border-radius: 0 0 0.5rem 0.5rem;
+    font-size: 0.875rem;
+    display: var(--h5v-header-ad-close-button);
+    position: fixed;
+    left: 0;
+    padding: 0.125rem 1rem;
+  }
+}
+
+/** on desktop the ad is not sticky and placed in the regular layout flow */
+@media (--h5v-desktop) {
+  .h5v-header-ad {
+    min-height: 90px;
+  }
+  .h5v-header-ad--button {
+    display: none;
+  }
+}

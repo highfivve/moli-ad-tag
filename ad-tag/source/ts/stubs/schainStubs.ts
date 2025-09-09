@@ -1,5 +1,5 @@
-import { Moli } from '../types/moli';
 import { SupplyChainObject } from '../types/supplyChainObject';
+import { schain } from '../types/moliConfig';
 
 export const dummySupplyChainNode: SupplyChainObject.ISupplyChainNode = {
   asi: 'example.com',
@@ -7,6 +7,6 @@ export const dummySupplyChainNode: SupplyChainObject.ISupplyChainNode = {
   hp: 1
 };
 
-export const dummySchainConfig: Moli.schain.SupplyChainConfig = {
+export const dummySchainConfig: schain.SupplyChainConfig = {
   supplyChainStartNode: dummySupplyChainNode
 };

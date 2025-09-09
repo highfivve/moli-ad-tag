@@ -19,7 +19,7 @@ A minimal configuration for a page with a layout breakpoint between `desktop` an
 import { Moli } from '@highfivve/ad-tag';
 
 const moliConfig: Moli.MoliConfig = {
-  slots: [ ... ],
+  slots: [ /* ... */ ],
   // highlight-start
   labelSizeConfig: [
     {
@@ -165,5 +165,5 @@ formats to bid on.
 
 [media queries]: https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries
 [labels]: labels.md
-[label size config]: ../api/interfaces/Moli.MoliConfig.md#labelsizeconfig
+[label size config]: ../api/types/moliConfig/namespaces/sizeConfigs/interfaces/LabelSizeConfigEntry.md
 [device]: ../getting-started/glossary.md

@@ -1,5 +1,5 @@
 import { parseQueryString } from './query';
-import { Moli } from '../types/moli';
+import { MoliRuntime } from '../types/moliRuntime';
 
 /**
  * Get the parameter `moliDebug`. If set to true all logs will be written to the console.
@@ -27,7 +27,7 @@ export function getMoliDebugParameter(window: Window): boolean {
 /**
  * The noop logger that only writes error to the console.
  */
-function getNoopLogger(): Moli.MoliLogger {
+function getNoopLogger(): MoliRuntime.MoliLogger {
   const noop = () => {
     return;
   };
@@ -76,7 +76,6 @@ function getSourceLabelStyle(
     | 'AdPipeline'
     | 'GAM'
     | 'Prebid'
-    | 'Faktor CMP'
     | 'MoliGlobal'
     | 'AdVisibilityService'
     | 'UserActivityService'
@@ -87,8 +86,6 @@ function getSourceLabelStyle(
       return getLabelStyle('#74ABC6');
     case 'GAM':
       return getLabelStyle('#BA0E5F');
-    case 'Faktor CMP':
-      return getLabelStyle('#9374C6');
     case 'MoliGlobal':
       return getLabelStyle('#403073');
     case 'Prebid':
@@ -107,7 +104,7 @@ function getSourceLabelStyle(
 /**
  * The default logger that writes everything to the console with labels.
  */
-export function getDefaultLogger(): Moli.MoliLogger {
+export function getDefaultLogger(): MoliRuntime.MoliLogger {
   return {
     debug(source?: any, message?: any, ...optionalParams: any[]): void {
       // eslint-disable-next-line
@@ -160,7 +157,10 @@ export function getDefaultLogger(): Moli.MoliLogger {
  * @param config
  * @param window the global window object
  */
-export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.MoliLogger {
+export function getLogger(
+  config: MoliRuntime.MoliRuntimeConfig | null,
+  window: Window
+): MoliRuntime.MoliLogger {
   if (getMoliDebugParameter(window)) {
     return getDefaultLogger();
   } else if (config && config.logger) {
@@ -174,10 +174,10 @@ export function getLogger(config: Moli.MoliConfig | null, window: Window): Moli.
  * Allows to change the underlying logging during runtime.
  * @internal
  */
-export class ProxyLogger implements Moli.MoliLogger {
-  constructor(private logger: Moli.MoliLogger) {}
+export class ProxyLogger implements MoliRuntime.MoliLogger {
+  constructor(private logger: MoliRuntime.MoliLogger) {}
 
-  setLogger = (newLogger: Moli.MoliLogger): void => {
+  setLogger = (newLogger: MoliRuntime.MoliLogger): void => {
     this.logger = newLogger;
   };
 

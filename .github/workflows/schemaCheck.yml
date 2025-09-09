@@ -1,0 +1,52 @@
+name: Check JSON Schema
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Schema Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Node Private Registry
+        uses: actions/setup-node@v4
+        with:
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+          always-auth: true
+          node-version: 20
+          registry-url: https://npm.pkg.github.com
+          scope: '@highfivve'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate JSON Schema
+        run: npm run schema
+
+      - name: Show git diff
+        run: git diff --exit-code
+
+      - name: Verify JSON Schema unchanged
+        uses: tj-actions/verify-changed-files@v20
+        id: verify-changed-files
+        with:
+          fail-if-changed: true
+          fail-message: 'Schema files have changed. Please run `npm run schema` and commit the changes.'
+          files: |
+            schema.json
+            **/*.json
