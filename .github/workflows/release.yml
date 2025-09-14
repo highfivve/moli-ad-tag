@@ -33,7 +33,6 @@ jobs:
         run: |
           echo $NPM_CONFIG_USERCONFIG
           pwd
-          cat ~/.npmrc
           mv $NPM_CONFIG_USERCONFIG ${{ github.GITHUB_WORKSPACE }}/.npmrc
 
       # Validate and publish
