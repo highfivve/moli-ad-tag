@@ -29,6 +29,13 @@ jobs:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Check .npmrc file
+        run: |
+          echo $NPM_CONFIG_USERCONFIG
+          pwd
+          cat ~/.npmrc
+          mv $NPM_CONFIG_USERCONFIG ${{ github.GITHUB_WORKSPACE }}/.npmrc
+
       # Validate and publish
       - name: npm setup and validation
         run: |
