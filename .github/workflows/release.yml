@@ -10,6 +10,9 @@ jobs:
   release:
     name: Check and Release New Version
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -33,10 +36,6 @@ jobs:
         run: |
           echo $NPM_CONFIG_USERCONFIG
           cat $NPM_CONFIG_USERCONFIG
-          pwd
-          echo ${{ github.GITHUB_WORKSPACE }}
-          echo "Copying .npmrc file to project root"
-          cp -f $NPM_CONFIG_USERCONFIG ${{ github.GITHUB_WORKSPACE }}/.npmrc
 
       # Validate and publish
       - name: npm setup and validation
@@ -45,7 +44,10 @@ jobs:
           npm run setup
 
       - name: Publish New Package Version
-        run: npm publish --provenance --access public
+        run: |
+          echo $NPM_CONFIG_USERCONFIG
+          cat $NPM_CONFIG_USERCONFIG
+          npm publish --provenance --access public
         env:
           NODE_ENV: production
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to publish to npm
