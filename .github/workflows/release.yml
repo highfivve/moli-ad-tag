@@ -28,7 +28,6 @@ jobs:
           always-auth: true
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
-          # scope: '@highfivve'
 
       # Validate and publish
       - name: npm setup and validation
@@ -37,10 +36,10 @@ jobs:
           npm run setup
 
       - name: Publish New Package Version
-        run: npm publish --access public
+        run: npm publish --provenance --access public
         env:
           NODE_ENV: production
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Used to publish to npm
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to publish to npm
 
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v6
