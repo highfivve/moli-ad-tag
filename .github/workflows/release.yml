@@ -26,8 +26,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
           always-auth: true
-          node-version: 20
-          registry-url: https://npm.pkg.github.com
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
           scope: '@highfivve'
 
       # Validate and publish
@@ -35,14 +35,12 @@ jobs:
         run: |
           npm ci --engine-strict
           npm run setup
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Publish New Package Version
-        run: npm run github:publish
+        run: npm publish --access public
         env:
           NODE_ENV: production
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Used to publish to npm
 
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v6

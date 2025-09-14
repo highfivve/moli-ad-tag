@@ -28,6 +28,7 @@ website/build
 website/docs/api
 website/docs/modules
 website/**typedoc-sidebar.js
+*.js.map
 
 # Runtime data
 pids
