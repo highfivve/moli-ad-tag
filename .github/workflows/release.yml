@@ -32,11 +32,6 @@ jobs:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Check .npmrc file
-        run: |
-          echo $NPM_CONFIG_USERCONFIG
-          cat $NPM_CONFIG_USERCONFIG
-
       # Validate and publish
       - name: npm setup and validation
         run: |

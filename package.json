@@ -46,7 +46,7 @@
     "directory": "ad-tag"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">=18.0"
