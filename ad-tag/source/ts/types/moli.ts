@@ -1261,7 +1261,7 @@ export namespace Moli {
      * Supplementary gpt configuration.
      * Gpt is always configured, regardless of the existence of this configuration.
      */
-    readonly gpt?: gpt.GptAdSlotConfig;
+    readonly gpt?: googletag.GptSlotSettingsConfig & gpt.GptAdSlotConfig;
 
     /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
     readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
