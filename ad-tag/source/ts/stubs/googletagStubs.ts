@@ -88,6 +88,9 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     },
     getResponseInformation: (): googletag.IResponseInformation | null => {
       return null;
+    },
+    setConfig(_config: googletag.GptSlotSettingsConfig) {
+      return;
     }
   };
   return stub;
