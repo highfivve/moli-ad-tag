@@ -1524,6 +1524,59 @@ export namespace modules {
     }
   }
 
+  /**
+   * @see https://geoedge.com/
+   */
+  export namespace geoedge {
+    export interface GeoEdgeModuleConfig extends IModuleConfig {
+      /**
+       * Your GeoEdge publisher key
+       */
+      readonly key: string;
+
+      /**
+       * Optional configuration for GeoEdge.
+       */
+      readonly cfg?: GeoEdgeConfig;
+    }
+
+    /**
+     * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+     *
+     * @see https://helpcenter.geoedge.com/hc/en-us/articles/360029065811-Choosing-what-to-Monitor-Include-Exclude-specific-Advertisers#overview-0-0
+     */
+    export type GeoEdgeFilter = {
+      /**
+       * the key is either an advertiserId, AdSense id or `exclude`.
+       */
+      readonly [id: string | 'exclude']: boolean;
+    };
+
+    export interface GeoEdgeConfig {
+      /**
+       * To support any of the Prebid-compatible Header Bidding Libraries, you can set the name of
+       * the module here.
+       */
+      readonly pbGlobal?: string;
+
+      /**
+       * Filter GAM advertiser ids. Use `exclude` as a key and set it to `true` if you want to
+       * exclude advertisers instead of including them.
+       *
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       */
+      readonly advs?: GeoEdgeFilter;
+
+      /**
+       * Should be used in case you would like to monitor only AdX/AdSense connected to your Google Ad Manager account.
+       * These id's need to be set under 'pubIds' (with the entire `ca-pub-xx…` string):
+       *
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       */
+      readonly pubIds?: GeoEdgeFilter;
+    }
+  }
+
   export namespace adex {
     export type AdexPartner = 'utiq';
 
@@ -2752,6 +2805,7 @@ export namespace modules {
     readonly cleanup?: cleanup.CleanupModuleConfig;
     readonly confiant?: confiant.ConfiantConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
+    readonly geoedge?: geoedge.GeoEdgeModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly skin?: skin.SkinModuleConfig;

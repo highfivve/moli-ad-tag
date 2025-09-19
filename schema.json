@@ -1687,6 +1687,9 @@
         "emetriq": {
           "$ref": "#/definitions/modules.emetriq.EmetriqModuleConfig"
         },
+        "geoedge": {
+          "$ref": "#/definitions/modules.geoedge.GeoEdgeModuleConfig"
+        },
         "identitylink": {
           "$ref": "#/definitions/modules.identitylink.IdentityLinkModuleConfig"
         },
@@ -2715,6 +2718,54 @@
           "type": "string"
         }
       ]
+    },
+    "modules.geoedge.GeoEdgeConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "advs": {
+          "$ref": "#/definitions/modules.geoedge.GeoEdgeFilter",
+          "description": "Filter GAM advertiser ids. Use `exclude` as a key and set it to `true` if you want to exclude advertisers instead of including them.\n\nIn case you don't want to limit the demand sources monitored, you can leave those objects empty."
+        },
+        "pbGlobal": {
+          "description": "To support any of the Prebid-compatible Header Bidding Libraries, you can set the name of the module here.",
+          "type": "string"
+        },
+        "pubIds": {
+          "$ref": "#/definitions/modules.geoedge.GeoEdgeFilter",
+          "description": "Should be used in case you would like to monitor only AdX/AdSense connected to your Google Ad Manager account. These id's need to be set under 'pubIds' (with the entire `ca-pub-xx…` string):\n\nIn case you don't want to limit the demand sources monitored, you can leave those objects empty."
+        }
+      },
+      "type": "object"
+    },
+    "modules.geoedge.GeoEdgeFilter": {
+      "additionalProperties": {
+        "description": "the key is either an advertiserId, AdSense id or `exclude`.",
+        "type": "boolean"
+      },
+      "description": "In case you don't want to limit the demand sources monitored, you can leave those objects empty.",
+      "type": "object"
+    },
+    "modules.geoedge.GeoEdgeModuleConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "cfg": {
+          "$ref": "#/definitions/modules.geoedge.GeoEdgeConfig",
+          "description": "Optional configuration for GeoEdge."
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "key": {
+          "description": "Your GeoEdge publisher key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "key"
+      ],
+      "type": "object"
     },
     "modules.identitylink.IdentityLinkModuleConfig": {
       "additionalProperties": false,
