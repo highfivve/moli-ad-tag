@@ -2477,7 +2477,7 @@ export namespace modules {
        *
        * @see https://docs.xdn.emetriq.de/#hashing
        */
-      readonly guid: string;
+      readonly guid?: string;
     }
 
     export type EmetriqMappingDefinition = {
@@ -2513,7 +2513,7 @@ export namespace modules {
       readonly launchPadId: string;
 
       /**
-       * md5, sha1, and sha256 hashes of the user's email address.
+       * sha1, sha256, and md5 hashes of the user's email address.
        *
        * From the docs
        *
