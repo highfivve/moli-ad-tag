@@ -27,8 +27,8 @@ import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
-import { criteoEnrichWithFpd } from 'ad-tag/ads/modules/prebid-first-party-data/criteo';
-import { id5Config } from 'ad-tag/ads/modules/prebid-first-party-data/id5';
+import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
+import { id5Config } from 'ad-tag/ads/id5';
 import IPrebidJs = prebidjs.IPrebidJs;
 
 // if we forget to remove prebid from the configuration.
@@ -105,17 +105,17 @@ const createdAdUnits = (
     .map(({ moliSlot, priceRule, filterSupportedSizes }) => {
       const floors: Pick<prebidjs.IAdUnit, 'floors'> | null = priceRule
         ? {
-          floors: {
-            currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
-            schema: {
-              delimiter: '|',
-              fields: ['mediaType']
-            },
-            values: {
-              '*': priceRule.floorprice
+            floors: {
+              currency: prebidConfig.config.currency?.adServerCurrency ?? 'EUR',
+              schema: {
+                delimiter: '|',
+                fields: ['mediaType']
+              },
+              values: {
+                '*': priceRule.floorprice
+              }
             }
           }
-        }
         : null;
       context.logger__.debug(
         'Prebid',
@@ -160,37 +160,37 @@ const createdAdUnits = (
           const videoDimensionsWH =
             videoSizes.length > 0 && !mediaTypeVideo?.w && !mediaTypeVideo?.h
               ? {
-                w: videoSizes[0][0],
-                h: videoSizes[0][1]
-              }
+                  w: videoSizes[0][0],
+                  h: videoSizes[0][1]
+                }
               : {};
 
           const backupVideoRenderer = prebidConfig.backupVideoRenderer;
           const video: prebidjs.IMediaTypes | undefined = mediaTypeVideo
             ? {
-              video: {
-                ...mediaTypeVideo,
-                playerSize: videoSizes.length === 0 ? undefined : videoSizes,
-                ...videoDimensionsWH,
-                // inject a backup video renderer if configured
-                ...(backupVideoRenderer
-                  ? { renderer: prebidOutstreamRenderer(moliSlot.domId, backupVideoRenderer.url) }
-                  : {})
+                video: {
+                  ...mediaTypeVideo,
+                  playerSize: videoSizes.length === 0 ? undefined : videoSizes,
+                  ...videoDimensionsWH,
+                  // inject a backup video renderer if configured
+                  ...(backupVideoRenderer
+                    ? { renderer: prebidOutstreamRenderer(moliSlot.domId, backupVideoRenderer.url) }
+                    : {})
+                }
               }
-            }
             : undefined;
 
           const banner =
             mediaTypeBanner && bannerSizes.length > 0
               ? {
-                banner: { ...mediaTypeBanner, sizes: bannerSizes }
-              }
+                  banner: { ...mediaTypeBanner, sizes: bannerSizes }
+                }
               : undefined;
 
           const native = mediaTypeNative
             ? {
-              native: { ...mediaTypeNative }
-            }
+                native: { ...mediaTypeNative }
+              }
             : undefined;
 
           const pubstack: prebidjs.IPubstackConfig = {
@@ -206,9 +206,9 @@ const createdAdUnits = (
           const storedRequestWithSolvedId: { id: string } | null =
             storedRequest && storedRequest.id
               ? {
-                ...storedRequest,
-                id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables__)
-              }
+                  ...storedRequest,
+                  id: resolveAdUnitPath(storedRequest.id, context.adUnitPathVariables__)
+                }
               : null;
 
           return {
@@ -471,13 +471,13 @@ export const prebidRequestBids = (
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
           ? {
-            adUnits: createdAdUnits(context, prebidConfig, slotsToRefresh)
-          }
+              adUnits: createdAdUnits(context, prebidConfig, slotsToRefresh)
+            }
           : {
-            adUnitCodes: slotsToRefresh
-              .filter(isPrebidSlotDefinition)
-              .map(slot => slot.moliSlot.domId)
-          };
+              adUnitCodes: slotsToRefresh
+                .filter(isPrebidSlotDefinition)
+                .map(slot => slot.moliSlot.domId)
+            };
 
         // ad unit codes are required for setTargetingForGPTAsync
         const adUnitCodes =

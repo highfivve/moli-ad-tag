@@ -3,7 +3,6 @@ import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import IID5Provider = prebidjs.userSync.IID5Provider;
 
-
 type Id5PartnerData = {
   /**
    * SHA256 Hashed Email
