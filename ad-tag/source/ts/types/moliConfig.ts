@@ -2422,7 +2422,7 @@ export namespace modules {
        *
        * @see https://docs.xdn.emetriq.de/#hashing
        */
-      readonly guid: string;
+      readonly guid?: string;
     }
 
     export type EmetriqMappingDefinition = {
