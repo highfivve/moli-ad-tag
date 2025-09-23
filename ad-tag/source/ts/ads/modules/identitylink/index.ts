@@ -107,10 +107,21 @@ export class IdentityLink implements IModule {
     // register event lister for email module
     // see https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html#envelopemoduleready
     window.addEventListener('envelopeModuleReady', () => {
+      const hashedEmailAddresses: string[] = [...moduleConfig.hashedEmailAddresses];
+      [
+        context.runtimeConfig__.audience?.hem?.sha1,
+        context.runtimeConfig__.audience?.hem?.sha256,
+        context.runtimeConfig__.audience?.hem?.md5
+      ].forEach((hash: string | undefined, index: number) => {
+        if (hash !== undefined) {
+          hashedEmailAddresses[index] = hash;
+        }
+      });
+
       // For example, you can directly feed it emails, like so:
       window.atsenvelopemodule.setAdditionalData({
         type: 'emailHashes',
-        id: moduleConfig.hashedEmailAddresses // TODO this can be augmented with the runtimeConfig.audience information. moduleConfig takes precedence.
+        id: hashedEmailAddresses
       });
     });
 
