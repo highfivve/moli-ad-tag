@@ -28,6 +28,7 @@ import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
+import { criteoEnrichWithFpd } from 'ad-tag/ads/modules/prebid-first-party-data/criteo';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -365,9 +366,12 @@ export const prebidConfigure = (
             ...{ floors: prebidConfig.config.floors || {} }
           });
 
-          // TODO bidder specific HEM configuration, e.g. for Criteo, would be done here.
           // set additional bidder configurations if provided
-          prebidConfig.bidderConfigs?.forEach(({ options, merge }) => {
+          const bidderConfigs = [
+            ...(prebidConfig.bidderConfigs || []),
+            criteoEnrichWithFpd(context.runtimeConfig__, context.window__.location.host)
+          ];
+          bidderConfigs.forEach(({ options, merge }) => {
             context.window__.pbjs.setBidderConfig(options, merge);
           });
 

@@ -1,7 +1,7 @@
 /**
  * Api Reference for Prebid.js
  *
- * @see https://prebid.org/dev-docs/publisher-api-reference.html
+ * @see https://docs.prebid.org/dev-docs/publisher-api-reference.html
  */
 import { SupplyChainObject } from './supplyChainObject';
 
