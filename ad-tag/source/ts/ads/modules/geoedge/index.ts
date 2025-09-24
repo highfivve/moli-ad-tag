@@ -58,9 +58,10 @@ export const geoEdge = (): IModule => {
     if (
       context.tcData__.gdprApplies &&
       // this is only a safeguard to block geoedge
+      // this is only a safeguard to block geoedge
       (!context.tcData__.purpose.consents['1'] ||
         // validate the GVL ID if configured
-        !context.tcData__.vendor.consents[geoEdgeGvlId])
+        !(!config.checkGVLID || context.tcData__.vendor.consents[geoEdgeGvlId]))
     ) {
       context.logger__.warn(name, 'no gdpr consent, geoedge will not be loaded');
       return Promise.resolve();
