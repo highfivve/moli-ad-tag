@@ -29,13 +29,18 @@ describe('GeoEdge Module', () => {
 
   const publisherKey = 'abc123';
 
-  const createAndConfigureModule = (key: string, cfg?: modules.geoedge.GeoEdgeConfig) => {
+  const createAndConfigureModule = (
+    key: string,
+    cfg?: modules.geoedge.GeoEdgeConfig,
+    checkGVLID?: boolean
+  ) => {
     const module = geoEdge();
     module.configure__({
       geoedge: {
         key: key,
         enabled: true,
-        cfg: cfg
+        cfg: cfg,
+        checkGVLID
       }
     });
     return { module, initStep: module.initSteps__()[0] };
@@ -77,8 +82,8 @@ describe('GeoEdge Module', () => {
       await testGeoEdgeLoad(initStep, adPipelineContext(jsDomWindow, { env__: 'test' }), false);
     });
 
-    it('not load anything if gdpr applies and vendor 845 has no consent ', async () => {
-      const { initStep } = createAndConfigureModule(publisherKey);
+    it('not load anything if gdpr applies, checkGVLID is true and vendor 845 has no consent ', async () => {
+      const { initStep } = createAndConfigureModule(publisherKey, undefined, true);
       await testGeoEdgeLoad(
         initStep,
         adPipelineContext(jsDomWindow, { tcData__: fullConsent({ 845: false }) }),
@@ -100,6 +105,24 @@ describe('GeoEdge Module', () => {
       await testGeoEdgeLoad(
         initStep,
         adPipelineContext(jsDomWindow, { tcData__: fullConsent({ 845: true }) }),
+        true
+      );
+    });
+
+    it('load geoedge if gdpr applies, checkGVLID is unset and purpose 1 is set ', async () => {
+      const { initStep } = createAndConfigureModule(publisherKey);
+      await testGeoEdgeLoad(
+        initStep,
+        adPipelineContext(jsDomWindow, { tcData__: fullConsent({ 845: false }) }),
+        true
+      );
+    });
+
+    it('load geoedge if gdpr applies, checkGVLID is false and purpose 1 is set ', async () => {
+      const { initStep } = createAndConfigureModule(publisherKey, undefined, false);
+      await testGeoEdgeLoad(
+        initStep,
+        adPipelineContext(jsDomWindow, { tcData__: fullConsent({ 845: false }) }),
         true
       );
     });
