@@ -45,7 +45,7 @@
               ],
               "type": "object"
             },
-            "adSenseAttributes": {
+            "adsenseAttributes": {
               "$ref": "#/definitions/googletag.GptAdSenseAttributesConfig",
               "description": "Setting to configure AdSense attributes.\n\nAdSense attribute changes only apply to ads requested after this method has been called. For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh."
             },
@@ -1294,6 +1294,48 @@
           ],
           "type": "object"
         },
+        "adsenseAttributes": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/googletag.GptAdSenseAttributesConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Setting to configure AdSense attributes.\n\nAdSense attributes configured via this setting will apply to all ad slots on the page. This setting may be called multiple times to define multiple attribute values, or overwrite existing values.\n\nAdSense attribute changes only apply to ads requested after this method has been called. For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh."
+        },
+        "centering": {
+          "description": "Setting to control the horizontal centering of ads. Centering is disabled by default.\n\nHorizontal centering changes only apply to ads requested after this method has been called. For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh.",
+          "type": "boolean"
+        },
+        "disableInitialLoad": {
+          "description": "Setting to control when ads are requested.\n\nBy default, the googletag.display method both registers ad slots and requests ads for them. However, there are times when it may be preferable to separate these actions, in order to more precisely control when ad content is loaded.\n\nBy enabling this setting, ads will not be requested for registered slots when the display() method is called. Instead, a separate call to PubAdsService.refresh must be made to initiate an ad request. This method must be called before calling googletag.enableServices.",
+          "type": "boolean"
+        },
+        "lazyLoad": {
+          "additionalProperties": false,
+          "description": "Settings to control the use of lazy loading in GPT.\n\nLazy loading is a technique to delay the requesting and rendering of ads until they approach the user's viewport. For a more detailed example, see the Lazy loading sample.\n\nNote: If singleRequest is enabled, lazy fetching only works when all slots are outside the fetch margin.\n\nAny lazy load settings which are not specified when calling setConfig() will use a default value set by Google. These defaults may be tuned over time. To disable a particular setting, set the value to null.",
+          "properties": {
+            "fetchMarginPercent": {
+              "description": "The minimum distance from the current viewport a slot must be before we request an ad, expressed as a percentage of viewport size.\n\nUsed in conjunction with renderMarginPercent, this setting allows for prefetching an ad, but waiting to render and download other subresources. As such, this value should always be greater than or equal to renderMarginPercent.\n\nA value of 0 means \"when the slot enters the viewport\", 100 means \"when the ad is 1 viewport away\", and so on.",
+              "type": "number"
+            },
+            "mobileScaling": {
+              "description": "A multiplier applied to margins on mobile devices. This multiplier is applied to both fetchMarginPercent and renderMarginPercent.\n\nThis allows for different margins on mobile vs. desktop, where viewport sizes and scroll speeds may be different. For example, a value of 2.0 will multiply all margins by 2 on mobile devices, increasing the minimum distance a slot can be from the viewport before fetching and rendering.",
+              "type": "number"
+            },
+            "renderMarginPercent": {
+              "description": "The minimum distance from the current viewport a slot must be before we render an ad, expressed as a percentage of viewport size.\n\nUsed in conjunction with fetchMarginPercent, this setting allows for prefetching an ad, but waiting to render and download other subresources. As such, this value should always be less than or equal to fetchMarginPercent.\n\nA value of 0 means \"when the slot enters the viewport\", 100 means \"when the ad is 1 viewport away\", and so on.",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "location": {
+          "description": "Setting to geo-target line items to geographic locations.",
+          "type": "string"
+        },
         "pps": {
           "additionalProperties": false,
           "description": "Settings to control publisher provided signals.",
@@ -1356,6 +1398,34 @@
             "treatments"
           ],
           "type": "object"
+        },
+        "singleRequest": {
+          "description": "Setting to enable or disable Single Request Architecture (SRA).\n\nWhen SRA is enabled, all ad slots defined prior to a googletag.display or PubAdsService.refresh call will be batched into a single ad request. This provides performance benefits, but is also necessary to ensure roadblocks and competetive exclusions are honored. When SRA is disabled, each ad slot is requested individually. This is the default behavior of GPT.\n\nThis method must be called prior to calling googletag.enableServices.",
+          "type": "boolean"
+        },
+        "targeting": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Setting to control key-value targeting.\n\nTargeting configured via this setting will apply to all ad slots on the page. This setting may be called multiple times to define multiple targeting key-values, or overwrite existing values. Targeting keys are defined in your Google Ad Manager account."
         }
       },
       "type": "object"
