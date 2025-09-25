@@ -432,7 +432,7 @@ export namespace googletag {
      * called will be fetched in a single instance of googletag.display(). To force an ad slot not to display,
      * the entire div must be removed.
      *
-     *  @param id
+     * @param id
      */
     display(id: string | Element | IAdSlot): void;
 
@@ -441,8 +441,21 @@ export namespace googletag {
      *
      * @param config - Configuration object for the page (adExpansion, ppp, privacyTreatments).
      */
-
     setConfig(config: GptPageSettingsConfig): void;
+
+    /**
+     * Gets general configuration options for the page set by setConfig.
+     *
+     * @param key supported config keys
+     * @see https://developers.google.com/publisher-tag/reference#googletag.getConfig
+     */
+    getConfig: <T extends keyof GetPageSettingsConfigKey>(key: T) => GptPageSettingsConfig[T];
+
+    secureSignalProviders: {
+      push(provider: { id: string; collectorFunction(): any }): void;
+
+      clearAllCache(): void;
+    };
   }
 
   export type GptPageSettingsConfig = {
@@ -450,10 +463,114 @@ export namespace googletag {
      * Settings to control/override ad expansion behavior.
      */
     readonly adExpansion?: { enabled: boolean };
+
+    /**
+     * Setting to control when ads are requested.
+     *
+     * By default, the googletag.display method both registers ad slots and requests ads for them.
+     * However, there are times when it may be preferable to separate these actions, in order to more
+     * precisely control when ad content is loaded.
+     *
+     * By enabling this setting, ads will not be requested for registered slots when the display() method is called. Instead, a separate call to PubAdsService.refresh must be made to initiate an ad request.
+     * This method must be called before calling googletag.enableServices.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.disableInitialLoad
+     */
+    readonly disableInitialLoad?: boolean;
+
+    /**
+     * Settings to control the use of lazy loading in GPT.
+     *
+     * Lazy loading is a technique to delay the requesting and rendering of ads until they approach the user's viewport.
+     * For a more detailed example, see the Lazy loading sample.
+     *
+     * Note: If singleRequest is enabled, lazy fetching only works when all slots are outside the fetch margin.
+     *
+     * Any lazy load settings which are not specified when calling setConfig() will use a default value set by Google.
+     * These defaults may be tuned over time. To disable a particular setting, set the value to null.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.lazyLoad
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.LazyLoadConfig
+     */
+    readonly lazyLoad?: {
+      /**
+       * The minimum distance from the current viewport a slot must be before we request an ad, expressed as a percentage
+       * of viewport size.
+       *
+       * Used in conjunction with renderMarginPercent, this setting allows for prefetching an ad, but waiting to render
+       * and download other subresources. As such, this value should always be greater than or equal to renderMarginPercent.
+       *
+       * A value of 0 means "when the slot enters the viewport", 100 means "when the ad is 1 viewport away", and so on.
+       */
+      fetchMarginPercent?: number;
+
+      /**
+       * The minimum distance from the current viewport a slot must be before we render an ad, expressed as a percentage
+       * of viewport size.
+       *
+       * Used in conjunction with fetchMarginPercent, this setting allows for prefetching an ad, but waiting to render
+       * and download other subresources. As such, this value should always be less than or equal to fetchMarginPercent.
+       *
+       * A value of 0 means "when the slot enters the viewport", 100 means "when the ad is 1 viewport away", and so on.
+       */
+      renderMarginPercent?: number;
+
+      /**
+       * A multiplier applied to margins on mobile devices. This multiplier is applied to both fetchMarginPercent and renderMarginPercent.
+       *
+       * This allows for different margins on mobile vs. desktop, where viewport sizes and scroll speeds may be different.
+       * For example, a value of 2.0 will multiply all margins by 2 on mobile devices, increasing the minimum distance a
+       * slot can be from the viewport before fetching and rendering.
+       */
+      mobileScaling?: number;
+    };
     /**
      * Settings to control publisher privacy treatments.
      */
     readonly privacyTreatments?: { treatments: 'disablePersonalization'[] };
+
+    /**
+     * Setting to control the horizontal centering of ads. Centering is disabled by default.
+     *
+     * Horizontal centering changes only apply to ads requested after this method has been called.
+     * For that reason, it is recommended to call this method before any calls to googletag.display
+     * or PubAdsService.refresh.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.centering
+     */
+    readonly centering?: boolean;
+
+    /**
+     * Setting to control key-value targeting.
+     *
+     * Targeting configured via this setting will apply to all ad slots on the page. This setting may be called multiple
+     * times to define multiple targeting key-values, or overwrite existing values. Targeting keys are defined in your
+     * Google Ad Manager account.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.targeting
+     */
+    readonly targeting?: Record<string, string | string[]> | null;
+
+    /**
+     * Setting to geo-target line items to geographic locations.
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.location
+     */
+    readonly location?: string;
+
+    /**
+     * Setting to enable or disable Single Request Architecture (SRA).
+     *
+     * When SRA is enabled, all ad slots defined prior to a googletag.display or PubAdsService.refresh call will be
+     * batched into a single ad request. This provides performance benefits, but is also necessary to ensure roadblocks
+     * and competetive exclusions are honored.
+     * When SRA is disabled, each ad slot is requested individually. This is the default behavior of GPT.
+     *
+     * This method must be called prior to calling googletag.enableServices.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.singleRequest
+     */
+    readonly singleRequest?: boolean;
+
     /**
      * Settings to control publisher provided signals.
      */
@@ -463,6 +580,19 @@ export namespace googletag {
         IAB_AUDIENCE_2_2?: { values: string[] };
       };
     };
+
+    /**
+     * Setting to configure AdSense attributes.
+     *
+     * AdSense attributes configured via this setting will apply to all ad slots on the page. This setting may be called
+     * multiple times to define multiple attribute values, or overwrite existing values.
+     *
+     * AdSense attribute changes only apply to ads requested after this method has been called. For that reason, it is
+     * recommended to call this method before any calls to googletag.display or PubAdsService.refresh.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.adsenseAttributes
+     */
+    readonly adsenseAttributes?: GptAdSenseAttributesConfig | null;
   };
 
   export interface GptAdSenseAttributesConfig {
@@ -619,7 +749,7 @@ export namespace googletag {
      * AdSense attribute changes only apply to ads requested after this method has been called.
      * For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh.
      */
-    readonly adSenseAttributes?: GptAdSenseAttributesConfig;
+    readonly adsenseAttributes?: GptAdSenseAttributesConfig;
 
     /**
      * Setting to configure ad category exclusions.
@@ -663,13 +793,23 @@ export namespace googletag {
     /**
      * @see https://developers.google.com/publisher-tag/reference#googletag.enums.OutOfPageFormat
      */
-    export enum OutOfPageFormat {
+    export const enum OutOfPageFormat {
       TOP_ANCHOR = 2,
       BOTTOM_ANCHOR = 3,
       REWARDED = 4,
       INTERSTITIAL = 5
     }
   }
+
+  export type GetPageSettingsConfigKey = Pick<
+    GptPageSettingsConfig,
+    'adsenseAttributes' | 'disableInitialLoad' | 'targeting'
+  >;
+
+  export type GetSlotSettingsConfigKey = Pick<
+    GptSlotSettingsConfig,
+    'adsenseAttributes' | 'categoryExclusion' | 'targeting'
+  >;
 
   /**
    * interface for Google DFP AdSlot.
@@ -750,6 +890,14 @@ export namespace googletag {
      * @param config - Configuration object for the slot.
      */
     setConfig(config: GptSlotSettingsConfig): void;
+
+    /**
+     * Gets general configuration options for the slot set by setConfig.
+     *
+     * @param key the supported config key to retrieve
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Slot.getConfig
+     */
+    getConfig: <T extends keyof GetSlotSettingsConfigKey>(key: T) => GptSlotSettingsConfig[T];
   }
 
   export interface IResponseInformation {

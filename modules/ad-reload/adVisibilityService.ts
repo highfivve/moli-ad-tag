@@ -1,6 +1,6 @@
 import { UserActivityService } from './userActivityService';
 import type { Moli } from '@highfivve/ad-tag/source/ts/types/moli';
-import type { googletag } from '@highfivve/ad-tag/source/ts/types/googletag';
+import type { googletag } from '@highfivve/ad-tag';
 import { RefreshIntervalOverrides, ViewabilityOverrideEntry, ViewabilityOverrides } from './index';
 import type { IntersectionObserverWindow } from '@highfivve/ad-tag/source/ts/types/dom';
 

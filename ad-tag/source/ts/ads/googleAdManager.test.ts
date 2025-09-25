@@ -333,11 +333,12 @@ describe('google ad manager', () => {
           }
         }
       };
-      const clearTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'clearTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       await step(adPipelineContext('production', configWithTargeting), []);
-      Sinon.assert.callOrder(clearTargetingSpy, setTargetingSpy);
-      expect(clearTargetingSpy).to.have.been.calledOnce;
+      Sinon.assert.callOrder(setConfigSpy, setTargetingSpy);
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).calledWith({ targeting: null });
       expect(setTargetingSpy).to.have.been.calledTwice;
       expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
       expect(setTargetingSpy).to.have.been.calledWith('tags', ['car', 'truck']);
@@ -345,14 +346,15 @@ describe('google ad manager', () => {
 
     it('should only be executed once per requestAds cycle', async () => {
       const step = gptResetTargeting();
-      const clearTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'clearTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       await Promise.all([
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 2), []),
         step(adPipelineContext('production', emptyConfig, 2), [])
       ]);
-      expect(clearTargetingSpy).to.have.been.calledTwice;
+      expect(setConfigSpy).to.have.been.calledTwice;
+      expect(setConfigSpy).calledWith({ targeting: null });
     });
   });
 
@@ -1047,9 +1049,9 @@ describe('google ad manager', () => {
           expect(interstitialChannelStub).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
-          expect(newSlot.getTargeting(formatKey)).to.deep.eq([
+          expect(newSlot.getConfig('targeting')![formatKey]).to.deep.eq(
             jsDomWindow.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
-          ]);
+          );
         });
       });
     });

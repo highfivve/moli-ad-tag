@@ -65,6 +65,9 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
 
   setConfig(_config: googletag.GptSlotSettingsConfig) {
     return;
+  },
+  getConfig(_key): any {
+    return;
   }
 });
 
@@ -74,6 +77,7 @@ const configureTargeting = (
 ): void => {
   const keyValueMap = targeting ? targeting.keyValues : {};
   const excludes = targeting?.adManagerExcludes ?? [];
+  // TODO use googletag.setConfig(targeting) instead as setTargeting is deprecated
   Object.keys(keyValueMap)
     .filter(key => !excludes.includes(key))
     .forEach(key => {
@@ -214,7 +218,7 @@ export const gptResetTargeting = (): ConfigureStep =>
       new Promise<void>(resolve => {
         if (context.env === 'production') {
           context.logger.debug('GAM', 'reset top level targeting');
-          context.window.googletag.pubads().clearTargeting();
+          context.window.googletag.setConfig({ targeting: null });
           configureTargeting(context.window, context.config.targeting);
         }
 
@@ -507,6 +511,7 @@ const checkAndSwitchToWebInterstitial = (
   );
 
   if (interstitialSlot && context.auction.interstitialChannel() === 'gam') {
+    const targeting = { ...interstitialSlot.adSlot.getConfig('targeting') };
     // if there are no bids, we switch to the out-of-page-interstitial position
     context.window.googletag.destroySlots([interstitialSlot.adSlot]);
 
@@ -519,10 +524,12 @@ const checkAndSwitchToWebInterstitial = (
 
       // this little dance is annoying - refresh is done afterwards
       gamWebInterstitial.addService(context.window.googletag.pubads());
-      gamWebInterstitial.setTargeting(
-        formatKey,
-        context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
-      );
+      gamWebInterstitial.setConfig({
+        targeting: {
+          ...targeting,
+          [formatKey]: context.window.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+        }
+      });
 
       context.window.googletag.display(gamWebInterstitial);
 

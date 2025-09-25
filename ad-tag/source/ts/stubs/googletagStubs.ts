@@ -1,4 +1,6 @@
 import { googletag } from '../types/googletag';
+import GptPageSettingsConfig = googletag.GptPageSettingsConfig;
+import GptSlotSettingsConfig = googletag.GptSlotSettingsConfig;
 
 const createPubAdsServiceStub = (): googletag.IPubAdsService => {
   const stub = {
@@ -50,6 +52,7 @@ const createPubAdsServiceStub = (): googletag.IPubAdsService => {
 };
 
 export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.IAdSlot => {
+  let config: GptSlotSettingsConfig = {};
   let targetingMap: Record<string, string[]> = {};
   const stub: googletag.IAdSlot = {
     clearTargeting(key?: string): void {
@@ -89,8 +92,11 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     getResponseInformation: (): googletag.IResponseInformation | null => {
       return null;
     },
-    setConfig(_config: googletag.GptSlotSettingsConfig) {
-      return;
+    setConfig(additionalConfig: googletag.GptSlotSettingsConfig) {
+      config = { ...config, ...additionalConfig };
+    },
+    getConfig(key) {
+      return config[key];
     }
   };
   return stub;
@@ -98,6 +104,7 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
 
 export const createGoogletagStub = (): googletag.IGoogleTag => {
   const pubAdsStub = createPubAdsServiceStub();
+  let pageConfig: GptPageSettingsConfig = {};
 
   return {
     pubadsReady: true,
@@ -135,8 +142,20 @@ export const createGoogletagStub = (): googletag.IGoogleTag => {
       return;
     },
     pubads: (): googletag.IPubAdsService => pubAdsStub,
-    setConfig: (): void => {
+    setConfig: (additionalConfig): void => {
+      pageConfig = { ...pageConfig, ...additionalConfig };
       return;
+    },
+    getConfig(key) {
+      return pageConfig[key];
+    },
+    secureSignalProviders: {
+      push(provider: { id: string; collectorFunction(): any }) {
+        return;
+      },
+      clearAllCache() {
+        return;
+      }
     }
   };
 };
