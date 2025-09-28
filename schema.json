@@ -1508,9 +1508,21 @@
           "description": "If set to true the yield optimization floor price will be sent to amazon.\n\ndefault: false",
           "type": "boolean"
         },
+        "enabled": {
+          "default": true,
+          "description": "Disable Amazon TAM / A9 integration",
+          "type": "boolean"
+        },
         "floorPriceCurrency": {
           "$ref": "#/definitions/apstag.Currency",
           "description": "Configure the floor price currency. Will be mandatory once the feature is out of beta."
+        },
+        "labelAll": {
+          "description": "Add conditions to disable a9 for certain pages. Note that this is a global setting and will disable a9 for all ad slots.\n\nNOTE: single page applications are not supported yet. The aps script is loaded initially.       If the first page view does not load the aps script, it will never be loaded for the       entire session.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "pubID": {
           "description": "publisher ID",
