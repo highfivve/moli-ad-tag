@@ -153,6 +153,27 @@ describe('a9', () => {
       expect(assetLoaderStub).to.have.been.calledOnce;
     });
 
+    it('should not load the a9 script if a9 is disabled', async () => {
+      const step = a9Init({ ...a9ConfigStub, enabled: false }, assetLoaderService);
+      const tcData = fullConsent({ '793': true });
+      await step({ ...adPipelineContext(), tcData });
+      expect(assetLoaderStub).not.have.been.called;
+    });
+
+    it('shold not load the a9 script if labels are not matching', async () => {
+      const step = a9Init({ ...a9ConfigStub, labelAll: ['a9'] }, assetLoaderService);
+      const tcData = fullConsent({ '793': true });
+      const ctxWithLabelServiceStub = {
+        ...adPipelineContext('production', emptyConfig)
+      };
+      const getSupportedLabelsStub = sandbox
+        .stub(ctxWithLabelServiceStub.labelConfigService, 'getSupportedLabels')
+        .returns(['desktop']);
+      await step({ ...ctxWithLabelServiceStub, tcData });
+      expect(getSupportedLabelsStub).to.have.been.calledOnce;
+      expect(assetLoaderStub).not.have.been.called;
+    });
+
     it('should not load the a9 script if vendor consent is false', async () => {
       const step = a9Init(a9ConfigStub, assetLoaderService);
       const tcData = fullConsent({ '793': false });
@@ -185,6 +206,27 @@ describe('a9', () => {
         await step({ ...adPipelineContext(), tcData });
         expect(assetLoaderStub).not.have.been.called;
       });
+    });
+
+    it('should load the a9 script with full consent', async () => {
+      const step = a9Init(a9ConfigStub, assetLoaderService);
+      const tcData = fullConsent({ '793': true });
+      await step({ ...adPipelineContext(), tcData });
+      expect(assetLoaderStub).to.have.been.calledOnce;
+    });
+
+    it('should load the a9 script if labelAll condition is matching', async () => {
+      const step = a9Init({ ...a9ConfigStub, labelAll: ['a9', 'mobile'] }, assetLoaderService);
+      const tcData = fullConsent({ '793': true });
+      const ctxWithLabelServiceStub = {
+        ...adPipelineContext('production', emptyConfig)
+      };
+      const getSupportedLabelsStub = sandbox
+        .stub(ctxWithLabelServiceStub.labelConfigService, 'getSupportedLabels')
+        .returns(['a9', 'mobile', 'some-other-label']);
+      await step({ ...ctxWithLabelServiceStub, tcData });
+      expect(getSupportedLabelsStub).to.have.been.calledTwice;
+      expect(assetLoaderStub).to.have.been.calledOnce;
     });
   });
 

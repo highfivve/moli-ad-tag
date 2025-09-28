@@ -87,7 +87,17 @@ export const a9Init = (
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
-        if (context.env !== 'test' && hasRequiredConsent(context.tcData)) {
+        const supportedByLabels =
+          !config.labelAll ||
+          config.labelAll.every(label =>
+            context.labelConfigService.getSupportedLabels().includes(label)
+          );
+        if (
+          context.env !== 'test' &&
+          hasRequiredConsent(context.tcData) &&
+          config.enabled !== false &&
+          supportedByLabels
+        ) {
           // async fetch as everything is already initialized
           assetService
             .loadScript({
