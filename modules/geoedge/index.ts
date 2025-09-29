@@ -79,6 +79,17 @@ export type GeoEdgeModuleConfig = {
    * Optional configuration for GeoEdge.
    */
   readonly cfg?: GeoEdgeConfig;
+
+  /**
+   * GeoEdge has no defined purposes (state 2025-09-24) and some CMPs (Sourcepoint, Consentmanager) exclude it from TC String.
+   * This makes it impossible to check if consent is given or not.
+   *
+   * If GeoEdge decides to add a purpose, we can use this flag to immediately turn on the check again.
+   * As a safeguard purpose-1 is mandatory to load geoedge.
+   *
+   * @default false
+   */
+  readonly checkGVLID?: boolean;
 };
 
 /**
@@ -119,7 +130,8 @@ export class GeoEdge implements IModule {
     // no consent if gdpr applies
     if (
       context.tcData.gdprApplies &&
-      (!context.tcData.purpose.consents['1'] || !context.tcData.vendor.consents[this.geoEdgeGvlId])
+      (!context.tcData.purpose.consents['1'] ||
+        !(!this.geoEdgeConfig.checkGVLID || context.tcData.vendor.consents[this.geoEdgeGvlId]))
     ) {
       context.logger.warn(this.name, 'no gdpr consent, geoedge will not be loaded');
       return Promise.resolve();

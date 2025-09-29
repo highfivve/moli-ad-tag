@@ -69,8 +69,8 @@ describe('GeoEdge Module', () => {
 
   const publisherKey = 'abc123';
 
-  const createModule = (key: string, cfg?: GeoEdgeConfig): GeoEdge => {
-    return new GeoEdge({ key, cfg });
+  const createModule = (key: string, cfg?: GeoEdgeConfig, checkGVLID?: boolean): GeoEdge => {
+    return new GeoEdge({ key, cfg, checkGVLID });
   };
 
   it('should add an init step', async () => {
@@ -88,8 +88,8 @@ describe('GeoEdge Module', () => {
       expect(loadScriptStub).to.have.not.been.called;
     });
 
-    it('should not load anything if gdpr applies and vendor 845 has no consent ', async () => {
-      const module = createModule(publisherKey);
+    it('should not load anything if gdpr applies, checkGVLID is true and vendor 845 has no consent ', async () => {
+      const module = createModule(publisherKey, undefined, true);
       await module.loadGeoEdge(
         adPipelineContext(jsDomWindow, { tcData: fullConsent({ 845: false }) }),
         assetLoaderService
@@ -113,9 +113,38 @@ describe('GeoEdge Module', () => {
 
     it('should load geoedge if gdpr applies and relevant consent is available', async () => {
       const module = createModule(publisherKey);
-
       await module.loadGeoEdge(
         adPipelineContext(jsDomWindow, { tcData: fullConsent({ 845: true }) }),
+        assetLoaderService
+      );
+
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: 'geoedge',
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: `https://rumcdn.geoedge.be/${publisherKey}/grumi-ip.js`
+      });
+    });
+
+    it('should load geoedge if gdpr applies, checkGVLID is unset and purpose 1 is set ', async () => {
+      const module = createModule(publisherKey);
+      await module.loadGeoEdge(
+        adPipelineContext(jsDomWindow, { tcData: fullConsent({ 845: false }) }),
+        assetLoaderService
+      );
+
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: 'geoedge',
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: `https://rumcdn.geoedge.be/${publisherKey}/grumi-ip.js`
+      });
+    });
+
+    it('should load geoedge if gdpr applies, checkGVLID is false and purpose 1 is set ', async () => {
+      const module = createModule(publisherKey, undefined, false);
+      await module.loadGeoEdge(
+        adPipelineContext(jsDomWindow, { tcData: fullConsent({ 845: false }) }),
         assetLoaderService
       );
 
