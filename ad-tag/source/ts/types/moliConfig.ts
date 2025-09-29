@@ -1095,6 +1095,22 @@ export namespace headerbidding {
 
   export interface A9Config {
     /**
+     * Disable Amazon TAM / A9 integration
+     * @default true
+     */
+    readonly enabled?: boolean;
+
+    /**
+     * Add conditions to disable a9 for certain pages.
+     * Note that this is a global setting and will disable a9 for all ad slots.
+     *
+     * NOTE: single page applications are not supported yet. The aps script is loaded initially.
+     *       If the first page view does not load the aps script, it will never be loaded for the
+     *       entire session.
+     */
+    readonly labelAll?: string[];
+
+    /**
      * publisher ID
      */
     readonly pubID: string;
