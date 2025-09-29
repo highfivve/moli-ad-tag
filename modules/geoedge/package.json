@@ -1,0 +1,55 @@
+{
+  "name": "@highfivve/geoedge",
+  "version": "4.28.8",
+  "license": "Apache-2.0",
+  "description": "Geoedge",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "setup": "yarn",
+    "make:nodemodule": "tsc -p tsconfig.build.json",
+    "compile": "tsc --noEmit",
+    "lint": "yarn lint:ts",
+    "lint:ts": "eslint ./ --ext .ts,.tsx && yarn prettier",
+    "lint:ts:fix": "eslint ./ --ext .ts,.tsx --fix && yarn prettier --write",
+    "test": "mocha --require ts-node/register index.test.ts",
+    "test:junit": "mocha --forbid-only --reporter mocha-junit-reporter --reporter-options mochaFile=./temp/test-results.xml --require ts-node/register index.test.ts",
+    "prettier": "prettier --config ../../.prettierrc --ignore-path ../../.prettierignore --check \"**/*.ts*\"",
+    "validate": "yarn compile && yarn lint && yarn test",
+    "validate:github": "yarn compile && yarn lint && yarn test",
+    "validate:jenkins": "yarn compile && yarn lint && yarn test:junit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:highfivve/moli-ad-tag.git",
+    "directory": "modules/identitylink"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "engines": {
+    "node": ">=8.0"
+  },
+  "devDependencies": {
+    "@types/chai": "4.2.18",
+    "@types/jsdom": "^20.0.0",
+    "@types/mocha": "8.2.2",
+    "@types/sinon": "10.0.0",
+    "@types/sinon-chai": "3.2.5",
+    "chai": "4.3.4",
+    "jsdom": "19.0.0",
+    "mocha": "8.4.0",
+    "mocha-junit-reporter": "2.0.0",
+    "sinon": "10.0.0",
+    "sinon-chai": "3.6.0",
+    "ts-loader": "^9.3.1",
+    "ts-node": "^10.8.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@highfivve/ad-tag": "4.28.8"
+  }
+}

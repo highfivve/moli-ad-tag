@@ -1185,7 +1185,6 @@ export namespace Moli {
 
     /** optional array of labels. All labels must **not** be present if the sizes should be applied */
     readonly labelNone?: Label[];
-
     /** static sizes that are support if the media query matches */
     readonly sizesSupported: DfpSlotSize[];
   }
@@ -2632,6 +2631,44 @@ export namespace Moli {
   }
 
   export namespace modules {
+    export namespace geoedge {
+      /**
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       *
+       * @see https://helpcenter.geoedge.com/hc/en-us/articles/360029065811-Choosing-what-to-Monitor-Include-Exclude-specific-Advertisers#overview-0-0
+       */
+      export type GeoEdgeFilter = {
+        /**
+         * the key is either an advertiserId, AdSense id or `exclude`.
+         */
+        readonly [id: string | 'exclude']: boolean;
+      };
+
+      export interface GeoEdgeConfig {
+        /**
+         * To support any of the Prebid-compatible Header Bidding Libraries, you can set the name of
+         * the module here.
+         */
+        readonly pbGlobal?: string;
+
+        /**
+         * Filter GAM advertiser ids. Use `exclude` as a key and set it to `true` if you want to
+         * exclude advertisers instead of including them.
+         *
+         * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+         */
+        readonly advs?: GeoEdgeFilter;
+
+        /**
+         * Should be used in case you would like to monitor only AdX/AdSense connected to your Google Ad Manager account.
+         * These id's need to be set under 'pubIds' (with the entire `ca-pub-xx…` string):
+         *
+         * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+         */
+        readonly pubIds?: GeoEdgeFilter;
+      }
+    }
+
     export interface CleanupModuleConfig {
       /**
        * Information about whether the cleanup module is enabled or not.
@@ -2643,8 +2680,21 @@ export namespace Moli {
       readonly configs: CleanupConfig[];
     }
 
+    export interface GeoEdgeModuleConfig {
+      /**
+       * Your GeoEdge publisher key
+       */
+      readonly key: string;
+
+      /**
+       * Optional configuration for GeoEdge.
+       */
+      readonly cfg?: geoedge.GeoEdgeConfig;
+    }
+
     export interface ModulesConfig {
       readonly cleanup?: CleanupModuleConfig;
+      readonly geoedge?: GeoEdgeModuleConfig;
     }
   }
 
