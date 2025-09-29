@@ -1185,7 +1185,6 @@ export namespace Moli {
 
     /** optional array of labels. All labels must **not** be present if the sizes should be applied */
     readonly labelNone?: Label[];
-
     /** static sizes that are support if the media query matches */
     readonly sizesSupported: DfpSlotSize[];
   }
