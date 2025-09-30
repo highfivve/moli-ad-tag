@@ -30,6 +30,8 @@ import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
 import { id5Config } from 'ad-tag/ads/id5';
 import IPrebidJs = prebidjs.IPrebidJs;
+import { sharedIdConfig } from 'ad-tag/ads/sharedId';
+import ISharedIdProvider = prebidjs.userSync.ISharedIdProvider;
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -365,10 +367,15 @@ export const prebidConfigure = (
             // for module priceFloors
             ...{ floors: prebidConfig.config.floors || {} }
           });
-
-          // for and additional HEM configuration for ID5
           context.window__.pbjs.mergeConfig({
-            userSync: { userIds: [id5Config(context.runtimeConfig__)] }
+            userSync: {
+              userIds: [
+                // for an additional HEM configuration for ID5
+                id5Config(context.runtimeConfig__),
+                // for sharedId (server-side or client-side cookie depending on the configuration)
+                sharedIdConfig(context.config__.prebid?.config.userSync)
+              ]
+            }
           });
 
           // set additional bidder configurations if provided

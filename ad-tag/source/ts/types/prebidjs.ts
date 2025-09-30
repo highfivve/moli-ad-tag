@@ -1330,7 +1330,7 @@ export namespace prebidjs {
     }
 
     export interface ISharedIdProvider
-      extends IParameterizedUserIdProvider<ISharedIdParams, 'sharedId'> {}
+      extends IParameterizedUserIdProvider<ISharedIdParams | undefined, 'sharedId'> {}
 
     export interface ISharedIdParams {
       /**
