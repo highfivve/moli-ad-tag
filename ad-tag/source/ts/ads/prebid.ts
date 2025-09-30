@@ -364,7 +364,7 @@ export const prebidConfigure = (
             ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
             // for module priceFloors
             ...{ floors: prebidConfig.config.floors || {} },
-            // for
+            // for and additional HEM configuration for ID5
             ...{ userSync: { userIds: [id5Config(context.runtimeConfig__)] } }
           });
 

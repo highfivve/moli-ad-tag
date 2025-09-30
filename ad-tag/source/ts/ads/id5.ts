@@ -61,7 +61,7 @@ export const id5Config = (runtimeConfig: MoliRuntimeConfig): IID5Provider => {
       refreshInSeconds: 8 * 3600 // refresh ID every 8 hours to ensure it is fresh
     },
     params: {
-      partner: 1519,
+      partner: 1519, // global highfivve partner number
       ...(pd && { pd })
     }
   };
