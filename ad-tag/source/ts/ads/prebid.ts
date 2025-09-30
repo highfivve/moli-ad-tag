@@ -23,11 +23,15 @@ import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
-import IPrebidJs = prebidjs.IPrebidJs;
 import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
+import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
+import { id5Config } from 'ad-tag/ads/id5';
+import IPrebidJs = prebidjs.IPrebidJs;
+import { sharedIdConfig } from 'ad-tag/ads/sharedId';
+import ISharedIdProvider = prebidjs.userSync.ISharedIdProvider;
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -364,10 +368,24 @@ export const prebidConfigure = (
             // for module priceFloors
             ...{ floors: prebidConfig.config.floors || {} }
           });
+          context.window__.pbjs.mergeConfig({
+            userSync: {
+              userIds: [
+                // for an additional HEM configuration for ID5
+                id5Config(context.runtimeConfig__),
+                // for sharedId (server-side or client-side cookie depending on the configuration)
+                sharedIdConfig(context.config__.prebid?.config.userSync)
+              ]
+            }
+          });
 
           // TODO bidder specific HEM configuration, e.g. for Criteo, would be done here.
           // set additional bidder configurations if provided
-          prebidConfig.bidderConfigs?.forEach(({ options, merge }) => {
+          const bidderConfigs = [
+            ...(prebidConfig.bidderConfigs || []),
+            criteoEnrichWithFpd(context.runtimeConfig__, context.window__.location.host)
+          ];
+          bidderConfigs.forEach(({ options, merge }) => {
             context.window__.pbjs.setBidderConfig(options, merge);
           });
 
