@@ -93,10 +93,19 @@ export namespace prebidjs {
      *
      * supports a number of advanced configuration options
      *
-     * @see https://prebid.org/dev-docs/publisher-api-reference.html#module_pbjs.setConfig
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html
      * @param {prebidjs.IPrebidJsConfig} config
      */
     setConfig(config: Partial<IPrebidJsConfig>): void;
+
+    /**
+     *
+     * This is the same as setConfig(options) except that it merges the supplied config into the structure rather than replacing it.
+     *
+     * @see https://docs.prebid.org/dev-docs/publisher-api-reference/mergeConfig.html
+     * @param {prebidjs.IPrebidJsConfig} config
+     */
+    mergeConfig(config: Partial<IPrebidJsConfig>): void;
 
     /**
      * This function is similar to setConfig, but is designed to support certain bidder-specific scenarios.
