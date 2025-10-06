@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/geoedge",
-  "version": "4.28.9",
+  "version": "4.28.10",
   "license": "Apache-2.0",
   "description": "Geoedge",
   "main": "./lib/index.js",
@@ -50,6 +50,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.28.9"
+    "@highfivve/ad-tag": "4.28.10"
   }
 }
