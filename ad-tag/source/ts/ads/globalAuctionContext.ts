@@ -42,6 +42,7 @@ export class GlobalAuctionContext {
    */
   #configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     this.frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables);
+    this.interstitial?.updateAdUnitPaths(context.adUnitPathVariables);
     return Promise.resolve();
   });
 
