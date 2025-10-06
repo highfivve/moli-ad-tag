@@ -134,6 +134,7 @@ export const createGlobalAuctionContext = (
 
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
+    interstitial?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
   });
 
