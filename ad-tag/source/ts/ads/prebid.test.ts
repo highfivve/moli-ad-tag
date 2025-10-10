@@ -81,14 +81,15 @@ describe('prebid', () => {
 
   const prebidSlot = (
     domId: string,
-    provider: Moli.headerbidding.PrebidAdSlotConfigProvider
+    provider: Moli.headerbidding.PrebidAdSlotConfigProvider,
+    position?: Moli.IPosition
   ): Moli.AdSlot => {
     domIdCounter = domIdCounter + 1;
     return {
       domId: domId,
       adUnitPath: `/123/${domId}`,
       sizes: mediumRec,
-      position: 'in-page',
+      position: position ?? 'in-page',
       sizeConfig: [],
       prebid: provider,
       behaviour: { loaded: 'eager' }
@@ -192,9 +193,10 @@ describe('prebid', () => {
   const createSlotDefinitions = (
     domId: string,
     provider: Moli.headerbidding.PrebidAdSlotConfigProvider,
-    floorprice?: number
+    floorprice?: number,
+    slotOverride?: Moli.AdSlot
   ): Moli.SlotDefinition => {
-    const slot = prebidSlot(domId, provider);
+    const slot = slotOverride ?? prebidSlot(domId, provider);
     return {
       moliSlot: slot,
       adSlot: googleAdSlotStub(slot.adUnitPath, slot.domId),
@@ -1160,6 +1162,52 @@ describe('prebid', () => {
       // 500ms bidder timeout + 3000ms buffer
       sandbox.clock.tick(3500);
       await result;
+    });
+
+    describe('interstitial slot filtering', () => {
+      const createInterstitialSlot = (position: Moli.IPosition) => {
+        const domId = getDomId();
+        const adUnit = prebidAdUnit(domId, [
+          { bidder: 'appnexus', params: { placementId: '123' }, labelAll: ['mobile'] }
+        ]);
+        return createSlotDefinitions(
+          domId,
+          { adUnit },
+          3.0,
+          prebidSlot(domId, { adUnit }, position)
+        );
+      };
+
+      it('should not request slots if interstitial if context returns gam', async () => {
+        const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+        const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+        const ctx = adPipelineContext();
+        sandbox.stub(ctx.auction, 'interstitialChannel').returns('gam');
+        const slotDef = createInterstitialSlot('interstitial');
+
+        await step(ctx, [slotDef]);
+        expect(requestBidsSpy).to.have.not.been.called;
+      });
+
+      it('should request interstitial if position is not interstitial even if context returns gam', async () => {
+        const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+        const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+        const ctx = adPipelineContext();
+        sandbox.stub(ctx.auction, 'interstitialChannel').returns('gam');
+        const slotDef = createInterstitialSlot('in-page');
+        await step(ctx, [slotDef]);
+        expect(requestBidsSpy).to.have.been.calledOnce;
+      });
+
+      it('should request interstitial if context returns c', async () => {
+        const requestBidsSpy = sandbox.spy(dom.window.pbjs, 'requestBids');
+        const step = prebidRequestBids(moliPrebidTestConfig, 'gam', undefined);
+        const ctx = adPipelineContext();
+        sandbox.stub(ctx.auction, 'interstitialChannel').returns('c');
+        const slotDef = createInterstitialSlot('interstitial');
+        await step(ctx, [slotDef]);
+        expect(requestBidsSpy).to.have.been.calledOnce;
+      });
     });
   });
 });
