@@ -89,6 +89,8 @@ export class InterstitialContextImpl implements InterstitialContext {
   private interstitialAdUnitPath: string;
   private currentInterstitialState: InterstitialState;
 
+  private name = 'InterstitialContext';
+
   constructor(
     private readonly config: auction.InterstitialConfig,
     private readonly window__: Window & googletag.IGoogleTagWindow,
@@ -145,7 +147,9 @@ export class InterstitialContextImpl implements InterstitialContext {
     if (arr.length === 0) {
       return [];
     }
-    return [...arr.slice(1), arr[0]];
+    const updatedPriority = [...arr.slice(1), arr[0]];
+    this.logger.debug(this.name, 'shift interstitial priority', updatedPriority);
+    return updatedPriority;
   }
 
   interstitialState(): InterstitialState {

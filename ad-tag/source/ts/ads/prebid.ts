@@ -440,8 +440,10 @@ export const prebidRequestBids = (
           slot =>
             !context.auction.isSlotThrottled(slot.adSlot) &&
             // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
-            (!isGamInterstitial(slot.adSlot, context.window) ||
-              context.auction.interstitialChannel() !== 'gam')
+            !(
+              slot.moliSlot.position === 'interstitial' &&
+              context.auction.interstitialChannel() === 'gam'
+            )
         );
 
         const requestObject: prebidjs.IRequestObj = prebidConfig.ephemeralAdUnits
