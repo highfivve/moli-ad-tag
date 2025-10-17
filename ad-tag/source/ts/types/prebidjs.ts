@@ -3739,6 +3739,7 @@ export namespace prebidjs {
   export const AppNexusAst = 'appnexusAst';
   export const AppNexus = 'appnexus';
   export const GumGum = 'gumgum';
+  export const Equativ = 'equativ';
   export const ImproveDigital = 'improvedigital';
   export const IndexExchange = 'ix';
   export const InMobi = 'inmobi';
@@ -3786,6 +3787,7 @@ export namespace prebidjs {
     | typeof AppNexusAst
     | typeof AppNexus
     | typeof GumGum
+    | typeof Equativ
     | typeof ImproveDigital
     | typeof IndexExchange
     | typeof Invibes
@@ -4885,6 +4887,7 @@ export namespace prebidjs {
    * Smart bid parameters
    *
    * @see https://prebid.org/dev-docs/bidders/smartadserver.html
+   * @see https://docs.prebid.org/dev-docs/bidders/equativ.html
    *
    */
   export interface ISmartAdServerParams {
@@ -4992,7 +4995,7 @@ export namespace prebidjs {
    */
   export interface ISmartAdServerBid
     extends IBidObject<
-      typeof SmartAdServer,
+      typeof SmartAdServer | typeof Equativ,
       ISmartAdServerParams | ISmartAdServerPrebidServerParams
     > {}
 
