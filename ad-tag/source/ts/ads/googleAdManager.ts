@@ -60,6 +60,13 @@ const testAdSlot = (domId: string, adUnitPath: string): googletag.IAdSlot => ({
   },
   getResponseInformation(): null | googletag.IResponseInformation {
     return null;
+  },
+
+  setConfig(_config: googletag.GptSlotSettingsConfig) {
+    return;
+  },
+  getConfig(_key): any {
+    return;
   }
 });
 
@@ -72,6 +79,7 @@ const configureTargeting = (
   const excludes = serverSideTargeting?.adManagerExcludes ?? [];
 
   // first use the static targeting and override if necessary with the runtime key values
+  // TODO use googletag.setConfig(targeting) instead as setTargeting is deprecated
   [staticKeyValues, runtimeKeyValues].forEach(keyValues => {
     Object.keys(keyValues)
       .filter(key => !excludes.includes(key))
@@ -217,7 +225,7 @@ export const gptResetTargeting = (): ConfigureStep =>
       new Promise<void>(resolve => {
         if (context.env__ === 'production') {
           context.logger__.debug('GAM', 'reset top level targeting');
-          context.window__.googletag.pubads().clearTargeting();
+          context.window__.googletag.setConfig({ targeting: null });
           configureTargeting(
             context.window__,
             context.runtimeConfig__.keyValues,
@@ -469,6 +477,13 @@ export const gptDefineSlots =
       switch (context.env__) {
         case 'production':
           if (adSlot) {
+            if (moliSlot.gpt) {
+              adSlot.setConfig(moliSlot.gpt);
+              context.logger__.debug(
+                'GAM',
+                `Add slot settings: [AdSlot] ${adSlot} [Settings] ${moliSlot.gpt}`
+              );
+            }
             adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
             adSlot.addService(context.window__.googletag.pubads());
             context.logger__.debug(
@@ -523,6 +538,7 @@ const checkAndSwitchToWebInterstitial = (
   );
 
   if (interstitialSlot && context.auction__.interstitialChannel() === 'gam') {
+    const targeting = { ...interstitialSlot.adSlot.getConfig('targeting') };
     // if there are no bids, we switch to the out-of-page-interstitial position
     context.window__.googletag.destroySlots([interstitialSlot.adSlot]);
 
@@ -535,10 +551,12 @@ const checkAndSwitchToWebInterstitial = (
 
       // this little dance is annoying - refresh is done afterwards
       gamWebInterstitial.addService(context.window__.googletag.pubads());
-      gamWebInterstitial.setTargeting(
-        formatKey,
-        context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
-      );
+      gamWebInterstitial.setConfig({
+        targeting: {
+          ...targeting,
+          [formatKey]: context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+        }
+      });
       context.window__.googletag.display(gamWebInterstitial);
 
       // early return to swap the interstitial slot
@@ -564,8 +582,7 @@ export const gptRequestAds =
           break;
         case 'production':
           const slotsToRefresh = slots.filter(
-            ({ moliSlot, adSlot }) =>
-              !context.auction__.isSlotThrottled(moliSlot.domId, adSlot.getAdUnitPath())
+            ({ adSlot }) => !context.auction__.isSlotThrottled(adSlot)
           );
           if (slotsToRefresh.length === 0) {
             break;

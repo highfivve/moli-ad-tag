@@ -87,7 +87,17 @@ export const a9Init = (
         };
 
         // only load a9 if consent is given for all purposes and Amazon Advertising (793)
-        if (context.env__ !== 'test' && hasRequiredConsent(context.tcData__)) {
+        const supportedByLabels =
+          !config.labelAll ||
+          config.labelAll.every(label =>
+            context.labelConfigService__.getSupportedLabels().includes(label)
+          );
+        if (
+          context.env__ !== 'test' &&
+          hasRequiredConsent(context.tcData__) &&
+          config.enabled !== false &&
+          supportedByLabels
+        ) {
           // async fetch as everything is already initialized
           assetService
             .loadScript({
@@ -230,10 +240,7 @@ export const a9RequestBids = (config: headerbidding.A9Config): RequestBidsStep =
 
         const slots = slotDefinitions
           .filter(isA9SlotDefinition)
-          .filter(
-            slot =>
-              !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath())
-          )
+          .filter(slot => !context.auction__.isSlotThrottled(slot.adSlot))
           .filter(slot => {
             const isVideo = slot.moliSlot.a9.mediaType === 'video';
             const filterSlot = context.labelConfigService__.filterSlot(slot.moliSlot.a9);

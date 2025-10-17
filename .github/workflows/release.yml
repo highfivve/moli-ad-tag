@@ -10,6 +10,14 @@ jobs:
   release:
     name: Check and Release New Version
     runs-on: ubuntu-latest
+    permissions:
+      # write permission is required to create a github release
+      contents: write
+      # write permission is required for autolabeler
+      # otherwise, read permission is required at least
+      pull-requests: write
+      # npm release
+      id-token: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -25,24 +33,21 @@ jobs:
         with:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-          always-auth: true
-          node-version: 20
-          registry-url: https://npm.pkg.github.com
-          scope: '@highfivve'
+          always-auth: false
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
 
       # Validate and publish
       - name: npm setup and validation
         run: |
           npm ci --engine-strict
           npm run setup
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Publish New Package Version
-        run: npm run github:publish
+        run: npm publish --provenance --access public
         env:
           NODE_ENV: production
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to publish to npm
 
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v6

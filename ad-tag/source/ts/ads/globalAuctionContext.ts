@@ -4,7 +4,7 @@ import { createBiddersDisabling } from './auctions/biddersDisabling';
 import { createAdRequestThrottling } from './auctions/adRequestThrottling';
 import { auction } from '../types/moliConfig';
 import { createFrequencyCapping } from './auctions/frequencyCapping';
-import { createPreviousBidCpms, PreviousBidCpms } from './auctions/previousBidCpms';
+import { createPreviousBidCpms } from './auctions/previousBidCpms';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { EventService } from './eventService';
 import { ConfigureStep, mkConfigureStep } from './adPipeline';
@@ -26,7 +26,11 @@ import { createInterstitialContext } from 'ad-tag/ads/auctions/interstitialConte
  * Every new feature must be enabled separately and should not share any data with other features.
  */
 export interface GlobalAuctionContext {
-  isSlotThrottled(slotId: string, adUnitPath: string): boolean;
+  /**
+   *
+   * @param slot The GPT ad slot to check
+   */
+  isSlotThrottled(slot: googletag.IAdSlot): boolean;
   isBidderFrequencyCappedOnSlot(slotId: string, bidder: string): boolean;
   getLastBidCpmsOfAdUnit(slotId: string): number[];
 
@@ -130,17 +134,19 @@ export const createGlobalAuctionContext = (
 
   const configureStep = mkConfigureStep('GlobalAuctionContext', context => {
     frequencyCapping?.updateAdUnitPaths(context.adUnitPathVariables__);
+    interstitial?.updateAdUnitPaths(context.adUnitPathVariables__);
     return Promise.resolve();
   });
 
   return {
-    isSlotThrottled(slotId: string, adUnitPath: string): boolean {
+    isSlotThrottled(slot: googletag.IAdSlot): boolean {
       return !!(
-        adRequestThrottling?.isThrottled(slotId) || frequencyCapping?.isAdUnitCapped(adUnitPath)
+        adRequestThrottling?.isThrottled(slot.getSlotElementId()) ||
+        frequencyCapping?.isAdUnitCapped(slot)
       );
     },
     isBidderFrequencyCappedOnSlot(slotId: string, bidder: prebidjs.BidderCode): boolean {
-      return frequencyCapping?.isFrequencyCapped(slotId, bidder) ?? false;
+      return frequencyCapping?.isBidderCapped(slotId, bidder) ?? false;
     },
     getLastBidCpmsOfAdUnit(slotId: string): number[] {
       return previousBidCpms?.getLastBidCpms(slotId) ?? [];

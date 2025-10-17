@@ -360,6 +360,7 @@ export const prebidConfigure = (
             });
           }
 
+          // TODO is is where additional HEM configuration would be added for id5 from the runtimeConfig.audience
           context.window__.pbjs.setConfig({
             ...prebidConfig.config,
             // global schain configuration
@@ -378,6 +379,7 @@ export const prebidConfigure = (
             }
           });
 
+          // TODO bidder specific HEM configuration, e.g. for Criteo, would be done here.
           // set additional bidder configurations if provided
           const bidderConfigs = [
             ...(prebidConfig.bidderConfigs || []),
@@ -473,7 +475,7 @@ export const prebidRequestBids = (
         const slotsToRefresh = slots.filter(
           slot =>
             // keep slots that are not throttled
-            !context.auction__.isSlotThrottled(slot.moliSlot.domId, slot.adSlot.getAdUnitPath()) &&
+            !context.auction__.isSlotThrottled(slot.adSlot) &&
             // keep slots that are not and interstitial or interstitials that are not from GAM web interstitials
             (!isGamInterstitial(slot.adSlot, context.window__) ||
               context.auction__.interstitialChannel() !== 'gam')

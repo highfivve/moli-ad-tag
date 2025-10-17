@@ -86,7 +86,7 @@ export interface AdSlot {
    * Supplementary gpt configuration.
    * Gpt is always configured, regardless of the existence of this configuration.
    */
-  readonly gpt?: gpt.GptAdSlotConfig;
+  readonly gpt?: googletag.GptSlotSettingsConfig & gpt.GptAdSlotConfig;
 
   /** an optional prebid configuration if this ad slot can also be used by prebid SSPs */
   readonly prebid?: headerbidding.PrebidAdSlotConfigProvider;
@@ -889,6 +889,7 @@ export namespace gpt {
 
   /**
    * ## Gpt ad slot configuration
+   * @deprecated in favor of googletag.GptSlotSettingsConfig.
    */
   export interface GptAdSlotConfig {
     /**
@@ -896,6 +897,7 @@ export namespace gpt {
      * Defaults to true.
      *
      * Correlates directly to googletag.IAdSlot.setCollapseEmptyDiv().
+     * @deprecated please use googletag.GptSlotSettingsConfig.collapseDiv instead.
      */
     collapseEmptyDiv?: boolean;
   }
@@ -1092,6 +1094,22 @@ export namespace headerbidding {
   export type A9SlotNamePathDepth = 3 | 4 | 5;
 
   export interface A9Config {
+    /**
+     * Disable Amazon TAM / A9 integration
+     * @default true
+     */
+    readonly enabled?: boolean;
+
+    /**
+     * Add conditions to disable a9 for certain pages.
+     * Note that this is a global setting and will disable a9 for all ad slots.
+     *
+     * NOTE: single page applications are not supported yet. The aps script is loaded initially.
+     *       If the first page view does not load the aps script, it will never be loaded for the
+     *       entire session.
+     */
+    readonly labelAll?: string[];
+
     /**
      * publisher ID
      */
@@ -1519,6 +1537,70 @@ export namespace modules {
        * @default false
        */
       readonly checkGVLID?: boolean;
+    }
+  }
+
+  /**
+   * @see https://geoedge.com/
+   */
+  export namespace geoedge {
+    export interface GeoEdgeModuleConfig extends IModuleConfig {
+      /**
+       * Your GeoEdge publisher key
+       */
+      readonly key: string;
+
+      /**
+       * Optional configuration for GeoEdge.
+       */
+      readonly cfg?: GeoEdgeConfig;
+
+      /**
+       * GeoEdge has no defined purposes (state 2025-09-24) and some CMPs (Sourcepoint, Consentmanager) exclude it from TC String.
+       * This makes it impossible to check if consent is given or not.
+       *
+       * If GeoEdge decides to add a purpose, we can use this flag to immediately turn on the check again.
+       * As a safeguard purpose-1 is mandatory to load geoedge.
+       *
+       * @default false
+       */
+      readonly checkGVLID?: boolean;
+    }
+
+    /**
+     * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+     *
+     * @see https://helpcenter.geoedge.com/hc/en-us/articles/360029065811-Choosing-what-to-Monitor-Include-Exclude-specific-Advertisers#overview-0-0
+     */
+    export type GeoEdgeFilter = {
+      /**
+       * the key is either an advertiserId, AdSense id or `exclude`.
+       */
+      readonly [id: string | 'exclude']: boolean;
+    };
+
+    export interface GeoEdgeConfig {
+      /**
+       * To support any of the Prebid-compatible Header Bidding Libraries, you can set the name of
+       * the module here.
+       */
+      readonly pbGlobal?: string;
+
+      /**
+       * Filter GAM advertiser ids. Use `exclude` as a key and set it to `true` if you want to
+       * exclude advertisers instead of including them.
+       *
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       */
+      readonly advs?: GeoEdgeFilter;
+
+      /**
+       * Should be used in case you would like to monitor only AdX/AdSense connected to your Google Ad Manager account.
+       * These id's need to be set under 'pubIds' (with the entire `ca-pub-xx…` string):
+       *
+       * In case you don't want to limit the demand sources monitored, you can leave those objects empty.
+       */
+      readonly pubIds?: GeoEdgeFilter;
     }
   }
 
@@ -2723,6 +2805,24 @@ export namespace modules {
     }
   }
 
+  export namespace interstitial {
+    export type InterstitialModuleConfig = {
+      readonly enabled: boolean;
+      readonly interstitialDomId: string;
+
+      /**
+       * Disable rendering the custom interstitial ad format for certain advertisers by specifying them here.
+       * Most of the time you would use this for partners who ship their own special format or behaviour.
+       */
+      readonly disallowedAdvertiserIds: number[];
+
+      /**
+       * Interstitial is automatically closed after a certain time.
+       */
+      readonly closeAutomaticallyAfterMs?: number;
+    };
+  }
+
   export interface ModulesConfig {
     readonly adex?: adex.AdexConfig;
     readonly adReload?: adreload.AdReloadModuleConfig;
@@ -2732,6 +2832,7 @@ export namespace modules {
     readonly cleanup?: cleanup.CleanupModuleConfig;
     readonly confiant?: confiant.ConfiantConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
+    readonly geoedge?: geoedge.GeoEdgeModuleConfig;
     readonly identitylink?: identitylink.IdentityLinkModuleConfig;
     readonly pubstack?: pubstack.PubstackConfig;
     readonly skin?: skin.SkinModuleConfig;
@@ -2743,6 +2844,7 @@ export namespace modules {
     readonly stickyFooterAdV2?: stickyFooterAdV2.StickyFooterAdConfig;
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
     readonly zeotap?: zeotap.ZeotapModuleConfig;
+    readonly interstitial?: interstitial.InterstitialModuleConfig;
   }
 }
 

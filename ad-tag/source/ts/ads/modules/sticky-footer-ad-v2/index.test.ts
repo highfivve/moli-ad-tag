@@ -194,7 +194,7 @@ describe('Sticky-footer-v2 Module', () => {
         filterSupportedSizes: {} as any
       };
 
-      const { prepareSteps, config, module } = createInitializedModule(
+      const { prepareSteps, config } = createInitializedModule(
         {
           stickyFooterDomIds: { desktop: 'ad-desktop-sticky' },
           disallowedAdvertiserIds: [111]
@@ -219,7 +219,15 @@ describe('Sticky-footer-v2 Module', () => {
   });
 
   describe('initialize initAdSticky function', () => {
-    const errorLogSpy = sandbox.spy(noopLogger, 'warn');
+    let errorLogSpy: Sinon.SinonSpy;
+
+    beforeEach(() => {
+      errorLogSpy = sandbox.spy(noopLogger, 'warn');
+    });
+
+    afterEach(() => {
+      errorLogSpy.restore();
+    });
 
     const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
       slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,

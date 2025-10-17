@@ -6,6 +6,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { AdUnitPathVariables, resolveAdUnitPath } from '../adUnitPath';
 import { googletag } from 'ad-tag/types/googletag';
 import { formatKey } from 'ad-tag/ads/keyValues';
+import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
@@ -65,8 +66,21 @@ export interface FrequencyCapping {
   afterRequestAds(): void;
   beforeRequestAds(): void;
   updateAdUnitPaths(adUnitPathVariables: AdUnitPathVariables): void;
-  isAdUnitCapped(adUnitPath: string): boolean;
-  isFrequencyCapped(slotId: string, bidder: BidderCode): boolean;
+
+  /**
+   * Check if an ad unit path is capped.
+   *
+   * @param slot the ad slot to check
+   */
+  isAdUnitCapped(slot: googletag.IAdSlot): boolean;
+
+  /**
+   * Check if a bidder is capped for a given slot id.
+   *
+   * @param slotId the DOM ID of the ad slot
+   * @param bidder a prebid bidder code
+   */
+  isBidderCapped(slotId: string, bidder: BidderCode): boolean;
 }
 
 const hasPacingInterval = (
@@ -76,7 +90,7 @@ const hasPacingInterval = (
 
 export const createFrequencyCapping = (
   config: auction.FrequencyCappingConfig,
-  _window: Window,
+  _window: Window & googletag.IGoogleTagWindow,
   now: NowInstant,
   logger: MoliRuntime.MoliLogger
 ): FrequencyCapping => {
@@ -299,20 +313,25 @@ export const createFrequencyCapping = (
       });
     },
 
-    isAdUnitCapped(adUnitPath: string): boolean {
+    isAdUnitCapped(slot: googletag.IAdSlot): boolean {
+      const adUnitPath = slot.getAdUnitPath();
+      const isGamInst = isGamInterstitial(slot, _window);
       return resolvedAdUnitPathPositionConfigs
         .filter(config => config.adUnitPath === adUnitPath)
         .some(positionConfig => {
           return (
             (positionConfig.adUnitPath === adUnitPath &&
-              // cap if minRequestAds is not reached yet
+              // cap if minRequestAds is not reached yet. Note: for GAM interstitials are requested
+              // one request ads cycle earlier, because they are actually rendered on navigation and
+              // not immediately after the ad request.
               positionConfig.conditions.delay &&
-              numAdRequests < positionConfig.conditions.delay.minRequestAds) ||
+              numAdRequests <
+                positionConfig.conditions.delay.minRequestAds - (isGamInst ? 1 : 0)) ||
             // cap if not at the right pacing interval yet
             (positionConfig.conditions.pacingRequestAds &&
               // if there are no winning impressions yet, we can request ads
               positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
-              // check if enough ad requests were made since the last impression
+              // check if enough ad requests were made since the last impressionØp
               numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
                 positionConfig.conditions.pacingRequestAds.requestAds) ||
             // cap if the maxImpressions is reached in the current window
@@ -327,7 +346,7 @@ export const createFrequencyCapping = (
         });
     },
 
-    isFrequencyCapped(slotId: string, bidder: BidderCode): boolean {
+    isBidderCapped(slotId: string, bidder: BidderCode): boolean {
       if (!config.bidders) {
         return false;
       }

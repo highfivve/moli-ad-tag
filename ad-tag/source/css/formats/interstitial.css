@@ -36,3 +36,7 @@
   cursor: pointer;
   color: #fff;
 }
+
+.h5v-interstitial--hidden {
+  display: none;
+}

@@ -4209,6 +4209,13 @@ export namespace prebidjs {
      * Used for reporting: we use de div-id here.
      */
     readonly publisherSubId?: string;
+
+    /**
+     * Ad Unit ID
+     * Example: 8888
+     * integer
+     */
+    readonly uid?: number;
   }
 
   export interface ICriteoBid extends IBidObject<typeof Criteo, ICriteoParams> {}
@@ -5924,6 +5931,7 @@ export namespace prebidjs {
     | IInvibesBid
     | IInMobiBid
     | INanoInteractiveBid
+    | INextMillenniumBid
     | IPrebidServerBid
     | IPubMaticBid
     | IOguryBid

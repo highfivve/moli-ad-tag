@@ -333,11 +333,12 @@ describe('google ad manager', () => {
           }
         }
       };
-      const clearTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'clearTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       const setTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'setTargeting');
       await step(adPipelineContext('production', configWithTargeting), []);
-      Sinon.assert.callOrder(clearTargetingSpy, setTargetingSpy);
-      expect(clearTargetingSpy).to.have.been.calledOnce;
+      Sinon.assert.callOrder(setConfigSpy, setTargetingSpy);
+      expect(setConfigSpy).to.have.been.calledOnce;
+      expect(setConfigSpy).calledWith({ targeting: null });
       expect(setTargetingSpy).to.have.been.calledTwice;
       expect(setTargetingSpy).to.have.been.calledWith('foo', 'bar');
       expect(setTargetingSpy).to.have.been.calledWith('tags', ['car', 'truck']);
@@ -345,14 +346,15 @@ describe('google ad manager', () => {
 
     it('should only be executed once per requestAds cycle', async () => {
       const step = gptResetTargeting();
-      const clearTargetingSpy = sandbox.spy(dom.window.googletag.pubads(), 'clearTargeting');
+      const setConfigSpy = sandbox.spy(dom.window.googletag, 'setConfig');
       await Promise.all([
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 1), []),
         step(adPipelineContext('production', emptyConfig, 2), []),
         step(adPipelineContext('production', emptyConfig, 2), [])
       ]);
-      expect(clearTargetingSpy).to.have.been.calledTwice;
+      expect(setConfigSpy).to.have.been.calledTwice;
+      expect(setConfigSpy).calledWith({ targeting: null });
     });
   });
 
@@ -477,7 +479,14 @@ describe('google ad manager', () => {
   });
 
   describe('gptDefineSlots', () => {
-    const adSlot: AdSlot = createdAdSlot('dom-id');
+    const gptSlotSettings: googletag.GptSlotSettingsConfig = {
+      safeFrame: { forceSafeFrame: true },
+      collapseDiv: 'ON_NO_FILL'
+    };
+    const adSlot: AdSlot = {
+      ...createdAdSlot('dom-id'),
+      gpt: gptSlotSettings
+    };
 
     describe('test mode', () => {
       it('should never call googletag.defineSlot ', async () => {
@@ -515,6 +524,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineSlotsStub = sandbox
           .stub(dom.window.googletag, 'defineSlot')
@@ -530,6 +540,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -550,6 +561,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineSlotsStub = sandbox
           .stub(dom.window.googletag, 'defineSlot')
@@ -566,6 +578,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -587,6 +600,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineSlotsStub = sandbox
           .stub(dom.window.googletag, 'defineSlot')
@@ -612,6 +626,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -631,6 +646,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineOutOfPageSlotStub = sandbox
           .stub(dom.window.googletag, 'defineOutOfPageSlot')
@@ -645,6 +661,7 @@ describe('google ad manager', () => {
         );
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -697,6 +714,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineOutOfPageSlotStub = sandbox
           .stub(dom.window.googletag, 'defineOutOfPageSlot')
@@ -708,6 +726,7 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 5);
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -746,6 +765,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineOutOfPageSlotStub = sandbox
           .stub(dom.window.googletag, 'defineOutOfPageSlot')
@@ -757,6 +777,7 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 2);
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -795,6 +816,7 @@ describe('google ad manager', () => {
 
         const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
         const addServiceSpy = sandbox.spy(adSlotStub, 'addService');
+        const setSlotConfigSpy = sandbox.spy(adSlotStub, 'setConfig');
         const setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
         const defineOutOfPageSlotStub = sandbox
           .stub(dom.window.googletag, 'defineOutOfPageSlot')
@@ -806,6 +828,7 @@ describe('google ad manager', () => {
         expect(defineOutOfPageSlotStub).to.have.been.calledOnceWithExactly('/123/dom-id/mobile', 3);
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
+        expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
         expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
@@ -986,8 +1009,8 @@ describe('google ad manager', () => {
         } as MoliRuntime.SlotDefinition;
 
         const isThrottledStub = sandbox.stub(ctx.auction__, 'isSlotThrottled');
-        isThrottledStub.withArgs(slot1.moliSlot.domId, slot1.adSlot.getAdUnitPath()).returns(true);
-        isThrottledStub.withArgs(slot2.moliSlot.domId, slot2.adSlot.getAdUnitPath()).returns(false);
+        isThrottledStub.withArgs(slot1.adSlot).returns(true);
+        isThrottledStub.withArgs(slot2.adSlot).returns(false);
 
         await step(ctx, [slot1, slot2]);
         expect(isThrottledStub).to.have.been.calledTwice;
@@ -1058,9 +1081,9 @@ describe('google ad manager', () => {
           expect(interstitialChannelStub).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
-          expect(newSlot.getTargeting(formatKey)).to.deep.eq([
+          expect(newSlot.getConfig('targeting')![formatKey]).to.deep.eq(
             jsDomWindow.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
-          ]);
+          );
         });
       });
     });

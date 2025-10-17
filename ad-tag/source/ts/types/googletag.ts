@@ -1,4 +1,6 @@
 // type definitions for DFP googletag
+import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+
 export namespace googletag {
   /**
    * Add googletag to global window instance
@@ -443,6 +445,14 @@ export namespace googletag {
      */
     setConfig(config: GptPageSettingsConfig): void;
 
+    /**
+     * Gets general configuration options for the page set by setConfig.
+     *
+     * @param key supported config keys
+     * @see https://developers.google.com/publisher-tag/reference#googletag.getConfig
+     */
+    getConfig: <T extends keyof GetPageSettingsConfigKey>(key: T) => GptPageSettingsConfig[T];
+
     secureSignalProviders: {
       push(provider: { id: string; collectorFunction(): any }): void;
 
@@ -455,10 +465,114 @@ export namespace googletag {
      * Settings to control/override ad expansion behavior.
      */
     readonly adExpansion?: { enabled: boolean };
+
+    /**
+     * Setting to control when ads are requested.
+     *
+     * By default, the googletag.display method both registers ad slots and requests ads for them.
+     * However, there are times when it may be preferable to separate these actions, in order to more
+     * precisely control when ad content is loaded.
+     *
+     * By enabling this setting, ads will not be requested for registered slots when the display() method is called. Instead, a separate call to PubAdsService.refresh must be made to initiate an ad request.
+     * This method must be called before calling googletag.enableServices.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.disableInitialLoad
+     */
+    readonly disableInitialLoad?: boolean;
+
+    /**
+     * Settings to control the use of lazy loading in GPT.
+     *
+     * Lazy loading is a technique to delay the requesting and rendering of ads until they approach the user's viewport.
+     * For a more detailed example, see the Lazy loading sample.
+     *
+     * Note: If singleRequest is enabled, lazy fetching only works when all slots are outside the fetch margin.
+     *
+     * Any lazy load settings which are not specified when calling setConfig() will use a default value set by Google.
+     * These defaults may be tuned over time. To disable a particular setting, set the value to null.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.lazyLoad
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.LazyLoadConfig
+     */
+    readonly lazyLoad?: {
+      /**
+       * The minimum distance from the current viewport a slot must be before we request an ad, expressed as a percentage
+       * of viewport size.
+       *
+       * Used in conjunction with renderMarginPercent, this setting allows for prefetching an ad, but waiting to render
+       * and download other subresources. As such, this value should always be greater than or equal to renderMarginPercent.
+       *
+       * A value of 0 means "when the slot enters the viewport", 100 means "when the ad is 1 viewport away", and so on.
+       */
+      fetchMarginPercent?: number;
+
+      /**
+       * The minimum distance from the current viewport a slot must be before we render an ad, expressed as a percentage
+       * of viewport size.
+       *
+       * Used in conjunction with fetchMarginPercent, this setting allows for prefetching an ad, but waiting to render
+       * and download other subresources. As such, this value should always be less than or equal to fetchMarginPercent.
+       *
+       * A value of 0 means "when the slot enters the viewport", 100 means "when the ad is 1 viewport away", and so on.
+       */
+      renderMarginPercent?: number;
+
+      /**
+       * A multiplier applied to margins on mobile devices. This multiplier is applied to both fetchMarginPercent and renderMarginPercent.
+       *
+       * This allows for different margins on mobile vs. desktop, where viewport sizes and scroll speeds may be different.
+       * For example, a value of 2.0 will multiply all margins by 2 on mobile devices, increasing the minimum distance a
+       * slot can be from the viewport before fetching and rendering.
+       */
+      mobileScaling?: number;
+    };
     /**
      * Settings to control publisher privacy treatments.
      */
     readonly privacyTreatments?: { treatments: 'disablePersonalization'[] };
+
+    /**
+     * Setting to control the horizontal centering of ads. Centering is disabled by default.
+     *
+     * Horizontal centering changes only apply to ads requested after this method has been called.
+     * For that reason, it is recommended to call this method before any calls to googletag.display
+     * or PubAdsService.refresh.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.centering
+     */
+    readonly centering?: boolean;
+
+    /**
+     * Setting to control key-value targeting.
+     *
+     * Targeting configured via this setting will apply to all ad slots on the page. This setting may be called multiple
+     * times to define multiple targeting key-values, or overwrite existing values. Targeting keys are defined in your
+     * Google Ad Manager account.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.targeting
+     */
+    readonly targeting?: Record<string, string | string[]> | null;
+
+    /**
+     * Setting to geo-target line items to geographic locations.
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.location
+     */
+    readonly location?: string;
+
+    /**
+     * Setting to enable or disable Single Request Architecture (SRA).
+     *
+     * When SRA is enabled, all ad slots defined prior to a googletag.display or PubAdsService.refresh call will be
+     * batched into a single ad request. This provides performance benefits, but is also necessary to ensure roadblocks
+     * and competetive exclusions are honored.
+     * When SRA is disabled, each ad slot is requested individually. This is the default behavior of GPT.
+     *
+     * This method must be called prior to calling googletag.enableServices.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.singleRequest
+     */
+    readonly singleRequest?: boolean;
+
     /**
      * Settings to control publisher provided signals.
      */
@@ -468,7 +582,214 @@ export namespace googletag {
         IAB_AUDIENCE_2_2?: { values: string[] };
       };
     };
+
+    /**
+     * Setting to configure AdSense attributes.
+     *
+     * AdSense attributes configured via this setting will apply to all ad slots on the page. This setting may be called
+     * multiple times to define multiple attribute values, or overwrite existing values.
+     *
+     * AdSense attribute changes only apply to ads requested after this method has been called. For that reason, it is
+     * recommended to call this method before any calls to googletag.display or PubAdsService.refresh.
+     *
+     * @see https://developers.google.com/publisher-tag/reference#googletag.config.PageSettingsConfig.adsenseAttributes
+     */
+    readonly adsenseAttributes?: GptAdSenseAttributesConfig | null;
   };
+
+  export interface GptAdSenseAttributesConfig {
+    /**
+     * AdSense ad format.
+     */
+    adsense_ad_format?:
+      | '120x240_as'
+      | '120x600_as'
+      | '125x125_as'
+      | '160x600_as'
+      | '180x150_as'
+      | '200x200_as'
+      | '234x60_as'
+      | '250x250_as'
+      | '300x250_as'
+      | '336x280_as'
+      | '468x60_as'
+      | '728x90_as';
+
+    /**
+     * AdSense channel IDs.
+     *
+     * Allowed values are channel IDs separated by '+'.
+     * Example: 271828183+314159265
+     */
+    adsense_channel_ids?: string;
+
+    /**
+     * Whether or not test mode is enabled.
+     *
+     * When set to on, ads are marked as test-only, and won't be included in counting or billing.
+     * This setting must be unset for production, non-test traffic.
+     */
+    adsense_test_mode?: 'on';
+
+    /**
+     * Language of the page on which ads are displayed.
+     *
+     * Allowed values are valid ISO 639-1 language codes.
+     * Example: en
+     */
+    document_language?: string;
+
+    /**
+     * URL of the page on which ads are displayed.
+     * Allowed values are valid URLs.
+     *
+     * Example: http://www.example.com
+     */
+    page_url?: string;
+  }
+
+  export interface GptComponentAuctionConfig {
+    /**
+     * An auction configuration object for this component auction.
+     * If this value is set to null, any existing configuration for the specified configKey will be deleted.
+     */
+    auctionConfig: {
+      auctionSignals?: unknown;
+      decisionLogicURL: string;
+      interestGroupBuyers?: string[];
+      perBuyerExperimentGroupIds?: {
+        [buyer: string]: number;
+      };
+      perBuyerGroupLimits?: {
+        [buyer: string]: number;
+      };
+      perBuyerSignals?: {
+        [buyer: string]: unknown;
+      };
+      perBuyerTimeouts?: {
+        [buyer: string]: number;
+      };
+      seller: string;
+      sellerExperimentGroupId?: number;
+      sellerSignals?: unknown;
+      sellerTimeout?: number;
+      trustedScoringSignalsURL?: string;
+    };
+    /**
+     * The configuration key associated with this component auction.
+     *
+     * This value must be non-empty and should be unique.
+     * If two ComponentAuctionConfig objects share the same configKey value,
+     * the last to be set will overwrite prior configurations.
+     */
+    configKey: string;
+  }
+
+  /**
+   * Supported interstitial ad triggers.
+   */
+  export type GptInterstitialTrigger = 'unhideWindow' | 'navBar';
+
+  export interface GptInterstitialConfig {
+    /**
+     * Whether local storage consent is required to display this interstitial ad.
+     *
+     * GPT uses local storage to enforce a frequency cap for interstitial ads.
+     * However, users who have not provided local storage consent are still eligible to be served interstitial ads.
+     * Setting this property to true opts out of the default behavior, and ensures interstial ads are only shown to users who have provided local storage consent.
+     */
+    requireStorageAccess?: boolean;
+
+    /**
+     * The interstitial trigger configuration for this interstitial ad.
+     *
+     * Setting the value of an interstitial trigger to true will enable it and false will disable it.
+     * This will override the default values configured in Google Ad Manager.
+     */
+    triggers?: Partial<Record<GptInterstitialTrigger, boolean>>;
+  }
+
+  /**
+   * Collapsing behavior of the ad slot:
+   *
+   * null (default): The slot will not be collapsed.
+   * DISABLED: The slot will not collapse, whether or not an ad is returned.
+   * BEFORE_FETCH: The slot will start out collapsed, and expand when an ad is returned.
+   * ON_NO_FILL: The slot will start out expanded, and collapse if no ad is returned.
+   */
+  export type GptCollapseDivBehavior = 'DISABLED' | 'BEFORE_FETCH' | 'ON_NO_FILL';
+
+  export interface GptSafeFrameConfig {
+    /**
+     * Whether SafeFrame should allow ad content to expand by overlaying page content.
+     */
+    allowOverlayExpansion?: boolean;
+    /**
+     * Whether SafeFrame should allow ad content to expand by pushing page content.
+     */
+    allowPushExpansion?: boolean;
+    /**
+     * Whether ad(s) should be forced to be rendered using a SafeFrame container.
+     */
+    forceSafeFrame?: boolean;
+    /**
+     *
+     * Whether SafeFrame should use the HTML5 sandbox attribute to prevent top level navigation without user interaction.
+     */
+    sandbox?: boolean;
+  }
+
+  export interface GptSlotSettingsConfig {
+    /**
+     * Settings to control/override ad expansion behavior.
+     */
+    readonly adExpansion?: { enabled: boolean };
+
+    /**
+     * Setting to configure AdSense attributes.
+     *
+     * AdSense attribute changes only apply to ads requested after this method has been called.
+     * For that reason, it is recommended to call this method before any calls to googletag.display or PubAdsService.refresh.
+     */
+    readonly adsenseAttributes?: GptAdSenseAttributesConfig;
+
+    /**
+     * Setting to configure ad category exclusions.
+     */
+    readonly categoryExclusion?: string[];
+
+    /**
+     * Setting to configure the URL to which users will be redirected after clicking on the ad.
+     */
+    readonly clickUrl?: string;
+
+    /**
+     * Setting to configure the collapsing behavior of the ad slot.
+     * A collapsed ad slot does not take up any space on the page.
+     */
+    readonly collapseDiv?: GptCollapseDivBehavior;
+
+    /**
+     * An array of component auctions to be included in an on-device ad auction.
+     */
+    readonly componentAuction?: GptComponentAuctionConfig[];
+
+    /**
+     * An object which defines the behavior of a single interstitial ad slot.
+     */
+    readonly interstitial?: GptInterstitialConfig;
+
+    /**
+     * Settings to configure the use of SafeFrame in GPT.
+     */
+    readonly safeFrame?: GptSafeFrameConfig;
+
+    /**
+     * Setting to configure key-value targeting.
+     * Targeting configured via this setting will only apply to the ad slot.
+     */
+    readonly targeting?: Record<string, string | string[]>;
+  }
 
   export namespace enums {
     /**
@@ -481,6 +802,16 @@ export namespace googletag {
       INTERSTITIAL = 5
     }
   }
+
+  export type GetPageSettingsConfigKey = Pick<
+    GptPageSettingsConfig,
+    'adsenseAttributes' | 'disableInitialLoad' | 'targeting'
+  >;
+
+  export type GetSlotSettingsConfigKey = Pick<
+    GptSlotSettingsConfig,
+    'adsenseAttributes' | 'categoryExclusion' | 'targeting'
+  >;
 
   /**
    * interface for Google DFP AdSlot.
@@ -554,6 +885,21 @@ export namespace googletag {
      * @return The latest ad response information, or null if the slot has no ad.
      */
     getResponseInformation(): null | IResponseInformation;
+
+    /**
+     * Sets general configuration options for the slot.
+     *
+     * @param config - Configuration object for the slot.
+     */
+    setConfig(config: GptSlotSettingsConfig): void;
+
+    /**
+     * Gets general configuration options for the slot set by setConfig.
+     *
+     * @param key the supported config key to retrieve
+     * @see https://developers.google.com/publisher-tag/reference#googletag.Slot.getConfig
+     */
+    getConfig: <T extends keyof GetSlotSettingsConfigKey>(key: T) => GptSlotSettingsConfig[T];
   }
 
   export interface IResponseInformation {
