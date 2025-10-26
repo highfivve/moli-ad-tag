@@ -3858,6 +3858,7 @@ export namespace prebidjs {
   export const TheTradeDesk = 'ttd';
   export const Triplelift = 'triplelift';
   export const Yieldlab = 'yieldlab';
+  export const SeedingAlliance = 'seedingAlliance';
   export const Seedtag = 'seedtag';
   export const Spotx = 'spotx';
   export const ShowHeroes = 'showheroesBs';
@@ -3905,6 +3906,7 @@ export namespace prebidjs {
     | typeof TheTradeDesk
     | typeof Triplelift
     | typeof Yieldlab
+    | typeof SeedingAlliance
     | typeof Seedtag
     | typeof Spotx
     | typeof ShowHeroes
@@ -5423,6 +5425,29 @@ export namespace prebidjs {
   export interface IYieldlabBid extends IBidObject<typeof Yieldlab, IYieldlabParams> {}
 
   /**
+   * @see https://docs.prebid.org/dev-docs/bidders/seedingAlliance.html
+   */
+  export interface ISeedingAllianceParams {
+    /**
+     * ID of the Ad Unit
+     */
+    readonly adUnitId: string;
+
+    /**
+     * Your identifier for the account (Prebid Server only)
+     */
+    readonly accountId?: string;
+
+    /**
+     * URL from the Page
+     */
+    readonly url?: string;
+  }
+
+  export interface ISeedingAllianceBid
+    extends IBidObject<typeof SeedingAlliance, ISeedingAllianceParams> {}
+
+  /**
    * @see https://docs.prebid.org/dev-docs/bidders/seedtag
    */
   export interface ISeedtagParams {
@@ -5937,6 +5962,7 @@ export namespace prebidjs {
     | ITripleliftBid
     | IYieldlabBid
     | ISeedtagBid
+    | ISeedingAllianceBid
     | ISpotXBid
     | IShowHeroesBid
     | IStroeerCoreBid
