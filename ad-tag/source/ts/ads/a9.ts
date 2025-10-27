@@ -154,12 +154,12 @@ export const a9PublisherAudiences = (
         const publisherAudience =
           runtimeHem !== undefined
             ? {
-                enabled: true,
+                enabled: !!config.publisherAudience?.enabled,
                 sha256Email: runtimeHem
               }
             : config.publisherAudience;
 
-        if (publisherAudience && publisherAudience.enabled) {
+        if (publisherAudience !== undefined && publisherAudience.enabled) {
           const tokenConfig: apstag.ITokenConfig = {
             hashedRecords: [
               {
