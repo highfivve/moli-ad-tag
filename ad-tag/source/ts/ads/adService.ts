@@ -250,7 +250,7 @@ export class AdService {
     if (config.a9 && env === 'production' && isGam) {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9, config.schain));
-      configure.push(a9PublisherAudiences(config.a9));
+      configure.push(a9PublisherAudiences(config.a9, runtimeConfig.audience));
       prepareRequestAds.push(a9ClearTargetingStep());
       requestBids.push(a9RequestBids(config.a9));
     }

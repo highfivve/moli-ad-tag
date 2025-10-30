@@ -17,10 +17,10 @@ import { isSizeEqual } from '../util/sizes';
 import { SizeConfigService } from './sizeConfigService';
 import { apstag } from '../types/apstag';
 import { tcfapi } from '../types/tcfapi';
-import TCPurpose = tcfapi.responses.TCPurpose;
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
 import { AdSlot, headerbidding, schain } from '../types/moliConfig';
+import TCPurpose = tcfapi.responses.TCPurpose;
 
 const isA9SlotDefinition = (
   slotDefinition: MoliRuntime.SlotDefinition
@@ -141,13 +141,24 @@ export const a9Configure = (
     });
   });
 
-export const a9PublisherAudiences = (config: headerbidding.A9Config): ConfigureStep =>
+export const a9PublisherAudiences = (
+  config: headerbidding.A9Config,
+  audienceTargeting?: MoliRuntime.AudienceTargeting
+): ConfigureStep =>
   mkConfigureStepOnce(
     'a9-publisher-audiences',
     (context: AdPipelineContext, _slots: AdSlot[]) =>
       new Promise<void>(resolve => {
-        const publisherAudience = config.publisherAudience;
-        if (publisherAudience && publisherAudience.enabled) {
+        const runtimeHem = audienceTargeting?.hem?.sha256;
+        const publisherAudience =
+          runtimeHem !== undefined
+            ? {
+                enabled: !!config.publisherAudience?.enabled,
+                sha256Email: runtimeHem
+              }
+            : config.publisherAudience;
+
+        if (publisherAudience !== undefined && publisherAudience.enabled) {
           const tokenConfig: apstag.ITokenConfig = {
             hashedRecords: [
               {
