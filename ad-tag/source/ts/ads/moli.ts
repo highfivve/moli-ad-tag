@@ -21,7 +21,6 @@ import {
   MoliConfig,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
-import AudienceTargeting = MoliRuntime.AudienceTargeting;
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -851,7 +850,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
    *
    * @param audience contains information about the user
    */
-  function setAudience(audience: AudienceTargeting): void {
+  function setAudience(audience: MoliRuntime.AudienceTargeting): void {
     switch (state.state) {
       case 'configurable':
       case 'configured': {
