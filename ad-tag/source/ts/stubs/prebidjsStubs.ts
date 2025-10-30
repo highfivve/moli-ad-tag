@@ -47,6 +47,9 @@ export const createPbjsStub = (): prebidjs.IPrebidJs => {
         defaultRates: { USD: { EUR: 1 } }
       }
     }),
+    mergeConfig(config: Partial<prebidjs.IPrebidJsConfig>) {
+      return;
+    },
     setConfig: (_config: prebidjs.IPrebidJsConfig): void => {
       return;
     },
