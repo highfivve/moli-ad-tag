@@ -1,7 +1,5 @@
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import MoliRuntimeConfig = MoliRuntime.MoliRuntimeConfig;
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import IID5Provider = prebidjs.userSync.IID5Provider;
 
 type Id5PartnerData = {
   /**
@@ -25,7 +23,7 @@ type Id5PartnerData = {
   readonly 11?: string;
 };
 
-const createPd = (runtimeConfig: MoliRuntimeConfig): string | null => {
+const createPd = (runtimeConfig: MoliRuntime.MoliRuntimeConfig): string | null => {
   const sha256Email = runtimeConfig.audience?.hem?.sha256;
   if (sha256Email) {
     // this is from the ID5 documentation
@@ -50,7 +48,7 @@ const createPd = (runtimeConfig: MoliRuntimeConfig): string | null => {
  * @param runtimeConfig - runtime parameters that can be set by publisher
  * @see https://wiki.id5.io/identitycloud/retrieve-id5-ids/passing-partner-data-to-id5
  */
-export const id5Config = (runtimeConfig: MoliRuntimeConfig): IID5Provider => {
+export const id5Config = (runtimeConfig: MoliRuntime.MoliRuntimeConfig): prebidjs.userSync.IID5Provider => {
   const pd = createPd(runtimeConfig);
   return {
     name: 'id5Id',

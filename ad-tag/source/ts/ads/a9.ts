@@ -21,7 +21,6 @@ import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
 import { AdSlot, headerbidding, schain } from '../types/moliConfig';
 import TCPurpose = tcfapi.responses.TCPurpose;
-import AudienceTargeting = MoliRuntime.AudienceTargeting;
 
 const isA9SlotDefinition = (
   slotDefinition: MoliRuntime.SlotDefinition
@@ -144,7 +143,7 @@ export const a9Configure = (
 
 export const a9PublisherAudiences = (
   config: headerbidding.A9Config,
-  audienceTargeting?: AudienceTargeting
+  audienceTargeting?: MoliRuntime.AudienceTargeting
 ): ConfigureStep =>
   mkConfigureStepOnce(
     'a9-publisher-audiences',

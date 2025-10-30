@@ -1,6 +1,5 @@
 import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { headerbidding } from 'ad-tag/types/moliConfig';
-import SetBidderConfig = headerbidding.SetBidderConfig;
 
 type UID = {
   id: string;
@@ -13,7 +12,7 @@ type UID = {
 export const criteoEnrichWithFpd = (
   runtimeConfig: MoliRuntime.MoliRuntimeConfig,
   source: string
-): SetBidderConfig => {
+): headerbidding.SetBidderConfig => {
   const uids: UID[] = [];
   if (runtimeConfig.audience?.hem?.sha256 !== undefined) {
     uids.push({
