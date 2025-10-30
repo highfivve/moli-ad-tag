@@ -21,6 +21,7 @@ import {
   MoliConfig,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
+import AudienceTargeting = MoliRuntime.AudienceTargeting;
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -846,6 +847,34 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   }
 
   /**
+   * Provide additional targeting insights about the user.
+   *
+   * @param audience contains information about the user
+   */
+  function setAudience(audience: AudienceTargeting): void {
+    switch (state.state) {
+      case 'configurable':
+      case 'configured': {
+        state.runtimeConfig.audience = audience;
+        break;
+      }
+
+      case 'spa-finished':
+      case 'spa-requestAds': {
+        state.nextRuntimeConfig.audience = audience;
+        break;
+      }
+      default: {
+        getLogger(state.runtimeConfig, window).error(
+          'MoliGlobal',
+          `Setting audience targeting after configuration: ${JSON.stringify(audience)}`
+        );
+        break;
+      }
+    }
+  }
+
+  /**
    * This functions creates a new runtime configuration from the previous one, if one exists.
    * It's important to note that some state is persistent across multiple requestAds() calls, because they are only set
    * once and use for the entire session time. This includes
@@ -930,6 +959,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
     triggerDelay: triggerDelay,
     getState: getState,
     openConsole: openConsole,
+    setAudience: setAudience,
     addEventListener: eventService.addEventListener,
     removeEventListener: eventService.removeEventListener
   };
