@@ -221,7 +221,7 @@ export const a9RequestBids = (config: Moli.headerbidding.A9Config): RequestBidsS
     'a9-fetch-bids',
     (context: AdPipelineContext, slotDefinitions: Moli.SlotDefinition[]) =>
       new Promise<void>(resolve => {
-        if (!hasRequiredConsent(context.tcData)) {
+        if (!hasRequiredConsent(context.tcData) || config.enabled === false) {
           context.logger.debug('A9', 'Skip any due to missing consent');
           resolve();
           return;
