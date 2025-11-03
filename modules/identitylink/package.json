@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-identitylink",
-  "version": "4.28.13",
+  "version": "4.28.14",
   "license": "Apache-2.0",
   "description": "LiveRamp ATS IdentityLink",
   "main": "./lib/index.js",
@@ -50,6 +50,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.28.13"
+    "@highfivve/ad-tag": "4.28.14"
   }
 }
