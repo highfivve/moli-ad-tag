@@ -381,10 +381,11 @@ export const prebidConfigure = (
 
           // TODO bidder specific HEM configuration, e.g. for Criteo, would be done here.
           // set additional bidder configurations if provided
-          const bidderConfigs = [
-            ...(prebidConfig.bidderConfigs || []),
-            criteoEnrichWithFpd(context.runtimeConfig__, context.window__.location.host)
-          ];
+          const bidderConfigs = criteoEnrichWithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync,
+            context.window__.location.host
+          )(prebidConfig.bidderConfigs || []);
           bidderConfigs.forEach(({ options, merge }) => {
             context.window__.pbjs.setBidderConfig(options, merge);
           });
