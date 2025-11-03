@@ -152,10 +152,7 @@ export const a9PublisherAudiences = (
         const runtimeHem = audienceTargeting?.hem?.sha256;
         const publisherAudience =
           runtimeHem !== undefined
-            ? {
-                enabled: !!config.publisherAudience?.enabled,
-                sha256Email: runtimeHem
-              }
+            ? { enabled: !!config.publisherAudience?.enabled, sha256Email: runtimeHem }
             : config.publisherAudience;
 
         if (publisherAudience !== undefined && publisherAudience.enabled) {

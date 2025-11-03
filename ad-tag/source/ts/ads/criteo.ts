@@ -11,6 +11,14 @@ type UID = {
   };
 };
 
+/**
+ * ## Criteo FPD Enrichment
+ * Enrich bidder configs with criteo-specific FPD user-targeting info
+ * @param runtimeConfig contains runtime information about the user
+ * @param userSyncConfig the user sync config (contains info about which user ids are enabled)
+ * @param source the domain
+ * @param bidderConfigs the array of bidder configs to enrich
+ */
 export const criteoEnrichWithFpd =
   (
     runtimeConfig: MoliRuntime.MoliRuntimeConfig,
@@ -36,7 +44,7 @@ export const criteoEnrichWithFpd =
     if (runtimeConfig.audience?.hem?.sha256ofMD5 !== undefined) {
       uids.push({
         id: runtimeConfig.audience.hem.sha256ofMD5,
-        atype: 1,
+        atype: 3,
         ext: { stype: 'hemsha256md5' }
       });
     }

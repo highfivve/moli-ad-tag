@@ -29,7 +29,6 @@ import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
 import { id5Config } from 'ad-tag/ads/id5';
-import { sharedIdConfig } from 'ad-tag/ads/sharedId';
 import IPrebidJs = prebidjs.IPrebidJs;
 import UserIdProvider = prebidjs.userSync.UserIdProvider;
 
@@ -379,8 +378,6 @@ export const prebidConfigure = (
             }
           });
 
-          // TODO bidder specific HEM configuration, e.g. for Criteo, would be done here.
-          // set additional bidder configurations if provided
           const bidderConfigs = criteoEnrichWithFpd(
             context.runtimeConfig__,
             prebidConfig.config.userSync,
