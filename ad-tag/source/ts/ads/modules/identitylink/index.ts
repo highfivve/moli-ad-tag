@@ -112,6 +112,7 @@ export class IdentityLink implements IModule {
       const sha256 = context.runtimeConfig__.audience?.hem?.sha256;
       const md5 = context.runtimeConfig__.audience?.hem?.md5;
 
+      /** ordering is important for LiveRamp: [SHA-1, SHA-256, MD5] */
       if (sha1 !== undefined) {
         hashedEmailAddresses[0] = sha1;
       }
