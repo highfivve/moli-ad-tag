@@ -25,32 +25,41 @@ type Id5PartnerData = {
 
 const createPd = (runtimeConfig: MoliRuntime.MoliRuntimeConfig): string | null => {
   const sha256Email = runtimeConfig.audience?.hem?.sha256;
-  if (sha256Email) {
-    // this is from the ID5 documentation
-    // set the keys and URL-encode each value
-    const pdKeys: Id5PartnerData = {
-      1: sha256Email
-    };
-
-    // convert the key/values into a querystring format
-    const pdRaw = Object.entries(pdKeys)
-      .map(([key, value]) => {
-        return `${key}=${encodeURIComponent(value)}`;
-      })
-      .join('&');
-    return btoa(pdRaw);
+  if (!sha256Email) {
+    return null;
   }
-  return null;
+  // this is from the ID5 documentation
+  // set the keys and URL-encode each value
+  const pdKeys: Id5PartnerData = {
+    1: sha256Email
+  };
+
+  // convert the key/values into a querystring format
+  const pdRaw = Object.entries(pdKeys)
+    .map(([key, value]) => {
+      return `${key}=${encodeURIComponent(value)}`;
+    })
+    .join('&');
+  return btoa(pdRaw);
 };
 
 /**
  *
  * @param runtimeConfig - runtime parameters that can be set by publisher
+ * @param userSync - prebid user sync configuration, contains a list of enabled user ID providers
  * @see https://wiki.id5.io/identitycloud/retrieve-id5-ids/passing-partner-data-to-id5
  */
 export const id5Config = (
-  runtimeConfig: MoliRuntime.MoliRuntimeConfig
-): prebidjs.userSync.IID5Provider => {
+  runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+  userSync: prebidjs.userSync.IUserSyncConfig | undefined
+): prebidjs.userSync.IID5Provider | null => {
+  const id5Provider: prebidjs.userSync.IID5Provider | undefined = userSync?.userIds?.find(
+    id => id.name === 'id5Id'
+  );
+  if (id5Provider === undefined) {
+    return null;
+  }
+
   const pd = createPd(runtimeConfig);
   return {
     name: 'id5Id',
