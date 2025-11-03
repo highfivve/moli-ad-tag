@@ -11,70 +11,71 @@ type UID = {
   };
 };
 
-export const criteoEnrichWithFpd = (
-  runtimeConfig: MoliRuntime.MoliRuntimeConfig,
-  userSyncConfig: IUserSyncConfig | undefined,
-  source: string
-) => (bidderConfigs: headerbidding.SetBidderConfig[]): headerbidding.SetBidderConfig[] => {
-  // don't add criteo fpd if criteo user sync is not enabled
-  const criteoEnabled = userSyncConfig
-    ?.userIds
-    ?.find((uid) => uid.name === 'criteo') !== undefined;
-  if (!criteoEnabled) {
-    return bidderConfigs;
-  }
+export const criteoEnrichWithFpd =
+  (
+    runtimeConfig: MoliRuntime.MoliRuntimeConfig,
+    userSyncConfig: IUserSyncConfig | undefined,
+    source: string
+  ) =>
+  (bidderConfigs: headerbidding.SetBidderConfig[]): headerbidding.SetBidderConfig[] => {
+    // don't add criteo fpd if criteo user sync is not enabled
+    const criteoEnabled = userSyncConfig?.userIds?.find(uid => uid.name === 'criteo') !== undefined;
+    if (!criteoEnabled) {
+      return bidderConfigs;
+    }
 
-  // enrich bidderConfigs with criteo fpd if criteo is enabled
-  const uids: UID[] = [];
-  if (runtimeConfig.audience?.hem?.sha256 !== undefined) {
-    uids.push({
-      id: runtimeConfig.audience.hem.sha256,
-      atype: 3,
-      ext: { stype: 'hemsha256' }
-    });
-  }
-  if (runtimeConfig.audience?.hem?.sha256ofMD5 !== undefined) {
-    uids.push({
-      id: runtimeConfig.audience.hem.sha256ofMD5,
-      atype: 1,
-      ext: { stype: 'hemsha256md5' }
-    });
-  }
-  if (uids.length === 0) {
+    // enrich bidderConfigs with criteo fpd if criteo is enabled
+    const uids: UID[] = [];
+    if (runtimeConfig.audience?.hem?.sha256 !== undefined) {
+      uids.push({
+        id: runtimeConfig.audience.hem.sha256,
+        atype: 3,
+        ext: { stype: 'hemsha256' }
+      });
+    }
+    if (runtimeConfig.audience?.hem?.sha256ofMD5 !== undefined) {
+      uids.push({
+        id: runtimeConfig.audience.hem.sha256ofMD5,
+        atype: 1,
+        ext: { stype: 'hemsha256md5' }
+      });
+    }
+    if (uids.length === 0) {
+      return [
+        ...bidderConfigs,
+        {
+          options: {
+            bidders: ['criteo'],
+            config: {}
+          },
+          merge: true
+        }
+      ];
+    }
+
     return [
       ...bidderConfigs,
       {
         options: {
           bidders: ['criteo'],
-          config: {}
-        },
-        merge: true
-      }];
-  }
-
-  return [
-    ...bidderConfigs,
-    {
-      options: {
-        bidders: ['criteo'],
-        config: {
-          ortb2: {
-            user: {
-              ext: {
-                data: {
-                  eids: [
-                    {
-                      source: source,
-                      uids: uids
-                    }
-                  ]
+          config: {
+            ortb2: {
+              user: {
+                ext: {
+                  data: {
+                    eids: [
+                      {
+                        source: source,
+                        uids: uids
+                      }
+                    ]
+                  }
                 }
               }
             }
           }
-        }
-      },
-      merge: true
-    }
-  ];
-};
+        },
+        merge: true
+      }
+    ];
+  };
