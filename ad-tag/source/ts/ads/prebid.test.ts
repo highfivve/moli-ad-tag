@@ -8,13 +8,7 @@ import { prebidjs } from '../types/prebidjs';
 
 import { emptyConfig, emptyRuntimeConfig, noopLogger } from '../stubs/moliStubs';
 import { AdPipelineContext } from './adPipeline';
-import {
-  prebidConfigure,
-  prebidInit,
-  prebidPrepareRequestAds,
-  prebidRemoveAdUnits,
-  prebidRequestBids
-} from './prebid';
+import { prebidConfigure, prebidInit, prebidPrepareRequestAds, prebidRemoveAdUnits, prebidRequestBids } from './prebid';
 import { createLabelConfigService } from './labelConfigService';
 import { createPbjsStub, moliPrebidTestConfig, pbjsTestConfig } from '../stubs/prebidjsStubs';
 import { googleAdSlotStub } from '../stubs/googletagStubs';
@@ -306,6 +300,20 @@ describe('prebid', () => {
 
         step(adPipelineContext(), []);
         expect(setBidderConfigSpy).to.have.not.been.called;
+      });
+
+      it('should call pbjs.setBidderConfig for criteo if the criteo userId is present', () => {
+        const step = prebidConfigure({
+          ...moliPrebidTestConfig,
+          config: { userSync: { userIds: [{ name: 'criteo' }] } }
+        }, dummySchainConfig);
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        const expectedCriteoConfig = { bidders: ['criteo'], config: {}};
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.been.calledOnce;
+        expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(expectedCriteoConfig, true);
       });
 
       it('should call pbjs.setBidderConfig with the bidderConfigs', () => {
