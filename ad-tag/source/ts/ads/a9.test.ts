@@ -588,6 +588,17 @@ describe('a9', () => {
       expect(fetchBidsSpy).to.have.been.callCount(0);
     });
 
+    it('should resolve immediately if a9 is not enabled', async () => {
+      const fetchBidsSpy = sandbox.spy(dom.window.apstag, 'fetchBids');
+      const step = a9RequestBids({ ...a9ConfigStub, enabled: false, enableFloorPrices: true });
+
+      const domId = getDomId();
+      const singleSlot = createSlotDefinitions(domId, {});
+
+      await step(contextWithConsent, [singleSlot]);
+      expect(fetchBidsSpy).to.have.been.callCount(0);
+    });
+
     describe('floor price', () => {
       ['USD' as const, 'EUR' as const].forEach(currency => {
         it(`should add floor config with configured currency ${currency}`, async () => {
