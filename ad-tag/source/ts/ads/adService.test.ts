@@ -236,8 +236,26 @@ describe('AdService', () => {
         expect(stepNames).to.contain('a9-init');
       });
 
+      it('should add the a9-init step if a9 is available and enabled is true', async () => {
+        const pipeline = await initialize({
+          ...emptyConfigWithA9,
+          a9: { ...emptyConfigWithA9.a9!, enabled: true }
+        });
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).to.contain('a9-init');
+      });
+
       it('should not add the a9-init step if a9 is not available', async () => {
         const pipeline = await initialize();
+        const stepNames = pipeline.init.map(step => step.name);
+        expect(stepNames).not.to.contain('a9-init');
+      });
+
+      it('should not add the a9-init step if a9 is disabled', async () => {
+        const pipeline = await initialize({
+          ...emptyConfigWithA9,
+          a9: { ...emptyConfigWithA9.a9!, enabled: false }
+        });
         const stepNames = pipeline.init.map(step => step.name);
         expect(stepNames).not.to.contain('a9-init');
       });
