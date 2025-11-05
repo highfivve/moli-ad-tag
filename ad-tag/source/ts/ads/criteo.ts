@@ -1,7 +1,6 @@
 import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import { headerbidding } from 'ad-tag/types/moliConfig';
-import IUserSyncConfig = prebidjs.userSync.IUserSyncConfig;
 
 type UID = {
   id: string;
@@ -22,7 +21,7 @@ type UID = {
 export const criteoEnrichWithFpd =
   (
     runtimeConfig: MoliRuntime.MoliRuntimeConfig,
-    userSyncConfig: IUserSyncConfig | undefined,
+    userSyncConfig: prebidjs.userSync.IUserSyncConfig | undefined,
     source: string
   ) =>
   (bidderConfigs: headerbidding.SetBidderConfig[]): headerbidding.SetBidderConfig[] => {
@@ -49,16 +48,7 @@ export const criteoEnrichWithFpd =
       });
     }
     if (uids.length === 0) {
-      return [
-        ...bidderConfigs,
-        {
-          options: {
-            bidders: ['criteo'],
-            config: {}
-          },
-          merge: true
-        }
-      ];
+      return bidderConfigs;
     }
 
     return [
