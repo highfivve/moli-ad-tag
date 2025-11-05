@@ -44,34 +44,27 @@ const createPd = (runtimeConfig: MoliRuntime.MoliRuntimeConfig): string | null =
 };
 
 /**
+ * Iterates over the provided userIds and, if ID5 is found, enriches it with partner data (pd)
  *
  * @param runtimeConfig - runtime parameters that can be set by publisher
- * @param userSync - prebid user sync configuration, contains a list of enabled user ID providers
+ * @param userIds - a list of enabled user ID providers
  * @see https://wiki.id5.io/identitycloud/retrieve-id5-ids/passing-partner-data-to-id5
  */
-export const id5Config = (
+export const enrichId5WithFpd = (
   runtimeConfig: MoliRuntime.MoliRuntimeConfig,
-  userSync: prebidjs.userSync.IUserSyncConfig | undefined
-): prebidjs.userSync.IID5Provider | null => {
-  const id5Provider: prebidjs.userSync.IID5Provider | undefined = userSync?.userIds?.find(
-    id => id.name === 'id5Id'
-  );
-  if (id5Provider === undefined) {
-    return null;
-  }
-
-  const pd = createPd(runtimeConfig);
-  return {
-    name: 'id5Id',
-    storage: {
-      type: 'html5',
-      name: 'id5id', // create a cookie with this name
-      expires: 90, // local storage entry lasts for 90 days
-      refreshInSeconds: 8 * 3600 // refresh ID every 8 hours to ensure it is fresh
-    },
-    params: {
-      partner: 1519, // global highfivve partner number
-      ...(pd && { pd })
+  userIds?: prebidjs.userSync.UserIdProvider[]
+): prebidjs.userSync.UserIdProvider[] | undefined => {
+  return userIds?.map<prebidjs.userSync.UserIdProvider>(idProvider => {
+    if (idProvider.name === 'id5Id') {
+      const pd = createPd(runtimeConfig);
+      return {
+        ...idProvider,
+        params: {
+          ...idProvider.params,
+          ...(pd && { pd })
+        }
+      };
     }
-  };
+    return idProvider;
+  });
 };
