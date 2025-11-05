@@ -29,7 +29,6 @@ import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
 import { enrichId5WithFpd } from 'ad-tag/ads/id5';
-import IPrebidJs = prebidjs.IPrebidJs;
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -248,7 +247,7 @@ const createdAdUnits = (
 
 export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
   mkInitStep('prebid-init', context => {
-    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
 
     // enable configured analytic adapters in prebid. Note that longstanding analytics vendors usually have no
     // prebid analytics adapter, but rather are loaded through an external script. Like pubstack and assertive yield do this
@@ -287,7 +286,8 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
         // only try to remove ad units if the configuration is set to not use ephemeral ad units and prebid is defined
         // at all
         if (prebidConfig.ephemeralAdUnits !== true) {
-          context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+          context.window__.pbjs =
+            context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
           const adUnits = context.window__.pbjs.adUnits;
           if (adUnits) {
             context.window__.pbjs.que.push(() => {
@@ -305,7 +305,8 @@ export const prebidClearAuction = (): ConfigureStep => {
     'prebid-clear-auction',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+        context.window__.pbjs =
+          context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
         context.window__.pbjs.que.push(() => {
           context.logger__.debug('Prebid', 'Clearing prebid auctions');
           context.window__.pbjs.clearAllAuctions();

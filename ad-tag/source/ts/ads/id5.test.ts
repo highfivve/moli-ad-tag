@@ -7,7 +7,6 @@ import { emptyRuntimeConfig } from '../stubs/moliStubs';
 import { enrichId5WithFpd } from './id5';
 import { MoliRuntime } from '../types/moliRuntime';
 import { prebidjs } from '../types/prebidjs';
-import IID5Provider = prebidjs.userSync.IID5Provider;
 
 // setup sinon-chai
 use(sinonChai);
@@ -152,7 +151,7 @@ describe('id5', () => {
       expect(result).to.have.length(1);
 
       // Decode the base64 pd and verify it contains the email
-      const decodedPd = atob((result?.at(0) as IID5Provider).params.pd!);
+      const decodedPd = atob((result?.at(0) as prebidjs.userSync.IID5Provider).params.pd!);
       const sha256Email = runtimeConfigWithSha256Hem.audience?.hem?.sha256!;
       expect(decodedPd).to.include(`1=${encodeURIComponent(sha256Email)}`);
     });

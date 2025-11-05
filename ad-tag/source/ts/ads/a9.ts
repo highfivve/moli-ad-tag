@@ -20,7 +20,6 @@ import { tcfapi } from '../types/tcfapi';
 import * as adUnitPath from './adUnitPath';
 import { AdUnitPathVariables } from './adUnitPath';
 import { AdSlot, headerbidding, schain } from '../types/moliConfig';
-import TCPurpose = tcfapi.responses.TCPurpose;
 
 const isA9SlotDefinition = (
   slotDefinition: MoliRuntime.SlotDefinition
@@ -32,13 +31,13 @@ const hasRequiredConsent = (tcData: tcfapi.responses.TCData): boolean =>
   !tcData.gdprApplies ||
   (tcData.vendor.consents['793'] &&
     [
-      TCPurpose.STORE_INFORMATION_ON_DEVICE,
-      TCPurpose.SELECT_BASIC_ADS,
-      TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
-      TCPurpose.SELECT_PERSONALISED_ADS,
-      TCPurpose.MEASURE_AD_PERFORMANCE,
-      TCPurpose.APPLY_MARKET_RESEARCH,
-      TCPurpose.DEVELOP_IMPROVE_PRODUCTS
+      tcfapi.responses.TCPurpose.STORE_INFORMATION_ON_DEVICE,
+      tcfapi.responses.TCPurpose.SELECT_BASIC_ADS,
+      tcfapi.responses.TCPurpose.CREATE_PERSONALISED_ADS_PROFILE,
+      tcfapi.responses.TCPurpose.SELECT_PERSONALISED_ADS,
+      tcfapi.responses.TCPurpose.MEASURE_AD_PERFORMANCE,
+      tcfapi.responses.TCPurpose.APPLY_MARKET_RESEARCH,
+      tcfapi.responses.TCPurpose.DEVELOP_IMPROVE_PRODUCTS
     ].every(purpose => tcData.purpose.consents[purpose]));
 
 /**
