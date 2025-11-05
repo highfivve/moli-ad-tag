@@ -28,9 +28,8 @@ import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
-import { id5Config } from 'ad-tag/ads/id5';
+import { enrichId5WithFpd } from 'ad-tag/ads/id5';
 import IPrebidJs = prebidjs.IPrebidJs;
-import UserIdProvider = prebidjs.userSync.UserIdProvider;
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -359,22 +358,21 @@ export const prebidConfigure = (
             });
           }
 
+          const enrichedUserIds = enrichId5WithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync?.userIds
+          );
           context.window__.pbjs.setConfig({
             ...prebidConfig.config,
             // global schain configuration
             ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
             // for module priceFloors
-            ...{ floors: prebidConfig.config.floors || {} }
-          });
-
-          const id5UserIdProviderWithHem: prebidjs.userSync.IID5Provider | null = id5Config(
-            context.runtimeConfig__,
-            prebidConfig.config.userSync
-          );
-          const userIds: UserIdProvider[] = [id5UserIdProviderWithHem].filter(isNotNull);
-          context.window__.pbjs.mergeConfig({
-            userSync: {
-              userIds: userIds
+            ...{ floors: prebidConfig.config.floors || {} },
+            // if there
+            ...{
+              userSync: prebidConfig.config.userSync
+                ? { ...prebidConfig.config.userSync, userIds: enrichedUserIds }
+                : prebidConfig.config.userSync
             }
           });
 
