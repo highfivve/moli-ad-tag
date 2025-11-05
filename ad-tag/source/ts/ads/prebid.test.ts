@@ -378,14 +378,8 @@ describe('prebid', () => {
         );
         const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
 
-        const expectedCriteoConfig = { bidders: ['criteo'], config: {} };
-
         step(adPipelineContext(), []);
         expect(setBidderConfigSpy).to.have.not.been.called;
-        expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(
-          expectedCriteoConfig,
-          true
-        );
       });
 
       it('should call pbjs.setBidderConfig with the bidderConfigs', () => {

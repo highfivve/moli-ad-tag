@@ -49,6 +49,8 @@ const createPd = (runtimeConfig: MoliRuntime.MoliRuntimeConfig): string | null =
  * @param runtimeConfig - runtime parameters that can be set by publisher
  * @param userIds - a list of enabled user ID providers
  * @see https://wiki.id5.io/identitycloud/retrieve-id5-ids/passing-partner-data-to-id5
+ *
+ * @returns the provided userIds if id5 is not found or userIds is undefined, else an enriched version of userIds
  */
 export const enrichId5WithFpd = (
   runtimeConfig: MoliRuntime.MoliRuntimeConfig,
