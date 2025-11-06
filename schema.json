@@ -1781,6 +1781,9 @@
         "lazyload": {
           "$ref": "#/definitions/modules.lazyload.LazyLoadModuleConfig"
         },
+        "moliAnalytics": {
+          "$ref": "#/definitions/modules.moliAnalytics.MoliAnalyticsConfig"
+        },
         "prebidFirstPartyData": {
           "$ref": "#/definitions/modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig"
         },
@@ -3046,6 +3049,28 @@
       ],
       "type": "object"
     },
+    "modules.moliAnalytics.MoliAnalyticsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "batchSize": {
+          "description": "Number of events to collect into a single call to handler or url. Defaults to 1",
+          "type": "number"
+        },
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "url": {
+          "description": "Data collection URL",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "url"
+      ],
+      "type": "object"
+    },
     "modules.prebid_first_party_data.GptTargetingMapping": {
       "additionalProperties": false,
       "properties": {
@@ -3943,6 +3968,16 @@
         "hb_adomain"
       ],
       "type": "object"
+    },
+    "prebidjs.BidResponse": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/prebidjs.IGenericBidResponse"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.IGumGumBidResponse"
+        }
+      ]
     },
     "prebidjs.BidderCode": {
       "description": "The bidder code is used to identify the different SSPs.",
@@ -5848,6 +5883,350 @@
       ],
       "type": "object"
     },
+    "prebidjs.IGenericBidResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "ad": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {}
+          ],
+          "description": "the actual creative Most of the time this a string containing the markup, but in some cases it's an object with more information."
+        },
+        "adId": {
+          "description": "The unique identifier of a bid creative.",
+          "type": "string"
+        },
+        "adUnitCode": {
+          "description": "The `code` property in the adUnit object. This is usually the `domId` of the ad unit.",
+          "type": "string"
+        },
+        "adserverTargeting": {
+          "$ref": "#/definitions/prebidjs.AdServerTargeting",
+          "description": "Contains all the adserver targeting parameters"
+        },
+        "auctionId": {
+          "description": "the unique prebid auction ID in which this bid response was created",
+          "type": "string"
+        },
+        "bidder": {
+          "description": "The bidder code.\n\nExcludes all the bidder codes which have a more specific implementation. Add more bidders by extending the union type, e.g.\n\n``` Exclude<BidderCode, typeof AppNexusAst>; ```",
+          "enum": [
+            "adagio",
+            "amx",
+            "aduptech",
+            "adf",
+            "connectad",
+            "criteo",
+            "cwire",
+            "appnexusAst",
+            "appnexus",
+            "equativ",
+            "improvedigital",
+            "ix",
+            "invibes",
+            "inmobi",
+            "nanointeractive",
+            "nextMillennium",
+            "pubmatic",
+            "ogury",
+            "onetag",
+            "openx",
+            "smartadserver",
+            "smartx",
+            "smilewanted",
+            "unruly",
+            "taboola",
+            "teads",
+            "ttd",
+            "triplelift",
+            "yieldlab",
+            "seedingAlliance",
+            "seedtag",
+            "spotx",
+            "showheroesBs",
+            "stailamedia",
+            "stroeerCore",
+            "xhb",
+            "dspx",
+            "ra",
+            "rubicon",
+            "rads",
+            "visx",
+            "vlyby",
+            "orbidder"
+          ],
+          "type": "string"
+        },
+        "bidderCode": {
+          "$ref": "#/definitions/prebidjs.IGenericBidResponse",
+          "description": "The bidder code.\n\nExcludes all the bidder codes which have a more specific implementation. Add more bidders by extending the union type, e.g.\n\n``` Exclude<BidderCode, typeof AppNexusAst>; ```"
+        },
+        "cpm": {
+          "description": "The exact bid price from the bidder.",
+          "type": "number"
+        },
+        "creativeId": {
+          "type": "number"
+        },
+        "currency": {
+          "description": "The currency of the bid",
+          "type": "string"
+        },
+        "dealId": {
+          "description": "If the bid is associated with a Deal, this field contains the deal ID.",
+          "type": "string"
+        },
+        "height": {
+          "description": "The height of the returned creative size. can be undefined for native / outstream media types",
+          "type": "number"
+        },
+        "mediaType": {
+          "description": "The media type of the bid response",
+          "enum": [
+            "banner",
+            "video",
+            "display"
+          ],
+          "type": "string"
+        },
+        "meta": {
+          "additionalProperties": false,
+          "description": "Additional meta data for this bid response",
+          "properties": {
+            "advertiserDomains": {
+              "description": "A list of advertiser domains this bid is for. This field is populated by at least some bidders.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "brandId": {
+              "description": "Seen on IX bids",
+              "type": "number"
+            },
+            "brandName": {
+              "description": "Seen on IX bids",
+              "type": "string"
+            },
+            "networkId": {
+              "description": "Seen on IX bids",
+              "type": "string"
+            },
+            "networkName": {
+              "description": "Seen on Criteo bids",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "native": {
+          "additionalProperties": false,
+          "description": "Contains native key value pairs.",
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "body2": {
+              "type": "string"
+            },
+            "clickTrackers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "clickUrl": {
+              "type": "string"
+            },
+            "cta": {
+              "type": "string"
+            },
+            "displayUrl": {
+              "type": "string"
+            },
+            "downloads": {
+              "type": "string"
+            },
+            "image": {
+              "additionalProperties": false,
+              "properties": {
+                "height": {
+                  "type": "number"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "url",
+                "height",
+                "width"
+              ],
+              "type": "object"
+            },
+            "impressionTrackers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "javascriptTrackers": {
+              "type": "string"
+            },
+            "likes": {},
+            "phone": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            },
+            "privacyLink": {
+              "type": "string"
+            },
+            "rating": {
+              "type": "string"
+            },
+            "salePrice": {
+              "type": "string"
+            },
+            "sponsoredBy": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "netRevenue": {
+          "description": "True if the CPM is the one this bidder will pay",
+          "type": "boolean"
+        },
+        "originalCpm": {
+          "type": "number"
+        },
+        "originalCurrency": {
+          "description": "If currencyModule performed any currency conversion, this is the original currency.",
+          "type": "string"
+        },
+        "pbAg": {
+          "description": "price bucket: 'auto granularity'",
+          "type": "string"
+        },
+        "pbCg": {
+          "description": "price bucket: 'custom granularity'",
+          "type": "string"
+        },
+        "pbDg": {
+          "description": "price bucket: 'dense granularity'",
+          "type": "string"
+        },
+        "pbHg": {
+          "description": "price bucket: 'high granularity'",
+          "type": "string"
+        },
+        "pbLg": {
+          "description": "price bucket: 'low granularity'",
+          "type": "string"
+        },
+        "pbMg": {
+          "description": "price bucket: 'medium granularity'",
+          "type": "string"
+        },
+        "requestId": {
+          "description": "The unique identifier of a bid creative. It’s used by the line item’s creative",
+          "type": "string"
+        },
+        "requestTimestamp": {
+          "type": "number"
+        },
+        "responseTimestamp": {
+          "type": "number"
+        },
+        "size": {
+          "type": "string"
+        },
+        "source": {
+          "description": "Origin of the bid",
+          "enum": [
+            "client",
+            "s2s"
+          ],
+          "type": "string"
+        },
+        "status": {
+          "description": "Status of the bid. Possible values: targetingSet, rendered",
+          "enum": [
+            "rendered",
+            "targetingSet"
+          ],
+          "type": "string"
+        },
+        "statusMessage": {
+          "description": "The bid’s status message",
+          "enum": [
+            "Bid returned empty or error response",
+            "Bid available"
+          ],
+          "type": "string"
+        },
+        "timeToRespond": {
+          "type": "number"
+        },
+        "ttl": {
+          "description": "(propably optional) - the time to live for this bid response in seconds",
+          "type": "number"
+        },
+        "vastImpUrl": {
+          "type": "string"
+        },
+        "vastXml": {
+          "type": "string"
+        },
+        "width": {
+          "description": "The width of the returned creative size. can be undefined for native / outstream media types",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ad",
+        "adId",
+        "adUnitCode",
+        "adserverTargeting",
+        "auctionId",
+        "bidder",
+        "bidderCode",
+        "cpm",
+        "currency",
+        "mediaType",
+        "native",
+        "netRevenue",
+        "originalCurrency",
+        "pbAg",
+        "pbCg",
+        "pbDg",
+        "pbHg",
+        "pbLg",
+        "pbMg",
+        "requestId",
+        "requestTimestamp",
+        "responseTimestamp",
+        "size",
+        "source",
+        "statusMessage",
+        "timeToRespond"
+      ],
+      "type": "object"
+    },
     "prebidjs.IGumGumBid": {
       "additionalProperties": false,
       "description": "## GumGum Bid params\n\nGumGum has a few special fields to determine the actual \"product\" being requested.\n\n`data.pi`:\n- `2` : inscreen\n- `3` : inslot\n- `5` : native (ICV)\n- `6` : invideo\n- `7` : video\n- `8` : skins",
@@ -5883,6 +6262,322 @@
       "required": [
         "bidder",
         "params"
+      ],
+      "type": "object"
+    },
+    "prebidjs.IGumGumBidResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "ad": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/prebidjs.IGumGumBidResponseWrapper"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "Contains the GumGum ad creative.\n\nIf the `cw` field is set, then it's a \"wrapper\". Otherwise, it's considered `markup` and is only a string."
+        },
+        "adId": {
+          "description": "The unique identifier of a bid creative.",
+          "type": "string"
+        },
+        "adUnitCode": {
+          "description": "The `code` property in the adUnit object. This is usually the `domId` of the ad unit.",
+          "type": "string"
+        },
+        "adserverTargeting": {
+          "$ref": "#/definitions/prebidjs.AdServerTargeting",
+          "description": "Contains all the adserver targeting parameters"
+        },
+        "auctionId": {
+          "description": "the unique prebid auction ID in which this bid response was created",
+          "type": "string"
+        },
+        "bidder": {
+          "const": "gumgum",
+          "description": "narrow this bid response type to gumgum",
+          "type": "string"
+        },
+        "bidderCode": {
+          "$ref": "#/definitions/prebidjs.IGumGumBidResponse",
+          "description": "narrow this bid response type to gumgum"
+        },
+        "cpm": {
+          "description": "The exact bid price from the bidder.",
+          "type": "number"
+        },
+        "creativeId": {
+          "type": "number"
+        },
+        "currency": {
+          "description": "The currency of the bid",
+          "type": "string"
+        },
+        "dealId": {
+          "description": "If the bid is associated with a Deal, this field contains the deal ID.",
+          "type": "string"
+        },
+        "height": {
+          "description": "The height of the returned creative size. can be undefined for native / outstream media types",
+          "type": "number"
+        },
+        "mediaType": {
+          "description": "The media type of the bid response",
+          "enum": [
+            "banner",
+            "video",
+            "display"
+          ],
+          "type": "string"
+        },
+        "meta": {
+          "additionalProperties": false,
+          "description": "Additional meta data for this bid response",
+          "properties": {
+            "advertiserDomains": {
+              "description": "A list of advertiser domains this bid is for. This field is populated by at least some bidders.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "brandId": {
+              "description": "Seen on IX bids",
+              "type": "number"
+            },
+            "brandName": {
+              "description": "Seen on IX bids",
+              "type": "string"
+            },
+            "networkId": {
+              "description": "Seen on IX bids",
+              "type": "string"
+            },
+            "networkName": {
+              "description": "Seen on Criteo bids",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "native": {
+          "additionalProperties": false,
+          "description": "Contains native key value pairs.",
+          "properties": {
+            "address": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "body2": {
+              "type": "string"
+            },
+            "clickTrackers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "clickUrl": {
+              "type": "string"
+            },
+            "cta": {
+              "type": "string"
+            },
+            "displayUrl": {
+              "type": "string"
+            },
+            "downloads": {
+              "type": "string"
+            },
+            "image": {
+              "additionalProperties": false,
+              "properties": {
+                "height": {
+                  "type": "number"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "url",
+                "height",
+                "width"
+              ],
+              "type": "object"
+            },
+            "impressionTrackers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "javascriptTrackers": {
+              "type": "string"
+            },
+            "likes": {},
+            "phone": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            },
+            "privacyLink": {
+              "type": "string"
+            },
+            "rating": {
+              "type": "string"
+            },
+            "salePrice": {
+              "type": "string"
+            },
+            "sponsoredBy": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "netRevenue": {
+          "description": "True if the CPM is the one this bidder will pay",
+          "type": "boolean"
+        },
+        "originalCpm": {
+          "type": "number"
+        },
+        "originalCurrency": {
+          "description": "If currencyModule performed any currency conversion, this is the original currency.",
+          "type": "string"
+        },
+        "pbAg": {
+          "description": "price bucket: 'auto granularity'",
+          "type": "string"
+        },
+        "pbCg": {
+          "description": "price bucket: 'custom granularity'",
+          "type": "string"
+        },
+        "pbDg": {
+          "description": "price bucket: 'dense granularity'",
+          "type": "string"
+        },
+        "pbHg": {
+          "description": "price bucket: 'high granularity'",
+          "type": "string"
+        },
+        "pbLg": {
+          "description": "price bucket: 'low granularity'",
+          "type": "string"
+        },
+        "pbMg": {
+          "description": "price bucket: 'medium granularity'",
+          "type": "string"
+        },
+        "requestId": {
+          "description": "The unique identifier of a bid creative. It’s used by the line item’s creative",
+          "type": "string"
+        },
+        "requestTimestamp": {
+          "type": "number"
+        },
+        "responseTimestamp": {
+          "type": "number"
+        },
+        "size": {
+          "type": "string"
+        },
+        "source": {
+          "description": "Origin of the bid",
+          "enum": [
+            "client",
+            "s2s"
+          ],
+          "type": "string"
+        },
+        "status": {
+          "description": "Status of the bid. Possible values: targetingSet, rendered",
+          "enum": [
+            "rendered",
+            "targetingSet"
+          ],
+          "type": "string"
+        },
+        "statusMessage": {
+          "description": "The bid’s status message",
+          "enum": [
+            "Bid returned empty or error response",
+            "Bid available"
+          ],
+          "type": "string"
+        },
+        "timeToRespond": {
+          "type": "number"
+        },
+        "ttl": {
+          "description": "(propably optional) - the time to live for this bid response in seconds",
+          "type": "number"
+        },
+        "vastImpUrl": {
+          "type": "string"
+        },
+        "vastXml": {
+          "type": "string"
+        },
+        "width": {
+          "description": "The width of the returned creative size. can be undefined for native / outstream media types",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ad",
+        "adId",
+        "adUnitCode",
+        "adserverTargeting",
+        "auctionId",
+        "bidder",
+        "bidderCode",
+        "cpm",
+        "currency",
+        "mediaType",
+        "native",
+        "netRevenue",
+        "originalCurrency",
+        "pbAg",
+        "pbCg",
+        "pbDg",
+        "pbHg",
+        "pbLg",
+        "pbMg",
+        "requestId",
+        "requestTimestamp",
+        "responseTimestamp",
+        "size",
+        "source",
+        "statusMessage",
+        "timeToRespond"
+      ],
+      "type": "object"
+    },
+    "prebidjs.IGumGumBidResponseWrapper": {
+      "additionalProperties": false,
+      "description": "The `bidResponse.ad` property contains this value if it's considered a \"wrapper\" creative.",
+      "properties": {
+        "auid": {
+          "description": "Stands for _ad id_ and contains the format delivered.\n\n- `59` = in-screen cascade (former mobile skin)\n- `39` = in-screen expandable (mobile expandable)",
+          "type": "number"
+        }
+      },
+      "required": [
+        "auid"
       ],
       "type": "object"
     },
@@ -9775,7 +10470,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-202888-202891-248365657-202881-202891-248365657-202849-203677-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Cstructure-248365657-204497-204500-248365657-204490-204500-248365657-204458-205286-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534%3E"
           },
           "type": "array"
         }
@@ -9785,7 +10480,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<(alias-248365657-201792-201962-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251149092559&alias-248365657-201962-202095-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251210238678)>": {
+    "prebidjs.activitycontrols.IActivity<(alias-248365657-203401-203571-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341149092559&alias-248365657-203571-203704-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341210238678)>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -9795,7 +10490,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-201792-201962-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251149092559%26alias-248365657-201962-202095-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251210238678)%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3C(alias-248365657-203401-203571-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341149092559%26alias-248365657-203571-203704-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341210238678)%3E"
           },
           "type": "array"
         }
@@ -9805,7 +10500,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-201365-201551-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-21592598888365>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-202974-203160-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-21753498888365>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -9815,7 +10510,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-201365-201551-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-21592598888365%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-202974-203160-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-21753498888365%3E"
           },
           "type": "array"
         }
@@ -9825,7 +10520,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivity<alias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090>": {
+    "prebidjs.activitycontrols.IActivity<alias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090>": {
       "additionalProperties": false,
       "properties": {
         "default": {
@@ -9835,7 +10530,7 @@
         "rules": {
           "description": "`Rules` is an array of objects that a publisher can construct to provide fine-grained control over a given activity. For instance, you could set up a series of rules that says:\n\n- Amongst the bid adapters, BidderA is always allowed to receive user first-party data\n- Always let analytics adapters receive user first-party data\n- Otherwise, let the active privacy modules decide\n- if they refuse to decide, then the overall default is to allow the transmitting of user first-party data",
           "items": {
-            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090%3E"
+            "$ref": "#/definitions/prebidjs.activitycontrols.IActivityRule%3Calias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090%3E"
           },
           "type": "array"
         }
@@ -9845,7 +10540,7 @@
       ],
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-201792-201962-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251149092559&alias-248365657-201962-202095-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251210238678)>": {
+    "prebidjs.activitycontrols.IActivityRule<(alias-248365657-203401-203571-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341149092559&alias-248365657-203571-203704-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341210238678)>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -9908,7 +10603,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-201365-201551-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-21592598888365>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-202974-203160-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-21753498888365>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -9967,7 +10662,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<alias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090>": {
+    "prebidjs.activitycontrols.IActivityRule<alias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -10022,7 +10717,7 @@
       },
       "type": "object"
     },
-    "prebidjs.activitycontrols.IActivityRule<structure-248365657-202888-202891-248365657-202881-202891-248365657-202849-203677-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925>": {
+    "prebidjs.activitycontrols.IActivityRule<structure-248365657-204497-204500-248365657-204490-204500-248365657-204458-205286-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534>": {
       "additionalProperties": false,
       "properties": {
         "allow": {
@@ -10078,7 +10773,7 @@
       "description": "Starting with version 7.52, Prebid.js introduced a centralized control mechanism for privacy-sensitive activities\n- such as accessing device storage or sharing data with partners.  These controls are intended to serve as building blocks for privacy protection mechanisms, allowing module developers or publishers to directly specify what should be permitted or avoided in any given regulatory environment.",
       "properties": {
         "accessDevice": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-201365-201551-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-21592598888365%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-202974-203160-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-21753498888365%3E",
           "description": "A component wants to use device storage.\n\nEffect when denied: Storage is disabled"
         },
         "enrichEids": {
@@ -10090,7 +10785,7 @@
           "description": "A Real-Time Data (RTD) submodule wants to add user first-party data to outgoing requests (`user.data` in ORTB)\n\nEffect when denied: User FPD is discarded"
         },
         "fetchBids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090%3E",
           "description": "A bid adapter wants to participate in an auction\n\nEffect when denied: Bidder is removed from the auction"
         },
         "reportAnalytics": {
@@ -10098,23 +10793,23 @@
           "description": "An analytics adapter is being enabled through `pbjs.enableAnalytics`\n\nEffect when denied: Adapter remains disabled"
         },
         "syncUser": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-201792-201962-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251149092559%26alias-248365657-201962-202095-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-2159251210238678)%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3C(alias-248365657-203401-203571-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341149092559%26alias-248365657-203571-203704-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-2175341210238678)%3E",
           "description": "A bid adapter wants to fetch a [user sync](https://docs.prebid.org/dev-docs/publisher-api-reference/setConfig.html#setConfig-Configure-User-Syncing)\n\nEffect when denied: User sync is skipped"
         },
         "transmitEids": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user IDs to their endpoint.\n\nEffect when denied: User IDs are hidden from the component"
         },
         "transmitPreciseGeo": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit precise geolocation data to their endpoint.\n\nEffect when denied: Component is allowed only 2-digit precision for latitude and longitude"
         },
         "transmitTid": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit globally unique transaction IDs to their endpoint.\n\nEffect when denied: Transaction IDs are hidden from the component"
         },
         "transmitUfpd": {
-          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-201551-201792-248365657-200784-206859-248365657-200669-206859-248365657-190-215924-248365657-163-215924-248365657-0-215925187177090%3E",
+          "$ref": "#/definitions/prebidjs.activitycontrols.IActivity%3Calias-248365657-203160-203401-248365657-202393-208468-248365657-202278-208468-248365657-190-217533-248365657-163-217533-248365657-0-217534187177090%3E",
           "description": "A bid adapter or RTD submodule wants to access and/or transmit user FPD to their endpoint.\n\nEffect when denied: User FPD is hidden from the component"
         }
       },
@@ -10130,6 +10825,9 @@
         },
         {
           "$ref": "#/definitions/prebidjs.analytics.IGoogleAnalyticsAdapter"
+        },
+        {
+          "$ref": "#/definitions/prebidjs.analytics.IGenericAnalyticsAdapter"
         }
       ]
     },
@@ -10227,6 +10925,446 @@
       },
       "required": [
         "code"
+      ],
+      "type": "object"
+    },
+    "prebidjs.analytics.IGenericAnalyticsAdapter": {
+      "additionalProperties": false,
+      "properties": {
+        "excludeEvents": {
+          "description": "Event blocklist; if provided, these events will not be forwarded to the adapter",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "includeEvents": {
+          "description": "Event include list; if provided, only these events will be forwarded to the adapter",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "options": {
+          "$ref": "#/definitions/prebidjs.analytics.IGenericAnalyticsAdapterOptions",
+          "description": "Adapter specific options"
+        },
+        "provider": {
+          "const": "generic",
+          "description": "Analytics adapter code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "options",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "prebidjs.analytics.IGenericAnalyticsAdapterOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "batchDelay": {
+          "description": "Time (in milliseconds) to wait before calling handler or url with an incomplete batch (when  fewer than batchSize events have been collected). Defaults to 100",
+          "type": "number"
+        },
+        "batchSize": {
+          "description": "Optional. Number of events to batch before sending to the url. Default is 1 (no batching)",
+          "type": "number"
+        },
+        "events": {
+          "additionalProperties": false,
+          "description": "Map from event name to a custom format function. Only events in this map will be collected, using the data returned by their corresponding function",
+          "properties": {
+            "adRenderFailed": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.RenderFailure"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "adRenderSucceeded": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.BidResponse"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "addAdUnits": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "auctionDebug": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.AuctionDebugInfo"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "auctionEnd": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.AuctionObject"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "auctionInit": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.AuctionObject"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "auctionTimeout": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.AuctionObject"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "beforeBidderHttp": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.BidderRequests"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "beforeRequestBids": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.BeforeRequestBidsAdUnitInfo"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidAccepted": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.BidResponse"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidAdjustment": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.BidResponse"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidRequested": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.BidderRequests"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidResponse": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.BidResponse"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidTimeout": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "items": {
+                        "$ref": "#/definitions/prebidjs.event.NoBidObject"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidWon": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.BidResponse"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "bidderDone": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.BidderRequests"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "noBid": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.NoBidObject"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "requestBids": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "setTargeting": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "additionalProperties": {
+                        "$ref": "#/definitions/prebidjs.AdServerTargeting"
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "tcf2Enforcement": {
+              "$comment": "(\n          eventData: prebidjs.event.PrebidEventMap[K]) => any",
+              "properties": {
+                "namedArgs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "eventData": {
+                      "$ref": "#/definitions/prebidjs.event.TCF2Enforcement"
+                    }
+                  },
+                  "required": [
+                    "eventData"
+                  ],
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "gvlid": {
+          "description": "Global vendor list ID to use for the purpose of GDPR purpose 7 enforcement.",
+          "type": "number"
+        },
+        "method": {
+          "description": "HTTP method used to call url. Defaults to 'POST'",
+          "type": "string"
+        },
+        "sampling": {
+          "description": "Sampling rate, expressed as a number between 0 and 1. Data is collected only on this ratio  of browser sessions. Defaults to 1",
+          "type": "number"
+        },
+        "url": {
+          "description": "Required. URL of the endpoint for data collection.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "events"
       ],
       "type": "object"
     },
@@ -10621,6 +11759,438 @@
         "adServerCurrency",
         "granularityMultiplier",
         "defaultRates"
+      ],
+      "type": "object"
+    },
+    "prebidjs.event.AuctionDebugInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "items": {},
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "WARNING",
+            "ERROR"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "prebidjs.event.AuctionObject": {
+      "additionalProperties": false,
+      "properties": {
+        "adUnitCodes": {
+          "description": "The ad unit codes that are participating in the auction.\n\nNote that ad unit codes may appear multiple times. This is likely caused by prebid twin ad unit feature",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "adUnits": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.IAdUnit"
+          },
+          "type": "array"
+        },
+        "auctionId": {
+          "type": "string"
+        },
+        "auctionStatus": {
+          "enum": [
+            "inProgress",
+            "completed"
+          ],
+          "type": "string"
+        },
+        "bidderRequests": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.event.BidderRequests"
+          },
+          "type": "array"
+        },
+        "bidsReceived": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidResponse"
+          },
+          "type": "array"
+        },
+        "bidsRejected": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.event.NoBidObject"
+          },
+          "type": "array"
+        },
+        "metrics": {
+          "description": "different functions to manage metrics"
+        },
+        "noBids": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.event.NoBidObject"
+          },
+          "type": "array"
+        },
+        "seatNonBids": {
+          "items": {},
+          "type": "array"
+        },
+        "timeout": {
+          "type": "number"
+        },
+        "timestamp": {
+          "type": "number"
+        },
+        "winningBids": {
+          "description": "This is probably always empty, because when the auction ends, the results must be sent back to the ad server. After that, the winners will be determined.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.BidResponse"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "adUnitCodes",
+        "auctionId",
+        "winningBids"
+      ],
+      "type": "object"
+    },
+    "prebidjs.event.BeforeRequestBidsAdUnitInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "bids": {
+          "description": "An array of bid objects.",
+          "items": {
+            "$ref": "#/definitions/prebidjs.IBid"
+          },
+          "type": "array"
+        },
+        "code": {
+          "description": "A unique identifier that you create and assign to this ad unit. This identifier will be used to set query string targeting on the ad. If you're using GPT, we recommend setting this to the slot element ID.\n\nMoli allows to omit the `code` and will use the `domId` of the slot",
+          "type": "string"
+        },
+        "floors": {
+          "$ref": "#/definitions/prebidjs.floors.IFloorsData",
+          "description": "Floors configuration over prebid priceFloor module."
+        },
+        "mediaTypes": {
+          "$ref": "#/definitions/prebidjs.IMediaTypes",
+          "description": "Defines one or multiple media types the ad unit supports. Media Types can be \"banner\", \"native\" or \"video"
+        },
+        "ortb2Imp": {
+          "$ref": "#/definitions/prebidjs.IOrtb2Imp",
+          "description": "Configure additional information per ad unit that should be sent along with a prebid server auction call."
+        },
+        "pubstack": {
+          "$ref": "#/definitions/prebidjs.IPubstackConfig",
+          "description": "This is an optional configuration for publishers that have a pubstack.io integration."
+        },
+        "renderer": {
+          "$ref": "#/definitions/prebidjs.IRenderer",
+          "description": "The renderer associated to the ad-unit. Only for mediaType = video."
+        },
+        "sizes": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "transactionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "bids",
+        "mediaTypes"
+      ],
+      "type": "object"
+    },
+    "prebidjs.event.BidderRequestBid": {
+      "additionalProperties": false,
+      "properties": {
+        "adUnitCode": {
+          "type": "string"
+        },
+        "auctionId": {
+          "type": "string"
+        },
+        "bidId": {
+          "type": "string"
+        },
+        "bidder": {
+          "$ref": "#/definitions/prebidjs.BidderCode"
+        },
+        "bidderRequestId": {
+          "type": "string"
+        },
+        "deferBilling": {
+          "type": "boolean"
+        },
+        "mediaTypes": {
+          "$ref": "#/definitions/prebidjs.IMediaTypes"
+        },
+        "ortb2": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData"
+        },
+        "ortb2Imp": {
+          "$ref": "#/definitions/prebidjs.IOrtb2Imp"
+        },
+        "serverResponseTimeMs": {
+          "type": "number"
+        },
+        "sizes": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "src": {
+          "enum": [
+            "s2s",
+            "client"
+          ],
+          "type": "string"
+        },
+        "transactionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "bidder",
+        "adUnitCode",
+        "auctionId",
+        "sizes",
+        "mediaTypes",
+        "bidderRequestId",
+        "src",
+        "ortb2"
+      ],
+      "type": "object"
+    },
+    "prebidjs.event.BidderRequests": {
+      "additionalProperties": false,
+      "properties": {
+        "adUnitsS2SCopy": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.IAdUnit"
+          },
+          "type": "array"
+        },
+        "auctionId": {
+          "type": "string"
+        },
+        "auctionStart": {
+          "type": "number"
+        },
+        "bidderCode": {
+          "$ref": "#/definitions/prebidjs.BidderCode"
+        },
+        "bidderRequestId": {
+          "type": "string"
+        },
+        "bids": {
+          "items": {
+            "$ref": "#/definitions/prebidjs.event.BidderRequestBid"
+          },
+          "type": "array"
+        },
+        "gdprConsent": {
+          "$ref": "#/definitions/prebidjs.event.GdprConsent"
+        },
+        "metrics": {
+          "description": "different functions to manage metrics"
+        },
+        "ortb2": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData"
+        },
+        "refererInfo": {},
+        "src": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        },
+        "timeout": {
+          "type": "number"
+        },
+        "uniquePbsTid": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "prebidjs.event.GdprConsent": {
+      "additionalProperties": false,
+      "properties": {
+        "addtlConsent": {
+          "type": "string"
+        },
+        "apiVersion": {
+          "type": "number"
+        },
+        "consentString": {
+          "type": "string"
+        },
+        "gdprApplies": {
+          "type": "boolean"
+        },
+        "vendorData": {}
+      },
+      "type": "object"
+    },
+    "prebidjs.event.NoBidObject": {
+      "additionalProperties": false,
+      "properties": {
+        "adId": {
+          "description": "unique identifier by prebid for a creative returned in an auction",
+          "type": "string"
+        },
+        "adUnitCode": {
+          "description": "The DOM ID of the ad unit",
+          "type": "string"
+        },
+        "adUnitId": {
+          "type": "string"
+        },
+        "auctionId": {
+          "type": "string"
+        },
+        "bidId": {
+          "type": "string"
+        },
+        "bidRequestsCount": {
+          "description": "the current count of the bid requests on the page (each request increases the count)",
+          "type": "number"
+        },
+        "bidder": {
+          "type": "string"
+        },
+        "bidderCode": {
+          "type": "string"
+        },
+        "bidderRequestId": {
+          "type": "string"
+        },
+        "bidderRequestsCount": {
+          "description": "the current count of the bidder requests on the page (each request to the bidder increases the count)",
+          "type": "number"
+        },
+        "bidderWinsCount": {
+          "description": "the current count of auctions the bidder won",
+          "type": "number"
+        },
+        "floorData": {
+          "$ref": "#/definitions/prebidjs.floors.IFloorConfig"
+        },
+        "mediaTypes": {
+          "$ref": "#/definitions/prebidjs.IMediaTypes"
+        },
+        "metrics": {
+          "description": "different functions to manage metrics"
+        },
+        "ortb2": {
+          "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData"
+        },
+        "ortb2Imp": {
+          "$ref": "#/definitions/prebidjs.IOrtb2Imp"
+        },
+        "params": {
+          "description": "provider specific params"
+        },
+        "schain": {
+          "$ref": "#/definitions/SupplyChainObject.ISupplyChainObject"
+        },
+        "sizes": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "src": {
+          "enum": [
+            "client",
+            "s2s"
+          ],
+          "type": "string"
+        },
+        "timeout": {
+          "type": "number"
+        },
+        "transactionId": {
+          "type": "string"
+        },
+        "userId": {
+          "$ref": "#/definitions/prebidjs.userSync.UserIds"
+        },
+        "userIdsAsEids": {}
+      },
+      "required": [
+        "adId",
+        "adUnitCode",
+        "auctionId",
+        "bidder",
+        "bidderCode"
+      ],
+      "type": "object"
+    },
+    "prebidjs.event.RenderFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "prebidjs.event.TCF2Enforcement": {
+      "additionalProperties": false,
+      "properties": {
+        "analyticsBlocked": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "bidderBlocked": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "storageBlocked": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "storageBlocked",
+        "bidderBlocked",
+        "analyticsBlocked"
       ],
       "type": "object"
     },
@@ -13066,6 +14636,67 @@
         }
       ],
       "description": "All supported id providers"
+    },
+    "prebidjs.userSync.UserIds": {
+      "additionalProperties": false,
+      "description": "The keys and the value type can be found in the`decode()` method of each user id module. The list is thus not complete.",
+      "properties": {
+        "IDP": {
+          "type": "string"
+        },
+        "amxId": {
+          "type": "string"
+        },
+        "criteoId": {
+          "type": "string"
+        },
+        "id5id": {
+          "additionalProperties": false,
+          "properties": {
+            "uid": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "uid"
+          ],
+          "type": "object"
+        },
+        "idl_env": {
+          "type": "string"
+        },
+        "pairId": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "params": {
+              "additionalProperties": false,
+              "properties": {
+                "liveramp": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "storageKey": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "pubcid": {
+          "type": "string"
+        }
+      },
+      "type": "object"
     },
     "prebidjs.video.Api": {
       "description": "Open RTB Spec 2.5 Section 5.6 Playback Methods",
