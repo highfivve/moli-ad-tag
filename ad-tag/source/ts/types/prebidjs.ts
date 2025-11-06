@@ -548,6 +548,19 @@ export namespace prebidjs {
        * ```
        */
       readonly vendorExceptions?: string[];
+
+      /**
+       * Defines a list of biddercodes or module names that are exempt from the checking vendor signals for this purpose.
+       *
+       * Unlike with vendorExceptions, Purpose consent is still checked.
+       * Note: Prebid.org recommends working with a privacy lawyer before making enforcement exceptions for any vendor.
+       *
+       * @example
+       * ```js
+       * [“bidderA”, “userID-module-B”]
+       * ```
+       */
+      readonly softVendorExceptions?: string[];
     }
   }
 
@@ -1784,28 +1797,28 @@ export namespace prebidjs {
      */
     export type BidSource =
       | {
-          /**
-           * a number between 0 and 100
-           */
-          readonly client: number;
+      /**
+       * a number between 0 and 100
+       */
+      readonly client: number;
 
-          /**
-           * a number between 0 and 100
-           */
-          readonly server: number;
-        }
+      /**
+       * a number between 0 and 100
+       */
+      readonly server: number;
+    }
       | {
-          /**
-           * if client should have 100% of the traffic, no server share is necessary
-           */
-          readonly client: 100;
-        }
+      /**
+       * if client should have 100% of the traffic, no server share is necessary
+       */
+      readonly client: 100;
+    }
       | {
-          /**
-           * if server should have 100% of the traffic, no server share is necessary
-           */
-          readonly server: 100;
-        };
+      /**
+       * if server should have 100% of the traffic, no server share is necessary
+       */
+      readonly server: 100;
+    };
 
     /**
      * Arguments will be added to resulting OpenRTB payload to Prebid Server in every impression
@@ -2160,18 +2173,18 @@ export namespace prebidjs {
       ext?:
         | any // basically anything can still be put here
         | {
-            data?: {
-              /**
-               * used by adagio. Example would be `article`
-               */
-              pagetype?: string;
+        data?: {
+          /**
+           * used by adagio. Example would be `article`
+           */
+          pagetype?: string;
 
-              /**
-               * used by adagio. Example would be `economy`
-               */
-              category?: string;
-            };
-          };
+          /**
+           * used by adagio. Example would be `economy`
+           */
+          category?: string;
+        };
+      };
     }
 
     /**
@@ -2410,28 +2423,28 @@ export namespace prebidjs {
        */
       ext?:
         | {
-            prebid?: {
-              data?: {
-                /**
-                 * Publishers can constrain which bidders receive which user.ext.eids entries.
-                 * See the [Prebid.js user ID permissions](https://docs.prebid.org/dev-docs/modules/userId.html#permissions) reference for background.
-                 *
-                 * @see https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#eid-permissions
-                 * @see https://docs.prebid.org/dev-docs/modules/userId.html#permissions
-                 */
-                eidpermissions?: Array<{
-                  /**
-                   * Which user.ext.eids.source is receiving the permissions, one entry per source is allowed
-                   */
-                  source: prebidjs.userSync.EIDSource;
-                  /**
-                   * Which bidders are allowed to receive the named eid source
-                   */
-                  permissions: Array<BidderCode | '*'>;
-                }>;
-              };
-            };
-          }
+        prebid?: {
+          data?: {
+            /**
+             * Publishers can constrain which bidders receive which user.ext.eids entries.
+             * See the [Prebid.js user ID permissions](https://docs.prebid.org/dev-docs/modules/userId.html#permissions) reference for background.
+             *
+             * @see https://docs.prebid.org/prebid-server/endpoints/openrtb2/pbs-endpoint-auction.html#eid-permissions
+             * @see https://docs.prebid.org/dev-docs/modules/userId.html#permissions
+             */
+            eidpermissions?: Array<{
+              /**
+               * Which user.ext.eids.source is receiving the permissions, one entry per source is allowed
+               */
+              source: prebidjs.userSync.EIDSource;
+              /**
+               * Which bidders are allowed to receive the named eid source
+               */
+              permissions: Array<BidderCode | '*'>;
+            }>;
+          };
+        };
+      }
         | any;
     }
 
