@@ -548,6 +548,19 @@ export namespace prebidjs {
        * ```
        */
       readonly vendorExceptions?: string[];
+
+      /**
+       * Defines a list of biddercodes or module names that are exempt from the checking vendor signals for this purpose.
+       *
+       * Unlike with vendorExceptions, Purpose consent is still checked.
+       * Note: Prebid.org recommends working with a privacy lawyer before making enforcement exceptions for any vendor.
+       *
+       * @example
+       * ```js
+       * [“bidderA”, “userID-module-B”]
+       * ```
+       */
+      readonly softVendorExceptions?: string[];
     }
   }
 
