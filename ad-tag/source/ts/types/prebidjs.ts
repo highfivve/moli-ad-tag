@@ -2001,15 +2001,39 @@ export namespace prebidjs {
      */
     export interface IGenericAnalyticsAdapterOptions {
       /**
-       * Required. URL of the endpoint for data collection
+       * Required. URL of the endpoint for data collection.
        */
       url: string;
 
       /**
-       * Optional. Number of events to batch before sending to the url
+       * Optional. Number of events to batch before sending to the url.
        * Default is 1 (no batching)
        */
       batchSize?: number;
+
+      /**
+       * Global vendor list ID to use for the purpose of GDPR purpose 7 enforcement.
+       */
+      gvlid?: number;
+
+      /**
+       * Time (in milliseconds) to wait before calling handler or url with an incomplete batch (when
+       *  fewer than batchSize events have been collected).
+       * Defaults to 100
+       */
+      batchDelay?: number;
+
+      /**
+       * Sampling rate, expressed as a number between 0 and 1. Data is collected only on this ratio
+       *  of browser sessions.
+       * Defaults to 1
+       */
+      sampling?: number;
+
+      /**
+       * HTTP method used to call url. Defaults to 'POST'
+       */
+      method?: string;
 
       /** Map from event name to a custom format function.
        * Only events in this map will be collected, using the data returned by their corresponding function
