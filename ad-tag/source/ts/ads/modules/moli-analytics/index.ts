@@ -74,8 +74,4 @@ export class MoliAnalytics implements IModule {
   prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
     return [];
   }
-
-  requestBidsSteps__(): RequestBidsStep[] {
-    return [];
-  }
 }
