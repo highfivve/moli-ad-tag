@@ -1959,15 +1959,16 @@ export namespace prebidjs {
   }
 
   /**
-   * @see http://prebid.org/overview/analytics.html
-   * @see http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
+   * @see https://docs.prebid.org/overview/analytics.html
+   * @see https://docs.prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html
    * @see https://docs.prebid.org/dev-docs/publisher-api-reference/enableAnalytics.html
    */
   export namespace analytics {
     export type AnalyticsAdapter =
       | IAdagioAnalyticsAdapter
       | IAgmaAnalyticsAdapter
-      | IGoogleAnalyticsAdapter;
+      | IGoogleAnalyticsAdapter
+      | IGenericAnalyticsAdapter;
     export type AnalyticsProviders = AnalyticsAdapter['provider'];
 
     /**
@@ -1993,6 +1994,36 @@ export namespace prebidjs {
        * Event blocklist; if provided, these events will not be forwarded to the adapter
        */
       readonly excludeEvents?: string[];
+    }
+
+    /**
+     * @see https://docs.prebid.org/dev-docs/modules/genericAnalyticsAdapter.html
+     */
+    export interface IGenericAnalyticsAdapterOptions {
+      /**
+       * Required. URL of the endpoint for data collection
+       */
+      url: string;
+
+      /**
+       * Optional. Number of events to batch before sending to the url
+       * Default is 1 (no batching)
+       */
+      batchSize?: number;
+
+      /** Map from event name to a custom format function.
+       * Only events in this map will be collected, using the data returned by their corresponding function
+       */
+      events: {
+        [K in keyof prebidjs.event.PrebidEventMap]?: (
+          eventData: prebidjs.event.PrebidEventMap[K]
+        ) => any;
+      };
+    }
+
+    export interface IGenericAnalyticsAdapter
+      extends IAnalyticsAdapter<IGenericAnalyticsAdapterOptions> {
+      readonly provider: 'generic';
     }
 
     export interface IAgmaAnalyticsAdapterOptions {
