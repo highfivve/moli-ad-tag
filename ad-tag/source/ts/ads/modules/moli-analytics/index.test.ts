@@ -29,6 +29,21 @@ describe('Moli Analytics Module', () => {
     return module;
   };
 
+  const testAnalyticsConfiguration = async (url: string, batchSize?: number) => {
+    const loadAnalyticsStub = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
+
+    const module = createAndConfigureModule(url, batchSize);
+    await module.initSteps__()[0](defaultContext);
+
+    expect(loadAnalyticsStub).to.have.been.calledOnce;
+    expect(loadAnalyticsStub.args[0][0][0].options).to.not.be.undefined;
+
+    const options = loadAnalyticsStub.args[0][0][0]
+      .options as prebidjs.analytics.IGenericAnalyticsAdapterOptions;
+
+    return options;
+  };
+
   beforeEach(() => {
     jsDomWindow.pbjs = createPbjsStub();
   });
@@ -39,26 +54,12 @@ describe('Moli Analytics Module', () => {
   });
 
   it('should load with the specified url', async () => {
-    const loadAnalyticsStub = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
-
-    const module = createAndConfigureModule(defaultUrl);
-    await module.initSteps__()[0](defaultContext);
-    expect(loadAnalyticsStub).to.have.been.calledOnce;
-    expect(loadAnalyticsStub.args[0][0][0].options).to.not.be.undefined;
-    const options = loadAnalyticsStub.args[0][0][0]
-      .options as prebidjs.analytics.IGenericAnalyticsAdapterOptions;
+    const options = await testAnalyticsConfiguration(defaultUrl);
     expect(options.url).to.equal(defaultUrl);
   });
 
   it('should load with the specified batch size', async () => {
-    const loadAnalyticsStub = sandbox.spy(jsDomWindow.pbjs, 'enableAnalytics');
-
-    const module = createAndConfigureModule(defaultUrl, defaultBatchSize);
-    await module.initSteps__()[0](defaultContext);
-    expect(loadAnalyticsStub).to.have.been.calledOnce;
-    expect(loadAnalyticsStub.args[0][0][0].options).to.not.be.undefined;
-    const options = loadAnalyticsStub.args[0][0][0]
-      .options as prebidjs.analytics.IGenericAnalyticsAdapterOptions;
+    const options = await testAnalyticsConfiguration(defaultUrl, defaultBatchSize);
     expect(options.batchSize).to.equal(defaultBatchSize);
   });
 
