@@ -7,11 +7,12 @@ import { googletag } from 'ad-tag/types/googletag';
 import { newEmptyConfig, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { initInterstitialModule } from './interstitialAd';
 
-import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
+import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStubs';
 import { AdSlot, MoliConfig } from 'ad-tag/types/moliConfig';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createInterstitialModule } from 'ad-tag/ads/modules/interstitial/index';
 import { IModule } from 'ad-tag/types/module';
+import { formatKey } from 'ad-tag/ads/keyValues';
 
 // setup sinon-chai
 use(sinonChai);
@@ -86,18 +87,29 @@ describe('Interstitial module', () => {
     describe('initialize initInterstitial function', () => {
       let errorLogSpy: Sinon.SinonSpy;
 
+      let interstitialAd = jsDomWindow.document.createElement('div');
+      interstitialAd.setAttribute('data-ref', 'h5v-interstitial');
+
+      let closeButton = jsDomWindow.document.createElement('button');
+      closeButton.setAttribute('data-ref', 'h5v-interstitial-close');
+
+      const interstitialDomId = 'interstitial';
+      let slot = googleAdSlotStub('/123/interstitial', interstitialDomId);
+
       beforeEach(() => {
         errorLogSpy = sandbox.spy(noopLogger, 'warn');
+        slot = googleAdSlotStub('/123/interstitial', interstitialDomId);
+        interstitialAd = jsDomWindow.document.createElement('div');
+        interstitialAd.setAttribute('data-ref', 'h5v-interstitial');
+
+        closeButton = jsDomWindow.document.createElement('button');
+        closeButton.setAttribute('data-ref', 'h5v-interstitial-close');
       });
 
       afterEach(() => {
         errorLogSpy.restore();
       });
 
-      const slot = {
-        getSlotElementId: () => 'interstitial',
-        setConfig: sandbox.spy()
-      } as unknown as googletag.IAdSlot;
       const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
         slot,
         advertiserId: 111,
@@ -133,16 +145,10 @@ describe('Interstitial module', () => {
       const interstitialCloseButtonSelector = '[data-ref="h5v-interstitial-close"]';
       const interstitialHidingClass = 'h5v-interstitial--hidden';
 
-      const interstitialAd = jsDomWindow.document.createElement('div');
-      interstitialAd.setAttribute('data-ref', 'h5v-interstitial');
-
-      const closeButton = jsDomWindow.document.createElement('button');
-      closeButton.setAttribute('data-ref', 'h5v-interstitial-close');
-
       it('should throw a warning if there is no interstitial container in the html', function () {
         jsDomWindow.document.querySelector(interstitialContainerSelector)?.remove();
         jsDomWindow.document.body.appendChild(closeButton);
-        initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [111]);
         expect(errorLogSpy.calledOnce).to.have.been.true;
         expect(errorLogSpy.args[0][0]).to.eq('[interstitial-module]');
         expect(errorLogSpy.args[0][1]).to.eq(
@@ -155,7 +161,7 @@ describe('Interstitial module', () => {
         jsDomWindow.document.body.appendChild(closeButton);
 
         const debugLogSpy = sandbox.spy(noopLogger, 'debug');
-        initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [111]);
         expect(debugLogSpy.calledOnce).to.have.been.true;
         expect(debugLogSpy.args.length).to.eq(1);
         expect(debugLogSpy.args[0][0]).to.eq('interstitial-module');
@@ -170,12 +176,8 @@ describe('Interstitial module', () => {
 
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [111]);
 
-        const slot = {
-          getSlotElementId: () => 'interstitial',
-          setConfig: sandbox.spy()
-        } as unknown as googletag.IAdSlot;
         const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
           slot,
           advertiserId: 111,
@@ -194,21 +196,37 @@ describe('Interstitial module', () => {
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
 
+      it('should hide the interstitial if it is a GAM interstitial', async function () {
+        jsDomWindow.document.body.appendChild(interstitialAd);
+        jsDomWindow.document.body.appendChild(closeButton);
+
+        const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [111]);
+        slot.setTargeting(formatKey, '5');
+
+        slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
+        slotLoadedCallback(slotLoadedEvent, listenerSpy);
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
+      });
+
       it('should hide the interstitial after clicking the close button', async function () {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', []);
+        await initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, []);
 
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
         await new Promise(resolve => setTimeout(resolve, 0));
-        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
+        expect([...interstitialAd.classList]).to.not.contain(interstitialHidingClass);
         closeButton.click();
-        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
+        expect([...interstitialAd.classList]).to.contains(interstitialHidingClass);
       });
 
       it('should show the interstitial if there was an ad', async function () {
@@ -217,14 +235,14 @@ describe('Interstitial module', () => {
 
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [999]);
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [999]);
 
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
+        expect([...interstitialAd.classList]).to.not.contain(interstitialHidingClass);
       });
 
       it('should hide the interstitial if the slotRenderEndedEvent was empty', async function () {
@@ -233,7 +251,7 @@ describe('Interstitial module', () => {
 
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [111]);
 
         const slot = {
           getSlotElementId: () => 'interstitial',
@@ -256,13 +274,14 @@ describe('Interstitial module', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
         expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
       });
+
       it('should remove the hidden class from the interstitial container if there is an ad', async function () {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', []);
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, []);
 
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
@@ -270,32 +289,26 @@ describe('Interstitial module', () => {
         // Wait for the event loop to finish, so the interstitial can be shown or hidden.
         await new Promise(resolve => setTimeout(resolve, 0));
 
-        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
+        expect([...interstitialAd.classList]).to.not.contain(interstitialHidingClass);
       });
+
       it('should show the interstitial when slot is rendered and hide it after timeout', async function () {
-        const clock = Sinon.useFakeTimers();
+        const clock = sandbox.useFakeTimers();
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
 
-        await initInterstitialModule(
-          jsDomWindow,
-          'production',
-          noopLogger,
-          'interstitial',
-          [],
-          1000
-        );
+        initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [], 1000);
 
         slotRenderedCallback(slotRenderEndedEvent, listenerSpy);
         slotLoadedCallback(slotLoadedEvent, listenerSpy);
 
-        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.false;
+        expect([...interstitialAd.classList]).to.not.contain(interstitialHidingClass);
 
         // tickAsync() needed because pubads().getSlots() and destroySlots(...) trigger microtasks / async work internally
         await clock.tickAsync(1100);
-        expect(interstitialAd.classList.contains(interstitialHidingClass)).to.be.true;
+        expect([...interstitialAd.classList]).to.contains(interstitialHidingClass);
         clock.restore();
       });
 
@@ -303,14 +316,13 @@ describe('Interstitial module', () => {
         jsDomWindow.document.body.appendChild(interstitialAd);
         jsDomWindow.document.body.appendChild(closeButton);
 
+        const setConfigSpy = sandbox.spy(slot, 'setConfig');
         const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
-        const slot = {
-          getSlotElementId: () => 'interstitial',
-          setConfig: sandbox.spy()
-        } as unknown as googletag.IAdSlot;
         jsDomWindow.googletag.pubads().getSlots = () => [slot];
 
-        await initInterstitialModule(jsDomWindow, 'production', noopLogger, 'interstitial', [111]);
+        await initInterstitialModule(jsDomWindow, 'production', noopLogger, interstitialDomId, [
+          111
+        ]);
 
         const allowedEvent: googletag.events.ISlotRenderEndedEvent = {
           slot,
@@ -319,7 +331,7 @@ describe('Interstitial module', () => {
         } as googletag.events.ISlotRenderEndedEvent;
 
         slotRenderedCallback(allowedEvent, listenerSpy);
-        expect(slot.setConfig).to.have.been.calledWith({ safeFrame: { forceSafeFrame: true } });
+        expect(setConfigSpy).to.have.been.calledWith({ safeFrame: { forceSafeFrame: true } });
       });
     });
   });
