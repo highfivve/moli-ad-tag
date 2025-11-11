@@ -1206,6 +1206,13 @@ export namespace MoliRuntime {
 
   export interface AudienceTargeting {
     /**
+     * ## User ID
+     *
+     * Let publishers provide their own user IDs for audience targeting.
+     */
+    userId?: string;
+
+    /**
      * ## Hashed Email (HEM)
      *
      * Let publishers provide hashed email addresses of logged-in users to audience targeting.
