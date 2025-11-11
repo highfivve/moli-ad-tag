@@ -23,13 +23,17 @@ export const MoliAnalytics = (): IModule => {
         url: moliAnalyticsConfig.url,
         batchSize: moliAnalyticsConfig.batchSize,
         events: {
-          // TODO implement
+          // TODO postindustria implement
           auctionEnd(request) {
-            return {};
+            return {
+              // userId: context.audience?.userId TODO highifivve wait until the HEM pr is merged
+            };
           },
-          // TODO implement
+          // TODO postindustria implement
           bidWon(response) {
-            return {};
+            return {
+              // userId: context.audience?.userId TODO highifivve  wait until the HEM pr is merged
+            };
           }
         }
       }
