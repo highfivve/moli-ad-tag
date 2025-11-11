@@ -52,7 +52,7 @@ export const criteoEnrichWithFpd =
     }
 
     return [
-      ...bidderConfigs,
+      ...bidderConfigs.filter(config => !config.options.bidders.every(b => b === 'criteo')),
       {
         options: {
           bidders: ['criteo'],
