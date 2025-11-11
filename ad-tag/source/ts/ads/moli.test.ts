@@ -677,6 +677,33 @@ describe('moli', () => {
 
       expect(adTag.getRuntimeConfig().audience).to.be.deep.equal(expectedAudience);
     });
+
+    it('audience should be available at runtime in module', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const config = newEmptyConfig(defaultSlots);
+      const expectedAudience: MoliRuntime.AudienceTargeting = {
+        userId: 'test',
+        hem: { sha256: 'test_sha256' }
+      };
+      let audience: MoliRuntime.AudienceTargeting | undefined;
+
+      const initStep: InitStep = mkInitStep('fake-init', context => {
+        audience = context.runtimeConfig__.audience;
+        return Promise.resolve();
+      });
+
+      const module: IModule = {
+        ...fakeModule,
+        initSteps__: (): InitStep[] => [initStep]
+      };
+
+      adTag.setAudience(expectedAudience);
+      adTag.registerModule(module);
+      await adTag.configure(config);
+      await adTag.requestAds();
+
+      expect(audience).to.be.deep.equal(expectedAudience);
+    });
   });
 
   describe('setAdUnitPathVariables', () => {
