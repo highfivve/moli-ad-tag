@@ -2,6 +2,7 @@ import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
 import { getBrowserStorageValue } from 'ad-tag/util/localStorage';
+import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 
 const interstitialContainerSelector = '[data-ref="h5v-interstitial"]';
 const interstitialCloseButtonSelector = '[data-ref="h5v-interstitial-close"]';
@@ -12,7 +13,10 @@ const interstitialHidingClass = 'h5v-interstitial--hidden';
  * disallowed: an advertiser that brings its own creative was rendered
  * standard: a regular creative was loaded
  */
-type RenderEventResult = 'empty' | 'disallowed' | 'standard';
+type RenderEventResult = {
+  readonly result: 'empty' | 'disallowed' | 'standard';
+  readonly slot: googletag.IAdSlot | null;
+};
 
 /**
  * Called when the iframe gets rendered and where our logic for disallowed advertisers with special formats is.
@@ -29,12 +33,12 @@ const interstitialRenderedEvent = (
       }
 
       if (event.isEmpty) {
-        resolve('empty');
+        resolve({ result: 'empty', slot: event.slot });
       } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
-        resolve('disallowed');
+        resolve({ result: 'disallowed', slot: event.slot });
       } else {
         event.slot.setConfig({ safeFrame: { forceSafeFrame: true } });
-        resolve('standard');
+        resolve({ result: 'standard', slot: event.slot });
       }
       window.googletag.pubads().removeEventListener('slotRenderEnded', listener);
     };
@@ -116,18 +120,22 @@ export const initInterstitialModule = (
       closeInterstitial();
     });
 
-    const onRenderResult = (renderResult: RenderEventResult): Promise<void> => {
+    const onRenderResult = ({ result, slot }: RenderEventResult): Promise<void> => {
       // false means that the slot should not be destroyed. If it's not false,
       // we receive the renderEndedEvent, which grants us access to the slot
       // that should be destroyed
-      log.debug(interstitial, `result ${renderResult}`);
+      log.debug(interstitial, `result ${result}`);
 
-      if (renderResult === 'disallowed' || renderResult === 'empty') {
+      if (
+        result === 'disallowed' ||
+        result === 'empty' ||
+        (slot && isGamInterstitial(slot, window))
+      ) {
         log.debug(interstitial, 'hide interstitial container');
         hideAdSlot(interstitialAdContainer);
 
         return Promise.resolve();
-      } else if (renderResult === 'standard') {
+      } else if (result === 'standard') {
         showAdSlot(interstitialAdContainer);
 
         if (closeAutomaticallyAfterMs) {
@@ -140,10 +148,10 @@ export const initInterstitialModule = (
         // wait for the results
         const interstitialOnLoadEventPromise = interstitialOnLoadEvent(interstitialDomId, window);
         return interstitialRenderedEvent(interstitialDomId, disallowedAdvertiserIds, window)
-          .then(result =>
-            result === 'empty' || result === 'disallowed'
-              ? Promise.resolve(result)
-              : interstitialOnLoadEventPromise.then(() => result)
+          .then(renderResult =>
+            renderResult.result === 'empty' || renderResult.result === 'disallowed'
+              ? Promise.resolve(renderResult)
+              : interstitialOnLoadEventPromise.then(() => renderResult)
           )
           .then(onRenderResult);
       }
@@ -155,20 +163,20 @@ export const initInterstitialModule = (
         const interstitialOnLoadEventPromise = interstitialOnLoadEvent(interstitialDomId, window);
 
         interstitialRenderedEvent(interstitialDomId, disallowedAdvertiserIds, window)
-          .then(result =>
-            result === 'empty' || result === 'disallowed'
-              ? Promise.resolve(result)
-              : interstitialOnLoadEventPromise.then(() => result)
+          .then(renderResult =>
+            renderResult.result === 'empty' || renderResult.result === 'disallowed'
+              ? Promise.resolve(renderResult)
+              : interstitialOnLoadEventPromise.then(() => renderResult)
           )
           .then(onRenderResult);
         break;
       case 'test':
         if (!!getBrowserStorageValue('test-interstitial', localStorage)) {
           // if test mode for interstitial is enabled, fake a render event
-          onRenderResult('standard');
+          onRenderResult({ result: 'standard', slot: null });
         } else {
           // if test mode for interstitial is not enabled, we treat it as empty (hidden)
-          onRenderResult('empty');
+          onRenderResult({ result: 'empty', slot: null });
         }
         break;
       default:

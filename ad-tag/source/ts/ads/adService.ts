@@ -247,7 +247,7 @@ export class AdService {
     }
 
     // amazon a9
-    if (config.a9 && env === 'production' && isGam) {
+    if (config.a9 && config.a9.enabled !== false && env === 'production' && isGam) {
       init.push(a9Init(config.a9, this.assetService));
       configure.push(a9Configure(config.a9, config.schain));
       configure.push(a9PublisherAudiences(config.a9, runtimeConfig.audience));
