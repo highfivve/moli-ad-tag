@@ -25,6 +25,7 @@ import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { getDeviceLabel } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
+import { loadFeed } from './feed';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -1046,6 +1047,9 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
     openConsole: openConsole,
     getAssetLoaderService: getAssetLoaderService,
     addEventListener: eventService.addEventListener,
-    removeEventListener: eventService.removeEventListener
+    removeEventListener: eventService.removeEventListener,
+    loadFeed(options: Moli.FeedOptions): Promise<void> {
+      return loadFeed(options, window, getLogger(null, window));
+    }
   };
 };
