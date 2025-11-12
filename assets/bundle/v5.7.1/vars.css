@@ -1,0 +1,59 @@
+/** provided by publisher or generated through external system */
+/** sticky footer ad global variables */
+:root {
+  --h5v-sticky-footer-bg: #f0f0f0;
+  --h5v-sticky-footer-close-clickable-area: -20px;
+  --h5v-sticky-footer-z-index: 900;
+}
+
+/** sticky footer ad variables for slim-width design */
+:root {
+  --h5v-sticky-footer-box-shadow: 0 -1px 1px 0 rgba(0, 0, 0, 0.2);
+  --h5v-sticky-footer-container-transform: translate(-50%);
+  --h5v-sticky-footer-container-left: 50%;
+  --h5v-sticky-footer-container-width: fit-content;
+  --h5v-sticky-footer-container-padding: 0;
+  --h5v-sticky-footer-container-display-on-hidden: none;
+  --h5v-sticky-footer-container-transition-on-hidden: none;
+  --h5v-sticky-footer-button-border-radius: 12px 0 0 0;
+  --h5v-sticky-footer-button-padding: 0.1rem 0.5rem;
+}
+
+@media (--h5v-desktop) {
+  :root {
+    --h5v-sticky-footer-button-border-radius: 12px 12px 0 0;
+  }
+}
+
+/** sticky header ad - height variables */
+:root {
+  /** depending on your ad layout this may range from 50px to 250px */
+  --h5v-header-ad-height: 100px;
+}
+
+/** sticky header ad - navbar variables */
+:root {
+  --h5v-navbar-height: 48px;
+  /** if you have a none sticky navbar configuration */
+  --h5v-header-ad-navbar-hidden-top: 0;
+}
+
+/** sticky header ad - close button vars */
+:root {
+  /** set this to none if you don't want a close button */
+  --h5v-header-ad-close-button: block;
+  --h5v-header-ad-bg: #fff;
+}
+
+/** sticky header ad - plate styling */
+:root {
+  --h5v-header-ad-border: 1px solid rgb(243, 244, 246);
+  --h5v-header-ad-shadow: 0 0 #0000, 0 0 #0000, 0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+:root {
+  /** placeholder */
+  --h5v-placeholder-width: 80px;
+  --h5v-placeholder-content: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='UTF-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg enable-background='new 0 0 365.635 91.598' version='1.1' viewBox='0 0 365.64 91.598' xml:space='preserve' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='27 0 0 0 0 25 0 52 0 77 27 77 27 52 30 52 30 77 57 77 57 52 57 41 57 25 27 25'/%3E%3Crect x='30' width='27' height='22'/%3E%3Cpath d='m109.86 76.895v-21.91c0-7.137-3.426-10.706-9.92-10.706-6.994 0-11.775 6.137-11.775 13.061v19.556h-4.496v-51.887h4.496v20.198h1.429c1.854-2.784 5.852-4.925 10.774-4.925 8.852 0 13.988 5.424 13.988 13.917v22.695l-4.496 1e-3z'/%3E%3Cpath d='m123.65 31.219v-6.21h5.496v6.21h-5.496zm4.997 45.676h-4.496v-35.686h4.496v35.686z'/%3E%3Cpath d='m170.05 41.209v33.902c0 9.991-5.924 16.485-16.129 16.485-8.851 0-14.489-3.854-15.701-10.491h4.424c1.143 4.781 5.424 6.495 11.206 6.495 7.922 0 11.704-4.641 11.704-12.489v-3.141h-1.428c-2.069 2.567-5.78 4.924-11.348 4.924-9.85 0-15.986-7.852-15.986-18.271s6.138-18.342 15.986-18.342c5.781 0 9.42 2.427 11.49 4.925h1.427v-3.998l4.355 1e-3zm-4.496 17.415c0-7.423-3.782-14.345-12.276-14.345-7.562 0-11.988 5.709-11.988 14.345 0 8.564 4.426 14.274 11.988 14.274 8.493 0 12.276-6.851 12.276-14.274z'/%3E%3Cpath d='m206.4 76.895v-21.91c0-7.137-3.426-10.706-9.92-10.706-6.995 0-11.775 6.137-11.775 13.061v19.556h-4.496v-51.887h4.496v20.198h1.428c1.854-2.784 5.853-4.925 10.775-4.925 8.852 0 13.988 5.424 13.988 13.917v22.695l-4.496 1e-3z'/%3E%3Cpath d='m228.05 45.207v31.688h-4.496v-31.688h-7.422v-3.998h7.422v-4.709c0-7.851 3.568-11.491 11.42-11.491h3.996v3.997h-3.854c-5.426 0-7.066 2.998-7.066 7.494v4.71h10.35v3.998l-10.35-1e-3zm18.984-13.988v-6.21h5.495v6.21h-5.495zm4.995 45.676h-4.495v-35.686h4.495v35.686z'/%3E%3Cpath d='M258.515,41.209h4.712l10.919,31.262H277l10.635-31.262h4.639L280.07,76.894h-9.063L258.515,41.209z'/%3E%3Cpath d='m296.59 41.209h4.71l10.92 31.262h2.854l10.637-31.262h4.639l-12.205 35.686h-9.062l-12.493-35.686z'/%3E%3Cpath d='m365.64 58.267h-27.763v1c0 8.85 4.925 14.56 12.488 14.56 5.496 0 8.923-2.498 10.063-6.352h4.496c-1.071 5.708-5.995 10.348-14.561 10.348-10.99 0-16.984-8.493-16.984-19.198 0-10.848 6.208-18.342 16.915-18.342 10.348 0 15.344 8.137 15.344 16.559l2e-3 1.425zm-27.479-3.996h22.839c-0.356-5.067-4.068-9.992-10.849-9.992-7.349 0-11.132 4.854-11.99 9.992z'/%3E%3C/svg%3E%0A");
+}
