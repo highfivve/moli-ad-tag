@@ -259,7 +259,12 @@ export class AdReload implements IModule {
 
       if (trackingSlotAllowed) {
         // add tracking for non-excluded slots
-        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback, advertiserId);
+        this.adVisibilityService!.trackSlot(
+          googleTagSlot,
+          reloadAdSlotCallback,
+          advertiserId,
+          companyIds
+        );
       } else if (slotAlreadyTracked) {
         this.adVisibilityService!.removeSlotTracking(googleTagSlot);
       }
