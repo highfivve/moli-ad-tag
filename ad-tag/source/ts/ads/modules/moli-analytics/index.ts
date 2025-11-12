@@ -26,13 +26,13 @@ export const MoliAnalytics = (): IModule => {
           // TODO postindustria implement
           auctionEnd(request) {
             return {
-              // userId: context.audience?.userId TODO highifivve wait until the HEM pr is merged
+              userId: context.runtimeConfig__.audience?.userId
             };
           },
           // TODO postindustria implement
           bidWon(response) {
             return {
-              // userId: context.audience?.userId TODO highifivve  wait until the HEM pr is merged
+              userId: context.runtimeConfig__.audience?.userId
             };
           }
         }
