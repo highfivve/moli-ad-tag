@@ -74,7 +74,16 @@ export const trackLoginEvent = (
 
   // use modern URL type
   const url = new URL(`https://xdn-ttp.de/lns/import-event-${moduleConfig.login.partner}`);
-  url.searchParams.append('guid', moduleConfig.login.guid);
+
+  const hemSha256 = context.runtimeConfig__.audience?.hem?.sha256;
+  // prefer the runtime config over static module config
+  const resolvedGuid =
+    hemSha256 !== undefined ? context.window__.btoa(hemSha256) : moduleConfig.login.guid;
+  if (resolvedGuid === undefined) {
+    logger.warn('emetriq', 'no guid provided for login event tracking');
+    return;
+  }
+  url.searchParams.append('guid', resolvedGuid);
 
   // consent parameter
   if (context.tcData__.gdprApplies) {

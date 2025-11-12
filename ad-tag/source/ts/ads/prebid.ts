@@ -23,11 +23,12 @@ import { SupplyChainObject } from '../types/supplyChainObject';
 import { resolveStoredRequestIdInOrtb2Object } from '../util/resolveStoredRequestIdInOrtb2Object';
 import { createTestSlots } from '../util/test-slots';
 import { AssetLoadMethod, IAssetLoaderService } from '../util/assetLoaderService';
-import IPrebidJs = prebidjs.IPrebidJs;
 import { AdServer, AdSlot, headerbidding, schain } from '../types/moliConfig';
 import { packageJson } from 'ad-tag/gen/packageJson';
 import { prebidOutstreamRenderer } from 'ad-tag/ads/prebid-outstream';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
+import { criteoEnrichWithFpd } from 'ad-tag/ads/criteo';
+import { enrichId5WithFpd } from 'ad-tag/ads/id5';
 
 // if we forget to remove prebid from the configuration.
 // the timeout is the longest timeout in buckets if available, or arbitrary otherwise
@@ -246,7 +247,7 @@ const createdAdUnits = (
 
 export const prebidInit = (assetService: IAssetLoaderService): InitStep =>
   mkInitStep('prebid-init', context => {
-    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+    context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
 
     // enable configured analytic adapters in prebid. Note that longstanding analytics vendors usually have no
     // prebid analytics adapter, but rather are loaded through an external script. Like pubstack and assertive yield do this
@@ -285,7 +286,8 @@ export const prebidRemoveAdUnits = (prebidConfig: headerbidding.PrebidConfig): C
         // only try to remove ad units if the configuration is set to not use ephemeral ad units and prebid is defined
         // at all
         if (prebidConfig.ephemeralAdUnits !== true) {
-          context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+          context.window__.pbjs =
+            context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
           const adUnits = context.window__.pbjs.adUnits;
           if (adUnits) {
             context.window__.pbjs.que.push(() => {
@@ -303,7 +305,8 @@ export const prebidClearAuction = (): ConfigureStep => {
     'prebid-clear-auction',
     (context: AdPipelineContext) =>
       new Promise<void>(resolve => {
-        context.window__.pbjs = context.window__.pbjs || ({ que: [] } as unknown as IPrebidJs);
+        context.window__.pbjs =
+          context.window__.pbjs || ({ que: [] } as unknown as prebidjs.IPrebidJs);
         context.window__.pbjs.que.push(() => {
           context.logger__.debug('Prebid', 'Clearing prebid auctions');
           context.window__.pbjs.clearAllAuctions();
@@ -356,18 +359,30 @@ export const prebidConfigure = (
             });
           }
 
-          // TODO is is where additional HEM configuration would be added for id5 from the runtimeConfig.audience
+          const enrichedUserIds = enrichId5WithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync?.userIds
+          );
           context.window__.pbjs.setConfig({
             ...prebidConfig.config,
             // global schain configuration
             ...{ schain: mkSupplyChainConfig([schainConfig.supplyChainStartNode]) },
             // for module priceFloors
-            ...{ floors: prebidConfig.config.floors || {} }
+            ...{ floors: prebidConfig.config.floors || {} },
+            // if there
+            ...{
+              userSync: prebidConfig.config.userSync
+                ? { ...prebidConfig.config.userSync, userIds: enrichedUserIds }
+                : prebidConfig.config.userSync
+            }
           });
 
-          // TODO bidder specific HEM configuration, e.g. for Criteo, would be done here.
-          // set additional bidder configurations if provided
-          prebidConfig.bidderConfigs?.forEach(({ options, merge }) => {
+          const bidderConfigs = criteoEnrichWithFpd(
+            context.runtimeConfig__,
+            prebidConfig.config.userSync,
+            context.window__.location.host
+          )(prebidConfig.bidderConfigs || []);
+          bidderConfigs.forEach(({ options, merge }) => {
             context.window__.pbjs.setBidderConfig(options, merge);
           });
 
