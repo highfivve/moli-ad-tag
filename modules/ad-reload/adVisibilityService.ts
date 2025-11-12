@@ -94,11 +94,13 @@ export class AdVisibilityService {
    * @param slot              a refreshable ad slot with "visibility" trigger
    * @param refreshCallback   callback fired when the configured duration is up
    * @param advertiserId      optional advertiser id to check against disallowed advertisers
+   * @param companyIds       optional list of company ids to check against disallowed advertisers
    */
   trackSlot(
     slot: googletag.IAdSlot,
     refreshCallback: (slot: googletag.IAdSlot) => void,
-    advertiserId?: number
+    advertiserId?: number,
+    companyIds?: number[]
   ): void {
     const slotDomId = slot.getSlotElementId();
     const domElement = this.observedDomElementForSlot(slot);
@@ -120,10 +122,15 @@ export class AdVisibilityService {
             (override.disableAllAdVisibilityChecks ||
               !(
                 override.disabledAdVisibilityCheckAdvertiserIds &&
-                override.disabledAdVisibilityCheckAdvertiserIds.length > 0 &&
-                advertiserId
+                override.disabledAdVisibilityCheckAdvertiserIds.length > 0
               ) ||
-              override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)))
+              // either the advertiserId or the companyIds match the disabled list
+              (advertiserId &&
+                override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)) ||
+              (companyIds &&
+                override.disabledAdVisibilityCheckAdvertiserIds.some(id =>
+                  companyIds.includes(id)
+                ))))
             ? this.window.performance.now()
             : undefined,
         durationVisibleSum: 0,
