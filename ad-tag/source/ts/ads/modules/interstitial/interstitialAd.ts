@@ -36,6 +36,11 @@ const interstitialRenderedEvent = (
         resolve({ result: 'empty', slot: event.slot });
       } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve({ result: 'disallowed', slot: event.slot });
+      } else if (
+        event.companyIds &&
+        disallowedAdvertiserIds.some(id => event.companyIds?.includes(id))
+      ) {
+        resolve({ result: 'disallowed', slot: event.slot });
       } else {
         event.slot.setConfig({ safeFrame: { forceSafeFrame: true } });
         resolve({ result: 'standard', slot: event.slot });

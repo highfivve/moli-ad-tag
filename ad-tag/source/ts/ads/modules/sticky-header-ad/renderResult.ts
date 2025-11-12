@@ -30,6 +30,11 @@ export const adRenderResult = (
       // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
       if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve('disallowed');
+      } else if (
+        event.companyIds &&
+        disallowedAdvertiserIds.some(id => event.companyIds?.includes(id))
+      ) {
+        resolve('disallowed');
       } else if (event.isEmpty) {
         resolve('empty');
       } else {
