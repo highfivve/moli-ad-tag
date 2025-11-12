@@ -50,6 +50,7 @@ const renderFooterAd =
       event.isEmpty ||
       // don't render for excluded advertiser ids
       (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) ||
+      (!!event.companyIds && disallowedAdvertiserIds.some(id => event.companyIds?.includes(id))) ||
       // minimum is 768px width - h5_footer_ad only on desktop!
       window.matchMedia('(max-width: 767px)').matches
     ) {

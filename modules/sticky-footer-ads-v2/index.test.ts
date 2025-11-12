@@ -331,7 +331,7 @@ describe('Sticky-footer-v2 Module', () => {
       expect(closeButton.childNodes.length).to.eq(1);
     });
 
-    it('should hide the stickAd if the advertiser was disallowed', async function () {
+    it('should hide the stickAd if the advertiser was disallowed and id is equal to advertiser id', async function () {
       jsDomWindow.document.body.appendChild(adSticky);
       jsDomWindow.document.body.appendChild(closeButton);
 
@@ -363,6 +363,38 @@ describe('Sticky-footer-v2 Module', () => {
 
       // Wait for the event loop to finish, so the adSticky can be shown or hidden.
       await new Promise(resolve => setTimeout(resolve, 0));
+      expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
+    });
+
+    it('should hide the stickyAd if the advertiser is disallowed and id is inside companyIds array', async function () {
+      // Arrange: Add sticky ad container and close button to the DOM
+      const adSticky = jsDomWindow.document.createElement('div');
+      adSticky.setAttribute('data-ref', 'h5v-sticky-ad');
+      jsDomWindow.document.body.appendChild(adSticky);
+
+      const closeButton = jsDomWindow.document.createElement('div');
+      closeButton.setAttribute('data-ref', 'h5v-sticky-ad-close');
+      jsDomWindow.document.body.appendChild(closeButton);
+
+      const listenerSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'addEventListener');
+
+      await initAdSticky(jsDomWindow, 'production', noopLogger, 'h5v-sticky-ad', [123], 'close');
+
+      const slotRenderEndedEvent: googletag.events.ISlotRenderEndedEvent = {
+        slot: { getSlotElementId: () => 'h5v-sticky-ad' } as googletag.IAdSlot,
+        advertiserId: 456,
+        companyIds: [123],
+        campaignId: 42
+      } as googletag.events.ISlotRenderEndedEvent;
+
+      const slotRenderedCallback: (event: googletag.events.ISlotRenderEndedEvent) => void =
+        listenerSpy.args.find(
+          args => (args[0] as string) === 'slotRenderEnded'
+        )?.[1] as unknown as (event: googletag.events.ISlotRenderEndedEvent) => void;
+
+      slotRenderedCallback(slotRenderEndedEvent);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       expect(adSticky.classList.contains('h5v-footerAd--hidden')).to.be.true;
     });
 
