@@ -37,6 +37,11 @@ const stickyRenderedEvent = (
         resolve('empty');
       } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
         resolve('disallowed');
+      } else if (
+        !!event.companyIds &&
+        disallowedAdvertiserIds.some(id => event.companyIds?.includes(id))
+      ) {
+        resolve('disallowed');
       } else {
         resolve('standard');
       }
