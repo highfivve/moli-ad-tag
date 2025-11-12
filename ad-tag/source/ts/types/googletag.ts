@@ -286,11 +286,18 @@ export namespace googletag {
       isEmpty: boolean;
 
       /**
-       * Advertiser ID of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.
+       * Advertiser ID of the rendered ad (Google).
        *
        * Viewable in ad manager: https://admanager.google.com/33559401#admin/companyDetail/id=[advertiserId]
        */
       advertiserId?: number;
+
+      /**
+       * Company ID - former advertiser id - of the rendered ad.
+       *
+       * Viewable in ad manager: https://admanager.google.com/33559401#admin/companyDetail/id=[companyId]
+       */
+      companyIds?: number[];
 
       /**
        * Campaign ID (Order ID) of the rendered ad. Value is null for empty slots, backfill ads or creatives rendered by services other than pubads service.

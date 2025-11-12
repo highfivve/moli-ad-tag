@@ -208,6 +208,7 @@ export class AdReload implements IModule {
         slot: googleTagSlot,
         campaignId,
         advertiserId,
+        companyIds,
         yieldGroupIds,
         isEmpty: slotIsEmpty
       } = renderEndedEvent;
@@ -216,7 +217,8 @@ export class AdReload implements IModule {
       const orderIdNotExcluded = !campaignId || config.excludeOrderIds.indexOf(campaignId) === -1;
       const orderIdIncluded = !!campaignId && config.includeOrderIds.indexOf(campaignId) > -1;
       const advertiserIdIncluded =
-        !!advertiserId && config.includeAdvertiserIds.indexOf(advertiserId) > -1;
+        (!!advertiserId && config.includeAdvertiserIds.indexOf(advertiserId) > -1) ||
+        (!!companyIds && config.includeAdvertiserIds.some(id => companyIds.includes(id)));
 
       const yieldGroupIdIncluded =
         !!yieldGroupIds && config.includeYieldGroupIds.some(id => yieldGroupIds.indexOf(id) > -1);
