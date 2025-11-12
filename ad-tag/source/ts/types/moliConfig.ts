@@ -1523,6 +1523,66 @@ export namespace modules {
     }
   }
 
+  /**
+   * ## Community Feed
+   *
+   * The Community Feed module allows to serve content from an external system into a defined space
+   * on the page.
+   *
+   * ### How it works
+   *
+   * The external content is fetched as HTML and may contain additional styles and javascript.
+   * The html is directly inserted in the defined container.
+   *
+   * - Why not iframes? Making iframes responsive is a pain.
+   * - Why not use a shadow DOM? Works better, but some styles like font-size still propagate into the
+   *   shadow DOM, which makes it hard to control the layout. Also, the ad tag cannot interact with
+   *   elements inside the shadow DOM and the other way around. This makes it impossible to build
+   *   programmatic ad slots into the feed
+   */
+  export namespace feed {
+    /**
+     * The ad tag may load one or more feeds on the page, while each feed can also target multiple
+     * elements on the page and fill them.
+     *
+     * In the future dynamic feed configurations maybe added through an API, so publishers can decide
+     * what is loaded or when.
+     */
+    export interface FeedConfig extends IModuleConfig {
+      readonly enabled: boolean;
+
+      /**
+       * List of feeds that should be loaded and filled on the page.
+       */
+      readonly feeds: FeedOptions[];
+    }
+
+    /**
+     * Options for a single feed to be loaded and filled.
+     */
+    export interface FeedOptions {
+      /**
+       * uniquely identifies the feed. Most of the feed content configuration is specific to this id.
+       */
+      readonly feedId: string;
+
+      /**
+       * Optional list of keywords that are added to the feed request and may be used to custom
+       * the content loaded through the feed. Useful for contextual targeting.
+       */
+      readonly keywords?: string[];
+
+      /**
+       * CSS selector that is used to identify all elements on the page that should be filled by this
+       * feed. The primary use case would be a div container identified by an ID, e.g. `#community-feed`.
+       *
+       * If the feed returns single elements that should be placed into multiple elements on the page,
+       * the selector may match multiple elements. E.g. a class selector `.community-feed-item`.
+       */
+      readonly selector: string;
+    }
+  }
+
   export namespace pubstack {
     export interface PubstackConfig extends IModuleConfig {
       /**
@@ -2937,6 +2997,7 @@ export namespace modules {
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
     readonly zeotap?: zeotap.ZeotapModuleConfig;
     readonly interstitial?: interstitial.InterstitialModuleConfig;
+    readonly feed?: feed.FeedConfig;
   }
 }
 
