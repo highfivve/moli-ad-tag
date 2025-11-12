@@ -68,6 +68,7 @@ export type AdPipelineContext = {
    * The config used for the ad configuration run
    */
   readonly config__: MoliConfig;
+
   /**
    * The runtime config. It contains all values that have been set through the javascript API
    */

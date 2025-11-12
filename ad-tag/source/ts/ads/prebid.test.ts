@@ -295,13 +295,87 @@ describe('prebid', () => {
               nodes: [dummySchainConfig.supplyChainStartNode]
             }
           }
-        }
+        },
+        ...{ userSync: pbjsTestConfig.userSync }
       });
     });
 
     describe('setBidderConfig options', () => {
       it('should not call pbjs.setBidderConfig if bidderConfigs is not defined', () => {
         const step = prebidConfigure(moliPrebidTestConfig, dummySchainConfig);
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+
+        step(adPipelineContext(), []);
+        expect(setBidderConfigSpy).to.have.not.been.called;
+      });
+
+      it('should call pbjs.setBidderConfig for criteo if the criteo userId is present and there is new runtime fpd', () => {
+        // given
+        const context = {
+          ...adPipelineContext(),
+          runtimeConfig__: {
+            ...emptyRuntimeConfig,
+            audience: { hem: { sha256: 'sha256-hash', sha256ofMD5: 'sha256ofmd5-hash' } }
+          }
+        };
+        const expectedCriteoConfig = {
+          bidders: ['criteo'],
+          config: {
+            ortb2: {
+              user: {
+                ext: {
+                  data: {
+                    eids: [
+                      {
+                        source: context.window__.location.host,
+                        uids: [
+                          {
+                            id: context.runtimeConfig__.audience.hem.sha256,
+                            atype: 3,
+                            ext: { stype: 'hemsha256' }
+                          },
+                          {
+                            id: context.runtimeConfig__.audience.hem.sha256ofMD5,
+                            atype: 3,
+                            ext: { stype: 'hemsha256md5' }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        // when
+        const step = prebidConfigure(
+          {
+            ...moliPrebidTestConfig,
+            config: { userSync: { userIds: [{ name: 'criteo' }] } }
+          },
+          dummySchainConfig
+        );
+        const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
+        step(context, []);
+
+        // then
+        expect(setBidderConfigSpy).to.have.been.calledOnce;
+        expect(setBidderConfigSpy.firstCall).to.have.been.calledWithExactly(
+          expectedCriteoConfig,
+          true
+        );
+      });
+
+      it('should not call pbjs.setBidderConfig if the criteo userId is present but there is not new runtime information', () => {
+        const step = prebidConfigure(
+          {
+            ...moliPrebidTestConfig,
+            config: { userSync: { userIds: [{ name: 'criteo' }] } }
+          },
+          dummySchainConfig
+        );
         const setBidderConfigSpy = sandbox.spy(dom.window.pbjs, 'setBidderConfig');
 
         step(adPipelineContext(), []);

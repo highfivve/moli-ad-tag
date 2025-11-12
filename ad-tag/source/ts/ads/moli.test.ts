@@ -52,6 +52,27 @@ describe('moli', () => {
   let defaultSlots: AdSlot[];
   let defaultConfig: MoliConfig;
 
+  const fakeModule: IModule = {
+    description: '',
+    moduleType: 'cmp',
+    name: '',
+    config__(): Object | null {
+      return null;
+    },
+    configure__(): void {
+      return;
+    },
+    initSteps__(): InitStep[] {
+      return [];
+    },
+    configureSteps__(): ConfigureStep[] {
+      return [];
+    },
+    prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+      return [];
+    }
+  };
+
   beforeEach(() => {
     dom = createDom();
     jsDomWindow = dom.window as any;
@@ -224,27 +245,6 @@ describe('moli', () => {
   });
 
   describe('registerModule()', () => {
-    const fakeModule: IModule = {
-      description: '',
-      moduleType: 'cmp',
-      name: '',
-      config__(): Object | null {
-        return null;
-      },
-      configure__(): void {
-        return;
-      },
-      initSteps__(): InitStep[] {
-        return [];
-      },
-      configureSteps__(): ConfigureStep[] {
-        return [];
-      },
-      prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-        return [];
-      }
-    };
-
     it('should init modules in the requestAds call', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const config = newEmptyConfig(defaultSlots);
@@ -662,6 +662,47 @@ describe('moli', () => {
 
         expect(refreshSpy).to.have.been.calledOnce;
       });
+    });
+  });
+
+  describe('setAudience', () => {
+    it('should add the target audience to the runtime config', () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const expectedAudience: MoliRuntime.AudienceTargeting = {
+        userId: 'test',
+        hem: { sha256: 'test_sha256' }
+      };
+
+      adTag.setAudience(expectedAudience);
+
+      expect(adTag.getRuntimeConfig().audience).to.be.deep.equal(expectedAudience);
+    });
+
+    it('audience should be available at runtime in module', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const config = newEmptyConfig(defaultSlots);
+      const expectedAudience: MoliRuntime.AudienceTargeting = {
+        userId: 'test',
+        hem: { sha256: 'test_sha256' }
+      };
+      let audience: MoliRuntime.AudienceTargeting | undefined;
+
+      const initStep: InitStep = mkInitStep('fake-init', context => {
+        audience = context.runtimeConfig__.audience;
+        return Promise.resolve();
+      });
+
+      const module: IModule = {
+        ...fakeModule,
+        initSteps__: (): InitStep[] => [initStep]
+      };
+
+      adTag.setAudience(expectedAudience);
+      adTag.registerModule(module);
+      await adTag.configure(config);
+      await adTag.requestAds();
+
+      expect(audience).to.be.deep.equal(expectedAudience);
     });
   });
 

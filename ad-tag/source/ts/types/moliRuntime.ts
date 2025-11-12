@@ -104,6 +104,13 @@ export namespace MoliRuntime {
     setAdUnitPathVariables(variables: AdUnitPathVariables): void;
 
     /**
+     * Provide additional information about the user visiting the page.
+     *
+     * @param audience contains all advertising relevant information about the user
+     */
+    setAudience(audience: AudienceTargeting): void;
+
+    /**
      * Resolves an ad unit path by replacing the ad unit path variables.
      * Optionally the networkChildId can be removed.
      *
@@ -417,6 +424,15 @@ export namespace MoliRuntime {
      * `requestAds` is called.
      */
     adUnitPathVariables: AdUnitPathVariables;
+
+    /**
+     * Publishers may set additional audience targeting during runtime, which can be used for
+     *
+     * - ORTB2 enrichments, e.g. age, gender or yob
+     * - UserID module configuration, e.g. for hashed emails (HEM)
+     * - DMP module configuration, e.g. for age, gender or custom segments
+     */
+    audience?: AudienceTargeting;
 
     /**
      * A list of ad slots that should be refreshed
@@ -1187,4 +1203,40 @@ export namespace MoliRuntime {
      */
     moli: MoliRuntime.MoliTag;
   };
+
+  export interface AudienceTargeting {
+    /**
+     * ## User ID
+     *
+     * Let publishers provide their own user IDs for audience targeting.
+     */
+    userId?: string;
+
+    /**
+     * ## Hashed Email (HEM)
+     *
+     * Let publishers provide hashed email addresses of logged-in users to audience targeting.
+     */
+    hem?: {
+      /**
+       * hashed email address (sha-256) of the logged-in user, provided by the publisher
+       */
+      readonly md5?: string;
+
+      /**
+       * hashed email address (sha-1) of the logged-in user, provided by the publisher
+       */
+      readonly sha1?: string;
+
+      /**
+       * hashed email address (sha-256) of the logged-in user, provided by the publisher
+       */
+      readonly sha256?: string;
+
+      /**
+       * hased email address(sha-256 of m5) of the logged-in user, provided by NMMS
+       */
+      readonly sha256ofMD5?: string;
+    };
+  }
 }
