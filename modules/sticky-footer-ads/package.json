@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/module-sticky-footer-ads",
-  "version": "4.28.15",
+  "version": "4.28.16",
   "license": "Apache-2.0",
   "description": "Business logic for sticky footer ads",
   "main": "./lib/index.js",
@@ -47,6 +47,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@highfivve/ad-tag": "4.28.15"
+    "@highfivve/ad-tag": "4.28.16"
   }
 }
