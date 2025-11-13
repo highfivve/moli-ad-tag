@@ -1,4 +1,4 @@
-import { googletag } from '../../../lib';
+import { googletag } from 'ad-tag/types/googletag';
 import ISlotRenderEndedEvent = googletag.events.ISlotRenderEndedEvent;
 
 /**
