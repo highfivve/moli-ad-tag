@@ -3,6 +3,7 @@ import type { googletag } from 'ad-tag/types/googletag';
 import type { modules } from 'ad-tag/types/moliConfig';
 import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 /**
  * Tracks the visibility of ad slots.
@@ -126,13 +127,10 @@ export class AdVisibilityService {
                 override.disabledAdVisibilityCheckAdvertiserIds &&
                 override.disabledAdVisibilityCheckAdvertiserIds.length > 0
               ) ||
-              // either the advertiserId or the companyIds match the disabled list
-              (advertiserId &&
-                override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)) ||
-              (companyIds &&
-                override.disabledAdVisibilityCheckAdvertiserIds.some(id =>
-                  companyIds.includes(id)
-                ))))
+              isAdvertiserIncluded(
+                { advertiserId, companyIds } as any,
+                override.disabledAdVisibilityCheckAdvertiserIds
+              )))
             ? this.window.performance.now()
             : undefined,
         durationVisibleSum: 0,

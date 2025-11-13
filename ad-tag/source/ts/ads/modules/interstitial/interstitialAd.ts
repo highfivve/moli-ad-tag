@@ -3,6 +3,7 @@ import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
 import { getBrowserStorageValue } from 'ad-tag/util/localStorage';
 import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 const interstitialContainerSelector = '[data-ref="h5v-interstitial"]';
 const interstitialCloseButtonSelector = '[data-ref="h5v-interstitial-close"]';
@@ -34,12 +35,7 @@ const interstitialRenderedEvent = (
 
       if (event.isEmpty) {
         resolve({ result: 'empty', slot: event.slot });
-      } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
-        resolve({ result: 'disallowed', slot: event.slot });
-      } else if (
-        event.companyIds &&
-        disallowedAdvertiserIds.some(id => event.companyIds?.includes(id))
-      ) {
+      } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve({ result: 'disallowed', slot: event.slot });
       } else {
         event.slot.setConfig({ safeFrame: { forceSafeFrame: true } });
