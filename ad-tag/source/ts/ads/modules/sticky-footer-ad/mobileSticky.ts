@@ -1,6 +1,7 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { Environment } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 const adStickyContainerDataRef = '[data-ref=sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=sticky-ad-close]';
@@ -49,12 +50,7 @@ const stickyRenderedEvent = (
           hideAdSlot(adSticky);
         }
         resolve('empty');
-      } else if (!!event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
-        resolve('disallowed');
-      } else if (
-        !!event.companyIds &&
-        disallowedAdvertiserIds.some(id => event.companyIds?.includes(id))
-      ) {
+      } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
       } else {
         resolve('standard');
