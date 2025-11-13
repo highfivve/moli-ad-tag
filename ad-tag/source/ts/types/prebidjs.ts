@@ -5858,6 +5858,7 @@ export namespace prebidjs {
     | IYieldlabBid
     | ISeedtagBid
     | ISeedingAllianceBid
+    | ISmileWantedBid
     | ISpotXBid
     | IShowHeroesBid
     | IStroeerCoreBid
