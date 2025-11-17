@@ -541,8 +541,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -579,8 +577,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -627,8 +623,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -662,8 +656,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -727,8 +719,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -778,8 +768,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -829,8 +817,6 @@ describe('google ad manager', () => {
         expect(addServiceSpy).to.have.been.calledOnce;
         expect(addServiceSpy).to.have.been.calledOnceWithExactly(dom.window.googletag.pubads());
         expect(setSlotConfigSpy).to.have.been.calledOnceWithExactly(gptSlotSettings);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnce;
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
         expect(displaySpy).to.have.been.calledOnce;
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
@@ -923,16 +909,16 @@ describe('google ad manager', () => {
       expect(slotDefinitions).to.have.length(0);
     });
 
-    describe('collapseEmptyDiv configuration', () => {
+    describe('gpt slot configuration', () => {
       let adSlotStub: googletag.IAdSlot;
-      let setCollapseEmptyDivSpy: Sinon.SinonSpy;
+      let setConfig: Sinon.SinonSpy;
 
       beforeEach(() => {
         adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
-        setCollapseEmptyDivSpy = sandbox.spy(adSlotStub, 'setCollapseEmptyDiv');
+        setConfig = sandbox.spy(adSlotStub, 'setConfig');
       });
 
-      const defineSlots = (collapseEmptyDiv?: boolean) => {
+      const defineSlots = (collapseDiv?: googletag.GptCollapseDivBehavior) => {
         matchMediaStub.returns({ matches: true } as MediaQueryList);
         sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
 
@@ -941,22 +927,24 @@ describe('google ad manager', () => {
         const filterSlotStub = sandbox.stub(context.labelConfigService__, 'filterSlot');
         filterSlotStub.returns(true);
 
-        return step(context, [{ ...adSlot, gpt: { collapseEmptyDiv } }]);
+        return step(context, [{ ...adSlot, gpt: { collapseDiv } }]);
       };
 
       it('should set to true if undefined', async () => {
-        await defineSlots(undefined);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
+        await defineSlots();
+        expect(setConfig).to.have.been.calledOnceWithExactly({ collapseDiv: undefined });
       });
 
-      it('should set to true if true', async () => {
-        await defineSlots(true);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(true);
-      });
-
-      it('should set to false if false', async () => {
-        await defineSlots(false);
-        expect(setCollapseEmptyDivSpy).to.have.been.calledOnceWithExactly(false);
+      const behaviours: googletag.GptCollapseDivBehavior[] = [
+        'DISABLED',
+        'ON_NO_FILL',
+        'BEFORE_FETCH'
+      ];
+      behaviours.forEach(behaviour => {
+        it(`should set to ${behaviour} if ${behaviour}`, async () => {
+          await defineSlots(behaviour);
+          expect(setConfig).to.have.been.calledOnceWithExactly({ collapseDiv: behaviour });
+        });
       });
     });
   });
