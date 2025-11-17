@@ -485,7 +485,6 @@ export const gptDefineSlots =
                 moliSlot.gpt
               );
             }
-            adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
             adSlot.addService(context.window__.googletag.pubads());
             context.logger__.debug(
               'GAM',
