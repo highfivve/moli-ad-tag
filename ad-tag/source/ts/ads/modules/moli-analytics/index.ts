@@ -1,13 +1,8 @@
 import { IModule } from 'ad-tag/types/module';
-import {
-  AdPipelineContext,
-  ConfigureStep,
-  InitStep,
-  mkInitStep,
-  PrepareRequestAdsStep
-} from 'ad-tag/ads/adPipeline';
+import { AdPipelineContext, ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
+import S2SConfig = prebidjs.server.S2SConfig;
 
 export const MoliAnalytics = (): IModule => {
   let moliAnalyticsConfig: modules.moliAnalytics.MoliAnalyticsConfig | null = null;
@@ -55,7 +50,6 @@ export const MoliAnalytics = (): IModule => {
     if (meta && meta.content && pubstackABTestValues.includes(meta.content)) {
       return meta.content;
     }
-
     return null;
   };
 
@@ -63,10 +57,9 @@ export const MoliAnalytics = (): IModule => {
     const pubstackAbTestVariant = pubstackABTestVariant(ctx);
     const moliConfigAbTestVariant = ctx.config__.version; // TODO replace with variant only when available
 
-    ctx.window__.pbjs.setConfig({
+    ctx.window__.pbjs.mergeConfig({
       analyticsLabels: {
-        pubstack_ab_test: pubstackAbTestVariant,
-        moli_config_ab_test: moliConfigAbTestVariant
+        ab_test_cohort: moliConfigAbTestVariant || pubstackAbTestVariant
       }
     });
     return Promise.resolve();
