@@ -1931,6 +1931,10 @@ export namespace prebidjs {
           /** information will come from the server */
           configVersion?: string;
 
+          /** Optional AB-test variant.
+           * Is defined when the moliConfig version belongs to an A/B test variant. Otherwise it's the main variant */
+          configVariant?: string;
+
           /** information set by the configureFromEndpoint bundle */
           configLabel?: string;
         };
@@ -2848,6 +2852,13 @@ export namespace prebidjs {
      * @see https://docs.prebid.org/dev-docs/publisher-api-reference/aliasBidder.html
      */
     readonly gvlMapping?: Record<string, number>;
+
+    /**
+     * Prebid events can carry an object of analytics labels that annotate the payload with experiment, rollout, or
+     * troubleshooting context. Custom labels can be declared through this configuration.
+     * @see https://docs.prebid.org/dev-docs/integrate-with-the-prebid-analytics-api
+     */
+    readonly analyticsLabels?: Object;
   }
 
   /**

@@ -42,6 +42,36 @@ export const MoliAnalytics = (): IModule => {
     return Promise.resolve();
   };
 
+  const pubstackABTestVariant = (ctx: AdPipelineContext): string | null => {
+    // these map to key-value values in GAM. Other values are not configured there and don't need to be sent along
+    const pubstackABTestValues = ['0', '1', '2', '3'];
+    if (ctx.env__ === 'test') {
+      return null;
+    }
+    // find meta data
+    const meta = ctx.window__.document.head.querySelector<HTMLMetaElement>(
+      'meta[name="pbstck_context:pbstck_ab_test"]'
+    );
+    if (meta && meta.content && pubstackABTestValues.includes(meta.content)) {
+      return meta.content;
+    }
+
+    return null;
+  };
+
+  const setAnalyticsLabels = (ctx: AdPipelineContext): Promise<void> => {
+    const pubstackAbTestVariant = pubstackABTestVariant(ctx);
+    const moliConfigAbTestVariant = ctx.config__.version; // TODO replace with variant only when available
+
+    ctx.window__.pbjs.setConfig({
+      analyticsLabels: {
+        pubstack_ab_test: pubstackAbTestVariant,
+        moli_config_ab_test: moliConfigAbTestVariant
+      }
+    });
+    return Promise.resolve();
+  };
+
   return {
     name: 'moli-analytics',
     description: 'ad events tracking and analytics module',
@@ -61,6 +91,9 @@ export const MoliAnalytics = (): IModule => {
       return [
         mkInitStep('moli-analytics-init', (context: AdPipelineContext) =>
           initMoliAnalytics(context)
+        ),
+        mkInitStep('set-analytics-labels', (context: AdPipelineContext) =>
+          setAnalyticsLabels(context)
         )
       ];
     },
