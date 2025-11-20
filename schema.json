@@ -293,6 +293,9 @@
           "$ref": "#/definitions/bucket.GlobalBucketConfig",
           "description": "Configure bucketing behaviour"
         },
+        "configVersion": {
+          "$ref": "#/definitions/MoliConfigVersion"
+        },
         "consent": {
           "$ref": "#/definitions/consent.ConsentConfig"
         },
@@ -362,6 +365,28 @@
       "required": [
         "slots",
         "schain"
+      ],
+      "type": "object"
+    },
+    "MoliConfigVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "description": "The version identifier including the variant if present. e.g. \"1\" or \"1_a\"",
+          "type": "string"
+        },
+        "versionNumber": {
+          "description": "The version number",
+          "type": "number"
+        },
+        "versionVariant": {
+          "description": "Optional AB-test variant. Is defined when the moliConfig version belongs to an A/B test variant. Otherwise it's the main variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "versionNumber",
+        "identifier"
       ],
       "type": "object"
     },

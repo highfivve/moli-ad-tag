@@ -455,7 +455,7 @@ describe('AdVisibilityService', () => {
         expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
       });
 
-      it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received for specified advertiserId', () => {
+      it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received for specified advertiserId (in case advertiserId is returned as advertiserId in the slotRenderEnded event)', () => {
         const { slot } = createAndStubAdSlot(adSlotDomId);
 
         // performance.now needs to be stubbed "by hand":
@@ -481,6 +481,42 @@ describe('AdVisibilityService', () => {
 
         const refreshCallback = sandbox.stub();
         service.trackSlot(slot, refreshCallback, 55555);
+
+        sandbox.clock.tick(adRefreshInterval + tickInterval);
+
+        // initial call for ad slot visibility + 21 calls accounting for 1..20s + final call when refreshing the slot
+        // note that no slot visibility event had to be fired.
+        expect(performanceNowStub).to.have.callCount(1 + 21 + 1);
+
+        expect(refreshCallback).to.have.been.calledOnceWithExactly(slot);
+      });
+
+      it('disableVisibilityChecks: should call the refreshCallback even if slot is out of viewport and NO googletag visibility event was received for specified advertiserId (in case advertiserId is returned as id inside the companyIds array in the slotRenderEnded event)', () => {
+        const { slot } = createAndStubAdSlot(adSlotDomId);
+
+        // performance.now needs to be stubbed "by hand":
+        // https://www.bountysource.com/issues/50501976-fake-timers-in-sinon-doesn-t-work-with-performance-now
+        const performanceNowStub = sandbox.stub(jsDomWindow.performance, 'now');
+
+        Array.from({ length: 30 }).forEach((_, index) => {
+          performanceNowStub.onCall(index).returns((index + 1) * 1000);
+        });
+
+        const service = createAdVisibilityService(
+          false,
+          {},
+          {
+            [adSlotDomId]: {
+              variant: 'disabled',
+              disableAllAdVisibilityChecks: false,
+              disabledAdVisibilityCheckAdvertiserIds: [55555]
+            }
+          },
+          false
+        );
+
+        const refreshCallback = sandbox.stub();
+        service.trackSlot(slot, refreshCallback, 45678, [55555]);
 
         sandbox.clock.tick(adRefreshInterval + tickInterval);
 

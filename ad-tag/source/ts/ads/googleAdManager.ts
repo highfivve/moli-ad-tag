@@ -481,10 +481,10 @@ export const gptDefineSlots =
               adSlot.setConfig(moliSlot.gpt);
               context.logger__.debug(
                 'GAM',
-                `Add slot settings: [AdSlot] ${adSlot} [Settings] ${moliSlot.gpt}`
+                `Add slot settings: [AdSlot] ${adSlot.getSlotElementId()}`,
+                moliSlot.gpt
               );
             }
-            adSlot.setCollapseEmptyDiv(moliSlot.gpt?.collapseEmptyDiv !== false);
             adSlot.addService(context.window__.googletag.pubads());
             context.logger__.debug(
               'GAM',

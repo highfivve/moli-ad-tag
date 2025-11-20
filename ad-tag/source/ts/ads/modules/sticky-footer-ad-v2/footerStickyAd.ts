@@ -1,6 +1,7 @@
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { Environment } from 'ad-tag/types/moliConfig';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 const adStickyContainerDataRef = '[data-ref=h5v-sticky-ad]';
 const adStickyCloseButtonDataRef = '[data-ref=h5v-sticky-ad-close]';
@@ -35,7 +36,7 @@ const stickyRenderedEvent = (
 
       if (event.isEmpty) {
         resolve('empty');
-      } else if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+      } else if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
       } else {
         resolve('standard');

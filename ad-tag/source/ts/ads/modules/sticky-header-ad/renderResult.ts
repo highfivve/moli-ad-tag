@@ -1,6 +1,7 @@
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import { AdSlot } from 'ad-tag/types/moliConfig';
 import { googletag } from 'ad-tag/types/googletag';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 /**
  * empty: mobile sticky load was empty
@@ -28,7 +29,7 @@ export const adRenderResult = (
       }
 
       // very similar to the footer sticky ads implementation. Can be merged once GD-8007 is on its way
-      if (event.advertiserId && disallowedAdvertiserIds.includes(event.advertiserId)) {
+      if (isAdvertiserIncluded(event, disallowedAdvertiserIds)) {
         resolve('disallowed');
       } else if (event.isEmpty) {
         resolve('empty');

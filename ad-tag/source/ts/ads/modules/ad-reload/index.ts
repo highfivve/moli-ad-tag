@@ -62,6 +62,7 @@ import { AdSlot, googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import { IntersectionObserverWindow } from 'ad-tag/types/dom';
 import { isNotNull } from 'ad-tag/util/arrayUtils';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 /**
  * This module can be used to refresh ads based on user activity after a certain amount of time that the ad was visible.
  */
@@ -208,6 +209,7 @@ export class AdReload implements IModule {
         slot: googleTagSlot,
         campaignId,
         advertiserId,
+        companyIds,
         yieldGroupIds,
         isEmpty: slotIsEmpty
       } = renderEndedEvent;
@@ -215,8 +217,10 @@ export class AdReload implements IModule {
       const slotIsMonitored = slotsToMonitor.indexOf(slotDomId) > -1;
       const orderIdNotExcluded = !campaignId || config.excludeOrderIds.indexOf(campaignId) === -1;
       const orderIdIncluded = !!campaignId && config.includeOrderIds.indexOf(campaignId) > -1;
-      const advertiserIdIncluded =
-        !!advertiserId && config.includeAdvertiserIds.indexOf(advertiserId) > -1;
+      const advertiserIdIncluded = isAdvertiserIncluded(
+        renderEndedEvent,
+        config.includeAdvertiserIds
+      );
 
       const yieldGroupIdIncluded =
         !!yieldGroupIds && config.includeYieldGroupIds.some(id => yieldGroupIds.indexOf(id) > -1);
@@ -257,7 +261,12 @@ export class AdReload implements IModule {
 
       if (trackingSlotAllowed) {
         // add tracking for non-excluded slots
-        this.adVisibilityService!.trackSlot(googleTagSlot, reloadAdSlotCallback, advertiserId);
+        this.adVisibilityService!.trackSlot(
+          googleTagSlot,
+          reloadAdSlotCallback,
+          advertiserId,
+          companyIds
+        );
       } else if (slotAlreadyTracked) {
         this.adVisibilityService!.removeSlotTracking(googleTagSlot);
       }

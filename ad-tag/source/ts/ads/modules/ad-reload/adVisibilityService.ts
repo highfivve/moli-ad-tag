@@ -3,6 +3,7 @@ import type { googletag } from 'ad-tag/types/googletag';
 import type { modules } from 'ad-tag/types/moliConfig';
 import type { MoliRuntime } from 'ad-tag/types/moliRuntime';
 import type { IntersectionObserverWindow } from 'ad-tag/types/dom';
+import { isAdvertiserIncluded } from 'ad-tag/ads/isAdvertiserIncluded';
 
 /**
  * Tracks the visibility of ad slots.
@@ -96,11 +97,13 @@ export class AdVisibilityService {
    * @param slot              a refreshable ad slot with "visibility" trigger
    * @param refreshCallback   callback fired when the configured duration is up
    * @param advertiserId      optional advertiser id to check against disallowed advertisers
+   * @param companyIds       optional list of company ids to check against disallowed advertisers
    */
   trackSlot(
     slot: googletag.IAdSlot,
     refreshCallback: (slot: googletag.IAdSlot) => void,
-    advertiserId?: number
+    advertiserId?: number,
+    companyIds?: number[]
   ): void {
     const slotDomId = slot.getSlotElementId();
     const domElement = this.observedDomElementForSlot(slot);
@@ -122,10 +125,12 @@ export class AdVisibilityService {
             (override.disableAllAdVisibilityChecks ||
               !(
                 override.disabledAdVisibilityCheckAdvertiserIds &&
-                override.disabledAdVisibilityCheckAdvertiserIds.length > 0 &&
-                advertiserId
+                override.disabledAdVisibilityCheckAdvertiserIds.length > 0
               ) ||
-              override.disabledAdVisibilityCheckAdvertiserIds.includes(advertiserId)))
+              isAdvertiserIncluded(
+                { advertiserId, companyIds } as any,
+                override.disabledAdVisibilityCheckAdvertiserIds
+              )))
             ? this.window.performance.now()
             : undefined,
         durationVisibleSum: 0,

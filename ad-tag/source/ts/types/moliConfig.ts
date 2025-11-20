@@ -95,6 +95,22 @@ export interface AdSlot {
   readonly a9?: headerbidding.A9AdSlotConfig;
 }
 
+export type MoliConfigVersion = {
+  /**
+   * The version number
+   */
+  readonly versionNumber: number;
+
+  /** Optional AB-test variant.
+   * Is defined when the moliConfig version belongs to an A/B test variant. Otherwise it's the main variant */
+  readonly versionVariant?: string;
+
+  /**
+   * The version identifier including the variant if present. e.g. "1" or "1_a"
+   */
+  readonly identifier: string;
+};
+
 /*
  * Parameters to configure the resolve function
  */
@@ -2874,6 +2890,8 @@ export interface MoliConfig {
    * that is served to the client. This is useful for debugging purposes.
    */
   readonly version?: string;
+
+  readonly configVersion?: MoliConfigVersion;
 
   /**
    * default is `gam`
