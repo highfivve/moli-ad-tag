@@ -57,6 +57,8 @@ type IGlobalConfigProps = {
   labelConfigService: LabelConfigService;
   windowResizeService: WindowResizeService;
   themingService: ThemingService;
+  showOverlays: boolean;
+  onShowOverlaysChange: (show: boolean) => void;
 };
 type AdDensityState = {
   totalAdDensity: number | undefined;
@@ -367,6 +369,12 @@ export class GlobalConfig
                         ▶ Override to test
                       </button>
                     )}
+                    <button
+                      className="MoliDebug-button MoliDebug-button--blue"
+                      onClick={() => this.props.onShowOverlaysChange(!this.props.showOverlays)}
+                    >
+                      {this.props.showOverlays ? '◀ Hide overlays' : '▶ Show overlays'}
+                    </button>
                   </div>
                   {interstitialSlot && (
                     <div className="MoliDebug-tagContainer">
@@ -383,7 +391,9 @@ export class GlobalConfig
                         </button>
                       ) : (
                         <button
-                          className={`MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText ${!isEnvironmentOverridden ? 'MoliDebug-button--disabled' : ''}`}
+                          className={`MoliDebug-button MoliDebug-button--yellow MoliDebug-button--greyText ${
+                            !isEnvironmentOverridden ? 'MoliDebug-button--disabled' : ''
+                          }`}
                           onClick={() => {
                             setBrowserStorageValue(interstitialTestKey, 'true', localStorage);
                             this.refreshInterstitial(interstitialSlot);
@@ -504,15 +514,16 @@ export class GlobalConfig
                     </label>
                   </div>
 
-                  {config.slots.map((slot, index) =>
-                    this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
-                      <div key={index}>
-                        <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
-                        <strong>{slot.domId}</strong>
-                        <AdSlotConfig labelConfigService={labelConfigService} slot={slot} />
-                      </div>
-                    ) : null
-                  )}
+                  {this.props.showOverlays &&
+                    config.slots.map((slot, index) =>
+                      this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
+                        <div key={index}>
+                          <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
+                          <strong>{slot.domId}</strong>
+                          <AdSlotConfig labelConfigService={labelConfigService} slot={slot} />
+                        </div>
+                      ) : null
+                    )}
                 </div>
               )}
             </div>
