@@ -55,7 +55,7 @@ export const MoliAnalytics = (): IModule => {
 
   const setAnalyticsLabels = (ctx: AdPipelineContext): Promise<void> => {
     const pubstackAbTestVariant = pubstackABTestVariant(ctx);
-    const moliConfigAbTestVariant = ctx.config__.version; // TODO replace with variant only when available
+    const moliConfigAbTestVariant = ctx.config__.configVersion?.versionVariant;
 
     ctx.window__.pbjs.mergeConfig({
       analyticsLabels: {
