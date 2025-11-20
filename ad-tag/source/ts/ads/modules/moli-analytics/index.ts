@@ -1,5 +1,11 @@
 import { IModule } from 'ad-tag/types/module';
-import { AdPipelineContext, ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from 'ad-tag/ads/adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  mkInitStep,
+  PrepareRequestAdsStep
+} from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
 import S2SConfig = prebidjs.server.S2SConfig;

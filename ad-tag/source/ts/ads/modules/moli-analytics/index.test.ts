@@ -74,4 +74,24 @@ describe('Moli Analytics Module', () => {
       });
     expect(loadAnalyticsStub).to.not.have.been.called;
   });
+
+  it('set analytics label from moli config', async () => {
+    const setLabelsStub = sandbox.stub(jsDomWindow.pbjs, 'mergeConfig');
+    const expectedConfig = {
+      analyticsLabels: {
+        ab_test_cohort: '1'
+      }
+    };
+
+    const module = createAndConfigureModule(defaultUrl, defaultBatchSize);
+    await module.initSteps__()[1]({
+      ...defaultContext,
+      config__: {
+        ...defaultContext.config__,
+        configVersion: { versionNumber: 1, versionVariant: '1', identifier: '1_1' }
+      }
+    });
+
+    expect(setLabelsStub).to.have.been.calledOnceWithExactly(expectedConfig);
+  });
 });
