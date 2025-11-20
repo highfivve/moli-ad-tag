@@ -43,7 +43,7 @@ export const MoliAnalytics = (): IModule => {
     return Promise.resolve();
   };
 
-  const pubstackABTestVariant = (ctx: AdPipelineContext): string | null => {
+  const extractPubstackAbTestCohort = (ctx: AdPipelineContext): string | null => {
     // these map to key-value values in GAM. Other values are not configured there and don't need to be sent along
     const pubstackABTestValues = ['0', '1', '2', '3'];
     if (ctx.env__ === 'test') {
@@ -60,12 +60,13 @@ export const MoliAnalytics = (): IModule => {
   };
 
   const setAnalyticsLabels = (ctx: AdPipelineContext): Promise<void> => {
-    const pubstackAbTestVariant = pubstackABTestVariant(ctx);
-    const moliConfigAbTestVariant = ctx.config__.configVersion?.versionVariant;
+    const pubstackAbTestCohort = extractPubstackAbTestCohort(ctx);
+    const moliConfigVariant = ctx.config__.configVersion?.versionVariant;
 
     ctx.window__.pbjs.mergeConfig({
       analyticsLabels: {
-        ab_test_cohort: moliConfigAbTestVariant || pubstackAbTestVariant
+        pubstackAbCohort: pubstackAbTestCohort,
+        configVariant: moliConfigVariant
       }
     });
     return Promise.resolve();

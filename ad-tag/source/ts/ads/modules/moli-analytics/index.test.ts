@@ -79,7 +79,8 @@ describe('Moli Analytics Module', () => {
     const setLabelsStub = sandbox.stub(jsDomWindow.pbjs, 'mergeConfig');
     const expectedConfig = {
       analyticsLabels: {
-        ab_test_cohort: '1'
+        pubstackAbCohort: null,
+        configVariant: '1'
       }
     };
 
