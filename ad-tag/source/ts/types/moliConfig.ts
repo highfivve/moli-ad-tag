@@ -1556,6 +1556,20 @@ export namespace modules {
     }
   }
 
+  export namespace moliAnalytics {
+    export interface MoliAnalyticsConfig extends IModuleConfig {
+      /**
+       *  Data collection URL
+       */
+      readonly url: string;
+
+      /**
+       * Number of events to collect into a single call to handler or url. Defaults to 1
+       */
+      readonly batchSize?: number;
+    }
+  }
+
   /**
    * @see https://geoedge.com/
    */
@@ -2861,6 +2875,7 @@ export namespace modules {
     readonly lazyload?: lazyload.LazyLoadModuleConfig;
     readonly zeotap?: zeotap.ZeotapModuleConfig;
     readonly interstitial?: interstitial.InterstitialModuleConfig;
+    readonly moliAnalytics?: moliAnalytics.MoliAnalyticsConfig;
   }
 }
 
