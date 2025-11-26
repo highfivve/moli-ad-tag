@@ -19,6 +19,7 @@
     "utiq",
     "yieldOptimization",
     "configureFromEndpoint",
-    "interstitialModule"
+    "interstitialModule",
+    "moliAnalytics"
   ]
 }
