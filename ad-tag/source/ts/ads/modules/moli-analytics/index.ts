@@ -8,7 +8,6 @@ import {
 } from 'ad-tag/ads/adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import S2SConfig = prebidjs.server.S2SConfig;
 
 export const MoliAnalytics = (): IModule => {
   let moliAnalyticsConfig: modules.moliAnalytics.MoliAnalyticsConfig | null = null;
@@ -39,7 +38,9 @@ export const MoliAnalytics = (): IModule => {
         }
       }
     };
-    context.window__.pbjs.enableAnalytics([genericAdapter]);
+    context.window__.pbjs.que.push(() => {
+      context.window__.pbjs.enableAnalytics([genericAdapter]);
+    });
     return Promise.resolve();
   };
 
@@ -63,12 +64,14 @@ export const MoliAnalytics = (): IModule => {
     const pubstackAbTestCohort = extractPubstackAbTestCohort(ctx);
     const moliConfigVariant = ctx.config__.configVersion?.versionVariant;
 
-    ctx.window__.pbjs.mergeConfig({
-      analyticsLabels: {
-        pubstackAbCohort: pubstackAbTestCohort,
-        configVariant: moliConfigVariant
-      }
-    });
+    ctx.window__.pbjs.que.push(() =>
+      ctx.window__.pbjs.mergeConfig({
+        analyticsLabels: {
+          pubstackAbCohort: pubstackAbTestCohort,
+          configVariant: moliConfigVariant
+        }
+      })
+    );
     return Promise.resolve();
   };
 
