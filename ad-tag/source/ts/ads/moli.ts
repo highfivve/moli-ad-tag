@@ -409,8 +409,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               sampleRate: state.reporting.sampleRate
                 ? state.reporting.sampleRate
                 : config.reporting && config.reporting.sampleRate
-                  ? config.reporting.sampleRate
-                  : 0,
+                ? config.reporting.sampleRate
+                : 0,
               reporters: [
                 ...(config.reporting ? config.reporting.reporters : []),
                 ...state.reporting.reporters
