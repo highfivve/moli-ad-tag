@@ -23,6 +23,14 @@ const isEnvironmentString = (environment: string): environment is Moli.Environme
 };
 
 /**
+ * Type guard to test whether a string is a valid AB test value (number between 1 and 100).
+ */
+const isValidAbTestValue = (value: string): boolean => {
+  const num = Number(value);
+  return !isNaN(num) && num >= 1 && num <= 100;
+};
+
+/**
  * Returns the active environment override. The precedence is defined via the array in getAllEnvironmentOverrides().
  */
 export const getActiveEnvironmentOverride = (window: Window): EnvironmentOverride | undefined =>
@@ -52,6 +60,38 @@ export const getAllEnvironmentOverrides = (window: Window): EnvironmentOverride[
   ]
     .map(({ source, environment }) =>
       !!environment && isEnvironmentString(environment) ? { source, environment } : undefined
+    )
+    .filter(isNotNull);
+};
+
+/**
+ * The AB test value can be set via query param, localStorage or sessionStorage.
+ * This allows us to force a specific AB test group for testing purposes.
+ *
+ * Example with query param:
+ * {@link https://local.h5v.eu:9000/?ABtest=42}
+ */
+export const getAbTestValues = (
+  window: Window,
+  abTestQueryParam: string,
+  abTestBrowserStorageKey: string
+): { source: 'queryParam' | 'sessionStorage' | 'localStorage'; value: string }[] => {
+  return [
+    {
+      source: 'queryParam' as const,
+      value: parseQueryString(window.location.search).get(abTestQueryParam)
+    },
+    {
+      source: 'sessionStorage' as const,
+      value: getBrowserStorageValue(abTestBrowserStorageKey, window.sessionStorage)
+    },
+    {
+      source: 'localStorage' as const,
+      value: getBrowserStorageValue(abTestBrowserStorageKey, window.localStorage)
+    }
+  ]
+    .map(({ source, value }) =>
+      !!value && isValidAbTestValue(value) ? { source, value } : undefined
     )
     .filter(isNotNull);
 };

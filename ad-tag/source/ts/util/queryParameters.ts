@@ -1,3 +1,4 @@
 export const QueryParameters = {
-  moliEnv: 'moliEnv'
+  moliEnv: 'moliEnv',
+  abTest: 'ABtest'
 };

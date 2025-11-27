@@ -1,5 +1,4 @@
 import { Moli } from '../types/moli';
-import { parseQueryString } from '../util/query';
 import {
   createAssetLoaderService,
   AssetLoadMethod,
@@ -17,6 +16,7 @@ import { IModule, metaFromModule, ModuleMeta } from '../types/module';
 import { AdService } from './adService';
 import { EventService } from './eventService';
 import {
+  getAbTestValues,
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
 } from '../util/environmentOverride';
@@ -25,6 +25,8 @@ import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
 import { getDeviceLabel } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
+import { QueryParameters } from '../util/queryParameters';
+import { BrowserStorageKeys } from '../util/browserStorageKeys';
 
 export const createMoliTag = (window: Window): Moli.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -407,8 +409,8 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
               sampleRate: state.reporting.sampleRate
                 ? state.reporting.sampleRate
                 : config.reporting && config.reporting.sampleRate
-                ? config.reporting.sampleRate
-                : 0,
+                  ? config.reporting.sampleRate
+                  : 0,
               reporters: [
                 ...(config.reporting ? config.reporting.reporters : []),
                 ...state.reporting.reporters
@@ -993,12 +995,10 @@ export const createMoliTag = (window: Window): Moli.MoliTag => {
    *
    */
   function setABtestTargeting(): void {
-    const key = 'ABtest';
-    const params = parseQueryString(window.location.search);
-    const param = params.get(key);
-    const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1;
-
-    setTargeting(key, abTest.toString());
+    const abTestValues = getAbTestValues(window, QueryParameters.abTest, BrowserStorageKeys.abTest);
+    const abTestValue =
+      abTestValues.length > 0 ? Number(abTestValues[0].value) : Math.floor(Math.random() * 100) + 1;
+    setTargeting(QueryParameters.abTest, abTestValue.toString());
   }
 
   function addDomainLabel(domainFromConfig?: string): void {
