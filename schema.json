@@ -1791,6 +1791,9 @@
         "confiant": {
           "$ref": "#/definitions/modules.confiant.ConfiantConfig"
         },
+        "custom": {
+          "$ref": "#/definitions/modules.custom.CustomModuleConfig"
+        },
         "emetriq": {
           "$ref": "#/definitions/modules.emetriq.EmetriqModuleConfig"
         },
@@ -2556,6 +2559,43 @@
       },
       "required": [
         "assetUrl",
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.custom.CustomModuleConfig": {
+      "additionalProperties": false,
+      "description": "## Custom Module Configuration\n\nThis module configuration allows the execute arbitrary javascript code. Late this may be extended to add arbitrary styles.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "inlineJs": {
+          "additionalProperties": false,
+          "description": "Inline JavaScript code that will be executed once per requestAds.",
+          "properties": {
+            "code": {
+              "description": "The JavaScript code to be executed.",
+              "type": "string"
+            },
+            "trigger": {
+              "description": "Defines when the code is executed.\n\n- `init`: executed only once in the init phase of the ad tag\n- `once-per-requestAds`: executed as a configure-step every time `moli.requestAds()` is called.",
+              "enum": [
+                "init",
+                "once-per-requestAds"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "trigger",
+            "code"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
         "enabled"
       ],
       "type": "object"
