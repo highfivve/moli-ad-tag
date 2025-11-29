@@ -2578,18 +2578,9 @@
             "code": {
               "description": "The JavaScript code to be executed.",
               "type": "string"
-            },
-            "trigger": {
-              "description": "Defines when the code is executed.\n\n- `init`: executed only once in the init phase of the ad tag\n- `once-per-requestAds`: executed as a configure-step every time `moli.requestAds()` is called.",
-              "enum": [
-                "init",
-                "once-per-requestAds"
-              ],
-              "type": "string"
             }
           },
           "required": [
-            "trigger",
             "code"
           ],
           "type": "object"
