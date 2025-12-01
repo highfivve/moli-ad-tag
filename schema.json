@@ -1791,6 +1791,9 @@
         "confiant": {
           "$ref": "#/definitions/modules.confiant.ConfiantConfig"
         },
+        "custom": {
+          "$ref": "#/definitions/modules.custom.CustomModuleConfig"
+        },
         "emetriq": {
           "$ref": "#/definitions/modules.emetriq.EmetriqModuleConfig"
         },
@@ -2556,6 +2559,34 @@
       },
       "required": [
         "assetUrl",
+        "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.custom.CustomModuleConfig": {
+      "additionalProperties": false,
+      "description": "## Custom Module Configuration\n\nThis module configuration allows the execute arbitrary javascript code. Late this may be extended to add arbitrary styles.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "inlineJs": {
+          "additionalProperties": false,
+          "description": "Inline JavaScript code that will be executed once per requestAds.",
+          "properties": {
+            "code": {
+              "description": "The JavaScript code to be executed.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
         "enabled"
       ],
       "type": "object"

@@ -2839,6 +2839,26 @@ export namespace modules {
     };
   }
 
+  export namespace custom {
+    /**
+     * ## Custom Module Configuration
+     *
+     * This module configuration allows the execute arbitrary javascript code.
+     * Late this may be extended to add arbitrary styles.
+     */
+    export interface CustomModuleConfig extends IModuleConfig {
+      /**
+       * Inline JavaScript code that will be executed once per requestAds.
+       */
+      readonly inlineJs?: {
+        /**
+         * The JavaScript code to be executed.
+         */
+        readonly code: string;
+      };
+    }
+  }
+
   export interface ModulesConfig {
     readonly adex?: adex.AdexConfig;
     readonly adReload?: adreload.AdReloadModuleConfig;
@@ -2846,6 +2866,7 @@ export namespace modules {
       | blocklist.BlocklistUrlsBlockingConfig
       | blocklist.BlocklistUrlsKeyValueConfig;
     readonly cleanup?: cleanup.CleanupModuleConfig;
+    readonly custom?: custom.CustomModuleConfig;
     readonly confiant?: confiant.ConfiantConfig;
     readonly emetriq?: emetriq.EmetriqModuleConfig;
     readonly geoedge?: geoedge.GeoEdgeModuleConfig;
