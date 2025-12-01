@@ -134,7 +134,8 @@ const config: Config = {
         entryPoints: [
           '../ad-tag/source/ts/ads/moli.ts',
           '../ad-tag/source/ts/types/moliConfig.ts',
-          '../ad-tag/source/ts/types/moliRuntime.ts'
+          '../ad-tag/source/ts/types/moliRuntime.ts',
+          '../ad-tag/source/ts/types/prebidjs.ts'
         ],
         tsconfig: '../tsconfig.json',
         out: 'docs/api',
@@ -154,18 +155,22 @@ const config: Config = {
           '../ad-tag/source/ts/ads/modules/ad-reload/index.ts',
           '../ad-tag/source/ts/ads/modules/adex/index.ts',
           '../ad-tag/source/ts/ads/modules/blocklist-url/index.ts',
+          '../ad-tag/source/ts/ads/modules/bridge/index.ts',
           '../ad-tag/source/ts/ads/modules/cleanup/index.ts',
           '../ad-tag/source/ts/ads/modules/confiant/index.ts',
+          '../ad-tag/source/ts/ads/modules/custom/index.ts',
           '../ad-tag/source/ts/ads/modules/emetriq/index.ts',
           '../ad-tag/source/ts/ads/modules/generic-skin/index.ts',
+          '../ad-tag/source/ts/ads/modules/geoedge/index.ts',
           '../ad-tag/source/ts/ads/modules/identitylink/index.ts',
+          '../ad-tag/source/ts/ads/modules/interstitial/index.ts',
           '../ad-tag/source/ts/ads/modules/lazy-load/index.ts',
           '../ad-tag/source/ts/ads/modules/prebid-first-party-data/index.ts',
           '../ad-tag/source/ts/ads/modules/pubstack/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-footer-ad-v2/index.ts',
-          '../ad-tag/source/ts/ads/modules/utiq/index.ts',
           '../ad-tag/source/ts/ads/modules/sticky-header-ad/index.ts',
+          '../ad-tag/source/ts/ads/modules/utiq/index.ts',
           '../ad-tag/source/ts/ads/modules/yield-optimization/index.ts',
           '../ad-tag/source/ts/ads/modules/zeotap/index.ts'
         ],
