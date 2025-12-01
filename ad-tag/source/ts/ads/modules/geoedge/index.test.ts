@@ -3,7 +3,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
 import { AdPipelineContext, InitStep } from '../../adPipeline';
-import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
+import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 import { geoEdge } from 'ad-tag/ads/modules/geoedge/index';

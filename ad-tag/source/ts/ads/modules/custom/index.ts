@@ -1,0 +1,57 @@
+/**
+ * # Custom Module
+ *
+ * Injects inline JavaScript from config into the window object during init.
+ *
+ * @module
+ */
+import { IModule } from 'ad-tag/types/module';
+import { AdPipelineContext, mkInitStep } from 'ad-tag/ads/adPipeline';
+import { modules } from 'ad-tag/types/moliConfig';
+
+const name = 'custom';
+
+export const customModule = (): IModule => {
+  let customConfig: modules.custom.CustomModuleConfig | null = null;
+
+  // Injects inline JS into window object
+  const injectInlineJs = (
+    context: AdPipelineContext,
+    config: modules.custom.CustomModuleConfig
+  ): Promise<void> => {
+    if (!config.inlineJs || !config.inlineJs.code) {
+      context.logger__?.warn(name, 'No inline JS code provided');
+      return Promise.resolve();
+    }
+    try {
+      // Option 1: Create a script element
+      const script = context.window__.document.createElement('script');
+      script.type = 'text/javascript';
+      script.innerHTML = config.inlineJs.code;
+      context.window__.document.head.appendChild(script);
+      context.logger__?.info(name, 'Injected inline JS');
+    } catch (e) {
+      context.logger__?.error(name, 'Failed to inject inline JS', e);
+    }
+    return Promise.resolve();
+  };
+
+  return {
+    name,
+    description: 'Injects custom inline JavaScript code',
+    moduleType: 'custom',
+    config__: () => null,
+    configure__: (moduleConfig?: modules.ModulesConfig) => {
+      if (moduleConfig?.custom?.enabled) {
+        customConfig = moduleConfig.custom;
+      }
+    },
+    initSteps__: () => {
+      const config = customConfig;
+      // Only add init step if enabled is true
+      return config ? [mkInitStep('custom-init', ctx => injectInlineJs(ctx, config))] : [];
+    },
+    configureSteps__: () => [],
+    prepareRequestAdsSteps__: () => []
+  };
+};

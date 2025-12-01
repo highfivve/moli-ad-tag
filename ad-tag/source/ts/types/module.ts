@@ -13,7 +13,8 @@ export type ModuleType =
   | 'dmp'
   | 'yield'
   | 'creatives'
-  | 'lazy-load';
+  | 'lazy-load'
+  | string;
 
 export interface IModule {
   readonly name: string;
