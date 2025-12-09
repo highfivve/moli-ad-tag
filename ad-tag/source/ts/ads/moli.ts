@@ -7,6 +7,7 @@ import { IModule } from '../types/module';
 import { AdService } from './adService';
 import { createEventService } from './eventService';
 import {
+  getAbTestValues,
   getActiveEnvironmentOverride,
   setEnvironmentOverrideInStorage
 } from '../util/environmentOverride';
@@ -21,6 +22,8 @@ import {
   MoliConfig,
   ResolveAdUnitPathOptions
 } from '../types/moliConfig';
+import { QueryParameters } from 'ad-tag/util/queryParameters';
+import { BrowserStorageKeys } from 'ad-tag/util/browserStorageKeys';
 
 export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
   // Creating the actual tag requires exactly one AdService instance
@@ -827,12 +830,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
    *
    */
   function setABtestTargeting(): void {
-    const key = 'ABtest';
-    const params = parseQueryString(window.location.search);
-    const param = params.get(key);
-    const abTest = param ? Number(param) : Math.floor(Math.random() * 100) + 1;
+    const abTestValues = getAbTestValues(window, QueryParameters.abTest, BrowserStorageKeys.abTest);
+    const abTestValue =
+      abTestValues.length > 0 ? Number(abTestValues[0].value) : Math.floor(Math.random() * 100) + 1;
 
-    setTargeting(key, abTest.toString());
+    setTargeting(QueryParameters.abTest, abTestValue.toString());
   }
 
   function addDomainLabel(domainFromConfig?: string): void {

@@ -169,7 +169,9 @@ describe('LabelConfigConfigService', () => {
       { labels: ['android', 'test'], deviceLabel: 'android' }
     ];
     inputs.forEach(({ labels, deviceLabel }) => {
-      it(`should return ${deviceLabel} if labels are [${labels.join(',')}] and matchMedia matches:true`, () => {
+      it(`should return ${deviceLabel} if labels are [${labels.join(
+        ','
+      )}] and matchMedia matches:true`, () => {
         matchMediaStub.returns({ matches: true } as MediaQueryList);
         const sizeConfigService = newLabelConfigService([labelConfigEntry1], labels);
         expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
@@ -177,7 +179,9 @@ describe('LabelConfigConfigService', () => {
     });
 
     inputs.forEach(({ labels, deviceLabel }) => {
-      it(`should return ${deviceLabel} if labels are [${labels.join(',')}] and matchMedia matches:false`, () => {
+      it(`should return ${deviceLabel} if labels are [${labels.join(
+        ','
+      )}] and matchMedia matches:false`, () => {
         matchMediaStub.returns({ matches: false } as MediaQueryList);
         const sizeConfigService = newLabelConfigService([labelConfigEntry1], labels);
         expect(sizeConfigService.getDeviceLabel()).to.be.equals(deviceLabel);
