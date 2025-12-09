@@ -72,7 +72,7 @@ describe('Skin Module', () => {
   const createGoogleAdSlot = (domId: string): googletag.IAdSlot =>
     ({
       getSlotElementId: () => domId
-    }) as googletag.IAdSlot;
+    } as googletag.IAdSlot);
 
   const genericBidResponse = (
     bidder: prebidjs.IGenericBidResponse['bidder'],
@@ -92,7 +92,7 @@ describe('Skin Module', () => {
       currency: 'EUR',
       originalCurrency: 'EUR',
       netRevenue: true
-    }) as prebidjs.IGenericBidResponse;
+    } as prebidjs.IGenericBidResponse);
 
   const dspxBidResponse = (cpm: number): prebidjs.IGenericBidResponse =>
     genericBidResponse(prebidjs.DSPX, cpm);
@@ -187,7 +187,7 @@ describe('Skin Module', () => {
         currency: 'EUR',
         originalCurrency: 'EUR',
         netRevenue: true
-      }) as prebidjs.IGumGumBidResponse;
+      } as prebidjs.IGumGumBidResponse);
     describe('gumgum mobile skin', () => {
       const config: modules.skin.SkinConfig = {
         formatFilter: [{ bidder: 'gumgum', auid: 59 }],
@@ -757,7 +757,7 @@ describe('Skin Module', () => {
           ({
             moliSlot: slot,
             adSlot: createGoogleAdSlot(slot.domId)
-          }) as MoliRuntime.SlotDefinition
+          } as MoliRuntime.SlotDefinition)
       );
 
       it('should set page level targeting if a skin is selected', () => {
