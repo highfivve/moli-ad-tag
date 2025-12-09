@@ -52,7 +52,9 @@ export function calculateAdDensity(
   // Calculate ad density as a percentage
   const totalAdDensity = Math.round((totalAdArea / pageArea) * 100);
   logMessages.push(
-    `Total ad area: ${totalAdArea}px², Page area: ${pageArea}px², Ad density: ${totalAdDensity.toFixed(2)}%`
+    `Total ad area: ${totalAdArea}px², Page area: ${pageArea}px², Ad density: ${totalAdDensity.toFixed(
+      2
+    )}%`
   );
 
   // Print all logs at once
