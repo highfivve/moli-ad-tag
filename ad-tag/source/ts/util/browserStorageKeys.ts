@@ -13,5 +13,6 @@ export const BrowserStorageKeys = {
    */
   moliVersion: 'moli-version',
   testSlotSize: (id: string) => `moli-test-slot-size-${id}`,
-  debugDelay: 'moli-debug-delay'
+  debugDelay: 'moli-debug-delay',
+  abTest: 'moli-ab-test'
 };
