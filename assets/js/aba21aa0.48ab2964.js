@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkthe_publisher_ad_tag=self.webpackChunkthe_publisher_ad_tag||[]).push([[35742],{27093:e=>{e.exports=JSON.parse('{"name":"docusaurus-plugin-content-docs","id":"default"}')}}]);
