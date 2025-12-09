@@ -911,9 +911,9 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       logger: previous?.logger ?? undefined,
       // all these values always depend on the current page and must be reset to an empty state
       adUnitPathVariables:
-        options?.keepTargeting === true ? previous?.adUnitPathVariables ?? {} : {},
-      labels: options?.keepTargeting === true ? previous?.labels ?? [] : [],
-      keyValues: options?.keepTargeting === true ? previous?.keyValues ?? {} : {},
+        options?.keepTargeting === true ? (previous?.adUnitPathVariables ?? {}) : {},
+      labels: options?.keepTargeting === true ? (previous?.labels ?? []) : [],
+      keyValues: options?.keepTargeting === true ? (previous?.keyValues ?? {}) : {},
       refreshSlots: [],
       refreshInfiniteSlots: [],
       refreshBuckets: [],

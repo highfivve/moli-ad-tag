@@ -37,7 +37,7 @@ describe('InterstitialContext', () => {
     ({
       slot: slotOverride ?? slot,
       isEmpty
-    } as googletag.events.ISlotRenderEndedEvent);
+    }) as googletag.events.ISlotRenderEndedEvent;
 
   const impressionViewableEvent: googletag.events.IImpressionViewableEvent = {
     slot
@@ -55,7 +55,7 @@ describe('InterstitialContext', () => {
     ({
       bidsReceived: bidsReceived,
       adUnitCodes: adUnitCodes
-    } as prebidjs.event.AuctionObject);
+    }) as prebidjs.event.AuctionObject;
 
   const interstitialContext = (priority: auction.InterstitialChannel[], ttl?: number) => {
     const config: auction.InterstitialConfig = {

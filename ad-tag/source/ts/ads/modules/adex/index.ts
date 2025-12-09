@@ -401,7 +401,7 @@ export class AdexModule implements IModule {
             (
               aggregator: modules.adex.AdexKeyValues,
               additionalKeyValue: modules.adex.AdexKeyValues
-            ) => ({ ...aggregator, ...additionalKeyValue } as modules.adex.AdexKeyValues),
+            ) => ({ ...aggregator, ...additionalKeyValue }) as modules.adex.AdexKeyValues,
             {}
           ),
           // single page mode for logged-in

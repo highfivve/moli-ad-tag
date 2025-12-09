@@ -60,18 +60,18 @@ describe('FrequencyCapping', () => {
       adUnitCode: string;
     }>
   ): prebidjs.event.AuctionObject =>
-    ({ bidderRequests: [{ bids: bidderRequestsBids }] } as prebidjs.event.AuctionObject);
+    ({ bidderRequests: [{ bids: bidderRequestsBids }] }) as prebidjs.event.AuctionObject;
 
   const slotRenderEndedEvent = (
     isEmpty: boolean,
     slot: googletag.IAdSlot
   ): googletag.events.ISlotRenderEndedEvent =>
-    ({ isEmpty, slot } as googletag.events.ISlotRenderEndedEvent);
+    ({ isEmpty, slot }) as googletag.events.ISlotRenderEndedEvent;
 
   const impressionViewableEvent = (
     slot: googletag.IAdSlot
   ): googletag.events.IImpressionViewableEvent =>
-    ({ slot } as googletag.events.IImpressionViewableEvent);
+    ({ slot }) as googletag.events.IImpressionViewableEvent;
 
   after(() => {
     // bring everything back to normal after tests

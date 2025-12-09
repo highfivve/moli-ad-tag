@@ -74,7 +74,10 @@ const MockIntersectionObserver = class MockIntersectionObserver implements Inter
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '0';
   readonly thresholds: ReadonlyArray<number> = [];
-  constructor(private readonly callback, private readonly options) {}
+  constructor(
+    private readonly callback,
+    private readonly options
+  ) {}
   observe() {
     return;
   }
@@ -124,7 +127,7 @@ describe('Lazy-load Module', () => {
   const createIntersectionObserverEntry = (
     isIntersecting: boolean,
     targetId: string
-  ): IntersectionObserverEntry => ({ isIntersecting, target: { id: targetId } } as any);
+  ): IntersectionObserverEntry => ({ isIntersecting, target: { id: targetId } }) as any;
 
   beforeEach(() => {
     sandbox = Sinon.createSandbox();

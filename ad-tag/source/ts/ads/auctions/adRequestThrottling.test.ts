@@ -23,7 +23,7 @@ describe('ad request throttling', () => {
     );
 
   const slotRequestedEvent = (slotId: string) =>
-    ({ slot: { getSlotElementId: () => slotId } } as googletag.events.ISlotRequestedEvent);
+    ({ slot: { getSlotElementId: () => slotId } }) as googletag.events.ISlotRequestedEvent;
 
   after(() => {
     // bring everything back to normal after tests

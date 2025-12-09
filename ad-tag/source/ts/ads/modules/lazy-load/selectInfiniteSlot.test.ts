@@ -26,7 +26,7 @@ describe('select infinite slots', () => {
     ({
       domId,
       behaviour: { loaded }
-    } as AdSlot);
+    }) as AdSlot;
 
   it('should return no ad slot if slots are empty', () => {
     const { configuredInfiniteSlots } = selectInfiniteSlot([]);
