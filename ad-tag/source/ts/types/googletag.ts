@@ -904,9 +904,12 @@ export namespace googletag {
      * Gets general configuration options for the slot set by setConfig.
      *
      * @param key the supported config key to retrieve
+     * @example getConfig('targeting') => {targeting: {...}}
      * @see https://developers.google.com/publisher-tag/reference#googletag.Slot.getConfig
      */
-    getConfig: <T extends keyof GetSlotSettingsConfigKey>(key: T) => GptSlotSettingsConfig[T];
+    getConfig: <T extends keyof GetSlotSettingsConfigKey>(
+      key: T
+    ) => { [K in T]: GptSlotSettingsConfig[K] };
   }
 
   export interface IResponseInformation {
