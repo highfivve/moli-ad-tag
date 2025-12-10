@@ -538,7 +538,7 @@ const checkAndSwitchToWebInterstitial = (
   );
 
   if (interstitialSlot && context.auction__.interstitialChannel() === 'gam') {
-    const targeting = { ...interstitialSlot.adSlot.getConfig('targeting') };
+    const targeting = interstitialSlot.adSlot.getConfig('targeting');
     // if there are no bids, we switch to the out-of-page-interstitial position
     context.window__.googletag.destroySlots([interstitialSlot.adSlot]);
 
@@ -554,7 +554,7 @@ const checkAndSwitchToWebInterstitial = (
       gamWebInterstitial.setConfig({
         targeting: {
           ...targeting,
-          [formatKey]: context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+          [formatKey]: [context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()]
         }
       });
       context.window__.googletag.display(gamWebInterstitial);
