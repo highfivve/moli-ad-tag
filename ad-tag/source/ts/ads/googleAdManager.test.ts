@@ -1069,9 +1069,9 @@ describe('google ad manager', () => {
           expect(interstitialChannelStub).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnce;
           expect(destroySlotsSpy).to.have.been.calledOnceWithExactly([slot.adSlot]);
-          expect(newSlot.getConfig('targeting').targeting![formatKey]).to.deep.eq([
+          expect(newSlot.getConfig('targeting').targeting![formatKey]).to.deep.eq(
             jsDomWindow.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
-          ]);
+          );
         });
       });
     });

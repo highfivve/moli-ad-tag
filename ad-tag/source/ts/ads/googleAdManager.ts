@@ -554,7 +554,7 @@ const checkAndSwitchToWebInterstitial = (
       gamWebInterstitial.setConfig({
         targeting: {
           ...targeting,
-          [formatKey]: [context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()]
+          [formatKey]: context.window__.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
         }
       });
       context.window__.googletag.display(gamWebInterstitial);
