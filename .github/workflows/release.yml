@@ -43,12 +43,6 @@ jobs:
           npm ci --engine-strict
           npm run setup
 
-      - name: Publish New Package Version
-        run: npm publish --provenance --access public
-        env:
-          NODE_ENV: production
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to publish to npm
-
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v6
         with:
