@@ -95,8 +95,10 @@ export const googleAdSlotStub = (adUnitPath: string, slotId: string): googletag.
     setConfig(additionalConfig: googletag.GptSlotSettingsConfig) {
       config = { ...config, ...additionalConfig };
     },
-    getConfig(key) {
-      return config[key];
+    getConfig<T extends keyof GptSlotSettingsConfig>(
+      key: T
+    ): { [K in T]: GptSlotSettingsConfig[K] } {
+      return { [key]: config[key] } as { [K in T]: GptSlotSettingsConfig[K] };
     }
   };
   return stub;
