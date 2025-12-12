@@ -2584,10 +2584,52 @@
             "code"
           ],
           "type": "object"
+        },
+        "scripts": {
+          "description": "List of external scripts to be loaded.",
+          "items": {
+            "$ref": "#/definitions/modules.custom.CustomScriptConfig"
+          },
+          "type": "array"
         }
       },
       "required": [
         "enabled"
+      ],
+      "type": "object"
+    },
+    "modules.custom.CustomScriptConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "additionalProperties": {
+            "description": "Additional attributes to be added to the script tag.",
+            "type": "string"
+          },
+          "description": "Additional attributes for the script tag.",
+          "type": "object"
+        },
+        "labelAll": {
+          "description": "Loading conditions based on labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Loading conditions based on labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "src": {
+          "description": "URL of an external script to be loaded.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "src"
       ],
       "type": "object"
     },
