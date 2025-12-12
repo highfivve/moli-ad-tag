@@ -19,20 +19,40 @@ export const customModule = (): IModule => {
     context: AdPipelineContext,
     config: modules.custom.CustomModuleConfig
   ): Promise<void> => {
-    if (!config.inlineJs || !config.inlineJs.code) {
-      context.logger__?.warn(name, 'No inline JS code provided');
-      return Promise.resolve();
+    if (config.inlineJs && config.inlineJs.code) {
+      try {
+        // Option 1: Create a script element
+        const script = context.window__.document.createElement('script');
+        script.type = 'text/javascript';
+        script.innerHTML = config.inlineJs.code;
+        context.window__.document.head.appendChild(script);
+        context.logger__?.info(name, 'Injected inline JS');
+      } catch (e) {
+        context.logger__?.error(name, 'Failed to inject inline JS', e);
+      }
     }
-    try {
-      // Option 1: Create a script element
-      const script = context.window__.document.createElement('script');
-      script.type = 'text/javascript';
-      script.innerHTML = config.inlineJs.code;
-      context.window__.document.head.appendChild(script);
-      context.logger__?.info(name, 'Injected inline JS');
-    } catch (e) {
-      context.logger__?.error(name, 'Failed to inject inline JS', e);
+
+    if (config.scripts) {
+      config.scripts
+        .filter(scriptConfig => context.labelConfigService__.filterSlot(scriptConfig))
+        .forEach(scriptConfig => {
+          try {
+            const script = context.window__.document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = scriptConfig.src;
+            if (scriptConfig.attributes) {
+              Object.entries(scriptConfig.attributes).forEach(([key, value]) => {
+                script.setAttribute(key, value);
+              });
+            }
+            context.window__.document.head.appendChild(script);
+            context.logger__?.info(name, `Injected script from URL: ${scriptConfig.src}`);
+          } catch (e) {
+            context.logger__?.error(name, 'Failed to inject script from config', scriptConfig, e);
+          }
+        });
     }
+
     return Promise.resolve();
   };
 
