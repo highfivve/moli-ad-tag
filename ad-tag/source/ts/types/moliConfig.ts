@@ -2834,6 +2834,40 @@ export namespace modules {
   }
 
   export namespace custom {
+    export interface CustomScriptConfig {
+      /**
+       * Loading conditions based on labels.
+       */
+      readonly labelAll?: string[];
+      /**
+       * Loading conditions based on labels.
+       */
+      readonly labelAny?: string[];
+
+      /**
+       * URL of an external script to be loaded.
+       */
+      readonly src: string;
+
+      /**
+       * Additional attributes for the script tag.
+       */
+      readonly attributes?: {
+        /**
+         * Additional attributes to be added to the script tag.
+         *
+         * @example
+         * ```ts
+         * {
+         *   'data-custom-attribute': 'value',
+         *   'type': 'text/javascript'
+         * }
+         * ```
+         */
+        readonly [attributeName: string]: string;
+      };
+    }
+
     /**
      * ## Custom Module Configuration
      *
@@ -2850,6 +2884,11 @@ export namespace modules {
          */
         readonly code: string;
       };
+
+      /**
+       * List of external scripts to be loaded.
+       */
+      readonly scripts?: CustomScriptConfig[];
     }
   }
 
