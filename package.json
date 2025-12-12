@@ -1,6 +1,6 @@
 {
   "name": "@highfivve/ad-tag",
-  "version": "5.8.3",
+  "version": "5.8.4",
   "license": "Apache-2.0",
   "description": "An ad tag implementation called moli",
   "main": "./lib/index.js",
