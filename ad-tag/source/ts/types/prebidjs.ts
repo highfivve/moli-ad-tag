@@ -2474,6 +2474,11 @@ export namespace prebidjs {
       ext?: OpenRtb2RegsExtDsa;
     }
 
+    export interface OpenRtb2Device {
+      ua: string;
+      sua?: Record<string, any> | null;
+    }
+
     export interface PrebidFirstPartyData {
       site?: OpenRtb2Site;
 
@@ -2514,6 +2519,8 @@ export namespace prebidjs {
             };
           }
         | any;
+
+      device?: OpenRtb2Device;
     }
 
     /**
@@ -3823,6 +3830,12 @@ export namespace prebidjs {
      * Floors configuration over prebid priceFloor module.
      */
     readonly floors?: floors.IFloorsData;
+
+    /**
+     * Transaction ID. Unique for any given impression opportunity (every auction presents an opportunity for each slot),
+     * but shared across all bid requests and responses for that impression opportunity.
+     */
+    readonly transactionId?: string;
   }
 
   export interface IPubstackConfig {
@@ -6248,6 +6261,8 @@ export namespace prebidjs {
      * (propably optional) - the time to live for this bid response in seconds
      */
     readonly ttl?: number;
+
+    readonly transactionId?: string;
 
     /**
      * If the bid is associated with a Deal, this field contains the deal ID.
