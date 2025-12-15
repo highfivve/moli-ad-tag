@@ -35,7 +35,8 @@ export const mapPageView = (
         pageViewId,
         domain: context.window__.location.hostname,
         ua: context.window__.navigator.userAgent,
-        utm: parseUTM(context.window__.location.search)
+        utm: parseUTM(context.window__.location.search),
+        device: context.labelConfigService__.getDeviceLabel()
       }
     }
   };

@@ -56,12 +56,16 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
     expect(result).to.have.property('publisher', publisher);
     expect(result).to.have.property('timestamp', now);
     expect(result).to.have.nested.property('payload.timestamp', new Date(now).toISOString());
+    expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
     expect(result).to.have.nested.property('payload.data.adUnitPath', event.slot.getAdUnitPath());
     expect(result).to.have.nested.property('payload.data.isEmpty', event.isEmpty);
     expect(result).to.have.nested.property('payload.data.size', event.size);
     expect(result).to.have.nested.property('payload.data.sessionId', sessionId);
     expect(result).to.have.nested.property('payload.data.pageViewId', pageViewId);
-    expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
+    expect(result).to.have.nested.property(
+      'payload.data.device',
+      context.labelConfigService__.getDeviceLabel()
+    );
     expect(result).to.have.nested.property('payload.prebidRef.auctionId', auctionId);
   });
 });

@@ -24,7 +24,8 @@ export const mapGPTSlotRenderEnded = (
         isEmpty: event.isEmpty,
         size: event.size,
         sessionId,
-        pageViewId
+        pageViewId,
+        device: context.labelConfigService__.getDeviceLabel()
       },
       prebidRef: {
         auctionId: context.auctionId__

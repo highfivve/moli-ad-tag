@@ -53,11 +53,15 @@ describe('AnalyticsPageView', () => {
     expect(result).to.have.property('publisher', publisher);
     expect(result).to.have.property('timestamp', now);
     expect(result).to.have.nested.property('payload.timestamp', new Date(now).toISOString());
+    expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
     expect(result).to.have.nested.property('payload.data.sessionId', sessionId);
     expect(result).to.have.nested.property('payload.data.pageViewId', pageViewId);
-    expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
     expect(result).to.have.nested.property('payload.data.domain', jsDomWindow.location.hostname);
     expect(result).to.have.nested.property('payload.data.ua', jsDomWindow.navigator.userAgent);
     expect(result).to.have.nested.property('payload.data.utm').deep.equal(utmParams);
+    expect(result).to.have.nested.property(
+      'payload.data.device',
+      context.labelConfigService__.getDeviceLabel()
+    );
   });
 });

@@ -1,4 +1,5 @@
-import { googletag } from 'ad-tag/types/googletag';
+import type { googletag } from 'ad-tag/types/googletag';
+import type { Device } from 'ad-tag/types/moliConfig';
 
 export type AnalyticsSession = {
   getId: () => string;
@@ -116,6 +117,7 @@ export namespace Events {
           size: googletag.Size;
           sessionId: string;
           pageViewId: string;
+          device: Device;
         };
         // TODO: complete prebid ref
         prebidRef: {
@@ -135,6 +137,7 @@ export namespace Events {
           domain: string;
           ua: string;
           utm: UTMParams;
+          device: Device;
         };
       };
     };
