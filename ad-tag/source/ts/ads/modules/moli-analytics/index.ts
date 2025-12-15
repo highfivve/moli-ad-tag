@@ -32,7 +32,9 @@ export const MoliAnalytics = (): IModule => {
   let pageViewId: string;
 
   const handleAuctionEnd = (auction: prebidjs.event.AuctionObject) => {
-    eventTracker.track(eventMapper.prebid.auctionEnd(auction, config.publisher, analyticsLabels));
+    eventTracker.track(
+      eventMapper.prebid.auctionEnd(auction, context, config.publisher, analyticsLabels)
+    );
   };
 
   const handleBidWon = (response: prebidjs.BidResponse) => {
@@ -120,7 +122,7 @@ export const MoliAnalytics = (): IModule => {
         }
       });
     } else {
-      // non SPA - trigger page view once
+      // non-SPA - trigger page view once
       handlePageView();
     }
 

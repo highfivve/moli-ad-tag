@@ -32,14 +32,11 @@ describe('Moli Analytics Module', () => {
   };
 
   beforeEach(() => {
-    sandbox.useFakeTimers();
-    sandbox.clock.tick(1000);
+    sandbox.useFakeTimers({ now: 1000 });
     jsDomWindow.pbjs = createPbjsStub();
   });
 
   afterEach(() => {
-    sandbox.clock.restore();
-    sandbox.reset();
     sandbox.restore();
   });
 
@@ -156,7 +153,7 @@ describe('Moli Analytics Module', () => {
     // Recall afterRequestAds listener
     moliAddListenerStub.firstCall.lastArg({ state: 'spa-finished' });
 
-    // Page view event should be tracked again with new pageViewId
+    // Page view event should be tracked again with the new pageViewId
     expect(trackSpy).calledTwice;
     expect(trackSpy.secondCall.firstArg).an('object').and.have.property('type', 'page.view');
     expect(trackSpy.secondCall.firstArg.payload.data.pageViewId).not.eq(

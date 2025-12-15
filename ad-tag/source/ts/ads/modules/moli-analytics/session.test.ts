@@ -15,12 +15,10 @@ describe('Analytics session', () => {
   const defaultContext = adPipelineContext(jsDomWindow);
 
   beforeEach(() => {
-    sandbox.useFakeTimers();
-    sandbox.clock.tick(1000);
+    sandbox.useFakeTimers({ now: 1000 });
   });
 
   afterEach(() => {
-    sandbox.clock.restore();
     sandbox.restore();
     defaultContext.window__.localStorage.removeItem(storageKey);
   });

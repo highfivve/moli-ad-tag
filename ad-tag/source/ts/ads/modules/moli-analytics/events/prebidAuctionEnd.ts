@@ -1,8 +1,10 @@
 import type { prebidjs } from 'ad-tag/types/prebidjs';
 import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
+import type { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 
 export const mapPrebidAuctionEnd = (
   auction: prebidjs.event.AuctionObject,
+  context: AdPipelineContext,
   publisher: string,
   analyticsLabels: Events.AnalyticsLabels
 ): Events.Prebid.AuctionEnd => {
@@ -34,7 +36,7 @@ export const mapPrebidAuctionEnd = (
             })),
             ortb2: {
               device: {
-                ua: request?.ortb2?.device?.ua || window.navigator.userAgent,
+                ua: request?.ortb2?.device?.ua || context.window__.navigator.userAgent,
                 sua: request?.ortb2?.device?.sua || null
               }
             }
