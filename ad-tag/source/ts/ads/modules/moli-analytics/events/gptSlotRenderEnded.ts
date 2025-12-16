@@ -29,7 +29,7 @@ export const mapGPTSlotRenderEnded = (
         adUnitPath,
         adUnitCode: event.slot.getSlotElementId(),
         isEmpty: event.isEmpty,
-        size: event.size,
+        size: Array.isArray(event.size) ? event.size.join('x') : event.size,
         device: context.labelConfigService__.getDeviceLabel(),
         domain: adUnitPathItems.at(-1) || context.window__.location.hostname.replace('www.', '')
       }

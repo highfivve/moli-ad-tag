@@ -30,6 +30,7 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
     const auctionId = 'test-auction-id';
     const adUnitCode = 'ad_header';
     const adUnitName = 'header';
+    const size = '300x200';
     const analyticsLabels: Events.AnalyticsLabels = {
       ab_test: 'test-ab',
       variant: 'test-variant'
@@ -42,7 +43,7 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
         getSlotElementId: sandbox.stub().returns(adUnitCode)
       } as any,
       isEmpty: false,
-      size: [300, 200]
+      size: size.split('x').map(Number)
     } as googletag.events.ISlotRenderEndedEvent;
 
     const result = mapGPTSlotRenderEnded(event, context, publisher, {
@@ -62,7 +63,7 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
     expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
     expect(result).to.have.nested.property('payload.data.adUnitPath', event.slot.getAdUnitPath());
     expect(result).to.have.nested.property('payload.data.isEmpty', event.isEmpty);
-    expect(result).to.have.nested.property('payload.data.size', event.size);
+    expect(result).to.have.nested.property('payload.data.size', size);
     expect(result).to.have.nested.property('payload.data.sessionId', sessionId);
     expect(result).to.have.nested.property('payload.data.pageViewId', pageViewId);
     expect(result).to.have.nested.property(

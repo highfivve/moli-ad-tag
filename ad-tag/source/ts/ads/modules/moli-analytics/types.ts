@@ -1,4 +1,3 @@
-import type { googletag } from 'ad-tag/types/googletag';
 import type { Device } from 'ad-tag/types/moliConfig';
 
 export type AnalyticsSession = {
@@ -115,7 +114,7 @@ export namespace Events {
           adUnitCode: string;
           adUnitName: string;
           isEmpty: boolean;
-          size: googletag.Size;
+          size: string;
           device: Device;
           domain: string;
         };
