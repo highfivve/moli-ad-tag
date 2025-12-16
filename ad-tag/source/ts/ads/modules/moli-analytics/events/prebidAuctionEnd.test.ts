@@ -35,10 +35,22 @@ describe('AnalyticsAuctionEnd', () => {
       auctionId: 'test-auction-id',
       adUnits: [
         {
-          code: 'test-ad-unit-code',
-          transactionId: 'test-transaction-id',
+          code: 'ad_header',
           pubstack: { adUnitName: 'header' },
-          bids: []
+          bids: [],
+          mediaTypes: []
+        },
+        {
+          code: 'ad_header',
+          pubstack: { adUnitName: 'header' },
+          bids: [],
+          mediaTypes: []
+        },
+        {
+          code: 'ad_sidebar',
+          pubstack: { adUnitName: 'sidebar' },
+          bids: [],
+          mediaTypes: []
         }
       ],
       bidderRequests: [
@@ -52,24 +64,30 @@ describe('AnalyticsAuctionEnd', () => {
               bidderRequestId: 'test-bidder-request-id',
               adUnitCode: 'test-ad-unit-code',
               sizes: [[300, 200]],
-              bidId: 'test-bid-id'
+              bidId: 'test-bid-id',
+              mediaTypes: [],
+              src: 'client',
+              ortb2: {}
             }
           ],
           ortb2: {
             device: {
               ua: 'test-ua',
-              sua: 'test-sua'
+              sua: {
+                device: 'desktop'
+              }
             }
           }
         }
       ],
       bidsReceived: [
         {
+          ad: 'test-ad-html',
           adId: 'test-ad-id',
           auctionId: 'test-auction-id',
           bidder: 'rubicon',
           bidderCode: 'rubicon',
-          adUnitCode: 'test-ad-unit-code',
+          adUnitCode: 'ad_header',
           requestId: 'test-request-id',
           transactionId: 'test-transaction-id',
           currency: 'EUR',
@@ -78,7 +96,8 @@ describe('AnalyticsAuctionEnd', () => {
           mediaType: 'banner',
           timeToRespond: 100
         }
-      ]
+      ],
+      winningBids: []
     } as any;
 
     const auctionEnd = mapPrebidAuctionEnd(
@@ -87,6 +106,15 @@ describe('AnalyticsAuctionEnd', () => {
       publisher,
       analyticsLabels
     );
+
+    const adUnitCodes = new Set();
+    const adUnitsUnique = event.adUnits.filter(adUnit => {
+      if (adUnitCodes.has(adUnit.code)) {
+        return false;
+      }
+      adUnitCodes.add(adUnit.code);
+      return true;
+    });
 
     expect(auctionEnd).to.be.an('object');
     expect(auctionEnd).to.have.property('v').that.is.a('number').gte(1);
@@ -101,11 +129,12 @@ describe('AnalyticsAuctionEnd', () => {
     expect(auctionEnd)
       .to.have.nested.property('payload.data.adUnits')
       .to.be.an('array')
-      .that.have.lengthOf(event.adUnits.length);
-    auctionEnd.payload.data.adUnits.forEach((adUnit, index) => {
-      const eventAdUnit = event.adUnits[index];
+      .that.have.lengthOf(adUnitsUnique.length);
+
+    auctionEnd.payload.data.adUnits.forEach(adUnit => {
+      expect(adUnit).to.be.an('object');
+      const eventAdUnit = adUnitsUnique.find(item => item.code === adUnit.code);
       expect(adUnit).to.have.property('code', eventAdUnit.code);
-      expect(adUnit).to.have.property('transactionId', eventAdUnit.transactionId);
       expect(adUnit).to.have.property('adUnitName', eventAdUnit.pubstack.adUnitName);
     });
 
@@ -113,6 +142,7 @@ describe('AnalyticsAuctionEnd', () => {
       .to.have.nested.property('payload.data.bidderRequests')
       .to.be.an('array')
       .that.have.lengthOf(event.bidderRequests.length);
+
     auctionEnd.payload.data.bidderRequests.forEach((bidderRequest, index) => {
       const eventBidderRequest = event.bidderRequests[index];
       expect(bidderRequest).to.have.property('auctionId', eventBidderRequest.auctionId);
@@ -144,12 +174,11 @@ describe('AnalyticsAuctionEnd', () => {
       .to.have.nested.property('payload.data.bidsReceived')
       .to.be.an('array')
       .that.have.lengthOf(event.bidsReceived.length);
+
     auctionEnd.payload.data.bidsReceived.forEach((bid, index) => {
       const eventBid = event.bidsReceived[index];
       expect(bid).to.have.property('bidder', eventBid.bidder);
       expect(bid).to.have.property('adUnitCode', eventBid.adUnitCode);
-      expect(bid).to.have.property('requestId', eventBid.requestId);
-      expect(bid).to.have.property('transactionId', eventBid.transactionId);
       expect(bid).to.have.property('currency', eventBid.currency);
       expect(bid).to.have.property('size', eventBid.size);
       expect(bid).to.have.property('timeToRespond', eventBid.timeToRespond);

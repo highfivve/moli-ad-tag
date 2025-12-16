@@ -12,8 +12,7 @@ use(sinonChai);
 describe('AnalyticsGPTSlotRenderEnded', () => {
   const sandbox = sinon.createSandbox();
   const { jsDomWindow } = createDomAndWindow();
-  const auctionId = 'test-auction-id';
-  const context = adPipelineContext(jsDomWindow, { auctionId__: auctionId });
+  const context = adPipelineContext(jsDomWindow);
   const now = 1000000;
 
   beforeEach(() => {
@@ -25,30 +24,34 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
   });
 
   it('testMapGPTSlotRenderEnded', () => {
+    const publisher = 'test-publisher';
+    const sessionId = 'test-session-id';
+    const pageViewId = 'test-page-view-id';
+    const auctionId = 'test-auction-id';
+    const adUnitCode = 'ad_header';
+    const adUnitName = 'header';
+    const analyticsLabels: Events.AnalyticsLabels = {
+      ab_test: 'test-ab',
+      variant: 'test-variant'
+    };
     const event = {
       slot: {
-        getAdUnitPath: sandbox.stub().returns('/test/ad/unit/path')
+        getAdUnitPath: sandbox
+          .stub()
+          .returns('/111,222/example/example_header/desktop/example.com'),
+        getSlotElementId: sandbox.stub().returns(adUnitCode)
       } as any,
       isEmpty: false,
       size: [300, 200]
     } as googletag.events.ISlotRenderEndedEvent;
 
-    const publisher = 'test-publisher';
-    const sessionId = 'test-session-id';
-    const pageViewId = 'test-page-view-id';
-    const analyticsLabels: Events.AnalyticsLabels = {
-      ab_test: 'test-ab',
-      variant: 'test-variant'
-    };
-
-    const result = mapGPTSlotRenderEnded(
-      event,
-      context,
-      publisher,
+    const result = mapGPTSlotRenderEnded(event, context, publisher, {
       sessionId,
       pageViewId,
+      auctionId,
+      adUnitName,
       analyticsLabels
-    );
+    });
 
     expect(result).to.be.an('object');
     expect(result).to.have.property('v').that.is.a('number').gte(1);
@@ -66,6 +69,9 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
       'payload.data.device',
       context.labelConfigService__.getDeviceLabel()
     );
-    expect(result).to.have.nested.property('payload.prebidRef.auctionId', auctionId);
+    expect(result).to.have.nested.property('payload.data.domain', 'example.com');
+    expect(result).to.have.nested.property('payload.data.auctionId', auctionId);
+    expect(result).to.have.nested.property('payload.data.adUnitCode', adUnitCode);
+    expect(result).to.have.nested.property('payload.data.adUnitName', adUnitName);
   });
 });

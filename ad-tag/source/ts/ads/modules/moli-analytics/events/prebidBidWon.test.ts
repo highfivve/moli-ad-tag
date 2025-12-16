@@ -51,8 +51,6 @@ describe('AnalyticsPrebidBidWon', () => {
     expect(result).to.have.nested.property('payload.data.auctionId', event.auctionId);
     expect(result).to.have.nested.property('payload.data.bidderCode', event.bidderCode);
     expect(result).to.have.nested.property('payload.data.adUnitCode', event.adUnitCode);
-    expect(result).to.have.nested.property('payload.data.transactionId', event.transactionId);
-    expect(result).to.have.nested.property('payload.data.requestId', event.requestId);
     expect(result).to.have.nested.property('payload.data.currency', event.currency);
     expect(result).to.have.nested.property('payload.data.cpm', event.cpm);
     expect(result).to.have.nested.property('payload.data.size', event.size);

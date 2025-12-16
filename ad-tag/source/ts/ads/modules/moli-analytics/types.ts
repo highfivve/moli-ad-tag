@@ -55,8 +55,7 @@ export namespace Events {
           auctionId: string;
           adUnits: {
             code: string;
-            transactionId: string;
-            adUnitName?: string;
+            adUnitName: string;
           }[];
           bidderRequests: {
             bidderCode: string;
@@ -77,8 +76,6 @@ export namespace Events {
           bidsReceived: {
             bidder: string;
             adUnitCode: string;
-            requestId: string;
-            transactionId: string;
             currency: string;
             cpm: number;
             size: string;
@@ -92,11 +89,9 @@ export namespace Events {
       type: 'prebid.bidWon';
       payload: {
         data: {
-          bidderCode: string;
           auctionId: string;
+          bidderCode: string;
           adUnitCode: string;
-          transactionId: string;
-          requestId: string;
           currency: string;
           cpm: number;
           size: string;
@@ -112,16 +107,17 @@ export namespace Events {
       type: 'gpt.slotRenderEnded';
       payload: {
         data: {
-          adUnitPath: string;
-          isEmpty: boolean;
-          size: googletag.Size;
           sessionId: string;
           pageViewId: string;
-          device: Device;
-        };
-        // TODO: complete prebid ref
-        prebidRef: {
           auctionId: string;
+          userId?: string;
+          adUnitPath: string;
+          adUnitCode: string;
+          adUnitName: string;
+          isEmpty: boolean;
+          size: googletag.Size;
+          device: Device;
+          domain: string;
         };
       };
     };

@@ -141,16 +141,10 @@ describe('Moli Analytics Module', () => {
     expect(moliAddListenerStub.firstCall.firstArg).eq('afterRequestAds');
     expect(moliAddListenerStub.firstCall.lastArg).to.be.a('function');
     // Page view should not be fired yet
-    expect(trackSpy).to.not.have.been.called;
-
-    // Call afterRequestAds listener
-    moliAddListenerStub.firstCall.lastArg({ state: 'spa-finished' });
-
-    // Page view event should be tracked
     expect(trackSpy).calledOnce;
     expect(trackSpy.firstCall.firstArg).an('object').and.have.property('type', 'page.view');
 
-    // Recall afterRequestAds listener
+    // Call afterRequestAds listener
     moliAddListenerStub.firstCall.lastArg({ state: 'spa-finished' });
 
     // Page view event should be tracked again with the new pageViewId

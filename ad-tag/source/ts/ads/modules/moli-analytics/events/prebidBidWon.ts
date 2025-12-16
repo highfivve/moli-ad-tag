@@ -16,11 +16,9 @@ export const mapPrebidBidWon = (
       timestamp: new Date(timestamp).toISOString(),
       data: {
         analyticsLabels,
-        bidderCode: response.bidderCode,
         auctionId: response.auctionId,
+        bidderCode: response.bidderCode,
         adUnitCode: response.adUnitCode,
-        transactionId: response.transactionId!,
-        requestId: response.requestId,
         currency: response.currency,
         cpm: response.cpm,
         size: response.size,

@@ -19,15 +19,21 @@ export const mapPrebidAuctionEnd = (
       data: {
         analyticsLabels,
         auctionId: auction.auctionId,
-        adUnits: (auction.adUnits || []).map(adUnit => ({
-          code: adUnit.code!,
-          transactionId: adUnit.transactionId!,
-          adUnitName: adUnit.pubstack?.adUnitName
-        })),
+        adUnits: Array.from(
+          new Map(
+            (auction.adUnits || []).map(adUnit => [
+              adUnit.code!,
+              {
+                code: adUnit.code!,
+                adUnitName: adUnit.pubstack?.adUnitName || adUnit.code!
+              }
+            ])
+          ).values()
+        ),
         bidderRequests: (auction.bidderRequests || []).map(request => {
           return {
-            bidderCode: request.bidderCode!,
             auctionId: request.auctionId!,
+            bidderCode: request.bidderCode!,
             bids: (request.bids || []).map(bid => ({
               bidder: bid.bidder,
               adUnitCode: bid.adUnitCode,
@@ -45,8 +51,6 @@ export const mapPrebidAuctionEnd = (
         bidsReceived: (auction.bidsReceived || []).map(bid => ({
           bidder: bid.bidder,
           adUnitCode: bid.adUnitCode,
-          requestId: bid.requestId,
-          transactionId: bid.transactionId!,
           currency: bid.currency,
           cpm: bid.cpm,
           size: bid.size,

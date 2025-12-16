@@ -30,11 +30,22 @@ export const MoliAnalytics = (): IModule => {
   let eventTracker: EventTracker;
   let analyticsLabels: Events.AnalyticsLabels = null;
   let pageViewId: string;
+  let adUnits: Map<string, { auctionId: string; adUnitName: string }> = new Map();
 
   const handleAuctionEnd = (auction: prebidjs.event.AuctionObject) => {
-    eventTracker.track(
-      eventMapper.prebid.auctionEnd(auction, context, config.publisher, analyticsLabels)
+    const auctionEnd = eventMapper.prebid.auctionEnd(
+      auction,
+      context,
+      config.publisher,
+      analyticsLabels
     );
+    for (const adUnit of auctionEnd.payload.data.adUnits) {
+      adUnits.set(adUnit.code, {
+        auctionId: auctionEnd.payload.data.auctionId,
+        adUnitName: adUnit.adUnitName
+      });
+    }
+    eventTracker.track(auctionEnd);
   };
 
   const handleBidWon = (response: prebidjs.BidResponse) => {
@@ -42,15 +53,16 @@ export const MoliAnalytics = (): IModule => {
   };
 
   const handleSlotRenderEnded = (event: googletag.events.ISlotRenderEndedEvent) => {
+    const adUnitCode = event.slot.getSlotElementId();
+    const adUnitData = adUnits.get(adUnitCode);
     eventTracker.track(
-      eventMapper.gpt.slotRenderEnded(
-        event,
-        context,
-        config.publisher,
-        session.getId(),
-        pageViewId,
-        analyticsLabels
-      )
+      eventMapper.gpt.slotRenderEnded(event, context, config.publisher, {
+        analyticsLabels,
+        sessionId: session.getId(),
+        pageViewId: pageViewId,
+        auctionId: adUnitData?.auctionId || '',
+        adUnitName: adUnitData?.adUnitName || adUnitCode
+      })
     );
   };
 
@@ -114,16 +126,14 @@ export const MoliAnalytics = (): IModule => {
     }
 
     // Setup page view event
+    handlePageView();
     if (context.config__.spa?.enabled) {
       // SPA - listen for page change
       context.window__.moli.addEventListener('afterRequestAds', event => {
-        if (event.state === 'spa-finished') {
+        if (event.state === 'spa-finished' || event.state === 'finished') {
           handlePageView();
         }
       });
-    } else {
-      // non-SPA - trigger page view once
-      handlePageView();
     }
 
     // Add prebid event listeners
