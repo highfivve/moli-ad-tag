@@ -72,10 +72,7 @@ describe('AnalyticsAuctionEnd', () => {
           ],
           ortb2: {
             device: {
-              ua: 'test-ua',
-              sua: {
-                device: 'desktop'
-              }
+              ua: 'test-ua'
             }
           }
         }
@@ -154,19 +151,12 @@ describe('AnalyticsAuctionEnd', () => {
 
       bidderRequest.bids.forEach((bid, index) => {
         const eventBid = eventBidderRequest.bids[index];
-        expect(bid).to.have.property('bidder', eventBid.bidder);
         expect(bid).to.have.property('adUnitCode', eventBid.adUnitCode);
-        expect(bid).to.have.property('sizes', eventBid.sizes);
-        expect(bid).to.have.property('bidId', eventBid.bidId);
       });
 
       expect(bidderRequest).to.have.nested.property(
         'ortb2.device.ua',
         eventBidderRequest.ortb2.device.ua
-      );
-      expect(bidderRequest).to.have.nested.property(
-        'ortb2.device.sua',
-        eventBidderRequest.ortb2.device.sua
       );
     });
 

@@ -60,15 +60,11 @@ export namespace Events {
             bidderCode: string;
             auctionId: string;
             bids: {
-              bidder: string;
               adUnitCode: string;
-              sizes: [number, number][];
-              bidId: string;
             }[];
             ortb2: {
               device: {
                 ua: string;
-                sua: Record<string, any> | null;
               };
             };
           }[];

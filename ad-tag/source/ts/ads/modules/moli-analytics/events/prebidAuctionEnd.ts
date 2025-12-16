@@ -35,15 +35,11 @@ export const mapPrebidAuctionEnd = (
             auctionId: request.auctionId!,
             bidderCode: request.bidderCode!,
             bids: (request.bids || []).map(bid => ({
-              bidder: bid.bidder,
-              adUnitCode: bid.adUnitCode,
-              sizes: bid.sizes,
-              bidId: bid.bidId!
+              adUnitCode: bid.adUnitCode
             })),
             ortb2: {
               device: {
-                ua: request?.ortb2?.device?.ua || context.window__.navigator.userAgent,
-                sua: request?.ortb2?.device?.sua || null
+                ua: request?.ortb2?.device?.ua || context.window__.navigator.userAgent
               }
             }
           };
