@@ -1,14 +1,14 @@
 import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
+import { createMoliTag } from 'ad-tag/ads/moli';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import { MoliAnalytics, DEFAULT_CONFIG } from 'ad-tag/ads/modules/moli-analytics/index';
 import { adPipelineContext } from 'ad-tag/stubs/adPipelineContextStubs';
 import { createPbjsStub } from 'ad-tag/stubs/prebidjsStubs';
+import { MoliAnalytics, DEFAULT_CONFIG } from 'ad-tag/ads/modules/moli-analytics/index';
 import { createSession } from 'ad-tag/ads/modules/moli-analytics/session';
 import * as eventTracker from 'ad-tag/ads/modules/moli-analytics/eventTracker';
 import { modules } from 'ad-tag/types/moliConfig';
-import { createMoliTag } from 'ad-tag/ads/moli';
 
 use(sinonChai);
 
@@ -34,6 +34,7 @@ describe('Moli Analytics Module', () => {
   beforeEach(() => {
     sandbox.useFakeTimers({ now: 1000 });
     jsDomWindow.pbjs = createPbjsStub();
+    jsDomWindow.moli = createMoliTag(jsDomWindow);
   });
 
   afterEach(() => {

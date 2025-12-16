@@ -33,10 +33,10 @@ export const mapPageView = (
         analyticsLabels,
         sessionId,
         pageViewId,
-        domain: context.window__.location.hostname,
+        domain: context.window__.moli.resolveAdUnitPath('{domain}'),
+        device: context.labelConfigService__.getDeviceLabel(),
         ua: context.window__.navigator.userAgent,
-        utm: parseUTM(context.window__.location.search),
-        device: context.labelConfigService__.getDeviceLabel()
+        utm: parseUTM(context.window__.location.search)
       }
     }
   };

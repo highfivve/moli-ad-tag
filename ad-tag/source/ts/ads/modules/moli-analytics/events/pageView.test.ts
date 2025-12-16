@@ -1,9 +1,11 @@
 import { expect, use } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { mapPageView } from 'ad-tag/ads/modules/moli-analytics/events/pageView';
+
+import { createMoliTag } from 'ad-tag/ads/moli';
 import { adPipelineContext } from 'ad-tag/stubs/adPipelineContextStubs';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
+import { mapPageView } from 'ad-tag/ads/modules/moli-analytics/events/pageView';
 import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
 
 use(sinonChai);
@@ -11,6 +13,7 @@ use(sinonChai);
 describe('AnalyticsPageView', () => {
   const sandbox = sinon.createSandbox();
   const { jsDomWindow } = createDomAndWindow();
+  jsDomWindow.moli = createMoliTag(jsDomWindow);
   const context = adPipelineContext(jsDomWindow);
   const now = 1000000;
 
@@ -39,7 +42,7 @@ describe('AnalyticsPageView', () => {
     };
 
     sandbox.stub(jsDomWindow, 'location').value({
-      hostname: 'example.com',
+      hostname: 'www.example.com',
       search: Object.entries(utmParams)
         .map(([k, v]) => `utm_${k}=${v || ''}`)
         .join('&')
@@ -56,7 +59,10 @@ describe('AnalyticsPageView', () => {
     expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
     expect(result).to.have.nested.property('payload.data.sessionId', sessionId);
     expect(result).to.have.nested.property('payload.data.pageViewId', pageViewId);
-    expect(result).to.have.nested.property('payload.data.domain', jsDomWindow.location.hostname);
+    expect(result).to.have.nested.property(
+      'payload.data.domain',
+      jsDomWindow.location.hostname.replace('www.', '')
+    );
     expect(result).to.have.nested.property('payload.data.ua', jsDomWindow.navigator.userAgent);
     expect(result).to.have.nested.property('payload.data.utm').deep.equal(utmParams);
     expect(result).to.have.nested.property(
