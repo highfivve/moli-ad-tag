@@ -1702,6 +1702,11 @@ export namespace modules {
        * Provided by your ADEX account manager.
        */
       readonly adexTagId: string;
+
+      /**
+       * Name of the app (publisher code).
+       */
+      readonly appName: string;
       /**
        * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
        * In regular mode, tracking is only executed once.
