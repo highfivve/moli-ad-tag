@@ -19,6 +19,7 @@ const getAdvertisingIdIFAType = (clientType: string | undefined): 'aaid' | 'idfa
 export const sendAdvertisingID = (
   adexCustomerId: string,
   adexTagId: string,
+  appName: string,
   advertisingId: string,
   adexAttributes: Array<modules.adex.AdexKeyValues>,
   clientType: string | string[],
@@ -37,6 +38,6 @@ export const sendAdvertisingID = (
   const consentParameter = consentString ? `&gdpr_consent=${consentString}` : '';
 
   fetch(
-    `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}`
+    `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}&appName=${appName}`
   ).catch(error => logger.error(error));
 };
