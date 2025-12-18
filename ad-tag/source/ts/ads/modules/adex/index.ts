@@ -277,7 +277,7 @@ export class AdexModule implements IModule {
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
   public track(context: AdPipelineContext, adexConfig: modules.adex.AdexConfig): Promise<void> {
-    const { adexCustomerId, adexTagId, appConfig } = adexConfig;
+    const { adexCustomerId, adexTagId, appConfig, appName } = adexConfig;
 
     this.configureAdexC(context, adexConfig);
     const adexKeyValues = this.getAdexKeyValues(context, adexConfig);
@@ -314,6 +314,7 @@ export class AdexModule implements IModule {
           sendAdvertisingID(
             adexCustomerId,
             appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
+            appName,
             advertisingIdValue,
             adexKeyValues,
             gamKeyValues[appConfig.clientTypeKey] ?? '',
