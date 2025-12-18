@@ -54,6 +54,7 @@ describe('The Adex DMP Module', () => {
       adexTagId: '456',
       mappingDefinitions: mappingDefinitions ?? [],
       appConfig: appConfig ?? undefined,
+      appName: 'testpublisher',
       enabledPartners
     }
   });
