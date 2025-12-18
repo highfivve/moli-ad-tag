@@ -1876,6 +1876,10 @@
           "$ref": "#/definitions/modules.adex.AdexAppConfig",
           "description": "If there's an app version of the site, add the appConfig in order to make sure mobile data is sent to the Adex"
         },
+        "appName": {
+          "description": "Name of the app (publisher code).",
+          "type": "string"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -1902,6 +1906,7 @@
       "required": [
         "adexCustomerId",
         "adexTagId",
+        "appName",
         "enabled",
         "mappingDefinitions",
         "spaMode"
