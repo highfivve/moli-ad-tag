@@ -258,6 +258,10 @@ export interface AdexModuleConfig {
    */
   readonly adexTagId: string;
   /**
+   * Name of the app (publisher code).
+   */
+  readonly appName: string;
+  /**
    * For single page apps, enable spaMode. Tracking is then executed once per configuration cycle.
    * In regular mode, tracking is only executed once.
    */
@@ -331,8 +335,15 @@ export class AdexModule implements IModule {
    * - after mapping to The Adex compatible data, the Adex targeting is empty
    */
   public track(context: AdPipelineContext, assetLoaderService: IAssetLoaderService): Promise<void> {
-    const { adexCustomerId, adexTagId, spaMode, mappingDefinitions, appConfig, enabledPartners } =
-      this.config();
+    const {
+      adexCustomerId,
+      adexTagId,
+      spaMode,
+      mappingDefinitions,
+      appConfig,
+      enabledPartners,
+      appName
+    } = this.config();
     const dfpKeyValues = context.config.targeting?.keyValues;
     if (!dfpKeyValues) {
       context.logger.warn('Adex DMP', 'targeting key/values are empty');
@@ -401,6 +412,7 @@ export class AdexModule implements IModule {
             appConfig.adexMobileTagId ? appConfig.adexMobileTagId : adexTagId,
             advertisingIdValue,
             adexKeyValues,
+            appName,
             dfpKeyValues[appConfig.clientTypeKey] ?? '',
             context.window.fetch,
             context.logger,

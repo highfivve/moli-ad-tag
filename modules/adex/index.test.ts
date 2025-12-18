@@ -85,6 +85,7 @@ describe('The Adex DMP Module', () => {
     spaMode: boolean,
     adexCustomerId: string,
     adexTagId: string,
+    appName: string,
     mappingDefinitions: Array<MappingDefinition>,
     appConfig?: AdexAppConfig,
     window: ITheAdexWindow = jsDomWindow
@@ -94,6 +95,7 @@ describe('The Adex DMP Module', () => {
         spaMode,
         adexCustomerId,
         adexTagId,
+        appName,
         mappingDefinitions,
         appConfig
       },
@@ -130,7 +132,7 @@ describe('The Adex DMP Module', () => {
   };
 
   it('should add an init step in non-spa mode', () => {
-    const module = createAdexModule(false, '123', '456', []);
+    const module = createAdexModule(false, '123', '456', 'test-publisher', []);
 
     const configPipeline = {
       initSteps: [mkInitStep('stub', _ => Promise.resolve())],
@@ -149,7 +151,7 @@ describe('The Adex DMP Module', () => {
   });
 
   it('should add a configure step in spa mode', () => {
-    const module = createAdexModule(true, '123', '456', []);
+    const module = createAdexModule(true, '123', '456', 'test-publisher', []);
 
     const configPipeline = {
       initSteps: [mkInitStep('stub', _ => Promise.resolve())],
@@ -168,7 +170,7 @@ describe('The Adex DMP Module', () => {
   });
 
   it("shouldn't load the script if no consent is given", async () => {
-    const module = createAdexModule(true, '123', '456', []);
+    const module = createAdexModule(true, '123', '456', 'test-publisher', []);
 
     const configPipeline = {
       initSteps: [mkInitStep('stub', _ => Promise.resolve())],
@@ -194,7 +196,7 @@ describe('The Adex DMP Module', () => {
   });
 
   it("shouldn't load the script if no targeting is given", async () => {
-    const module = createAdexModule(true, '123', '456', []);
+    const module = createAdexModule(true, '123', '456', 'test-publisher', []);
 
     const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
@@ -212,7 +214,7 @@ describe('The Adex DMP Module', () => {
   });
 
   it('shouldn load the script if no adex data can be produced with the given mappings', async () => {
-    const module = createAdexModule(true, '123', '456', [
+    const module = createAdexModule(true, '123', '456', 'test-publisher', [
       { key: 'subChannel', attribute: 'iab_cat', adexValueType: 'string' }
     ]);
 
@@ -249,7 +251,7 @@ describe('The Adex DMP Module', () => {
 
   consentSituations.forEach(situation =>
     it(`should load the script if ${situation.description}`, async () => {
-      const module = createAdexModule(true, '123', '456', [
+      const module = createAdexModule(true, '123', '456', 'test-publisher', [
         { adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }
       ]);
 
@@ -293,7 +295,7 @@ describe('The Adex DMP Module', () => {
   );
 
   it('should load the script only once despite multiple trackings in SPA mode', async () => {
-    const module = createAdexModule(true, '123', '456', [
+    const module = createAdexModule(true, '123', '456', 'test-publisher', [
       { adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }
     ]);
 
@@ -343,6 +345,7 @@ describe('The Adex DMP Module', () => {
       true,
       '123',
       '456',
+      'test-publisher',
       [{ adexValueType: 'string', key: 'channel', attribute: 'iab_cat' }],
       { clientTypeKey: 'gf_clientType', advertiserIdKey: 'advertising_id' }
     );

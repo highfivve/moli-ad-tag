@@ -21,6 +21,7 @@ export const sendAdvertisingID = (
   adexTagId: string,
   advertisingId: string,
   adexAttributes: Array<AdexKeyValues>,
+  appName: string,
   clientType: string | string[],
   fetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>,
   logger: Moli.MoliLogger,
@@ -37,6 +38,6 @@ export const sendAdvertisingID = (
   const consentParameter = consentString ? `&gdpr_consent=${consentString}` : '';
 
   fetch(
-    `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}`
+    `https://api.theadex.com/collector/v1/ifa/c/${adexCustomerId}/t/${adexTagId}/request?&ifa=${advertisingId}&ifa_type=${ifaType}${keyValuesParameter}${consentParameter}&appName=${appName}`
   ).catch(error => logger.error(error));
 };

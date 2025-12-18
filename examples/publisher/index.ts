@@ -218,7 +218,8 @@ moli.registerModule(
         clientTypeKey: 'gf_clientType',
         advertiserIdKey: 'advertising_id',
         adexMobileTagId: '7484'
-      }
+      },
+      appName: 'gutefrage'
     },
     window
   )
