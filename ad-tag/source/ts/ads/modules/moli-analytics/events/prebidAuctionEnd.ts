@@ -1,58 +1,47 @@
 import type { prebidjs } from 'ad-tag/types/prebidjs';
-import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
-import type { AdPipelineContext } from 'ad-tag/ads/adPipeline';
+import type { EventContext, Events } from 'ad-tag/ads/modules/moli-analytics/types';
 
 export const mapPrebidAuctionEnd = (
-  auction: prebidjs.event.AuctionObject,
-  context: AdPipelineContext,
-  publisher: string,
-  analyticsLabels: Events.AnalyticsLabels
+  event: prebidjs.event.AuctionObject,
+  context: EventContext
 ): Events.Prebid.AuctionEnd => {
   const timestamp = Date.now();
   return {
     v: 1,
     type: 'prebid.auctionEnd',
-    publisher: publisher,
+    publisher: context.publisher,
+    pageViewId: context.pageViewId,
     timestamp,
-    payload: {
-      timestamp: new Date(timestamp).toISOString(),
-      data: {
-        analyticsLabels,
-        auctionId: auction.auctionId,
-        adUnits: Array.from(
-          new Map(
-            (auction.adUnits || []).map(adUnit => [
-              adUnit.code!,
-              {
-                code: adUnit.code!,
-                adUnitName: adUnit.pubstack?.adUnitName || adUnit.code!
-              }
-            ])
-          ).values()
-        ),
-        bidderRequests: (auction.bidderRequests || []).map(request => {
-          return {
-            auctionId: request.auctionId!,
-            bidderCode: request.bidderCode!,
-            bids: (request.bids || []).map(bid => ({
-              adUnitCode: bid.adUnitCode
-            })),
-            ortb2: {
-              device: {
-                ua: request?.ortb2?.device?.ua || context.window__.navigator.userAgent
-              }
+    analyticsLabels: context.analyticsLabels,
+    data: {
+      auctionId: event.auctionId,
+      adUnits: Array.from(
+        new Map(
+          (event.adUnits || []).map(adUnit => [
+            adUnit.code!,
+            {
+              code: adUnit.code!,
+              adUnitName: adUnit.pubstack?.adUnitName || adUnit.code!
             }
-          };
-        }),
-        bidsReceived: (auction.bidsReceived || []).map(bid => ({
-          bidder: bid.bidder,
-          adUnitCode: bid.adUnitCode,
-          currency: bid.currency,
-          cpm: bid.cpm,
-          size: bid.size,
-          timeToRespond: bid.timeToRespond
-        }))
-      }
+          ])
+        ).values()
+      ),
+      bidderRequests: (event.bidderRequests || []).map(request => {
+        return {
+          bidderCode: request.bidderCode!,
+          bids: (request.bids || []).map(bid => ({
+            adUnitCode: bid.adUnitCode
+          }))
+        };
+      }),
+      bidsReceived: (event.bidsReceived || []).map(bid => ({
+        bidder: bid.bidder,
+        adUnitCode: bid.adUnitCode,
+        size: bid.size,
+        currency: bid.currency,
+        cpm: bid.cpm,
+        timeToRespond: bid.timeToRespond
+      }))
     }
   };
 };

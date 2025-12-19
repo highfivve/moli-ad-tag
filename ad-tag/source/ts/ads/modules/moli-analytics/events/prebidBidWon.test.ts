@@ -1,9 +1,9 @@
 import { expect, use } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { mapPrebidBidWon } from 'ad-tag/ads/modules/moli-analytics/events/prebidBidWon';
-import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
 import { prebidjs } from 'ad-tag/types/prebidjs';
+import { createEventContextStub } from 'ad-tag/stubs/analytics';
+import { mapPrebidBidWon } from 'ad-tag/ads/modules/moli-analytics/events/prebidBidWon';
 
 use(sinonChai);
 
@@ -20,41 +20,37 @@ describe('AnalyticsPrebidBidWon', () => {
   });
 
   it('testMapPrebidBidWon', () => {
-    const publisher = 'test-publisher';
-    const analyticsLabels: Events.AnalyticsLabels = {
-      ab_test: 'test-ab',
-      variant: 'test-variant'
-    };
-
     const event = {
-      auctionId: 'test-auction-id',
-      bidderCode: 'test-bidder-code',
-      adUnitCode: 'test-ad-unit-code',
-      transactionId: 'test-transaction-id',
-      requestId: 'test-request-id',
+      auctionId: 'au-001',
+      bidderCode: 'rubicon',
+      adUnitCode: 'header',
+      size: '300x250',
       currency: 'EUR',
       cpm: 0.1,
-      size: '300x250',
       status: 'rendered',
       timeToRespond: 100
     };
+    const eventContext = createEventContextStub();
 
-    const result = mapPrebidBidWon(event as prebidjs.BidResponse, publisher, analyticsLabels);
+    const result = mapPrebidBidWon(event as prebidjs.BidResponse, eventContext);
 
     expect(result).to.be.an('object');
     expect(result).to.have.property('v').that.is.a('number').gte(1);
     expect(result).to.have.property('type', 'prebid.bidWon');
-    expect(result).to.have.property('publisher', publisher);
+    expect(result).to.have.property('publisher', eventContext.publisher);
     expect(result).to.have.property('timestamp', now);
-    expect(result).to.have.nested.property('payload.timestamp', new Date(now).toISOString());
-    expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
-    expect(result).to.have.nested.property('payload.data.auctionId', event.auctionId);
-    expect(result).to.have.nested.property('payload.data.bidderCode', event.bidderCode);
-    expect(result).to.have.nested.property('payload.data.adUnitCode', event.adUnitCode);
-    expect(result).to.have.nested.property('payload.data.currency', event.currency);
-    expect(result).to.have.nested.property('payload.data.cpm', event.cpm);
-    expect(result).to.have.nested.property('payload.data.size', event.size);
-    expect(result).to.have.nested.property('payload.data.status', event.status);
-    expect(result).to.have.nested.property('payload.data.timeToRespond', event.timeToRespond);
+    expect(result).to.have.property('analyticsLabels', eventContext.analyticsLabels);
+    expect(result).to.have.property('data').that.is.an('object');
+
+    const resultData = result.data;
+
+    expect(resultData).to.have.property('auctionId', event.auctionId);
+    expect(resultData).to.have.property('bidderCode', event.bidderCode);
+    expect(resultData).to.have.property('adUnitCode', event.adUnitCode);
+    expect(resultData).to.have.property('size', event.size);
+    expect(resultData).to.have.property('currency', event.currency);
+    expect(resultData).to.have.property('cpm', event.cpm);
+    expect(resultData).to.have.property('status', event.status);
+    expect(resultData).to.have.property('timeToRespond', event.timeToRespond);
   });
 });

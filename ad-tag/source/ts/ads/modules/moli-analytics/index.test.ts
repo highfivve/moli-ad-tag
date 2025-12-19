@@ -151,9 +151,7 @@ describe('Moli Analytics Module', () => {
     // Page view event should be tracked again with the new pageViewId
     expect(trackSpy).calledTwice;
     expect(trackSpy.secondCall.firstArg).an('object').and.have.property('type', 'page.view');
-    expect(trackSpy.secondCall.firstArg.payload.data.pageViewId).not.eq(
-      trackSpy.firstCall.firstArg.payload.data.pageViewId
-    );
+    expect(trackSpy.secondCall.firstArg.pageViewId).not.eq(trackSpy.firstCall.firstArg.pageViewId);
   });
 
   it('should use analytics labels from moli config', async () => {
@@ -172,10 +170,10 @@ describe('Moli Analytics Module', () => {
     expect(trackSpy).calledOnce;
     expect(trackSpy.firstCall.firstArg)
       .an('object')
-      .and.nested.property('payload.data.analyticsLabels.variant', 'A');
+      .and.nested.property('analyticsLabels.variant', 'A');
     expect(trackSpy.firstCall.firstArg)
       .an('object')
-      .and.nested.property('payload.data.analyticsLabels.ab_test', 'A_1');
+      .and.nested.property('analyticsLabels.ab_test', 'A_1');
   });
 
   it('set analytics label from moli config', async () => {

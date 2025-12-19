@@ -1,30 +1,27 @@
 import type { prebidjs } from 'ad-tag/types/prebidjs';
-import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
+import type { EventContext, Events } from 'ad-tag/ads/modules/moli-analytics/types';
 
 export const mapPrebidBidWon = (
-  response: prebidjs.BidResponse,
-  publisher: string,
-  analyticsLabels: Events.AnalyticsLabels
+  event: prebidjs.BidResponse,
+  context: EventContext
 ): Events.Prebid.BidWon => {
   const timestamp = Date.now();
   return {
     v: 1,
     type: 'prebid.bidWon',
-    publisher,
+    publisher: context.publisher,
+    pageViewId: context.pageViewId,
     timestamp,
-    payload: {
-      timestamp: new Date(timestamp).toISOString(),
-      data: {
-        analyticsLabels,
-        auctionId: response.auctionId,
-        bidderCode: response.bidderCode,
-        adUnitCode: response.adUnitCode,
-        currency: response.currency,
-        cpm: response.cpm,
-        size: response.size,
-        status: response.status!,
-        timeToRespond: response.timeToRespond
-      }
+    analyticsLabels: context.analyticsLabels,
+    data: {
+      auctionId: event.auctionId,
+      bidderCode: event.bidderCode,
+      adUnitCode: event.adUnitCode,
+      size: event.size,
+      currency: event.currency,
+      cpm: event.cpm,
+      status: event.status!,
+      timeToRespond: event.timeToRespond
     }
   };
 };

@@ -1,5 +1,5 @@
 import type { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
+import type { EventContext, Events } from 'ad-tag/ads/modules/moli-analytics/types';
 
 const parseUTM = (search: string): Events.UTMParams => {
   const params = new URLSearchParams(search);
@@ -15,29 +15,23 @@ const parseUTM = (search: string): Events.UTMParams => {
 };
 
 export const mapPageView = (
-  context: AdPipelineContext,
-  publisher: string,
-  sessionId: string,
-  pageViewId: string,
-  analyticsLabels: Events.AnalyticsLabels
+  context: EventContext,
+  adContext: AdPipelineContext
 ): Events.Page.View => {
   const timestamp = Date.now();
   return {
     v: 1,
     type: 'page.view',
-    publisher,
+    publisher: context.publisher,
+    pageViewId: context.pageViewId,
     timestamp,
-    payload: {
-      timestamp: new Date(timestamp).toISOString(),
-      data: {
-        analyticsLabels,
-        sessionId,
-        pageViewId,
-        domain: context.window__.moli.resolveAdUnitPath('{domain}'),
-        device: context.labelConfigService__.getDeviceLabel(),
-        ua: context.window__.navigator.userAgent,
-        utm: parseUTM(context.window__.location.search)
-      }
+    analyticsLabels: context.analyticsLabels,
+    ua: adContext.window__.navigator.userAgent,
+    data: {
+      sessionId: context.session.getId(),
+      device: adContext.labelConfigService__.getDeviceLabel(),
+      domain: adContext.window__.moli.resolveAdUnitPath('{domain}'),
+      utm: parseUTM(adContext.window__.location.search)
     }
   };
 };

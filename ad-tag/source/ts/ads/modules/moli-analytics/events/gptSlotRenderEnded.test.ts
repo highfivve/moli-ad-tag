@@ -1,18 +1,18 @@
 import { expect, use } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { mapGPTSlotRenderEnded } from 'ad-tag/ads/modules/moli-analytics/events/gptSlotRenderEnded';
+import type { googletag } from 'ad-tag/types/googletag';
 import { adPipelineContext } from 'ad-tag/stubs/adPipelineContextStubs';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
-import type { googletag } from 'ad-tag/types/googletag';
-import type { Events } from 'ad-tag/ads/modules/moli-analytics/types';
+import { createEventContextStub } from 'ad-tag/stubs/analytics';
+import { mapGPTSlotRenderEnded } from 'ad-tag/ads/modules/moli-analytics/events/gptSlotRenderEnded';
 
 use(sinonChai);
 
 describe('AnalyticsGPTSlotRenderEnded', () => {
   const sandbox = sinon.createSandbox();
   const { jsDomWindow } = createDomAndWindow();
-  const context = adPipelineContext(jsDomWindow);
+  const adContext = adPipelineContext(jsDomWindow);
   const now = 1000000;
 
   beforeEach(() => {
@@ -24,17 +24,8 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
   });
 
   it('testMapGPTSlotRenderEnded', () => {
-    const publisher = 'test-publisher';
-    const sessionId = 'test-session-id';
-    const pageViewId = 'test-page-view-id';
-    const auctionId = 'test-auction-id';
     const adUnitCode = 'ad_header';
-    const adUnitName = 'header';
     const size = '300x200';
-    const analyticsLabels: Events.AnalyticsLabels = {
-      ab_test: 'test-ab',
-      variant: 'test-variant'
-    };
     const event = {
       slot: {
         getAdUnitPath: sandbox
@@ -45,34 +36,29 @@ describe('AnalyticsGPTSlotRenderEnded', () => {
       isEmpty: false,
       size: size.split('x').map(Number)
     } as googletag.events.ISlotRenderEndedEvent;
+    const eventContext = {
+      ...createEventContextStub(),
+      auctionId: 'auc-001',
+      adUnitName: 'header'
+    };
 
-    const result = mapGPTSlotRenderEnded(event, context, publisher, {
-      sessionId,
-      pageViewId,
-      auctionId,
-      adUnitName,
-      analyticsLabels
-    });
+    const result = mapGPTSlotRenderEnded(event, eventContext, adContext);
 
     expect(result).to.be.an('object');
     expect(result).to.have.property('v').that.is.a('number').gte(1);
     expect(result).to.have.property('type', 'gpt.slotRenderEnded');
-    expect(result).to.have.property('publisher', publisher);
+    expect(result).to.have.property('publisher', eventContext.publisher);
+    expect(result).to.have.property('pageViewId', eventContext.pageViewId);
     expect(result).to.have.property('timestamp', now);
-    expect(result).to.have.nested.property('payload.timestamp', new Date(now).toISOString());
-    expect(result).to.have.nested.property('payload.data.analyticsLabels', analyticsLabels);
-    expect(result).to.have.nested.property('payload.data.adUnitPath', event.slot.getAdUnitPath());
-    expect(result).to.have.nested.property('payload.data.isEmpty', event.isEmpty);
-    expect(result).to.have.nested.property('payload.data.size', size);
-    expect(result).to.have.nested.property('payload.data.sessionId', sessionId);
-    expect(result).to.have.nested.property('payload.data.pageViewId', pageViewId);
-    expect(result).to.have.nested.property(
-      'payload.data.device',
-      context.labelConfigService__.getDeviceLabel()
-    );
-    expect(result).to.have.nested.property('payload.data.domain', 'example.com');
-    expect(result).to.have.nested.property('payload.data.auctionId', auctionId);
-    expect(result).to.have.nested.property('payload.data.adUnitCode', adUnitCode);
-    expect(result).to.have.nested.property('payload.data.adUnitName', adUnitName);
+    expect(result).to.have.property('analyticsLabels', eventContext.analyticsLabels);
+    expect(result).to.have.property('data').that.is.an('object');
+
+    const data = result.data;
+    expect(data).to.have.property('auctionId', eventContext.auctionId);
+    expect(data).to.have.property('adUnitPath', event.slot.getAdUnitPath());
+    expect(data).to.have.property('adUnitCode', adUnitCode);
+    expect(data).to.have.property('adUnitName', eventContext.adUnitName);
+    expect(data).to.have.property('size', size);
+    expect(data).to.have.property('isEmpty', event.isEmpty);
   });
 });
