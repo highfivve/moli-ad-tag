@@ -2614,6 +2614,26 @@
           "description": "Additional attributes for the script tag.",
           "type": "object"
         },
+        "consent": {
+          "additionalProperties": false,
+          "description": "Consent requirements for loading the script.",
+          "properties": {
+            "cmpApi": {
+              "const": "tcf",
+              "description": "validate GVL (general vendor id) via tcf2api interface",
+              "type": "string"
+            },
+            "vendorId": {
+              "description": "A valid GVL vendor id.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cmpApi",
+            "vendorId"
+          ],
+          "type": "object"
+        },
         "labelAll": {
           "description": "Loading conditions based on labels.",
           "items": {

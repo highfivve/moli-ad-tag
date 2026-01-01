@@ -7,6 +7,7 @@ import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { modules } from 'ad-tag/types/moliConfig';
 import { newAdPipelineContext } from 'ad-tag/stubs/moliStubs';
 import { createLabelConfigService } from 'ad-tag/ads/labelConfigService';
+import { fullConsent, tcData, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
 
 use(sinonChai);
 
@@ -141,5 +142,70 @@ describe('customModule', () => {
     expect(scripts).to.have.lengthOf(2);
     expect(scripts[0].src).to.equal('https://example.com/allowed1.js');
     expect(scripts[1].src).to.equal('https://example.com/allowed2.js');
+  });
+
+  describe('consent checks', () => {
+    const vendorId = '123';
+    const configWithConsent: modules.custom.CustomModuleConfig = {
+      enabled: true,
+      scripts: [{ src: 'https://example.com/test.js', consent: { cmpApi: 'tcf', vendorId } }]
+    };
+
+    it('should inject script if no consent config is provided', async () => {
+      const context = newAdPipelineContext(jsDomWindow);
+      const config: modules.custom.CustomModuleConfig = {
+        enabled: true,
+        scripts: [{ src: 'https://example.com/test.js' }]
+      };
+      const { initStep } = createAndConfigureCustomModule(config);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(1);
+      expect(scripts[0].src).to.equal('https://example.com/test.js');
+    });
+
+    it('should inject script if in test mode regardless of consent', async () => {
+      const context: AdPipelineContext = { ...newAdPipelineContext(jsDomWindow), env__: 'test' };
+      const { initStep } = createAndConfigureCustomModule(configWithConsent);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(1);
+      expect(scripts[0].src).to.equal('https://example.com/test.js');
+    });
+
+    it('should inject script if TCF consent is given', async () => {
+      const context: AdPipelineContext = {
+        ...newAdPipelineContext(jsDomWindow),
+        tcData__: fullConsent({ [vendorId]: true })
+      };
+      const { initStep } = createAndConfigureCustomModule(configWithConsent);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(1);
+      expect(scripts[0].src).to.equal('https://example.com/test.js');
+    });
+
+    it('should not inject script if TCF consent is denied', async () => {
+      const context: AdPipelineContext = {
+        ...newAdPipelineContext(jsDomWindow),
+        tcData__: fullConsent({ [vendorId]: false })
+      };
+      const { initStep } = createAndConfigureCustomModule(configWithConsent);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(0);
+    });
+
+    it('should inject script if gdprApplies is false', async () => {
+      const context: AdPipelineContext = {
+        ...newAdPipelineContext(jsDomWindow),
+        tcData__: tcDataNoGdpr
+      };
+      const { initStep } = createAndConfigureCustomModule(configWithConsent);
+      await initStep(context);
+      const scripts = jsDomWindow.document.getElementsByTagName('script');
+      expect(scripts).to.have.lengthOf(1);
+      expect(scripts[0].src).to.equal('https://example.com/test.js');
+    });
   });
 });
