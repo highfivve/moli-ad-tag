@@ -2871,6 +2871,23 @@ export namespace modules {
          */
         readonly [attributeName: string]: string;
       };
+
+      /**
+       * Consent requirements for loading the script.
+       */
+      readonly consent?: {
+        /**
+         * validate GVL (general vendor id) via tcf2api interface
+         */
+        cmpApi: 'tcf';
+
+        /**
+         * A valid GVL vendor id.
+         * @see https://vendorlist.consensu.org/v3/vendor-list.json
+         * @see https://iabeurope.eu/vendor-list-tcf/
+         */
+        vendorId: string;
+      };
     }
 
     /**
