@@ -28,7 +28,7 @@ import { createAssetLoaderService } from '../util/assetLoaderService';
 import { fullConsent, tcData, tcDataNoGdpr, tcfapiFunction } from '../stubs/consentStubs';
 import { googletag } from '../types/googletag';
 import { AdSlot, Environment, gpt, MoliConfig } from '../types/moliConfig';
-import { formatKey } from 'ad-tag/ads/keyValues';
+import { formatKey, CUSTOM_INTERSTITIAL_FORMAT } from 'ad-tag/ads/keyValues';
 
 // setup sinon-chai
 use(sinonChai);
@@ -627,6 +627,55 @@ describe('google ad manager', () => {
         expect(displaySpy).to.have.been.calledOnceWithExactly(adSlotStub);
         expect(slotDefinitions).to.have.length(1);
         expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
+      });
+
+      it('should set format targeting to "6" for custom interstitials', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        getElementByIdStub.returns(null);
+
+        const customInterstitialSlot: AdSlot = {
+          ...adSlot,
+          position: 'interstitial'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const setTargetingSpy = sandbox.spy(adSlotStub, 'setTargeting');
+        const context = adPipelineContext();
+        const interstitialChannelStub = sandbox.stub(context.auction__, 'interstitialChannel');
+        interstitialChannelStub.returns('c');
+
+        sandbox.stub(dom.window.googletag, 'defineSlot').returns(adSlotStub);
+
+        await step(context, [customInterstitialSlot]);
+
+        expect(setTargetingSpy).to.have.been.calledWith(formatKey, CUSTOM_INTERSTITIAL_FORMAT);
+      });
+
+      it('should set format targeting to "5" for GAM web interstitials', async () => {
+        const step = gptDefineSlots();
+        matchMediaStub.returns({ matches: true } as MediaQueryList);
+        getElementByIdStub.returns(null);
+
+        const gamInterstitialSlot: AdSlot = {
+          ...adSlot,
+          position: 'interstitial'
+        };
+
+        const adSlotStub = googleAdSlotStub(adSlot.adUnitPath, adSlot.domId);
+        const setTargetingSpy = sandbox.spy(adSlotStub, 'setTargeting');
+        const context = adPipelineContext();
+        const interstitialChannelStub = sandbox.stub(context.auction__, 'interstitialChannel');
+        interstitialChannelStub.returns('gam'); // GAM interstitial channel
+
+        sandbox.stub(dom.window.googletag, 'defineOutOfPageSlot').returns(adSlotStub);
+
+        await step(context, [gamInterstitialSlot]);
+
+        expect(setTargetingSpy).to.have.been.calledWith(
+          formatKey,
+          jsDomWindow.googletag.enums.OutOfPageFormat.INTERSTITIAL.toString()
+        );
       });
 
       it('should define out-of-page slots', async () => {

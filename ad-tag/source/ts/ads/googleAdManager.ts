@@ -20,7 +20,7 @@ import { tcfapi } from '../types/tcfapi';
 import { createTestSlots } from '../util/test-slots';
 import { resolveAdUnitPath } from './adUnitPath';
 import { AdSlot, consent, googleAdManager } from '../types/moliConfig';
-import { formatKey } from './keyValues';
+import { formatKey, CUSTOM_INTERSTITIAL_FORMAT } from './keyValues';
 
 /**
  * A dummy googletag ad slot for the test mode
@@ -454,9 +454,16 @@ export const gptDefineSlots =
           // transport the special GAM formats through the ad slot targeting
           if (format) {
             adSlot.setTargeting(formatKey, format.toString());
+          } else if (moliSlot.position === 'interstitial') {
+            // For custom interstitials, use the custom format value
+            if (context.auction__.interstitialChannel() === 'c') {
+              adSlot.setTargeting(formatKey, CUSTOM_INTERSTITIAL_FORMAT);
+            }
+            // GAM interstitials already have format set above via the format parameter
           } else {
             adSlot.clearTargeting(formatKey);
           }
+
           // required method call, but doesn't trigger ad loading as we use the disableInitialLoad
           context.window__.googletag.display(adSlot);
         }
