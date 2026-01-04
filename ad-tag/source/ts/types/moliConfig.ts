@@ -1562,9 +1562,23 @@ export namespace modules {
      */
     export interface FeedOptions {
       /**
+       * Loading conditions based on labels.
+       */
+      readonly labelAll?: string[];
+      /**
+       * Loading conditions based on labels.
+       */
+      readonly labelAny?: string[];
+
+      /**
        * uniquely identifies the feed. Most of the feed content configuration is specific to this id.
        */
       readonly feedId: string;
+
+      /**
+       * URL that is used to load the feed content.
+       */
+      readonly feedUrl: string;
 
       /**
        * Optional list of keywords that are added to the feed request and may be used to custom

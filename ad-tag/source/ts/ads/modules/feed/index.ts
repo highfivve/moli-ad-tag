@@ -1,31 +1,37 @@
 import { modules } from 'ad-tag/types/moliConfig';
 import { IModule } from 'ad-tag/types/module';
-import { ConfigureStep, InitStep, mkInitStep, PrepareRequestAdsStep } from 'ad-tag/ads/adPipeline';
+import {
+  AdPipelineContext,
+  ConfigureStep,
+  InitStep,
+  mkInitStep,
+  PrepareRequestAdsStep
+} from 'ad-tag/ads/adPipeline';
 
-const getBaseUrl = (): string => {
-  const url = new URL(window.location.href);
+const getBaseUrl = (ctx: AdPipelineContext): string => {
+  const url = new URL(ctx.window__.location.href);
   return url.origin + url.pathname;
 };
 
 // Fetch content from the API
-const fetchContent = async (contentFeedUrl: URL) => {
+const fetchContent = async (contentFeedUrl: URL, ctx: AdPipelineContext) => {
   try {
-    const baseUrl = getBaseUrl();
+    const baseUrl = getBaseUrl(ctx);
     contentFeedUrl.searchParams.set('url', encodeURIComponent(baseUrl));
-    const response = await fetch(contentFeedUrl.toString(), {
+    const response = await ctx.window__.fetch(contentFeedUrl.toString(), {
       headers: {
         Accept: 'text/html'
       }
     });
 
     if (!response.ok) {
-      console.error('feed', `HTTP error! status: ${response.status}`);
+      ctx.logger__.error('feed', `HTTP error! status: ${response.status}`);
       return null;
     }
 
     return await response.text();
   } catch (error) {
-    console.error('feed', 'Error fetching content:', error);
+    ctx.logger__.error('feed', 'Error fetching content:', error);
     return null;
   }
 };
@@ -33,21 +39,21 @@ const fetchContent = async (contentFeedUrl: URL) => {
 /**
  * @see https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
  */
-const reinsertScripts = (container: Element): void => {
+const reinsertScripts = (container: Element, ctx: AdPipelineContext): void => {
   Array.from(container.querySelectorAll('script')).forEach(oldScriptEl => {
-    const newScriptEl = document.createElement('script');
+    const newScriptEl = ctx.window__.document.createElement('script');
 
     Array.from(oldScriptEl.attributes).forEach(attr => {
       newScriptEl.setAttribute(attr.name, attr.value);
     });
 
-    const scriptText = document.createTextNode(oldScriptEl.innerHTML);
+    const scriptText = ctx.window__.document.createTextNode(oldScriptEl.innerHTML);
     newScriptEl.appendChild(scriptText);
 
     if (oldScriptEl.parentNode) {
       oldScriptEl.parentNode.replaceChild(newScriptEl, oldScriptEl);
     } else {
-      console.warn(
+      ctx.logger__.warn(
         'feed',
         'Script element has no parent node, cannot reinsert script:',
         oldScriptEl
@@ -56,23 +62,26 @@ const reinsertScripts = (container: Element): void => {
   });
 };
 
-const loadFeed = async (config: modules.feed.FeedConfig): Promise<void> => {
-  for (const options of config.feeds) {
-    for (const element of document.querySelectorAll(options.selector)) {
-      const feedUrl = new URL(`https://feed.h5v.eu/api/content/feed/${options.feedId}`);
-      if (options.keywords) {
-        feedUrl.searchParams.set('keywords', encodeURIComponent(options.keywords.join(';')));
-      }
-      const html = await fetchContent(feedUrl);
-      if (html) {
-        // If not using shadow DOM, just set the innerHTML directly
-        element.innerHTML = html;
-        reinsertScripts(element);
-      } else {
-        console.warn('feed', 'No content received from API');
-      }
-    }
-  }
+const loadFeed = (config: modules.feed.FeedConfig, ctx: AdPipelineContext): Promise<void> => {
+  config.feeds
+    .filter(options => ctx.labelConfigService__.filterSlot(options))
+    .forEach(options => {
+      ctx.window__.document.querySelectorAll(options.selector).forEach(element => {
+        const feedUrl = new URL(options.feedUrl);
+        if (options.keywords) {
+          feedUrl.searchParams.set('keywords', encodeURIComponent(options.keywords.join(';')));
+        }
+        fetchContent(feedUrl, ctx).then(html => {
+          if (html) {
+            element.innerHTML = html;
+            reinsertScripts(element, ctx);
+          } else {
+            ctx.logger__.warn('feed', 'No content received from API');
+          }
+        });
+      });
+    });
+  return Promise.resolve();
 };
 
 export const feedModule = (): IModule => {
@@ -91,7 +100,7 @@ export const feedModule = (): IModule => {
     },
     initSteps__(): InitStep[] {
       const config = feedConfig;
-      return config ? [mkInitStep('feed-init', () => loadFeed(config))] : [];
+      return config ? [mkInitStep('feed-init', ctx => loadFeed(config, ctx))] : [];
     },
     configureSteps__(): ConfigureStep[] {
       return [];
