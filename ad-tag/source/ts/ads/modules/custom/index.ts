@@ -43,7 +43,6 @@ export const customModule = (): IModule => {
   ): Promise<void> => {
     if (config.inlineJs && config.inlineJs.code) {
       try {
-        // Option 1: Create a script element
         const script = context.window__.document.createElement('script');
         script.type = 'text/javascript';
         script.innerHTML = config.inlineJs.code;
