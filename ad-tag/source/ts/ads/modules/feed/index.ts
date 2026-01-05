@@ -52,6 +52,7 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
+  mkConfigureStepOncePerRequestAdsCycle,
   mkInitStep,
   PrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
@@ -147,11 +148,13 @@ export const feedModule = (): IModule => {
       }
     },
     initSteps__(): InitStep[] {
-      const config = feedConfig;
-      return config ? [mkInitStep('feed-init', ctx => loadFeed(config, ctx))] : [];
+      return [];
     },
     configureSteps__(): ConfigureStep[] {
-      return [];
+      const config = feedConfig;
+      return config
+        ? [mkConfigureStepOncePerRequestAdsCycle('feed-loading', ctx => loadFeed(config, ctx))]
+        : [];
     },
     prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
       return [];

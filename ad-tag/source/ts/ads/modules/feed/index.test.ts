@@ -21,9 +21,9 @@ describe('feedModule', () => {
     return mod;
   };
 
-  const runInitSteps = async (mod: ReturnType<typeof feedModule>, ctx: AdPipelineContext) => {
-    const [initStep] = mod.initSteps__();
-    await initStep(ctx);
+  const runConfigureStep = async (mod: ReturnType<typeof feedModule>, ctx: AdPipelineContext) => {
+    const [configureStep] = mod.configureSteps__();
+    await configureStep(ctx, []);
     // wait for any async operations to complete
     await new Promise(resolve => setTimeout(resolve, 5));
   };
@@ -62,12 +62,42 @@ describe('feedModule', () => {
   it('should not return any steps if disabled', () => {
     const mod = feedModule();
     mod.configure__({ feed: { enabled: false, feeds: [] } as any });
-    expect(mod.initSteps__()).to.be.empty;
+    expect(mod.configureSteps__()).to.be.empty;
   });
 
-  it('should return an init step if enabled', () => {
+  it('should return an configureStep step if enabled', () => {
     const mod = createAndConfigureModule(feedConfig);
-    expect(mod.initSteps__()).to.have.lengthOf(1);
+    expect(mod.configureSteps__()).to.have.lengthOf(1);
+  });
+
+  it('should run the configure step only once per request ads cycle', async () => {
+    const mod = createAndConfigureModule(feedConfig);
+
+    // Setup DOM
+    const el = jsDomWindow.document.createElement('div');
+    el.className = 'feed';
+    jsDomWindow.document.body.appendChild(el);
+
+    // Mock fetch
+    const fetchStub = sandbox.stub(jsDomWindow, 'fetch').resolves({
+      ok: true,
+      text: async () => '<div>content</div>'
+    } as any);
+
+    const ctx = adPipelineContext(jsDomWindow);
+    // Run configure step twice
+    const [configureStep] = mod.configureSteps__();
+    await configureStep(ctx, []);
+    await configureStep(ctx, []);
+    // wait for any async operations to complete
+    await new Promise(resolve => setTimeout(resolve, 5));
+
+    expect(fetchStub).to.have.been.calledOnce;
+    expect(el.innerHTML).to.contain('content');
+
+    const ctxNextCycle: AdPipelineContext = { ...ctx, requestAdsCalls__: 2 };
+    await configureStep(ctxNextCycle, []);
+    expect(fetchStub).to.have.been.calledTwice;
   });
 
   it('should inject HTML and reinsert scripts for a feed', async () => {
@@ -86,7 +116,7 @@ describe('feedModule', () => {
       text: async () => htmlWithScript
     } as any);
 
-    await runInitSteps(mod, adPipelineContext(jsDomWindow));
+    await runConfigureStep(mod, adPipelineContext(jsDomWindow));
     expect(fetchStub).to.have.been.calledOnce;
     expect(el.innerHTML).to.contain('content');
     // The script should be reinserted as a new script element
@@ -116,7 +146,7 @@ describe('feedModule', () => {
       text: async () => '<div>content</div>'
     } as any);
 
-    await runInitSteps(mod, adPipelineContext(jsDomWindow));
+    await runConfigureStep(mod, adPipelineContext(jsDomWindow));
 
     expect(fetchStub).to.have.been.calledOnce;
     const calledUrl = new URL(fetchStub.firstCall.args[0] as string);
@@ -138,7 +168,7 @@ describe('feedModule', () => {
 
     const ctx = adPipelineContext(jsDomWindow);
     const warnSpy = sandbox.spy(ctx.logger__, 'warn');
-    await runInitSteps(mod, ctx);
+    await runConfigureStep(mod, ctx);
 
     expect(fetchStub).to.have.been.calledOnce;
     expect(warnSpy).to.have.been.calledWith('feed', 'No content received from API');
@@ -154,7 +184,7 @@ describe('feedModule', () => {
     const ctx = adPipelineContext(jsDomWindow);
     const fetchStub = sandbox.stub(jsDomWindow, 'fetch').rejects(new Error('fail'));
     const errorSpy = sandbox.spy(ctx.logger__, 'error');
-    await runInitSteps(mod, ctx);
+    await runConfigureStep(mod, ctx);
 
     expect(fetchStub).to.have.been.calledOnce;
     expect(errorSpy).to.have.been.calledWith('feed', 'Error fetching content:', Sinon.match.any);
