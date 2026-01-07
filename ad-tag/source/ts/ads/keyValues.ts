@@ -10,7 +10,7 @@
  * - '5' = INTERSTITIAL (GAM Web Interstitial)
  *
  * Custom format extensions:
- * - '6' = Custom interstitial (header bidding or custom implementations)
+ * - '100' = Custom interstitial (header bidding or custom implementations)
  *
  * Main use case is to have the initially requested ad format available in googletag.pubads event
  * listeners, such as `slotRequested` and `slotRenderEnded`. This makes it possible to attach
@@ -21,4 +21,4 @@ export const formatKey = 'f' as const;
 /**
  * Custom format value for custom interstitials (header bidding or custom implementations)
  */
-export const CUSTOM_INTERSTITIAL_FORMAT = '6' as const;
+export const CUSTOM_INTERSTITIAL_FORMAT = '100' as const;

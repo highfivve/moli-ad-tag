@@ -629,7 +629,7 @@ describe('google ad manager', () => {
         expect(slotDefinitions[0].adSlot).to.be.equal(adSlotStub);
       });
 
-      it('should set format targeting to "6" for custom interstitials', async () => {
+      it('should set format targeting to "100" for custom interstitials', async () => {
         const step = gptDefineSlots();
         matchMediaStub.returns({ matches: true } as MediaQueryList);
         getElementByIdStub.returns(null);
