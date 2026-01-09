@@ -6,6 +6,7 @@
     "blocklistUrls",
     "cleanup",
     "geoedge",
+    "feed",
     "lazyLoad",
     "prebidFirstPartyData",
     "pubstack",
