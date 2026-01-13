@@ -25,7 +25,7 @@ export const createEventTracker = (
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(currentBatch)
+      body: JSON.stringify({ events: currentBatch })
     })
       .then(response => {
         if (response.ok) {

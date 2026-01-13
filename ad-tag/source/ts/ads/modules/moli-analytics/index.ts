@@ -28,23 +28,34 @@ export const MoliAnalytics = (): IModule => {
   let adContext: AdPipelineContext;
   let eventContext: EventContext;
   let eventTracker: EventTracker;
-  let adUnitsMap: Map<string, { auctionId: string; adUnitName: string }> = new Map();
+  let adUnitsMap: Map<string, { auctionId: string; adUnitName: string; gpid: string }> = new Map();
 
   const generatePageViewId = (): string => `pv-${uuidV4(adContext.window__)}`;
 
   const handleAuctionEnd = (event: prebidjs.event.AuctionObject) => {
-    const auctionEnd = eventMapper.prebid.auctionEnd(event, eventContext);
+    const auctionEnd = eventMapper.prebid.auctionEnd(event, eventContext, adContext);
     for (const adUnit of auctionEnd.data.adUnits) {
       adUnitsMap.set(adUnit.code, {
         auctionId: auctionEnd.data.auctionId,
-        adUnitName: adUnit.adUnitName
+        adUnitName: adUnit.adUnitName,
+        gpid: adUnit.gpid
       });
     }
     eventTracker.track(auctionEnd);
   };
 
   const handleBidWon = (event: prebidjs.BidResponse) => {
-    eventTracker.track(eventMapper.prebid.bidWon(event, eventContext));
+    const adUnitData = adUnitsMap.get(event.adUnitCode);
+    eventTracker.track(
+      eventMapper.prebid.bidWon(
+        event,
+        {
+          ...eventContext,
+          gpid: adUnitData?.gpid || ''
+        },
+        adContext
+      )
+    );
   };
 
   const handleSlotRenderEnded = (event: googletag.events.ISlotRenderEndedEvent) => {
@@ -56,7 +67,8 @@ export const MoliAnalytics = (): IModule => {
         {
           ...eventContext,
           auctionId: adUnitData?.auctionId || '',
-          adUnitName: adUnitData?.adUnitName || adUnitCode
+          adUnitName: adUnitData?.adUnitName || adUnitCode,
+          gpid: adUnitData?.gpid || ''
         },
         adContext
       )
@@ -96,7 +108,7 @@ export const MoliAnalytics = (): IModule => {
     return true;
   };
 
-  const initMoliAnalytics = (adPipelineContext: AdPipelineContext): Promise<void> => {
+  const initMoliAnalytics = async (adPipelineContext: AdPipelineContext): Promise<void> => {
     if (!configValid(config, adPipelineContext.logger__)) {
       return Promise.reject('failed to initialize moli analytics: invalid configuration');
     }
@@ -126,8 +138,7 @@ export const MoliAnalytics = (): IModule => {
       };
     }
 
-    // Setup page view event
-    handlePageView();
+    // Set up page view event
     if (adContext.config__.spa?.enabled) {
       // SPA - listen for page change
       adContext.window__.moli.addEventListener('afterRequestAds', event => {
@@ -138,12 +149,18 @@ export const MoliAnalytics = (): IModule => {
     }
 
     // Add prebid event listeners
-    const setupPrebid = () => {
+    const setupPrebid = async () => {
+      // Trigger the initial page view event after user ID resolved
+      if (typeof adContext.window__.pbjs.getUserIdsAsync === 'function') {
+        await adContext.window__.pbjs.getUserIdsAsync();
+      }
+      handlePageView();
+
       adContext.window__.pbjs.onEvent('auctionEnd', handleAuctionEnd);
       adContext.window__.pbjs.onEvent('bidWon', handleBidWon);
     };
     if (typeof adContext.window__.pbjs.onEvent === 'function') {
-      setupPrebid();
+      await setupPrebid();
     } else {
       adContext.window__.pbjs.que.push(setupPrebid);
     }

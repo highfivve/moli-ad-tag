@@ -37,6 +37,7 @@ export namespace Events {
     type: string;
     publisher: string;
     pageViewId: string;
+    userId?: string;
     timestamp: number;
     analyticsLabels: AnalyticsLabels;
     data: Data;
@@ -50,6 +51,7 @@ export namespace Events {
         adUnits: {
           code: string;
           adUnitName: string;
+          gpid: string;
         }[];
         bidderRequests: {
           bidderCode: string;
@@ -72,6 +74,7 @@ export namespace Events {
       type: 'prebid.bidWon';
       data: {
         auctionId: string;
+        gpid: string;
         bidderCode: string;
         adUnitCode: string;
         size: string;
@@ -89,6 +92,7 @@ export namespace Events {
       data: {
         auctionId: string;
         userId?: string;
+        gpid: string;
         adUnitPath: string;
         adUnitCode: string;
         adUnitName: string;
@@ -101,11 +105,11 @@ export namespace Events {
   export namespace Page {
     export type View = BaseEvent & {
       type: 'page.view';
-      ua: string;
       data: {
         sessionId: string;
         device: Device;
         domain: string;
+        ua: string;
         utm: UTMParams;
       };
     };

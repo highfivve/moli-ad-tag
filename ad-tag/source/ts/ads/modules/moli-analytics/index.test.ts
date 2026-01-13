@@ -124,6 +124,7 @@ describe('Moli Analytics Module', () => {
     const moliTag = createMoliTag(jsDomWindow);
     const moliAddListenerStub = sandbox.stub(moliTag, 'addEventListener');
     jsDomWindow.moli = moliTag;
+    jsDomWindow.pbjs = createPbjsStub();
 
     const context = adPipelineContext(jsDomWindow, {
       config__: {
@@ -141,7 +142,8 @@ describe('Moli Analytics Module', () => {
     expect(moliAddListenerStub).calledOnce;
     expect(moliAddListenerStub.firstCall.firstArg).eq('afterRequestAds');
     expect(moliAddListenerStub.firstCall.lastArg).to.be.a('function');
-    // Page view should not be fired yet
+
+    // Page view should be fired
     expect(trackSpy).calledOnce;
     expect(trackSpy.firstCall.firstArg).an('object').and.have.property('type', 'page.view');
 

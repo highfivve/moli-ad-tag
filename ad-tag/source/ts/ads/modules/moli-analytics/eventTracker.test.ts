@@ -42,7 +42,7 @@ describe('EventTracker', () => {
     expect(fetchStub).calledWithMatch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(events)
+      body: JSON.stringify({ events })
     });
   });
 
@@ -61,7 +61,7 @@ describe('EventTracker', () => {
     expect(fetchStub).calledWithMatch(url, {
       method: 'POST',
       headers,
-      body: JSON.stringify(events)
+      body: JSON.stringify({ events })
     });
 
     fetchStub.restore();

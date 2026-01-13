@@ -1,9 +1,11 @@
 import type { prebidjs } from 'ad-tag/types/prebidjs';
 import type { EventContext, Events } from 'ad-tag/ads/modules/moli-analytics/types';
+import type { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 
 export const mapPrebidAuctionEnd = (
   event: prebidjs.event.AuctionObject,
-  context: EventContext
+  context: EventContext,
+  adContext: AdPipelineContext
 ): Events.Prebid.AuctionEnd => {
   const timestamp = Date.now();
   return {
@@ -11,6 +13,7 @@ export const mapPrebidAuctionEnd = (
     type: 'prebid.auctionEnd',
     publisher: context.publisher,
     pageViewId: context.pageViewId,
+    userId: adContext.window__.pbjs.getUserIds().pubcid,
     timestamp,
     analyticsLabels: context.analyticsLabels,
     data: {
@@ -21,7 +24,8 @@ export const mapPrebidAuctionEnd = (
             adUnit.code!,
             {
               code: adUnit.code!,
-              adUnitName: adUnit.pubstack?.adUnitName || adUnit.code!
+              adUnitName: adUnit.pubstack?.adUnitName || adUnit.code!,
+              gpid: adUnit.ortb2Imp?.ext?.gpid!
             }
           ])
         ).values()

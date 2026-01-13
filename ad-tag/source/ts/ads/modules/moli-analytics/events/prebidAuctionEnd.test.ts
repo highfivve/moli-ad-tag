@@ -3,16 +3,22 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import type { prebidjs } from 'ad-tag/types/prebidjs';
 import { createEventContextStub } from 'ad-tag/stubs/analytics';
+import { createPbjsStub } from 'ad-tag/stubs/prebidjsStubs';
+import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
+import { adPipelineContext } from 'ad-tag/stubs/adPipelineContextStubs';
 import { mapPrebidAuctionEnd } from 'ad-tag/ads/modules/moli-analytics/events/prebidAuctionEnd';
 
 use(sinonChai);
 
 describe('AnalyticsAuctionEnd', () => {
   const sandbox = sinon.createSandbox();
+  const { jsDomWindow } = createDomAndWindow();
+  const adContext = adPipelineContext(jsDomWindow);
   const now = 1000000;
 
   beforeEach(() => {
     sandbox.useFakeTimers({ now });
+    jsDomWindow.pbjs = createPbjsStub();
   });
 
   afterEach(() => {
@@ -20,6 +26,7 @@ describe('AnalyticsAuctionEnd', () => {
   });
 
   it('testMapPrebidAuctionEnd', () => {
+    const userId = 'user-id';
     const event = {
       adUnitCodes: ['test-ad-unit-code'],
       auctionId: 'test-auction-id',
@@ -28,19 +35,34 @@ describe('AnalyticsAuctionEnd', () => {
           code: 'ad_header',
           pubstack: { adUnitName: 'header' },
           bids: [],
-          mediaTypes: []
+          mediaTypes: [],
+          ortb2Imp: {
+            ext: {
+              gpid: 'gpid-val'
+            }
+          }
         },
         {
           code: 'ad_header',
           pubstack: { adUnitName: 'header' },
           bids: [],
-          mediaTypes: []
+          mediaTypes: [],
+          ortb2Imp: {
+            ext: {
+              gpid: 'gpid-val'
+            }
+          }
         },
         {
           code: 'ad_sidebar',
           pubstack: { adUnitName: 'sidebar' },
           bids: [],
-          mediaTypes: []
+          mediaTypes: [],
+          ortb2Imp: {
+            ext: {
+              gpid: 'gpid-val'
+            }
+          }
         }
       ],
       bidderRequests: [
@@ -87,8 +109,16 @@ describe('AnalyticsAuctionEnd', () => {
       winningBids: []
     } as any;
     const eventContext = createEventContextStub();
+    adContext.window__.pbjs = {
+      ...adContext.window__.pbjs,
+      getUserIds: () => ({ pubcid: userId })
+    };
 
-    const auctionEnd = mapPrebidAuctionEnd(event as prebidjs.event.AuctionObject, eventContext);
+    const auctionEnd = mapPrebidAuctionEnd(
+      event as prebidjs.event.AuctionObject,
+      eventContext,
+      adContext
+    );
 
     const adUnitCodes = new Set();
     const adUnitsUnique = event.adUnits.filter(adUnit => {
@@ -105,6 +135,7 @@ describe('AnalyticsAuctionEnd', () => {
     expect(auctionEnd).to.have.property('type', 'prebid.auctionEnd');
     expect(auctionEnd).to.have.property('publisher', eventContext.publisher);
     expect(auctionEnd).to.have.property('pageViewId', eventContext.pageViewId);
+    expect(auctionEnd).to.have.property('userId', userId);
     expect(auctionEnd).to.have.property('timestamp', now);
     expect(auctionEnd).to.have.property('analyticsLabels', eventContext.analyticsLabels);
     expect(auctionEnd).to.have.nested.property('data.auctionId', event.auctionId);
@@ -119,6 +150,7 @@ describe('AnalyticsAuctionEnd', () => {
       const eventAdUnit = adUnitsUnique.find(item => item.code === adUnit.code);
       expect(adUnit).to.have.property('code', eventAdUnit.code);
       expect(adUnit).to.have.property('adUnitName', eventAdUnit.pubstack.adUnitName);
+      expect(adUnit).to.have.property('gpid', eventAdUnit.ortb2Imp.ext.gpid);
     });
 
     expect(auctionEnd)

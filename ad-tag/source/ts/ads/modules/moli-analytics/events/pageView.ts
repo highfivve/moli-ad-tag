@@ -19,18 +19,20 @@ export const mapPageView = (
   adContext: AdPipelineContext
 ): Events.Page.View => {
   const timestamp = Date.now();
+  const userIds = adContext.window__.pbjs.getUserIds ? adContext.window__.pbjs.getUserIds() : {};
   return {
     v: 1,
     type: 'page.view',
     publisher: context.publisher,
     pageViewId: context.pageViewId,
+    userId: userIds?.pubcid,
     timestamp,
     analyticsLabels: context.analyticsLabels,
-    ua: adContext.window__.navigator.userAgent,
     data: {
       sessionId: context.session.getId(),
       device: adContext.labelConfigService__.getDeviceLabel(),
       domain: adContext.window__.moli.resolveAdUnitPath('{domain}'),
+      ua: adContext.window__.navigator.userAgent,
       utm: parseUTM(adContext.window__.location.search)
     }
   };

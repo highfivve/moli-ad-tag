@@ -155,6 +155,18 @@ export namespace prebidjs {
     getUserIds(): userSync.UserIds;
 
     /**
+     * Returns a promise that resolves to the same value as `getUserIds()`, but only once all ID submodules have completed
+     * initialization. This can also be used to synchronize calls to other ID accessors, e.g.
+     *
+     * ```
+     * pbjs.getUserIdsAsync().then(() => {
+     *   const eids = pbjs.getUserIdsAsEids(); // guaranteed to be completely initialized at this point
+     * });
+     * ```
+     */
+    getUserIdsAsync(): Promise<userSync.UserIds>;
+
+    /**
      * Enable sending analytics data to the analytics provider of your choice.
      *
      * For usage, see Integrate with the [Prebid Analytics API](http://prebid.org/dev-docs/integrate-with-the-prebid-analytics-api.html)
@@ -3919,6 +3931,7 @@ export namespace prebidjs {
        * custom prebid extensions
        */
       readonly prebid?: IOrtb2ImpPrebid;
+      readonly gpid?: string;
     };
   }
 
