@@ -465,6 +465,107 @@ describe('moli', () => {
       expect(adTag.getState()).to.be.eq('finished');
       expect(refreshSpy).to.have.not.been.called;
     });
+
+    describe('refreshBucket in SPA mode', () => {
+      it('should queue refreshBucket calls in nextRuntimeConfig (not runtimeConfig) when navigation occurs in spa-finished state', async () => {
+        dom.reconfigure({
+          url: 'https://example.com/page-one'
+        });
+
+        const slots: AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'page' } }
+        ];
+
+        const adTag = createMoliTag(jsDomWindow);
+
+        await adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' },
+          buckets: { enabled: true }
+        });
+
+        // Initial request ads - reach spa-finished state
+        const initialState = await adTag.requestAds();
+        expect(initialState.state).to.be.eq('spa-finished');
+
+        const spaState = initialState as ISinglePageApp;
+        expect(spaState.runtimeConfig.refreshBuckets).to.have.length(0);
+        expect(spaState.nextRuntimeConfig.refreshBuckets).to.have.length(0);
+
+        dom.reconfigure({
+          url: 'https://example.com/page-two'
+        });
+
+        // RefreshBucket call after navigation - this should queue in nextRuntimeConfig
+        const queueResult = await adTag.refreshBucket('page');
+        expect(queueResult).to.be.eq('queued');
+
+        expect(spaState.nextRuntimeConfig.refreshBuckets).to.have.length(1);
+        expect(spaState.nextRuntimeConfig.refreshBuckets[0].bucket).to.eq('page');
+        expect(spaState.runtimeConfig.refreshBuckets).to.have.length(0);
+      });
+
+      it('should immediately refresh bucket calls when no navigation occurred in spa-finished state', async () => {
+        dom.reconfigure({
+          url: 'https://example.com/page-one'
+        });
+
+        const slots: AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'page' } }
+        ];
+
+        const adTag = createMoliTag(jsDomWindow);
+
+        await adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' },
+          buckets: { enabled: true }
+        });
+
+        const state = await adTag.requestAds();
+        expect(state.state).to.be.eq('spa-finished');
+
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+        // RefreshBucket call without navigation - should refresh immediately
+        const refreshResult = await adTag.refreshBucket('page');
+        expect(refreshResult).to.be.eq('refreshed');
+        expect(refreshSpy).to.have.been.calledOnce;
+      });
+
+      it('should queue refreshBucket calls in runtimeConfig during spa-requestAds state', async () => {
+        const slots: AdSlot[] = [
+          { ...mkAdSlotInDOM(), behaviour: { loaded: 'manual', bucket: 'page' } }
+        ];
+
+        const adTag = createMoliTag(jsDomWindow);
+
+        await adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' },
+          buckets: { enabled: true }
+        });
+
+        // Start requestAds (puts us in spa-requestAds state)
+        const requestAdsPromise = adTag.requestAds();
+
+        // RefreshBucket call during spa-requestAds - should be queued in current runtimeConfig
+        const queueResult = await adTag.refreshBucket('page');
+        expect(queueResult).to.be.eq('queued');
+
+        // Wait for requestAds to complete
+        const state = await requestAdsPromise;
+        expect(state.state).to.be.eq('spa-finished');
+
+        // The refreshBucket should have been processed during requestAds
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+        // The refresh should have already happened during requestAds, not after
+        expect(refreshSpy).to.not.have.been.called;
+      });
+    });
   });
 
   describe('refreshAds()', () => {
@@ -660,6 +761,66 @@ describe('moli', () => {
         expect(spaState.config).to.be.ok;
         expect(spaState.runtimeConfig.refreshSlots).to.have.length(0);
 
+        expect(refreshSpy).to.have.been.calledOnce;
+      });
+
+      it('should queue refreshAdSlot calls in nextRuntimeConfig (not runtimeConfig) when navigation occurs in spa-finished state', async () => {
+        dom.reconfigure({
+          url: 'https://example.com/page-one'
+        });
+
+        const slots: AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
+
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' }
+        });
+
+        const initialState = await adTag.requestAds();
+        expect(initialState.state).to.be.eq('spa-finished');
+
+        dom.reconfigure({
+          url: 'https://example.com/page-two'
+        });
+
+        const spaState = initialState as ISinglePageApp;
+        expect(spaState.runtimeConfig.refreshSlots).to.have.length(0);
+        expect(spaState.nextRuntimeConfig.refreshSlots).to.have.length(0);
+
+        dom.reconfigure({
+          url: 'https://example.com/page-two'
+        });
+
+        const queueResult = await adTag.refreshAdSlot(slots[0].domId);
+        expect(queueResult).to.be.eq('queued');
+
+        expect(spaState.nextRuntimeConfig.refreshSlots).to.have.length(1);
+        expect(spaState.nextRuntimeConfig.refreshSlots[0]).to.eq(slots[0].domId);
+        expect(spaState.runtimeConfig.refreshSlots).to.have.length(0);
+      });
+
+      it('should immediately refresh ad slots when no navigation occurred in spa-finished state', async () => {
+        dom.reconfigure({
+          url: 'https://example.com/page-one'
+        });
+
+        const slots: AdSlot[] = [{ ...mkAdSlotInDOM(), behaviour: { loaded: 'manual' } }];
+
+        const adTag = createMoliTag(jsDomWindow);
+        const refreshSpy = sandbox.spy(jsDomWindow.googletag.pubads(), 'refresh');
+
+        await adTag.configure({
+          ...defaultConfig,
+          slots: slots,
+          spa: { enabled: true, validateLocation: 'href' }
+        });
+
+        await adTag.requestAds();
+
+        const refreshResult = await adTag.refreshAdSlot(slots[0].domId);
+        expect(refreshResult).to.be.eq('refreshed');
         expect(refreshSpy).to.have.been.calledOnce;
       });
     });
@@ -946,7 +1107,6 @@ describe('moli', () => {
       expect(googletagPubAdsSetTargetingSpy).calledWithMatch('ABtest', Sinon.match.any);
     });
   });
-
   describe('addLabel()', () => {
     it('should add label to the config', () => {
       const adTag = createMoliTag(jsDomWindow);
