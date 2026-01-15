@@ -765,7 +765,7 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
             .then(() => 'refreshed');
         } else {
           // requestAds() hasn't been called yet, but some ad slot is already ready to be requested
-          state.runtimeConfig.refreshBuckets.push({ bucket, options });
+          state.nextRuntimeConfig.refreshBuckets.push({ bucket, options });
           return Promise.resolve('queued');
         }
       }
