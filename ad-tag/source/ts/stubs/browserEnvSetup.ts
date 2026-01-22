@@ -33,6 +33,12 @@ export const createDom = (options?: CreateDomOptions): jsdom.JSDOM => {
 
 export const createDomAndWindow = () => {
   const dom = createDom();
+
+  // provide fetch as jsdom does not implement it ( yet ).
+  // @see https://github.com/jsdom/jsdom/issues/1724
+  dom.window.fetch = () => {
+    return Promise.reject('not implemented');
+  };
   return {
     dom,
     jsDomWindow: dom.window as any as Window &

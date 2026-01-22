@@ -1797,6 +1797,9 @@
         "emetriq": {
           "$ref": "#/definitions/modules.emetriq.EmetriqModuleConfig"
         },
+        "feed": {
+          "$ref": "#/definitions/modules.feed.FeedConfig"
+        },
         "geoedge": {
           "$ref": "#/definitions/modules.geoedge.GeoEdgeModuleConfig"
         },
@@ -2922,6 +2925,73 @@
           "type": "string"
         }
       ]
+    },
+    "modules.feed.FeedConfig": {
+      "additionalProperties": false,
+      "description": "The ad tag may load one or more feeds on the page, while each feed can also target multiple elements on the page and fill them.\n\nIn the future dynamic feed configurations maybe added through an API, so publishers can decide what is loaded or when.",
+      "properties": {
+        "enabled": {
+          "description": "If set to true the module will be enabled.",
+          "type": "boolean"
+        },
+        "feeds": {
+          "description": "List of feeds that should be loaded and filled on the page.",
+          "items": {
+            "$ref": "#/definitions/modules.feed.FeedOptions"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "feeds"
+      ],
+      "type": "object"
+    },
+    "modules.feed.FeedOptions": {
+      "additionalProperties": false,
+      "description": "Options for a single feed to be loaded and filled.",
+      "properties": {
+        "feedId": {
+          "description": "uniquely identifies the feed. Most of the feed content configuration is specific to this id.",
+          "type": "string"
+        },
+        "feedUrl": {
+          "description": "URL that is used to load the feed content.",
+          "type": "string"
+        },
+        "keywords": {
+          "description": "Optional list of keywords that are added to the feed request and may be used to custom the content loaded through the feed. Useful for contextual targeting.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAll": {
+          "description": "Loading conditions based on labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "labelAny": {
+          "description": "Loading conditions based on labels.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "selector": {
+          "description": "CSS selector that is used to identify all elements on the page that should be filled by this feed. The primary use case would be a div container identified by an ID, e.g. `#community-feed`.\n\nIf the feed returns single elements that should be placed into multiple elements on the page, the selector may match multiple elements. E.g. a class selector `.community-feed-item`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feedId",
+        "feedUrl",
+        "selector"
+      ],
+      "type": "object"
     },
     "modules.geoedge.GeoEdgeConfig": {
       "additionalProperties": false,
