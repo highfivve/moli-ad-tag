@@ -514,16 +514,15 @@ export class GlobalConfig
                     </label>
                   </div>
 
-                  {this.props.showOverlays &&
-                    config.slots.map((slot, index) =>
-                      this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
-                        <div key={index}>
-                          <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
-                          <strong>{slot.domId}</strong>
-                          <AdSlotConfig labelConfigService={labelConfigService} slot={slot} />
-                        </div>
-                      ) : null
-                    )}
+                  {config.slots.map((slot, index) =>
+                    this.isSlotRendered(slot) || !showOnlyRenderedSlots ? (
+                      <div key={index}>
+                        <strong>{slot.behaviour.loaded}</strong> slot with DOM ID{' '}
+                        <strong>{slot.domId}</strong>
+                        <AdSlotConfig labelConfigService={labelConfigService} slot={slot} />
+                      </div>
+                    ) : null
+                  )}
                 </div>
               )}
             </div>
