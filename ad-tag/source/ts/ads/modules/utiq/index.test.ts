@@ -83,11 +83,19 @@ describe('Utiq Module', () => {
   });
 
   describe('loadUtiq', () => {
-    const adPipelineContext = (): AdPipelineContext => {
+    const adPipelineContext = (requestAdsCalls: number = 1): AdPipelineContext => {
+      const mockAuctionContext = newGlobalAuctionContext(jsDomWindow);
+      // Mock the hasMinimumRequestAds method to simulate the expected behavior
+      sandbox
+        .stub(mockAuctionContext, 'hasMinimumRequestAds')
+        .callsFake((minAdRequests: number) => {
+          return requestAdsCalls >= minAdRequests;
+        });
+
       return {
         auctionId__: 'xxxx-xxxx-xxxx-xxxx',
         requestId__: 0,
-        requestAdsCalls__: 1,
+        requestAdsCalls__: requestAdsCalls,
         env__: 'production',
         logger__: noopLogger,
         config__: emptyConfig,
@@ -97,7 +105,7 @@ describe('Utiq Module', () => {
         labelConfigService__: null as any,
         tcData__: fullConsent({ 56: true }),
         adUnitPathVariables__: {},
-        auction__: newGlobalAuctionContext(jsDomWindow),
+        auction__: mockAuctionContext,
         assetLoaderService__: assetLoaderService
       };
     };
@@ -177,7 +185,7 @@ describe('Utiq Module', () => {
           enabled: true,
           minAdRequests: 2
         });
-        await configureStep({ ...adPipelineContext(), requestAdsCalls__: 1 }, []);
+        await configureStep(adPipelineContext(1), []);
         expect(loadScriptStub).to.have.not.been.called;
       });
 
@@ -186,7 +194,7 @@ describe('Utiq Module', () => {
           enabled: true,
           minAdRequests: 1
         });
-        await configureStep({ ...adPipelineContext(), requestAdsCalls__: 1 }, []);
+        await configureStep(adPipelineContext(1), []);
         expect(loadScriptStub).to.have.been.calledOnce;
       });
     });
