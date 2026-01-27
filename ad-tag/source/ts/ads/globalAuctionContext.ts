@@ -40,6 +40,8 @@ export interface GlobalAuctionContext {
 
   interstitialChannel(): auction.InterstitialChannel | null | undefined;
 
+  hasMinimumRequestAds(minRequestAds: number): boolean;
+
   configureStep(): ConfigureStep;
 }
 
@@ -156,6 +158,10 @@ export const createGlobalAuctionContext = (
     },
     interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
       return interstitial?.interstitialChannel();
+    },
+    hasMinimumRequestAds(minRequestAds: number): boolean {
+      const currentRequestAdsCount = frequencyCapping?.getRequestAdsCount() ?? 0;
+      return currentRequestAdsCount >= minRequestAds;
     },
     configureStep(): ConfigureStep {
       return configureStep;

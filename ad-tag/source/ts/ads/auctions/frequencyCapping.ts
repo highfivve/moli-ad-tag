@@ -81,6 +81,11 @@ export interface FrequencyCapping {
    * @param bidder a prebid bidder code
    */
   isBidderCapped(slotId: string, bidder: BidderCode): boolean;
+
+  /**
+   * Get the current number of requestAds calls
+   */
+  getRequestAdsCount(): number;
 }
 
 const hasPacingInterval = (
@@ -362,6 +367,22 @@ export const createFrequencyCapping = (
             (delay && numAdRequests < delay.minRequestAds)
           );
         });
+    },
+
+    getRequestAdsCount(): number {
+      if (config.persistent === true) {
+        const storedData = _window.sessionStorage.getItem(sessionStorageKey);
+        if (storedData) {
+          try {
+            const parsedData = JSON.parse(storedData) as PersistedFrequencyCappingState;
+            return parsedData.requestAds;
+          } catch (e) {
+            logger.warn('fc', 'failed to parse fc state for requestAds count', e);
+          }
+        }
+      }
+      // Fallback to in-memory value if session storage is not available or fails
+      return numAdRequests;
     }
   };
 };
