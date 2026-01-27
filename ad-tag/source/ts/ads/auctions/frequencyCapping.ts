@@ -81,6 +81,11 @@ export interface FrequencyCapping {
    * @param bidder a prebid bidder code
    */
   isBidderCapped(slotId: string, bidder: BidderCode): boolean;
+
+  /**
+   * Get the current number of requestAds calls
+   */
+  getRequestAdsCount(): number;
 }
 
 const hasPacingInterval = (
@@ -362,6 +367,10 @@ export const createFrequencyCapping = (
             (delay && numAdRequests < delay.minRequestAds)
           );
         });
+    },
+
+    getRequestAdsCount(): number {
+      return numAdRequests;
     }
   };
 };

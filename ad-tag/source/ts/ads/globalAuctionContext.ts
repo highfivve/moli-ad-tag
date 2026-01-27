@@ -40,6 +40,14 @@ export interface GlobalAuctionContext {
 
   interstitialChannel(): auction.InterstitialChannel | null | undefined;
 
+  /**
+   * Check if the minimum number of requestAds calls has been reached
+   * @param minRequestAds The minimum number of requestAds calls required
+   * @returns true if the minimum number of requests has been reached, false otherwise.
+   *          Always returns true if frequency capping is not enabled (since we can't track counts).
+   */
+  hasMinimumRequestAds(minRequestAds: number): boolean;
+
   configureStep(): ConfigureStep;
 }
 
@@ -156,6 +164,13 @@ export const createGlobalAuctionContext = (
     },
     interstitialChannel: (): auction.InterstitialChannel | null | undefined => {
       return interstitial?.interstitialChannel();
+    },
+    hasMinimumRequestAds(minRequestAds: number): boolean {
+      if (!frequencyCapping) {
+        return true;
+      }
+      const currentRequestAdsCount = frequencyCapping.getRequestAdsCount();
+      return currentRequestAdsCount >= minRequestAds;
     },
     configureStep(): ConfigureStep {
       return configureStep;
