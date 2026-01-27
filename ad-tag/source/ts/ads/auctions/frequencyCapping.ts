@@ -370,18 +370,6 @@ export const createFrequencyCapping = (
     },
 
     getRequestAdsCount(): number {
-      if (config.persistent === true) {
-        const storedData = _window.sessionStorage.getItem(sessionStorageKey);
-        if (storedData) {
-          try {
-            const parsedData = JSON.parse(storedData) as PersistedFrequencyCappingState;
-            return parsedData.requestAds;
-          } catch (e) {
-            logger.warn('fc', 'failed to parse fc state for requestAds count', e);
-          }
-        }
-      }
-      // Fallback to in-memory value if session storage is not available or fails
       return numAdRequests;
     }
   };
