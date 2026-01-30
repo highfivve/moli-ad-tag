@@ -91,7 +91,6 @@ export namespace Events {
       type: 'gpt.slotRenderEnded';
       data: {
         auctionId: string;
-        userId?: string;
         gpid: string;
         adUnitPath: string;
         adUnitCode: string;
