@@ -21,9 +21,6 @@ use(sinonChai);
 
 describe('YieldOptimizationService', () => {
   const { jsDomWindow } = createDomAndWindow();
-  jsDomWindow.fetch = () => {
-    return Promise.reject('not implemented');
-  };
 
   // single sandbox instance to create spies and stubs
   const sandbox = Sinon.createSandbox();
