@@ -41,10 +41,12 @@ describe('Utiq Module', () => {
         ...(options ? { options: options } : {})
       }
     });
+    const hasDelayEnabled = delay?.enabled ?? false;
     return {
       module,
       initStep: module.initSteps__()[0],
-      configureStep: module.configureSteps__()[0]
+      configureStep: hasDelayEnabled ? undefined : module.configureSteps__()[0],
+      prepareRequestAdsStep: hasDelayEnabled ? module.prepareRequestAdsSteps__()[0] : undefined
     };
   };
 
@@ -73,12 +75,15 @@ describe('Utiq Module', () => {
       expect(configureStep).to.be.undefined;
     });
 
-    it('should add a configure step if enabled and delay config is enabled', async () => {
-      const { initStep, configureStep } = createUtiqModule(true, undefined, { enabled: true });
+    it('should add a prepareRequestAds step if enabled and delay config is enabled', async () => {
+      const { initStep, configureStep, prepareRequestAdsStep } = createUtiqModule(true, undefined, {
+        enabled: true
+      });
 
       expect(initStep).to.be.undefined;
-      expect(configureStep).to.be.ok;
-      expect(configureStep.name).to.be.eq('utiq');
+      expect(configureStep).to.be.undefined; // No configure step for delayed UTIQ
+      expect(prepareRequestAdsStep).to.be.ok; // Uses prepareRequestAds step for consistent timing
+      expect(prepareRequestAdsStep!.name).to.be.eq('utiq');
     });
   });
 
@@ -89,7 +94,8 @@ describe('Utiq Module', () => {
       sandbox
         .stub(mockAuctionContext, 'hasMinimumRequestAds')
         .callsFake((minAdRequests: number) => {
-          return requestAdsCalls >= minAdRequests;
+          const completedRequests = requestAdsCalls - 1;
+          return completedRequests + 1 >= minAdRequests;
         });
 
       return {
@@ -181,20 +187,20 @@ describe('Utiq Module', () => {
 
     describe('delay with minAdRequests', () => {
       it('should not load utiq if minAdRequest requirement is not met', async () => {
-        const { configureStep } = createUtiqModule(true, undefined, {
+        const { prepareRequestAdsStep } = createUtiqModule(true, undefined, {
           enabled: true,
           minAdRequests: 2
         });
-        await configureStep(adPipelineContext(1), []);
+        await prepareRequestAdsStep!(adPipelineContext(1), []);
         expect(loadScriptStub).to.have.not.been.called;
       });
 
       it('should load utiq if minAdRequest requirement is met', async () => {
-        const { configureStep } = createUtiqModule(true, undefined, {
+        const { prepareRequestAdsStep } = createUtiqModule(true, undefined, {
           enabled: true,
           minAdRequests: 1
         });
-        await configureStep(adPipelineContext(1), []);
+        await prepareRequestAdsStep!(adPipelineContext(1), []);
         expect(loadScriptStub).to.have.been.calledOnce;
       });
     });

@@ -26,7 +26,8 @@ import {
   ConfigureStep,
   InitStep,
   mkInitStep,
-  PrepareRequestAdsStep
+  PrepareRequestAdsStep,
+  mkPrepareRequestAdsStep
 } from 'ad-tag/ads/adPipeline';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 
@@ -277,15 +278,18 @@ export const createUtiq = (): IModule => {
         ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
         : [];
     },
-
     configureSteps__(): ConfigureStep[] {
-      return utiqConfig?.enabled && hasDelayEnabled(utiqConfig)
+      // Non-delayed utiq runs in configure steps
+      return utiqConfig?.enabled && !hasDelayEnabled(utiqConfig)
         ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
         : [];
     },
 
     prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-      return [];
+      // Delayed utiq runs in prepareRequestAds to check minimum requests on every cycle
+      return utiqConfig?.enabled && hasDelayEnabled(utiqConfig)
+        ? [mkPrepareRequestAdsStep('utiq', 0, ctx => loadUtiq(utiqConfig!, ctx))]
+        : [];
     }
   };
 };
