@@ -83,9 +83,12 @@ export interface FrequencyCapping {
   isBidderCapped(slotId: string, bidder: BidderCode): boolean;
 
   /**
-   * Get the current number of requestAds calls
+   * Get the current page impression from local storage.
+   *
+   * Note: This is the total number of page impressions and will not be reset
+   * in a new session!
    */
-  getRequestAdsCount(): number;
+  getCurrentPageImpressionFromLocalStorage(): number;
 }
 
 const hasPacingInterval = (
@@ -104,6 +107,9 @@ export const createFrequencyCapping = (
   const bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
   const positionAdRequests: Map<string, number> = new Map();
   let numAdRequests = 0;
+
+  const pageImpressionStorageKey = 'h5v_pi';
+  let currentPageImpression = Number(_window.localStorage.getItem(pageImpressionStorageKey) ?? '0');
 
   const pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[] =
     config.bidders?.filter(hasPacingInterval) ?? [];
@@ -136,6 +142,9 @@ export const createFrequencyCapping = (
       };
       _window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
     }
+
+    // always persist total page impressions in local storage
+    _window.localStorage.setItem(pageImpressionStorageKey, JSON.stringify(currentPageImpression));
   };
 
   const cap = (
@@ -309,6 +318,7 @@ export const createFrequencyCapping = (
 
     afterRequestAds() {
       numAdRequests++;
+      currentPageImpression++;
       persist();
     },
 
@@ -369,8 +379,8 @@ export const createFrequencyCapping = (
         });
     },
 
-    getRequestAdsCount(): number {
-      return numAdRequests;
+    getCurrentPageImpressionFromLocalStorage(): number {
+      return currentPageImpression;
     }
   };
 };
