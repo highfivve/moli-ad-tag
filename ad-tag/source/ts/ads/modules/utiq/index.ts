@@ -211,7 +211,7 @@ export const createUtiq = (): IModule => {
       return Promise.resolve();
     }
 
-    // don't load script if is has been loaded before
+    // don't load script if it has been loaded before
     if (scriptLoaded) {
       return Promise.resolve();
     }
@@ -283,16 +283,11 @@ export const createUtiq = (): IModule => {
         ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
         : [];
     },
+
     configureSteps__(): ConfigureStep[] {
-      if (!utiqConfig?.enabled) {
-        return [];
-      }
-      if (hasDelayEnabled(utiqConfig)) {
-        // Minimum page impressions should be checked once per request ads cycle for delayed utiq
-        return [mkConfigureStepOncePerRequestAdsCycle('utiq', ctx => loadUtiq(utiqConfig!, ctx))];
-      } else {
-        return [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))];
-      }
+      return utiqConfig?.enabled && hasDelayEnabled(utiqConfig)
+        ? [mkConfigureStepOncePerRequestAdsCycle('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
+        : [];
     },
 
     prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
