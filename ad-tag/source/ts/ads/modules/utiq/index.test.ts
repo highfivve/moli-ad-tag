@@ -41,7 +41,6 @@ describe('Utiq Module', () => {
         ...(options ? { options: options } : {})
       }
     });
-    const hasDelayEnabled = delay?.enabled ?? false;
     const initSteps = module.initSteps__();
     const configureSteps = module.configureSteps__();
 
@@ -203,6 +202,57 @@ describe('Utiq Module', () => {
           minAdRequests: 1
         });
         await configureStep!(adPipelineContext(1), []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+      });
+    });
+
+    describe('SPA with delayed utiq loading', () => {
+      it('should load utiq script in SPA when delay requirement is met across multiple requestAds cycles', async () => {
+        const { module, configureStep } = createUtiqModule(true, undefined, {
+          enabled: true,
+          minAdRequests: 3
+        });
+
+        // First requestAds call - requirement not met (1 < 3)
+        const firstContext = adPipelineContext(1);
+        await configureStep!(firstContext, []);
+        expect(loadScriptStub).to.have.not.been.called;
+
+        // Second requestAds call - requirement still not met (2 < 3)
+        const secondContext = adPipelineContext(2);
+        await configureStep!(secondContext, []);
+        expect(loadScriptStub).to.have.not.been.called;
+
+        // Third requestAds call - requirement now met (3 >= 3)
+        const thirdContext = adPipelineContext(3);
+        await configureStep!(thirdContext, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+        expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+          name: module.name,
+          loadMethod: AssetLoadMethod.TAG,
+          assetUrl: 'http://localhost/utiqLoader.js'
+        });
+      });
+
+      it('should not load utiq script twice even when called multiple times after requirement is met', async () => {
+        const { configureStep } = createUtiqModule(true, undefined, {
+          enabled: true,
+          minAdRequests: 2
+        });
+
+        // First call - requirement met, script loads
+        const firstContext = adPipelineContext(2);
+        await configureStep!(firstContext, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+
+        // Second call - should not load again due to scriptLoaded flag
+        const secondContext = adPipelineContext(3);
+        await configureStep!(secondContext, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+
+        // Third call - should still not load again
+        const thirdContext = adPipelineContext(4);
+        await configureStep!(thirdContext, []);
         expect(loadScriptStub).to.have.been.calledOnce;
       });
     });
