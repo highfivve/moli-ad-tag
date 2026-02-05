@@ -25,8 +25,9 @@ import {
   AdPipelineContext,
   ConfigureStep,
   InitStep,
+  PrepareRequestAdsStep,
   mkInitStep,
-  PrepareRequestAdsStep
+  mkConfigureStepOncePerRequestAdsCycle
 } from 'ad-tag/ads/adPipeline';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
 
@@ -203,17 +204,17 @@ const requiredPurposeIds = [
 
 export const createUtiq = (): IModule => {
   let utiqConfig: modules.utiq.UtiqConfig | null = null;
-  let loaded = false;
+  let scriptLoaded = false;
 
   const loadUtiq = (config: modules.utiq.UtiqConfig, context: AdPipelineContext): Promise<void> => {
     if (context.env__ === 'test') {
       return Promise.resolve();
     }
 
-    if (loaded) {
+    // don't load script if it has been loaded before
+    if (scriptLoaded) {
       return Promise.resolve();
     }
-    loaded = true;
 
     const utiqWindow = context.window__ as unknown as UtiqWindow;
     // merge any existing object. Existing configurations take precedence.
@@ -236,7 +237,7 @@ export const createUtiq = (): IModule => {
 
     const minAdRequests =
       config.delay?.enabled && config.delay.minAdRequests ? config.delay.minAdRequests : 0;
-    if (!context.auction__.hasMinimumRequestAds(minAdRequests)) {
+    if (!context.auction__.hasMinimumPageImpressions(minAdRequests)) {
       context.logger__.info(
         'Utiq',
         `not enough ad requests to load Utiq. ${minAdRequests} required.`
@@ -250,7 +251,12 @@ export const createUtiq = (): IModule => {
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: config.assetUrl
       })
-      .catch(error => context.logger__.error('failed to load utiq', error));
+      .then(() => {
+        scriptLoaded = true;
+      })
+      .catch(error => {
+        context.logger__.error('failed to load utiq', error);
+      });
   };
 
   const hasDelayEnabled = (config: modules.utiq.UtiqConfig | null): boolean => {
@@ -280,7 +286,7 @@ export const createUtiq = (): IModule => {
 
     configureSteps__(): ConfigureStep[] {
       return utiqConfig?.enabled && hasDelayEnabled(utiqConfig)
-        ? [mkInitStep('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
+        ? [mkConfigureStepOncePerRequestAdsCycle('utiq', ctx => loadUtiq(utiqConfig!, ctx))]
         : [];
     },
 

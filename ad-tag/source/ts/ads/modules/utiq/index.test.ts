@@ -41,10 +41,14 @@ describe('Utiq Module', () => {
         ...(options ? { options: options } : {})
       }
     });
+    const initSteps = module.initSteps__();
+    const configureSteps = module.configureSteps__();
+
     return {
       module,
-      initStep: module.initSteps__()[0],
-      configureStep: module.configureSteps__()[0]
+      initStep: initSteps.length > 0 ? initSteps[0] : undefined,
+      configureStep: configureSteps.length > 0 ? configureSteps[0] : undefined,
+      prepareRequestAdsStep: undefined // No longer used
     };
   };
 
@@ -61,35 +65,38 @@ describe('Utiq Module', () => {
       const { initStep, configureStep } = createUtiqModule();
 
       expect(initStep).to.be.ok;
-      expect(initStep.name).to.be.eq('utiq');
-      expect(configureStep).to.be.undefined;
+      expect(initStep!.name).to.be.eq('utiq');
+      expect(configureStep).to.be.undefined; // No configure step for non-delayed UTIQ
     });
 
     it('should add an init step if enabled and delay config is disabled', async () => {
       const { initStep, configureStep } = createUtiqModule(true, undefined, { enabled: false });
 
       expect(initStep).to.be.ok;
-      expect(initStep.name).to.be.eq('utiq');
-      expect(configureStep).to.be.undefined;
+      expect(initStep!.name).to.be.eq('utiq');
+      expect(configureStep).to.be.undefined; // No configure step for non-delayed UTIQ
     });
 
-    it('should add a configure step if enabled and delay config is enabled', async () => {
-      const { initStep, configureStep } = createUtiqModule(true, undefined, { enabled: true });
+    it('should add a configureStep if enabled and delay config is enabled', async () => {
+      const { initStep, configureStep } = createUtiqModule(true, undefined, {
+        enabled: true
+      });
 
       expect(initStep).to.be.undefined;
       expect(configureStep).to.be.ok;
-      expect(configureStep.name).to.be.eq('utiq');
+      expect(configureStep!.name).to.be.eq('utiq');
     });
   });
 
   describe('loadUtiq', () => {
     const adPipelineContext = (requestAdsCalls: number = 1): AdPipelineContext => {
       const mockAuctionContext = newGlobalAuctionContext(jsDomWindow);
-      // Mock the hasMinimumRequestAds method to simulate the expected behavior
+      // Mock the hasMinimumPageImpressions method to simulate the expected behavior
       sandbox
-        .stub(mockAuctionContext, 'hasMinimumRequestAds')
+        .stub(mockAuctionContext, 'hasMinimumPageImpressions')
         .callsFake((minAdRequests: number) => {
-          return requestAdsCalls >= minAdRequests;
+          const completedRequests = requestAdsCalls - 1;
+          return completedRequests + 1 >= minAdRequests;
         });
 
       return {
@@ -112,7 +119,7 @@ describe('Utiq Module', () => {
 
     it('not load anything in a test environment', async () => {
       const { initStep } = createUtiqModule();
-      await initStep({ ...adPipelineContext(), env__: 'test' });
+      await initStep!({ ...adPipelineContext(), env__: 'test' });
       expect(loadScriptStub).to.have.not.been.called;
     });
 
@@ -132,7 +139,7 @@ describe('Utiq Module', () => {
       it(`not load anything if gdpr applies and purpose ${purposeId} is missing`, async () => {
         const { initStep } = createUtiqModule();
         const tcDataFullConsent = fullConsent();
-        await initStep({
+        await initStep!({
           ...adPipelineContext(),
           tcData__: {
             ...tcDataFullConsent,
@@ -148,7 +155,7 @@ describe('Utiq Module', () => {
 
     it('load utiq if gdpr does not apply', async () => {
       const { module, initStep } = createUtiqModule();
-      await initStep({ ...adPipelineContext(), tcData__: tcDataNoGdpr });
+      await initStep!({ ...adPipelineContext(), tcData__: tcDataNoGdpr });
       expect(loadScriptStub).to.have.been.calledOnce;
       expect(loadScriptStub).to.have.been.calledOnceWithExactly({
         name: module.name,
@@ -159,7 +166,7 @@ describe('Utiq Module', () => {
 
     it('load utiq if gdpr does apply and consent for all 11 purposes is given', async () => {
       const { module, initStep } = createUtiqModule();
-      await initStep(adPipelineContext());
+      await initStep!(adPipelineContext());
       expect(loadScriptStub).to.have.been.calledOnce;
       expect(loadScriptStub).to.have.been.calledOnceWithExactly({
         name: module.name,
@@ -171,11 +178,11 @@ describe('Utiq Module', () => {
 
     it('should load utiq script only once', async () => {
       const { initStep } = createUtiqModule();
-      await initStep(adPipelineContext());
+      await initStep!(adPipelineContext());
       expect(loadScriptStub).to.have.been.calledOnce;
 
       // call again, should not load again
-      await initStep(adPipelineContext());
+      await initStep!(adPipelineContext());
       expect(loadScriptStub).to.have.been.calledOnce;
     });
 
@@ -185,7 +192,7 @@ describe('Utiq Module', () => {
           enabled: true,
           minAdRequests: 2
         });
-        await configureStep(adPipelineContext(1), []);
+        await configureStep!(adPipelineContext(1), []);
         expect(loadScriptStub).to.have.not.been.called;
       });
 
@@ -194,7 +201,58 @@ describe('Utiq Module', () => {
           enabled: true,
           minAdRequests: 1
         });
-        await configureStep(adPipelineContext(1), []);
+        await configureStep!(adPipelineContext(1), []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+      });
+    });
+
+    describe('SPA with delayed utiq loading', () => {
+      it('should load utiq script in SPA when delay requirement is met across multiple requestAds cycles', async () => {
+        const { module, configureStep } = createUtiqModule(true, undefined, {
+          enabled: true,
+          minAdRequests: 3
+        });
+
+        // First requestAds call - requirement not met (1 < 3)
+        const firstContext = adPipelineContext(1);
+        await configureStep!(firstContext, []);
+        expect(loadScriptStub).to.have.not.been.called;
+
+        // Second requestAds call - requirement still not met (2 < 3)
+        const secondContext = adPipelineContext(2);
+        await configureStep!(secondContext, []);
+        expect(loadScriptStub).to.have.not.been.called;
+
+        // Third requestAds call - requirement now met (3 >= 3)
+        const thirdContext = adPipelineContext(3);
+        await configureStep!(thirdContext, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+        expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+          name: module.name,
+          loadMethod: AssetLoadMethod.TAG,
+          assetUrl: 'http://localhost/utiqLoader.js'
+        });
+      });
+
+      it('should not load utiq script twice even when called multiple times after requirement is met', async () => {
+        const { configureStep } = createUtiqModule(true, undefined, {
+          enabled: true,
+          minAdRequests: 2
+        });
+
+        // First call - requirement met, script loads
+        const firstContext = adPipelineContext(2);
+        await configureStep!(firstContext, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+
+        // Second call - should not load again due to scriptLoaded flag
+        const secondContext = adPipelineContext(3);
+        await configureStep!(secondContext, []);
+        expect(loadScriptStub).to.have.been.calledOnce;
+
+        // Third call - should still not load again
+        const thirdContext = adPipelineContext(4);
+        await configureStep!(thirdContext, []);
         expect(loadScriptStub).to.have.been.calledOnce;
       });
     });
