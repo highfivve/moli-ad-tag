@@ -93,7 +93,7 @@ describe('Utiq Module', () => {
       const mockAuctionContext = newGlobalAuctionContext(jsDomWindow);
       // Mock the hasMinimumPageImpressions method to simulate the expected behavior
       sandbox
-        .stub(mockAuctionContext, 'hasMinimumPageImpressions')
+        .stub(mockAuctionContext, 'hasMinimumRequestAds')
         .callsFake((minAdRequests: number) => {
           const completedRequests = requestAdsCalls - 1;
           return completedRequests + 1 >= minAdRequests;
