@@ -237,7 +237,7 @@ export const createUtiq = (): IModule => {
 
     const minAdRequests =
       config.delay?.enabled && config.delay.minAdRequests ? config.delay.minAdRequests : 0;
-    if (!context.auction__.hasMinimumPageImpressions(minAdRequests)) {
+    if (!context.auction__.hasMinimumRequestAds(minAdRequests)) {
       context.logger__.info(
         'Utiq',
         `not enough ad requests to load Utiq. ${minAdRequests} required.`
