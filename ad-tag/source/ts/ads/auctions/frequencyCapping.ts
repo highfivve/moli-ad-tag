@@ -10,6 +10,7 @@ import { isGamInterstitial } from 'ad-tag/ads/auctions/interstitialContext';
 
 /** store meta data for frequency capping feature */
 const sessionStorageKey = 'h5v-fc';
+const localStorageKey = 'h5v-pi';
 
 type BidderAdUnitKey = `${string}:${string}`;
 
@@ -52,7 +53,25 @@ export type PersistedFrequencyCappingState = {
   readonly pLastImpAdRequests: { [adUnitPath: string]: number | undefined };
 
   /**
-   * number of requestAds made so far
+   * number of requestAds made so far in the current session
+   */
+  readonly requestAds: number;
+};
+
+/**
+ * The total number of requestAds() calls across sessions.
+ */
+export type PersistedLocalStorageData = {
+  /**
+   * the first time the data was persisted/updated in local storage
+   */
+  readonly createdAt: number;
+  /**
+   * the last time the data was persisted/updated in local storage
+   */
+  readonly ts: number;
+  /**
+   * number of total requestAds made so far
    */
   readonly requestAds: number;
 };
@@ -83,12 +102,12 @@ export interface FrequencyCapping {
   isBidderCapped(slotId: string, bidder: BidderCode): boolean;
 
   /**
-   * Get the current page impression from local storage.
+   * Get the total number of ad requests from local storage.
    *
-   * Note: This is the total number of page impressions and will not be reset
+   * Note: This is the total number of ad requests and will not be reset
    * in a new session!
    */
-  getCurrentPageImpressionFromLocalStorage(): number;
+  getTotalNumAdRequests(): number;
 }
 
 const hasPacingInterval = (
@@ -106,10 +125,21 @@ export const createFrequencyCapping = (
   const positionLastImpressionNumberOfAdRequests: Map<string, number> = new Map();
   const bidderImpSchedules: Map<string, FrequencyCappingBidderImpSchedules> = new Map();
   const positionAdRequests: Map<string, number> = new Map();
-  let numAdRequests = 0;
 
-  const pageImpressionStorageKey = 'h5v_pi';
-  let currentPageImpression = Number(_window.localStorage.getItem(pageImpressionStorageKey) ?? '0');
+  let sessionNumAdRequests = 0;
+  let totalNumAdRequests = 0;
+  let existingLocalStorageData: PersistedLocalStorageData | null = null;
+
+  // Read localStorage once at initialization
+  try {
+    const stored = _window.localStorage.getItem(localStorageKey);
+    if (stored) {
+      existingLocalStorageData = JSON.parse(stored) as PersistedLocalStorageData;
+      totalNumAdRequests = existingLocalStorageData.requestAds;
+    }
+  } catch (e) {
+    logger.debug('fc', 'failed to parse localStorage data, starting fresh', e);
+  }
 
   const pacingIntervalConfigs: BidderFrequencyCappingConfigWithPacingInterval[] =
     config.bidders?.filter(hasPacingInterval) ?? [];
@@ -137,14 +167,25 @@ export const createFrequencyCapping = (
         >((acc, [adUnitPath, schedules]) => ({ ...acc, [adUnitPath]: schedules }), {}),
         pLastImpAdRequests: Array.from(positionLastImpressionNumberOfAdRequests.entries()).reduce<
           PersistedFrequencyCappingState['pLastImpAdRequests']
-        >((acc, [adUnitPath, numAdRequests]) => ({ ...acc, [adUnitPath]: numAdRequests }), {}),
-        requestAds: numAdRequests
+        >(
+          (acc, [adUnitPath, sessionNumAdRequests]) => ({
+            ...acc,
+            [adUnitPath]: sessionNumAdRequests
+          }),
+          {}
+        ),
+        requestAds: sessionNumAdRequests
       };
       _window.sessionStorage.setItem(sessionStorageKey, JSON.stringify(data));
     }
 
-    // always persist total page impressions in local storage
-    _window.localStorage.setItem(pageImpressionStorageKey, JSON.stringify(currentPageImpression));
+    // always persist total request ads in local storage
+    const dataToStoreInLocalStorage: PersistedLocalStorageData = {
+      createdAt: existingLocalStorageData?.createdAt ?? Date.now(),
+      ts: Date.now(),
+      requestAds: totalNumAdRequests
+    };
+    _window.localStorage.setItem(localStorageKey, JSON.stringify(dataToStoreInLocalStorage));
   };
 
   const cap = (
@@ -215,9 +256,9 @@ export const createFrequencyCapping = (
           capPosition(now(), adUnitPath, config.conditions.pacingInterval);
         }
         // store the number of ad requests for this position. Doesn't matter we persist multiple times
-        // as the numAdRequests should not change. And there's rarely more than one config for a position
+        // as the sessionNumAdRequests should not change. And there's rarely more than one config for a position
         if (config.conditions.pacingRequestAds) {
-          positionLastImpressionNumberOfAdRequests.set(adUnitPath, numAdRequests);
+          positionLastImpressionNumberOfAdRequests.set(adUnitPath, sessionNumAdRequests);
           persist();
         }
       });
@@ -229,7 +270,7 @@ export const createFrequencyCapping = (
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData) as PersistedFrequencyCappingState;
-        numAdRequests = parsedData.requestAds;
+        sessionNumAdRequests = parsedData.requestAds;
 
         Object.entries(parsedData.bCaps).forEach(([adUnitBidderKey, schedules]) => {
           //
@@ -317,8 +358,8 @@ export const createFrequencyCapping = (
     },
 
     afterRequestAds() {
-      numAdRequests++;
-      currentPageImpression++;
+      sessionNumAdRequests++;
+      totalNumAdRequests++;
       persist();
     },
 
@@ -340,14 +381,15 @@ export const createFrequencyCapping = (
               // one request ads cycle earlier, because they are actually rendered on navigation and
               // not immediately after the ad request.
               positionConfig.conditions.delay &&
-              numAdRequests <
+              sessionNumAdRequests <
                 positionConfig.conditions.delay.minRequestAds - (isGamInst ? 1 : 0)) ||
             // cap if not at the right pacing interval yet
             (positionConfig.conditions.pacingRequestAds &&
               // if there are no winning impressions yet, we can request ads
               positionLastImpressionNumberOfAdRequests.has(adUnitPath) &&
               // check if enough ad requests were made since the last impressionØp
-              numAdRequests - (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
+              sessionNumAdRequests -
+                (positionLastImpressionNumberOfAdRequests.get(adUnitPath) ?? 0) <
                 positionConfig.conditions.pacingRequestAds.requestAds) ||
             // cap if the maxImpressions is reached in the current window
             (positionConfig.conditions.pacingInterval &&
@@ -374,13 +416,13 @@ export const createFrequencyCapping = (
               (bidderImpSchedules.get(`${slotId}:${bidder}`) ?? []).length >=
                 pacingInterval.maxImpressions) ||
             // delay condition: check if the number of ad requests is less than the minimum required for a request
-            (delay && numAdRequests < delay.minRequestAds)
+            (delay && sessionNumAdRequests < delay.minRequestAds)
           );
         });
     },
 
-    getCurrentPageImpressionFromLocalStorage(): number {
-      return currentPageImpression;
+    getTotalNumAdRequests(): number {
+      return totalNumAdRequests;
     }
   };
 };
