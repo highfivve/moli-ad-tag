@@ -162,7 +162,9 @@ describe('Moli Ad Reload Module', () => {
         adPipelineContext(testSlotMoliConfig),
         fullConfig,
         [testAdSlotDomId],
-        () => {}
+        () => {
+          // No-op callback for test purposes
+        }
       );
       // Access the internal AdVisibilityService instance
       return (module as any).adVisibilityService;
