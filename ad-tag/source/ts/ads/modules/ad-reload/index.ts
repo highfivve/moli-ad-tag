@@ -187,7 +187,8 @@ export class AdReload implements IModule {
   ): void => {
     this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, config.userActivityLevelControl, logger),
-      this.refreshIntervalMs,
+      // use the refresh interval from the config if provided, otherwise use the default one
+      config.refreshIntervalMs ?? this.refreshIntervalMs,
       config.refreshIntervalMsOverrides ?? {},
       false,
       !!config.disableAdVisibilityChecks,

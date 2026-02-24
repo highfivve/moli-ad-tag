@@ -150,6 +150,48 @@ describe('Moli Ad Reload Module', () => {
     sandbox.clock.restore();
   });
 
+  describe('refresh interval configuration', () => {
+    // Helper to initialize module and return the internal AdVisibilityService instance
+    const initAdReloadModuleWithConfig = (
+      configOverrides: Partial<modules.adreload.AdReloadModuleConfig>
+    ) => {
+      const fullConfig = { ...defaultAdReloadConfig, ...configOverrides };
+      const module = new AdReload();
+      module.configure__({ adReload: fullConfig });
+      module.initialize(
+        adPipelineContext(testSlotMoliConfig),
+        fullConfig,
+        [testAdSlotDomId],
+        () => {}
+      );
+      // Access the internal AdVisibilityService instance
+      return (module as any).adVisibilityService;
+    };
+
+    [
+      { name: 'default', config: {}, expected: 20000 },
+      { name: 'custom', config: { refreshIntervalMs: 15000 }, expected: 15000 },
+      { name: 'zero', config: { refreshIntervalMs: 0 }, expected: 0 },
+      { name: 'undefined', config: { refreshIntervalMs: undefined }, expected: 20000 }
+    ].forEach(({ name, config, expected }) => {
+      it(`should use ${expected}ms for ${name} config`, () => {
+        const service = initAdReloadModuleWithConfig(config);
+        expect(service.refreshInterval).to.equal(expected);
+      });
+    });
+
+    it('should pass both refresh interval and overrides correctly', () => {
+      const overrides = { slot1: 10000, slot2: 40000 };
+      const service = initAdReloadModuleWithConfig({
+        refreshIntervalMs: 25000,
+        refreshIntervalMsOverrides: overrides
+      });
+
+      expect(service.refreshInterval).to.equal(25000);
+      expect(service.refreshIntervalOverrides).to.deep.equal(overrides);
+    });
+  });
+
   describe('initialize', () => {
     it("shouldn't initialize the ad reload in environment test", () => {
       const { module, moduleConfig } = createAdReloadModule();
