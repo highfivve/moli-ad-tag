@@ -2298,7 +2298,7 @@ export namespace modules {
       /**
        * Utiq loads a single javascript. It will only load if consent for **all** purposes is given.
        */
-      readonly assetUrl: string;
+      readonly assetUrl?: string;
 
       /**
        * The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript

@@ -3677,7 +3677,6 @@
         }
       },
       "required": [
-        "assetUrl",
         "enabled"
       ],
       "type": "object"
