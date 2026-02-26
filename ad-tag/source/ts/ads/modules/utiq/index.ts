@@ -30,6 +30,7 @@ import {
   mkConfigureStepOncePerRequestAdsCycle
 } from 'ad-tag/ads/adPipeline';
 import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
+import { extractTopPrivateDomainFromHostname } from 'ad-tag/util/extractTopPrivateDomainFromHostname';
 
 type UtiqCommand = () => void;
 
@@ -245,11 +246,22 @@ export const createUtiq = (): IModule => {
       return Promise.resolve();
     }
 
+    const assetUrl =
+      config.assetUrl ?? extractTopPrivateDomainFromHostname(context.window__.location.hostname);
+
+    if (!assetUrl) {
+      context.logger__.error(
+        'Utiq',
+        'Cannot load Utiq: no assetUrl provided in config and unable to extract domain from hostname'
+      );
+      return Promise.resolve();
+    }
+
     return context.assetLoaderService__
       .loadScript({
         name: 'utiq',
         loadMethod: AssetLoadMethod.TAG,
-        assetUrl: config.assetUrl
+        assetUrl
       })
       .then(() => {
         scriptLoaded = true;
