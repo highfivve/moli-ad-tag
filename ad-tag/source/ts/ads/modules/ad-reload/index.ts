@@ -79,7 +79,7 @@ export class AdReload implements IModule {
    * Default duration after which slots can be refreshed if certain criteria are met (ad visibility duration and
    * other metrics).
    */
-  private readonly refreshIntervalMs: number = 20000;
+  private readonly defaultRefreshIntervalMs: number = 20000;
 
   /**
    * Default ad reload key
@@ -188,7 +188,7 @@ export class AdReload implements IModule {
     this.adVisibilityService = new AdVisibilityService(
       new UserActivityService(window, config.userActivityLevelControl, logger),
       // use the refresh interval from the config if provided, otherwise use the default one
-      config.refreshIntervalMs ?? this.refreshIntervalMs,
+      config.refreshIntervalMs ?? this.defaultRefreshIntervalMs,
       config.refreshIntervalMsOverrides ?? {},
       false,
       !!config.disableAdVisibilityChecks,

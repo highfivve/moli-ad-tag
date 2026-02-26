@@ -151,6 +151,22 @@ describe('Moli Ad Reload Module', () => {
   });
 
   describe('refresh interval configuration', () => {
+    it('should store the provided refresh interval from config in configure step', () => {
+      const customRefreshInterval = 30000;
+      const moduleConfig: modules.adreload.AdReloadModuleConfig = {
+        ...defaultAdReloadConfig,
+        refreshIntervalMs: customRefreshInterval
+      };
+
+      const module = new AdReload();
+      expect(module.config__()).to.be.null;
+      module.configure__({ adReload: moduleConfig });
+
+      const storedConfig = module.config__();
+      expect(storedConfig).to.not.be.null;
+      expect(storedConfig!.refreshIntervalMs).to.equal(customRefreshInterval);
+    });
+
     // Helper to initialize module and return the internal AdVisibilityService instance
     const initAdReloadModuleWithConfig = (
       configOverrides: Partial<modules.adreload.AdReloadModuleConfig>
@@ -176,13 +192,13 @@ describe('Moli Ad Reload Module', () => {
       { name: 'zero', config: { refreshIntervalMs: 0 }, expected: 0 },
       { name: 'undefined', config: { refreshIntervalMs: undefined }, expected: 20000 }
     ].forEach(({ name, config, expected }) => {
-      it(`should use ${expected}ms for ${name} config`, () => {
+      it(`should use ${expected}ms in visibility service for ${name} config`, () => {
         const service = initAdReloadModuleWithConfig(config);
         expect(service.refreshInterval).to.equal(expected);
       });
     });
 
-    it('should pass both refresh interval and overrides correctly', () => {
+    it('should pass both refresh interval and overrides correctly to the visibility service', () => {
       const overrides = { slot1: 10000, slot2: 40000 };
       const service = initAdReloadModuleWithConfig({
         refreshIntervalMs: 25000,
