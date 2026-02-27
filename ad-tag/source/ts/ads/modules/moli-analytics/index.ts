@@ -26,15 +26,18 @@ export const DEFAULT_CONFIG = {
 
 export const MoliAnalytics = (): IModule => {
   let config: Required<modules.moliAnalytics.MoliAnalyticsConfig>;
-  let adContext: AdPipelineContext;
   let eventContext: EventContext;
   let eventTracker: EventTracker;
   let adUnitsMap: Map<string, { auctionId: string; adUnitName: string; gpid: string }> = new Map();
 
-  const generatePageViewId = (): string => `pv-${uuidV4(adContext.window__)}`;
+  const generatePageViewId = (adPipelineContext: AdPipelineContext): string => 
+    `pv-${uuidV4(adPipelineContext.window__)}`;
 
-  const handleAuctionEnd = (event: prebidjs.event.AuctionObject) => {
-    const auctionEnd = eventMapper.prebid.auctionEnd(event, eventContext, adContext);
+  const handleAuctionEnd = (
+    event: prebidjs.event.AuctionObject,
+    adPipelineContext: AdPipelineContext
+  ) => {
+    const auctionEnd = eventMapper.prebid.auctionEnd(event, eventContext, adPipelineContext);
     for (const adUnit of auctionEnd.data.adUnits) {
       adUnitsMap.set(adUnit.code, {
         auctionId: auctionEnd.data.auctionId,
@@ -45,7 +48,10 @@ export const MoliAnalytics = (): IModule => {
     eventTracker.track(auctionEnd);
   };
 
-  const handleBidWon = (event: prebidjs.BidResponse) => {
+  const handleBidWon = (
+    event: prebidjs.BidResponse,
+    adPipelineContext: AdPipelineContext
+  ) => {
     const adUnitData = adUnitsMap.get(event.adUnitCode);
     eventTracker.track(
       eventMapper.prebid.bidWon(
@@ -54,12 +60,15 @@ export const MoliAnalytics = (): IModule => {
           ...eventContext,
           gpid: adUnitData?.gpid || ''
         },
-        adContext
+        adPipelineContext
       )
     );
   };
 
-  const handleSlotRenderEnded = (event: googletag.events.ISlotRenderEndedEvent) => {
+  const handleSlotRenderEnded = (
+    event: googletag.events.ISlotRenderEndedEvent,
+    adPipelineContext: AdPipelineContext
+  ) => {
     const adUnitCode = event.slot.getSlotElementId();
     const adUnitData = adUnitsMap.get(adUnitCode);
     eventTracker.track(
@@ -71,15 +80,15 @@ export const MoliAnalytics = (): IModule => {
           adUnitName: adUnitData?.adUnitName || adUnitCode,
           gpid: adUnitData?.gpid || ''
         },
-        adContext
+        adPipelineContext
       )
     );
   };
 
-  const handlePageView = () => {
+  const handlePageView = (adPipelineContext: AdPipelineContext) => {
     // Set a new page view id on each page view
-    eventContext.pageViewId = generatePageViewId();
-    eventTracker.track(eventMapper.page.view(eventContext, adContext));
+    eventContext.pageViewId = generatePageViewId(adPipelineContext);
+    eventTracker.track(eventMapper.page.view(eventContext, adPipelineContext));
   };
 
   const configValid = (
@@ -114,37 +123,36 @@ export const MoliAnalytics = (): IModule => {
       return Promise.reject('failed to initialize moli analytics: invalid configuration');
     }
 
-    adContext = adPipelineContext;
     eventContext = {
       publisher: config.publisher,
-      session: createSession(adContext.window__, SESSION_TTL_MIN),
-      pageViewId: generatePageViewId(),
+      session: createSession(adPipelineContext.window__, SESSION_TTL_MIN),
+      pageViewId: generatePageViewId(adPipelineContext),
       analyticsLabels: null
     };
     eventTracker = createEventTracker(
       config.url,
       config.batchSize,
       config.batchDelay,
-      adContext.logger__
+      adPipelineContext.logger__
     );
 
     // Set analytics labels
     if (
-      adContext.config__.configVersion?.identifier ||
-      adContext.config__.configVersion?.versionVariant
+      adPipelineContext.config__.configVersion?.identifier ||
+      adPipelineContext.config__.configVersion?.versionVariant
     ) {
       eventContext.analyticsLabels = {
-        ab_test: adContext.config__.configVersion?.identifier || null,
-        variant: adContext.config__.configVersion?.versionVariant || null
+        ab_test: adPipelineContext.config__.configVersion?.identifier || null,
+        variant: adPipelineContext.config__.configVersion?.versionVariant || null
       };
     }
 
     // Set up page view event
-    if (adContext.config__.spa?.enabled) {
+    if (adPipelineContext.config__.spa?.enabled) {
       // SPA - listen for page change
-      adContext.window__.moli.addEventListener('afterRequestAds', event => {
+      adPipelineContext.window__.moli.addEventListener('afterRequestAds', event => {
         if (event.state === 'spa-finished' || event.state === 'finished') {
-          handlePageView();
+          handlePageView(adPipelineContext);
         }
       });
     }
@@ -152,30 +160,36 @@ export const MoliAnalytics = (): IModule => {
     // Add prebid event listeners
     const setupPrebid = async () => {
       // Trigger the initial page view event after user ID resolved
-      if (typeof adContext.window__.pbjs.getUserIdsAsync === 'function') {
-        await adContext.window__.pbjs.getUserIdsAsync();
+      if (typeof adPipelineContext.window__.pbjs.getUserIdsAsync === 'function') {
+        await adPipelineContext.window__.pbjs.getUserIdsAsync();
       }
-      handlePageView();
+      handlePageView(adPipelineContext);
 
-      adContext.window__.pbjs.onEvent('auctionEnd', handleAuctionEnd);
-      adContext.window__.pbjs.onEvent('bidWon', handleBidWon);
+      adPipelineContext.window__.pbjs.onEvent('auctionEnd', (event: prebidjs.event.AuctionObject) =>
+        handleAuctionEnd(event, adPipelineContext)
+      );
+      adPipelineContext.window__.pbjs.onEvent('bidWon', (event: prebidjs.BidResponse) =>
+        handleBidWon(event, adPipelineContext)
+      );
     };
-    if (typeof adContext.window__.pbjs.onEvent === 'function') {
+    if (typeof adPipelineContext.window__.pbjs.onEvent === 'function') {
       await setupPrebid();
     } else {
-      adContext.window__.pbjs.que.push(setupPrebid);
+      adPipelineContext.window__.pbjs.que.push(setupPrebid);
     }
 
     // Add google publisher tag event listeners
     const setupGPT = () => {
-      adContext.window__.googletag
+      adPipelineContext.window__.googletag
         .pubads()
-        .addEventListener('slotRenderEnded', handleSlotRenderEnded);
+        .addEventListener('slotRenderEnded', (event: googletag.events.ISlotRenderEndedEvent) =>
+          handleSlotRenderEnded(event, adPipelineContext)
+        );
     };
-    if (typeof adContext.window__.googletag.pubads === 'function') {
+    if (typeof adPipelineContext.window__.googletag.pubads === 'function') {
       setupGPT();
     } else {
-      adContext.window__.googletag.cmd.push(setupGPT);
+      adPipelineContext.window__.googletag.cmd.push(setupGPT);
     }
 
     return Promise.resolve();
