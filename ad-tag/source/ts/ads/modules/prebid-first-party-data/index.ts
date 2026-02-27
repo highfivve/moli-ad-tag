@@ -57,10 +57,7 @@ export const createPrebidFirstPartyDataModule = (): IModule => {
   const config__ = (): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null =>
     moduleConfig;
 
-  const extractKeyValueArray = (
-    key: string,
-    keyValues: googleAdManager.KeyValueMap
-  ): string[] => {
+  const extractKeyValueArray = (key: string, keyValues: googleAdManager.KeyValueMap): string[] => {
     const value = keyValues[key];
     if (value) {
       return typeof value === 'string' ? [value] : value;

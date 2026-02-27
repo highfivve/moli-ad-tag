@@ -195,11 +195,7 @@ export const createAdexModule = (): IAdexModule => {
     };
 
     // load script or make request (appMode) if consent is given
-    if (
-      hasRequiredConsent(context.tcData__) &&
-      !isLoaded &&
-      Object.keys(gamKeyValues).length > 0
-    ) {
+    if (hasRequiredConsent(context.tcData__) && !isLoaded && Object.keys(gamKeyValues).length > 0) {
       isLoaded = true;
       // if user comes via app (clientType is 'android' or 'ios'), make a request to the in-app endpoint instead of loading the script
       const hasValidMobileKeyValues: boolean =
