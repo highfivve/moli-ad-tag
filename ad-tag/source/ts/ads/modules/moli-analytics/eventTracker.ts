@@ -15,7 +15,7 @@ export const createEventTracker = (
   logger?: MoliRuntime.MoliLogger
 ): EventTracker => {
   let batch: Event[] = [];
-  let timer: NodeJS.Timeout | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
   const processBatch = () => {
     const currentBatch = batch;
