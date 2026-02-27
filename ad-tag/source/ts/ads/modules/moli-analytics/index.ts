@@ -30,7 +30,7 @@ export const MoliAnalytics = (): IModule => {
   let eventTracker: EventTracker;
   let adUnitsMap: Map<string, { auctionId: string; adUnitName: string; gpid: string }> = new Map();
 
-  const generatePageViewId = (adPipelineContext: AdPipelineContext): string => 
+  const generatePageViewId = (adPipelineContext: AdPipelineContext): string =>
     `pv-${uuidV4(adPipelineContext.window__)}`;
 
   const handleAuctionEnd = (
@@ -48,10 +48,7 @@ export const MoliAnalytics = (): IModule => {
     eventTracker.track(auctionEnd);
   };
 
-  const handleBidWon = (
-    event: prebidjs.BidResponse,
-    adPipelineContext: AdPipelineContext
-  ) => {
+  const handleBidWon = (event: prebidjs.BidResponse, adPipelineContext: AdPipelineContext) => {
     const adUnitData = adUnitsMap.get(event.adUnitCode);
     eventTracker.track(
       eventMapper.prebid.bidWon(
