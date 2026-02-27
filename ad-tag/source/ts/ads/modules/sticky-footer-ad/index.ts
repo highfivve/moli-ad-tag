@@ -53,33 +53,26 @@ import { initMobileAdSticky } from './mobileSticky';
  *
  * @see https://highfivve.github.io/footer-ads/
  */
-export class StickyFooterAd implements IModule {
-  public readonly name: string = 'sticky-footer-ads';
-  public readonly description: string = 'sticky footer ad creatives';
-  public readonly moduleType: ModuleType = 'creatives';
+export const createStickyFooterAd = (): IModule => {
+  const name = 'sticky-footer-ads';
+  let stickyFooterAdConfig: modules.stickyFooterAd.StickyFooterAdConfig | null = null;
 
-  private stickyFooterAdConfig: modules.stickyFooterAd.StickyFooterAdConfig | null = null;
+  const config__ = (): Object | null => stickyFooterAdConfig;
 
-  config__(): Object | null {
-    return this.stickyFooterAdConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
+  const configure__ = (moduleConfig?: modules.ModulesConfig | undefined): void => {
     if (moduleConfig?.stickyFooterAd?.enabled) {
-      this.stickyFooterAdConfig = moduleConfig.stickyFooterAd;
+      stickyFooterAdConfig = moduleConfig.stickyFooterAd;
     }
-  }
+  };
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    const config = this.stickyFooterAdConfig;
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => {
+    const config = stickyFooterAdConfig;
     return config
       ? [
-          mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
+          mkPrepareRequestAdsStep(name, LOW_PRIORITY, (ctx, slots) => {
             if (
               config.mobileStickyDomId &&
-              slots.some(
-                slot => slot.moliSlot.domId === this.stickyFooterAdConfig?.mobileStickyDomId
-              )
+              slots.some(slot => slot.moliSlot.domId === config.mobileStickyDomId)
             ) {
               initMobileAdSticky(
                 ctx.window__,
@@ -106,13 +99,19 @@ export class StickyFooterAd implements IModule {
           })
         ]
       : [];
-  }
+  };
 
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
+  const configureSteps__ = (): ConfigureStep[] => [];
+  const initSteps__ = (): InitStep[] => [];
 
-  initSteps__(): InitStep[] {
-    return [];
-  }
-}
+  return {
+    name,
+    description: 'sticky footer ad creatives',
+    moduleType: 'creatives' as ModuleType,
+    config__,
+    configure__,
+    prepareRequestAdsSteps__,
+    configureSteps__,
+    initSteps__
+  };
+};

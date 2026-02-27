@@ -1,5 +1,5 @@
 import type { MoliRuntime } from '../types/moliRuntime';
-import { PrebidFirstPartyDataModule } from 'ad-tag/ads/modules/prebid-first-party-data';
+import { createPrebidFirstPartyDataModule } from 'ad-tag/ads/modules/prebid-first-party-data';
 
 declare const window: MoliRuntime.MoliWindow;
-window.moli.registerModule(new PrebidFirstPartyDataModule());
+window.moli.registerModule(createPrebidFirstPartyDataModule());

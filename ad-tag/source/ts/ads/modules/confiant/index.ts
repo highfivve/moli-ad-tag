@@ -47,31 +47,23 @@ import { modules } from 'ad-tag/types/moliConfig';
  * Confiant blocks malicious ads.
  *
  */
-export class Confiant implements IModule {
-  public readonly name: string = 'confiant';
-  public readonly description: string = 'ad fraud detection and protection module';
-  public readonly moduleType: ModuleType = 'ad-fraud';
+export const createConfiant = (): IModule => {
+  const name = 'confiant';
+  const gvlid: string = '56';
+  let confiantConfig: modules.confiant.ConfiantConfig | null = null;
 
-  private readonly gvlid: string = '56';
+  const config__ = (): Object | null => confiantConfig;
 
-  private confiantConfig: modules.confiant.ConfiantConfig | null = null;
-
-  config__(): Object | null {
-    return this.confiantConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig) {
+  const configure__ = (moduleConfig?: modules.ModulesConfig) => {
     if (moduleConfig?.confiant && moduleConfig.confiant.enabled) {
-      this.confiantConfig = moduleConfig.confiant;
+      confiantConfig = moduleConfig.confiant;
     }
-  }
+  };
 
-  initSteps__(): InitStep[] {
-    const config = this.confiantConfig;
-    return config ? [mkInitStep('confiant-init', ctx => this.loadConfiant(ctx, config))] : [];
-  }
-
-  loadConfiant(context: AdPipelineContext, config: modules.confiant.ConfiantConfig): Promise<void> {
+  const loadConfiant = (
+    context: AdPipelineContext,
+    config: modules.confiant.ConfiantConfig
+  ): Promise<void> => {
     // test environment doesn't require confiant
     if (context.env__ === 'test') {
       return Promise.resolve();
@@ -83,25 +75,36 @@ export class Confiant implements IModule {
       // this is only a safeguard to block confiant when checkGVLID is false
       (!context.tcData__.purpose.consents['1'] ||
         // validate the GVL ID if configured
-        !(!this.confiantConfig?.checkGVLID || context.tcData__.vendor.consents[this.gvlid]))
+        !(!confiantConfig?.checkGVLID || context.tcData__.vendor.consents[gvlid]))
     ) {
       return Promise.resolve();
     }
     context.assetLoaderService__
       .loadScript({
-        name: this.name,
+        name,
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: config.assetUrl
       })
       .catch(error => context.logger__.error('failed to load confiant', error));
     return Promise.resolve();
-  }
+  };
 
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
+  const initSteps__ = (): InitStep[] => {
+    const config = confiantConfig;
+    return config ? [mkInitStep('confiant-init', ctx => loadConfiant(ctx, config))] : [];
+  };
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-}
+  const configureSteps__ = (): ConfigureStep[] => [];
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => [];
+
+  return {
+    name,
+    description: 'ad fraud detection and protection module',
+    moduleType: 'ad-fraud' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};

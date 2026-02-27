@@ -5,7 +5,7 @@ import sinonChai from 'sinon-chai';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { modules } from 'ad-tag/types/moliConfig';
 import { ATS } from 'ad-tag/types/identitylink';
-import { IdentityLink } from 'ad-tag/ads/modules/identitylink/index';
+import { createIdentityLink } from 'ad-tag/ads/modules/identitylink/index';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
 import {
   emptyConfig,
@@ -44,7 +44,6 @@ describe('IdentityLink Module', () => {
   const assetLoaderService = createAssetLoaderService(jsDomWindow);
   const loadScriptStub = sandbox.stub(assetLoaderService, 'loadScript');
 
-  const createIdentityLink = (): IdentityLink => new IdentityLink();
   const identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig = {
     enabled: true,
     hashedEmailAddresses: ['somehashedaddress'],

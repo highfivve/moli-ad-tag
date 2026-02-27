@@ -18,7 +18,8 @@ import { createGoogletagStub, googleAdSlotStub } from 'ad-tag/stubs/googletagStu
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { AdSlot, Device, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
-import { StickyFooterAdsV2 } from 'ad-tag/ads/modules/sticky-footer-ad-v2/index';
+import { createStickyFooterAdsV2 } from 'ad-tag/ads/modules/sticky-footer-ad-v2/index';
+import { IModule } from 'ad-tag/types/module';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 
@@ -82,7 +83,7 @@ const createAndConfigureModule = (
   disallowedAdvertiserIds: number[] = [],
   closingButtonText?: string
 ) => {
-  const module = new StickyFooterAdsV2();
+  const module = createStickyFooterAdsV2();
   module.configure__({
     stickyFooterAdV2: {
       enabled: true,
@@ -103,7 +104,7 @@ const createInitializedModule = (
   slots: AdSlot[] = []
 ): {
   prepareSteps: PrepareRequestAdsStep;
-  module: StickyFooterAdsV2;
+  module: IModule;
   config: MoliConfig;
 } => {
   const config = newEmptyConfig(slots);

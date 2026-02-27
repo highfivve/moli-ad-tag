@@ -27,24 +27,7 @@ import { modules } from 'ad-tag/types/moliConfig';
  * In your `index.ts` import the Cleanup module and register the module.
  *
  * ```js
- * moli.registerModule(new CleanupModule({
- *     enabled: true,
- *     configs: [
- *       {
- *         bidder: 'seedtag',
- *         domId: 'wallpaper-pixel',
- *         deleteMethod: {
- *           cssSelectors: ['div[data-seedtag-format="inscreen"]']
- *         }
- *       },
- *       {
- *         bidder: 'dspx',
- *         domId: 'lazy-loading-adslot-1',
- *         deleteMethod: {
- *           jsAsString: ['window.dspx_start_called.dspxPageSkin.unload();', 'window.dspx_start_called.counter = 0;']
- *         }
- *       }
- *     }]));
+ * moli.registerModule(createCleanup());
  * ```
  *
  * ## Dspx Skin
@@ -59,82 +42,28 @@ import { modules } from 'ad-tag/types/moliConfig';
  *
  */
 
-export class Cleanup implements IModule {
-  public readonly name: string = 'cleanup';
-  public readonly description: string = 'cleanup out-of-page formats on navigation or ad-reload';
-  public readonly moduleType: ModuleType = 'creatives';
+export interface ICleanupModule extends IModule {
+  cleanUp(context: AdPipelineContext, configs: modules.cleanup.CleanupConfig[]): void;
+}
 
-  private cleanupConfig: modules.cleanup.CleanupModuleConfig | null = null;
+export const createCleanup = (): ICleanupModule => {
+  const name = 'cleanup';
+  let cleanupConfig: modules.cleanup.CleanupModuleConfig | null = null;
 
-  configure__(modulesConfig?: modules.ModulesConfig) {
+  const config__ = (): Object | null => cleanupConfig;
+
+  const configure__ = (modulesConfig?: modules.ModulesConfig) => {
     if (modulesConfig?.cleanup && modulesConfig.cleanup.enabled) {
-      this.cleanupConfig = modulesConfig.cleanup;
+      cleanupConfig = modulesConfig.cleanup;
     }
-  }
+  };
 
-  config__(): Object | null {
-    return this.cleanupConfig;
-  }
-
-  initSteps__(): InitStep[] {
-    return [];
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    const config = this.cleanupConfig;
-    return config
-      ? [
-          mkConfigureStepOncePerRequestAdsCycle(
-            'destroy-out-of-page-ad-format',
-            (context: AdPipelineContext) => {
-              if (context.runtimeConfig__.environment === 'test') {
-                return Promise.resolve();
-              }
-
-              context.window__.pbjs.que.push(() => {
-                // check if the bidder in each of the cleanup configs has won the last auction on the configured slot
-                // e.g. seedtag is configured on the wallpaper slot, then clean up seedtag if they have won the last auction on the wallpaper slot
-                // prevents cleaning on the first page load
-                const configsOfDomIdsThatNeedToBeCleaned = config.configs.filter(config =>
-                  this.hasBidderWonLastAuction(context, config)
-                );
-                this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
-              });
-              return Promise.resolve();
-            }
-          )
-        ]
-      : [];
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    const config = this.cleanupConfig;
-    return config
-      ? [
-          mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
-            if (context.runtimeConfig__.environment === 'test') {
-              return Promise.resolve();
-            }
-
-            context.window__.pbjs.que.push(() => {
-              // look at the slots that should be reloaded & check if there is a cleanup config for it
-              // if there is, check if the bidder in this config has won the last auction on the slot
-              const configsOfDomIdsThatNeedToBeCleaned = config.configs
-                .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
-                .filter(config => this.hasBidderWonLastAuction(context, config));
-
-              this.cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
-            });
-            return Promise.resolve();
-          })
-        ]
-      : [];
-  }
+  const initSteps__ = (): InitStep[] => [];
 
   /**
    * Public for testing and spying purposes
    */
-  cleanUp = (context: AdPipelineContext, configs: modules.cleanup.CleanupConfig[]) => {
+  const cleanUp = (context: AdPipelineContext, configs: modules.cleanup.CleanupConfig[]) => {
     configs.forEach(config => {
       if ('cssSelectors' in config.deleteMethod) {
         config.deleteMethod.cssSelectors.forEach((selector: string) => {
@@ -177,7 +106,7 @@ export class Cleanup implements IModule {
     });
   };
 
-  private hasBidderWonLastAuction = (
+  const hasBidderWonLastAuction = (
     context: AdPipelineContext,
     config: modules.cleanup.CleanupConfig
   ): boolean => {
@@ -190,4 +119,67 @@ export class Cleanup implements IModule {
     // look at the single cleanup config and check if the configured bidder has won the last auction on the configured slot
     return bidderThatWonLastAuctionOnSlot === config.bidder;
   };
-}
+
+  const configureSteps__ = (): ConfigureStep[] => {
+    const config = cleanupConfig;
+    return config
+      ? [
+          mkConfigureStepOncePerRequestAdsCycle(
+            'destroy-out-of-page-ad-format',
+            (context: AdPipelineContext) => {
+              if (context.runtimeConfig__.environment === 'test') {
+                return Promise.resolve();
+              }
+
+              context.window__.pbjs.que.push(() => {
+                // check if the bidder in each of the cleanup configs has won the last auction on the configured slot
+                // e.g. seedtag is configured on the wallpaper slot, then clean up seedtag if they have won the last auction on the wallpaper slot
+                // prevents cleaning on the first page load
+                const configsOfDomIdsThatNeedToBeCleaned = config.configs.filter(config =>
+                  hasBidderWonLastAuction(context, config)
+                );
+                cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+              });
+              return Promise.resolve();
+            }
+          )
+        ]
+      : [];
+  };
+
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => {
+    const config = cleanupConfig;
+    return config
+      ? [
+          mkPrepareRequestAdsStep('cleanup-before-ad-reload', HIGH_PRIORITY, (context, slots) => {
+            if (context.runtimeConfig__.environment === 'test') {
+              return Promise.resolve();
+            }
+
+            context.window__.pbjs.que.push(() => {
+              // look at the slots that should be reloaded & check if there is a cleanup config for it
+              // if there is, check if the bidder in this config has won the last auction on the slot
+              const configsOfDomIdsThatNeedToBeCleaned = config.configs
+                .filter(config => slots.map(slot => slot.moliSlot.domId).includes(config.domId))
+                .filter(config => hasBidderWonLastAuction(context, config));
+
+              cleanUp(context, configsOfDomIdsThatNeedToBeCleaned);
+            });
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  };
+
+  return {
+    name,
+    description: 'cleanup out-of-page formats on navigation or ad-reload',
+    moduleType: 'creatives' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__,
+    cleanUp
+  };
+};
