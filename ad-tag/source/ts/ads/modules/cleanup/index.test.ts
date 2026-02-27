@@ -35,7 +35,9 @@ describe('Cleanup Module', () => {
   const specialFormatClass2 = 'seedtag-container2';
   const specialFormatClass3 = 'other-container';
 
-  const createAndConfigureModule = (cleanup: modules.cleanup.CleanupModuleConfig): ICleanupModule => {
+  const createAndConfigureModule = (
+    cleanup: modules.cleanup.CleanupModuleConfig
+  ): ICleanupModule => {
     const module = createCleanup();
     module.configure__({ cleanup });
     return module;

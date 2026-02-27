@@ -131,9 +131,8 @@ export const createStickyHeaderAd = (): IModule => {
               return Promise.resolve();
             }
 
-            const container = ctx.window__.document.querySelector<HTMLDivElement>(
-              containerSelector
-            );
+            const container =
+              ctx.window__.document.querySelector<HTMLDivElement>(containerSelector);
             if (!container) {
               ctx.logger__.warn(
                 name,
@@ -200,9 +199,8 @@ export const createStickyHeaderAd = (): IModule => {
             }
 
             // register close button
-            const closeButton = ctx.window__.document.querySelector<HTMLButtonElement>(
-              buttonSelector
-            );
+            const closeButton =
+              ctx.window__.document.querySelector<HTMLButtonElement>(buttonSelector);
             if (closeButton) {
               closeButton.addEventListener('click', () => {
                 container.classList.add(config.fadeOutClassName);
