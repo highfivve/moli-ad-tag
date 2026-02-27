@@ -39,25 +39,20 @@ import { extractPubstackAbTestCohort } from './abTest';
  *
  * @see https://pubstack.io
  */
-export class Pubstack implements IModule {
-  public readonly name: string = 'pubstack';
-  public readonly description: string = 'prebid analytics integration';
-  public readonly moduleType: ModuleType = 'reporting';
+export const createPubstack = (): IModule => {
+  const name = 'pubstack';
+  let pubstackConfig: modules.pubstack.PubstackConfig | null = null;
 
-  private pubstackConfig: modules.pubstack.PubstackConfig | null = null;
+  const config__ = (): Object | null => pubstackConfig;
 
-  config__(): Object | null {
-    return this.pubstackConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig) {
+  const configure__ = (moduleConfig?: modules.ModulesConfig) => {
     if (moduleConfig?.pubstack && moduleConfig.pubstack.enabled) {
-      this.pubstackConfig = moduleConfig.pubstack;
+      pubstackConfig = moduleConfig.pubstack;
     }
-  }
+  };
 
-  initSteps__(): InitStep[] {
-    const config = this.pubstackConfig;
+  const initSteps__ = (): InitStep[] => {
+    const config = pubstackConfig;
     return config
       ? [
           mkInitStep('pubstack-init', ctx => {
@@ -67,7 +62,7 @@ export class Pubstack implements IModule {
             // load the pubstack script
             ctx.assetLoaderService__
               .loadScript({
-                name: 'pubstack',
+                name,
                 loadMethod: AssetLoadMethod.TAG,
                 assetUrl: `https://boot.pbstck.com/v1/tag/${config.tagId}`
               })
@@ -76,10 +71,10 @@ export class Pubstack implements IModule {
           })
         ]
       : [];
-  }
+  };
 
-  configureSteps__(): ConfigureStep[] {
-    const config = this.pubstackConfig;
+  const configureSteps__ = (): ConfigureStep[] => {
+    const config = pubstackConfig;
     return config
       ? [
           mkConfigureStep('pubstack-configure', ctx => {
@@ -95,9 +90,18 @@ export class Pubstack implements IModule {
           })
         ]
       : [];
-  }
+  };
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-}
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => [];
+
+  return {
+    name,
+    description: 'prebid analytics integration',
+    moduleType: 'reporting' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};

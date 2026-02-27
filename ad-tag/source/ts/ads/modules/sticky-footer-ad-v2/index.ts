@@ -45,28 +45,23 @@ import { initAdSticky } from './footerStickyAd';
  *
  * @see https://highfivve.github.io/footer-ads/
  */
-export class StickyFooterAdsV2 implements IModule {
-  public readonly name: string = 'sticky-footer-ads-v2';
-  public readonly description: string = 'sticky footer ad creatives';
-  public readonly moduleType: ModuleType = 'creatives';
+export const createStickyFooterAdsV2 = (): IModule => {
+  const name = 'sticky-footer-ads-v2';
+  let stickyFooterAdConfig: modules.stickyFooterAdV2.StickyFooterAdConfig | null = null;
 
-  private stickyFooterAdConfig: modules.stickyFooterAdV2.StickyFooterAdConfig | null = null;
+  const config__ = (): Object | null => stickyFooterAdConfig;
 
-  config__(): Object | null {
-    return this.stickyFooterAdConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
+  const configure__ = (moduleConfig?: modules.ModulesConfig | undefined): void => {
     if (moduleConfig?.stickyFooterAdV2 && moduleConfig.stickyFooterAdV2.enabled) {
-      this.stickyFooterAdConfig = moduleConfig.stickyFooterAdV2;
+      stickyFooterAdConfig = moduleConfig.stickyFooterAdV2;
     }
-  }
+  };
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    const config = this.stickyFooterAdConfig;
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => {
+    const config = stickyFooterAdConfig;
     return config
       ? [
-          mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
+          mkPrepareRequestAdsStep(name, LOW_PRIORITY, (ctx, slots) => {
             // determine the slot to init sticky ad for
             const desktopSlot = slots.find(
               slot => slot.moliSlot.domId === config.stickyFooterDomIds.desktop
@@ -78,7 +73,7 @@ export class StickyFooterAdsV2 implements IModule {
             // this is usually a configuration error in the ad tag and should not happen
             const footerAdSlot = mobileSlot ? mobileSlot : desktopSlot;
             if (mobileSlot && desktopSlot) {
-              ctx.logger__.warn(this.name, 'mobile and desktop sticky footer are called!');
+              ctx.logger__.warn(name, 'mobile and desktop sticky footer are called!');
             }
 
             if (footerAdSlot) {
@@ -95,12 +90,19 @@ export class StickyFooterAdsV2 implements IModule {
           })
         ]
       : [];
-  }
+  };
 
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
-  initSteps__(): InitStep[] {
-    return [];
-  }
-}
+  const configureSteps__ = (): ConfigureStep[] => [];
+  const initSteps__ = (): InitStep[] => [];
+
+  return {
+    name,
+    description: 'sticky footer ad creatives',
+    moduleType: 'creatives' as ModuleType,
+    config__,
+    configure__,
+    prepareRequestAdsSteps__,
+    configureSteps__,
+    initSteps__
+  };
+};

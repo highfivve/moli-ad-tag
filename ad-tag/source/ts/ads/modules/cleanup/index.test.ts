@@ -4,7 +4,7 @@ import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyConfig, emptyRuntimeConfig, newNoopLogger } from 'ad-tag/stubs/moliStubs';
-import { Cleanup } from './index';
+import { createCleanup, ICleanupModule } from './index';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createMoliTag } from 'ad-tag/ads/moli';
 import { AdSlot, modules } from 'ad-tag/types/moliConfig';
@@ -35,8 +35,8 @@ describe('Cleanup Module', () => {
   const specialFormatClass2 = 'seedtag-container2';
   const specialFormatClass3 = 'other-container';
 
-  const createAndConfigureModule = (cleanup: modules.cleanup.CleanupModuleConfig): Cleanup => {
-    const module = new Cleanup();
+  const createAndConfigureModule = (cleanup: modules.cleanup.CleanupModuleConfig): ICleanupModule => {
+    const module = createCleanup();
     module.configure__({ cleanup });
     return module;
   };
@@ -129,7 +129,7 @@ describe('Cleanup Module', () => {
   };
 
   it('should not add a configure and prepare request ads pipeline step if disabled', () => {
-    const module = new Cleanup();
+    const module = createCleanup();
 
     module.configure__({ cleanup: { enabled: false, configs: [] } });
 

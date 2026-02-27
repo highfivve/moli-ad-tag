@@ -97,6 +97,14 @@ Modules are registered with `moli.registerModule(...)` before `moli.configure(..
 - **File naming**: kebab-case for files and directories.
 - **Functions**: Start with a verb; booleans use `is`/`has`/`can` prefix.
 - **Immutability**: Prefer `readonly` on data that doesn't change; `as const` for literals.
+- **Module pattern**: All modules use factory functions (`createXxx()`) returning a plain object, NOT classes. This enables better esbuild minification. Each module implements `IModule` (`types/module.ts`). Modules with extra public methods expose an extended interface (e.g. `ICleanupModule`, `ISkinModule`, `IAdReloadModule`). Bundle entry points in `ad-tag/source/ts/bundle/` call `createXxx()` instead of `new Xxx()`.
+
+### Build validation
+
+`npm run build` runs: `tsc -p tsconfig.build.json` + `build:bundle:all` + `build:console` + `build:css`. The following warnings are **pre-existing and expected** — do not treat them as errors:
+- "Browserslist: browsers data (caniuse-lite) is N months old"
+- `@rollup/plugin-typescript: Typescript 'sourceMap' compiler option must be set to generate source maps`
+- Circular dependency warning in `node_modules/@iabtcf/core`
 
 ### Documentation
 

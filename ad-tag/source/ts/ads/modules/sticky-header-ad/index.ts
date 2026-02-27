@@ -15,8 +15,8 @@
  * In your `index.ts` import and register the module.
  *
  * ```js
- * import { StickyHeaderAd } from '@highfivve/module-sticky-header-ad';
- * moli.registerModule(new StickyHeadersAd);
+ * import { createStickyHeaderAd } from '@highfivve/module-sticky-header-ad';
+ * moli.registerModule(createStickyHeaderAd());
  * ```
  *
  * Next you need to add the required HTML and CSS on your page. See the [sticky header ads documentation](https://highfivve.github.io/footer-ads/)
@@ -60,78 +60,68 @@ import {
  *
  * @see https://highfivve.github.io/footer-ads/
  */
-export class StickyHeaderAd implements IModule {
-  public readonly name: string = 'sticky-header-ads';
-  public readonly description: string = 'sticky header ad creatives';
-  public readonly moduleType: ModuleType = 'creatives';
+export const createStickyHeaderAd = (): IModule => {
+  const name = 'sticky-header-ads';
 
   /**
    * selects the div wrapping the ad slot
-   * @private
    */
-  private readonly containerSelector = '[data-ref="header-ad"]';
+  const containerSelector = '[data-ref="header-ad"]';
 
   /**
    * selects the close button of the ad slot
-   * @private
    */
-  private readonly buttonSelector = '[data-ref="header-ad-close-button"]';
+  const buttonSelector = '[data-ref="header-ad-close-button"]';
 
   /**
    * If a none sticky navbar configuration is available, but no css class is configured, this one will
    * be used as default.
    *
    * Overriding this only makes sense if the publisher wants a different class name
-   * @private
    */
-  private readonly navbarHiddenClassName = 'h5v-header-ad--navbarHidden';
+  const navbarHiddenClassName = 'h5v-header-ad--navbarHidden';
 
   /**
    * singleton observer instance. Required for SPA publishers where we need to
    * disconnect and reconnect when the user navigates.
    *
    * The instance is also used to ensure that there's only one observer
-   * @private
    */
-  private observer: IntersectionObserver | null = null;
+  let observer: IntersectionObserver | null = null;
 
-  private stickyHeaderAdConfig: modules.stickyHeaderAd.StickyHeaderAdConfig | null = null;
+  let stickyHeaderAdConfig: modules.stickyHeaderAd.StickyHeaderAdConfig | null = null;
 
-  configure__(moduleConfig?: modules.ModulesConfig | undefined): void {
+  const configure__ = (moduleConfig?: modules.ModulesConfig | undefined): void => {
     if (moduleConfig?.stickyHeaderAd?.enabled) {
-      this.stickyHeaderAdConfig = moduleConfig.stickyHeaderAd;
+      stickyHeaderAdConfig = moduleConfig.stickyHeaderAd;
     }
-  }
+  };
 
-  config__(): Object | null {
-    return this.stickyHeaderAdConfig;
-  }
+  const config__ = (): Object | null => stickyHeaderAdConfig;
 
-  initSteps__(): InitStep[] {
-    return [];
-  }
+  const initSteps__ = (): InitStep[] => [];
 
-  configureSteps__(): ConfigureStep[] {
-    const config = this.stickyHeaderAdConfig;
+  const configureSteps__ = (): ConfigureStep[] => {
+    const config = stickyHeaderAdConfig;
     return config
       ? [
           mkConfigureStepOncePerRequestAdsCycle('sticky-header-ads:cleanup', () => {
-            if (this.observer) {
-              this.observer.disconnect();
-              this.observer = null;
+            if (observer) {
+              observer.disconnect();
+              observer = null;
             }
             return Promise.resolve();
           })
         ]
       : [];
-  }
+  };
 
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    const config = this.stickyHeaderAdConfig;
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => {
+    const config = stickyHeaderAdConfig;
     return config
       ? [
-          mkPrepareRequestAdsStep(this.name, LOW_PRIORITY, (ctx, slots) => {
-            if (this.observer) {
+          mkPrepareRequestAdsStep(name, LOW_PRIORITY, (ctx, slots) => {
+            if (observer) {
               return Promise.resolve();
             }
 
@@ -142,12 +132,12 @@ export class StickyHeaderAd implements IModule {
             }
 
             const container = ctx.window__.document.querySelector<HTMLDivElement>(
-              this.containerSelector
+              containerSelector
             );
             if (!container) {
               ctx.logger__.warn(
-                this.name,
-                `Could not find sticky header container with selector '${this.containerSelector}'`
+                name,
+                `Could not find sticky header container with selector '${containerSelector}'`
               );
               return Promise.resolve();
             }
@@ -171,7 +161,7 @@ export class StickyHeaderAd implements IModule {
               // optional navbar configuration to support none-sticky navbars
               const navbarConfig = config.navbarConfig;
               const navbarHiddenClass =
-                navbarConfig?.navbarHiddenClassName ?? this.navbarHiddenClassName;
+                navbarConfig?.navbarHiddenClassName ?? navbarHiddenClassName;
               const navbar = navbarConfig
                 ? ctx.window__.document.querySelector(navbarConfig.selector)
                 : null;
@@ -185,7 +175,7 @@ export class StickyHeaderAd implements IModule {
                 );
 
                 // setup intersection observer
-                this.observer = new IntersectionObserver(
+                observer = new IntersectionObserver(
                   intersectionObserverFadeOutCallback(
                     container,
                     target,
@@ -196,14 +186,14 @@ export class StickyHeaderAd implements IModule {
                   ),
                   options
                 );
-                this.observer.observe(target);
+                observer.observe(target);
 
                 if (navbar) {
-                  this.observer.observe(navbar);
+                  observer.observe(navbar);
                 }
               } else {
                 ctx.logger__.error(
-                  this.name,
+                  name,
                   `No DOM element found for selector ${config.fadeOutTrigger.selector}. Sticky header may never fade out`
                 );
               }
@@ -211,13 +201,13 @@ export class StickyHeaderAd implements IModule {
 
             // register close button
             const closeButton = ctx.window__.document.querySelector<HTMLButtonElement>(
-              this.buttonSelector
+              buttonSelector
             );
             if (closeButton) {
               closeButton.addEventListener('click', () => {
                 container.classList.add(config.fadeOutClassName);
-                if (this.observer) {
-                  this.observer.disconnect();
+                if (observer) {
+                  observer.disconnect();
                 }
                 if (ctx.env__ === 'production') {
                   ctx.window__.googletag.destroySlots([headerSlot.adSlot]);
@@ -235,5 +225,16 @@ export class StickyHeaderAd implements IModule {
           })
         ]
       : [];
-  }
-}
+  };
+
+  return {
+    name,
+    description: 'sticky header ad creatives',
+    moduleType: 'creatives' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};

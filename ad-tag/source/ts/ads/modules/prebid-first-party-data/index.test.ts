@@ -15,7 +15,7 @@ import { fullConsent } from 'ad-tag/stubs/consentStubs';
 import { createPbjsStub, pbjsTestConfig } from 'ad-tag/stubs/prebidjsStubs';
 
 import { prebidjs } from 'ad-tag/types/prebidjs';
-import { PrebidFirstPartyDataModule } from './index';
+import { createPrebidFirstPartyDataModule } from './index';
 import { AdPipelineContext } from '../../adPipeline';
 import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { dummySchainConfig } from 'ad-tag/stubs/schainStubs';
@@ -67,7 +67,7 @@ describe('Prebid First Party Data Module', () => {
     gptTargetingMappings?: modules.prebid_first_party_data.GptTargetingMapping,
     iabDataProviderName?: string
   ) => {
-    const module = new PrebidFirstPartyDataModule();
+    const module = createPrebidFirstPartyDataModule();
 
     module.configure__({
       prebidFirstPartyData: {

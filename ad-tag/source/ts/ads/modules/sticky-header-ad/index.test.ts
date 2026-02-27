@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { StickyHeaderAd } from './index';
+import { createStickyHeaderAd } from './index';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import {
   emptyConfig,
@@ -76,8 +76,8 @@ describe('sticky header ad module', () => {
   const createStickyHeaderAdModule = (
     headerAdDomId: string,
     disallowedAdvertiserIds: number[] = []
-  ): StickyHeaderAd => {
-    const module = new StickyHeaderAd();
+  ) => {
+    const module = createStickyHeaderAd();
     module.configure__({
       stickyHeaderAd: {
         enabled: true,

@@ -3,7 +3,7 @@ import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import { AdPipelineContext } from '../../adPipeline';
 import chaiAsPromised from 'chai-as-promised';
-import { AdexCommand, AdexModule, ITheAdexWindow } from './index';
+import { AdexCommand, createAdexModule, IAdexModule, ITheAdexWindow } from './index';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { createDom } from 'ad-tag/stubs/browserEnvSetup';
 import { googletag } from 'ad-tag/types/googletag';
@@ -93,7 +93,7 @@ describe('The Adex DMP Module', () => {
     appConfig?: AdexAppConfig,
     enabledPartners?: AdexPartner[]
   ) => {
-    const module = new AdexModule();
+    const module = createAdexModule();
     module.configure__(modulesConfig(isSpa, mappingDefinitions, appConfig, enabledPartners));
     return {
       module,
@@ -103,7 +103,7 @@ describe('The Adex DMP Module', () => {
   };
 
   const testAdexLoad = async (
-    module: AdexModule,
+    module: IAdexModule,
     context: AdPipelineContext,
     shouldLoad: boolean
   ) => {

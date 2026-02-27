@@ -5,7 +5,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { AssetLoadMethod, createAssetLoaderService } from 'ad-tag/util/assetLoaderService';
 import { googleAdManager, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { AdPipelineContext } from 'ad-tag/ads/adPipeline';
-import { Zeotap } from 'ad-tag/ads/modules/zeotap/index';
+import { createZeotap } from 'ad-tag/ads/modules/zeotap/index';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { emptyRuntimeConfig, newGlobalAuctionContext, noopLogger } from 'ad-tag/stubs/moliStubs';
 import { fullConsent } from 'ad-tag/stubs/consentStubs';
@@ -40,8 +40,6 @@ describe('Zeotap Module', () => {
       assetLoaderService__: assetLoaderService
     };
   };
-
-  const createZeotap = (): Zeotap => new Zeotap();
 
   const moliConfig = (keyValues: googleAdManager.KeyValueMap): MoliConfig => {
     return {
