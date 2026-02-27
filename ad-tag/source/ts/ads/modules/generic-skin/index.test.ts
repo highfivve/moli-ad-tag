@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 
-import { filterHighestNonSkinBid, Skin, SkinConfigEffect } from './index';
+import { filterHighestNonSkinBid, createSkin, ISkinModule, SkinConfigEffect } from './index';
 import { AdSlot, headerbidding, modules, MoliConfig } from 'ad-tag/types/moliConfig';
 import { googletag } from 'ad-tag/types/googletag';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
@@ -128,21 +128,21 @@ describe('Skin Module', () => {
     }
   });
 
-  const skinModule = (skin: SkinModuleConfig = emptySkinModuleConfig): Skin => {
-    const module = new Skin();
+  const skinModule = (skin: SkinModuleConfig = emptySkinModuleConfig): ISkinModule => {
+    const module = createSkin();
     module.configure__(modulesConfig(skin));
     return module;
   };
 
   describe('configure', () => {
     it('should return no prebid bids back handler if not configured', () => {
-      const module = new Skin();
+      const module = createSkin();
       expect(module.prebidBidsBackHandler__).to.be.ok;
       expect(module.prebidBidsBackHandler__()).to.have.length(0);
     });
 
     it('should return no prebid bids back handler if disabled', () => {
-      const module = new Skin();
+      const module = createSkin();
       module.configure__({
         skin: { enabled: false, configs: [] }
       });

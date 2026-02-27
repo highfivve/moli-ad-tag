@@ -12,61 +12,9 @@
  *
  *
  * ```javascript
- * import { Skin } from '@highfivve/module-generic-skin'
+ * import { createSkin } from '@highfivve/module-generic-skin'
  *
- * moli.registerModule(new Skin({
- *   configs: [
- *     // configuration for regular wallpaper/skin from GumGum or Screen on Demand (DSPX)
- *     {
- *       formatFilter: [
- *         { bidder: 'dspx' },
- *         { bidder: 'visx' }
- *       ],
- *       skinAdSlotDomId: 'my_header',
- *       hideSkinAdSlot: false,
- *       hideBlockedSlots: true,
- *       blockedAdSlotDomIds: [
- *         'my_sidebar_1',
- *         'my_sidebar_2',
- *         'my_sidebar_left',
- *         'my_floorad'
- *       ]
- *     }
- *   ]
- * }, window));
- * ```
- *
- * ### Skin optimization
- *
- * This module is capable of blocking the skin ad if the summed up CPM of all
- * blocked ad slots is higher than the skin CPM.
- *
- * This requires a separate ad unit for the skin.
- *
- * ```javascript
- * import { Skin } from '@highfivve/module-generic-skin'
- *
- * moli.registerModule(new Skin({
- *   configs: [
- *     // configuration for regular wallpaper/skin from GumGum or Screen on Demand (DSPX)
- *     {
- *       formatFilter: [
- *         { bidder: 'dspx' },
- *       ],
- *       skinAdSlotDomId: 'my_skin',
- *       hideSkinAdSlot: false,
- *       hideBlockedSlots: true,
- *       blockedAdSlotDomIds: [
- *         'my_header',
- *         'my_sidebar_1',
- *         'my_sidebar_2',
- *         'my_sidebar_left',
- *         'my_floorad'
- *       ],
- *       enableCpmComparison: true // set this to true to prevent skin from rendering if its cpm is too low
- *     }
- *   ]
- * }, window));
+ * moli.registerModule(createSkin());
  * ```
  *
  * @module
@@ -112,50 +60,47 @@ export const filterHighestNonSkinBid = (
   );
 };
 
+export interface ISkinModule extends IModule {
+  prebidBidsBackHandler__(): MoliRuntime.PrebidBidsBackHandler[];
+  getConfigEffect(
+    config: modules.skin.SkinConfig,
+    bidResponses: prebidjs.IBidResponsesMap,
+    log: MoliRuntime.MoliLogger
+  ): SkinConfigEffect;
+  selectConfig(
+    skinModuleConfig: modules.skin.SkinModuleConfig,
+    bidResponses: prebidjs.IBidResponsesMap,
+    log: MoliRuntime.MoliLogger
+  ): { skinConfig: modules.skin.SkinConfig; configEffect: SkinConfigEffect } | undefined;
+  destroyAdSlot(
+    slotDefinitions: MoliRuntime.SlotDefinition[],
+    gWindow: googletag.IGoogleTagWindow
+  ): (adSlotDomId: string) => void;
+  runSkinConfigs(
+    skinModuleConfig: modules.skin.SkinModuleConfig
+  ): (
+    ctx: AdPipelineContext,
+    bidResponses: prebidjs.IBidResponsesMap,
+    slotDefinitions: MoliRuntime.SlotDefinition[]
+  ) => void;
+}
+
 /**
  * # Skin Module
  */
-export class Skin implements IModule {
-  public readonly name: string = 'skin';
-  public readonly description: string = 'Block other ad slots if a wallpaper has won the auction';
-  public readonly moduleType: ModuleType = 'prebid';
+export const createSkin = (): ISkinModule => {
+  const name = 'skin';
+  let skinModuleConfig: modules.skin.SkinModuleConfig | null = null;
+  let bidsBackHandler: MoliRuntime.PrebidBidsBackHandler[] = [];
 
-  private skinModuleConfig: modules.skin.SkinModuleConfig | null = null;
-  private bidsBackHandler: MoliRuntime.PrebidBidsBackHandler[] = [];
-
-  config__(): Object | null {
-    return this.skinModuleConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig) {
-    if (moduleConfig?.skin && moduleConfig.skin.enabled) {
-      this.skinModuleConfig = moduleConfig.skin;
-      this.bidsBackHandler.push(this.runSkinConfigs(moduleConfig.skin));
-    }
-  }
-
-  initSteps__(): InitStep[] {
-    return [];
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-
-  prebidBidsBackHandler__(): MoliRuntime.PrebidBidsBackHandler[] {
-    return this.bidsBackHandler;
-  }
+  const config__ = (): Object | null => skinModuleConfig;
 
   /**
    * Check this skin config against the given bid responses to see if there are any skin bids inside, and if so (and
    * if the respective check is enabled), compare the highest-bidding skin cpm to the combined cpm of the other bids
    * to see if we'd be missing out on revenue if we applied the skin to the page.
    */
-  getConfigEffect = (
+  const getConfigEffect = (
     config: modules.skin.SkinConfig,
     bidResponses: prebidjs.IBidResponsesMap,
     log: MoliRuntime.MoliLogger
@@ -201,8 +146,8 @@ export class Skin implements IModule {
         : // no skin config - that means no action should be taken.
           SkinConfigEffect.NoBlocking;
 
-    log.debug(this.name, 'nonSkinBids', nonSkinBids);
-    log.debug(this.name, 'skinBids', skinBids);
+    log.debug(name, 'nonSkinBids', nonSkinBids);
+    log.debug(name, 'skinBids', skinBids);
 
     if (config.enableCpmComparison) {
       return skinConfigEffect;
@@ -218,7 +163,7 @@ export class Skin implements IModule {
    * @param log
    * @return the first skin config with matching filters. If no config matches, undefined is being returned
    */
-  selectConfig = (
+  const selectConfig = (
     skinModuleConfig: modules.skin.SkinModuleConfig,
     bidResponses: prebidjs.IBidResponsesMap,
     log: MoliRuntime.MoliLogger
@@ -226,7 +171,7 @@ export class Skin implements IModule {
     skinModuleConfig.configs
       .map(config => ({
         skinConfig: config,
-        configEffect: this.getConfigEffect(config, bidResponses, log)
+        configEffect: getConfigEffect(config, bidResponses, log)
       }))
       .find(({ configEffect }) => configEffect !== SkinConfigEffect.NoBlocking);
 
@@ -239,7 +184,7 @@ export class Skin implements IModule {
    * @param gWindow
    * @return function that destroys a given adSlot by domId
    */
-  destroyAdSlot =
+  const destroyAdSlot =
     (slotDefinitions: MoliRuntime.SlotDefinition[], gWindow: googletag.IGoogleTagWindow) =>
     (adSlotDomId: string): void => {
       const adSlots = slotDefinitions
@@ -248,28 +193,42 @@ export class Skin implements IModule {
       gWindow.googletag.destroySlots(adSlots);
     };
 
-  runSkinConfigs =
+  const hideAdSlot =
+    (_window: Window, log: MoliRuntime.MoliLogger) =>
+    (domId: string): void => {
+      const element = _window.document.getElementById(domId);
+      try {
+        if (element) {
+          log.debug('SkinModule', `Set display:none for ${domId}`);
+          element.style.setProperty('display', 'none');
+        }
+      } catch (e) {
+        log.error('SkinModule', `Couldn't set the the wallpaper div ${domId} to display:none;`, e);
+      }
+    };
+
+  const runSkinConfigs =
     (skinModuleConfig: modules.skin.SkinModuleConfig) =>
     (
       ctx: AdPipelineContext,
       bidResponses: prebidjs.IBidResponsesMap,
       slotDefinitions: MoliRuntime.SlotDefinition[]
     ): void => {
-      const skinConfigWithEffect = this.selectConfig(skinModuleConfig, bidResponses, ctx.logger__);
+      const skinConfigWithEffect = selectConfig(skinModuleConfig, bidResponses, ctx.logger__);
 
       if (skinConfigWithEffect) {
         const { skinConfig, configEffect } = skinConfigWithEffect;
 
         if (configEffect === SkinConfigEffect.BlockOtherSlots) {
           ctx.logger__.debug('SkinModule', 'Skin configuration applied', skinConfig);
-          skinConfig.blockedAdSlotDomIds.forEach(this.destroyAdSlot(slotDefinitions, ctx.window__));
+          skinConfig.blockedAdSlotDomIds.forEach(destroyAdSlot(slotDefinitions, ctx.window__));
 
           if (skinConfig.hideBlockedSlots) {
-            skinConfig.blockedAdSlotDomIds.forEach(this.hideAdSlot(ctx.window__, ctx.logger__));
+            skinConfig.blockedAdSlotDomIds.forEach(hideAdSlot(ctx.window__, ctx.logger__));
           }
 
           if (skinConfig.hideSkinAdSlot) {
-            this.hideAdSlot(ctx.window__, ctx.logger__)(skinConfig.skinAdSlotDomId);
+            hideAdSlot(ctx.window__, ctx.logger__)(skinConfig.skinAdSlotDomId);
           }
 
           if (skinConfig.hideBlockedSlotsSelector) {
@@ -300,7 +259,7 @@ export class Skin implements IModule {
             skinConfig
           );
 
-          this.destroyAdSlot(slotDefinitions, ctx.window__)(skinConfig.skinAdSlotDomId);
+          destroyAdSlot(slotDefinitions, ctx.window__)(skinConfig.skinAdSlotDomId);
         }
       } else {
         // there's no matching configuration so we check if there are any
@@ -310,21 +269,38 @@ export class Skin implements IModule {
           .filter(skinConfig => skinConfig.destroySkinSlot)
           .map(skinConfig => skinConfig.skinAdSlotDomId)
           .filter(uniquePrimitiveFilter)
-          .forEach(this.destroyAdSlot(slotDefinitions, ctx.window__));
+          .forEach(destroyAdSlot(slotDefinitions, ctx.window__));
       }
     };
 
-  private hideAdSlot =
-    (_window: Window, log: MoliRuntime.MoliLogger) =>
-    (domId: string): void => {
-      const element = _window.document.getElementById(domId);
-      try {
-        if (element) {
-          log.debug('SkinModule', `Set display:none for ${domId}`);
-          element.style.setProperty('display', 'none');
-        }
-      } catch (e) {
-        log.error('SkinModule', `Couldn't set the the wallpaper div ${domId} to display:none;`, e);
-      }
-    };
-}
+  const configure__ = (moduleConfig?: modules.ModulesConfig) => {
+    if (moduleConfig?.skin && moduleConfig.skin.enabled) {
+      skinModuleConfig = moduleConfig.skin;
+      bidsBackHandler.push(runSkinConfigs(moduleConfig.skin));
+    }
+  };
+
+  const initSteps__ = (): InitStep[] => [];
+
+  const configureSteps__ = (): ConfigureStep[] => [];
+
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => [];
+
+  const prebidBidsBackHandler__ = (): MoliRuntime.PrebidBidsBackHandler[] => bidsBackHandler;
+
+  return {
+    name,
+    description: 'Block other ad slots if a wallpaper has won the auction',
+    moduleType: 'prebid' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__,
+    prebidBidsBackHandler__,
+    getConfigEffect,
+    selectConfig,
+    destroyAdSlot,
+    runSkinConfigs
+  };
+};

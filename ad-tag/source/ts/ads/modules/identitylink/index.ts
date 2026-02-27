@@ -48,58 +48,37 @@ import { AssetLoadMethod } from 'ad-tag/util/assetLoaderService';
  *
  * @see https://developers.liveramp.com/authenticatedtraffic-api/docs/atsjs-quickstart-guide
  */
-export class IdentityLink implements IModule {
-  public readonly name: string = 'identitylink';
-  public readonly description: string =
-    "Provides LiveRamp's ATS (authenticated traffic solution) functionality to Moli.";
-  public readonly moduleType: ModuleType = 'identity';
-
-  private readonly gvlid: string = '97';
-
-  private identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig | null = null;
-
-  config__(): modules.identitylink.IdentityLinkModuleConfig | null {
-    return this.identityLinkConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig) {
-    if (moduleConfig?.identitylink && moduleConfig.identitylink.enabled) {
-      this.identityLinkConfig = moduleConfig.identitylink;
-    }
-  }
-
-  initSteps__(): InitStep[] {
-    const config = this.identityLinkConfig;
-    return config
-      ? [
-          mkInitStep(this.name, ctx => {
-            // async loading - prebid takes care of auction delay
-            this.loadAts(ctx, config);
-            return Promise.resolve();
-          })
-        ]
-      : [];
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    return [];
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-
+export interface IIdentityLinkModule extends IModule {
   loadAts(
     context: AdPipelineContext,
     moduleConfig: modules.identitylink.IdentityLinkModuleConfig
-  ): Promise<void> {
+  ): Promise<void>;
+}
+
+export const createIdentityLink = (): IIdentityLinkModule => {
+  const name = 'identitylink';
+  const gvlid: string = '97';
+  let identityLinkConfig: modules.identitylink.IdentityLinkModuleConfig | null = null;
+
+  const config__ = (): modules.identitylink.IdentityLinkModuleConfig | null => identityLinkConfig;
+
+  const configure__ = (moduleConfig?: modules.ModulesConfig) => {
+    if (moduleConfig?.identitylink && moduleConfig.identitylink.enabled) {
+      identityLinkConfig = moduleConfig.identitylink;
+    }
+  };
+
+  const loadAts = (
+    context: AdPipelineContext,
+    moduleConfig: modules.identitylink.IdentityLinkModuleConfig
+  ): Promise<void> => {
     // test environment doesn't require confiant
     if (context.env__ === 'test') {
       return Promise.resolve();
     }
 
     // no consent
-    if (context.tcData__.gdprApplies && !context.tcData__.vendor.consents[this.gvlid]) {
+    if (context.tcData__.gdprApplies && !context.tcData__.vendor.consents[gvlid]) {
       return Promise.resolve();
     }
 
@@ -132,10 +111,38 @@ export class IdentityLink implements IModule {
 
     return context.assetLoaderService__
       .loadScript({
-        name: this.name,
+        name,
         loadMethod: AssetLoadMethod.TAG,
         assetUrl: `https://launchpad-wrapper.privacymanager.io/${moduleConfig.launchPadId}/launchpad-liveramp.js`
       })
       .catch(error => context.logger__.error('failed to load emetriq', error));
-  }
-}
+  };
+
+  const initSteps__ = (): InitStep[] => {
+    const config = identityLinkConfig;
+    return config
+      ? [
+          mkInitStep(name, ctx => {
+            // async loading - prebid takes care of auction delay
+            loadAts(ctx, config);
+            return Promise.resolve();
+          })
+        ]
+      : [];
+  };
+
+  const configureSteps__ = (): ConfigureStep[] => [];
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => [];
+
+  return {
+    name,
+    description: "Provides LiveRamp's ATS (authenticated traffic solution) functionality to Moli.",
+    moduleType: 'identity' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__,
+    loadAts
+  };
+};

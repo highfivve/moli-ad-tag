@@ -2,7 +2,7 @@ import { expect, use } from 'chai';
 import * as Sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-import { AdReload } from './index';
+import { createAdReload } from './index';
 import { googletag } from 'ad-tag/types/googletag';
 import { createDomAndWindow } from 'ad-tag/stubs/browserEnvSetup';
 import { MoliRuntime } from 'ad-tag/types/moliRuntime';
@@ -72,7 +72,7 @@ describe('Moli Ad Reload Module', () => {
     }) as ISlotRenderEndedEvent;
 
   const createAdReloadModuleInitialized = (moduleConfig: modules.adreload.AdReloadModuleConfig) => {
-    const module = new AdReload();
+    const module = createAdReload();
     module.configure__({ adReload: moduleConfig });
     const configureStep = module.configureSteps__()[0];
     // this is awkward, but it works. Alternative would be to inject the service into the module via the constructor for tests
@@ -158,11 +158,11 @@ describe('Moli Ad Reload Module', () => {
         refreshIntervalMs: customRefreshInterval
       };
 
-      const module = new AdReload();
+      const module = createAdReload();
       expect(module.config__()).to.be.null;
       module.configure__({ adReload: moduleConfig });
 
-      const storedConfig = module.config__();
+      const storedConfig = module.config__() as modules.adreload.AdReloadModuleConfig | null;
       expect(storedConfig).to.not.be.null;
       expect(storedConfig!.refreshIntervalMs).to.equal(customRefreshInterval);
     });
@@ -172,7 +172,7 @@ describe('Moli Ad Reload Module', () => {
       configOverrides: Partial<modules.adreload.AdReloadModuleConfig>
     ) => {
       const fullConfig = { ...defaultAdReloadConfig, ...configOverrides };
-      const module = new AdReload();
+      const module = createAdReload();
       module.configure__({ adReload: fullConfig });
       module.initialize(
         adPipelineContext(testSlotMoliConfig),
@@ -239,7 +239,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should not return any pipeline steps if unconfigured', () => {
-    const module = new AdReload();
+    const module = createAdReload();
 
     expect(module.initSteps__()).to.be.empty;
     expect(module.configureSteps__()).to.be.empty;
@@ -247,7 +247,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should not return any pipeline steps if disabled', () => {
-    const module = new AdReload();
+    const module = createAdReload();
     module.configure__({ adReload: { enabled: false } as modules.adreload.AdReloadModuleConfig });
 
     expect(module.initSteps__()).to.be.empty;
@@ -256,7 +256,7 @@ describe('Moli Ad Reload Module', () => {
   });
 
   it('should return any init and configure steps if unconfigured', () => {
-    const module = new AdReload();
+    const module = createAdReload();
 
     expect(module.initSteps__()).to.be.empty;
     expect(module.configureSteps__()).to.be.empty;
