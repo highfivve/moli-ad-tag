@@ -15,6 +15,7 @@ import { EventTracker, EventContext } from 'ad-tag/ads/modules/moli-analytics/ty
 import { createSession } from 'ad-tag/ads/modules/moli-analytics/session';
 import { createEventTracker } from 'ad-tag/ads/modules/moli-analytics/eventTracker';
 import { eventMapper } from 'ad-tag/ads/modules/moli-analytics/events';
+import { extractPubstackAbTestCohort } from '../pubstack/abTest';
 
 const SESSION_TTL_MIN = 30;
 
@@ -178,22 +179,6 @@ export const MoliAnalytics = (): IModule => {
     }
 
     return Promise.resolve();
-  };
-
-  const extractPubstackAbTestCohort = (ctx: AdPipelineContext): string | null => {
-    // these map to key-value values in GAM. Other values are not configured there and don't need to be sent along
-    const pubstackABTestValues = ['0', '1', '2', '3'];
-    if (ctx.env__ === 'test') {
-      return null;
-    }
-    // find meta data
-    const meta = ctx.window__.document.head.querySelector<HTMLMetaElement>(
-      'meta[name="pbstck_context:pbstck_ab_test"]'
-    );
-    if (meta && meta.content && pubstackABTestValues.includes(meta.content)) {
-      return meta.content;
-    }
-    return null;
   };
 
   const setAnalyticsLabels = (ctx: AdPipelineContext): Promise<void> => {

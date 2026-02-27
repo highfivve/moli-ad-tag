@@ -30,6 +30,7 @@ import {
   PrepareRequestAdsStep
 } from '../../adPipeline';
 import { modules } from 'ad-tag/types/moliConfig';
+import { extractPubstackAbTestCohort } from './abTest';
 
 /**
  * ## Pubstack Analytics
@@ -85,15 +86,9 @@ export class Pubstack implements IModule {
             if (ctx.env__ === 'test') {
               return Promise.resolve();
             }
-            // these map to key-value values in the ad manager. All other values are not configured there and thus
-            // don't need to be sent along
-            const validABTestValues = ['0', '1', '2', '3'];
-            // find meta data
-            const meta = ctx.window__.document.head.querySelector<HTMLMetaElement>(
-              'meta[name="pbstck_context:pbstck_ab_test"]'
-            );
-            if (meta && meta.content && validABTestValues.includes(meta.content)) {
-              ctx.window__.googletag.pubads().setTargeting('pbstck_ab_test', meta.content);
+            const pubstackAbTestCohort = extractPubstackAbTestCohort(ctx);
+            if (pubstackAbTestCohort) {
+              ctx.window__.googletag.pubads().setTargeting('pbstck_ab_test', pubstackAbTestCohort);
             }
 
             return Promise.resolve();
