@@ -257,4 +257,278 @@ describe('Utiq Module', () => {
       });
     });
   });
+
+  describe('Emetriq integration', () => {
+    const createUtiqModuleWithEmetriq = (
+      enabled: boolean = true,
+      emetriqSid: string = '29540',
+      options?: modules.utiq.UtiqConfigOptions,
+      delay?: modules.utiq.UtiqConfig['delay']
+    ) => {
+      const module = createUtiq();
+      module.configure__({
+        utiq: {
+          enabled: enabled,
+          assetUrl: 'http://localhost/utiqLoader.js',
+          ...(delay ? { delay: delay } : {}),
+          ...(options ? { options: options } : {}),
+          userIdConfig: {
+            emetriq: {
+              sid: emetriqSid
+            }
+          }
+        }
+      });
+      const initSteps = module.initSteps__();
+      const configureSteps = module.configureSteps__();
+
+      return {
+        module,
+        initStep: initSteps.length > 0 ? initSteps[0] : undefined,
+        configureStep: configureSteps.length > 0 ? configureSteps[0] : undefined
+      };
+    };
+
+    const adPipelineContext = (requestAdsCalls: number = 1): AdPipelineContext => {
+      const mockAuctionContext = newGlobalAuctionContext(jsDomWindow);
+      sandbox
+        .stub(mockAuctionContext, 'hasMinimumRequestAds')
+        .callsFake((minAdRequests: number) => {
+          const completedRequests = requestAdsCalls - 1;
+          return completedRequests + 1 >= minAdRequests;
+        });
+
+      return {
+        auctionId__: 'xxxx-xxxx-xxxx-xxxx',
+        requestId__: 0,
+        requestAdsCalls__: requestAdsCalls,
+        env__: 'production',
+        logger__: noopLogger,
+        config__: emptyConfig,
+        runtimeConfig__: emptyRuntimeConfig,
+        window__: jsDomWindow,
+        labelConfigService__: null as any,
+        tcData__: fullConsent({ 56: true }),
+        adUnitPathVariables__: {},
+        auction__: mockAuctionContext,
+        assetLoaderService__: assetLoaderService
+      };
+    };
+
+    beforeEach(() => {
+      // Clear any existing UTIQ and Emetriq globals
+      delete (jsDomWindow as any).Utiq;
+      delete (jsDomWindow as any)._enqAdpParam;
+    });
+
+    it('should set up Emetriq event listener when userIdConfig.emetriq.sid is provided', async () => {
+      const { initStep } = createUtiqModuleWithEmetriq(true, '29540');
+
+      await initStep!(adPipelineContext());
+
+      // Verify UTIQ queue was set up
+      expect((jsDomWindow as any).Utiq).to.be.ok;
+      expect((jsDomWindow as any).Utiq.queue).to.be.an('array');
+      expect((jsDomWindow as any).Utiq.queue).to.have.length(1);
+    });
+
+    it('should not set up Emetriq event listener when userIdConfig.emetriq.sid is not provided', async () => {
+      const { initStep } = createUtiqModule(); // No emetriq config
+
+      await initStep!(adPipelineContext());
+
+      // UTIQ should still be set up, but no additional queue items for Emetriq
+      expect((jsDomWindow as any).Utiq).to.be.ok;
+      expect((jsDomWindow as any).Utiq.queue).to.be.an('array');
+      expect((jsDomWindow as any).Utiq.queue).to.have.length(0);
+    });
+
+    it('should set _enqAdpParam when UTIQ provides mobile MTID', async () => {
+      const { initStep } = createUtiqModuleWithEmetriq(true, '29540');
+
+      await initStep!(adPipelineContext());
+
+      // Simulate UTIQ script loading and API becoming available
+      const utiqWindow = jsDomWindow as any;
+      utiqWindow.Utiq.API = {
+        addEventListener: sandbox.spy()
+      };
+
+      // Execute the queued function (this sets up the event listener)
+      const queuedFunction = utiqWindow.Utiq.queue[0];
+      queuedFunction();
+
+      // Verify the event listener was registered
+      expect(utiqWindow.Utiq.API.addEventListener).to.have.been.calledOnce;
+      expect(utiqWindow.Utiq.API.addEventListener).to.have.been.calledWith(
+        'onIdsAvailable',
+        Sinon.match.func
+      );
+
+      // Get the event listener function
+      const eventListener = utiqWindow.Utiq.API.addEventListener.firstCall.args[1];
+
+      // Simulate the onIdsAvailable event with mobile MTID
+      const mockEvent = {
+        mtid: 'test-mtid-123',
+        atid: 'test-atid-456',
+        attrid: 'test-attrid-789',
+        category: 'mobile' as const,
+        ttl: '3600',
+        domain: 'example.com'
+      };
+
+      eventListener(mockEvent);
+
+      // Verify _enqAdpParam was set correctly
+      expect(utiqWindow._enqAdpParam).to.be.ok;
+      expect(utiqWindow._enqAdpParam.id_utiq_29540).to.equal('test-mtid-123');
+    });
+
+    it('should not set _enqAdpParam when category is not mobile', async () => {
+      const { initStep } = createUtiqModuleWithEmetriq(true, '29540');
+
+      await initStep!(adPipelineContext());
+
+      // Simulate UTIQ script loading and API becoming available
+      const utiqWindow = jsDomWindow as any;
+      utiqWindow.Utiq.API = {
+        addEventListener: sandbox.spy()
+      };
+
+      // Execute the queued function
+      const queuedFunction = utiqWindow.Utiq.queue[0];
+      queuedFunction();
+
+      // Get the event listener function
+      const eventListener = utiqWindow.Utiq.API.addEventListener.firstCall.args[1];
+
+      // Simulate the onIdsAvailable event with fixed category
+      const mockEvent = {
+        mtid: 'test-mtid-123',
+        atid: 'test-atid-456',
+        attrid: 'test-attrid-789',
+        category: 'fixed' as const,
+        ttl: '3600',
+        domain: 'example.com'
+      };
+
+      eventListener(mockEvent);
+
+      // Verify _enqAdpParam was not set
+      expect(utiqWindow._enqAdpParam).to.be.undefined;
+    });
+
+    it('should not set _enqAdpParam when mtid is missing', async () => {
+      const { initStep } = createUtiqModuleWithEmetriq(true, '29540');
+
+      await initStep!(adPipelineContext());
+
+      // Simulate UTIQ script loading and API becoming available
+      const utiqWindow = jsDomWindow as any;
+      utiqWindow.Utiq.API = {
+        addEventListener: sandbox.spy()
+      };
+
+      // Execute the queued function
+      const queuedFunction = utiqWindow.Utiq.queue[0];
+      queuedFunction();
+
+      // Get the event listener function
+      const eventListener = utiqWindow.Utiq.API.addEventListener.firstCall.args[1];
+
+      // Simulate the onIdsAvailable event without mtid
+      const mockEvent = {
+        mtid: '',
+        atid: 'test-atid-456',
+        attrid: 'test-attrid-789',
+        category: 'mobile' as const,
+        ttl: '3600',
+        domain: 'example.com'
+      };
+
+      eventListener(mockEvent);
+
+      // Verify _enqAdpParam was not set
+      expect(utiqWindow._enqAdpParam).to.be.undefined;
+    });
+
+    it('should use custom SID in _enqAdpParam parameter name', async () => {
+      const customSid = 'custom-123';
+      const { initStep } = createUtiqModuleWithEmetriq(true, customSid);
+
+      await initStep!(adPipelineContext());
+
+      // Simulate UTIQ script loading and API becoming available
+      const utiqWindow = jsDomWindow as any;
+      utiqWindow.Utiq.API = {
+        addEventListener: sandbox.spy()
+      };
+
+      // Execute the queued function
+      const queuedFunction = utiqWindow.Utiq.queue[0];
+      queuedFunction();
+
+      // Get the event listener function
+      const eventListener = utiqWindow.Utiq.API.addEventListener.firstCall.args[1];
+
+      // Simulate the onIdsAvailable event with mobile MTID
+      const mockEvent = {
+        mtid: 'test-mtid-123',
+        atid: 'test-atid-456',
+        attrid: 'test-attrid-789',
+        category: 'mobile' as const,
+        ttl: '3600',
+        domain: 'example.com'
+      };
+
+      eventListener(mockEvent);
+
+      // Verify _enqAdpParam was set with custom SID
+      expect(utiqWindow._enqAdpParam).to.be.ok;
+      expect(utiqWindow._enqAdpParam[`id_utiq_${customSid}`]).to.equal('test-mtid-123');
+      expect(utiqWindow._enqAdpParam.id_utiq_29540).to.be.undefined; // Should not use default
+    });
+
+    it('should preserve existing _enqAdpParam when setting UTIQ parameter', async () => {
+      const { initStep } = createUtiqModuleWithEmetriq(true, '29540');
+
+      // Set up existing _enqAdpParam
+      const utiqWindow = jsDomWindow as any;
+      utiqWindow._enqAdpParam = {
+        existing_param: 'existing_value'
+      };
+
+      await initStep!(adPipelineContext());
+
+      // Simulate UTIQ script loading and API becoming available
+      utiqWindow.Utiq.API = {
+        addEventListener: sandbox.spy()
+      };
+
+      // Execute the queued function
+      const queuedFunction = utiqWindow.Utiq.queue[0];
+      queuedFunction();
+
+      // Get the event listener function
+      const eventListener = utiqWindow.Utiq.API.addEventListener.firstCall.args[1];
+
+      // Simulate the onIdsAvailable event with mobile MTID
+      const mockEvent = {
+        mtid: 'test-mtid-123',
+        atid: 'test-atid-456',
+        attrid: 'test-attrid-789',
+        category: 'mobile' as const,
+        ttl: '3600',
+        domain: 'example.com'
+      };
+
+      eventListener(mockEvent);
+
+      // Verify both existing and new parameters are present
+      expect(utiqWindow._enqAdpParam).to.be.ok;
+      expect(utiqWindow._enqAdpParam.existing_param).to.equal('existing_value');
+      expect(utiqWindow._enqAdpParam.id_utiq_29540).to.equal('test-mtid-123');
+    });
+  });
 });

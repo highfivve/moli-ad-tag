@@ -2289,6 +2289,18 @@ export namespace modules {
       readonly consentManagerDataLayer?: boolean;
     }
 
+    export interface UtiqUserIdConfig {
+      /**
+       * Configuration for integrating UTIQ with Emetriq.
+       */
+      readonly emetriq?: {
+        /**
+         * SID (Site ID) for Emetriq integration.
+         */
+        readonly sid: string;
+      };
+    }
+
     /**
      * ## Utiq Configuration
      *
@@ -2331,6 +2343,11 @@ export namespace modules {
          */
         readonly minAdRequests?: number;
       };
+
+      /**
+       * Configuration for integrating UTIQ with other user ID solutions.
+       */
+      readonly userIdConfig?: UtiqUserIdConfig;
     }
   }
 
