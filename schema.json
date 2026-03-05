@@ -3719,6 +3719,10 @@
         "options": {
           "$ref": "#/definitions/modules.utiq.UtiqConfigOptions",
           "description": "The Utiq loader script can be configured using the Utiq.config object. The configuration object is a JavaScript"
+        },
+        "userIdConfig": {
+          "$ref": "#/definitions/modules.utiq.UtiqUserIdConfig",
+          "description": "Configuration for integrating UTIQ with other user ID solutions."
         }
       },
       "required": [
@@ -3831,6 +3835,26 @@
         "disableGoogleSecureSignals": {
           "description": "Utiq SDK automatically sends adtechpass as Google Secure Signals to Google Ad Manager (GAM), firing the below code. From integration perspective you don’t have to do anything else.\n\nYour only pending action would be to enable the feature in Google Ad Manager UI.",
           "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "modules.utiq.UtiqUserIdConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "emetriq": {
+          "additionalProperties": false,
+          "description": "Configuration for integrating UTIQ with Emetriq.",
+          "properties": {
+            "sid": {
+              "description": "SID (Site ID) for Emetriq integration.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "sid"
+          ],
+          "type": "object"
         }
       },
       "type": "object"
