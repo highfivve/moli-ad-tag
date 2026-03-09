@@ -187,6 +187,11 @@ export type UtiqWindow = {
      */
     API?: UtiqAPI;
   };
+
+  /**
+   * Emetriq adapter parameter object for UTIQ integration
+   */
+  _enqAdpParam?: Record<string, string>;
 };
 
 const requiredPurposeIds = [
@@ -226,6 +231,33 @@ export const createUtiq = (): IModule => {
     // double check queue initialization as publishers might already have set options, but did not
     // properly initialize the queue
     utiqWindow.Utiq.queue = utiqWindow.Utiq.queue || [];
+
+    // Setup utiq event listeners for emetriq integration
+    const emetriqSid = config.userIdConfig?.emetriq?.sid;
+    if (emetriqSid) {
+      utiqWindow.Utiq.queue.push(() => {
+        if (utiqWindow.Utiq?.API) {
+          utiqWindow.Utiq.API.addEventListener(
+            'onIdsAvailable',
+            ({ mtid, category }: UtiqIdsAvailableEvent) => {
+              if (!mtid || category !== 'mobile') {
+                context.logger__.info(
+                  'Utiq',
+                  'MTID missing or category is not mobile, fallback to standard code'
+                );
+                return;
+              }
+              context.logger__.debug(
+                'Utiq',
+                'MTID found and category is mobile, setting Emetriq params'
+              );
+              utiqWindow._enqAdpParam ||= {};
+              utiqWindow._enqAdpParam[`id_utiq_${emetriqSid}`] = mtid;
+            }
+          );
+        }
+      });
+    }
 
     if (
       context.tcData__.gdprApplies &&
