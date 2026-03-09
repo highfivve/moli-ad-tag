@@ -278,8 +278,10 @@ export const createUtiq = (): IModule => {
       return Promise.resolve();
     }
 
+    const extractedDomain = extractTopPrivateDomainFromHostname(context.window__.location.hostname);
     const assetUrl =
-      config.assetUrl ?? extractTopPrivateDomainFromHostname(context.window__.location.hostname);
+      config.assetUrl ??
+      (extractedDomain ? `https://utiq.${extractedDomain}/utiqLoader.js` : undefined);
 
     if (!assetUrl) {
       context.logger__.error(
