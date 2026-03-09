@@ -256,6 +256,60 @@ describe('Utiq Module', () => {
         expect(loadScriptStub).to.have.been.calledOnce;
       });
     });
+
+    it('should not load utiq when domain extraction fails and no assetUrl is configured', async () => {
+      const module = createUtiq();
+      module.configure__({
+        utiq: {
+          enabled: true
+        }
+      });
+      const initStep = module.initSteps__()[0];
+
+      const context = {
+        ...adPipelineContext(),
+        window__: {
+          ...adPipelineContext().window__,
+          location: {
+            ...adPipelineContext().window__.location,
+            hostname: '' // Empty hostname will cause extractTopPrivateDomainFromHostname to return undefined
+          }
+        }
+      };
+
+      await initStep!(context);
+      expect(loadScriptStub).to.have.not.been.called;
+    });
+
+    it('should load utiq with extracted URL when domain extraction succeeds and no assetUrl is configured', async () => {
+      const module = createUtiq();
+      module.configure__({
+        utiq: {
+          enabled: true
+        }
+      });
+      const initStep = module.initSteps__()[0];
+
+      const context = {
+        ...adPipelineContext(),
+        window__: {
+          ...adPipelineContext().window__,
+          location: {
+            ...adPipelineContext().window__.location,
+            hostname: 'www.example.com' // This should extract to 'example.com'
+          }
+        }
+      };
+
+      await initStep!(context);
+
+      expect(loadScriptStub).to.have.been.calledOnce;
+      expect(loadScriptStub).to.have.been.calledOnceWithExactly({
+        name: module.name,
+        loadMethod: AssetLoadMethod.TAG,
+        assetUrl: 'https://utiq.example.com/utiqLoader.js'
+      });
+    });
   });
 
   describe('Emetriq integration', () => {
