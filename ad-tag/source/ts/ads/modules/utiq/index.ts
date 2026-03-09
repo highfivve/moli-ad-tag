@@ -247,7 +247,7 @@ export const createUtiq = (): IModule => {
                 );
                 return;
               }
-              context.logger__.info(
+              context.logger__.debug(
                 'Utiq',
                 'MTID found and category is mobile, setting Emetriq params'
               );
