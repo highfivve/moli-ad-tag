@@ -3954,6 +3954,7 @@ export namespace prebidjs {
   export const NanoInteractive = 'nanointeractive';
   export const NextMillennium = 'nextMillennium';
   export const PubMatic = 'pubmatic';
+  export const Pubstack = 'pubstack';
   export const Ogury = 'ogury';
   export const OneTag = 'onetag';
   export const OpenX = 'openx';
@@ -4003,6 +4004,7 @@ export namespace prebidjs {
     | typeof NanoInteractive
     | typeof NextMillennium
     | typeof PubMatic
+    | typeof Pubstack
     | typeof Ogury
     | typeof OneTag
     | typeof OpenX
@@ -4877,6 +4879,14 @@ export namespace prebidjs {
   }
 
   export interface IPubMaticBid extends IBidObject<typeof PubMatic, IPubMaticParams> {}
+
+  export interface IPubstackParams {
+    readonly siteId: string;
+
+    readonly adUnitName: string;
+  }
+
+  export interface IPubstackBid extends IBidObject<typeof Pubstack, IPubstackParams> {}
 
   /**
    * InMobi bid parameters.
@@ -6060,6 +6070,7 @@ export namespace prebidjs {
     | INextMillenniumBid
     | IPrebidServerBid
     | IPubMaticBid
+    | IPubstackBid
     | IOguryBid
     | IOneTagBid
     | IOpenxBid
