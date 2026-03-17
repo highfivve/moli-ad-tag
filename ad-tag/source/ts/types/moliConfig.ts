@@ -1294,6 +1294,22 @@ export namespace modules {
      * If set to true the module will be enabled.
      */
     readonly enabled: boolean;
+
+    /**
+     * Optional configuration to activate the module only when a specific label is present.
+     * If enabled is true and the activationLabel is present in the labels array, the module will be configured.
+     * If not specified or enabled is false, this check is bypassed.
+     */
+    readonly activatedByLabel?: {
+      /**
+       * If set to true, the module will only be configured if the activationLabel is present in the labels array.
+       */
+      readonly enabled: boolean;
+      /**
+       * The label that must be present in the labels array for the module to be configured.
+       */
+      readonly activationLabel: string;
+    };
   }
 
   export namespace adreload {
