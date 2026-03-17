@@ -255,7 +255,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configurable': {
         const shouldInitialize = state.initialize;
         const envOverride = getActiveEnvironmentOverride(window);
-        const modules = state.modules;
 
         // if an override is available, update the environment in the runtime config
         if (envOverride) {
@@ -269,46 +268,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
           setEnvironmentOverrideInStorage(envOverride.value, window.sessionStorage);
         }
 
-        // configure modules
-        const log = getLogger(state.runtimeConfig, window);
-        log.debug('MoliGlobal', 'configure modules', config.modules ?? {});
-        modules.forEach(module => {
-          try {
-            module.configure__(config.modules ?? {});
-            log.debug(
-              'MoliGlobal',
-              `configure ${module.moduleType} module ${module.name}`,
-              module.config__()
-            );
-            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
-            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps__());
-            state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
-              ...module.prepareRequestAdsSteps__()
-            );
-            if (module.requestBidsSteps__) {
-              state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
-                ...module.requestBidsSteps__()
-              );
-            }
-            if (module.prebidBidsBackHandler__) {
-              state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
-                ...module.prebidBidsBackHandler__()
-              );
-            }
-          } catch (e) {
-            log.error(
-              'MoliGlobal',
-              `failed to configure ${module.moduleType} module ${module.name}`,
-              e
-            );
-          }
-        });
-
         state = {
           state: 'configured',
           config: config,
           runtimeConfig: state.runtimeConfig,
-          modules: modules
+          modules: state.modules
         };
 
         if (shouldInitialize || config.requestAds === true) {
@@ -364,6 +328,46 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
       case 'configured': {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
+
+        // TODO add the module configure and init steps here to check for label conditions!
+        const modules = state.modules;
+        getLogger(state.runtimeConfig, window).debug(
+          'MoliGlobal',
+          'configure modules',
+          state.config.modules ?? {}
+        );
+        modules.forEach(module => {
+          try {
+            module.configure__(state.config?.modules ?? {});
+            getLogger(state.runtimeConfig, window).debug(
+              'MoliGlobal',
+              `configure ${module.moduleType} module ${module.name}`,
+              module.config__()
+            );
+            state.runtimeConfig.adPipelineConfig.initSteps.push(...module.initSteps__());
+            state.runtimeConfig.adPipelineConfig.configureSteps.push(...module.configureSteps__());
+            state.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps.push(
+              ...module.prepareRequestAdsSteps__()
+            );
+            if (module.requestBidsSteps__) {
+              state.runtimeConfig.adPipelineConfig.requestBidsSteps.push(
+                ...module.requestBidsSteps__()
+              );
+            }
+            if (module.prebidBidsBackHandler__) {
+              state.runtimeConfig.adPipelineConfig.prebidBidsBackHandler.push(
+                ...module.prebidBidsBackHandler__()
+              );
+            }
+          } catch (e) {
+            getLogger(state.runtimeConfig, window).error(
+              'MoliGlobal',
+              `failed to configure ${module.moduleType} module ${module.name}`,
+              e
+            );
+          }
+        });
+
         const { refreshInfiniteSlots } = state.runtimeConfig;
         let config = state.config;
 

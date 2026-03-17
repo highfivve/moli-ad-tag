@@ -1670,12 +1670,17 @@ describe('moli', () => {
       expect(result?.state).to.be.eq('configured');
     });
 
-    it('should configure modules and add steps to pipeline', async () => {
+    it('should configure modules and add steps to pipeline when requestAds is false', async () => {
       const adTag = createMoliTag(jsDomWindow);
       const configureSpy = sandbox.spy();
       const initStepSpy = sandbox.spy();
       const configureStepSpy = sandbox.spy();
       const prepareRequestAdsStepSpy = sandbox.spy();
+
+      const initStep = mkInitStep('init-step', async _context => initStepSpy());
+      const configureStep = mkConfigureStep('config-step', async (_context, _slots) =>
+        configureStepSpy()
+      );
       const prepareRequestAdsStep = mkPrepareRequestAdsStep(
         'prep-step',
         1,
@@ -1691,35 +1696,120 @@ describe('moli', () => {
         },
         configure__: configureSpy,
         initSteps__(): InitStep[] {
-          return [initStepSpy];
+          return [initStep];
         },
         configureSteps__(): ConfigureStep[] {
-          return [configureStepSpy];
+          return [configureStep];
         },
         prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
           return [prepareRequestAdsStep];
         }
       });
+
       const configWithModules: MoliConfig = {
         ...defaultConfig,
-        modules: { pubstack: { enabled: true, tagId: 'xxxx' } }
+        modules: { pubstack: { enabled: true, tagId: 'xxxx' } },
+        requestAds: false
       };
-      const result = await adTag.configure(configWithModules);
+      const configureResult = await adTag.configure(configWithModules);
 
-      expect(result).to.be.ok;
-      expect(result?.state).to.be.eq('configured');
+      expect(configureResult).to.be.ok;
+      expect(configureResult?.state).to.be.eq('configured');
+      expect(configureResult?.modules).to.have.length(1);
 
-      expect(result?.modules).to.have.length(1);
+      // After configure(), modules should not be configured yet when requestAds is false
+      expect(configureSpy).to.have.not.been.called;
+
+      // Pipeline steps should not be added yet
+      expect(configureResult?.runtimeConfig.adPipelineConfig.initSteps).to.have.length(0);
+      expect(configureResult?.runtimeConfig.adPipelineConfig.configureSteps).to.have.length(0);
+      expect(configureResult?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.have.length(
+        0
+      );
+
+      // Now call requestAds() to trigger module configuration
+      const requestAdsResult = await adTag.requestAds();
+
+      expect(requestAdsResult).to.be.ok;
+      expect(requestAdsResult?.modules).to.have.length(1);
+
+      // After requestAds(), modules should be configured
       expect(configureSpy).calledOnce;
       expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
 
-      expect(result?.runtimeConfig.adPipelineConfig.initSteps).to.have.deep.equals([initStepSpy]);
-      expect(result?.runtimeConfig.adPipelineConfig.configureSteps).to.have.deep.equals([
-        configureStepSpy
-      ]);
-      expect(result?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.have.deep.equals([
+      // Pipeline steps should now be added
+      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.initSteps).to.deep.include(initStep);
+      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.configureSteps).to.deep.include(
+        configureStep
+      );
+      expect(
+        requestAdsResult?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps
+      ).to.deep.include(prepareRequestAdsStep);
+
+      expect(initStepSpy).to.have.not.been.called;
+      expect(configureStepSpy).to.have.not.been.called;
+      expect(prepareRequestAdsStepSpy).to.have.not.been.called;
+    });
+
+    it('should configure modules and add steps to pipeline immediately when requestAds is true', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const configureSpy = sandbox.spy();
+      const initStepSpy = sandbox.spy();
+      const configureStepSpy = sandbox.spy();
+      const prepareRequestAdsStepSpy = sandbox.spy();
+
+      const initStep = mkInitStep('init-step', async _context => initStepSpy());
+      const configureStep = mkConfigureStep('config-step', async (_context, _slots) =>
+        configureStepSpy()
+      );
+      const prepareRequestAdsStep = mkPrepareRequestAdsStep(
+        'prep-step',
+        1,
+        prepareRequestAdsStepSpy
+      );
+
+      adTag.registerModule({
+        name: 'test-module',
+        moduleType: 'prebid',
+        description: 'test-module',
+        config__(): Object | null {
+          return null;
+        },
+        configure__: configureSpy,
+        initSteps__(): InitStep[] {
+          return [initStep];
+        },
+        configureSteps__(): ConfigureStep[] {
+          return [configureStep];
+        },
+        prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+          return [prepareRequestAdsStep];
+        }
+      });
+
+      const configWithModules: MoliConfig = {
+        ...defaultConfig,
+        modules: { pubstack: { enabled: true, tagId: 'xxxx' } },
+        requestAds: true
+      };
+
+      // When requestAds is true, configure() should automatically call requestAds()
+      const result = await adTag.configure(configWithModules);
+
+      expect(result).to.be.ok;
+      expect(result?.state).to.be.eq('finished'); // Should be finished, not configured
+      expect(result?.modules).to.have.length(1);
+
+      // Modules should be configured immediately since requestAds was called
+      expect(configureSpy).calledOnce;
+      expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
+
+      // Pipeline steps should be added immediately
+      expect(result?.runtimeConfig.adPipelineConfig.initSteps).to.deep.include(initStep);
+      expect(result?.runtimeConfig.adPipelineConfig.configureSteps).to.deep.include(configureStep);
+      expect(result?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.deep.include(
         prepareRequestAdsStep
-      ]);
+      );
 
       expect(initStepSpy).to.have.not.been.called;
       expect(configureStepSpy).to.have.not.been.called;
