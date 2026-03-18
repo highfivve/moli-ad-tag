@@ -1677,10 +1677,6 @@ describe('moli', () => {
       const configureStepSpy = sandbox.spy();
       const prepareRequestAdsStepSpy = sandbox.spy();
 
-      const initStep = mkInitStep('init-step', async _context => initStepSpy());
-      const configureStep = mkConfigureStep('config-step', async (_context, _slots) =>
-        configureStepSpy()
-      );
       const prepareRequestAdsStep = mkPrepareRequestAdsStep(
         'prep-step',
         1,
@@ -1688,7 +1684,7 @@ describe('moli', () => {
       );
 
       adTag.registerModule({
-        name: 'test-module',
+        name: 'pubstack',
         moduleType: 'prebid',
         description: 'test-module',
         config__(): Object | null {
@@ -1696,10 +1692,10 @@ describe('moli', () => {
         },
         configure__: configureSpy,
         initSteps__(): InitStep[] {
-          return [initStep];
+          return [initStepSpy];
         },
         configureSteps__(): ConfigureStep[] {
-          return [configureStep];
+          return [configureStepSpy];
         },
         prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
           return [prepareRequestAdsStep];
@@ -1738,17 +1734,20 @@ describe('moli', () => {
       expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
 
       // Pipeline steps should now be added
-      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.initSteps).to.deep.include(initStep);
-      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.configureSteps).to.deep.include(
-        configureStep
-      );
+      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.initSteps).to.have.deep.equals([
+        initStepSpy
+      ]);
+      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.configureSteps).to.have.deep.equals([
+        configureStepSpy
+      ]);
       expect(
         requestAdsResult?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps
-      ).to.deep.include(prepareRequestAdsStep);
+      ).to.have.deep.equals([prepareRequestAdsStep]);
 
-      expect(initStepSpy).to.have.not.been.called;
-      expect(configureStepSpy).to.have.not.been.called;
-      expect(prepareRequestAdsStepSpy).to.have.not.been.called;
+      // After requestAds() runs the pipeline, these steps should be executed
+      expect(initStepSpy).to.have.been.called;
+      expect(configureStepSpy).to.have.been.called;
+      expect(prepareRequestAdsStepSpy).to.have.been.called;
     });
 
     it('should configure modules and add steps to pipeline immediately when requestAds is true', async () => {
@@ -1758,10 +1757,6 @@ describe('moli', () => {
       const configureStepSpy = sandbox.spy();
       const prepareRequestAdsStepSpy = sandbox.spy();
 
-      const initStep = mkInitStep('init-step', async _context => initStepSpy());
-      const configureStep = mkConfigureStep('config-step', async (_context, _slots) =>
-        configureStepSpy()
-      );
       const prepareRequestAdsStep = mkPrepareRequestAdsStep(
         'prep-step',
         1,
@@ -1777,10 +1772,10 @@ describe('moli', () => {
         },
         configure__: configureSpy,
         initSteps__(): InitStep[] {
-          return [initStep];
+          return [initStepSpy];
         },
         configureSteps__(): ConfigureStep[] {
-          return [configureStep];
+          return [configureStepSpy];
         },
         prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
           return [prepareRequestAdsStep];
@@ -1805,15 +1800,18 @@ describe('moli', () => {
       expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
 
       // Pipeline steps should be added immediately
-      expect(result?.runtimeConfig.adPipelineConfig.initSteps).to.deep.include(initStep);
-      expect(result?.runtimeConfig.adPipelineConfig.configureSteps).to.deep.include(configureStep);
-      expect(result?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.deep.include(
+      expect(result?.runtimeConfig.adPipelineConfig.initSteps).to.have.deep.equals([initStepSpy]);
+      expect(result?.runtimeConfig.adPipelineConfig.configureSteps).to.have.deep.equals([
+        configureStepSpy
+      ]);
+      expect(result?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.have.deep.equals([
         prepareRequestAdsStep
-      );
+      ]);
 
-      expect(initStepSpy).to.have.not.been.called;
-      expect(configureStepSpy).to.have.not.been.called;
-      expect(prepareRequestAdsStepSpy).to.have.not.been.called;
+      // When requestAds is true, configure() automatically calls requestAds() which executes the pipeline
+      expect(initStepSpy).to.have.been.called;
+      expect(configureStepSpy).to.have.been.called;
+      expect(prepareRequestAdsStepSpy).to.have.been.called;
     });
   });
 
@@ -1915,10 +1913,13 @@ describe('moli', () => {
           ...defaultConfig,
           spa: { enabled: true, validateLocation: 'href' }
         });
+        await adTag.requestAds();
+
+        // Modules are configured during requestAds(), so prebidBidsBackHandler is available after requestAds()
         expect(adTag.getRuntimeConfig().adPipelineConfig.prebidBidsBackHandler[0]).to.be.equal(
           prebidBidsBackHandler
         );
-        await adTag.requestAds();
+
         dom.reconfigure({
           url: 'https://example.com/foo'
         });
