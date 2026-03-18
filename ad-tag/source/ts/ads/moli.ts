@@ -329,7 +329,38 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
 
-        // TODO add the module configure and init steps here to check for label conditions!
+        const shouldConfigureModule = (moduleName: string): boolean => {
+          const moduleConfig = state.config?.modules?.[moduleName];
+
+          // If no module name is provided or no config exists for this module,
+          // configure it (backward compatibility for test modules and direct registrations)
+          if (!moduleName || !moduleConfig) {
+            return true;
+          }
+
+          // If module config exists but is disabled, don't configure
+          if (!moduleConfig.enabled) {
+            return false;
+          }
+
+          // Check if activatedByLabel is configured
+          if (moduleConfig.activatedByLabel?.enabled) {
+            const requiredLabel = moduleConfig.activatedByLabel.activationLabel;
+            const currentLabels = state.runtimeConfig.labels;
+            const hasRequiredLabel = currentLabels.includes(requiredLabel);
+
+            getLogger(state.runtimeConfig, window).debug(
+              'MoliGlobal',
+              `checking label condition for module ${moduleName}: required="${requiredLabel}", current=[${currentLabels.join(', ')}], hasLabel=${hasRequiredLabel}`
+            );
+
+            return hasRequiredLabel;
+          }
+
+          // If no label condition is set, configure the module if it's enabled
+          return true;
+        };
+
         const modules = state.modules;
         getLogger(state.runtimeConfig, window).debug(
           'MoliGlobal',
@@ -338,6 +369,15 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         );
         modules.forEach(module => {
           try {
+            // Check if this module should be configured based on label conditions
+            if (!shouldConfigureModule(module.name)) {
+              getLogger(state.runtimeConfig, window).debug(
+                'MoliGlobal',
+                `skipping configuration of ${module.moduleType} module ${module.name} due to missing label.`
+              );
+              return;
+            }
+
             module.configure__(state.config?.modules ?? {});
             getLogger(state.runtimeConfig, window).debug(
               'MoliGlobal',

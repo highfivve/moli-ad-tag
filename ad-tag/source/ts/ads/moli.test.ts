@@ -303,54 +303,214 @@ describe('moli', () => {
       expect(configureSpy).to.have.been.calledWithMatch(config.modules);
     });
 
-    it('should configure modules and push pipeline steps to config', async () => {
+    it('should configure modules and add steps to pipeline when requestAds is false', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      const config = newEmptyConfig(defaultSlots);
+      const configureSpy = sandbox.spy();
+      const initStepSpy = sandbox.spy();
+      const configureStepSpy = sandbox.spy();
+      const prepareRequestAdsStepSpy = sandbox.spy();
 
-      const fakeInitStep: InitStep = mkInitStep('fake-init', () => Promise.resolve());
-      const fakeConfigureStep: ConfigureStep = mkConfigureStep('fake-configure', () =>
-        Promise.resolve()
-      );
-      const fakePrepareRequestAdsStep: PrepareRequestAdsStep = mkPrepareRequestAdsStep(
-        'fake-prepare',
-        LOW_PRIORITY,
-        () => Promise.resolve()
-      );
-      const fakeRequestBidsSteps: RequestBidsStep = mkRequestBidsStep('fake-request-bids', () =>
-        Promise.resolve()
+      const prepareRequestAdsStep = mkPrepareRequestAdsStep(
+        'prep-step',
+        1,
+        prepareRequestAdsStepSpy
       );
 
-      const fakePrebidBidsBackHandler: MoliRuntime.PrebidBidsBackHandler = () => ({});
-
-      const configChangingModule: IModule = {
-        ...fakeModule,
-        initSteps__: (): InitStep[] => [fakeInitStep],
-        configureSteps__: (): ConfigureStep[] => [fakeConfigureStep],
-        prepareRequestAdsSteps__: (): PrepareRequestAdsStep[] => [fakePrepareRequestAdsStep],
-        requestBidsSteps__: () => [fakeRequestBidsSteps],
-        prebidBidsBackHandler__: () => [fakePrebidBidsBackHandler]
-      };
-
-      expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
-        initSteps: [],
-        configureSteps: [],
-        prepareRequestAdsSteps: [],
-        requestBidsSteps: [],
-        prebidBidsBackHandler: []
+      adTag.registerModule({
+        name: 'pubstack',
+        moduleType: 'prebid',
+        description: 'test-module',
+        config__(): Object | null {
+          return null;
+        },
+        configure__: configureSpy,
+        initSteps__(): InitStep[] {
+          return [initStepSpy];
+        },
+        configureSteps__(): ConfigureStep[] {
+          return [configureStepSpy];
+        },
+        prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+          return [prepareRequestAdsStep];
+        }
       });
 
-      adTag.registerModule(configChangingModule);
-      await adTag.configure(config);
-      const state = await adTag.requestAds();
+      const configWithModules: MoliConfig = {
+        ...defaultConfig,
+        modules: { pubstack: { enabled: true, tagId: 'xxxx' } },
+        requestAds: false
+      };
+      const configureResult = await adTag.configure(configWithModules);
 
-      expect(adTag.getState()).to.be.eq(state.state);
+      expect(configureResult).to.be.ok;
+      expect(configureResult?.state).to.be.eq('configured');
+      expect(configureResult?.modules).to.have.length(1);
 
-      expect(adTag.getRuntimeConfig().adPipelineConfig).to.deep.equals({
-        initSteps: [fakeInitStep],
-        configureSteps: [fakeConfigureStep],
-        prepareRequestAdsSteps: [fakePrepareRequestAdsStep],
-        requestBidsSteps: [fakeRequestBidsSteps],
-        prebidBidsBackHandler: [fakePrebidBidsBackHandler]
+      // After configure(), modules should not be configured yet when requestAds is false
+      expect(configureSpy).to.have.not.been.called;
+
+      // Pipeline steps should not be added yet
+      expect(configureResult?.runtimeConfig.adPipelineConfig.initSteps).to.have.length(0);
+      expect(configureResult?.runtimeConfig.adPipelineConfig.configureSteps).to.have.length(0);
+      expect(configureResult?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.have.length(
+        0
+      );
+
+      // Now call requestAds() to trigger module configuration
+      const requestAdsResult = await adTag.requestAds();
+
+      expect(requestAdsResult).to.be.ok;
+      expect(requestAdsResult?.modules).to.have.length(1);
+
+      // After requestAds(), modules should be configured
+      expect(configureSpy).calledOnce;
+      expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
+
+      // Pipeline steps should now be added
+      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.initSteps).to.have.deep.equals([
+        initStepSpy
+      ]);
+      expect(requestAdsResult?.runtimeConfig.adPipelineConfig.configureSteps).to.have.deep.equals([
+        configureStepSpy
+      ]);
+      expect(
+        requestAdsResult?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps
+      ).to.have.deep.equals([prepareRequestAdsStep]);
+
+      // After requestAds() runs the pipeline, these steps should be executed
+      expect(initStepSpy).to.have.been.called;
+      expect(configureStepSpy).to.have.been.called;
+      expect(prepareRequestAdsStepSpy).to.have.been.called;
+    });
+
+    it('should configure modules and add steps to pipeline immediately when requestAds is true', async () => {
+      const adTag = createMoliTag(jsDomWindow);
+      const configureSpy = sandbox.spy();
+      const initStepSpy = sandbox.spy();
+      const configureStepSpy = sandbox.spy();
+      const prepareRequestAdsStepSpy = sandbox.spy();
+
+      const prepareRequestAdsStep = mkPrepareRequestAdsStep(
+        'prep-step',
+        1,
+        prepareRequestAdsStepSpy
+      );
+
+      adTag.registerModule({
+        name: 'pubstack',
+        moduleType: 'prebid',
+        description: 'test-module',
+        config__(): Object | null {
+          return null;
+        },
+        configure__: configureSpy,
+        initSteps__(): InitStep[] {
+          return [initStepSpy];
+        },
+        configureSteps__(): ConfigureStep[] {
+          return [configureStepSpy];
+        },
+        prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+          return [prepareRequestAdsStep];
+        }
+      });
+
+      const configWithModules: MoliConfig = {
+        ...defaultConfig,
+        modules: { pubstack: { enabled: true, tagId: 'xxxx' } },
+        requestAds: true
+      };
+
+      // When requestAds is true, configure() should automatically call requestAds()
+      const result = await adTag.configure(configWithModules);
+
+      expect(result).to.be.ok;
+      expect(result?.state).to.be.eq('finished'); // Should be finished, not configured
+      expect(result?.modules).to.have.length(1);
+
+      // Modules should be configured immediately since requestAds was called
+      expect(configureSpy).calledOnce;
+      expect(configureSpy).calledOnceWithExactly(configWithModules.modules);
+
+      // Pipeline steps should be added immediately
+      expect(result?.runtimeConfig.adPipelineConfig.initSteps).to.have.deep.equals([initStepSpy]);
+      expect(result?.runtimeConfig.adPipelineConfig.configureSteps).to.have.deep.equals([
+        configureStepSpy
+      ]);
+      expect(result?.runtimeConfig.adPipelineConfig.prepareRequestAdsSteps).to.have.deep.equals([
+        prepareRequestAdsStep
+      ]);
+
+      // When requestAds is true, configure() automatically calls requestAds() which executes the pipeline
+      expect(initStepSpy).to.have.been.called;
+      expect(configureStepSpy).to.have.been.called;
+      expect(prepareRequestAdsStepSpy).to.have.been.called;
+    });
+  });
+
+  describe('requestAds', () => {
+    describe('configurable state', () => {
+      it('should add localhost as domain label in config', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.requestAds();
+        await adTag.configure(newEmptyConfig());
+        const targeting = adTag.getPageTargeting();
+        const labels = targeting?.labels;
+        expect(labels).to.be.ok;
+        expect(labels).to.contain.oneOf(['localhost']);
+      });
+
+      it('should add apexDomain as domain label in config', async () => {
+        dom.reconfigure({
+          url: 'https://example.com'
+        });
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.requestAds();
+        await adTag.configure(newEmptyConfig());
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.be.ok;
+        expect(targeting.labels).to.contain.oneOf(['example.com']);
+      });
+    });
+
+    describe('configured state', () => {
+      it('should add ABtest targeting', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.configure(newEmptyConfig());
+        await adTag.requestAds();
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.keyValues).to.be.ok;
+        expect(targeting.keyValues.ABtest).to.be.ok;
+      });
+
+      it('should localhost as domain label in config', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.configure(newEmptyConfig());
+        await adTag.requestAds();
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.contain.oneOf(['localhost']);
+      });
+
+      it('should add top private domain as domain label in config', async () => {
+        dom.reconfigure({
+          url: 'https://example.com'
+        });
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.configure(newEmptyConfig());
+        await adTag.requestAds();
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.contain.oneOf(['example.com']);
+      });
+
+      it('should add top private domain as domain label from config', async () => {
+        dom.reconfigure({
+          url: 'https://example.com'
+        });
+        const adTag = createMoliTag(jsDomWindow);
+        await adTag.configure({ ...newEmptyConfig(), domain: 'sub.example.com' });
+        await adTag.requestAds();
+        const targeting = adTag.getPageTargeting();
+        expect(targeting.labels).to.contain.oneOf(['sub.example.com']);
       });
     });
 
@@ -1764,7 +1924,7 @@ describe('moli', () => {
       );
 
       adTag.registerModule({
-        name: 'test-module',
+        name: 'pubstack',
         moduleType: 'prebid',
         description: 'test-module',
         config__(): Object | null {
@@ -1812,6 +1972,359 @@ describe('moli', () => {
       expect(initStepSpy).to.have.been.called;
       expect(configureStepSpy).to.have.been.called;
       expect(prepareRequestAdsStepSpy).to.have.been.called;
+    });
+
+    describe('activatedByLabel', () => {
+      it('should configure module when activatedByLabel is disabled', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: true,
+              activatedByLabel: { enabled: false, activationLabel: 'test-label' }
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+      });
+
+      it('should configure module when activatedByLabel is not specified', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: { pubstack: { enabled: true, tagId: '123' } },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+      });
+
+      it('should configure module when required label is present', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        // Add the required label before configuration
+        adTag.addLabel('test-label');
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: true,
+              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+      });
+
+      it('should not configure module when required label is missing', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: true,
+              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).to.have.not.been.called;
+      });
+
+      it('should not configure module when module is disabled even if label is present', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        // Add the required label before configuration
+        adTag.addLabel('test-label');
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: false,
+              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).to.have.not.been.called;
+      });
+
+      it('should configure module when label is added after configuration but before requestAds', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: true,
+              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+
+        // Add the label after configure but before requestAds
+        adTag.addLabel('test-label');
+
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
+      });
+
+      it('should handle multiple modules with different label conditions', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpyA = sandbox.spy();
+        const configureSpyB = sandbox.spy();
+        const configureSpyC = sandbox.spy();
+
+        // Add only one of the required labels
+        adTag.addLabel('label-a');
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'module-a',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpyA,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        adTag.registerModule({
+          name: 'geoedge',
+          moduleType: 'prebid',
+          description: 'module-b',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpyB,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        adTag.registerModule({
+          name: 'confiant',
+          moduleType: 'prebid',
+          description: 'module-c',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpyC,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: true,
+              activatedByLabel: { enabled: true, activationLabel: 'label-a' }
+            },
+            geoedge: {
+              key: 'abc',
+              enabled: true,
+              activatedByLabel: { enabled: true, activationLabel: 'label-b' }
+            },
+            confiant: {
+              assetUrl: 'https://test.confiant.com/guard.js',
+              enabled: true
+              // No activatedByLabel - should always configure
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        // module-a should be configured (has required label)
+        expect(configureSpyA).calledOnce;
+
+        // module-b should not be configured (missing required label)
+        expect(configureSpyB).to.have.not.been.called;
+
+        // module-c should be configured (no label requirement)
+        expect(configureSpyC).calledOnce;
+      });
     });
   });
 
@@ -1886,7 +2399,7 @@ describe('moli', () => {
         const adTag = createMoliTag(jsDomWindow);
         const prebidBidsBackHandler = sandbox.spy();
         adTag.registerModule({
-          name: 'test-module',
+          name: 'pubstack',
           moduleType: 'prebid',
           description: 'test-module',
           config__(): Object | null {
