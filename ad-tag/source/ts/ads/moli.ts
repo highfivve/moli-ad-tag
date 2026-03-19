@@ -332,18 +332,10 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         const shouldConfigureModule = (moduleName: string): boolean => {
           const moduleConfig = state.config?.modules?.[moduleName];
 
-          // If no module name is provided or no config exists for this module,
-          // configure it (backward compatibility for test modules and direct registrations)
-          if (!moduleName || !moduleConfig) {
-            return true;
-          }
-
-          // If module config exists but is disabled, don't configure
-          if (!moduleConfig.enabled) {
+          if (!moduleConfig || !moduleConfig.enabled) {
             return false;
           }
 
-          // Check if activatedByLabel is configured
           if (moduleConfig.activatedByLabel?.enabled) {
             const requiredLabel = moduleConfig.activatedByLabel.activationLabel;
             const currentLabels = state.runtimeConfig.labels;

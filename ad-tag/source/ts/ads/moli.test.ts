@@ -247,7 +247,12 @@ describe('moli', () => {
   describe('registerModule()', () => {
     it('should init modules in the requestAds call', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      const config = newEmptyConfig(defaultSlots);
+      const config = {
+        ...newEmptyConfig(defaultSlots),
+        modules: {
+          custom: { enabled: true }
+        }
+      };
 
       const initStep: InitStep = mkInitStep('fake-init', () => Promise.resolve());
       const configuredStep: ConfigureStep = mkConfigureStep('fake-configure', () =>
@@ -261,6 +266,7 @@ describe('moli', () => {
 
       const module: IModule = {
         ...fakeModule,
+        name: 'custom',
         initSteps__: (): InitStep[] => [initStep],
         configureSteps__: (): ConfigureStep[] => [configuredStep],
         prepareRequestAdsSteps__: (): PrepareRequestAdsStep[] => [prepareRequestAdsStep]
@@ -285,7 +291,11 @@ describe('moli', () => {
     });
 
     it('should add pipeline steps', async () => {
-      const configureSpy = sandbox.spy(fakeModule, 'configure__');
+      const testModule = {
+        ...fakeModule,
+        name: 'pubstack'
+      };
+      const configureSpy = sandbox.spy(testModule, 'configure__');
       const adTag = createMoliTag(jsDomWindow);
       const moduleConfig: modules.ModulesConfig = {
         pubstack: {
@@ -295,7 +305,7 @@ describe('moli', () => {
       };
       const config: MoliConfig = { ...newEmptyConfig(defaultSlots), modules: moduleConfig };
 
-      adTag.registerModule(fakeModule);
+      adTag.registerModule(testModule);
       await adTag.configure(config);
       await adTag.requestAds();
 
@@ -840,7 +850,12 @@ describe('moli', () => {
 
     it('audience should be available at runtime in module', async () => {
       const adTag = createMoliTag(jsDomWindow);
-      const config = newEmptyConfig(defaultSlots);
+      const config = {
+        ...newEmptyConfig(defaultSlots),
+        modules: {
+          pubstack: { enabled: true, tagId: 'test-tag-id' }
+        }
+      };
       const expectedAudience: MoliRuntime.AudienceTargeting = {
         userId: 'test',
         hem: { sha256: 'test_sha256' }
@@ -854,6 +869,7 @@ describe('moli', () => {
 
       const module: IModule = {
         ...fakeModule,
+        name: 'pubstack',
         initSteps__: (): InitStep[] => [initStep]
       };
 
@@ -2424,7 +2440,10 @@ describe('moli', () => {
 
         await adTag.configure({
           ...defaultConfig,
-          spa: { enabled: true, validateLocation: 'href' }
+          spa: { enabled: true, validateLocation: 'href' },
+          modules: {
+            pubstack: { enabled: true, tagId: 'test-tag-id' }
+          }
         });
         await adTag.requestAds();
 
