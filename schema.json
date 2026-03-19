@@ -1887,6 +1887,25 @@
     "modules.adex.AdexConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "adexCustomerId": {
           "description": "Provided by your ADEX account manager.",
           "type": "string"
@@ -2073,6 +2092,25 @@
     "modules.adreload.AdReloadModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "disableAdVisibilityChecks": {
           "description": "Enable reloading ads that are not in viewport. It is not advised to use this option. Impressions are usually only counted on ads that have been 50% visible and it's generally not very user-centric to load stuff that is out of viewport.",
           "type": "boolean"
@@ -2394,6 +2432,25 @@
     "modules.blocklist.BlocklistUrlsBlockingConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "blocklist": {
           "$ref": "#/definitions/modules.blocklist.BlocklistProvider",
           "description": "blocklist content"
@@ -2418,6 +2475,25 @@
     "modules.blocklist.BlocklistUrlsKeyValueConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "blocklist": {
           "$ref": "#/definitions/modules.blocklist.BlocklistProvider"
         },
@@ -2534,6 +2610,25 @@
       "additionalProperties": false,
       "description": "== Cleanup Module ==\n\nCleans up special formats if enabled (on user navigation and ad reload), especially useful for SPAs.\n\nThe configs can either provide CSS selectors of the html elements that are part of the special/out-of-page formats and should be deleted or JS as a string that will be evaluated by the module in order to remove these elements.",
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "configs": {
           "description": "A list of configurations.",
           "items": {
@@ -2571,6 +2666,25 @@
     "modules.confiant.ConfiantConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "assetUrl": {
           "description": "Confiant loads a single javascript file that contains all the configuration properties",
           "type": "string"
@@ -2595,6 +2709,25 @@
       "additionalProperties": false,
       "description": "## Custom Module Configuration\n\nThis module configuration allows the execute arbitrary javascript code. Late this may be extended to add arbitrary styles.",
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -2684,6 +2817,25 @@
     "modules.emetriq.EmetriqAppConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "additionalIdentifier": {
           "$ref": "#/definitions/EmetriqAdditionalIdentifier",
           "description": "Configure additional identifiers"
@@ -2902,6 +3054,25 @@
           "$ref": "#/definitions/EmetriqParams",
           "description": "Global parameter on window"
         },
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "customMappingDefinition": {
           "description": "Optional mapping definitions. Map values from the key-value targeting map to a custom parameter that is sent to emetriq.",
           "items": {
@@ -2975,6 +3146,25 @@
     "modules.geoedge.GeoEdgeModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "cfg": {
           "$ref": "#/definitions/modules.geoedge.GeoEdgeConfig",
           "description": "Optional configuration for GeoEdge."
@@ -3002,6 +3192,25 @@
     "modules.identitylink.IdentityLinkModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -3126,6 +3335,25 @@
     "modules.lazyload.LazyLoadModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "buckets": {
           "items": {
             "$ref": "#/definitions/modules.lazyload.LazyLoadModuleBucketsConfig"
@@ -3251,6 +3479,25 @@
     "modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -3276,6 +3523,25 @@
     "modules.pubstack.PubstackConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -3449,6 +3715,25 @@
     "modules.skin.SkinModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "configs": {
           "description": "A list of configurations. The first configuration with matching format filters will be used.",
           "items": {
@@ -3589,6 +3874,25 @@
     "modules.stickyHeaderAd.StickyHeaderAdConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "destroySlot": {
           "description": "If set to `true` this will additional remove the entire ad slot from the DOM and not just `googletag.destorySlots([slot])`",
           "type": "boolean"
@@ -3698,6 +4002,25 @@
       "additionalProperties": false,
       "description": "## Utiq Configuration\n\nThe configuration for the utiq module. Contains all utiq configuration properties as well as moli ad tag modules, too.",
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "assetUrl": {
           "description": "Utiq loads a single javascript. It will only load if consent for **all** purposes is given.",
           "type": "string"
@@ -3923,6 +4246,25 @@
       "additionalProperties": false,
       "description": "A dynamic configuration",
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "configEndpoint": {
           "description": "URL to a json config file that contains a list of AdUnitPriceRules.",
           "type": "string"
@@ -3958,6 +4300,25 @@
       "additionalProperties": false,
       "description": "No key values will be applied. The system is inactive.",
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "enabled": {
           "description": "If set to true the module will be enabled.",
           "type": "boolean"
@@ -3983,6 +4344,25 @@
       "additionalProperties": false,
       "description": "A static configuration for all ad units. This is to emulate server requests",
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "config": {
           "$ref": "#/definitions/modules.yield_optimization.AdunitPriceRulesResponse"
         },
@@ -4060,6 +4440,25 @@
     "modules.zeotap.ZeotapModuleConfig": {
       "additionalProperties": false,
       "properties": {
+        "activatedByLabel": {
+          "additionalProperties": false,
+          "description": "Optional configuration to activate the module only when a specific label is present. If enabled is true and the activationLabel is present in the labels array, the module will be configured. If not specified or enabled is false, this check is bypassed.",
+          "properties": {
+            "activationLabel": {
+              "description": "The label that must be present in the labels array for the module to be configured.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "If set to true, the module will only be configured if the activationLabel is present in the labels array.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "activationLabel"
+          ],
+          "type": "object"
+        },
         "assetUrl": {
           "description": "Points to the Zeotap script, containing only env, eventType and zdid parameters. The other parameters (country code, idp, hashed email address, and custom parameters) are added through configuration parameters.",
           "type": "string"
