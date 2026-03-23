@@ -3681,6 +3681,13 @@ export namespace prebidjs {
      * @see https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
      */
     readonly privacy?: 0 | 1;
+
+    /**
+     * Specifies the design/format/layout of the ad unit being offered. Currently, there's only 1 to 4 specified but
+     * exchanges can define their own IDs, so we don't make the type too specific.
+     * @see 7.3 in https://www.iab.com/wp-content/uploads/2018/03/OpenRTB-Native-Ads-Specification-Final-1.2.pdf
+     */
+    readonly plcmttype?: number;
   }
 
   export interface IMediaTypeNativeOrtb {
