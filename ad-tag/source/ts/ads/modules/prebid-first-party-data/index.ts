@@ -14,14 +14,9 @@
  * In your `index.ts` import the prebid-fpd-module module and register it.
  *
  * ```javascript
- * import { PrebidFpd } from '@highfivve/module-prebid-first-party-data'
+ * import { createPrebidFirstPartyDataModule } from '@highfivve/module-prebid-first-party-data'
  *
- * moli.registerModule(new PrebidFpd({
- *    staticPrebidFirstPartyData: { },
- *    gptTargetingMappings: {
- *      cat: 'openrtb2_page_cat'
- *    }
- * }));
+ * moli.registerModule(createPrebidFirstPartyDataModule());
  * ```
  *
  * The `gptTargetingMappings` property is optional. For static IAB categories you can also use the
@@ -54,47 +49,28 @@ import { uniquePrimitiveFilter } from 'ad-tag/util/arrayUtils';
 import { mergeDeep } from 'ad-tag/util/objectUtils';
 import { extractTopPrivateDomainFromHostname } from 'ad-tag/util/extractTopPrivateDomainFromHostname';
 
-export class PrebidFirstPartyDataModule implements IModule {
-  readonly description = 'Module for passing first party data to prebid auctions';
-  readonly moduleType: ModuleType = 'prebid';
-  readonly name = 'prebid-first-party-data';
+export const createPrebidFirstPartyDataModule = (): IModule => {
+  const name = 'prebid-first-party-data';
+  let moduleConfig: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null = null;
+  let configureStepsArr: ConfigureStep[] = [];
 
-  private moduleConfig: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null =
-    null;
-  private _configureSteps: ConfigureStep[] = [];
+  const config__ = (): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null =>
+    moduleConfig;
 
-  config__(): modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig | null {
-    return this.moduleConfig;
-  }
-
-  configure__(moduleConfig?: modules.ModulesConfig): void {
-    if (moduleConfig?.prebidFirstPartyData?.enabled) {
-      const config = moduleConfig.prebidFirstPartyData;
-      this._configureSteps = [
-        mkConfigureStep('prebid-fpd-module-configure', context =>
-          PrebidFirstPartyDataModule.setPrebidFpdConfig(context, config, context.logger__)
-        )
-      ];
+  const extractKeyValueArray = (key: string, keyValues: googleAdManager.KeyValueMap): string[] => {
+    const value = keyValues[key];
+    if (value) {
+      return typeof value === 'string' ? [value] : value;
+    } else {
+      return [];
     }
-  }
+  };
 
-  initSteps__(): InitStep[] {
-    return [];
-  }
-
-  configureSteps__(): ConfigureStep[] {
-    return this._configureSteps;
-  }
-
-  prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-    return [];
-  }
-
-  private static setPrebidFpdConfig(
+  const setPrebidFpdConfig = (
     context: AdPipelineContext,
     config: modules.prebid_first_party_data.PrebidFirstPartyDataModuleConfig,
     log: MoliRuntime.MoliLogger
-  ): Promise<void> {
+  ): Promise<void> => {
     if (context.config__.prebid) {
       const keyValues = context.config__.targeting?.keyValues || {};
       const gptTargeting = config.gptTargetingMappings;
@@ -112,25 +88,16 @@ export class PrebidFirstPartyDataModule implements IModule {
             ...ortb2FromKeyValues.site
           };
           if (gptTargeting.cat) {
-            const keyValueData = PrebidFirstPartyDataModule.extractKeyValueArray(
-              gptTargeting.cat,
-              keyValues
-            );
+            const keyValueData = extractKeyValueArray(gptTargeting.cat, keyValues);
             site.cat?.push(...keyValueData);
             site.pagecat?.push(...keyValueData);
             site.sectioncat?.push(...keyValueData);
           }
           if (gptTargeting.sectionCat) {
-            site.sectioncat = PrebidFirstPartyDataModule.extractKeyValueArray(
-              gptTargeting.sectionCat,
-              keyValues
-            );
+            site.sectioncat = extractKeyValueArray(gptTargeting.sectionCat, keyValues);
           }
           if (gptTargeting.pageCat) {
-            site.pagecat = PrebidFirstPartyDataModule.extractKeyValueArray(
-              gptTargeting.pageCat,
-              keyValues
-            );
+            site.pagecat = extractKeyValueArray(gptTargeting.pageCat, keyValues);
           }
 
           if (site.cat) {
@@ -166,10 +133,7 @@ export class PrebidFirstPartyDataModule implements IModule {
 
           // Set site.content.data objects with the publisher as data provider and the iab v2 segments for this page.
           if (gptTargeting.iabV2 && provider) {
-            const iabV2Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
-              gptTargeting.iabV2,
-              keyValues
-            );
+            const iabV2Ids = extractKeyValueArray(gptTargeting.iabV2, keyValues);
 
             const publisherContentData: OpenRtb2Data = {
               name: provider,
@@ -184,10 +148,7 @@ export class PrebidFirstPartyDataModule implements IModule {
 
           // Set site.content.data objects with the publisher as data provider and the iab v3 segments for this page.
           if (gptTargeting.iabV3 && provider) {
-            const iabV3Ids = PrebidFirstPartyDataModule.extractKeyValueArray(
-              gptTargeting.iabV3,
-              keyValues
-            );
+            const iabV3Ids = extractKeyValueArray(gptTargeting.iabV3, keyValues);
 
             const publisherContentData: OpenRtb2Data = {
               name: provider,
@@ -208,17 +169,33 @@ export class PrebidFirstPartyDataModule implements IModule {
     }
 
     return Promise.resolve();
-  }
+  };
 
-  private static extractKeyValueArray(
-    key: string,
-    keyValues: googleAdManager.KeyValueMap
-  ): string[] {
-    const value = keyValues[key];
-    if (value) {
-      return typeof value === 'string' ? [value] : value;
-    } else {
-      return [];
+  const configure__ = (mConfig?: modules.ModulesConfig): void => {
+    if (mConfig?.prebidFirstPartyData?.enabled) {
+      const config = mConfig.prebidFirstPartyData;
+      configureStepsArr = [
+        mkConfigureStep('prebid-fpd-module-configure', context =>
+          setPrebidFpdConfig(context, config, context.logger__)
+        )
+      ];
     }
-  }
-}
+  };
+
+  const initSteps__ = (): InitStep[] => [];
+
+  const configureSteps__ = (): ConfigureStep[] => configureStepsArr;
+
+  const prepareRequestAdsSteps__ = (): PrepareRequestAdsStep[] => [];
+
+  return {
+    name,
+    description: 'Module for passing first party data to prebid auctions',
+    moduleType: 'prebid' as ModuleType,
+    config__,
+    configure__,
+    initSteps__,
+    configureSteps__,
+    prepareRequestAdsSteps__
+  };
+};

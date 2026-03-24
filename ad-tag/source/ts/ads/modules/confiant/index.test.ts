@@ -12,7 +12,8 @@ import {
   noopLogger
 } from 'ad-tag/stubs/moliStubs';
 import { fullConsent, tcDataNoGdpr } from 'ad-tag/stubs/consentStubs';
-import { Confiant } from 'ad-tag/ads/modules/confiant/index';
+import { createConfiant } from 'ad-tag/ads/modules/confiant/index';
+import { IModule } from 'ad-tag/types/module';
 import { googleAdManager, modules } from 'ad-tag/types/moliConfig';
 import { createGoogletagStub } from 'ad-tag/stubs/googletagStubs';
 import { tcfapi } from 'ad-tag/types/tcfapi';
@@ -68,13 +69,13 @@ describe('Confiant Module', () => {
   });
 
   const createAndConfigureModule = (checkGVLID?: boolean) => {
-    const module = new Confiant();
+    const module = createConfiant();
     module.configure__(modulesConfig(checkGVLID));
     return module;
   };
 
   const testConfiantLoad = async (
-    module: Confiant,
+    module: IModule,
     context: AdPipelineContext,
     shouldLoad: boolean
   ) => {
