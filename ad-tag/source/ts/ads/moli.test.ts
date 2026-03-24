@@ -1990,49 +1990,8 @@ describe('moli', () => {
       expect(prepareRequestAdsStepSpy).to.have.been.called;
     });
 
-    describe('activatedByLabel', () => {
-      it('should configure module when activatedByLabel is disabled', async () => {
-        const adTag = createMoliTag(jsDomWindow);
-        const configureSpy = sandbox.spy();
-
-        adTag.registerModule({
-          name: 'pubstack',
-          moduleType: 'prebid',
-          description: 'test-module',
-          config__(): Object | null {
-            return null;
-          },
-          configure__: configureSpy,
-          initSteps__(): InitStep[] {
-            return [];
-          },
-          configureSteps__(): ConfigureStep[] {
-            return [];
-          },
-          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
-            return [];
-          }
-        });
-
-        const configWithModules: MoliConfig = {
-          ...defaultConfig,
-          modules: {
-            pubstack: {
-              tagId: '123',
-              enabled: true,
-              activatedByLabel: { enabled: false, activationLabel: 'test-label' }
-            }
-          },
-          requestAds: false
-        };
-
-        await adTag.configure(configWithModules);
-        await adTag.requestAds();
-
-        expect(configureSpy).calledOnce;
-      });
-
-      it('should configure module when activatedByLabel is not specified', async () => {
+    describe('labelConditions', () => {
+      it('should configure module when labelConditions are not specified', async () => {
         const adTag = createMoliTag(jsDomWindow);
         const configureSpy = sandbox.spy();
 
@@ -2067,12 +2026,13 @@ describe('moli', () => {
         expect(configureSpy).calledOnce;
       });
 
-      it('should configure module when required label is present', async () => {
+      it('should configure module when required labels of labelAll rule is present', async () => {
         const adTag = createMoliTag(jsDomWindow);
         const configureSpy = sandbox.spy();
 
-        // Add the required label before configuration
-        adTag.addLabel('test-label');
+        // Add the required labels before configuration
+        adTag.addLabel('test-label-1');
+        adTag.addLabel('test-label-2');
 
         adTag.registerModule({
           name: 'pubstack',
@@ -2099,7 +2059,7 @@ describe('moli', () => {
             pubstack: {
               tagId: '123',
               enabled: true,
-              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+              labelCondition: { labelAll: ['test-label-1', 'test-label-2'] }
             }
           },
           requestAds: false
@@ -2111,7 +2071,7 @@ describe('moli', () => {
         expect(configureSpy).calledOnce;
       });
 
-      it('should not configure module when required label is missing', async () => {
+      it('should not configure module when required label in labelAll rule is missing', async () => {
         const adTag = createMoliTag(jsDomWindow);
         const configureSpy = sandbox.spy();
 
@@ -2140,7 +2100,7 @@ describe('moli', () => {
             pubstack: {
               tagId: '123',
               enabled: true,
-              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+              labelCondition: { labelAll: ['test-label'] }
             }
           },
           requestAds: false
@@ -2152,11 +2112,10 @@ describe('moli', () => {
         expect(configureSpy).to.have.not.been.called;
       });
 
-      it('should not configure module when module is disabled even if label is present', async () => {
+      it('should not configure module when label in labelNone rule is present', async () => {
         const adTag = createMoliTag(jsDomWindow);
         const configureSpy = sandbox.spy();
 
-        // Add the required label before configuration
         adTag.addLabel('test-label');
 
         adTag.registerModule({
@@ -2183,8 +2142,8 @@ describe('moli', () => {
           modules: {
             pubstack: {
               tagId: '123',
-              enabled: false,
-              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+              enabled: true,
+              labelCondition: { labelNone: ['test-label'] }
             }
           },
           requestAds: false
@@ -2194,6 +2153,50 @@ describe('moli', () => {
         await adTag.requestAds();
 
         expect(configureSpy).to.have.not.been.called;
+      });
+
+      it('should configure module when one required labels of labelAny rule is present', async () => {
+        const adTag = createMoliTag(jsDomWindow);
+        const configureSpy = sandbox.spy();
+
+        // Add the required label before configuration
+        adTag.addLabel('test-label-1');
+
+        adTag.registerModule({
+          name: 'pubstack',
+          moduleType: 'prebid',
+          description: 'test-module',
+          config__(): Object | null {
+            return null;
+          },
+          configure__: configureSpy,
+          initSteps__(): InitStep[] {
+            return [];
+          },
+          configureSteps__(): ConfigureStep[] {
+            return [];
+          },
+          prepareRequestAdsSteps__(): PrepareRequestAdsStep[] {
+            return [];
+          }
+        });
+
+        const configWithModules: MoliConfig = {
+          ...defaultConfig,
+          modules: {
+            pubstack: {
+              tagId: '123',
+              enabled: true,
+              labelCondition: { labelAny: ['test-label-1', 'test-label-2'] }
+            }
+          },
+          requestAds: false
+        };
+
+        await adTag.configure(configWithModules);
+        await adTag.requestAds();
+
+        expect(configureSpy).calledOnce;
       });
 
       it('should configure module when label is added after configuration but before requestAds', async () => {
@@ -2225,7 +2228,7 @@ describe('moli', () => {
             pubstack: {
               tagId: '123',
               enabled: true,
-              activatedByLabel: { enabled: true, activationLabel: 'test-label' }
+              labelCondition: { labelAll: ['test-label'] }
             }
           },
           requestAds: false
@@ -2313,12 +2316,12 @@ describe('moli', () => {
             pubstack: {
               tagId: '123',
               enabled: true,
-              activatedByLabel: { enabled: true, activationLabel: 'label-a' }
+              labelCondition: { labelAll: ['label-a'] }
             },
             geoedge: {
               key: 'abc',
               enabled: true,
-              activatedByLabel: { enabled: true, activationLabel: 'label-b' }
+              labelCondition: { labelAll: ['label-b'] }
             },
             confiant: {
               assetUrl: 'https://test.confiant.com/guard.js',

@@ -1,7 +1,6 @@
 import { ConfigureStep, InitStep, PrepareRequestAdsStep, RequestBidsStep } from '../ads/adPipeline';
 import { modules } from './moliConfig';
 import { MoliRuntime } from './moliRuntime';
-
 export type ModuleType =
   | 'cmp'
   | 'reporting'
