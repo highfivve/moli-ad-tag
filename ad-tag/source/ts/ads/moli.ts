@@ -1,5 +1,4 @@
 import { MoliRuntime } from '../types/moliRuntime';
-import { parseQueryString } from '../util/query';
 import { AssetLoadMethod, createAssetLoaderService } from '../util/assetLoaderService';
 import { getLogger } from '../util/logging';
 import { addNewInfiniteSlotToConfig } from '../util/addNewInfiniteSlotToConfig';
@@ -14,7 +13,7 @@ import {
 import { packageJson } from '../gen/packageJson';
 import * as adUnitPath from './adUnitPath';
 import { extractTopPrivateDomainFromHostname } from '../util/extractTopPrivateDomainFromHostname';
-import { createLabelConfigService, LabelConfigService } from './labelConfigService';
+import { createLabelConfigService } from './labelConfigService';
 import { allowRefreshAdSlot, allowRequestAds } from './spa';
 import {
   AdUnitPathVariables,
@@ -329,45 +328,50 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
         setABtestTargeting();
         addDomainLabel(state.config.domain);
 
-        const shouldConfigureModule = (moduleName: string): boolean => {
-          const moduleConfig = state.config?.modules?.[moduleName];
-
-          if (!moduleConfig || !moduleConfig.enabled) {
-            return false;
-          }
-
-          if (moduleConfig.activatedByLabel?.enabled) {
-            const requiredLabel = moduleConfig.activatedByLabel.activationLabel;
-            const currentLabels = state.runtimeConfig.labels;
-            const hasRequiredLabel = currentLabels.includes(requiredLabel);
-
-            getLogger(state.runtimeConfig, window).debug(
-              'MoliGlobal',
-              `checking label condition for module ${moduleName}: required="${requiredLabel}", current=[${currentLabels.join(', ')}], hasLabel=${hasRequiredLabel}`
-            );
-
-            return hasRequiredLabel;
-          }
-
-          // If no label condition is set, configure the module if it's enabled
-          return true;
-        };
-
         const modules = state.modules;
         getLogger(state.runtimeConfig, window).debug(
           'MoliGlobal',
           'configure modules',
           state.config.modules ?? {}
         );
+
+        const labelService = createLabelConfigService(
+          state.config?.labelSizeConfig || [],
+          state.runtimeConfig.labels,
+          window
+        );
+
         modules.forEach(module => {
           try {
-            // Check if this module should be configured based on label conditions
-            if (!shouldConfigureModule(module.name)) {
-              getLogger(state.runtimeConfig, window).debug(
-                'MoliGlobal',
-                `skipping configuration of ${module.moduleType} module ${module.name} due to missing label.`
+            const moduleName = module.name;
+            const moduleConfig = state.config?.modules?.[moduleName];
+
+            // if there is a labelCondition setting, only configure the module if conditions are met
+            if (moduleConfig.labelCondition) {
+              // check for labelAll and labelAny
+              const areLabelAnyAndLabelAllConditionsMet = labelService.filterSlot(
+                moduleConfig.labelCondition
               );
-              return;
+              // check for label none
+              const areLabelNoneConditionsMet =
+                !moduleConfig.labelCondition.labelNone ||
+                !moduleConfig.labelCondition.labelNone.some(label =>
+                  state.runtimeConfig.labels.includes(label)
+                );
+
+              console.log('DEBUG MODULE CONFIG:', {
+                moduleName,
+                labelCondition: moduleConfig.labelCondition,
+                currentLabels: state.runtimeConfig.labels,
+                filterSlotResult: areLabelAnyAndLabelAllConditionsMet && areLabelNoneConditionsMet
+              });
+              if (!(areLabelAnyAndLabelAllConditionsMet && areLabelNoneConditionsMet)) {
+                getLogger(state.runtimeConfig, window).debug(
+                  'MoliGlobal',
+                  `skipping configuration of ${module.moduleType} module ${moduleName} due to label condition not met.`
+                );
+                return;
+              }
             }
 
             module.configure__(state.config?.modules ?? {});
