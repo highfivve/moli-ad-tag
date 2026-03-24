@@ -359,12 +359,6 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
                   state.runtimeConfig.labels.includes(label)
                 );
 
-              console.log('DEBUG MODULE CONFIG:', {
-                moduleName,
-                labelCondition: moduleConfig.labelCondition,
-                currentLabels: state.runtimeConfig.labels,
-                filterSlotResult: areLabelAnyAndLabelAllConditionsMet && areLabelNoneConditionsMet
-              });
               if (!(areLabelAnyAndLabelAllConditionsMet && areLabelNoneConditionsMet)) {
                 getLogger(state.runtimeConfig, window).debug(
                   'MoliGlobal',
