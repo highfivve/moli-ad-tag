@@ -4,6 +4,7 @@ import { apstag } from './apstag';
 import { MoliRuntime } from './moliRuntime';
 import { EmetriqAdditionalIdentifier, EmetriqParams, EmetriqCustomParam } from './emetriq';
 import { googletag } from './googletag';
+import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 
 /**
  * Type for a device where Moli could possibly be run on.
@@ -1298,11 +1299,7 @@ export namespace modules {
     /**
      * Optional configuration to activate the module only if the specific label conditions are met.
      */
-    readonly labelCondition?: {
-      readonly labelAll?: string[];
-      readonly labelAny?: string[];
-      readonly labelNone?: string[];
-    };
+    readonly labelCondition?: LabelCondition;
   }
 
   export namespace adreload {
