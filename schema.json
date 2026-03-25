@@ -273,6 +273,55 @@
       ],
       "type": "object"
     },
+    "LabelCondition": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelAll": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelAll"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelAny": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelAny"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "labelNone": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "labelNone"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "MoliConfig": {
       "additionalProperties": false,
       "description": "## Moli Configuration\n\nContains the configuration for the ad tag that is served from a backend.",
@@ -1915,29 +1964,8 @@
           "type": "array"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "mappingDefinitions": {
           "description": "extraction and conversion rules to produce Adex compatible data from key/value targeting.",
@@ -2142,29 +2170,8 @@
           "type": "array"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "optimizeClsScoreDomIds": {
           "description": "Ad slots that have an influence on content positioning should be included here. The ad reload module will make sure that reloading these slots will not negatively impact CLS scores.",
@@ -2453,29 +2460,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "mode": {
           "const": "block",
@@ -2509,29 +2495,8 @@
           "type": "string"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "mode": {
           "const": "key-value",
@@ -2646,29 +2611,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -2710,29 +2654,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -2764,29 +2687,8 @@
           "type": "object"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "scripts": {
           "description": "List of external scripts to be loaded.",
@@ -2941,29 +2843,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "linkOrKeyword": {
           "$ref": "#/definitions/modules.emetriq.EmetriqAppKeywordOrLinkConfig",
@@ -3114,29 +2995,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "login": {
           "$ref": "#/definitions/modules.emetriq.EmetriqLoginEventConfig",
@@ -3218,29 +3078,8 @@
           "type": "string"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -3264,29 +3103,8 @@
           "type": "array"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "launchPadId": {
           "description": "The launchPadID references a bunch of services from LiveRamp that are loaded dynamically.\n\nIt is used to load the script from the LiveRamp CDN at https://launchpad-wrapper.privacymanager.io",
@@ -3418,29 +3236,8 @@
           "type": "array"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "slots": {
           "items": {
@@ -3564,29 +3361,8 @@
           "type": "string"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "staticPrebidFirstPartyData": {
           "$ref": "#/definitions/prebidjs.firstpartydata.PrebidFirstPartyData",
@@ -3606,29 +3382,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "tagId": {
           "description": "TagID from pubstack",
@@ -3811,29 +3566,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         }
       },
       "required": [
@@ -4000,29 +3734,8 @@
           "type": "string"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "minVisibleDurationMs": {
           "description": "If set, setting css classes will be delayed by the amount of milliseconds specified here.\n\nIf `waitForRendering` is set to `true`, the timer starts after the ad has been rendered.",
@@ -4126,29 +3839,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "options": {
           "$ref": "#/definitions/modules.utiq.UtiqConfigOptions",
@@ -4368,29 +4060,8 @@
           "type": "array"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
@@ -4413,29 +4084,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
@@ -4466,29 +4116,8 @@
           "type": "boolean"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "provider": {
           "$ref": "#/definitions/modules.yield_optimization.YieldOptimizationConfigProvider"
@@ -4591,29 +4220,8 @@
           "type": "string"
         },
         "labelCondition": {
-          "additionalProperties": false,
-          "description": "Optional configuration to activate the module only if the specific label conditions are met.",
-          "properties": {
-            "labelAll": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelAny": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "labelNone": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
+          "$ref": "#/definitions/LabelCondition",
+          "description": "Optional configuration to activate the module only if the specific label conditions are met."
         },
         "mode": {
           "description": "The mode defines if the Zeotap script can be loaded repeatedly with updated parameters (in spa/single page application mode) or just once (for sever side rendered pages, mode = default).",
