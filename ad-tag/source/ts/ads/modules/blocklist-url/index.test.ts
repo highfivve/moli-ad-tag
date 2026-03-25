@@ -23,6 +23,7 @@ import BlocklistUrlsBlockingConfig = modules.blocklist.BlocklistUrlsBlockingConf
 import BlocklistUrlsKeyValueConfig = modules.blocklist.BlocklistUrlsKeyValueConfig;
 import { IModule } from 'ad-tag/types/module';
 import BlocklistLabelEntry = modules.blocklist.BlocklistLabelEntry;
+import { LabelCondition } from 'ad-tag/ads/labelConfigService';
 
 // setup sinon-chai
 use(sinonChai);
@@ -59,7 +60,8 @@ describe('BlocklistedUrls Module', () => {
       getDeviceLabel: () => 'mobile',
       addLabel: () => {
         return;
-      }
+      },
+      isLabelConditionMet: () => true
     },
     tcData__: fullConsent(),
     adUnitPathVariables__: {},

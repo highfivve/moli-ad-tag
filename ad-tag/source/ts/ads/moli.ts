@@ -348,18 +348,11 @@ export const createMoliTag = (window: Window): MoliRuntime.MoliTag => {
 
             // if there is a labelCondition setting, only configure the module if conditions are met
             if (moduleConfig.labelCondition) {
-              // check for labelAll and labelAny
-              const areLabelAnyAndLabelAllConditionsMet = labelService.filterSlot(
+              const areLabelConditionsMet = labelService.isLabelConditionMet(
                 moduleConfig.labelCondition
               );
-              // check for label none
-              const areLabelNoneConditionsMet =
-                !moduleConfig.labelCondition.labelNone ||
-                !moduleConfig.labelCondition.labelNone.some(label =>
-                  state.runtimeConfig.labels.includes(label)
-                );
 
-              if (!(areLabelAnyAndLabelAllConditionsMet && areLabelNoneConditionsMet)) {
+              if (!areLabelConditionsMet) {
                 getLogger(state.runtimeConfig, window).debug(
                   'MoliGlobal',
                   `skipping configuration of ${module.moduleType} module ${moduleName} due to label condition not met.`
